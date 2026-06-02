@@ -794,6 +794,12 @@ html {
   color: #8d9691;
 }
 
+.vd-search:focus-within {
+  border-color: var(--vd-accent);
+  background: var(--vd-surface);
+  box-shadow: 0 0 0 3px rgba(34, 92, 72, 0.18);
+}
+
 .vd-avatar,
 .vd-profile-photo {
   display: inline-flex;
@@ -978,7 +984,13 @@ html {
 
 .vd-institution-mark--wqu { background: #1f4f82; }
 .vd-institution-mark--quantnet { background: #050607; }
-.vd-institution-mark--claude { background: #d86f32; }
+.vd-institution-mark--claude {
+  width: auto;
+  min-width: 3rem;
+  padding: 0 0.45rem;
+  border-radius: 6px;
+  background: #8f3f17;
+}
 
 .vd-section-row {
   display: grid;
