@@ -67,6 +67,8 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
 
   assert.equal(text.match(/Ask this profile/g)?.length ?? 0, 1);
   assert.match(html, /class="vd-home/);
+  assert.doesNotMatch(html, /placeholder="Ask this profile"/);
+  assert.match(html, /placeholder="Search this profile"/);
   assert.doesNotMatch(text, /Yiping's Loom/);
   assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);
   assert.doesNotMatch(html, />\s*&nbsp;\s*</i);

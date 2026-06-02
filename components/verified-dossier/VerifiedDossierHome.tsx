@@ -75,7 +75,7 @@ export function VerifiedDossierHome({
         </div>
         <label className="vd-search">
           <SearchIcon />
-          <input type="search" placeholder="Ask this profile" aria-label="Search this profile" />
+          <input type="search" placeholder="Search this profile" aria-label="Search this profile" />
         </label>
         <a className="vd-avatar" href="/about" aria-label="Open Yiping Yin profile">
           <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
