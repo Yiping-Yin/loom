@@ -54,6 +54,8 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'XLSX',
     'MD',
     'Ask this profile',
+    'Sources to Draft to Answer',
+    'Course files become a draft trail and then a cited answer people can inspect.',
     'Phillips Curve',
     'inflation and unemployment',
     'expectations',
@@ -63,6 +65,7 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     assert.match(text, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
+  assert.equal(text.match(/Ask this profile/g)?.length ?? 0, 1);
   assert.match(html, /class="vd-home/);
   assert.doesNotMatch(text, /Yiping's Loom/);
   assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);

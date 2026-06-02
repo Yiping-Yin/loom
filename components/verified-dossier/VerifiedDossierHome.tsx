@@ -28,6 +28,8 @@ const FEATURED_UNSW_ARTIFACTS: VerifiedDossierArtifactId[] = [
   'econ-notes',
 ];
 
+const FEATURED_UNSW_SECTION = VERIFIED_DOSSIER_SECTIONS.find((section) => section.id === 'unsw');
+
 function SearchIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -161,9 +163,15 @@ export function VerifiedDossierHome({
                 })}
               </div>
               <div className="vd-inspector-card">
-                <h2>Ask this profile</h2>
-                <p>{VERIFIED_DOSSIER_AI_PROMPT.question}</p>
-                <p>{VERIFIED_DOSSIER_AI_PROMPT.answer}</p>
+                <h2>Sources to Draft to Answer</h2>
+                <p>
+                  Course files become a draft trail and then a cited answer people can inspect.
+                </p>
+                {FEATURED_UNSW_SECTION ? (
+                  <a className="vd-text-link" href={FEATURED_UNSW_SECTION.href}>
+                    Open UNSW evidence <ArrowIcon />
+                  </a>
+                ) : null}
               </div>
             </div>
           </section>
