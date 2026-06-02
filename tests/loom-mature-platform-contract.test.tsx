@@ -69,6 +69,7 @@ test('HomeClient renders mature platform modules on first paint', () => {
     /Sources, drafts, projects, and conversations become a public record/,
   );
   assert.match(html, /ECON3202 Problem Set 2\.pdf/);
+  assert.match(html, /Lecture 8 Slides\.pptx/);
   assert.match(html, /Sources to Draft to Answer/);
   assert.match(html, /Ask this profile/);
   assert.match(html, /Phillips Curve/);
@@ -115,9 +116,6 @@ test('static Private Wiki home exposes the personal knowledge identity model', (
   }
   for (const model of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {
     assert.match(html, new RegExp(model));
-  }
-  for (const moduleLabel of ['Recent progress', 'Product story', 'Process timeline', 'Output previews']) {
-    assert.match(html, new RegExp(moduleLabel));
   }
   assert.match(html, /thinking loom/i);
   assert.match(html, /ECON3202/);

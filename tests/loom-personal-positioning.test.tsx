@@ -6,6 +6,7 @@ import test from 'node:test';
 import React from 'react';
 
 import { HomeClient } from '../app/HomeClient';
+import { VERIFIED_DOSSIER_HOME_COPY } from '../lib/new-loom/verified-dossier-home';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -27,6 +28,10 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
     /Sources, drafts, projects, and conversations become a public record/,
   );
   assert.match(html, /一个可展示、可追溯、可交流的个人知识身份/);
+  assert.match(html, /资料、学习路径、作品、过程记录和 AI 对话/);
+  assert.match(html, /作品/);
+  assert.match(html, /过程记录/);
+  assert.match(html, /虚拟个人 AI|AI/);
   assert.match(html, /Knowledge identity/);
   assert.match(html, /proof|evidence/i);
 
@@ -61,6 +66,13 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.doesNotMatch(html, /personal knowledge display platform/i);
   assert.doesNotMatch(html, /Recent progress|Product story|Process timeline|Output previews/);
   assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
+});
+
+test('verified dossier data contract keeps the approved short definition', () => {
+  assert.equal(
+    VERIFIED_DOSSIER_HOME_COPY.shortDefinition,
+    'Loom turns your sources, learning path, work, process records, and AI conversations into an inspectable personal knowledge identity.',
+  );
 });
 
 test('Sources and Draft descriptions serve personal learning paths, resources, portfolio, and process work', () => {
