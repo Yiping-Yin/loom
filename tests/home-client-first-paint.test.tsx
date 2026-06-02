@@ -21,32 +21,50 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   const html = renderToStaticMarkup(<HomeClient />);
   const text = visibleText(html);
 
-  assert.match(html, /personal knowledge identity platform/i);
-  assert.match(html, /portfolio people can inspect/i);
-  assert.match(html, /knowledge base people can trust/i);
-  assert.match(html, /personal AI people can talk to/i);
-  assert.match(html, /first reference instance/i);
-  assert.match(html, /Portfolio with proof/i);
-  assert.match(html, /Source to identity/i);
-  assert.match(html, /AI persona/i);
+  assert.match(text, /A knowledge profile people can inspect and ask\./);
+  assert.match(
+    text,
+    /Sources, drafts, projects, and conversations become a public record/,
+  );
+  assert.match(text, /一个可展示、可追溯、可交流的个人知识身份/);
 
-  assert.equal(html.match(/class="new-loom-shell__shelf"/g)?.length, 5);
-  for (const href of [
-    '/about',
-    '/knowledge/unsw',
-    '/knowledge/quantnet',
-    '/knowledge/wqu',
-    '/knowledge/claude',
+  for (const label of [
+    'Yiping Yin',
+    'Student',
+    'Builder',
+    'Learner',
+    'Sydney, Australia',
+    'About',
+    'Sources',
+    'UNSW',
+    'Quantnet',
+    'WQU',
+    'Claude',
+    'History',
+    'ECON3202 Problem Set 2.pdf',
+    'Lecture 8 Slides.pptx',
+    'Tutorial 3 Solutions.pdf',
+    'Lecture 8 Notes.pdf',
+    'About me page.docx',
+    'BHP Case Study.xlsx',
+    'Prompt library.md',
+    'PDF',
+    'PPTX',
+    'DOCX',
+    'XLSX',
+    'MD',
+    'Ask this profile',
+    'Phillips Curve',
+    'inflation and unemployment',
+    'expectations',
+    'supply shocks',
+    'Draft',
   ]) {
-    assert.match(html, new RegExp(`href="${href}"`));
+    assert.match(text, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
-  for (const model of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {
-    assert.match(html, new RegExp(model));
-  }
-
-  assert.match(text, /Sources/);
-  assert.match(text, /Draft/);
+  assert.match(html, /class="vd-home/);
+  assert.doesNotMatch(text, /Yiping's Loom/);
   assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);
   assert.doesNotMatch(html, />\s*&nbsp;\s*</i);
 });
