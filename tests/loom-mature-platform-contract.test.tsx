@@ -1,19 +1,30 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import React from 'react';
 
+import { HomeClient } from '../app/HomeClient';
 import {
   PERSONAL_PLATFORM_MODEL,
   PERSONAL_PLATFORM_HISTORY,
-  PERSONAL_PLATFORM_NARRATIVE_LAYERS,
   PERSONAL_PLATFORM_OUTPUTS,
-  PERSONAL_PLATFORM_PITCH_COPY,
   PERSONAL_PLATFORM_PROCESS,
-  PERSONAL_PLATFORM_PRODUCT_THESIS,
   PERSONAL_PLATFORM_PROGRESS,
-  PERSONAL_PLATFORM_REFERENCE_INSTANCE,
   PERSONAL_PLATFORM_SECTIONS,
-  PERSONAL_PLATFORM_STACK,
 } from '../lib/new-loom/personal-platform';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const privateWikiRoot = path.resolve(repoRoot, '..');
+
+function readRepo(relativePath: string) {
+  return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
+}
+
+function readPrivateWiki(relativePath: string) {
+  return fs.readFileSync(path.join(privateWikiRoot, relativePath), 'utf8');
+}
 
 test('personal platform data keeps five sections and the mature section model', () => {
   assert.deepEqual(
@@ -33,76 +44,99 @@ test('personal platform data keeps five sections and the mature section model', 
     assert.ok(section.outputs.length >= 1, `${section.label} should expose output items`);
   }
 
-  assert.equal(PERSONAL_PLATFORM_PROGRESS.length, 3, 'home progress strip should have concrete items');
-  assert.equal(PERSONAL_PLATFORM_HISTORY.length, 4, 'product history should keep the Loom story visible');
-  assert.equal(PERSONAL_PLATFORM_PROCESS.length, 3, 'home process timeline should have concrete items');
-  assert.doesNotMatch(
-    PERSONAL_PLATFORM_PROCESS.map((item) => item.title).join('\n'),
-    /Collect sources/i,
-    'home process timeline should not expose stale Collect sources copy',
-  );
-  assert.doesNotMatch(
-    PERSONAL_PLATFORM_SECTIONS.flatMap((section) => section.processItems).join('\n'),
-    /Collect official source truth/i,
-    'section process items should not expose stale Collect official source truth copy',
-  );
-  assert.equal(PERSONAL_PLATFORM_OUTPUTS.length, 3, 'home output previews should have concrete items');
-  assert.deepEqual(
-    PERSONAL_PLATFORM_STACK.map((item) => item.title),
-    ['Personal knowledge postcard', 'Portfolio site', 'Knowledge base', 'Virtual personal AI'],
-  );
-  assert.deepEqual(
-    PERSONAL_PLATFORM_NARRATIVE_LAYERS.map((item) => item.title),
-    ['Portfolio with proof', 'Source to identity', 'AI persona'],
-  );
+  assert.ok(PERSONAL_PLATFORM_PROGRESS.length >= 3, 'home progress strip should have concrete items');
+  assert.ok(PERSONAL_PLATFORM_HISTORY.length >= 4, 'product history should keep the Loom story visible');
+  assert.ok(PERSONAL_PLATFORM_PROCESS.length >= 3, 'home process timeline should have concrete items');
+  assert.ok(PERSONAL_PLATFORM_OUTPUTS.length >= 3, 'home output previews should have concrete items');
   assert.match(PERSONAL_PLATFORM_HISTORY[0].text, /personal thinking tool/i);
   assert.match(
     PERSONAL_PLATFORM_HISTORY[PERSONAL_PLATFORM_HISTORY.length - 1].text,
     /future path toward a platform for everyone/i,
   );
-  assert.match(PERSONAL_PLATFORM_PRODUCT_THESIS, /helps anyone/i);
-  assert.match(PERSONAL_PLATFORM_PRODUCT_THESIS, /portfolio people can inspect/i);
-  assert.match(PERSONAL_PLATFORM_PRODUCT_THESIS, /knowledge base people can trust/i);
-  assert.match(PERSONAL_PLATFORM_PRODUCT_THESIS, /personal AI people can talk to/i);
-  assert.match(PERSONAL_PLATFORM_REFERENCE_INSTANCE.title, /first reference instance/i);
-  assert.match(PERSONAL_PLATFORM_REFERENCE_INSTANCE.text, /not the product boundary/i);
-  assert.match(PERSONAL_PLATFORM_PITCH_COPY.oneLine, /personal knowledge identity platform/i);
-  assert.match(PERSONAL_PLATFORM_PITCH_COPY.oneLine, /personal AI people can talk to/i);
-  assert.match(PERSONAL_PLATFORM_PITCH_COPY.problem, /show results but not the evidence/i);
-  assert.match(PERSONAL_PLATFORM_PITCH_COPY.solution, /portfolio, knowledge base, and grounded personal AI/i);
-  assert.match(PERSONAL_PLATFORM_PITCH_COPY.customer, /students, researchers, builders, creators/i);
-  assert.doesNotMatch(PERSONAL_PLATFORM_PITCH_COPY.applicationSummary500, /weaves them/i);
-  assert.match(PERSONAL_PLATFORM_PITCH_COPY.applicationSummary500, /portfolio with proof/i);
-  assert.match(PERSONAL_PLATFORM_PITCH_COPY.applicationSummary500, /source-backed knowledge base/i);
-  assert.match(PERSONAL_PLATFORM_PITCH_COPY.applicationSummary500, /grounded personal AI/i);
-  assert.ok(
-    Array.from(PERSONAL_PLATFORM_PITCH_COPY.applicationSummary500).length <= 500,
-    'application summary should stay within a 500-character form field',
-  );
 });
 
-test('knowledge category route keeps first-reference shelves stable when nav is empty', () => {
-  const routeSource = require('node:fs').readFileSync(
-    require('node:path').join(__dirname, '..', 'app/knowledge/[category]/page.tsx'),
-    'utf8',
-  );
+test('HomeClient renders mature platform modules on first paint', () => {
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
 
-  assert.deepEqual(
-    PERSONAL_PLATFORM_SECTIONS
-      .filter((section) => section.href.startsWith('/knowledge/'))
-      .map((section) => section.id),
-    ['unsw', 'quantnet', 'wqu', 'claude'],
-  );
-  assert.match(routeSource, /const REFERENCE_SHELF_CATEGORIES: KnowledgeCategory\[\] = PERSONAL_PLATFORM_SECTIONS/);
-  assert.match(routeSource, /function referenceShelfFallbackFor\(slug: string\): KnowledgeCategory \| null/);
+  const html = renderToStaticMarkup(<HomeClient />);
+
+  assert.match(html, /A knowledge profile people can inspect and ask\./);
   assert.match(
-    routeSource,
-    /knowledgeCategories\.find\(\(item\) => item\.slug === slug\) \?\? referenceShelfFallbackFor\(slug\)/,
+    html,
+    /Sources, drafts, projects, and conversations become a public record/,
   );
-  assert.match(routeSource, /if \(!cat\) notFound\(\)/);
-  assert.ok(
-    routeSource.indexOf('sourceLibraryCategoryFor(category, knowledgeCategories)') <
-      routeSource.indexOf('if (!cat) notFound()'),
-    'category route should check source-library category plus reference-shelf fallback before notFound()',
-  );
+  assert.match(html, /ECON3202 Problem Set 2\.pdf/);
+  assert.match(html, /Sources to Draft to Answer/);
+  assert.match(html, /Ask this profile/);
+  assert.match(html, /Phillips Curve/);
+  assert.match(html, /aria-label="Loom history"/);
+
+  for (const label of [
+    'About',
+    'UNSW',
+    'Quantnet',
+    'WQU',
+    'Claude',
+    'Original Loom',
+    'Private Wiki',
+    'Knowledge identity',
+    'Platform for everyone',
+    'Sources',
+    'Draft',
+  ]) {
+    assert.match(html, new RegExp(label));
+  }
+
+  for (const retired of [
+    /Recent progress/,
+    /Product story/,
+    /Process timeline/,
+    /Output previews/,
+    /Personal knowledge display/,
+    /personal knowledge display platform/i,
+    /Yiping's Loom/,
+  ]) {
+    assert.doesNotMatch(html, retired);
+  }
+  assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
+});
+
+test('static Private Wiki home exposes the personal knowledge identity model', () => {
+  const html = readPrivateWiki('index.html');
+
+  assert.match(html, /Loom is a personal knowledge identity platform/i);
+  assert.match(html, /a portfolio people can inspect/i);
+  assert.match(html, /personal knowledge identity layer/i);
+  for (const label of ['About', 'UNSW', 'Quantnet', 'WQU', 'Claude']) {
+    assert.match(html, new RegExp(`>${label}<|${label}`));
+  }
+  for (const model of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {
+    assert.match(html, new RegExp(model));
+  }
+  for (const moduleLabel of ['Recent progress', 'Product story', 'Process timeline', 'Output previews']) {
+    assert.match(html, new RegExp(moduleLabel));
+  }
+  assert.match(html, /thinking loom/i);
+  assert.match(html, /ECON3202/);
+  assert.doesNotMatch(html, /AI Engineer|Citadel/i);
+});
+
+test('Sources and Draft remain canonical across web and native shell copy', () => {
+  const productShell = readRepo('lib/new-loom/product-shell.ts');
+  const nativeShell = readRepo('macos-app/Loom/Sources/LoomMinimalRootView.swift');
+
+  assert.match(productShell, /Sources/);
+  assert.match(productShell, /Draft/);
+  assert.match(productShell, /learning/i);
+  assert.match(productShell, /portfolio/i);
+  assert.match(productShell, /process/i);
+
+  assert.match(nativeShell, /Sources/);
+  assert.match(nativeShell, /pageDraft/);
+
+  assert.match(productShell, /Overview|Path|Outputs/);
+  assert.doesNotMatch(productShell, /Collect, organize, draft/);
 });

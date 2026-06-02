@@ -1,53 +1,19 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import React from 'react';
 
-import AboutClient from '../app/about/AboutClient';
-import { HomeClient, formatNativeActivitySummary } from '../app/HomeClient';
-import ProductHistoryPage from '../app/product-history/page';
+import { HomeClient } from '../app/HomeClient';
 
-const repoRoot = path.resolve(__dirname, '..');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-function readText(relativePath: string) {
-  const filePath = path.join(repoRoot, relativePath);
-  return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+function read(relativePath: string) {
+  return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-function visibleText(html: string) {
-  return html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
-}
-
-function readmeSection(readme: string, heading: string) {
-  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pattern = new RegExp(`^## ${escaped}\\n([\\s\\S]*?)(?=\\n## |\\n# |(?![\\s\\S]))`, 'm');
-  const match = readme.match(pattern);
-  assert.ok(match, `README should include ${heading}`);
-  return match[1];
-}
-
-function activeReadmeBody(readme: string) {
-  const kept: string[] = [];
-  let skippingHistoricalSection = false;
-
-  for (const line of readme.split('\n')) {
-    if (/^## Historical (?:origin|technique):/i.test(line)) {
-      skippingHistoricalSection = true;
-      continue;
-    }
-
-    if (/^## (?!Historical (?:origin|technique):)/i.test(line) || /^# /i.test(line)) {
-      skippingHistoricalSection = false;
-    }
-
-    if (!skippingHistoricalSection) kept.push(line);
-  }
-
-  return kept.join('\n');
-}
-
-test('HomeClient renders the mature Loom personal platform positioning', () => {
+test('home first paint frames Loom as an inspectable personal knowledge identity', () => {
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = require('react-dom/server') as {
     renderToStaticMarkup: (node: React.ReactElement) => string;
@@ -55,145 +21,109 @@ test('HomeClient renders the mature Loom personal platform positioning', () => {
 
   const html = renderToStaticMarkup(<HomeClient />);
 
-  assert.match(html, /personal knowledge identity platform/i);
-  assert.match(html, /helps anyone/i);
-  assert.match(html, /portfolio people can inspect/i);
-  assert.match(html, /knowledge base people can trust/i);
-  assert.match(html, /personal AI people can talk to/i);
-  assert.match(html, /first reference instance/i);
-  assert.match(html, /not the product boundary/i);
-  assert.match(html, /Portfolio with proof/i);
-  assert.match(html, /Source to identity/i);
-  assert.match(html, /AI persona/i);
-
-  assert.equal(html.match(/class="new-loom-shell__shelf"/g)?.length, 5);
-  for (const href of [
-    '/about',
-    '/knowledge/unsw',
-    '/knowledge/quantnet',
-    '/knowledge/wqu',
-    '/knowledge/claude',
-  ]) {
-    assert.match(html, new RegExp(`href="${href}"`));
-  }
-
-  for (const label of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {
-    assert.match(html, new RegExp(label));
-  }
-
-  assert.match(html, /Sources/);
-  assert.match(html, /Draft/);
-  assert.doesNotMatch(visibleText(html), /Collect sources/i);
-  assert.doesNotMatch(visibleText(html), /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);
-  assert.doesNotMatch(
-    formatNativeActivitySummary({ panelCount: 1, pursuitCount: 2, weaveCount: 1 }),
-    /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i,
+  assert.match(html, /A knowledge profile people can inspect and ask\./);
+  assert.match(
+    html,
+    /Sources, drafts, projects, and conversations become a public record/,
   );
+  assert.match(html, /一个可展示、可追溯、可交流的个人知识身份/);
+  assert.match(html, /Knowledge identity/);
+  assert.match(html, /proof|evidence/i);
+
+  for (const shelf of ['About', 'UNSW', 'Quantnet', 'WQU', 'Claude']) {
+    assert.match(html, new RegExp(shelf));
+  }
+
+  for (const label of [
+    'Sources',
+    'Draft',
+    'ECON3202 Problem Set 2.pdf',
+    'Lecture 8 Slides.pptx',
+    'About me page.docx',
+    'BHP Case Study.xlsx',
+    'Prompt library.md',
+    'PDF',
+    'PPTX',
+    'DOCX',
+    'XLSX',
+    'MD',
+    'Sources to Draft to Answer',
+    'Ask this profile',
+    'Phillips Curve',
+    'Original Loom',
+    'Private Wiki',
+    'Knowledge identity',
+  ]) {
+    assert.match(html, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+
+  assert.doesNotMatch(html, /One workspace for source material, one surface for writing from it\./);
+  assert.doesNotMatch(html, /personal knowledge display platform/i);
+  assert.doesNotMatch(html, /Recent progress|Product story|Process timeline|Output previews/);
+  assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
 });
 
-test('About and product history routes present the approved three-layer narrative', () => {
-  const aboutSource = readText('app/about/AboutClient.tsx');
-  const productHistorySource = readText('app/product-history/page.tsx');
-  const productHistoryDoc = readText('docs/product-history.md');
-  const readme = readText('README.md');
-  const productDefinition = readText('LOOM.md');
-  const productRules = readText('LOOM_RULES.md');
-  Object.assign(globalThis, { React });
-  const { renderToStaticMarkup } = require('react-dom/server') as {
-    renderToStaticMarkup: (node: React.ReactElement) => string;
-  };
+test('Sources and Draft descriptions serve personal learning paths, resources, portfolio, and process work', () => {
+  const productShell = read('lib/new-loom/product-shell.ts');
 
-  const aboutText = visibleText(renderToStaticMarkup(<AboutClient />));
-  const productHistoryText = visibleText(renderToStaticMarkup(<ProductHistoryPage />));
+  assert.match(productShell, /learning paths/i);
+  assert.match(productShell, /resources/i);
+  assert.match(productShell, /portfolio/i);
+  assert.match(productShell, /process/i);
+  assert.doesNotMatch(productShell, /one workspace/i);
+});
 
-  assert.match(aboutText, /Ordinary portfolios only show results/);
-  assert.match(aboutText, /Ordinary notes only help the owner/);
-  assert.match(aboutText, /Ordinary chatbots do not know/);
-  assert.match(aboutText, /Loom connects identity, proof, and conversation/);
-  assert.match(aboutText, /Draft is earned/);
-  assert.match(aboutText, /Relations are evidenced/);
-  assert.doesNotMatch(aboutText, /Panels are earned/i);
-  assert.doesNotMatch(aboutText, /\bweave\b/i);
-  assert.match(productHistoryText, /Why Loom is called Loom\./);
-  assert.match(productHistoryText, /Portfolio with proof/);
-  assert.match(productHistoryText, /Source to identity/);
-  assert.match(productHistoryText, /AI persona/);
-  assert.match(productHistoryText, /Yiping's Loom is the first reference instance/);
+test('visible support surfaces use approved personal-identity and local-app positioning', () => {
+  const about = read('app/about/AboutClient.tsx');
+  const help = read('app/help/page.tsx');
+  const productHistory = read('app/product-history/page.tsx');
+  const privacy = read('public/privacy.html');
+  const support = read('public/support.html');
 
-  assert.match(aboutSource, /ordinary portfolios only show results/i);
-  assert.match(aboutSource, /ordinary notes only help the owner/i);
-  assert.match(aboutSource, /ordinary chatbots do not know/i);
-  assert.match(aboutSource, /Loom connects identity, proof, and conversation/i);
-  assert.match(productHistorySource, /Portfolio with proof/i);
-  assert.match(productHistorySource, /Source to identity/i);
-  assert.match(productHistorySource, /AI persona/i);
-  assert.match(productHistorySource, /Yiping's Loom is the first reference instance/i);
-  assert.match(productHistoryDoc, /Three-Layer Product Narrative/i);
-  assert.match(productHistoryDoc, /Yiping's Loom is the first reference instance, not the product boundary/i);
+  assert.match(about, /personal knowledge postcard/i);
+  assert.match(about, /learning paths/i);
+  assert.match(about, /identity that can be inspected and talked to/i);
+  assert.match(about, /Proof/);
+  assert.match(about, /Product story/i);
+  assert.match(about, /\/product-history/);
+
+  assert.match(help, /reading-and-thinking environment/i);
+  assert.match(help, /source-bound understanding/i);
+  assert.match(help, /\/about/);
+
+  assert.match(productHistory, /Why Loom is called Loom/i);
+  assert.match(productHistory, /Portfolio with proof/i);
+  assert.match(productHistory, /Source to identity/i);
+  assert.match(productHistory, /AI persona/i);
+
+  assert.match(privacy, /local Mac app for personal reading and thinking/i);
+  assert.match(privacy, /everything stays on your Mac/i);
+  assert.match(support, /local Mac app for reading and thinking/i);
+  assert.doesNotMatch([about, help, productHistory, privacy, support].join('\n'), /personal knowledge display platform/i);
+});
+
+test('canonical docs no longer present Loom as a generic public product', () => {
+  const readme = read('README.md');
+  const productDefinition = read('LOOM.md');
+  const productRules = read('LOOM_RULES.md');
+  const appStoreCopy = read('docs/app-store-copy.md');
+  const canonicalDocs = [readme, productDefinition, productRules].join('\n');
+
+  assert.match(readme, /personal knowledge identity platform/i);
   assert.match(readme, /portfolio people can inspect/i);
   assert.match(readme, /knowledge base people can trust/i);
-  assert.match(readme, /personal AI people can talk to/i);
-  assert.doesNotMatch(readme, /not an AI assistant/i);
-
-  const activeReadme = activeReadmeBody(readme);
-  const currentSurfaces = readmeSection(readme, 'Current surfaces');
-  const howItWorks = readmeSection(readme, 'How it works');
-  const whatThisIsNot = readmeSection(readme, 'What this is not');
-  const closingTagline = readme.match(/> \*.*\*\s*$/m)?.[0] ?? '';
-
-  assert.match(readme, /^## Historical origin: why it's called Loom$/m);
-  assert.match(readme, /^## Historical origin: five design principles$/m);
-  assert.match(readme, /^## Historical technique: 通经断纬$/m);
-  assert.doesNotMatch(activeReadme, /\/patterns/i);
-  assert.doesNotMatch(activeReadme, /\bPatterns\b/);
-  assert.doesNotMatch(activeReadme, /\bpanel\b/i);
-  assert.doesNotMatch(activeReadme, /\bweaver\b/i);
-  assert.doesNotMatch(activeReadme, /\bwoven\b/i);
-  assert.doesNotMatch(currentSurfaces, /crystallized panels/i);
-  assert.doesNotMatch(currentSurfaces, /\bpanel\b/i);
-  assert.doesNotMatch(currentSurfaces, /\/patterns/i);
-  assert.doesNotMatch(currentSurfaces, /\bPatterns\b/);
-  assert.doesNotMatch(currentSurfaces, /\bweaver\b/i);
-  assert.doesNotMatch(currentSurfaces, /\bwoven\b/i);
-  assert.doesNotMatch(howItWorks, /Patterns archive/i);
-  assert.doesNotMatch(howItWorks, /\/patterns/i);
-  assert.doesNotMatch(howItWorks, /\bPatterns\b/);
-  assert.doesNotMatch(howItWorks, /\bpanel\b/i);
-  assert.doesNotMatch(howItWorks, /\bweaver\b/i);
-  assert.doesNotMatch(howItWorks, /\bwoven\b/i);
-  assert.doesNotMatch(closingTagline, /\/patterns/i);
-  assert.doesNotMatch(closingTagline, /\bPatterns\b/);
-  assert.doesNotMatch(closingTagline, /\bpanel\b/i);
-  assert.doesNotMatch(closingTagline, /\bweaver\b/i);
-  assert.doesNotMatch(closingTagline, /\bwoven\b/i);
-  assert.doesNotMatch(whatThisIsNot, /pattern archive is woven by you/i);
-  assert.doesNotMatch(whatThisIsNot, /second weaver/i);
-
+  assert.match(productDefinition, /personal knowledge\s*>?\s*identity platform/i);
   assert.match(productDefinition, /Yiping's Loom is the first reference instance/i);
-  assert.match(productRules, /not the product boundary/i);
-});
+  assert.match(productRules, /personal knowledge identity platform/i);
+  assert.match(productRules, /reference instance, not the product boundary/i);
+  assert.match(appStoreCopy, /Canonical metadata for the first Mac App Store submission/i);
+  assert.match(appStoreCopy, /Your files stay on your Mac/i);
 
-test('canonical Loom docs publish Sources and Draft as current visible vocabulary', () => {
-  const productDefinition = readText('LOOM.md');
-  const productRules = readText('LOOM_RULES.md');
-  const loomDoc = readText('docs/loom.md');
-
-  assert.match(productDefinition, /Sources.*Draft|Draft.*Sources/is);
-  assert.match(productRules, /Sources.*Draft|Draft.*Sources/is);
-  assert.match(loomDoc, /Sources.*Draft|Draft.*Sources/is);
-  assert.doesNotMatch(loomDoc, /^.*shipped UI uses.*Collect \/ Organize \/ Draft.*$/im);
-  assert.doesNotMatch(loomDoc, /^.*Current shipped vocab.*Collect \/ Organize \/ Draft.*$/im);
-  assert.doesNotMatch(loomDoc, /当前\s+Collect/i);
-  assert.doesNotMatch(loomDoc, /当前\s+Organize/i);
-  assert.doesNotMatch(loomDoc, /Collect\s*=/i);
-  assert.doesNotMatch(loomDoc, /Organize\s*=/i);
-  assert.doesNotMatch(loomDoc, /Collect\s*:/i);
-  assert.doesNotMatch(loomDoc, /Draft surface.*不存在/is);
-  assert.doesNotMatch(loomDoc, /^####\s+Phase 7.*Pursuits/im);
-
-  const plateIvInventory = loomDoc.match(/## Plate IV[\s\S]*?(?=### Superseded historical entries)/)?.[0] ?? '';
-  assert.ok(plateIvInventory, 'Plate IV should expose a current inventory before historical notes');
-  assert.doesNotMatch(plateIvInventory, /^\| \*\*Pursuits\*\*/m);
-  assert.doesNotMatch(plateIvInventory, /^\| \*\*Shuttle\b/m);
-  assert.doesNotMatch(plateIvInventory, /^\| \*\*Interlace\b/m);
+  for (const retired of [
+    /personal knowledge display platform/i,
+    /Collect, organize, draft/i,
+    /source-bound knowledge display platform/i,
+  ]) {
+    assert.doesNotMatch(canonicalDocs, retired);
+  }
 });
