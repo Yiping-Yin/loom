@@ -24,59 +24,7 @@ export type VerifiedDossierArtifact = {
   href: string;
 };
 
-export type VerifiedDossierSection = {
-  id: 'about' | 'unsw' | 'quantnet' | 'wqu' | 'claude';
-  label: string;
-  href: string;
-  summary: string;
-  status: string;
-  artifactIds: string[];
-};
-
-export type VerifiedDossierHistoryItem = {
-  title: string;
-  text: string;
-  date: string;
-};
-
-export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
-  { label: 'About', href: '/about' },
-  { label: 'Sources', href: '/knowledge' },
-  { label: 'UNSW', href: '/knowledge/unsw' },
-  { label: 'Quantnet', href: '/knowledge/quantnet' },
-  { label: 'WQU', href: '/knowledge/wqu' },
-  { label: 'Claude', href: '/knowledge/claude' },
-  { label: 'History', href: '/product-history' },
-];
-
-export const VERIFIED_DOSSIER_HOME_COPY = {
-  headline: 'A knowledge profile people can inspect and ask.',
-  body: 'Sources, drafts, projects, and conversations become a public record with evidence behind every answer.',
-  chineseHeadline: '一个可展示、可追溯、可交流的个人知识身份。',
-  chineseBody:
-    'Loom 将资料、学习路径、作品、过程记录和 AI 对话织成一个真实的个人知识档案。它既是作品集，也是知识库，最终也是一个基于本人知识的虚拟个人 AI。',
-  shortDefinition:
-    'Loom turns your sources, learning path, work, process records, and AI conversations into an inspectable personal knowledge identity.',
-};
-
-export const VERIFIED_DOSSIER_PROFILE = {
-  name: 'Yiping Yin',
-  roles: ['Student', 'Builder', 'Learner'],
-  location: 'Sydney, Australia',
-  photoSrc: '/profile/yiping-avatar.png',
-  links: [
-    { label: 'LinkedIn', href: '/about#linkedin' },
-    { label: 'GitHub', href: '/about#github' },
-    { label: 'Website', href: 'https://fanpu.io' },
-  ] satisfies VerifiedDossierProfileLink[],
-  memberships: [
-    { label: 'UNSW Sydney', kind: 'unsw' },
-    { label: 'WorldQuant University', kind: 'wqu' },
-    { label: 'QuantNet', kind: 'quantnet' },
-  ] satisfies VerifiedDossierMembership[],
-};
-
-export const VERIFIED_DOSSIER_ARTIFACTS: VerifiedDossierArtifact[] = [
+export const VERIFIED_DOSSIER_ARTIFACTS = [
   {
     id: 'about-doc',
     label: 'About me page.docx',
@@ -91,7 +39,7 @@ export const VERIFIED_DOSSIER_ARTIFACTS: VerifiedDossierArtifact[] = [
     kind: 'pdf',
     shelf: 'unsw',
     role: 'Problem-set evidence',
-    href: '/knowledge/unsw/econ3202/problem-set-2',
+    href: '/knowledge/unsw',
   },
   {
     id: 'econ-slides',
@@ -99,7 +47,7 @@ export const VERIFIED_DOSSIER_ARTIFACTS: VerifiedDossierArtifact[] = [
     kind: 'ppt',
     shelf: 'unsw',
     role: 'Lecture source',
-    href: '/knowledge/unsw/econ3202',
+    href: '/knowledge/unsw',
   },
   {
     id: 'econ-tutorial',
@@ -107,7 +55,7 @@ export const VERIFIED_DOSSIER_ARTIFACTS: VerifiedDossierArtifact[] = [
     kind: 'pdf',
     shelf: 'unsw',
     role: 'Tutorial solution source',
-    href: '/knowledge/unsw/econ3202',
+    href: '/knowledge/unsw',
   },
   {
     id: 'econ-notes',
@@ -115,7 +63,7 @@ export const VERIFIED_DOSSIER_ARTIFACTS: VerifiedDossierArtifact[] = [
     kind: 'pdf',
     shelf: 'unsw',
     role: 'Course notes',
-    href: '/knowledge/unsw/econ3202',
+    href: '/knowledge/unsw',
   },
   {
     id: 'quant-market-making',
@@ -157,7 +105,67 @@ export const VERIFIED_DOSSIER_ARTIFACTS: VerifiedDossierArtifact[] = [
     role: 'Certificate evidence',
     href: '/knowledge/claude',
   },
+] as const satisfies readonly VerifiedDossierArtifact[];
+
+export type VerifiedDossierArtifactId = (typeof VERIFIED_DOSSIER_ARTIFACTS)[number]['id'];
+
+export type VerifiedDossierSection = {
+  id: 'about' | 'unsw' | 'quantnet' | 'wqu' | 'claude';
+  label: string;
+  href: string;
+  summary: string;
+  status: string;
+  artifactIds: readonly VerifiedDossierArtifactId[];
+};
+
+export type VerifiedDossierHistoryItem = {
+  title: string;
+  text: string;
+  date: string;
+};
+
+export type VerifiedDossierAiPrompt = {
+  question: string;
+  answer: string;
+  citations: readonly VerifiedDossierArtifactId[];
+};
+
+export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
+  { label: 'About', href: '/about' },
+  { label: 'Sources', href: '/knowledge' },
+  { label: 'UNSW', href: '/knowledge/unsw' },
+  { label: 'Quantnet', href: '/knowledge/quantnet' },
+  { label: 'WQU', href: '/knowledge/wqu' },
+  { label: 'Claude', href: '/knowledge/claude' },
+  { label: 'History', href: '/product-history' },
 ];
+
+export const VERIFIED_DOSSIER_HOME_COPY = {
+  headline: 'A knowledge profile people can inspect and ask.',
+  body: 'Sources, drafts, projects, and conversations become a public record with evidence behind every answer.',
+  chineseHeadline: '一个可展示、可追溯、可交流的个人知识身份。',
+  chineseBody:
+    'Loom 将资料、学习路径、作品、过程记录和 AI 对话织成一个真实的个人知识档案。它既是作品集，也是知识库，最终也是一个基于本人知识的虚拟个人 AI。',
+  shortDefinition:
+    'Loom turns your sources, learning path, work, process records, and AI conversations into an inspectable personal knowledge identity.',
+};
+
+export const VERIFIED_DOSSIER_PROFILE = {
+  name: 'Yiping Yin',
+  roles: ['Student', 'Builder', 'Learner'],
+  location: 'Sydney, Australia',
+  photoSrc: '/profile/yiping-avatar.png',
+  links: [
+    { label: 'LinkedIn', href: '/about#linkedin' },
+    { label: 'GitHub', href: '/about#github' },
+    { label: 'Website', href: 'https://fanpu.io' },
+  ] satisfies VerifiedDossierProfileLink[],
+  memberships: [
+    { label: 'UNSW Sydney', kind: 'unsw' },
+    { label: 'WorldQuant University', kind: 'wqu' },
+    { label: 'QuantNet', kind: 'quantnet' },
+  ] satisfies VerifiedDossierMembership[],
+};
 
 export const VERIFIED_DOSSIER_SECTIONS: VerifiedDossierSection[] = [
   {
@@ -207,7 +215,15 @@ export const VERIFIED_DOSSIER_AI_PROMPT = {
   answer:
     'In ECON3202, the Phillips Curve frames the short-run trade-off between inflation and unemployment. When aggregate demand rises, unemployment can fall while inflation rises. The course also uses expectations and supply shocks to explain why the curve shifts over time.',
   citations: ['econ-ps2', 'econ-slides', 'econ-tutorial'],
-};
+} satisfies VerifiedDossierAiPrompt;
+
+export const VERIFIED_DOSSIER_ARTIFACTS_BY_ID = Object.fromEntries(
+  VERIFIED_DOSSIER_ARTIFACTS.map((artifact) => [artifact.id, artifact]),
+) as Record<VerifiedDossierArtifactId, (typeof VERIFIED_DOSSIER_ARTIFACTS)[number]>;
+
+export function resolveVerifiedDossierArtifact(id: VerifiedDossierArtifactId) {
+  return VERIFIED_DOSSIER_ARTIFACTS_BY_ID[id];
+}
 
 export const VERIFIED_DOSSIER_HISTORY: VerifiedDossierHistoryItem[] = [
   {
