@@ -67,7 +67,7 @@ export function ActiveEvidenceStory({
         ))}
       </div>
       <a className="vd-active-story__link" href={section.href}>
-        Open UNSW shelf <ArrowIcon />
+        Open source shelf <ArrowIcon />
       </a>
     </article>
   );
@@ -134,7 +134,6 @@ export function SourceIndex({ sections }: { sections: readonly VerifiedDossierSe
       <div className="vd-source-index__grid">
         {sections.map((section) => {
           const sectionArtifacts = section.artifactIds.map(resolveVerifiedDossierArtifact);
-          const thumbnailArtifact = sectionArtifacts.find((artifact) => artifact.thumbnailSrc);
 
           return (
             <a key={section.id} className="vd-source-index__card" href={section.href}>
@@ -143,9 +142,6 @@ export function SourceIndex({ sections }: { sections: readonly VerifiedDossierSe
                 <strong>{section.label}</strong>
                 <small>{section.status}</small>
               </span>
-              {thumbnailArtifact?.thumbnailSrc ? (
-                <img src={thumbnailArtifact.thumbnailSrc} alt="" draggable={false} />
-              ) : null}
               <span className="vd-source-index__files">
                 {sectionArtifacts.map((artifact) => (
                   <FileBadge key={artifact.id} kind={artifact.kind} label={artifact.label} compact />
