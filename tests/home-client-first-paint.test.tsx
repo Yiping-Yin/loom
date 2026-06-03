@@ -82,12 +82,14 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   assert.match(html, /class="vd-source-graph/);
   assert.match(html, /<a class="vd-search" href="#source-index-title" aria-label="Jump to source index">/);
   assert.match(html, /<nav class="vd-profile-links" aria-label="Profile links">/);
+  assert.match(html, /<aside id="answer-inspector" class="vd-inspector" aria-label="Answer inspector">/);
   assert.doesNotMatch(text, /Source Dossier/);
   assert.doesNotMatch(text, /Ask this profile/);
   assert.doesNotMatch(text, /Ask a follow-up/);
   assert.doesNotMatch(text, /Open recent Draft/);
   assert.doesNotMatch(text, /Open Draft/);
   assert.doesNotMatch(html, /href="\/draft"/);
+  assert.doesNotMatch(html, /id="ask-this-profile"/);
   assert.doesNotMatch(text, /A knowledge profile people can inspect and ask\./);
   assert.doesNotMatch(
     text,

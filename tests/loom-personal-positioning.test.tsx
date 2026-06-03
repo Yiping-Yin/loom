@@ -22,15 +22,10 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
 
   const html = renderToStaticMarkup(<HomeClient />);
 
-  assert.match(html, /A knowledge profile people can inspect and ask\./);
-  assert.match(
-    html,
-    /Sources, drafts, projects, and conversations become a public record/,
-  );
-  assert.match(html, /sources, learning path, work, process records, and AI conversations/i);
-  assert.match(html, /work/);
-  assert.match(html, /process records/);
-  assert.match(html, /AI conversations|AI/i);
+  assert.match(html, /Verified source workspace/);
+  assert.match(html, /Sources become cited work/);
+  assert.match(html, /Sources\s*<!-- -->→<!-- -->\s*Draft\s*<!-- -->→<!-- -->\s*Answer|Sources[\s\S]{0,40}Draft[\s\S]{0,40}Answer/);
+  assert.match(html, /Answer inspector/);
   assert.match(html, /Knowledge identity/);
   assert.match(html, /proof|evidence/i);
 
@@ -44,14 +39,14 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
     'Problem Set 02.pdf',
     'W8 A Concave-Functions.pdf',
     'About me page.docx',
-    'BHP Case Study.xlsx',
-    'Prompt library.md',
+    'QuantNet Online C++ Course.pdf',
+    'Python Foundations.pdf',
+    'WQU index.html',
+    'Claude Certificate.html',
     'PDF',
     'DOCX',
-    'XLSX',
-    'MD',
-    'Sources to Draft to Answer',
-    'Ask this profile',
+    'HTML',
+    'Sources',
     'concavity',
     'Original Loom',
     'Private Wiki',
@@ -60,6 +55,9 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
     assert.match(html, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
+  assert.doesNotMatch(html, /Source Dossier/);
+  assert.doesNotMatch(html, /Ask this profile/);
+  assert.doesNotMatch(html, /Ask a follow-up/);
   assert.doesNotMatch(html, /One workspace for source material, one surface for writing from it\./);
   assert.doesNotMatch(html, /personal knowledge display platform/i);
   assert.doesNotMatch(html, /Recent progress|Product story|Process timeline|Output previews/);
@@ -70,7 +68,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
 test('verified dossier data contract keeps the approved short definition', () => {
   assert.equal(
     VERIFIED_DOSSIER_HOME_COPY.shortDefinition,
-    'Loom turns your sources, learning path, work, process records, and AI conversations into an inspectable personal knowledge identity.',
+    'Sources stay inspectable. Draft turns them into cited answers.',
   );
 });
 

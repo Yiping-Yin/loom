@@ -37,7 +37,7 @@ const FEATURED_SOURCE_ARTIFACTS: VerifiedDossierArtifactId[] = [
   'econ-ps2',
   'econ-slides',
   'about-doc',
-  'wqu-bhp',
+  'wqu-index',
 ];
 
 const SOURCE_FLOW = [

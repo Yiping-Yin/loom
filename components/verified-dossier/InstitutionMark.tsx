@@ -1,11 +1,11 @@
 export type InstitutionMarkKind = 'about' | 'unsw' | 'quantnet' | 'wqu' | 'claude';
 
-const INSTITUTION_MARKS: Record<InstitutionMarkKind, { label: string; text: string }> = {
-  about: { label: 'About', text: 'AB' },
-  unsw: { label: 'UNSW Sydney', text: 'UNSW' },
-  quantnet: { label: 'QuantNet', text: 'QN' },
-  wqu: { label: 'WorldQuant University', text: 'WQU' },
-  claude: { label: 'Claude', text: 'Claude' },
+const INSTITUTION_MARKS: Record<InstitutionMarkKind, { label: string; imageSrc: string }> = {
+  about: { label: 'About', imageSrc: '/profile/yiping-avatar.png' },
+  unsw: { label: 'UNSW Sydney', imageSrc: '/brand/unsw/unsw-crest.png' },
+  quantnet: { label: 'QuantNet', imageSrc: '/brand/quantnet/quantnet-logo.png' },
+  wqu: { label: 'WorldQuant University', imageSrc: '/brand/wqu/wqu-logo.svg' },
+  claude: { label: 'Claude', imageSrc: '/brand/claude/claude-icon.png' },
 };
 
 export type InstitutionMarkProps = {
@@ -17,7 +17,7 @@ export function InstitutionMark({ kind }: InstitutionMarkProps) {
 
   return (
     <span className={`vd-institution-mark vd-institution-mark--${kind}`} aria-label={mark.label}>
-      {mark.text}
+      <img src={mark.imageSrc} alt="" draggable={false} />
     </span>
   );
 }

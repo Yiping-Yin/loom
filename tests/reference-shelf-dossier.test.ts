@@ -12,6 +12,8 @@ import {
   findReferenceDoc,
   referenceArtifactsByCategory,
   referenceDocsByCategory,
+  readReferenceSourceManifest,
+  referenceSourceAbsolutePath,
   referenceWikiRoot,
 } from '../lib/new-loom/reference-artifact-bindings';
 import {
@@ -40,7 +42,8 @@ test('reference shelf dossiers cover Quantnet, WQU, and Claude with real artifac
     for (const artifactId of verifiedSection.artifactIds) {
       const artifact = resolveVerifiedDossierArtifact(artifactId);
       assert.equal(artifact.shelf, shelfId);
-      assert.match(artifact.label, /\.(pdf|xlsx|md)$/i);
+      assert.match(artifact.label, /\.(pdf|html)$/i);
+      assert.ok(['pdf', 'html'].includes(artifact.kind));
     }
   }
 });
@@ -94,18 +97,32 @@ test('reference shelf pages bind dossier artifacts to real whitelisted source fi
   assert.match(client, /referenceArtifacts/);
 });
 
-test('reference artifact bindings expose available local source documents', () => {
-  const quantnetDocs = referenceDocsByCategory('quantnet');
-  const wquDocs = referenceDocsByCategory('wqu');
-  const claudeDocs = referenceDocsByCategory('claude');
+test('reference artifact bindings expose manifest targets and tolerate absent external files', () => {
+  const manifest = readReferenceSourceManifest();
 
-  assert.ok(quantnetDocs.length >= 2, 'Quantnet should expose multiple real source files');
-  assert.ok(wquDocs.some((doc) => doc.title === 'WQU index.html'));
-  assert.ok(claudeDocs.some((doc) => doc.title === 'Claude Certificate.html'));
+  assert.ok(manifest.sources.length >= 5, 'reference source manifest should keep concrete source targets');
+  assert.ok(manifest.sources.some((source) => source.id === 'ref-quantnet-python-foundations'));
+  assert.ok(manifest.sources.some((source) => source.title === 'WQU index.html'));
+  assert.ok(manifest.sources.some((source) => source.title === 'Claude Certificate.html'));
+  assert.ok(manifest.sources.every((source) => source.sourcePath && source.previewLines.length >= 3));
 
-  assert.ok(findReferenceDoc('quantnet', 'python-foundations'));
-  assert.ok(referenceArtifactsByCategory('quantnet').some((artifact) => artifact.href === '/knowledge/quantnet/python-foundations'));
-  assert.ok(referenceArtifactsByCategory('claude').some((artifact) => artifact.label === 'Claude Certificate.html'));
+  const previousRoot = process.env.LOOM_REFERENCE_WIKI_ROOT;
+  process.env.LOOM_REFERENCE_WIKI_ROOT = path.join(repoRoot, '.missing-reference-root');
+
+  try {
+    assert.deepEqual(referenceDocsByCategory('quantnet'), []);
+    assert.deepEqual(referenceDocsByCategory('wqu'), []);
+    assert.deepEqual(referenceDocsByCategory('claude'), []);
+    assert.equal(findReferenceDoc('quantnet', 'python-foundations'), null);
+    assert.deepEqual(referenceArtifactsByCategory('quantnet'), []);
+    assert.equal(referenceSourceAbsolutePath('ref-quantnet-python-foundations'), null);
+  } finally {
+    if (previousRoot === undefined) {
+      delete process.env.LOOM_REFERENCE_WIKI_ROOT;
+    } else {
+      process.env.LOOM_REFERENCE_WIKI_ROOT = previousRoot;
+    }
+  }
 });
 
 test('reference source importer resolves the Private Wiki root instead of hard-coding one machine path', () => {

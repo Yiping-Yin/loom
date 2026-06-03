@@ -240,7 +240,7 @@ export function VerifiedDossierHome({
           </section>
         </section>
 
-        <aside id="ask-this-profile" className="vd-inspector" aria-label="Answer inspector">
+        <aside id="answer-inspector" className="vd-inspector" aria-label="Answer inspector">
           <AnswerInspector
             prompt={VERIFIED_DOSSIER_AI_PROMPT}
             citationRegistryCount={citationCandidates.length}

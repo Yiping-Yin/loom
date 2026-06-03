@@ -26,6 +26,12 @@ const SAFE_INTERNAL_HREFS = new Set([
   '/knowledge/quantnet',
   '/knowledge/wqu',
   '/knowledge/claude',
+  '/knowledge/unsw/econ3202',
+  '/knowledge/unsw/econ3202/ps02',
+  '/knowledge/quantnet/quantnet-online-cpp-course',
+  '/knowledge/quantnet/python-foundations',
+  '/knowledge/wqu/wqu-index',
+  '/knowledge/claude/claude-certificate',
   '/product-history',
 ]);
 
@@ -60,7 +66,7 @@ test('verified dossier home data preserves approved evidence workbench definitio
 test('verified dossier home keeps canonical navigation and profile identity', () => {
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.label),
-    ['About', 'Sources', 'UNSW', 'Quantnet', 'WQU', 'Claude', 'History'],
+    ['Sources', 'UNSW / ECON3202', 'Quantnet', 'WQU', 'Claude', 'History'],
   );
   assert.equal(VERIFIED_DOSSIER_PROFILE.name, 'Yiping Yin');
   assert.match(VERIFIED_DOSSIER_PROFILE.location, /Sydney/);
@@ -83,16 +89,17 @@ test('verified dossier home includes ECON3202 artifacts and file kinds', () => {
     'W8 C Suggested Exercises.pdf',
     'Problem2.pdf',
     'About me page.docx',
-    'BHP Case Study.xlsx',
-    'Prompt library.md',
+    'QuantNet Online C++ Course.pdf',
+    'Python Foundations.pdf',
+    'WQU index.html',
+    'Claude Certificate.html',
   ]) {
     assert.ok(labels.has(label), `${label} should be present`);
   }
 
   assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'pdf'));
   assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'word'));
-  assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'excel'));
-  assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'markdown'));
+  assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'html'));
 });
 
 test('verified dossier home keeps five sections and Loom history', () => {
@@ -102,7 +109,7 @@ test('verified dossier home keeps five sections and Loom history', () => {
   );
   assert.deepEqual(
     VERIFIED_DOSSIER_HISTORY.map((item) => item.title),
-    ['Original Loom', 'Private Wiki', 'Knowledge identity', 'Platform for everyone'],
+    ['Original Loom', 'Private Wiki', 'Knowledge identity', 'Real-file workflow'],
   );
 });
 
@@ -136,7 +143,7 @@ test('verified dossier workbench graph binds relationships to real artifact ids'
   }
 
   for (const node of VERIFIED_DOSSIER_WORKBENCH.sourceGraph.nodes) {
-    if (node.artifactId) {
+    if ('artifactId' in node && node.artifactId) {
       assert.ok(artifactIds.has(node.artifactId), `graph node references missing artifact ${node.artifactId}`);
     }
   }
@@ -179,9 +186,17 @@ test('featured ECON3202 artifacts carry realistic document preview metadata', ()
     const artifact = resolveVerifiedDossierArtifact(artifactId);
 
     assert.ok(artifact.preview, `${artifact.label} should include preview metadata`);
-    assert.match(artifact.preview.metadata, /(PDF|PPTX)/);
+    assert.ok(artifact.sourcePath?.startsWith('UNSW/ECON 3202/'), `${artifact.label} should bind to a real source path`);
+    assert.ok(artifact.pageCount && artifact.pageCount > 0, `${artifact.label} should carry a real page count`);
+    assert.ok(artifact.fileSize, `${artifact.label} should carry a real file size`);
+    assert.ok(artifact.modifiedAt, `${artifact.label} should carry a real modified date`);
+    assert.ok(artifact.thumbnailSrc?.startsWith('/verified-sources/econ3202/'), `${artifact.label} should carry a real thumbnail`);
+    assert.match(artifact.preview.metadata, /pages - .+ - modified/);
     assert.ok(artifact.preview.lines.length >= 3, `${artifact.label} should include preview lines`);
-    assert.match(artifact.preview.tag, /Problem set|Week 8 lecture|Practice|Answer/);
+    assert.match(artifact.preview.tag, /03_Problem_Set|02_Week\/W08/);
+
+    const thumbPath = join(repoRoot, 'public', artifact.thumbnailSrc!);
+    assert.ok(existsSync(thumbPath), `${artifact.thumbnailSrc} should exist under public/`);
   }
 });
 
@@ -193,4 +208,24 @@ test('about profile artifact carries a realistic document preview', () => {
   assert.match(artifact.preview.metadata, /DOCX/);
   assert.match(artifact.preview.kicker, /Personal Knowledge Postcard/);
   assert.ok(artifact.preview.lines.some((line) => /Learning path/.test(line)));
+});
+
+test('reference shelves use real local sources and image previews', () => {
+  for (const artifactId of [
+    'quantnet-cpp-course',
+    'quantnet-python-foundations',
+    'wqu-index',
+    'claude-certificate',
+  ] as const) {
+    const artifact = resolveVerifiedDossierArtifact(artifactId);
+
+    assert.ok(artifact.sourcePath, `${artifact.label} should bind to a local source path`);
+    assert.ok(artifact.fileSize, `${artifact.label} should carry a real file size`);
+    assert.ok(artifact.modifiedAt, `${artifact.label} should carry a real modified date`);
+    assert.ok(artifact.thumbnailSrc, `${artifact.label} should carry a public thumbnail`);
+    assert.match(artifact.preview?.metadata ?? '', /(pages|HTML) - .+ - modified/);
+
+    const thumbPath = join(repoRoot, 'public', artifact.thumbnailSrc!);
+    assert.ok(existsSync(thumbPath), `${artifact.thumbnailSrc} should exist under public/`);
+  }
 });

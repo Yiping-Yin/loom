@@ -22,14 +22,14 @@ import styles from './AboutClient.module.css';
 const PROFILE_ARTIFACTS: VerifiedDossierArtifactId[] = [
   'about-doc',
   'econ-ps2',
-  'quant-market-making',
-  'wqu-bhp',
+  'quantnet-cpp-course',
+  'wqu-index',
 ];
 
 const CITED_PROFILE_SOURCES: VerifiedDossierArtifactId[] = [
   'about-doc',
   'econ-slides',
-  'claude-cert',
+  'claude-certificate',
 ];
 
 const COMMITMENTS = [

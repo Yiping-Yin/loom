@@ -40,14 +40,14 @@ export const REFERENCE_SHELF_DOSSIERS: Record<ReferenceShelfDossierId, Reference
     proofLine:
       'The shelf is designed to show how study inputs become examples, notes, interview answers, and portfolio-ready market reasoning.',
     metrics: [
-      { label: 'Primary track', value: 'Market making / Python' },
-      { label: 'Visible evidence', value: 'Notes and practice outputs' },
+      { label: 'Primary track', value: 'C++ / Python' },
+      { label: 'Visible evidence', value: 'Course PDFs and practice outputs' },
       { label: 'Review mode', value: 'Interview-ready proof' },
     ],
     question: 'How does this shelf prove quant capability beyond a resume line?',
     answer:
-      'It connects source material to repeated practice: market-making notes, Python foundations, order-book reasoning, and draft outputs. A visitor can inspect the learning path instead of only seeing a claim that the person is preparing for quant roles.',
-    citedArtifacts: ['quant-market-making', 'quant-python'],
+      'It connects source material to repeated practice: QuantNet C++ course material, Python foundations, order-book reasoning, and draft outputs. A visitor can inspect the learning path instead of only seeing a claim that the person is preparing for quant roles.',
+    citedArtifacts: ['quantnet-cpp-course', 'quantnet-python-foundations'],
     flow: [
       {
         title: 'Study market structure',
@@ -76,13 +76,13 @@ export const REFERENCE_SHELF_DOSSIERS: Record<ReferenceShelfDossierId, Reference
       'The shelf separates official requirements, source material, working analysis, and portfolio-ready artifacts.',
     metrics: [
       { label: 'Primary track', value: 'Applied finance credential' },
-      { label: 'Visible evidence', value: 'Case studies and models' },
+      { label: 'Visible evidence', value: 'Program source and records' },
       { label: 'Review mode', value: 'Source-backed progress' },
     ],
     question: 'What does this shelf show that a certificate alone cannot show?',
     answer:
-      'It shows how the credential work was produced: requirements, case material, calculations, drafts, and final artifacts. The certificate line becomes inspectable because the underlying process and outputs remain attached.',
-    citedArtifacts: ['wqu-bhp'],
+      'It shows how the credential work is grounded: program material, local source records, drafts, and future artifacts can stay attached. The certificate line becomes inspectable because the underlying process remains visible.',
+    citedArtifacts: ['wqu-index'],
     flow: [
       {
         title: 'Track requirements',
@@ -111,13 +111,13 @@ export const REFERENCE_SHELF_DOSSIERS: Record<ReferenceShelfDossierId, Reference
       'The shelf treats AI output as a traceable process layer, not detached polish.',
     metrics: [
       { label: 'Primary track', value: 'Prompting / AI workflow' },
-      { label: 'Visible evidence', value: 'Prompts, chats, certificates' },
+      { label: 'Visible evidence', value: 'Certificate and workflow record' },
       { label: 'Review mode', value: 'Grounded personal AI' },
     ],
     question: 'How can AI conversations become part of a trustworthy profile?',
     answer:
-      'They stay connected to the sources, decisions, and drafts they shaped. Instead of presenting AI text as unexplained output, Loom keeps prompts, certificates, work logs, and revisions available as evidence for a grounded personal AI.',
-    citedArtifacts: ['claude-prompts', 'claude-cert'],
+      'They stay connected to the sources, decisions, and drafts they shaped. Instead of presenting AI text as unexplained output, Loom keeps certificate records, work logs, and revisions available as evidence for a grounded personal AI.',
+    citedArtifacts: ['claude-certificate'],
     flow: [
       {
         title: 'Capture useful conversations',
