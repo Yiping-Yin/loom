@@ -29,8 +29,12 @@ export function ExaminerOverlay() {
       href,
       overlay: 'examiner',
     });
-    if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
-      console.warn('[loom-app-shell] consumeOverlayResume:examiner', JSON.stringify({
+    if (
+      typeof window !== 'undefined'
+      && process.env.NODE_ENV !== 'production'
+      && window.localStorage.getItem('loom:debug-overlay-resume') === '1'
+    ) {
+      console.debug('[loom-app-shell] consumeOverlayResume:examiner', JSON.stringify({
         href,
         matched: Boolean(payload),
       }));
