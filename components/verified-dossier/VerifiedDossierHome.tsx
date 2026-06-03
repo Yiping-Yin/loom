@@ -87,13 +87,13 @@ export function VerifiedDossierHome({
           <a className="vd-profile-photo" href="/about" aria-label="Open full profile">
             <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
           </a>
-          <section aria-labelledby="verified-dossier-profile">
+          <section className="vd-profile-summary" aria-labelledby="verified-dossier-profile">
             <h2 id="verified-dossier-profile">Yiping Yin</h2>
             <p>{VERIFIED_DOSSIER_PROFILE.roles.join(' / ')}</p>
             <p>{VERIFIED_DOSSIER_PROFILE.location}</p>
           </section>
 
-          <section aria-label="Profile links">
+          <section className="vd-profile-links" aria-label="Profile links">
             {VERIFIED_DOSSIER_PROFILE.links.map((link) => (
               <a key={link.label} className="vd-profile-link" href={link.href}>
                 {link.label}
@@ -101,41 +101,52 @@ export function VerifiedDossierHome({
             ))}
           </section>
 
-          <section aria-labelledby="verified-dossier-memberships">
+          <section className="vd-memberships" aria-labelledby="verified-dossier-memberships">
             <h2 id="verified-dossier-memberships">Verified memberships</h2>
-            <div className="vd-section-lanes">
+            <div className="vd-membership-list">
               {VERIFIED_DOSSIER_PROFILE.memberships.map((membership) => (
-                <div key={membership.label} className="vd-section-row">
+                <div key={membership.label} className="vd-membership-row">
                   <InstitutionMark kind={membership.kind} />
-                  <strong>{membership.label}</strong>
-                  <span>Evidence shelf connected to this profile.</span>
+                  <span className="vd-membership-copy">
+                    <strong>{membership.label}</strong>
+                    <span>Evidence shelf connected to this profile.</span>
+                  </span>
                 </div>
               ))}
             </div>
           </section>
 
-          <section aria-labelledby="verified-dossier-workflow">
+          <section className="vd-workflow" aria-labelledby="verified-dossier-workflow">
             <h2 id="verified-dossier-workflow">Workflow</h2>
             <p>
               <strong>Sources</strong> hold the evidence. <strong>Draft</strong> turns that evidence into
               working output.
             </p>
-            <button type="button" onClick={onOpenSources}>
-              Open Sources <ArrowIcon />
-            </button>
-            <button type="button" onClick={onOpenRecent} disabled={!hasRecent}>
-              Open recent Draft <ArrowIcon />
-            </button>
+            <div className="vd-workflow-actions">
+              <button className="vd-action-button" type="button" onClick={onOpenSources}>
+                <span>Open Sources</span>
+                <ArrowIcon />
+              </button>
+              <button
+                className="vd-action-button"
+                type="button"
+                onClick={onOpenRecent}
+                disabled={!hasRecent}
+              >
+                <span>Open recent Draft</span>
+                <ArrowIcon />
+              </button>
+            </div>
           </section>
 
-          <section aria-label="Native activity">
+          <section className="vd-activity" aria-label="Native activity">
             <h2>Activity</h2>
             <p>{ready ? activitySummary : 'Sources and Draft ready'}</p>
           </section>
         </aside>
 
         <section className="vd-main" aria-label="Verified dossier">
-          <p>{VERIFIED_DOSSIER_HOME_COPY.chineseHeadline}</p>
+          <p className="vd-chinese-headline">{VERIFIED_DOSSIER_HOME_COPY.chineseHeadline}</p>
           <h1 id="verified-dossier-title" className="vd-title">
             {VERIFIED_DOSSIER_HOME_COPY.headline}
           </h1>
