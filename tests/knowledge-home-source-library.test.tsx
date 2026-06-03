@@ -113,6 +113,7 @@ test('KnowledgeHomeClient forwards runtime groups and mutation handlers into Kno
 
 test('KnowledgeHomeStatic wires group controls to the supplied mutation callbacks', () => {
   const { sourceText, sourceFile } = loadTsx('app/knowledge/KnowledgeHomeStatic.tsx');
+  const stylesText = readText('app/knowledge/KnowledgeHomeStatic.module.css');
 
   assert.match(sourceText, /\(sourceLibraryGroups \?\? groups \?\? \[\]\)\.map\(/);
   assert.match(sourceText, /onStartAddGroup = \(\) => \{\}/);
@@ -128,7 +129,7 @@ test('KnowledgeHomeStatic wires group controls to the supplied mutation callback
   assert.match(sourceText, /onCancelHideCategory = \(\) => \{\}/);
   assert.match(sourceText, /onConfirmHideCategory = \(\) => \{\}/);
   assert.match(sourceText, /onMoveCategory = \(\) => \{\}/);
-  assert.match(sourceText, /Re-shelving changes Loom\s+provenance only; original source files stay unchanged\./);
+  assert.match(sourceText, /Re-shelving\s+changes Loom provenance only; original source files stay unchanged\./);
   assert.doesNotMatch(sourceText, /buildSourceLibraryGroups/);
 
   const buttons = [] as ts.JsxElement[];
@@ -169,7 +170,7 @@ test('KnowledgeHomeStatic wires group controls to the supplied mutation callback
   assert.ok(selectElement, 'Re-shelve select not found');
   assert.match(sourceText, /title="Drag to another shelf, or use the Re-shelve menu\."/);
   assert.match(sourceText, /title="Hide from shelves \(original files stay read-only\)"/);
-  assert.match(sourceText, /loom-source-sample__move[\s\S]*pointer-events:\s*auto;/);
+  assert.match(stylesText, /loom-source-sample__move[\s\S]*pointer-events:\s*auto;/);
 
   assert.equal(jsxExpressionText(addGroupButton.openingElement, 'onClick', sourceFile), 'onStartAddGroup');
   assert.equal(
@@ -191,19 +192,22 @@ test('KnowledgeHomeStatic wires group controls to the supplied mutation callback
   assert.equal(jsxExpressionText(selectElement.openingElement, 'disabled', sourceFile), 'busy');
 });
 
-test('KnowledgeHomeStatic renders Atlas entry sections and collection tiles through the refreshed shell', () => {
+test('KnowledgeHomeStatic renders the verified dossier Sources surface and source controls', () => {
   const { sourceText } = loadTsx('app/knowledge/KnowledgeHomeStatic.tsx');
 
-  assert.match(sourceText, /<StageShell/);
-  assert.match(sourceText, /<QuietScene tone="atlas"/);
-  assert.match(sourceText, /var\(--archive-stage-width\)/);
-  assert.match(sourceText, /<PageFrame/);
-  assert.match(sourceText, /<span>\s*\{formatCount\(totalCollections, 'shelf'\)\} \/ \{formatCount\(totalDocs, 'indexed source'\)\}\s*<\/span>/);
-  assert.match(sourceText, /archive shelves/);
-  assert.match(sourceText, /Re-shelving changes Loom\s+provenance only; original source files stay unchanged\./);
+  assert.match(sourceText, /className=\{`vd-home \$\{styles\.page\}`\}/);
+  assert.match(sourceText, /VERIFIED_DOSSIER_TOP_NAV/);
+  assert.match(sourceText, /DocumentPreviewCard/);
+  assert.match(sourceText, /FileBadge/);
+  assert.match(sourceText, /InstitutionMark/);
+  assert.match(sourceText, /Sources are the proof layer\./);
+  assert.match(sourceText, /<span>\{formatCount\(totalCollections, 'shelf'\)\}<\/span>/);
+  assert.match(sourceText, /<span>\{formatCount\(totalDocs, 'indexed source'\)\}<\/span>/);
+  assert.match(sourceText, /Re-shelving\s+changes Loom provenance only; original source files stay unchanged\./);
   assert.match(sourceText, /loom-archive-shelf/);
   assert.match(sourceText, /loom-source-sample/);
-  assert.match(sourceText, /materialForItem/);
+  assert.match(sourceText, /function sourceStateTags/);
+  assert.match(sourceText, /Has draft/);
   assert.match(sourceText, /href=\{`\/knowledge\/\$\{item\.slug\}`\}/);
   assert.match(sourceText, /aria-label=\{`Open shelf \$\{item\.label\}`\}/);
   assert.match(sourceText, /formatCount\(group\.items\.length, 'collection'\)/);

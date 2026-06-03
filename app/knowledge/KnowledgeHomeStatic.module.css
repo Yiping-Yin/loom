@@ -1,0 +1,528 @@
+.page {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8faf8 56%, #ffffff 100%);
+}
+
+.hero,
+.featuredSection,
+.referenceSection,
+.librarySection {
+  width: min(100%, 118rem);
+  margin: 0 auto;
+  padding-right: clamp(1.25rem, 3vw, 3rem);
+  padding-left: clamp(1.25rem, 3vw, 3rem);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 31rem);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: end;
+  padding-top: clamp(2rem, 5vw, 4.5rem);
+  padding-bottom: clamp(2rem, 4vw, 3.2rem);
+}
+
+.heroCopy {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.sectionLabel {
+  margin: 0;
+  color: var(--vd-accent);
+  font-size: 0.78rem;
+  font-weight: 820;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.hero h1,
+.sectionHeader h2 {
+  margin: 0;
+  color: var(--vd-ink);
+  font-family: var(--display);
+  font-size: clamp(3.1rem, 5vw, 6.1rem);
+  font-weight: 560;
+  letter-spacing: 0;
+  line-height: 0.98;
+}
+
+.hero p,
+.sectionHeader p,
+.flowRows p,
+.sourceLink small,
+.referenceRow > span:nth-child(3),
+.sourceRow em,
+.libraryToolbar span,
+.emptyGroup,
+.groupHeader span,
+.groupHeader p,
+.sourceBlock p {
+  margin: 0;
+  color: var(--vd-muted);
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  line-height: 1.5;
+}
+
+.hero p {
+  max-width: 57rem;
+  font-family: var(--serif);
+  font-size: clamp(1.02rem, 1.25vw, 1.25rem);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--vd-border);
+  border-left: 1px solid var(--vd-border);
+}
+
+.metrics div {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 7rem;
+  padding: 1rem;
+  border-right: 1px solid var(--vd-border);
+  border-bottom: 1px solid var(--vd-border);
+}
+
+.metrics span {
+  color: var(--vd-ink);
+  font-family: var(--serif);
+  font-size: clamp(1.2rem, 1.8vw, 1.7rem);
+  font-weight: 720;
+  line-height: 1.05;
+}
+
+.metrics strong {
+  align-self: end;
+  color: var(--vd-muted);
+  font-size: 0.74rem;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.featuredSection,
+.referenceSection,
+.librarySection {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.32fr) minmax(0, 1fr);
+  gap: clamp(1.8rem, 4vw, 4rem);
+  padding-top: clamp(2rem, 4vw, 3.3rem);
+  padding-bottom: clamp(2rem, 4vw, 3.3rem);
+  border-top: 1px solid var(--vd-border);
+}
+
+.sectionHeader {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.sectionHeader h2 {
+  max-width: 12ch;
+  font-size: clamp(2rem, 3.2vw, 3.55rem);
+  line-height: 1;
+}
+
+.sectionHeader p:not(.sectionLabel) {
+  max-width: 31rem;
+}
+
+.proofBoard {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.documentGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.documentGrid :global(.vd-document-preview--word) {
+  background:
+    linear-gradient(135deg, rgba(43, 87, 154, 0.94), rgba(30, 68, 130, 0.94)),
+    #2b579a;
+  color: #ffffff;
+}
+
+.documentGrid :global(.vd-document-preview--excel) {
+  background:
+    linear-gradient(135deg, rgba(33, 115, 70, 0.94), rgba(21, 91, 55, 0.94)),
+    #217346;
+  color: #ffffff;
+}
+
+.documentGrid :global(.vd-document-preview--word) :global(.vd-document-preview__kicker),
+.documentGrid :global(.vd-document-preview--word) :global(.vd-document-preview__title),
+.documentGrid :global(.vd-document-preview--word) :global(.vd-document-preview__body span),
+.documentGrid :global(.vd-document-preview--excel) :global(.vd-document-preview__kicker),
+.documentGrid :global(.vd-document-preview--excel) :global(.vd-document-preview__title),
+.documentGrid :global(.vd-document-preview--excel) :global(.vd-document-preview__body span) {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.documentGrid :global(.vd-document-preview--word) :global(.vd-document-preview__title),
+.documentGrid :global(.vd-document-preview--excel) :global(.vd-document-preview__title) {
+  color: #ffffff;
+  font-family: var(--sans);
+}
+
+.flowRows {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.flowRows article {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--vd-border);
+  border-radius: 8px;
+  background: #fbfcfb;
+}
+
+.flowRows article > span {
+  color: var(--vd-accent);
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.flowRows h3,
+.referenceRow strong,
+.groupHeader h3,
+.sourceLink strong,
+.sourceBlock h3 {
+  margin: 0;
+  color: var(--vd-ink);
+  font-family: var(--serif);
+  font-size: 1.06rem;
+  line-height: 1.2;
+}
+
+.referenceRows,
+.groupRows {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.referenceRow {
+  display: grid;
+  grid-template-columns: auto minmax(8rem, 0.65fr) minmax(15rem, 1.1fr) minmax(12rem, 0.95fr);
+  gap: 0.9rem;
+  align-items: start;
+  min-width: 0;
+  padding: 1rem 0;
+  border-top: 1px solid #e8ebe6;
+  color: inherit;
+  text-decoration: none;
+}
+
+.referenceRow:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.referenceRow:hover {
+  color: var(--vd-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.referenceRow small {
+  display: block;
+  margin-top: 0.22rem;
+  color: var(--vd-subtle);
+  font-size: 0.72rem;
+  font-weight: 720;
+  line-height: 1.25;
+}
+
+.fileStack {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.library {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.error {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(217, 48, 37, 0.25);
+  border-radius: 8px;
+  background: rgba(217, 48, 37, 0.06);
+  color: #a12820;
+  font-size: 0.84rem;
+}
+
+.libraryToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--vd-border);
+}
+
+.libraryToolbar > button,
+.groupForm button,
+.groupActions button,
+.sourceTools button {
+  min-height: 2rem;
+  padding: 0.38rem 0.62rem;
+  border: 1px solid var(--vd-border);
+  border-radius: 7px;
+  background: var(--vd-surface);
+  color: var(--vd-accent);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 740;
+  line-height: 1.15;
+  cursor: pointer;
+}
+
+.libraryToolbar > button:hover,
+.groupForm button:hover,
+.groupActions button:hover,
+.sourceTools button:hover {
+  border-color: var(--vd-border-strong);
+  color: var(--vd-accent-strong);
+}
+
+.groupForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.groupForm input {
+  min-width: min(100%, 15rem);
+  min-height: 2rem;
+  padding: 0.38rem 0.58rem;
+  border: 1px solid var(--vd-border);
+  border-radius: 7px;
+  background: #fbfcfb;
+  color: var(--vd-ink);
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.groupRow {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  padding: 1rem 0;
+  border-top: 1px solid #e8ebe6;
+}
+
+.groupRow:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.groupRow[data-drop-active="true"] {
+  background: linear-gradient(90deg, rgba(34, 92, 72, 0.06), transparent);
+}
+
+.groupHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+.groupHeader p {
+  font-size: 0.68rem;
+  font-weight: 820;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.groupHeader h3 {
+  margin-top: 0.2rem;
+}
+
+.groupHeader span {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+}
+
+.groupActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.groupActions strong {
+  align-self: center;
+  color: var(--vd-muted);
+  font-size: 0.76rem;
+  font-weight: 760;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sourceRows {
+  display: grid;
+  gap: 0.48rem;
+}
+
+.sourceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1px solid var(--vd-border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.sourceLink {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.85fr) minmax(0, 1fr) minmax(7rem, auto);
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sourceLink > span {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.sourceLink small {
+  font-size: 0.75rem;
+}
+
+.sourceRow em {
+  justify-self: end;
+  font-size: 0.74rem;
+  font-style: normal;
+  font-weight: 720;
+}
+
+.sourceTools,
+.confirmTools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.sourceTools :global(.loom-source-sample__move) {
+  max-width: 12rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--vd-border);
+  border-radius: 7px;
+  background: #fbfcfb;
+  color: var(--vd-muted);
+  font: inherit;
+  font-size: 0.76rem;
+  pointer-events: auto;
+}
+
+.confirmTools span {
+  color: var(--vd-muted);
+  font-size: 0.75rem;
+}
+
+.emptyGroup {
+  display: grid;
+  gap: 0.24rem;
+  padding: 0.8rem;
+  border: 1px dashed var(--vd-border);
+  border-radius: 8px;
+  background: #fbfcfb;
+  font-size: 0.84rem;
+}
+
+.sourceBlock {
+  margin-top: 0.8rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--vd-border);
+}
+
+@media (max-width: 1180px) {
+  .hero,
+  .featuredSection,
+  .referenceSection,
+  .librarySection {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader h2 {
+    max-width: 18ch;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .documentGrid,
+  .flowRows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .referenceRow {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .referenceRow > span:nth-child(3),
+  .referenceRow .fileStack {
+    grid-column: 2;
+  }
+
+  .sourceRow,
+  .sourceLink,
+  .groupHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .sourceRow em,
+  .groupActions,
+  .sourceTools {
+    justify-self: start;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero h1 {
+    font-size: clamp(2.5rem, 13vw, 3.45rem);
+  }
+
+  .metrics,
+  .documentGrid,
+  .flowRows {
+    grid-template-columns: 1fr;
+  }
+
+  .libraryToolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
