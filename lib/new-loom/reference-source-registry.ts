@@ -25,6 +25,31 @@ export type ReferenceSourceRecord = {
   kind: 'reference-source';
 };
 
+export type ReferenceCitationCandidate = {
+  id: string;
+  sourceId: string;
+  title: string;
+  label: string;
+  href: string;
+  category: string;
+  categorySlug: string;
+  sourcePath: string;
+  ext: string;
+  role: string;
+  subcategory: string;
+  preview: string;
+  promptLine: string;
+  draftCorpusDoc: {
+    title: string;
+    href: string;
+    category: string;
+    sourcePath: string;
+    excerpt: string;
+    body: string;
+  };
+  kind: 'reference-citation';
+};
+
 const REFERENCE_SOURCE_GROUP_ID = 'reference-shelves';
 
 type StoredSearchField = {
@@ -203,6 +228,50 @@ export function appendReferenceCategoriesToSourceGroups(
       categories: referenceCategories,
     },
   ];
+}
+
+function citationPromptLine(record: ReferenceSourceRecord) {
+  return [
+    `sourceId=${record.id}`,
+    `title=${record.title}`,
+    `category=${record.category}`,
+    `role=${record.role}`,
+    `href=${record.href}`,
+    `sourcePath=${record.sourcePath}`,
+    `preview=${record.preview}`,
+  ].join(' | ');
+}
+
+export function listReferenceCitationCandidates(
+  options: ReferenceSourceManifestOptions = {},
+): ReferenceCitationCandidate[] {
+  return listReferenceSourceRecords(options).map((record) => {
+    const promptLine = citationPromptLine(record);
+    return {
+      id: `citation:${record.id}`,
+      sourceId: record.id,
+      title: record.title,
+      label: record.title,
+      href: record.href,
+      category: record.category,
+      categorySlug: record.categorySlug,
+      sourcePath: record.sourcePath,
+      ext: record.ext,
+      role: record.role,
+      subcategory: record.subcategory,
+      preview: record.preview,
+      promptLine,
+      draftCorpusDoc: {
+        title: record.title,
+        href: record.href,
+        category: record.category,
+        sourcePath: record.sourcePath,
+        excerpt: record.preview,
+        body: promptLine,
+      },
+      kind: 'reference-citation',
+    };
+  });
 }
 
 function toSearchField(record: ReferenceSourceRecord): StoredSearchField {
