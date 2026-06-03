@@ -176,6 +176,37 @@ export type VerifiedDossierAiPrompt = {
   citations: readonly VerifiedDossierArtifactId[];
 };
 
+export type VerifiedDossierWorkbenchStep = {
+  number: string;
+  title: 'Sources' | 'Draft' | 'Answer';
+  summary: string;
+  detail: string;
+};
+
+export type VerifiedDossierGraphNode = {
+  id: string;
+  label: string;
+  eyebrow: string;
+  kind: 'source' | 'draft' | 'answer';
+  artifactId?: VerifiedDossierArtifactId;
+};
+
+export type VerifiedDossierGraphEdge = {
+  from: string;
+  to: string;
+  label: string;
+};
+
+export type VerifiedDossierWorkbench = {
+  activeSectionId: 'unsw';
+  activeArtifactIds: readonly VerifiedDossierArtifactId[];
+  sourceGraph: {
+    nodes: readonly VerifiedDossierGraphNode[];
+    edges: readonly VerifiedDossierGraphEdge[];
+  };
+  provenanceSteps: readonly VerifiedDossierWorkbenchStep[];
+};
+
 export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
   { label: 'About', href: '/about' },
   { label: 'Sources', href: '/knowledge' },
@@ -187,10 +218,9 @@ export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
 ];
 
 export const VERIFIED_DOSSIER_HOME_COPY = {
-  headline: 'A knowledge profile people can inspect and ask.',
-  body: 'Sources, drafts, projects, and conversations become a public record with evidence behind every answer.',
-  shortDefinition:
-    'Loom turns your sources, learning path, work, process records, and AI conversations into an inspectable personal knowledge identity.',
+  headline: 'Sources become cited work',
+  body: 'Verified source workspace',
+  shortDefinition: 'Sources stay inspectable. Draft turns them into cited answers.',
 };
 
 export const VERIFIED_DOSSIER_PROFILE = {
@@ -259,6 +289,67 @@ export const VERIFIED_DOSSIER_AI_PROMPT = {
     'In ECON3202, concavity turns the shape of a function into usable optimisation evidence. It helps show when first-order conditions identify a maximum and when an economic choice problem has a stable interpretation rather than only a formal derivative calculation.',
   citations: ['econ-ps2', 'econ-slides', 'econ-tutorial'],
 } satisfies VerifiedDossierAiPrompt;
+
+export const VERIFIED_DOSSIER_WORKBENCH = {
+  activeSectionId: 'unsw',
+  activeArtifactIds: ['econ-ps2', 'econ-slides', 'econ-tutorial', 'econ-notes'],
+  sourceGraph: {
+    nodes: [
+      {
+        id: 'problem-set-source',
+        label: 'Problem Set 02.pdf',
+        eyebrow: 'Source PDF',
+        kind: 'source',
+        artifactId: 'econ-ps2',
+      },
+      {
+        id: 'lecture-source',
+        label: 'W8 A Concave-Functions.pdf',
+        eyebrow: 'Lecture source',
+        kind: 'source',
+        artifactId: 'econ-slides',
+      },
+      {
+        id: 'draft-summary',
+        label: 'Concavity and optimisation summary.md',
+        eyebrow: 'Draft',
+        kind: 'draft',
+      },
+      {
+        id: 'grounded-answer',
+        label: 'Grounded explanation',
+        eyebrow: 'Answer',
+        kind: 'answer',
+        artifactId: 'econ-notes',
+      },
+    ],
+    edges: [
+      { from: 'problem-set-source', to: 'draft-summary', label: 'Problem context' },
+      { from: 'lecture-source', to: 'draft-summary', label: 'Concept source' },
+      { from: 'draft-summary', to: 'grounded-answer', label: 'Cited output' },
+    ],
+  },
+  provenanceSteps: [
+    {
+      number: '01',
+      title: 'Sources',
+      summary: '4 ECON3202 files',
+      detail: 'Course materials, weekly PDFs, exercises, and problem-set work.',
+    },
+    {
+      number: '02',
+      title: 'Draft',
+      summary: 'Concavity and optimisation summary.md',
+      detail: 'A working note created from lecture, exercise, and answer evidence.',
+    },
+    {
+      number: '03',
+      title: 'Answer',
+      summary: 'Grounded explanation',
+      detail: 'Cited back to source artifacts people can inspect from this shelf.',
+    },
+  ],
+} as const satisfies VerifiedDossierWorkbench;
 
 export const VERIFIED_DOSSIER_ARTIFACTS_BY_ID = Object.fromEntries(
   VERIFIED_DOSSIER_ARTIFACTS.map((artifact) => [artifact.id, artifact]),

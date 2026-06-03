@@ -13,6 +13,7 @@ import {
   VERIFIED_DOSSIER_PROFILE,
   VERIFIED_DOSSIER_SECTIONS,
   VERIFIED_DOSSIER_TOP_NAV,
+  VERIFIED_DOSSIER_WORKBENCH,
   resolveVerifiedDossierArtifact,
 } from '../lib/new-loom/verified-dossier-home';
 
@@ -36,19 +37,24 @@ function assertSafeHref(href: string) {
   assert.ok(SAFE_INTERNAL_HREFS.has(href), `${href} must be a safe internal app surface`);
 }
 
-test('verified dossier home data preserves approved product definition', () => {
-  assert.equal(
-    VERIFIED_DOSSIER_HOME_COPY.headline,
-    'A knowledge profile people can inspect and ask.',
-  );
-  assert.match(
-    VERIFIED_DOSSIER_HOME_COPY.body,
-    /Sources, drafts, projects, and conversations become a public record/i,
-  );
+test('verified dossier home data preserves approved evidence workbench definition', () => {
+  assert.equal(VERIFIED_DOSSIER_HOME_COPY.headline, 'Sources become cited work');
+  assert.equal(VERIFIED_DOSSIER_HOME_COPY.body, 'Verified source workspace');
   assert.match(
     VERIFIED_DOSSIER_HOME_COPY.shortDefinition,
-    /sources, learning path, work, process records, and AI conversations/,
+    /Sources stay inspectable\. Draft turns them into cited answers\./,
   );
+  assert.equal(VERIFIED_DOSSIER_WORKBENCH.activeSectionId, 'unsw');
+  assert.deepEqual(
+    VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds,
+    ['econ-ps2', 'econ-slides', 'econ-tutorial', 'econ-notes'],
+  );
+  assert.deepEqual(
+    VERIFIED_DOSSIER_WORKBENCH.provenanceSteps.map((step) => step.title),
+    ['Sources', 'Draft', 'Answer'],
+  );
+  assert.ok(VERIFIED_DOSSIER_WORKBENCH.sourceGraph.nodes.length >= 4);
+  assert.ok(VERIFIED_DOSSIER_WORKBENCH.sourceGraph.edges.length >= 3);
 });
 
 test('verified dossier home keeps canonical navigation and profile identity', () => {
@@ -119,6 +125,26 @@ test('verified dossier sections and AI citations resolve to known artifacts', ()
   for (const artifactId of VERIFIED_DOSSIER_AI_PROMPT.citations) {
     assert.ok(artifactIds.has(artifactId), `AI citation references missing artifact ${artifactId}`);
     assert.equal(resolveVerifiedDossierArtifact(artifactId).id, artifactId);
+  }
+});
+
+test('verified dossier workbench graph binds relationships to real artifact ids', () => {
+  const artifactIds = new Set(VERIFIED_DOSSIER_ARTIFACTS.map((artifact) => artifact.id));
+
+  for (const artifactId of VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds) {
+    assert.ok(artifactIds.has(artifactId), `active story references missing artifact ${artifactId}`);
+  }
+
+  for (const node of VERIFIED_DOSSIER_WORKBENCH.sourceGraph.nodes) {
+    if (node.artifactId) {
+      assert.ok(artifactIds.has(node.artifactId), `graph node references missing artifact ${node.artifactId}`);
+    }
+  }
+
+  const nodeIds = new Set(VERIFIED_DOSSIER_WORKBENCH.sourceGraph.nodes.map((node) => node.id));
+  for (const edge of VERIFIED_DOSSIER_WORKBENCH.sourceGraph.edges) {
+    assert.ok(nodeIds.has(edge.from), `graph edge references missing from-node ${edge.from}`);
+    assert.ok(nodeIds.has(edge.to), `graph edge references missing to-node ${edge.to}`);
   }
 });
 
