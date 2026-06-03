@@ -21,7 +21,10 @@ type ReferenceArtifactSource = {
   previewLines: readonly string[];
 };
 
-const PRIVATE_WIKI_ROOT = '/Users/yinyiping/Desktop/Private Wiki';
+type ReferenceWikiRootOptions = {
+  cwd?: string;
+  env?: Record<string, string | undefined>;
+};
 
 const REFERENCE_SOURCES: readonly ReferenceArtifactSource[] = [
   {
@@ -102,8 +105,16 @@ const REFERENCE_SOURCES: readonly ReferenceArtifactSource[] = [
   },
 ];
 
+export function referenceWikiRoot(options: ReferenceWikiRootOptions = {}) {
+  const env = options.env ?? process.env;
+  const cwd = options.cwd ?? process.cwd();
+  const configured = env.LOOM_REFERENCE_WIKI_ROOT?.trim();
+  if (configured) return path.resolve(configured);
+  return path.basename(cwd) === 'LOOM' ? path.dirname(cwd) : path.resolve(cwd, '..');
+}
+
 function absolutePathFor(sourcePath: string) {
-  return path.join(PRIVATE_WIKI_ROOT, sourcePath);
+  return path.join(referenceWikiRoot(), sourcePath);
 }
 
 function extFor(sourcePath: string) {

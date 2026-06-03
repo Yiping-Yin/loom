@@ -12,6 +12,7 @@ import {
   findReferenceDoc,
   referenceArtifactsByCategory,
   referenceDocsByCategory,
+  referenceWikiRoot,
 } from '../lib/new-loom/reference-artifact-bindings';
 import {
   VERIFIED_DOSSIER_SECTIONS,
@@ -81,7 +82,7 @@ test('reference shelf pages bind dossier artifacts to real whitelisted source fi
   assert.match(binding, /referenceDocsByCategory/);
   assert.match(binding, /referenceArtifactsByCategory/);
   assert.match(binding, /findReferenceDoc/);
-  assert.match(binding, /private wiki/i);
+  assert.match(binding, /referenceWikiRoot/);
   assert.match(binding, /Python Foundations\.pdf/);
   assert.match(binding, /Claude Certificate\.html/);
   assert.match(binding, /WQU index\.html/);
@@ -103,4 +104,24 @@ test('reference artifact bindings expose available local source documents', () =
   assert.ok(findReferenceDoc('quantnet', 'python-foundations'));
   assert.ok(referenceArtifactsByCategory('quantnet').some((artifact) => artifact.href === '/knowledge/quantnet/python-foundations'));
   assert.ok(referenceArtifactsByCategory('claude').some((artifact) => artifact.label === 'Claude Certificate.html'));
+});
+
+test('reference source importer resolves the Private Wiki root instead of hard-coding one machine path', () => {
+  const binding = read('lib/new-loom/reference-artifact-bindings.ts');
+
+  assert.match(binding, /referenceWikiRoot/);
+  assert.match(binding, /LOOM_REFERENCE_WIKI_ROOT/);
+  assert.doesNotMatch(binding, /const PRIVATE_WIKI_ROOT = ['"]\/Users\/yinyiping\/Desktop\/Private Wiki['"]/);
+
+  assert.equal(
+    referenceWikiRoot({ cwd: '/example/Private Wiki/LOOM', env: {} }),
+    '/example/Private Wiki',
+  );
+  assert.equal(
+    referenceWikiRoot({
+      cwd: '/example/Private Wiki/LOOM',
+      env: { LOOM_REFERENCE_WIKI_ROOT: '/external/source-root' },
+    }),
+    '/external/source-root',
+  );
 });
