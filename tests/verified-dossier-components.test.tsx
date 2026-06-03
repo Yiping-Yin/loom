@@ -18,13 +18,13 @@ import {
 } from '../lib/new-loom/verified-dossier-home';
 
 const fileCases: Array<[VerifiedDossierFileKind, string, string]> = [
-  ['pdf', 'Problem Set 02.pdf', 'PDF'],
-  ['word', 'About me page.docx', 'DOCX'],
-  ['ppt', 'Presentation deck.pptx', 'PPTX'],
-  ['excel', 'Financial model.xlsx', 'XLSX'],
-  ['markdown', 'Research note.md', 'MD'],
-  ['html', 'Claude Certificate.html', 'HTML'],
-  ['text', 'Reading notes.txt', 'TXT'],
+  ['pdf', 'Example source.pdf', 'PDF'],
+  ['word', 'Example brief.docx', 'DOCX'],
+  ['ppt', 'Example deck.pptx', 'PPTX'],
+  ['excel', 'Example model.xlsx', 'XLSX'],
+  ['markdown', 'Example note.md', 'MD'],
+  ['html', 'Example page.html', 'HTML'],
+  ['text', 'Example notes.txt', 'TXT'],
 ];
 
 function render(node: React.ReactElement) {
@@ -34,6 +34,10 @@ function render(node: React.ReactElement) {
   };
 
   return renderToStaticMarkup(node);
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 test('FileBadge renders real artifact extensions for every supported file kind', () => {
@@ -49,11 +53,11 @@ test('FileBadge renders real artifact extensions for every supported file kind',
 });
 
 test('FileBadge compact mode keeps the artifact extension visible', () => {
-  const html = render(<FileBadge kind="pdf" label="Problem Set 02.pdf" compact />);
+  const html = render(<FileBadge kind="pdf" label="Example source.pdf" compact />);
 
   assert.match(html, /vd-file-badge--compact/);
   assert.match(html, />PDF</);
-  assert.match(html, /Problem Set 02\.pdf/);
+  assert.match(html, /Example source\.pdf/);
 });
 
 test('FileBadge preserves concrete file-first direction', () => {
@@ -83,6 +87,7 @@ test('ActiveEvidenceStory renders the UNSW workbench proof case', () => {
   );
 
   assert.match(html, /vd-active-story/);
+  assert.match(html, /vd-active-story__title/);
   assert.match(html, /Active evidence story/);
   assert.match(html, /UNSW \/ ECON3202/);
   assert.match(html, /4 files/);
@@ -104,6 +109,7 @@ test('SourceGraph renders semantic source relationships from real artifacts', ()
   assert.match(html, /Problem context/);
   assert.match(html, /Concept source/);
   assert.match(html, /Cited output/);
+  assert.match(html, /aria-label="Problem Set 02\.pdf to Concavity and optimisation summary\.md: Problem context"/);
 });
 
 test('ProvenanceChain renders Sources to Draft to Answer as the product explanation', () => {
@@ -133,22 +139,27 @@ test('AnswerInspector is citation-first and no longer titled as a chatbot', () =
   assert.match(html, /Cited sources/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /12 registry sources available/);
+  assert.match(html, /for="vd-followup-input"/);
+  assert.match(html, /id="vd-followup-input"/);
   assert.doesNotMatch(html, />Ask this profile</);
 });
 
 test('SourceIndex renders supplied secondary shelves compactly', () => {
   const secondarySections = VERIFIED_DOSSIER_SECTIONS.filter((section) => section.id !== 'unsw');
   const html = render(<SourceIndex sections={secondarySections} />);
+  const expectedFileCount = secondarySections.reduce((count, section) => count + section.artifactIds.length, 0);
 
   assert.match(html, /vd-source-index/);
   assert.match(html, /Source index/);
-  assert.match(html, /About/);
-  assert.match(html, /Quantnet/);
-  assert.match(html, /WQU/);
-  assert.match(html, /Claude/);
-  assert.match(html, /About me page\.docx/);
-  assert.match(html, /QuantNet Online C\+\+ Course\.pdf/);
-  assert.match(html, /WQU index\.html/);
-  assert.match(html, /Claude Certificate\.html/);
-  assert.doesNotMatch(html, /UNSW \/ ECON3202/);
+  assert.equal((html.match(/vd-source-index__card/g) ?? []).length, secondarySections.length);
+  assert.equal((html.match(/vd-file-badge--compact/g) ?? []).length, expectedFileCount);
+
+  for (const section of secondarySections) {
+    assert.match(html, new RegExp(escapeRegExp(section.label)));
+    assert.match(html, new RegExp(escapeRegExp(section.status)));
+  }
+
+  const activeSection = VERIFIED_DOSSIER_SECTIONS.find((section) => section.id === 'unsw');
+  assert.ok(activeSection, 'UNSW section should exist');
+  assert.doesNotMatch(html, new RegExp(escapeRegExp(activeSection.label)));
 });

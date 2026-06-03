@@ -47,10 +47,10 @@ export function ActiveEvidenceStory({
     <article className="vd-active-story" aria-labelledby="active-evidence-story-title">
       <div className="vd-active-story__header">
         <InstitutionMark kind={section.id} />
-        <span>
+        <div className="vd-active-story__title">
           <small>Active evidence story</small>
           <h2 id="active-evidence-story-title">{section.label}</h2>
-        </span>
+        </div>
         <strong>{artifacts.length} files</strong>
       </div>
       <div className="vd-active-story__featured">
@@ -81,6 +81,8 @@ export function SourceGraph({
     edges: readonly VerifiedDossierGraphEdge[];
   };
 }) {
+  const nodeLabels = new Map(graph.nodes.map((node) => [node.id, node.label]));
+
   return (
     <section className="vd-source-graph" aria-label="Source relationship graph">
       <div className="vd-source-graph__header">
@@ -96,11 +98,16 @@ export function SourceGraph({
         ))}
       </div>
       <div className="vd-source-graph__edges">
-        {graph.edges.map((edge) => (
-          <span key={`${edge.from}-${edge.to}`}>
-            {edge.label}
-          </span>
-        ))}
+        {graph.edges.map((edge) => {
+          const fromLabel = nodeLabels.get(edge.from) ?? edge.from;
+          const toLabel = nodeLabels.get(edge.to) ?? edge.to;
+
+          return (
+            <span key={`${edge.from}-${edge.to}`} aria-label={`${fromLabel} to ${toLabel}: ${edge.label}`}>
+              {edge.label}
+            </span>
+          );
+        })}
       </div>
     </section>
   );

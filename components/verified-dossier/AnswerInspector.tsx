@@ -56,12 +56,15 @@ export function AnswerInspector({
             : 'Waiting for registry'}
         </small>
       </div>
-      <label className="vd-followup">
-        <input type="text" placeholder="Ask a follow-up..." aria-label="Ask a follow-up" />
+      <label className="vd-followup__label" htmlFor="vd-followup-input">
+        Ask a follow-up
+      </label>
+      <div className="vd-followup">
+        <input id="vd-followup-input" type="text" placeholder="Ask a follow-up..." />
         <button type="button" aria-label="Send follow-up">
           <ArrowIcon />
         </button>
-      </label>
+      </div>
     </section>
   );
 }
