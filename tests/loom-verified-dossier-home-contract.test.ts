@@ -159,3 +159,13 @@ test('featured ECON3202 artifacts carry realistic document preview metadata', ()
     assert.match(artifact.preview.tag, /Problem set|Lecture slides|Solutions|Lecture notes/);
   }
 });
+
+test('about profile artifact carries a realistic document preview', () => {
+  const artifact = resolveVerifiedDossierArtifact('about-doc');
+
+  assert.equal(artifact.kind, 'word');
+  assert.ok(artifact.preview, 'About artifact should include preview metadata');
+  assert.match(artifact.preview.metadata, /DOCX/);
+  assert.match(artifact.preview.kicker, /Personal Knowledge Postcard/);
+  assert.ok(artifact.preview.lines.some((line) => /Learning path/.test(line)));
+});

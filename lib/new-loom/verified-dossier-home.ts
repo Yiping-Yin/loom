@@ -39,6 +39,17 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     shelf: 'about',
     role: 'Profile notes, values, direction',
     href: '/about',
+    preview: {
+      title: 'About Me',
+      kicker: 'Yiping Yin / Personal Knowledge Postcard',
+      metadata: 'DOCX - Profile notes - Updated Jun 2026',
+      tag: 'Identity brief',
+      lines: [
+        'Student / Builder / Learner',
+        'Learning path, work, and process',
+        'Linked to sources and Draft',
+      ],
+    },
   },
   {
     id: 'econ-ps2',

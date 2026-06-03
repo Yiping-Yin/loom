@@ -87,6 +87,7 @@ test('Sources and Draft descriptions serve personal learning paths, resources, p
 
 test('visible support surfaces use approved personal-identity and local-app positioning', () => {
   const about = read('app/about/AboutClient.tsx');
+  const verifiedDossierData = read('lib/new-loom/verified-dossier-home.ts');
   const help = read('app/help/page.tsx');
   const productHistory = read('app/product-history/page.tsx');
   const privacy = read('public/privacy.html');
@@ -96,8 +97,14 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(about, /learning paths/i);
   assert.match(about, /identity that can be inspected and talked to/i);
   assert.match(about, /Proof/);
+  assert.match(about, /about-doc/);
+  assert.match(verifiedDossierData, /About me page\.docx/);
+  assert.match(about, /UNSW \/ ECON3202/);
+  assert.match(about, /Ask this profile/);
   assert.match(about, /Product story/i);
   assert.match(about, /\/product-history/);
+  assert.doesNotMatch(about, /Yiping's Loom/);
+  assert.doesNotMatch(about, /[\u3400-\u9fff]/);
 
   assert.match(help, /reading-and-thinking environment/i);
   assert.match(help, /source-bound understanding/i);
