@@ -61,7 +61,8 @@ export function AnswerInspector({
       </label>
       <div className="vd-followup">
         <input id="vd-followup-input" type="text" placeholder="Ask a follow-up..." />
-        <button type="button" aria-label="Send follow-up">
+        <button type="button" disabled aria-disabled="true">
+          <span>Send</span>
           <ArrowIcon />
         </button>
       </div>

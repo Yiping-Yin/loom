@@ -89,33 +89,33 @@ export function SourceGraph({
         <span>Source graph</span>
         <strong>{graph.nodes.length} nodes</strong>
       </div>
-      <div className="vd-source-graph__canvas">
+      <ul className="vd-source-graph__canvas" aria-label="Source graph nodes">
         {graph.nodes.map((node) => (
-          <div
+          <li
             key={node.id}
             className={`vd-source-graph__node vd-source-graph__node--${node.kind}`}
             aria-label={node.label}
           >
             <small>{node.eyebrow}</small>
             <strong>{node.label}</strong>
-          </div>
+          </li>
         ))}
-      </div>
-      <div className="vd-source-graph__edges">
+      </ul>
+      <ul className="vd-source-graph__edges" aria-label="Source graph relationships">
         {graph.edges.map((edge, index) => {
           const fromLabel = nodeLabels.get(edge.from) ?? edge.from;
           const toLabel = nodeLabels.get(edge.to) ?? edge.to;
 
           return (
-            <span
+            <li
               key={`${edge.from}-${edge.to}-${edge.label}-${index}`}
-              aria-label={`${fromLabel} to ${toLabel}: ${edge.label}`}
+              aria-label={`${fromLabel}: ${edge.label} to ${toLabel}`}
             >
               {edge.label}
-            </span>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
   );
 }

@@ -103,7 +103,9 @@ test('SourceGraph renders semantic source relationships from real artifacts', ()
 
   assert.match(html, /vd-source-graph/);
   assert.match(html, /aria-label="Source relationship graph"/);
-  assert.match(html, /class="vd-source-graph__node vd-source-graph__node--source" aria-label="Problem Set 02\.pdf"/);
+  assert.match(html, /<ul class="vd-source-graph__canvas" aria-label="Source graph nodes">/);
+  assert.match(html, /<ul class="vd-source-graph__edges" aria-label="Source graph relationships">/);
+  assert.match(html, /<li class="vd-source-graph__node vd-source-graph__node--source" aria-label="Problem Set 02\.pdf"/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /W8 A Concave-Functions\.pdf/);
   assert.match(html, /Concavity and optimisation summary\.md/);
@@ -111,7 +113,7 @@ test('SourceGraph renders semantic source relationships from real artifacts', ()
   assert.match(html, /Problem context/);
   assert.match(html, /Concept source/);
   assert.match(html, /Cited output/);
-  assert.match(html, /aria-label="Problem Set 02\.pdf to Concavity and optimisation summary\.md: Problem context"/);
+  assert.match(html, /aria-label="Problem Set 02\.pdf: Problem context to Concavity and optimisation summary\.md"/);
 });
 
 test('ProvenanceChain renders Sources to Draft to Answer as the product explanation', () => {
@@ -143,6 +145,8 @@ test('AnswerInspector is citation-first and no longer titled as a chatbot', () =
   assert.match(html, /12 registry sources available/);
   assert.match(html, /for="vd-followup-input"/);
   assert.match(html, /id="vd-followup-input"/);
+  assert.match(html, /<button type="button" disabled="" aria-disabled="true">/);
+  assert.match(html, />Send</);
   assert.doesNotMatch(html, />Ask this profile</);
 });
 
