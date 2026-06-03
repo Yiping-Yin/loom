@@ -87,6 +87,7 @@ test('ActiveEvidenceStory renders the UNSW workbench proof case', () => {
   );
 
   assert.match(html, /vd-active-story/);
+  assert.match(html, /aria-label="UNSW Sydney"/);
   assert.match(html, /vd-active-story__title/);
   assert.match(html, /Active evidence story/);
   assert.match(html, /UNSW \/ ECON3202/);
@@ -102,6 +103,7 @@ test('SourceGraph renders semantic source relationships from real artifacts', ()
 
   assert.match(html, /vd-source-graph/);
   assert.match(html, /aria-label="Source relationship graph"/);
+  assert.match(html, /class="vd-source-graph__node vd-source-graph__node--source" aria-label="Problem Set 02\.pdf"/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /W8 A Concave-Functions\.pdf/);
   assert.match(html, /Concavity and optimisation summary\.md/);

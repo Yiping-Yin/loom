@@ -91,19 +91,26 @@ export function SourceGraph({
       </div>
       <div className="vd-source-graph__canvas">
         {graph.nodes.map((node) => (
-          <article key={node.id} className={`vd-source-graph__node vd-source-graph__node--${node.kind}`}>
+          <div
+            key={node.id}
+            className={`vd-source-graph__node vd-source-graph__node--${node.kind}`}
+            aria-label={node.label}
+          >
             <small>{node.eyebrow}</small>
             <strong>{node.label}</strong>
-          </article>
+          </div>
         ))}
       </div>
       <div className="vd-source-graph__edges">
-        {graph.edges.map((edge) => {
+        {graph.edges.map((edge, index) => {
           const fromLabel = nodeLabels.get(edge.from) ?? edge.from;
           const toLabel = nodeLabels.get(edge.to) ?? edge.to;
 
           return (
-            <span key={`${edge.from}-${edge.to}`} aria-label={`${fromLabel} to ${toLabel}: ${edge.label}`}>
+            <span
+              key={`${edge.from}-${edge.to}-${edge.label}-${index}`}
+              aria-label={`${fromLabel} to ${toLabel}: ${edge.label}`}
+            >
               {edge.label}
             </span>
           );
