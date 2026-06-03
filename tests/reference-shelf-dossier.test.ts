@@ -9,6 +9,11 @@ import {
   referenceShelfDossierFor,
 } from '../lib/new-loom/reference-shelf-dossiers';
 import {
+  findReferenceDoc,
+  referenceArtifactsByCategory,
+  referenceDocsByCategory,
+} from '../lib/new-loom/reference-artifact-bindings';
+import {
   VERIFIED_DOSSIER_SECTIONS,
   resolveVerifiedDossierArtifact,
 } from '../lib/new-loom/verified-dossier-home';
@@ -63,4 +68,39 @@ test('category landing uses professional dossier shell before the source file in
   assert.match(styles, /\.sourceIndexShell/);
   assert.doesNotMatch(client, /Yiping's Loom/);
   assert.doesNotMatch(client, /personal knowledge display platform/i);
+});
+
+test('reference shelf pages bind dossier artifacts to real whitelisted source files', () => {
+  const bindingPath = path.join(repoRoot, 'lib/new-loom/reference-artifact-bindings.ts');
+  assert.ok(fs.existsSync(bindingPath), 'reference artifact binding module should exist');
+
+  const binding = read('lib/new-loom/reference-artifact-bindings.ts');
+  const page = read('app/knowledge/[category]/page.tsx');
+  const client = read('app/knowledge/[category]/CategoryLandingClient.tsx');
+
+  assert.match(binding, /referenceDocsByCategory/);
+  assert.match(binding, /referenceArtifactsByCategory/);
+  assert.match(binding, /findReferenceDoc/);
+  assert.match(binding, /private wiki/i);
+  assert.match(binding, /Python Foundations\.pdf/);
+  assert.match(binding, /Claude Certificate\.html/);
+  assert.match(binding, /WQU index\.html/);
+
+  assert.match(page, /referenceDocsByCategory/);
+  assert.match(page, /referenceArtifactsByCategory/);
+  assert.match(client, /referenceArtifacts/);
+});
+
+test('reference artifact bindings expose available local source documents', () => {
+  const quantnetDocs = referenceDocsByCategory('quantnet');
+  const wquDocs = referenceDocsByCategory('wqu');
+  const claudeDocs = referenceDocsByCategory('claude');
+
+  assert.ok(quantnetDocs.length >= 2, 'Quantnet should expose multiple real source files');
+  assert.ok(wquDocs.some((doc) => doc.title === 'WQU index.html'));
+  assert.ok(claudeDocs.some((doc) => doc.title === 'Claude Certificate.html'));
+
+  assert.ok(findReferenceDoc('quantnet', 'python-foundations'));
+  assert.ok(referenceArtifactsByCategory('quantnet').some((artifact) => artifact.href === '/knowledge/quantnet/python-foundations'));
+  assert.ok(referenceArtifactsByCategory('claude').some((artifact) => artifact.label === 'Claude Certificate.html'));
 });

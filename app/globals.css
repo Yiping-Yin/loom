@@ -1305,6 +1305,7 @@ html {
 .vd-file-badge--word .vd-file-badge__icon { background: #2b579a; }
 .vd-file-badge--ppt .vd-file-badge__icon { background: #d24726; }
 .vd-file-badge--excel .vd-file-badge__icon { background: #217346; }
+.vd-file-badge--html .vd-file-badge__icon { background: #e34f26; }
 .vd-file-badge--markdown .vd-file-badge__icon,
 .vd-file-badge--text .vd-file-badge__icon { background: #68716d; }
 

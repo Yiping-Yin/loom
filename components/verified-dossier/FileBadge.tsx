@@ -6,6 +6,7 @@ const FILE_KIND_EXTENSIONS: Record<VerifiedDossierFileKind, string> = {
   ppt: 'PPTX',
   excel: 'XLSX',
   markdown: 'MD',
+  html: 'HTML',
   text: 'TXT',
 };
 

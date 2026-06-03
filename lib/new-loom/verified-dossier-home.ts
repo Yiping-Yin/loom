@@ -1,4 +1,4 @@
-export type VerifiedDossierFileKind = 'pdf' | 'word' | 'ppt' | 'excel' | 'markdown' | 'text';
+export type VerifiedDossierFileKind = 'pdf' | 'word' | 'ppt' | 'excel' | 'markdown' | 'html' | 'text';
 
 export type VerifiedDossierNavItem = {
   label: string;

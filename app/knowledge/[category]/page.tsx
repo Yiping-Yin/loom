@@ -12,6 +12,10 @@ import {
 import { coworkRefsByDocId, listCoworksByCategory } from '../../../lib/coworks-store';
 import type { KnowledgeCategory } from '../../../lib/knowledge-types';
 import { PERSONAL_PLATFORM_SECTIONS } from '../../../lib/new-loom/personal-platform';
+import {
+  referenceArtifactsByCategory,
+  referenceDocsByCategory,
+} from '../../../lib/new-loom/reference-artifact-bindings';
 import { CategoryLandingClient, type CategoryDocCard } from './CategoryLandingClient';
 
 const REFERENCE_SHELF_CATEGORIES: KnowledgeCategory[] = PERSONAL_PLATFORM_SECTIONS
@@ -77,6 +81,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   if (!cat) notFound();
 
   const docs = await docsByCategory(category);
+  const referenceDocs = referenceDocsByCategory(category);
+  const allDocs = [...docs, ...referenceDocs.filter((doc) => !docs.some((item) => item.id === doc.id))];
+  const referenceArtifacts = referenceArtifactsByCategory(category);
   const ingested = await getCollectionMetadata(category);
   const overrides = await readKnowledgeOverrides();
   const collectionOverride = collectionOverrideFor(overrides, category);
@@ -110,7 +117,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   // plain `{ docId: { id, title }[] }` to keep the client payload small.
   const refsMap = await coworkRefsByDocId();
   const coworkRefs: Record<string, { id: string; title: string }[]> = {};
-  for (const doc of docs) {
+  for (const doc of allDocs) {
     const list = refsMap.get(doc.id);
     if (list && list.length > 0) {
       coworkRefs[doc.id] = list.map((c) => ({ id: c.id, title: c.title }));
@@ -120,11 +127,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   return (
     <CategoryLandingClient
       category={cat}
-      docs={docs.map(toDocCard)}
+      docs={allDocs.map(toDocCard)}
       collection={collection}
       folderOverrides={folderOverrides}
       coworks={coworks}
       coworkRefs={coworkRefs}
+      referenceArtifacts={referenceArtifacts}
     />
   );
 }

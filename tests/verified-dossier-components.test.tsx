@@ -19,6 +19,7 @@ const fileCases: Array<[VerifiedDossierFileKind, string, string]> = [
   ['ppt', 'Presentation deck.pptx', 'PPTX'],
   ['excel', 'BHP Case Study.xlsx', 'XLSX'],
   ['markdown', 'Prompt library.md', 'MD'],
+  ['html', 'Claude Certificate.html', 'HTML'],
   ['text', 'Reading notes.txt', 'TXT'],
 ];
 
@@ -78,7 +79,7 @@ test('artifact components preserve concrete file-first direction', () => {
     </div>,
   );
 
-  for (const extension of ['PDF', 'DOCX', 'PPTX', 'XLSX', 'MD', 'TXT']) {
+  for (const extension of ['PDF', 'DOCX', 'PPTX', 'XLSX', 'MD', 'HTML', 'TXT']) {
     assert.match(html, new RegExp(`>${extension}<`));
   }
   assert.doesNotMatch(html, /toy icon|generic icon|file type/i);

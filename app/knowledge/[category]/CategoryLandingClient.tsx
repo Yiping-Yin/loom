@@ -23,6 +23,7 @@ import {
   VERIFIED_DOSSIER_SECTIONS,
   VERIFIED_DOSSIER_TOP_NAV,
   resolveVerifiedDossierArtifact,
+  type VerifiedDossierArtifact,
 } from '../../../lib/new-loom/verified-dossier-home';
 import { referenceShelfDossierFor } from '../../../lib/new-loom/reference-shelf-dossiers';
 import { ArtifactCitationCard, DocumentPreviewCard } from '../../../components/verified-dossier/DocumentPreviewCard';
@@ -688,6 +689,7 @@ export function CategoryLandingClient({
   folderOverrides = {},
   coworks = [],
   coworkRefs = {},
+  referenceArtifacts = [],
 }: {
   category: KnowledgeCategory;
   docs: CategoryDocCard[];
@@ -695,6 +697,7 @@ export function CategoryLandingClient({
   folderOverrides?: Record<string, FolderOverride>;
   coworks?: CoworkSummary[];
   coworkRefs?: Record<string, { id: string; title: string }[]>;
+  referenceArtifacts?: VerifiedDossierArtifact[];
 }) {
   // Live folder overrides: initialise from server, update optimistically on
   // drag-and-drop so the UI moves immediately. Persistence round-trips to
@@ -1377,8 +1380,11 @@ export function CategoryLandingClient({
     return sourceIndex;
   }
 
-  const artifacts = verifiedShelf.artifactIds.map(resolveVerifiedDossierArtifact);
-  const citedArtifacts = dossier.citedArtifacts.map(resolveVerifiedDossierArtifact);
+  const fallbackArtifacts = verifiedShelf.artifactIds.map(resolveVerifiedDossierArtifact);
+  const artifacts = referenceArtifacts.length > 0 ? referenceArtifacts : fallbackArtifacts;
+  const citedArtifacts = referenceArtifacts.length > 0
+    ? artifacts.slice(0, Math.max(1, Math.min(3, artifacts.length)))
+    : dossier.citedArtifacts.map(resolveVerifiedDossierArtifact);
 
   return (
     <main className={`vd-home ${styles.page}`} aria-labelledby={`${dossier.id}-shelf-title`}>
