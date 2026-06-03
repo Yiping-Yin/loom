@@ -45,7 +45,8 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'Claude',
     'History',
     'Open Sources',
-    'Open Draft',
+    'No recent Draft',
+    'Draft opens after a saved record.',
     'Problem Set 02.pdf',
     'W8 A Concave-Functions.pdf',
     'W8 C Suggested Exercises.pdf',
@@ -85,6 +86,8 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   assert.doesNotMatch(text, /Ask this profile/);
   assert.doesNotMatch(text, /Ask a follow-up/);
   assert.doesNotMatch(text, /Open recent Draft/);
+  assert.doesNotMatch(text, /Open Draft/);
+  assert.doesNotMatch(html, /href="\/draft"/);
   assert.doesNotMatch(text, /A knowledge profile people can inspect and ask\./);
   assert.doesNotMatch(
     text,

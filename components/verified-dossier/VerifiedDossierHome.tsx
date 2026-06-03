@@ -112,8 +112,8 @@ export function VerifiedDossierHome({
           Loom
         </a>
         <div className="vd-nav__links">
-          {VERIFIED_DOSSIER_TOP_NAV.map((item, index) => (
-            <a key={item.label} className={index === 0 ? 'is-active' : undefined} href={item.href}>
+          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
+            <a key={item.label} className={item.label === 'Sources' ? 'is-active' : undefined} href={item.href}>
               {item.label}
             </a>
           ))}
@@ -168,11 +168,18 @@ export function VerifiedDossierHome({
                 <span>Open Sources</span>
                 <ArrowIcon />
               </button>
-              <button className="vd-action-button" type="button" onClick={onOpenRecent}>
-                <DraftIcon />
-                <span>{hasRecent ? 'Open recent Draft' : 'Open Draft'}</span>
-                <ArrowIcon />
-              </button>
+              {hasRecent ? (
+                <button className="vd-action-button" type="button" onClick={onOpenRecent}>
+                  <DraftIcon />
+                  <span>Open recent Draft</span>
+                  <ArrowIcon />
+                </button>
+              ) : (
+                <button className="vd-action-button" type="button" disabled>
+                  <DraftIcon />
+                  <span>No recent Draft</span>
+                </button>
+              )}
             </div>
           </section>
 
@@ -182,7 +189,7 @@ export function VerifiedDossierHome({
               <span className="vd-status-dot" aria-hidden="true" />
               {ready ? activitySummary : 'Sources and Draft ready'}
             </p>
-            {!hasRecent ? <span className="vd-activity__hint">Draft opens clean when no recent record exists.</span> : null}
+            {!hasRecent ? <span className="vd-activity__hint">Draft opens after a saved record.</span> : null}
           </section>
         </aside>
 

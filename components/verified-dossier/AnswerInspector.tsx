@@ -4,20 +4,6 @@ import {
 } from '../../lib/new-loom/verified-dossier-home';
 import { ArtifactCitationCard } from './DocumentPreviewCard';
 
-function ArrowIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 12h13M13 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function AnswerInspector({
   prompt,
   citationRegistryCount,
@@ -58,10 +44,6 @@ export function AnswerInspector({
       </div>
       <div className="vd-followup vd-followup--readonly" aria-label="Homepage answer inspector status">
         <span>Citation preview is read-only on the homepage.</span>
-        <a href="/draft">
-          Open Draft for follow-up work
-          <ArrowIcon />
-        </a>
       </div>
     </section>
   );

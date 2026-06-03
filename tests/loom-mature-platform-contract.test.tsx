@@ -63,15 +63,13 @@ test('HomeClient renders mature platform modules on first paint', () => {
 
   const html = renderToStaticMarkup(<HomeClient />);
 
-  assert.match(html, /A knowledge profile people can inspect and ask\./);
-  assert.match(
-    html,
-    /Sources, drafts, projects, and conversations become a public record/,
-  );
+  assert.match(html, /Verified source workspace/);
+  assert.match(html, /Sources become cited work/);
+  assert.match(html, /UNSW \/ ECON3202/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /W8 A Concave-Functions\.pdf/);
-  assert.match(html, /Sources to Draft to Answer/);
-  assert.match(html, /Ask this profile/);
+  assert.match(html, /Sources[\s\S]{0,80}Draft[\s\S]{0,80}Answer/);
+  assert.match(html, /Answer inspector/);
   assert.match(html, /concavity/i);
   assert.match(html, /aria-label="Loom history"/);
 
@@ -84,7 +82,7 @@ test('HomeClient renders mature platform modules on first paint', () => {
     'Original Loom',
     'Private Wiki',
     'Knowledge identity',
-    'Platform for everyone',
+    'Real-file workflow',
     'Sources',
     'Draft',
   ]) {
@@ -92,6 +90,8 @@ test('HomeClient renders mature platform modules on first paint', () => {
   }
 
   for (const retired of [
+    /A knowledge profile people can inspect and ask/,
+    /Ask this profile/,
     /Recent progress/,
     /Product story/,
     /Process timeline/,

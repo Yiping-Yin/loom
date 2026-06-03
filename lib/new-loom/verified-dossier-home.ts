@@ -22,6 +22,12 @@ export type VerifiedDossierArtifact = {
   shelf: 'about' | 'unsw' | 'quantnet' | 'wqu' | 'claude';
   role: string;
   href: string;
+  sourcePath?: string;
+  sourceFolder?: string;
+  pageCount?: number;
+  fileSize?: string;
+  modifiedAt?: string;
+  thumbnailSrc?: string;
   preview?: {
     title: string;
     kicker: string;
@@ -57,13 +63,19 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     kind: 'pdf',
     shelf: 'unsw',
     role: 'Problem-set evidence',
-    href: '/knowledge/unsw',
+    href: '/knowledge/unsw/econ3202/ps02',
+    sourcePath: 'UNSW/ECON 3202/03_Problem_Set/Problem Set 02.pdf',
+    sourceFolder: '03_Problem_Set',
+    pageCount: 2,
+    fileSize: '79 KB',
+    modifiedAt: '15 Mar 2026',
+    thumbnailSrc: '/verified-sources/econ3202/problem-set-02.png',
     preview: {
       title: 'Problem Set 02',
       kicker: 'ECON3202 - Mathematical Economics',
-      metadata: 'PDF - Assignment - T1 2026',
-      tag: 'Problem set',
-      lines: ['Continuity and differentiation', 'Opened 10 Mar 2026', 'Due 18 Mar 2026'],
+      metadata: '2 pages - 79 KB - modified 15 Mar 2026',
+      tag: '03_Problem_Set',
+      lines: ['UNSW/ECON 3202/03_Problem_Set', 'PDF metadata verified locally', 'Set 2 - Term 1, 2026'],
     },
   },
   {
@@ -72,13 +84,19 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     kind: 'pdf',
     shelf: 'unsw',
     role: 'Lecture source',
-    href: '/knowledge/unsw',
+    href: '/knowledge/unsw/econ3202',
+    sourcePath: 'UNSW/ECON 3202/02_Week/W08/W8 A Concave-Functions.pdf',
+    sourceFolder: '02_Week/W08',
+    pageCount: 27,
+    fileSize: '227 KB',
+    modifiedAt: '06 Apr 2026',
+    thumbnailSrc: '/verified-sources/econ3202/w8-a-concave-functions.png',
     preview: {
       title: 'Concave Functions',
       kicker: 'Week 8 - ECON3202',
-      metadata: 'PDF - Lecture source - T1 2026',
-      tag: 'Week 8 lecture',
-      lines: ['Function shape and optimisation', 'Concavity in economic reasoning', 'Bridge to problem-set work'],
+      metadata: '27 pages - 227 KB - modified 06 Apr 2026',
+      tag: '02_Week/W08',
+      lines: ['UNSW/ECON 3202/02_Week/W08', 'Beamer lecture deck', 'Week 8A - Term 1, 2026'],
     },
   },
   {
@@ -87,13 +105,19 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     kind: 'pdf',
     shelf: 'unsw',
     role: 'Exercise source',
-    href: '/knowledge/unsw',
+    href: '/knowledge/unsw/econ3202',
+    sourcePath: 'UNSW/ECON 3202/02_Week/W08/W8 C Suggested Exercises.pdf',
+    sourceFolder: '02_Week/W08',
+    pageCount: 2,
+    fileSize: '81 KB',
+    modifiedAt: '06 Apr 2026',
+    thumbnailSrc: '/verified-sources/econ3202/w8-c-suggested-exercises.png',
     preview: {
       title: 'Suggested Exercises',
       kicker: 'Week 8 - Practice layer',
-      metadata: 'PDF - Exercises - T1 2026',
-      tag: 'Practice',
-      lines: ['Concavity checks', 'Mathematical proof practice', 'Bridge from source to answer'],
+      metadata: '2 pages - 81 KB - modified 06 Apr 2026',
+      tag: '02_Week/W08',
+      lines: ['UNSW/ECON 3202/02_Week/W08', 'Exercise source file', 'Suggested exercises for Week 8'],
     },
   },
   {
@@ -102,54 +126,102 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     kind: 'pdf',
     shelf: 'unsw',
     role: 'Answer artifact',
-    href: '/knowledge/unsw',
+    href: '/knowledge/unsw/econ3202/ps02',
+    sourcePath: 'UNSW/ECON 3202/03_Problem_Set/Problem2.pdf',
+    sourceFolder: '03_Problem_Set',
+    pageCount: 5,
+    fileSize: '1.5 MB',
+    modifiedAt: '18 May 2026',
+    thumbnailSrc: '/verified-sources/econ3202/problem2-answer.png',
     preview: {
       title: 'Problem 2 Answer',
       kicker: 'Private working answer',
-      metadata: 'PDF - Answer - 5 pages',
-      tag: 'Answer',
-      lines: ['Continuity and differentiation work', 'Private synthesis layer', 'Evidence, not official source truth'],
+      metadata: '5 pages - 1.5 MB - modified 18 May 2026',
+      tag: '03_Problem_Set',
+      lines: ['UNSW/ECON 3202/03_Problem_Set', 'Handwritten answer scan', 'Private synthesis, not official source truth'],
     },
   },
   {
-    id: 'quant-market-making',
-    label: 'Market Making Interview Notes.pdf',
+    id: 'quantnet-cpp-course',
+    label: 'QuantNet Online C++ Course.pdf',
     kind: 'pdf',
     shelf: 'quantnet',
-    role: 'Quant interview preparation',
-    href: '/knowledge/quantnet',
+    role: 'Course source',
+    href: '/knowledge/quantnet/quantnet-online-cpp-course',
+    sourcePath: 'Quant/C++/00_Course_Info/QuantNet_Online_C++_Course.pdf',
+    sourceFolder: 'C++/00_Course_Info',
+    pageCount: 9,
+    fileSize: '52 KB',
+    modifiedAt: '29 Apr 2025',
+    thumbnailSrc: '/verified-sources/quantnet/quantnet-online-cpp-course.png',
+    preview: {
+      title: 'C++ Programming for Financial Engineering',
+      kicker: 'QuantNet / C++ course source',
+      metadata: '9 pages - 52 KB - modified 29 Apr 2025',
+      tag: '00_Course_Info',
+      lines: ['Quant/C++/00_Course_Info', 'Financial engineering course source', 'Real local PDF'],
+    },
   },
   {
-    id: 'quant-python',
+    id: 'quantnet-python-foundations',
     label: 'Python Foundations.pdf',
     kind: 'pdf',
     shelf: 'quantnet',
-    role: 'Programming path',
-    href: '/knowledge/quantnet',
+    role: 'Programming source',
+    href: '/knowledge/quantnet/python-foundations',
+    sourcePath: 'Quant/Python for Quant/Python Foundations/Section 1 Orientation/Python Foundations.pdf',
+    sourceFolder: 'Python for Quant/Python Foundations',
+    pageCount: 117,
+    fileSize: '7.6 MB',
+    modifiedAt: '03 Oct 2025',
+    thumbnailSrc: '/verified-sources/quantnet/python-foundations.png',
+    preview: {
+      title: 'Python Foundations',
+      kicker: 'QuantNet / Python for Quant',
+      metadata: '117 pages - 7.6 MB - modified 03 Oct 2025',
+      tag: 'Python Foundations',
+      lines: ['Quant/Python for Quant/Python Foundations', 'Install the Python Quant Stack', 'Real local PDF'],
+    },
   },
   {
-    id: 'wqu-bhp',
-    label: 'BHP Case Study.xlsx',
-    kind: 'excel',
+    id: 'wqu-index',
+    label: 'WQU index.html',
+    kind: 'html',
     shelf: 'wqu',
-    role: 'Case-study artifact',
-    href: '/knowledge/wqu',
+    role: 'Credential source',
+    href: '/knowledge/wqu/wqu-index',
+    sourcePath: 'WQU/index.html',
+    sourceFolder: 'WQU',
+    fileSize: '2.3 KB',
+    modifiedAt: '31 May 2026',
+    thumbnailSrc: '/verified-sources/wqu/wqu-index.png',
+    preview: {
+      title: 'WQU',
+      kicker: 'WorldQuant University / local source',
+      metadata: 'HTML - 2.3 KB - modified 31 May 2026',
+      tag: 'Program page',
+      lines: ['WQU/index.html', 'WorldQuant University material home', 'Real local HTML source'],
+    },
   },
   {
-    id: 'claude-prompts',
-    label: 'Prompt library.md',
-    kind: 'markdown',
+    id: 'claude-certificate',
+    label: 'Claude Certificate.html',
+    kind: 'html',
     shelf: 'claude',
-    role: 'Prompt and conversation memory',
-    href: '/knowledge/claude',
-  },
-  {
-    id: 'claude-cert',
-    label: 'Claude certificate.pdf',
-    kind: 'pdf',
-    shelf: 'claude',
-    role: 'Certificate evidence',
-    href: '/knowledge/claude',
+    role: 'Certificate source',
+    href: '/knowledge/claude/claude-certificate',
+    sourcePath: 'Claude Certificate/Claude Certificate.html',
+    sourceFolder: 'Claude Certificate',
+    fileSize: '18 KB',
+    modifiedAt: '28 May 2026',
+    thumbnailSrc: '/verified-sources/claude/claude-certificate.png',
+    preview: {
+      title: 'Anthropic Official Certificates',
+      kicker: 'Claude / certificate source',
+      metadata: 'HTML - 18 KB - modified 28 May 2026',
+      tag: 'Credential evidence',
+      lines: ['Claude Certificate/Claude Certificate.html', 'Official-first certificate record', 'Real local HTML source'],
+    },
   },
 ] as const satisfies readonly VerifiedDossierArtifact[];
 
@@ -208,9 +280,8 @@ export type VerifiedDossierWorkbench = {
 };
 
 export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
-  { label: 'About', href: '/about' },
   { label: 'Sources', href: '/knowledge' },
-  { label: 'UNSW', href: '/knowledge/unsw' },
+  { label: 'UNSW / ECON3202', href: '/knowledge/unsw' },
   { label: 'Quantnet', href: '/knowledge/quantnet' },
   { label: 'WQU', href: '/knowledge/wqu' },
   { label: 'Claude', href: '/knowledge/claude' },
@@ -261,32 +332,32 @@ export const VERIFIED_DOSSIER_SECTIONS: VerifiedDossierSection[] = [
     id: 'quantnet',
     label: 'Quantnet',
     href: '/knowledge/quantnet',
-    summary: 'Quant interviews, programming practice, and market reasoning.',
+    summary: 'QuantNet course material, Python practice, and market reasoning.',
     status: 'Skill proof',
-    artifactIds: ['quant-market-making', 'quant-python'],
+    artifactIds: ['quantnet-cpp-course', 'quantnet-python-foundations'],
   },
   {
     id: 'wqu',
     label: 'WQU',
     href: '/knowledge/wqu',
-    summary: 'Credential work, case studies, and professional learning records.',
+    summary: 'WorldQuant University material and professional learning records.',
     status: 'Credential evidence',
-    artifactIds: ['wqu-bhp'],
+    artifactIds: ['wqu-index'],
   },
   {
     id: 'claude',
     label: 'Claude',
     href: '/knowledge/claude',
-    summary: 'AI conversations, prompts, certificates, and grounded persona memory.',
+    summary: 'AI learning, certificate evidence, and grounded persona memory.',
     status: 'AI memory',
-    artifactIds: ['claude-prompts', 'claude-cert'],
+    artifactIds: ['claude-certificate'],
   },
 ];
 
 export const VERIFIED_DOSSIER_AI_PROMPT = {
   question: 'How does concavity connect to optimisation in ECON3202?',
   answer:
-    'In ECON3202, concavity turns the shape of a function into usable optimisation evidence. It helps show when first-order conditions identify a maximum and when an economic choice problem has a stable interpretation rather than only a formal derivative calculation.',
+    'Concavity shapes how a function behaves. In optimisation, it helps show when first-order conditions identify a maximum and when an economic choice problem has a stable interpretation rather than only a derivative calculation.',
   citations: ['econ-ps2', 'econ-slides', 'econ-tutorial'],
 } satisfies VerifiedDossierAiPrompt;
 
@@ -351,9 +422,13 @@ export const VERIFIED_DOSSIER_WORKBENCH = {
   ],
 } as const satisfies VerifiedDossierWorkbench;
 
-export const VERIFIED_DOSSIER_ARTIFACTS_BY_ID = Object.fromEntries(
-  VERIFIED_DOSSIER_ARTIFACTS.map((artifact) => [artifact.id, artifact]),
-) as Record<VerifiedDossierArtifactId, VerifiedDossierArtifact>;
+export const VERIFIED_DOSSIER_ARTIFACTS_BY_ID = VERIFIED_DOSSIER_ARTIFACTS.reduce(
+  (artifactsById, artifact) => {
+    artifactsById[artifact.id] = artifact;
+    return artifactsById;
+  },
+  {} as Record<VerifiedDossierArtifactId, VerifiedDossierArtifact>,
+);
 
 export function resolveVerifiedDossierArtifact(id: VerifiedDossierArtifactId): VerifiedDossierArtifact {
   return VERIFIED_DOSSIER_ARTIFACTS_BY_ID[id];
@@ -376,8 +451,8 @@ export const VERIFIED_DOSSIER_HISTORY: VerifiedDossierHistoryItem[] = [
     date: 'Jun 2026',
   },
   {
-    title: 'Platform for everyone',
-    text: 'From one real instance toward Loom for everyone.',
+    title: 'Real-file workflow',
+    text: 'Importer and Draft output are checked against local source files before release.',
     date: 'Next',
   },
 ];

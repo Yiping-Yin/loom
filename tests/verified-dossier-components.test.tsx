@@ -145,8 +145,8 @@ test('AnswerInspector is citation-first and no longer titled as a chatbot', () =
   assert.match(html, /12 registry sources available/);
   assert.match(html, /Homepage answer inspector status/);
   assert.match(html, /Citation preview is read-only on the homepage\./);
-  assert.match(html, /href="\/draft"/);
-  assert.match(html, /Open Draft for follow-up work/);
+  assert.doesNotMatch(html, /href="\/draft"/);
+  assert.doesNotMatch(html, /Open Draft for follow-up work/);
   assert.doesNotMatch(html, /vd-followup-input/);
   assert.doesNotMatch(html, /placeholder="Follow-up disabled in static preview"/);
   assert.doesNotMatch(html, /<input/);
