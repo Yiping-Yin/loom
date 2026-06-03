@@ -16,14 +16,9 @@ import {
 } from '../lib/new-loom/personal-platform';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const privateWikiRoot = path.resolve(repoRoot, '..');
 
 function readRepo(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
-}
-
-function readPrivateWiki(relativePath: string) {
-  return fs.readFileSync(path.join(privateWikiRoot, relativePath), 'utf8');
 }
 
 test('personal platform data keeps five sections and the mature section model', () => {
@@ -105,20 +100,30 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
 });
 
-test('static Private Wiki home exposes the personal knowledge identity model', () => {
-  const html = readPrivateWiki('index.html');
+test('repo homepage exposes the personal knowledge identity evidence model', () => {
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
 
-  assert.match(html, /Loom is a personal knowledge identity platform/i);
-  assert.match(html, /a portfolio people can inspect/i);
-  assert.match(html, /personal knowledge identity layer/i);
+  const html = renderToStaticMarkup(<HomeClient />);
+
+  assert.match(html, /Sources become cited work/);
+  assert.match(html, /Verified source workspace/);
+  assert.match(html, /Active evidence story/);
+  assert.match(html, /Source graph/);
+  assert.match(html, /Answer inspector/);
+  assert.match(html, /Knowledge identity/);
+  assert.match(html, /Real-file workflow/);
   for (const label of ['About', 'UNSW', 'Quantnet', 'WQU', 'Claude']) {
     assert.match(html, new RegExp(`>${label}<|${label}`));
   }
   for (const model of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {
-    assert.match(html, new RegExp(model));
+    assert.ok(PERSONAL_PLATFORM_MODEL.includes(model as (typeof PERSONAL_PLATFORM_MODEL)[number]));
   }
-  assert.match(html, /thinking loom/i);
   assert.match(html, /ECON3202/);
+  assert.doesNotMatch(html, /personal knowledge display platform/i);
+  assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
   assert.doesNotMatch(html, /AI Engineer|Citadel/i);
 });
 
