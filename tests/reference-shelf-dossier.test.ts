@@ -155,6 +155,10 @@ test('reference source importer resolves the Private Wiki root instead of hard-c
     '/example/Private Wiki',
   );
   assert.equal(
+    referenceWikiRoot({ cwd: '/example/Private Wiki/LOOM/.worktrees/clean-homepage-parity', env: {} }),
+    '/example/Private Wiki',
+  );
+  assert.equal(
     referenceWikiRoot({
       cwd: '/example/Private Wiki/LOOM',
       env: { LOOM_REFERENCE_WIKI_ROOT: '/external/source-root' },

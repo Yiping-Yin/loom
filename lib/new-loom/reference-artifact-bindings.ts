@@ -35,12 +35,20 @@ export type ReferenceSourceManifest = {
   sources: readonly ReferenceArtifactSource[];
 };
 
+function privateWikiRootFromLoomPath(cwd: string) {
+  const resolved = path.resolve(cwd);
+  const parts = resolved.split(path.sep);
+  const loomIndex = parts.lastIndexOf('LOOM');
+  if (loomIndex <= 0) return null;
+  return parts.slice(0, loomIndex).join(path.sep) || path.sep;
+}
+
 export function referenceWikiRoot(options: ReferenceWikiRootOptions = {}) {
   const env = options.env ?? process.env;
   const cwd = options.cwd ?? process.cwd();
   const configured = env.LOOM_REFERENCE_WIKI_ROOT?.trim();
   if (configured) return path.resolve(configured);
-  return path.basename(cwd) === 'LOOM' ? path.dirname(cwd) : path.resolve(cwd, '..');
+  return privateWikiRootFromLoomPath(cwd) ?? path.resolve(cwd, '..');
 }
 
 export function referenceSourceManifestPath(options: ReferenceSourceManifestOptions = {}) {

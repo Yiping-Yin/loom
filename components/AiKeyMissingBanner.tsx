@@ -50,9 +50,9 @@ export function AiKeyMissingBanner() {
     return () => { cancelled = true; };
   }, []);
 
-  // Don't show on pure reading surfaces — those are focus mode; the banner
-  // would be chrome on top of chrome-free pages.
-  if (!visible || isReadingPath(pathname)) return null;
+  // Don't show on pure reading surfaces or the identity homepage. Those
+  // surfaces should open cleanly before provider setup becomes relevant.
+  if (!visible || pathname === '/' || isReadingPath(pathname)) return null;
 
   const dismiss = () => {
     try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
