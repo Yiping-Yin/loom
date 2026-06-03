@@ -21,15 +21,9 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   const html = renderToStaticMarkup(<HomeClient />);
   const text = visibleText(html);
 
-  assert.match(text, /A knowledge profile people can inspect and ask\./);
-  assert.match(
-    text,
-    /Sources, drafts, projects, and conversations become a public record/,
-  );
-  assert.match(
-    text,
-    /Loom turns your sources, learning path, work, process records, and AI conversations/,
-  );
+  assert.match(text, /Verified source workspace/);
+  assert.match(text, /Sources become cited work/);
+  assert.match(text, /Sources\s+→\s+Draft\s+→\s+Answer/);
 
   for (const label of [
     'Yiping Yin',
@@ -39,32 +33,39 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'Sydney, Australia',
     'About',
     'Sources',
-    'UNSW',
+    'Draft',
+    'Sources become cited work',
+    'Answer inspector',
+    'Verified source workspace',
+    'Active evidence story',
+    'Source graph',
+    'UNSW / ECON3202',
     'Quantnet',
     'WQU',
     'Claude',
     'History',
+    'Open Sources',
+    'Open recent Draft',
     'Problem Set 02.pdf',
     'W8 A Concave-Functions.pdf',
     'W8 C Suggested Exercises.pdf',
     'Problem2.pdf',
     'About me page.docx',
-    'BHP Case Study.xlsx',
-    'Prompt library.md',
+    'QuantNet Online C++ Course.pdf',
+    'Python Foundations.pdf',
+    'WQU index.html',
+    'Claude Certificate.html',
     'PDF',
     'DOCX',
-    'XLSX',
-    'MD',
-    'Ask this profile',
-    'Sources to Draft to Answer',
-    'Featured UNSW / ECON3202 evidence',
+    'HTML',
     'Problem Set 02',
-    'Concave Functions',
-    'PDF - Assignment - T1 2026',
-    'PDF - Lecture source - T1 2026',
+    'W8 A Concave-Functions.pdf',
+    '2 pages - 79 KB - modified 15 Mar 2026',
+    '27 pages - 227 KB - modified 06 Apr 2026',
+    'UNSW/ECON 3202/03_Problem_Set/Problem Set 02.pdf',
+    'UNSW/ECON 3202/02_Week/W08/W8 A Concave-Functions.pdf',
     'Concavity and optimisation summary.md',
-    'Evidence quality: High',
-    'Cited sources from this shelf',
+    'Cited sources',
     'concavity',
     'first-order conditions',
     'economic choice problem',
@@ -73,11 +74,32 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     assert.match(text, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
-  assert.equal(text.match(/Ask this profile/g)?.length ?? 0, 1);
+  assert.equal(text.match(/Answer inspector/g)?.length ?? 0, 1);
   assert.match(html, /class="vd-home/);
+  assert.match(html, /class="vd-workbench-grid"/);
+  assert.match(html, /class="vd-active-story/);
+  assert.match(html, /class="vd-source-graph/);
+  assert.doesNotMatch(text, /Source Dossier/);
+  assert.doesNotMatch(text, /Ask this profile/);
+  for (const assetSrc of [
+    '/brand/quantnet/quantnet-logo.png',
+    '/brand/wqu/wqu-logo.svg',
+    '/brand/claude/claude-icon.png',
+  ]) {
+    assert.match(html, new RegExp(assetSrc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.doesNotMatch(text, /A knowledge profile people can inspect and ask\./);
+  assert.doesNotMatch(
+    text,
+    /Sources, drafts, projects, and conversations become a public record/,
+  );
+  assert.doesNotMatch(
+    text,
+    /Loom turns your sources, learning path, work, process records, and AI conversations/,
+  );
   assert.doesNotMatch(html, /placeholder="Ask this profile"/);
   assert.match(html, /placeholder="Search this profile"/);
-  assert.match(html, /placeholder="Ask a follow-up\.\.\."/);
+  assert.match(html, /placeholder="Follow-up disabled in static preview"/);
   assert.doesNotMatch(text, /[\u3400-\u9fff]/);
   assert.doesNotMatch(text, /Yiping's Loom/);
   assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);
