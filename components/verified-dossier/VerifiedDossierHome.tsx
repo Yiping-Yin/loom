@@ -10,6 +10,7 @@ import {
   resolveVerifiedDossierArtifact,
   type VerifiedDossierArtifactId,
 } from '../../lib/new-loom/verified-dossier-home';
+import { ArtifactCitationCard, DocumentPreviewCard } from './DocumentPreviewCard';
 import { FileBadge } from './FileBadge';
 import { InstitutionMark } from './InstitutionMark';
 
@@ -154,7 +155,7 @@ export function VerifiedDossierHome({
           <p className="vd-subtitle">{VERIFIED_DOSSIER_HOME_COPY.chineseBody}</p>
 
           <section className="vd-featured-story" aria-labelledby="featured-unsw-title">
-            <div>
+            <div className="vd-featured-story__header">
               <InstitutionMark kind="unsw" />
               <h2 id="featured-unsw-title">Featured UNSW / ECON3202 evidence</h2>
               <p>
@@ -162,22 +163,43 @@ export function VerifiedDossierHome({
                 work.
               </p>
             </div>
-            <div className="vd-artifact-stage">
-              <div className="vd-file-stack" aria-label="Featured artifacts">
+            <div className="vd-evidence-board">
+              <div className="vd-document-grid" aria-label="Featured ECON3202 document previews">
                 {FEATURED_UNSW_ARTIFACTS.map((artifactId) => {
                   const artifact = resolveVerifiedDossierArtifact(artifactId);
-                  return (
-                    <a key={artifact.id} className="vd-text-link" href={artifact.href}>
-                      <FileBadge kind={artifact.kind} label={artifact.label} />
-                    </a>
-                  );
+                  return <DocumentPreviewCard key={artifact.id} artifact={artifact} />;
                 })}
               </div>
-              <div className="vd-inspector-card">
-                <h2>Sources to Draft to Answer</h2>
-                <p>
-                  Course files become a draft trail and then a cited answer people can inspect.
-                </p>
+
+              <section className="vd-provenance-section" aria-labelledby="provenance-title">
+                <h2 id="provenance-title">Sources to Draft to Answer</h2>
+                <div className="vd-provenance-chain" aria-label="Sources to Draft to Answer chain">
+                  <article className="vd-provenance-step">
+                    <span aria-hidden="true">01</span>
+                    <h3>Sources</h3>
+                    <strong>4 ECON3202 files</strong>
+                    <p>Course materials, notes, slides, tutorial solutions, and problem-set work.</p>
+                  </article>
+                  <article className="vd-provenance-step">
+                    <span aria-hidden="true">02</span>
+                    <h3>Draft</h3>
+                    <strong>Phillips Curve summary.md</strong>
+                    <p>A working note created from lecture and tutorial evidence.</p>
+                  </article>
+                  <article className="vd-provenance-step">
+                    <span aria-hidden="true">03</span>
+                    <h3>Answer</h3>
+                    <strong>Grounded explanation</strong>
+                    <p>Cited to source artifacts people can inspect from this shelf.</p>
+                  </article>
+                </div>
+              </section>
+
+              <div className="vd-evidence-quality">
+                <div>
+                  <strong>Evidence quality: High</strong>
+                  <p>All featured sources are represented as inspectable UNSW / ECON3202 materials.</p>
+                </div>
                 {FEATURED_UNSW_SECTION ? (
                   <a className="vd-text-link" href={FEATURED_UNSW_SECTION.href}>
                     Open UNSW evidence <ArrowIcon />
@@ -231,19 +253,28 @@ export function VerifiedDossierHome({
 
         <aside id="ask-this-profile" className="vd-inspector" aria-labelledby="ask-profile-title">
           <section className="vd-inspector-card">
-            <h2 id="ask-profile-title">Ask this profile</h2>
-            <p>{VERIFIED_DOSSIER_AI_PROMPT.question}</p>
-            <p>{VERIFIED_DOSSIER_AI_PROMPT.answer}</p>
+            <div className="vd-inspector-card__header">
+              <h2 id="ask-profile-title">Ask this profile</h2>
+              <span>Grounded</span>
+            </div>
+            <div className="vd-question-card">
+              <strong>{VERIFIED_DOSSIER_AI_PROMPT.question}</strong>
+            </div>
+            <div className="vd-answer-block">
+              <h3>Answer</h3>
+              <p>{VERIFIED_DOSSIER_AI_PROMPT.answer}</p>
+            </div>
+            <h3 className="vd-citation-heading">Cited sources from this shelf</h3>
             <div className="vd-citation-list" aria-label="Cited artifacts">
               {VERIFIED_DOSSIER_AI_PROMPT.citations.map((artifactId) => {
                 const artifact = resolveVerifiedDossierArtifact(artifactId);
-                return (
-                  <a key={artifact.id} className="vd-text-link" href={artifact.href}>
-                    <FileBadge kind={artifact.kind} label={artifact.label} compact />
-                  </a>
-                );
+                return <ArtifactCitationCard key={artifact.id} artifact={artifact} />;
               })}
             </div>
+            <label className="vd-followup">
+              <input type="text" placeholder="Ask a follow-up..." aria-label="Ask a follow-up" />
+              <ArrowIcon />
+            </label>
           </section>
         </aside>
       </div>

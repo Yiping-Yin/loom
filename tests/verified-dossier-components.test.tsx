@@ -2,12 +2,16 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
 
+import { ArtifactCitationCard, DocumentPreviewCard } from '../components/verified-dossier/DocumentPreviewCard';
 import { FileBadge } from '../components/verified-dossier/FileBadge';
 import {
   InstitutionMark,
   type InstitutionMarkKind,
 } from '../components/verified-dossier/InstitutionMark';
-import type { VerifiedDossierFileKind } from '../lib/new-loom/verified-dossier-home';
+import {
+  resolveVerifiedDossierArtifact,
+  type VerifiedDossierFileKind,
+} from '../lib/new-loom/verified-dossier-home';
 
 const fileCases: Array<[VerifiedDossierFileKind, string, string]> = [
   ['pdf', 'ECON3202 Problem Set 2.pdf', 'PDF'],
@@ -78,4 +82,27 @@ test('artifact components preserve concrete file-first direction', () => {
     assert.match(html, new RegExp(`>${extension}<`));
   }
   assert.doesNotMatch(html, /toy icon|generic icon|file type/i);
+});
+
+test('DocumentPreviewCard renders inspectable file preview metadata', () => {
+  const artifact = resolveVerifiedDossierArtifact('econ-slides');
+  const html = render(<DocumentPreviewCard artifact={artifact} />);
+
+  assert.match(html, /vd-document-card/);
+  assert.match(html, /vd-document-preview--ppt/);
+  assert.match(html, /Lecture 8/);
+  assert.match(html, /Aggregate Demand I/);
+  assert.match(html, /PPTX - 8\.7 MB - 10 Apr 2024/);
+  assert.match(html, /Lecture slides/);
+});
+
+test('ArtifactCitationCard keeps cited source thumbnails visible', () => {
+  const artifact = resolveVerifiedDossierArtifact('econ-ps2');
+  const html = render(<ArtifactCitationCard artifact={artifact} />);
+
+  assert.match(html, /vd-citation-card/);
+  assert.match(html, /vd-citation-card__thumb--pdf/);
+  assert.match(html, /ECON3202 Problem Set 2\.pdf/);
+  assert.match(html, /Problem Set 2/);
+  assert.match(html, /PDF - 1\.2 MB - 12 Apr 2024/);
 });

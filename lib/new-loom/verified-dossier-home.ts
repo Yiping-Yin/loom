@@ -22,6 +22,13 @@ export type VerifiedDossierArtifact = {
   shelf: 'about' | 'unsw' | 'quantnet' | 'wqu' | 'claude';
   role: string;
   href: string;
+  preview?: {
+    title: string;
+    kicker: string;
+    metadata: string;
+    tag: string;
+    lines: readonly string[];
+  };
 };
 
 export const VERIFIED_DOSSIER_ARTIFACTS = [
@@ -40,6 +47,13 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     shelf: 'unsw',
     role: 'Problem-set evidence',
     href: '/knowledge/unsw',
+    preview: {
+      title: 'Problem Set 2',
+      kicker: 'ECON3202 - Macroeconomic Analysis',
+      metadata: 'PDF - 1.2 MB - 12 Apr 2024',
+      tag: 'Problem set',
+      lines: ['Due 23 Apr 2024, 5:00pm AEST', 'Phillips Curve and aggregate demand', 'Answer all questions with working'],
+    },
   },
   {
     id: 'econ-slides',
@@ -48,6 +62,13 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     shelf: 'unsw',
     role: 'Lecture source',
     href: '/knowledge/unsw',
+    preview: {
+      title: 'Lecture 8',
+      kicker: 'Aggregate Demand I',
+      metadata: 'PPTX - 8.7 MB - 10 Apr 2024',
+      tag: 'Lecture slides',
+      lines: ['Macroeconomic Analysis', 'Aggregate demand and output', 'Policy impacts in the short run'],
+    },
   },
   {
     id: 'econ-tutorial',
@@ -56,6 +77,13 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     shelf: 'unsw',
     role: 'Tutorial solution source',
     href: '/knowledge/unsw',
+    preview: {
+      title: 'Tutorial 3',
+      kicker: 'Phillips Curve solution',
+      metadata: 'PDF - 1.1 MB - 11 Apr 2024',
+      tag: 'Solutions',
+      lines: ['Inflation pi and unemployment u', 'Short-run relationship diagram', 'Expectations-augmented curve'],
+    },
   },
   {
     id: 'econ-notes',
@@ -64,6 +92,13 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     shelf: 'unsw',
     role: 'Course notes',
     href: '/knowledge/unsw',
+    preview: {
+      title: 'Lecture 8 Notes',
+      kicker: 'Aggregate demand and supply shocks',
+      metadata: 'PDF - 642 KB - 10 Apr 2024',
+      tag: 'Lecture notes',
+      lines: ['Key topics: AD, C, I, G, NX', 'Expectations and supply shocks', 'Short-run fluctuations'],
+    },
   },
   {
     id: 'quant-market-making',
@@ -219,9 +254,9 @@ export const VERIFIED_DOSSIER_AI_PROMPT = {
 
 export const VERIFIED_DOSSIER_ARTIFACTS_BY_ID = Object.fromEntries(
   VERIFIED_DOSSIER_ARTIFACTS.map((artifact) => [artifact.id, artifact]),
-) as Record<VerifiedDossierArtifactId, (typeof VERIFIED_DOSSIER_ARTIFACTS)[number]>;
+) as Record<VerifiedDossierArtifactId, VerifiedDossierArtifact>;
 
-export function resolveVerifiedDossierArtifact(id: VerifiedDossierArtifactId) {
+export function resolveVerifiedDossierArtifact(id: VerifiedDossierArtifactId): VerifiedDossierArtifact {
   return VERIFIED_DOSSIER_ARTIFACTS_BY_ID[id];
 }
 

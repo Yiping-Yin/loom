@@ -148,3 +148,14 @@ test('verified dossier AI prompt is source-grounded and not generic chat', () =>
   assert.match(VERIFIED_DOSSIER_AI_PROMPT.answer, /supply shocks/i);
   assert.ok(VERIFIED_DOSSIER_AI_PROMPT.citations.length >= 3);
 });
+
+test('featured ECON3202 artifacts carry realistic document preview metadata', () => {
+  for (const artifactId of ['econ-ps2', 'econ-slides', 'econ-tutorial', 'econ-notes'] as const) {
+    const artifact = resolveVerifiedDossierArtifact(artifactId);
+
+    assert.ok(artifact.preview, `${artifact.label} should include preview metadata`);
+    assert.match(artifact.preview.metadata, /(PDF|PPTX)/);
+    assert.ok(artifact.preview.lines.length >= 3, `${artifact.label} should include preview lines`);
+    assert.match(artifact.preview.tag, /Problem set|Lecture slides|Solutions|Lecture notes/);
+  }
+});

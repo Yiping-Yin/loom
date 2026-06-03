@@ -55,7 +55,14 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'MD',
     'Ask this profile',
     'Sources to Draft to Answer',
-    'Course files become a draft trail and then a cited answer people can inspect.',
+    'Featured UNSW / ECON3202 evidence',
+    'Problem Set 2',
+    'Aggregate Demand I',
+    'PDF - 1.2 MB - 12 Apr 2024',
+    'PPTX - 8.7 MB - 10 Apr 2024',
+    'Phillips Curve summary.md',
+    'Evidence quality: High',
+    'Cited sources from this shelf',
     'Phillips Curve',
     'inflation and unemployment',
     'expectations',
@@ -69,6 +76,7 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   assert.match(html, /class="vd-home/);
   assert.doesNotMatch(html, /placeholder="Ask this profile"/);
   assert.match(html, /placeholder="Search this profile"/);
+  assert.match(html, /placeholder="Ask a follow-up\.\.\."/);
   assert.doesNotMatch(text, /Yiping's Loom/);
   assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);
   assert.doesNotMatch(html, />\s*&nbsp;\s*</i);
