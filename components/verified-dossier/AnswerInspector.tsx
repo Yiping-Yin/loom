@@ -60,12 +60,23 @@ export function AnswerInspector({
         Ask a follow-up
       </label>
       <div className="vd-followup">
-        <input id="vd-followup-input" type="text" placeholder="Ask a follow-up..." />
-        <button type="button" disabled aria-disabled="true">
+        <input
+          id="vd-followup-input"
+          type="text"
+          placeholder="Follow-up disabled in static preview"
+          disabled
+          readOnly
+          aria-disabled="true"
+          aria-describedby="vd-followup-disabled-state"
+        />
+        <button type="button" disabled aria-disabled="true" aria-describedby="vd-followup-disabled-state">
           <span>Send</span>
           <ArrowIcon />
         </button>
       </div>
+      <small id="vd-followup-disabled-state" className="vd-followup__state">
+        Follow-up is disabled in this static preview.
+      </small>
     </section>
   );
 }

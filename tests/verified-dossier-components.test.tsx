@@ -145,7 +145,10 @@ test('AnswerInspector is citation-first and no longer titled as a chatbot', () =
   assert.match(html, /12 registry sources available/);
   assert.match(html, /for="vd-followup-input"/);
   assert.match(html, /id="vd-followup-input"/);
-  assert.match(html, /<button type="button" disabled="" aria-disabled="true">/);
+  assert.match(html, /placeholder="Follow-up disabled in static preview"/);
+  assert.match(html, /<input id="vd-followup-input" type="text" placeholder="Follow-up disabled in static preview" disabled="" readonly="" aria-disabled="true" aria-describedby="vd-followup-disabled-state"/);
+  assert.match(html, /<button type="button" disabled="" aria-disabled="true" aria-describedby="vd-followup-disabled-state">/);
+  assert.match(html, /Follow-up is disabled in this static preview\./);
   assert.match(html, />Send</);
   assert.doesNotMatch(html, />Ask this profile</);
 });
