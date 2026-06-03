@@ -56,15 +56,6 @@ function useReferenceCitationCandidates() {
   return citationCandidates;
 }
 
-function SearchIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function ArrowIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -127,11 +118,10 @@ export function VerifiedDossierHome({
             </a>
           ))}
         </div>
-        <label className="vd-search">
-          <SearchIcon />
-          <input type="search" placeholder="Search this profile" aria-label="Search this profile" />
-          <kbd>⌘K</kbd>
-        </label>
+        <a className="vd-search" href="#source-index-title" aria-label="Jump to source index">
+          <span>Source index</span>
+          <ArrowIcon />
+        </a>
         <a className="vd-avatar" href="/about" aria-label="Open Yiping Yin profile">
           <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
         </a>
@@ -146,13 +136,13 @@ export function VerifiedDossierHome({
             <h2 id="verified-dossier-profile">Yiping Yin</h2>
             <p>{VERIFIED_DOSSIER_PROFILE.roles.join(' · ')}</p>
             <p>{VERIFIED_DOSSIER_PROFILE.location}</p>
-            <div className="vd-profile-links" aria-label="Profile links">
+            <nav className="vd-profile-links" aria-label="Profile links">
               {VERIFIED_DOSSIER_PROFILE.links.map((link) => (
                 <a key={link.label} className="vd-profile-link" href={link.href}>
                   {link.label}
                 </a>
               ))}
-            </div>
+            </nav>
           </section>
 
           <section className="vd-memberships" aria-labelledby="verified-dossier-memberships">
@@ -180,7 +170,7 @@ export function VerifiedDossierHome({
               </button>
               <button className="vd-action-button" type="button" onClick={onOpenRecent}>
                 <DraftIcon />
-                <span>Open recent Draft</span>
+                <span>{hasRecent ? 'Open recent Draft' : 'Open Draft'}</span>
                 <ArrowIcon />
               </button>
             </div>

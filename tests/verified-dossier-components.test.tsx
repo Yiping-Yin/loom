@@ -143,13 +143,15 @@ test('AnswerInspector is citation-first and no longer titled as a chatbot', () =
   assert.match(html, /Cited sources/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /12 registry sources available/);
-  assert.match(html, /for="vd-followup-input"/);
-  assert.match(html, /id="vd-followup-input"/);
-  assert.match(html, /placeholder="Follow-up disabled in static preview"/);
-  assert.match(html, /<input id="vd-followup-input" type="text" placeholder="Follow-up disabled in static preview" disabled="" readonly="" aria-disabled="true" aria-describedby="vd-followup-disabled-state"/);
-  assert.match(html, /<button type="button" disabled="" aria-disabled="true" aria-describedby="vd-followup-disabled-state">/);
-  assert.match(html, /Follow-up is disabled in this static preview\./);
-  assert.match(html, />Send</);
+  assert.match(html, /Homepage answer inspector status/);
+  assert.match(html, /Citation preview is read-only on the homepage\./);
+  assert.match(html, /href="\/draft"/);
+  assert.match(html, /Open Draft for follow-up work/);
+  assert.doesNotMatch(html, /vd-followup-input/);
+  assert.doesNotMatch(html, /placeholder="Follow-up disabled in static preview"/);
+  assert.doesNotMatch(html, /<input/);
+  assert.doesNotMatch(html, /<button/);
+  assert.doesNotMatch(html, /Ask a follow-up/);
   assert.doesNotMatch(html, />Ask this profile</);
 });
 

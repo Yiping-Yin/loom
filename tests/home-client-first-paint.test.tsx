@@ -45,7 +45,7 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'Claude',
     'History',
     'Open Sources',
-    'Open recent Draft',
+    'Open Draft',
     'Problem Set 02.pdf',
     'W8 A Concave-Functions.pdf',
     'W8 C Suggested Exercises.pdf',
@@ -79,15 +79,12 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   assert.match(html, /class="vd-workbench-grid"/);
   assert.match(html, /class="vd-active-story/);
   assert.match(html, /class="vd-source-graph/);
+  assert.match(html, /<a class="vd-search" href="#source-index-title" aria-label="Jump to source index">/);
+  assert.match(html, /<nav class="vd-profile-links" aria-label="Profile links">/);
   assert.doesNotMatch(text, /Source Dossier/);
   assert.doesNotMatch(text, /Ask this profile/);
-  for (const assetSrc of [
-    '/brand/quantnet/quantnet-logo.png',
-    '/brand/wqu/wqu-logo.svg',
-    '/brand/claude/claude-icon.png',
-  ]) {
-    assert.match(html, new RegExp(assetSrc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  }
+  assert.doesNotMatch(text, /Ask a follow-up/);
+  assert.doesNotMatch(text, /Open recent Draft/);
   assert.doesNotMatch(text, /A knowledge profile people can inspect and ask\./);
   assert.doesNotMatch(
     text,
@@ -98,8 +95,11 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     /Loom turns your sources, learning path, work, process records, and AI conversations/,
   );
   assert.doesNotMatch(html, /placeholder="Ask this profile"/);
-  assert.match(html, /placeholder="Search this profile"/);
-  assert.match(html, /placeholder="Follow-up disabled in static preview"/);
+  assert.doesNotMatch(html, /placeholder="Search this profile"/);
+  assert.doesNotMatch(html, /placeholder="Follow-up disabled in static preview"/);
+  assert.doesNotMatch(html, /type="search"/);
+  assert.doesNotMatch(html, /<kbd>⌘K<\/kbd>/);
+  assert.doesNotMatch(text, /⌘K/);
   assert.doesNotMatch(text, /[\u3400-\u9fff]/);
   assert.doesNotMatch(text, /Yiping's Loom/);
   assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);

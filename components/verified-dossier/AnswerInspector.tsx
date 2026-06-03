@@ -56,27 +56,13 @@ export function AnswerInspector({
             : 'Waiting for registry'}
         </small>
       </div>
-      <label className="vd-followup__label" htmlFor="vd-followup-input">
-        Ask a follow-up
-      </label>
-      <div className="vd-followup">
-        <input
-          id="vd-followup-input"
-          type="text"
-          placeholder="Follow-up disabled in static preview"
-          disabled
-          readOnly
-          aria-disabled="true"
-          aria-describedby="vd-followup-disabled-state"
-        />
-        <button type="button" disabled aria-disabled="true" aria-describedby="vd-followup-disabled-state">
-          <span>Send</span>
+      <div className="vd-followup vd-followup--readonly" aria-label="Homepage answer inspector status">
+        <span>Citation preview is read-only on the homepage.</span>
+        <a href="/draft">
+          Open Draft for follow-up work
           <ArrowIcon />
-        </button>
+        </a>
       </div>
-      <small id="vd-followup-disabled-state" className="vd-followup__state">
-        Follow-up is disabled in this static preview.
-      </small>
     </section>
   );
 }
