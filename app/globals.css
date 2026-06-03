@@ -1190,6 +1190,8 @@ html {
 .vd-inspector .vd-inspector-card {
   position: sticky;
   top: 5.35rem;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
   gap: 1.05rem;
   padding: 1.22rem;
 }
