@@ -7,9 +7,9 @@ import type {
   VerifiedDossierFileKind,
 } from './verified-dossier-home';
 
-type ReferenceShelfSlug = 'quantnet' | 'wqu' | 'claude';
+export type ReferenceShelfSlug = 'quantnet' | 'wqu' | 'claude';
 
-type ReferenceArtifactSource = {
+export type ReferenceArtifactSource = {
   id: string;
   categorySlug: ReferenceShelfSlug;
   categoryLabel: string;
@@ -26,12 +26,12 @@ type ReferenceWikiRootOptions = {
   env?: Record<string, string | undefined>;
 };
 
-type ReferenceSourceManifestOptions = {
+export type ReferenceSourceManifestOptions = {
   cwd?: string;
   env?: Record<string, string | undefined>;
 };
 
-type ReferenceSourceManifest = {
+export type ReferenceSourceManifest = {
   sources: readonly ReferenceArtifactSource[];
 };
 

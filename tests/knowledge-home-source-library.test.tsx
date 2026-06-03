@@ -222,6 +222,18 @@ test('knowledge top-level route is a compatibility alias to Sources', () => {
   assert.doesNotMatch(sourceText, /<KnowledgeHomeClient/);
 });
 
+test('Sources page includes manifest-backed reference shelves through the source registry', () => {
+  const { sourceText } = loadTsx('app/sources/page.tsx');
+  const registryText = readText('lib/new-loom/reference-source-registry.ts');
+
+  assert.match(sourceText, /mergeReferenceCategories/);
+  assert.match(sourceText, /appendReferenceCategoriesToSourceGroups/);
+  assert.match(sourceText, /const categories = mergeReferenceCategories\(rawCategories\)/);
+  assert.match(sourceText, /const groups = appendReferenceCategoriesToSourceGroups\(rawGroups\)\.map/);
+  assert.match(registryText, /Reference shelves/);
+  assert.match(registryText, /listReferenceSourceCategories/);
+});
+
 test('knowledge category routes are constrained to source-library categories only', () => {
   const { sourceText } = loadTsx('app/knowledge/[category]/page.tsx');
 

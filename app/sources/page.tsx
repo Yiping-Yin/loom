@@ -1,15 +1,20 @@
 import { getSourceLibraryCategories, getSourceLibraryGroups } from '../../lib/knowledge-store';
+import {
+  appendReferenceCategoriesToSourceGroups,
+  mergeReferenceCategories,
+} from '../../lib/new-loom/reference-source-registry';
 import { KnowledgeHomeClient } from '../knowledge/KnowledgeHomeClient';
 
 export const metadata = { title: 'Sources · Loom' };
 
 export default async function SourcesPage() {
-  const [categories, sourceLibraryGroups] = await Promise.all([
+  const [rawCategories, rawGroups] = await Promise.all([
     getSourceLibraryCategories(),
     getSourceLibraryGroups(),
   ]);
 
-  const groups = sourceLibraryGroups.map((group) => ({
+  const categories = mergeReferenceCategories(rawCategories);
+  const groups = appendReferenceCategoriesToSourceGroups(rawGroups).map((group) => ({
     id: group.id,
     label: group.label,
     items: group.categories.map((category) => ({
