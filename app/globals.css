@@ -7412,8 +7412,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-source-graph__node strong {
-  overflow-wrap: anywhere;
-  font-size: 0.88rem;
+  overflow-wrap: break-word;
+  word-break: normal;
+  font-size: 0.84rem;
   line-height: 1.2;
 }
 
