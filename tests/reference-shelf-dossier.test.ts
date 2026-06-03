@@ -83,9 +83,11 @@ test('reference shelf pages bind dossier artifacts to real whitelisted source fi
   assert.match(binding, /referenceArtifactsByCategory/);
   assert.match(binding, /findReferenceDoc/);
   assert.match(binding, /referenceWikiRoot/);
-  assert.match(binding, /Python Foundations\.pdf/);
-  assert.match(binding, /Claude Certificate\.html/);
-  assert.match(binding, /WQU index\.html/);
+
+  const manifest = read('lib/new-loom/reference-source-manifest.json');
+  assert.match(manifest, /Python Foundations\.pdf/);
+  assert.match(manifest, /Claude Certificate\.html/);
+  assert.match(manifest, /WQU index\.html/);
 
   assert.match(page, /referenceDocsByCategory/);
   assert.match(page, /referenceArtifactsByCategory/);
@@ -124,4 +126,22 @@ test('reference source importer resolves the Private Wiki root instead of hard-c
     }),
     '/external/source-root',
   );
+});
+
+test('reference source importer reads shelf rules from a manifest instead of TypeScript literals', () => {
+  const manifestPath = path.join(repoRoot, 'lib/new-loom/reference-source-manifest.json');
+  assert.ok(fs.existsSync(manifestPath), 'reference source manifest should exist');
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as {
+    sources: Array<{ id: string; categorySlug: string; sourcePath: string }>;
+  };
+  assert.ok(manifest.sources.some((source) => source.id === 'ref-quantnet-python-foundations'));
+  assert.ok(manifest.sources.some((source) => source.categorySlug === 'wqu'));
+  assert.ok(manifest.sources.some((source) => source.categorySlug === 'claude'));
+
+  const binding = read('lib/new-loom/reference-artifact-bindings.ts');
+  assert.match(binding, /referenceSourceManifestPath/);
+  assert.match(binding, /readReferenceSourceManifest/);
+  assert.doesNotMatch(binding, /const REFERENCE_SOURCES: readonly ReferenceArtifactSource\[\] = \[/);
+  assert.doesNotMatch(binding, /Quant\/Python for Quant\/Python Foundations/);
 });

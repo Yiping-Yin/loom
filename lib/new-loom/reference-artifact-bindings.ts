@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { KnowledgeDoc } from '../knowledge-types';
@@ -26,84 +26,14 @@ type ReferenceWikiRootOptions = {
   env?: Record<string, string | undefined>;
 };
 
-const REFERENCE_SOURCES: readonly ReferenceArtifactSource[] = [
-  {
-    id: 'ref-quantnet-cpp-course',
-    categorySlug: 'quantnet',
-    categoryLabel: 'Quantnet',
-    title: 'QuantNet Online C++ Course.pdf',
-    fileSlug: 'quantnet-online-cpp-course',
-    sourcePath: 'Quant/C++/00_Course_Info/QuantNet_Online_C++_Course.pdf',
-    role: 'Course source',
-    subcategory: 'C++ / Course info',
-    previewLines: [
-      'Financial engineering course source',
-      'C++ learning path and preparation',
-      'Anchors the Quantnet shelf with a real PDF',
-    ],
-  },
-  {
-    id: 'ref-quantnet-python-foundations',
-    categorySlug: 'quantnet',
-    categoryLabel: 'Quantnet',
-    title: 'Python Foundations.pdf',
-    fileSlug: 'python-foundations',
-    sourcePath: 'Quant/Python for Quant/Python Foundations/Section 1 Orientation/Python Foundations.pdf',
-    role: 'Programming source',
-    subcategory: 'Python for Quant / Python Foundations',
-    previewLines: [
-      'Python foundations for quant work',
-      'Orientation material and notebook path',
-      'Direct source behind the programming artifact',
-    ],
-  },
-  {
-    id: 'ref-quantnet-options-python',
-    categorySlug: 'quantnet',
-    categoryLabel: 'Quantnet',
-    title: 'Options Pricing with Python.pdf',
-    fileSlug: 'options-pricing-with-python',
-    sourcePath:
-      'Quant/Python for Quant/The 46-Page Ultimate Guide to Pricing Options and Implied Volatility With Python/The 46-Page Ultimate Guide to Pricing Options and Implied Volatility With Python (PDF + code).pdf',
-    role: 'Pricing source',
-    subcategory: 'Python for Quant / Options pricing',
-    previewLines: [
-      'Options pricing and implied volatility',
-      'PDF plus code path',
-      'Connects programming practice to finance artifacts',
-    ],
-  },
-  {
-    id: 'ref-wqu-index',
-    categorySlug: 'wqu',
-    categoryLabel: 'WQU',
-    title: 'WQU index.html',
-    fileSlug: 'wqu-index',
-    sourcePath: 'WQU/index.html',
-    role: 'Credential source',
-    subcategory: 'Program page',
-    previewLines: [
-      'WorldQuant University shelf entry',
-      'Credential and program record',
-      'Real local HTML source',
-    ],
-  },
-  {
-    id: 'ref-claude-certificate',
-    categorySlug: 'claude',
-    categoryLabel: 'Claude',
-    title: 'Claude Certificate.html',
-    fileSlug: 'claude-certificate',
-    sourcePath: 'Claude Certificate/Claude Certificate.html',
-    role: 'Certificate source',
-    subcategory: 'Credential evidence',
-    previewLines: [
-      'Claude certificate evidence',
-      'Training and AI workflow record',
-      'Real local HTML source',
-    ],
-  },
-];
+type ReferenceSourceManifestOptions = {
+  cwd?: string;
+  env?: Record<string, string | undefined>;
+};
+
+type ReferenceSourceManifest = {
+  sources: readonly ReferenceArtifactSource[];
+};
 
 export function referenceWikiRoot(options: ReferenceWikiRootOptions = {}) {
   const env = options.env ?? process.env;
@@ -111,6 +41,73 @@ export function referenceWikiRoot(options: ReferenceWikiRootOptions = {}) {
   const configured = env.LOOM_REFERENCE_WIKI_ROOT?.trim();
   if (configured) return path.resolve(configured);
   return path.basename(cwd) === 'LOOM' ? path.dirname(cwd) : path.resolve(cwd, '..');
+}
+
+export function referenceSourceManifestPath(options: ReferenceSourceManifestOptions = {}) {
+  const env = options.env ?? process.env;
+  const cwd = options.cwd ?? process.cwd();
+  const configured = env.LOOM_REFERENCE_SOURCE_MANIFEST?.trim();
+  if (configured) return path.resolve(configured);
+  return path.join(cwd, 'lib/new-loom/reference-source-manifest.json');
+}
+
+function isReferenceShelfSlug(value: string): value is ReferenceShelfSlug {
+  return value === 'quantnet' || value === 'wqu' || value === 'claude';
+}
+
+function readString(value: unknown, field: string, index: number) {
+  if (typeof value === 'string' && value.trim()) return value;
+  throw new Error(`Invalid reference source manifest entry ${index}: ${field} must be a non-empty string`);
+}
+
+function readPreviewLines(value: unknown, index: number) {
+  if (
+    Array.isArray(value)
+    && value.length > 0
+    && value.every((item) => typeof item === 'string' && item.trim())
+  ) {
+    return value;
+  }
+  throw new Error(`Invalid reference source manifest entry ${index}: previewLines must be non-empty strings`);
+}
+
+function parseReferenceSource(value: unknown, index: number): ReferenceArtifactSource {
+  if (!value || typeof value !== 'object') {
+    throw new Error(`Invalid reference source manifest entry ${index}: expected object`);
+  }
+  const record = value as Record<string, unknown>;
+  const categorySlug = readString(record.categorySlug, 'categorySlug', index);
+  if (!isReferenceShelfSlug(categorySlug)) {
+    throw new Error(`Invalid reference source manifest entry ${index}: unsupported categorySlug`);
+  }
+  return {
+    id: readString(record.id, 'id', index),
+    categorySlug,
+    categoryLabel: readString(record.categoryLabel, 'categoryLabel', index),
+    title: readString(record.title, 'title', index),
+    fileSlug: readString(record.fileSlug, 'fileSlug', index),
+    sourcePath: readString(record.sourcePath, 'sourcePath', index),
+    role: readString(record.role, 'role', index),
+    subcategory: readString(record.subcategory, 'subcategory', index),
+    previewLines: readPreviewLines(record.previewLines, index),
+  };
+}
+
+export function readReferenceSourceManifest(
+  options: ReferenceSourceManifestOptions = {},
+): ReferenceSourceManifest {
+  const raw = readFileSync(referenceSourceManifestPath(options), 'utf8');
+  const parsed = JSON.parse(raw) as { sources?: unknown };
+  if (!Array.isArray(parsed.sources)) {
+    throw new Error('Invalid reference source manifest: sources must be an array');
+  }
+  return {
+    sources: parsed.sources.map(parseReferenceSource),
+  };
+}
+
+function referenceSources() {
+  return readReferenceSourceManifest().sources;
 }
 
 function absolutePathFor(sourcePath: string) {
@@ -161,26 +158,26 @@ function sourceToDoc(source: ReferenceArtifactSource): KnowledgeDoc | null {
 }
 
 export function referenceDocsByCategory(categorySlug: string): KnowledgeDoc[] {
-  return REFERENCE_SOURCES
+  return referenceSources()
     .filter((source) => source.categorySlug === categorySlug)
     .map(sourceToDoc)
     .filter((doc): doc is KnowledgeDoc => Boolean(doc));
 }
 
 export function findReferenceDoc(categorySlug: string, fileSlug: string): KnowledgeDoc | null {
-  const source = REFERENCE_SOURCES.find(
+  const source = referenceSources().find(
     (item) => item.categorySlug === categorySlug && item.fileSlug === fileSlug,
   );
   return source ? sourceToDoc(source) : null;
 }
 
 export function findReferenceDocById(id: string): KnowledgeDoc | null {
-  const source = REFERENCE_SOURCES.find((item) => item.id === id);
+  const source = referenceSources().find((item) => item.id === id);
   return source ? sourceToDoc(source) : null;
 }
 
 export function referenceSourceAbsolutePath(id: string): string | null {
-  const source = REFERENCE_SOURCES.find((item) => item.id === id);
+  const source = referenceSources().find((item) => item.id === id);
   if (!source) return null;
   const abs = absolutePathFor(source.sourcePath);
   return existsSync(abs) ? abs : null;
@@ -223,7 +220,7 @@ function artifactPreviewFor(doc: KnowledgeDoc, role: string): VerifiedDossierArt
 
 export function referenceArtifactsByCategory(categorySlug: string): VerifiedDossierArtifact[] {
   const artifacts: VerifiedDossierArtifact[] = [];
-  for (const source of REFERENCE_SOURCES) {
+  for (const source of referenceSources()) {
     if (source.categorySlug !== categorySlug) continue;
     const doc = sourceToDoc(source);
     if (!doc) continue;
