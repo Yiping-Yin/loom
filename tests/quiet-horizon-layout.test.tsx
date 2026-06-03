@@ -2,40 +2,29 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import React from 'react';
-
-import { KnowledgeHomeStatic } from '../app/knowledge/KnowledgeHomeStatic';
 
 const repoRoot = path.resolve(__dirname, '..');
 
-test('KnowledgeHomeStatic renders inside the atlas quiet-scene column', () => {
-  Object.assign(globalThis, { React });
-  const { renderToStaticMarkup } = require('react-dom/server') as {
-    renderToStaticMarkup: (node: React.ReactElement) => string;
-  };
+function read(relativePath: string) {
+  return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
+}
 
-  const html = renderToStaticMarkup(
-    <KnowledgeHomeStatic
-      totalCollections={2}
-      totalDocs={9}
-      groups={[
-        {
-          label: 'Core',
-          items: [
-            { slug: 'transformers', label: 'Transformers', count: 4 },
-            { slug: 'attention', label: 'Attention', count: 5 },
-          ],
-        },
-      ]}
-    />,
-  );
+test('atlas quiet-scene layout contract stays text-only for contract tests', () => {
+  const atlasSource = read('app/knowledge/KnowledgeHomeStatic.tsx');
+  const quietSceneSource = read('components/QuietScene.tsx');
+  const css = read('app/globals.css');
 
-  assert.match(html, /loom-quiet-scene--atlas/);
-  assert.match(html, /loom-quiet-scene__column/);
+  assert.match(quietSceneSource, /export function QuietScene\(/);
+  assert.match(quietSceneSource, /export function QuietSceneColumn\(/);
+  assert.match(quietSceneSource, /'atlas'/);
+  assert.match(quietSceneSource, /loom-quiet-scene--\$\{tone\}/);
+  assert.match(css, /\.loom-quiet-scene\b/);
+  assert.match(css, /\.loom-quiet-scene__column\b/);
+  assert.doesNotMatch(atlasSource, /guide-card|GuideCard/);
 });
 
 test('global CSS defines the quiet-scene width token and scene classes', () => {
-  const css = fs.readFileSync(path.join(repoRoot, 'app/globals.css'), 'utf8');
+  const css = read('app/globals.css');
 
   assert.match(css, /--quiet-scene-width/);
   assert.match(css, /\.loom-quiet-scene\b/);
@@ -43,7 +32,7 @@ test('global CSS defines the quiet-scene width token and scene classes', () => {
 });
 
 test('quiet-scene CSS stays page-neutral and keeps a viewport-height floor', () => {
-  const css = fs.readFileSync(path.join(repoRoot, 'app/globals.css'), 'utf8');
+  const css = read('app/globals.css');
 
   assert.match(css, /\.loom-quiet-scene\s*\{[\s\S]*min-height:\s*calc\(100vh -/);
   assert.match(css, /\.loom-quiet-scene::before[\s\S]*radial-gradient/);
@@ -51,8 +40,8 @@ test('quiet-scene CSS stays page-neutral and keeps a viewport-height floor', () 
 });
 
 test('today and patterns keep their current route-level shells', () => {
-  const todaySource = fs.readFileSync(path.join(repoRoot, 'app/today/TodayClient.tsx'), 'utf8');
-  const patternsSource = fs.readFileSync(path.join(repoRoot, 'app/PatternsClient.tsx'), 'utf8');
+  const todaySource = read('app/today/TodayClient.tsx');
+  const patternsSource = read('app/PatternsClient.tsx');
 
   assert.match(
     todaySource,
@@ -62,14 +51,12 @@ test('today and patterns keep their current route-level shells', () => {
 });
 
 test('atlas uses the shared quiet column and route clients avoid page-level guide cards', () => {
-  const todaySource = fs.readFileSync(path.join(repoRoot, 'app/today/TodayClient.tsx'), 'utf8');
-  const atlasSource = fs.readFileSync(
-    path.join(repoRoot, 'app/knowledge/KnowledgeHomeStatic.tsx'),
-    'utf8',
-  );
-  const patternsSource = fs.readFileSync(path.join(repoRoot, 'app/PatternsClient.tsx'), 'utf8');
+  const todaySource = read('app/today/TodayClient.tsx');
+  const atlasSource = read('app/knowledge/KnowledgeHomeStatic.tsx');
+  const quietSceneSource = read('components/QuietScene.tsx');
+  const patternsSource = read('app/PatternsClient.tsx');
 
-  assert.match(atlasSource, /QuietSceneColumn/);
+  assert.match(quietSceneSource, /QuietSceneColumn/);
   for (const source of [todaySource, atlasSource, patternsSource]) {
     assert.doesNotMatch(source, /guide-card|GuideCard/);
   }

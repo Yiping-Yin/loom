@@ -10,6 +10,7 @@ import {
 } from '../lib/new-loom/reference-shelf-dossiers';
 import {
   findReferenceDoc,
+  findReferenceManifestDoc,
   referenceArtifactsByCategory,
   referenceDocsByCategory,
   readReferenceSourceManifest,
@@ -85,6 +86,7 @@ test('reference shelf pages bind dossier artifacts to real whitelisted source fi
   assert.match(binding, /referenceDocsByCategory/);
   assert.match(binding, /referenceArtifactsByCategory/);
   assert.match(binding, /findReferenceDoc/);
+  assert.match(binding, /findReferenceManifestDoc/);
   assert.match(binding, /referenceWikiRoot/);
 
   const manifest = read('lib/new-loom/reference-source-manifest.json');
@@ -95,6 +97,10 @@ test('reference shelf pages bind dossier artifacts to real whitelisted source fi
   assert.match(page, /referenceDocsByCategory/);
   assert.match(page, /referenceArtifactsByCategory/);
   assert.match(client, /referenceArtifacts/);
+
+  const detailPage = read('app/knowledge/[category]/[fileSlug]/page.tsx');
+  assert.match(detailPage, /findReferenceManifestDoc/);
+  assert.match(detailPage, /findReferenceDoc\(category, fileSlug\)\s*\?\?/);
 });
 
 test('reference artifact bindings expose manifest targets and tolerate absent external files', () => {
@@ -116,6 +122,18 @@ test('reference artifact bindings expose manifest targets and tolerate absent ex
     assert.equal(findReferenceDoc('quantnet', 'python-foundations'), null);
     assert.deepEqual(referenceArtifactsByCategory('quantnet'), []);
     assert.equal(referenceSourceAbsolutePath('ref-quantnet-python-foundations'), null);
+
+    const manifestDoc = findReferenceManifestDoc('quantnet', 'python-foundations');
+    assert.equal(manifestDoc?.title, 'Python Foundations.pdf');
+    assert.equal(
+      manifestDoc?.sourcePath,
+      'Quant/Python for Quant/Python Foundations/Section 1 Orientation/Python Foundations.pdf',
+    );
+    assert.equal(manifestDoc?.ext, '.pdf');
+    assert.equal(manifestDoc?.size, 0);
+    assert.equal(manifestDoc?.hasText, false);
+    assert.equal(manifestDoc?.categorySlug, 'quantnet');
+    assert.match(manifestDoc?.preview ?? '', /Python foundations for quant work/);
   } finally {
     if (previousRoot === undefined) {
       delete process.env.LOOM_REFERENCE_WIKI_ROOT;

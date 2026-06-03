@@ -7,6 +7,7 @@ import { findDoc } from '../../../../lib/knowledge-store';
 import type { KnowledgeDoc } from '../../../../lib/knowledge-types';
 import {
   findReferenceDoc,
+  findReferenceManifestDoc,
   readReferenceDocBody,
 } from '../../../../lib/new-loom/reference-artifact-bindings';
 
@@ -16,7 +17,10 @@ function sourceUrlFor(doc: KnowledgeDoc, isReference: boolean) {
 }
 
 async function bodyFor(doc: KnowledgeDoc, isReference: boolean) {
-  if (isReference) return readReferenceDocBody(doc.id);
+  if (isReference) {
+    const body = await readReferenceDocBody(doc.id);
+    return body || doc.preview;
+  }
   const cached = await readKnowledgeDocBody(doc.id);
   return cached?.body ?? '';
 }
@@ -27,7 +31,8 @@ export default async function KnowledgeSourcePage({
   params: Promise<{ category: string; fileSlug: string }>;
 }) {
   const { category, fileSlug } = await params;
-  const referenceDoc = findReferenceDoc(category, fileSlug);
+  const referenceDoc =
+    findReferenceDoc(category, fileSlug) ?? findReferenceManifestDoc(category, fileSlug);
   const manifestDoc = referenceDoc ? null : await findDoc(category, fileSlug);
   const doc = referenceDoc ?? manifestDoc;
   if (!doc) notFound();

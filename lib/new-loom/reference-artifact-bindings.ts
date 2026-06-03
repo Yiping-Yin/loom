@@ -128,6 +128,10 @@ function fileKindForExt(ext: string): VerifiedDossierFileKind {
   return 'text';
 }
 
+function textLikeExt(ext: string) {
+  return ['.html', '.htm', '.md', '.txt', '.json', '.ipynb'].includes(ext);
+}
+
 function readStats(source: ReferenceArtifactSource) {
   try {
     const stats = statSync(absolutePathFor(source.sourcePath));
@@ -152,7 +156,26 @@ function sourceToDoc(source: ReferenceArtifactSource): KnowledgeDoc | null {
     sourcePath: source.sourcePath,
     ext,
     size: stats.size,
-    hasText: ['.html', '.htm', '.md', '.txt', '.json', '.ipynb'].includes(ext),
+    hasText: textLikeExt(ext),
+    preview: source.previewLines.join(' '),
+  };
+}
+
+function sourceToManifestDoc(source: ReferenceArtifactSource): KnowledgeDoc {
+  const stats = readStats(source);
+  const ext = extFor(source.sourcePath);
+  return {
+    id: source.id,
+    title: source.title,
+    category: source.categoryLabel,
+    categorySlug: source.categorySlug,
+    subcategory: source.subcategory,
+    subOrder: 10,
+    fileSlug: source.fileSlug,
+    sourcePath: source.sourcePath,
+    ext,
+    size: stats?.size ?? 0,
+    hasText: textLikeExt(ext),
     preview: source.previewLines.join(' '),
   };
 }
@@ -169,6 +192,16 @@ export function findReferenceDoc(categorySlug: string, fileSlug: string): Knowle
     (item) => item.categorySlug === categorySlug && item.fileSlug === fileSlug,
   );
   return source ? sourceToDoc(source) : null;
+}
+
+export function findReferenceManifestDoc(
+  categorySlug: string,
+  fileSlug: string,
+): KnowledgeDoc | null {
+  const source = referenceSources().find(
+    (item) => item.categorySlug === categorySlug && item.fileSlug === fileSlug,
+  );
+  return source ? sourceToManifestDoc(source) : null;
 }
 
 export function findReferenceDocById(id: string): KnowledgeDoc | null {
@@ -241,7 +274,7 @@ export async function readReferenceDocBody(id: string): Promise<string> {
   const doc = findReferenceDocById(id);
   const abs = referenceSourceAbsolutePath(id);
   if (!doc || !abs) return '';
-  if (!['.html', '.htm', '.md', '.txt', '.json', '.ipynb'].includes(doc.ext)) {
+  if (!textLikeExt(doc.ext)) {
     return `[Binary source: ${doc.title}]`;
   }
 
