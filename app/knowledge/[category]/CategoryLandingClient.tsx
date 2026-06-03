@@ -17,6 +17,18 @@ import type { CoworkSummary } from '../../../lib/cowork-types';
 import { folderPathToId } from '../../../lib/folder-anchor';
 import { continuePanelLifecycle } from '../../../lib/panel-resume';
 import { useAllTraces, type Trace } from '../../../lib/trace';
+import { PERSONAL_PLATFORM_SECTIONS } from '../../../lib/new-loom/personal-platform';
+import {
+  VERIFIED_DOSSIER_PROFILE,
+  VERIFIED_DOSSIER_SECTIONS,
+  VERIFIED_DOSSIER_TOP_NAV,
+  resolveVerifiedDossierArtifact,
+} from '../../../lib/new-loom/verified-dossier-home';
+import { referenceShelfDossierFor } from '../../../lib/new-loom/reference-shelf-dossiers';
+import { ArtifactCitationCard, DocumentPreviewCard } from '../../../components/verified-dossier/DocumentPreviewCard';
+import { FileBadge } from '../../../components/verified-dossier/FileBadge';
+import { InstitutionMark } from '../../../components/verified-dossier/InstitutionMark';
+import styles from './CategoryDossier.module.css';
 
 export type CategoryDocCard = {
   id: string;
@@ -109,6 +121,29 @@ function stateLabel(surface: CategorySurface) {
 
 function extLabel(ext: string) {
   return ext.replace(/^\./, '').toUpperCase();
+}
+
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 12h13M13 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function activeSurfaceCount(surfaces: CategorySurface[]) {
@@ -1158,19 +1193,22 @@ export function CategoryLandingClient({
   };
 
   const theme = categoryTheme(category.slug);
+  const verifiedShelf = VERIFIED_DOSSIER_SECTIONS.find((section) => section.id === category.slug);
+  const platformShelf = PERSONAL_PLATFORM_SECTIONS.find((section) => section.id === category.slug);
+  const dossier = referenceShelfDossierFor(verifiedShelf);
 
-  return (
+  const sourceIndex = (
     <StageShell
       variant="archive"
       contentVariant="archive"
       innerStyle={{
-        minHeight: '100vh',
-        paddingTop: '4.75rem',
+        minHeight: dossier ? 'auto' : '100vh',
+        paddingTop: dossier ? 0 : '4.75rem',
         paddingBottom: '2.5rem',
         // Category landing is an outline, not a body of prose — let it breathe
         // wider than the archive default (~1240px). On MBP 16" this reclaims
         // ~250px of horizontal space for the structure.
-        maxWidth: 'min(1500px, calc(100vw - 120px))',
+        maxWidth: dossier ? '100%' : 'min(1500px, calc(100vw - 120px))',
         // Inherit the category accent so COLLECTION / COWORK / outline all
         // color-match the child doc pages — same identity across the whole
         // category like LLM Wiki's chapter-themed sections.
@@ -1333,6 +1371,179 @@ export function CategoryLandingClient({
         </div>
       </div>
     </StageShell>
+  );
+
+  if (!dossier || !verifiedShelf || !platformShelf) {
+    return sourceIndex;
+  }
+
+  const artifacts = verifiedShelf.artifactIds.map(resolveVerifiedDossierArtifact);
+  const citedArtifacts = dossier.citedArtifacts.map(resolveVerifiedDossierArtifact);
+
+  return (
+    <main className={`vd-home ${styles.page}`} aria-labelledby={`${dossier.id}-shelf-title`}>
+      <nav className="vd-nav" aria-label="Verified dossier navigation">
+        <a className="vd-wordmark" href="/" aria-label="Loom home">
+          Loom
+        </a>
+        <div className="vd-nav__links">
+          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
+            <a key={item.label} href={item.href}>
+              {item.label}
+            </a>
+          ))}
+        </div>
+        <label className="vd-search">
+          <SearchIcon />
+          <input type="search" placeholder={`Search ${verifiedShelf.label}`} aria-label={`Search ${verifiedShelf.label}`} />
+        </label>
+        <a className="vd-avatar" href="/about" aria-label="Open Yiping Yin profile">
+          <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
+        </a>
+      </nav>
+
+      <section className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <p className={styles.sectionLabel}>{dossier.eyebrow}</p>
+          <h1 id={`${dossier.id}-shelf-title`}>{dossier.headline}</h1>
+          <p className={styles.heroLead}>{dossier.lead}</p>
+          <p>{dossier.proofLine}</p>
+          <div className={styles.heroActions}>
+            {focusDoc ? (
+              <button
+                className={styles.buttonLink}
+                type="button"
+                onClick={() => openPrimaryAction(focusDoc)}
+              >
+                {continueDoc ? 'Continue source' : 'Open first source'}
+                <ArrowIcon />
+              </button>
+            ) : null}
+            <a className={styles.textLink} href="#source-file-index">
+              Open source index
+              <ArrowIcon />
+            </a>
+          </div>
+        </div>
+
+        <aside className={styles.identityPanel} aria-label={`${verifiedShelf.label} shelf summary`}>
+          <div className={styles.identityHeader}>
+            <InstitutionMark kind={verifiedShelf.id} />
+            <div>
+              <h2>{verifiedShelf.label}</h2>
+              <p>{verifiedShelf.status}</p>
+            </div>
+          </div>
+          <div className={styles.metricGrid}>
+            {dossier.metrics.map((metric) => (
+              <div key={metric.label}>
+                <span>{metric.value}</span>
+                <strong>{metric.label}</strong>
+              </div>
+            ))}
+            <div>
+              <span>{docs.length} source{docs.length === 1 ? '' : 's'}</span>
+              <strong>Indexed in this shelf</strong>
+            </div>
+            <div>
+              <span>{activeCount} active</span>
+              <strong>Reading or Draft state</strong>
+            </div>
+          </div>
+          <div className={styles.artifactStack} aria-label={`${verifiedShelf.label} artifacts`}>
+            {artifacts.map((artifact) => (
+              <FileBadge key={artifact.id} kind={artifact.kind} label={artifact.label} compact />
+            ))}
+          </div>
+          <div className={styles.profileLine}>
+            <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
+            <span>
+              <strong>{VERIFIED_DOSSIER_PROFILE.name}</strong>
+              <span>{VERIFIED_DOSSIER_PROFILE.roles.join(' / ')} · {VERIFIED_DOSSIER_PROFILE.location}</span>
+            </span>
+          </div>
+        </aside>
+      </section>
+
+      <section className={styles.evidenceSection} aria-labelledby={`${dossier.id}-evidence-title`}>
+        <div className={styles.sectionHeader}>
+          <p className={styles.sectionLabel}>Evidence objects</p>
+          <h2 id={`${dossier.id}-evidence-title`}>A real shelf needs real artifacts.</h2>
+          <p>{verifiedShelf.summary}</p>
+        </div>
+        <div className={styles.evidenceGrid}>
+          <div className={`vd-document-grid ${styles.artifactGrid}`} aria-label={`${verifiedShelf.label} document previews`}>
+            {artifacts.map((artifact) => (
+              <DocumentPreviewCard key={artifact.id} artifact={artifact} />
+            ))}
+          </div>
+          <aside className={`vd-inspector-card ${styles.askPanel}`} aria-labelledby={`${dossier.id}-ask-title`}>
+            <div className="vd-inspector-card__header">
+              <h2 id={`${dossier.id}-ask-title`}>Ask this shelf</h2>
+              <span>Grounded</span>
+            </div>
+            <div className="vd-question-card">
+              <strong>{dossier.question}</strong>
+            </div>
+            <div className="vd-answer-block">
+              <h3>Answer</h3>
+              <p>{dossier.answer}</p>
+            </div>
+            <h3 className="vd-citation-heading">Cited artifacts</h3>
+            <div className="vd-citation-list">
+              {citedArtifacts.map((artifact) => (
+                <ArtifactCitationCard key={artifact.id} artifact={artifact} />
+              ))}
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section className={styles.flowSection} aria-labelledby={`${dossier.id}-flow-title`}>
+        <div className={styles.sectionHeader}>
+          <p className={styles.sectionLabel}>Path / Sources / Process / Outputs</p>
+          <h2 id={`${dossier.id}-flow-title`}>The shelf is a workflow, not a folder dump.</h2>
+          <p>{platformShelf.nextAction}</p>
+        </div>
+        <div className={styles.flowGrid}>
+          {dossier.flow.map((step, index) => (
+            <article key={step.title} className={styles.flowCard}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <h3>{step.title}</h3>
+              <p>{step.text}</p>
+            </article>
+          ))}
+        </div>
+        <div className={styles.outcomePanel}>
+          <div>
+            <h2>{dossier.outcomeTitle}</h2>
+            <p>{dossier.outcomeText}</p>
+          </div>
+          <div className={styles.outcomeList} aria-label={`${verifiedShelf.label} source groups`}>
+            {platformShelf.sourceGroups.map((group) => (
+              <a key={group.title} href="#source-file-index">
+                <span>
+                  {group.title}: {group.items.join(', ')}
+                </span>
+                <ArrowIcon />
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="source-file-index" className={styles.sourceIndex} aria-labelledby={`${dossier.id}-source-index-title`}>
+        <div className={styles.sourceIndexHeader}>
+          <p className={styles.sectionLabel}>Source file index</p>
+          <h2 id={`${dossier.id}-source-index-title`}>Manage the underlying Sources.</h2>
+          <p>
+            This is the operational layer: metadata, Cowork rehearsal, folder order, and direct file
+            access. The polished dossier above is built from these source objects.
+          </p>
+        </div>
+        <div className={styles.sourceIndexShell}>{sourceIndex}</div>
+      </section>
+    </main>
   );
 }
 
