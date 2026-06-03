@@ -14,9 +14,9 @@ import {
 } from '../lib/new-loom/verified-dossier-home';
 
 const fileCases: Array<[VerifiedDossierFileKind, string, string]> = [
-  ['pdf', 'ECON3202 Problem Set 2.pdf', 'PDF'],
+  ['pdf', 'Problem Set 02.pdf', 'PDF'],
   ['word', 'About me page.docx', 'DOCX'],
-  ['ppt', 'Lecture 8 Slides.pptx', 'PPTX'],
+  ['ppt', 'Presentation deck.pptx', 'PPTX'],
   ['excel', 'BHP Case Study.xlsx', 'XLSX'],
   ['markdown', 'Prompt library.md', 'MD'],
   ['text', 'Reading notes.txt', 'TXT'],
@@ -52,11 +52,11 @@ test('FileBadge renders real artifact extensions for every supported file kind',
 });
 
 test('FileBadge compact mode keeps the artifact extension visible', () => {
-  const html = render(<FileBadge kind="pdf" label="ECON3202 Problem Set 2.pdf" compact />);
+  const html = render(<FileBadge kind="pdf" label="Problem Set 02.pdf" compact />);
 
   assert.match(html, /vd-file-badge--compact/);
   assert.match(html, />PDF</);
-  assert.match(html, /ECON3202 Problem Set 2\.pdf/);
+  assert.match(html, /Problem Set 02\.pdf/);
 });
 
 test('InstitutionMark renders accessible labels and recognizable marks', () => {
@@ -89,11 +89,11 @@ test('DocumentPreviewCard renders inspectable file preview metadata', () => {
   const html = render(<DocumentPreviewCard artifact={artifact} />);
 
   assert.match(html, /vd-document-card/);
-  assert.match(html, /vd-document-preview--ppt/);
-  assert.match(html, /Lecture 8/);
-  assert.match(html, /Aggregate Demand I/);
-  assert.match(html, /PPTX - 8\.7 MB - 10 Apr 2024/);
-  assert.match(html, /Lecture slides/);
+  assert.match(html, /vd-document-preview--pdf/);
+  assert.match(html, /Concave Functions/);
+  assert.match(html, /Week 8 - ECON3202/);
+  assert.match(html, /PDF - Lecture source - T1 2026/);
+  assert.match(html, /Week 8 lecture/);
 });
 
 test('ArtifactCitationCard keeps cited source thumbnails visible', () => {
@@ -102,7 +102,7 @@ test('ArtifactCitationCard keeps cited source thumbnails visible', () => {
 
   assert.match(html, /vd-citation-card/);
   assert.match(html, /vd-citation-card__thumb--pdf/);
-  assert.match(html, /ECON3202 Problem Set 2\.pdf/);
-  assert.match(html, /Problem Set 2/);
-  assert.match(html, /PDF - 1\.2 MB - 12 Apr 2024/);
+  assert.match(html, /Problem Set 02\.pdf/);
+  assert.match(html, /Problem Set 02/);
+  assert.match(html, /PDF - Assignment - T1 2026/);
 });

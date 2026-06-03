@@ -158,8 +158,8 @@ export function VerifiedDossierHome({
               <InstitutionMark kind="unsw" />
               <h2 id="featured-unsw-title">Featured UNSW / ECON3202 evidence</h2>
               <p>
-                A course story anchored in source files, notes, tutorial solutions, and problem-set
-                work.
+                A course story anchored in official sources, weekly mathematics, exercises, and
+                problem-set work.
               </p>
             </div>
             <div className="vd-evidence-board">
@@ -177,13 +177,13 @@ export function VerifiedDossierHome({
                     <span aria-hidden="true">01</span>
                     <h3>Sources</h3>
                     <strong>4 ECON3202 files</strong>
-                    <p>Course materials, notes, slides, tutorial solutions, and problem-set work.</p>
+                    <p>Course materials, weekly PDFs, exercises, and problem-set work.</p>
                   </article>
                   <article className="vd-provenance-step">
                     <span aria-hidden="true">02</span>
                     <h3>Draft</h3>
-                    <strong>Phillips Curve summary.md</strong>
-                    <p>A working note created from lecture and tutorial evidence.</p>
+                    <strong>Concavity and optimisation summary.md</strong>
+                    <p>A working note created from lecture, exercise, and answer evidence.</p>
                   </article>
                   <article className="vd-provenance-step">
                     <span aria-hidden="true">03</span>

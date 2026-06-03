@@ -72,10 +72,10 @@ test('verified dossier profile photo points to a tracked public asset path', () 
 test('verified dossier home includes ECON3202 artifacts and file kinds', () => {
   const labels = new Set<string>(VERIFIED_DOSSIER_ARTIFACTS.map((artifact) => artifact.label));
   for (const label of [
-    'ECON3202 Problem Set 2.pdf',
-    'Lecture 8 Slides.pptx',
-    'Tutorial 3 Solutions.pdf',
-    'Lecture 8 Notes.pdf',
+    'Problem Set 02.pdf',
+    'W8 A Concave-Functions.pdf',
+    'W8 C Suggested Exercises.pdf',
+    'Problem2.pdf',
     'About me page.docx',
     'BHP Case Study.xlsx',
     'Prompt library.md',
@@ -84,7 +84,6 @@ test('verified dossier home includes ECON3202 artifacts and file kinds', () => {
   }
 
   assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'pdf'));
-  assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'ppt'));
   assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'word'));
   assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'excel'));
   assert.ok(VERIFIED_DOSSIER_ARTIFACTS.some((artifact) => artifact.kind === 'markdown'));
@@ -142,10 +141,10 @@ test('verified dossier links stay on currently routable app surfaces', () => {
 });
 
 test('verified dossier AI prompt is source-grounded and not generic chat', () => {
-  assert.match(VERIFIED_DOSSIER_AI_PROMPT.question, /Phillips Curve/);
-  assert.match(VERIFIED_DOSSIER_AI_PROMPT.answer, /inflation and unemployment/i);
-  assert.match(VERIFIED_DOSSIER_AI_PROMPT.answer, /expectations/i);
-  assert.match(VERIFIED_DOSSIER_AI_PROMPT.answer, /supply shocks/i);
+  assert.match(VERIFIED_DOSSIER_AI_PROMPT.question, /concavity/i);
+  assert.match(VERIFIED_DOSSIER_AI_PROMPT.answer, /optimisation/i);
+  assert.match(VERIFIED_DOSSIER_AI_PROMPT.answer, /first-order conditions/i);
+  assert.match(VERIFIED_DOSSIER_AI_PROMPT.answer, /economic choice problem/i);
   assert.ok(VERIFIED_DOSSIER_AI_PROMPT.citations.length >= 3);
 });
 
@@ -156,7 +155,7 @@ test('featured ECON3202 artifacts carry realistic document preview metadata', ()
     assert.ok(artifact.preview, `${artifact.label} should include preview metadata`);
     assert.match(artifact.preview.metadata, /(PDF|PPTX)/);
     assert.ok(artifact.preview.lines.length >= 3, `${artifact.label} should include preview lines`);
-    assert.match(artifact.preview.tag, /Problem set|Lecture slides|Solutions|Lecture notes/);
+    assert.match(artifact.preview.tag, /Problem set|Week 8 lecture|Practice|Answer/);
   }
 });
 

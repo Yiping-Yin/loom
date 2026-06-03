@@ -68,11 +68,11 @@ test('HomeClient renders mature platform modules on first paint', () => {
     html,
     /Sources, drafts, projects, and conversations become a public record/,
   );
-  assert.match(html, /ECON3202 Problem Set 2\.pdf/);
-  assert.match(html, /Lecture 8 Slides\.pptx/);
+  assert.match(html, /Problem Set 02\.pdf/);
+  assert.match(html, /W8 A Concave-Functions\.pdf/);
   assert.match(html, /Sources to Draft to Answer/);
   assert.match(html, /Ask this profile/);
-  assert.match(html, /Phillips Curve/);
+  assert.match(html, /concavity/i);
   assert.match(html, /aria-label="Loom history"/);
 
   for (const label of [
