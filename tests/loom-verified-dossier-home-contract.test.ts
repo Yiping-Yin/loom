@@ -46,8 +46,8 @@ test('verified dossier home data preserves approved product definition', () => {
     /Sources, drafts, projects, and conversations become a public record/i,
   );
   assert.match(
-    VERIFIED_DOSSIER_HOME_COPY.chineseBody,
-    /资料、学习路径、作品、过程记录和 AI 对话/,
+    VERIFIED_DOSSIER_HOME_COPY.shortDefinition,
+    /sources, learning path, work, process records, and AI conversations/,
   );
 });
 

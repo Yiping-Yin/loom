@@ -178,9 +178,6 @@ export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
 export const VERIFIED_DOSSIER_HOME_COPY = {
   headline: 'A knowledge profile people can inspect and ask.',
   body: 'Sources, drafts, projects, and conversations become a public record with evidence behind every answer.',
-  chineseHeadline: '一个可展示、可追溯、可交流的个人知识身份。',
-  chineseBody:
-    'Loom 将资料、学习路径、作品、过程记录和 AI 对话织成一个真实的个人知识档案。它既是作品集，也是知识库，最终也是一个基于本人知识的虚拟个人 AI。',
   shortDefinition:
     'Loom turns your sources, learning path, work, process records, and AI conversations into an inspectable personal knowledge identity.',
 };

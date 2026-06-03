@@ -26,7 +26,10 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     text,
     /Sources, drafts, projects, and conversations become a public record/,
   );
-  assert.match(text, /一个可展示、可追溯、可交流的个人知识身份/);
+  assert.match(
+    text,
+    /Loom turns your sources, learning path, work, process records, and AI conversations/,
+  );
 
   for (const label of [
     'Yiping Yin',
@@ -77,6 +80,7 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   assert.doesNotMatch(html, /placeholder="Ask this profile"/);
   assert.match(html, /placeholder="Search this profile"/);
   assert.match(html, /placeholder="Ask a follow-up\.\.\."/);
+  assert.doesNotMatch(text, /[\u3400-\u9fff]/);
   assert.doesNotMatch(text, /Yiping's Loom/);
   assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);
   assert.doesNotMatch(html, />\s*&nbsp;\s*</i);

@@ -147,12 +147,11 @@ export function VerifiedDossierHome({
         </aside>
 
         <section className="vd-main" aria-label="Verified dossier">
-          <p className="vd-chinese-headline">{VERIFIED_DOSSIER_HOME_COPY.chineseHeadline}</p>
           <h1 id="verified-dossier-title" className="vd-title">
             {VERIFIED_DOSSIER_HOME_COPY.headline}
           </h1>
           <p className="vd-subtitle">{VERIFIED_DOSSIER_HOME_COPY.body}</p>
-          <p className="vd-subtitle">{VERIFIED_DOSSIER_HOME_COPY.chineseBody}</p>
+          <p className="vd-subtitle">{VERIFIED_DOSSIER_HOME_COPY.shortDefinition}</p>
 
           <section className="vd-featured-story" aria-labelledby="featured-unsw-title">
             <div className="vd-featured-story__header">
