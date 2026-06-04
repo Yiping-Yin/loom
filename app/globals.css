@@ -11994,7 +11994,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-personal-category-card {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto auto auto auto;
   gap: 0.45rem;
   min-width: 0;
   min-height: clamp(10.4rem, 13vw, 12.25rem);
@@ -12045,23 +12045,18 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-personal-category-card span {
-  overflow: hidden;
   color: var(--vd-accent);
   font-size: 0.72rem;
   font-weight: 760;
   line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .vd-personal-category-card small {
-  display: -webkit-box;
-  overflow: hidden;
   color: var(--vd-muted);
   font-size: 0.68rem;
   line-height: 1.25;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 
 .vd-loom-intro {
