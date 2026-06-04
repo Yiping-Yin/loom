@@ -11699,11 +11699,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-personal-category-card {
   display: grid;
-  grid-template-rows: auto auto auto auto auto;
-  gap: 0.45rem;
+  grid-template-rows: minmax(7.2rem, auto) minmax(0, 1fr);
+  gap: 0.62rem;
   min-width: 0;
-  min-height: clamp(9.2rem, 11vw, 10.6rem);
-  padding: clamp(0.84rem, 1.35vw, 1.05rem);
+  min-height: clamp(13rem, 16vw, 15.4rem);
+  padding: clamp(0.62rem, 1vw, 0.78rem);
   border: 1px solid rgba(31, 58, 47, 0.13);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.88);
@@ -11763,6 +11763,80 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   font-weight: 720;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.vd-category-visual {
+  display: grid;
+  gap: 0.46rem;
+  min-width: 0;
+  aspect-ratio: 1.58;
+  padding: 0.48rem;
+  border: 1px solid rgba(31, 58, 47, 0.13);
+  border-radius: 7px;
+  background: #f9fbf8;
+}
+
+.vd-category-visual__media {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.34rem;
+  min-height: 0;
+}
+
+.vd-category-visual__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid rgba(31, 58, 47, 0.1);
+  border-radius: 6px;
+  background: #ffffff;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.vd-category-visual--profile-photo .vd-category-visual__media,
+.vd-category-visual--document-preview .vd-category-visual__media {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.vd-category-visual--logo-strip .vd-category-visual__media img {
+  padding: 0.34rem;
+  object-fit: contain;
+}
+
+.vd-category-visual__caption {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.vd-category-visual__caption strong,
+.vd-category-visual__caption span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vd-category-visual__caption strong {
+  color: var(--vd-ink);
+  font-size: 0.72rem;
+  font-weight: 820;
+  line-height: 1.12;
+}
+
+.vd-category-visual__caption span {
+  color: var(--vd-muted);
+  font-size: 0.68rem;
+  font-weight: 680;
+  line-height: 1.14;
+}
+
+.vd-personal-category-card__body {
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  gap: 0.28rem;
+  min-width: 0;
 }
 
 .vd-loom-intro {
@@ -11904,6 +11978,19 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
   .vd-personal-category-card {
     min-height: 0;
+  }
+
+  .vd-category-visual {
+    aspect-ratio: auto;
+  }
+
+  .vd-category-visual__media {
+    min-height: 7.2rem;
+  }
+
+  .vd-category-visual__caption strong,
+  .vd-category-visual__caption span {
+    white-space: normal;
   }
 }
 

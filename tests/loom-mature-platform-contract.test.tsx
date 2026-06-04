@@ -111,6 +111,16 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
 });
 
+test('homepage CSS protects picture-first personal category cards', () => {
+  const css = readRepo('app/globals.css');
+
+  assert.match(css, /\.vd-category-visual\s*{[\s\S]*aspect-ratio/);
+  assert.match(css, /\.vd-category-visual__media\s*{[\s\S]*grid-template-columns/);
+  assert.match(css, /\.vd-category-visual__media img\s*{[\s\S]*object-fit:\s*cover/);
+  assert.match(css, /\.vd-personal-category-card__body\s*{[\s\S]*grid-template-rows/);
+  assert.match(css, /@media \(max-width: 680px\)[\s\S]*\.vd-category-visual/);
+});
+
 test('repo homepage exposes the personal knowledge identity evidence model', () => {
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = require('react-dom/server') as {

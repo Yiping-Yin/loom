@@ -100,6 +100,16 @@ test('verified dossier data contract keeps the approved short definition', () =>
   );
 });
 
+test('personal positioning CSS keeps category visuals stable and compact', () => {
+  const css = read('app/globals.css');
+
+  assert.match(css, /\.vd-category-visual\s*{[\s\S]*aspect-ratio/);
+  assert.match(css, /\.vd-category-visual__media\s*{[\s\S]*grid-template-columns/);
+  assert.match(css, /\.vd-category-visual__media img\s*{[\s\S]*object-fit:\s*cover/);
+  assert.match(css, /\.vd-personal-category-card__body\s*{[\s\S]*grid-template-rows/);
+  assert.match(css, /@media \(max-width: 680px\)[\s\S]*\.vd-category-visual/);
+});
+
 test('Sources and Draft descriptions serve personal learning paths, resources, portfolio, and process work', () => {
   const productShell = read('lib/new-loom/product-shell.ts');
 
