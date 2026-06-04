@@ -129,62 +129,58 @@ export function SourceGraph({
     edges: readonly VerifiedDossierGraphEdge[];
   };
 }) {
-  const nodeLabels = new Map(graph.nodes.map((node) => [node.id, node.label]));
-
   return (
-    <section className="vd-source-graph" aria-label="Source relationship graph">
+    <section className="vd-source-graph vd-source-graph--proof" aria-label="Cited answer evidence">
       <div className="vd-source-graph__header">
-        <span>Source graph</span>
-        <strong>{graph.nodes.length} nodes</strong>
+        <span>Cited output</span>
       </div>
-      <ul className="vd-source-graph__canvas" aria-label="Source graph nodes">
+      <ul className="vd-source-graph__canvas" aria-label="Citation proof assets">
         {graph.nodes.map((node) => (
-          <li
-            key={node.id}
-            className={`vd-source-graph__node vd-source-graph__node--${node.kind}`}
-            aria-label={node.label}
-          >
-            <small>{node.eyebrow}</small>
-            <strong>{node.label}</strong>
-          </li>
+          <SourceGraphNode key={node.id} node={node} />
         ))}
-      </ul>
-      <ul className="vd-source-graph__edges" aria-label="Source graph relationships">
-        {graph.edges.map((edge, index) => {
-          const fromLabel = nodeLabels.get(edge.from) ?? edge.from;
-          const toLabel = nodeLabels.get(edge.to) ?? edge.to;
-
-          return (
-            <li
-              key={`${edge.from}-${edge.to}-${edge.label}-${index}`}
-              aria-label={`${fromLabel}: ${edge.label} to ${toLabel}`}
-            >
-              {edge.label}
-            </li>
-          );
-        })}
       </ul>
     </section>
   );
 }
 
+function SourceGraphNode({ node }: { node: VerifiedDossierGraphNode }) {
+  const artifact = node.artifactId ? resolveVerifiedDossierArtifact(node.artifactId) : null;
+
+  return (
+    <li
+      className={`vd-source-graph__node vd-source-graph__node--${node.kind}`}
+      aria-label={node.label}
+    >
+      <span className="vd-source-graph__asset" aria-hidden="true">
+        {artifact?.thumbnailSrc ? (
+          <img src={artifact.thumbnailSrc} alt="" draggable={false} />
+        ) : (
+          <span>{node.kind === 'draft' ? 'MD' : 'AI'}</span>
+        )}
+      </span>
+      <span className="vd-source-graph__copy">
+        <strong>{node.label}</strong>
+      </span>
+    </li>
+  );
+}
+
 export function ProvenanceChain({ steps }: { steps: readonly VerifiedDossierWorkbenchStep[] }) {
   return (
-    <section className="vd-provenance-section" aria-labelledby="provenance-title">
+    <section className="vd-provenance-section vd-provenance-section--rail" aria-labelledby="provenance-title">
       <h2 id="provenance-title">Sources <span>→</span> Draft <span>→</span> Answer</h2>
-      <div className="vd-provenance-chain" aria-label="Sources to Draft to Answer chain">
+      <ol className="vd-provenance-chain" aria-label="Sources to Draft to Answer chain">
         {steps.map((step, index) => (
-          <div key={step.number} className="vd-provenance-chain__item">
-            <article className="vd-provenance-step">
+          <li key={step.number} className="vd-provenance-chain__item">
+            <article className="vd-provenance-step" aria-label={`${step.title}: ${step.summary}. ${step.detail}`}>
               <span className="vd-step-number">{step.number}</span>
               <h3>{step.title}</h3>
               <strong>{step.summary}</strong>
-              <p>{step.detail}</p>
             </article>
             {index < steps.length - 1 ? <StepArrow /> : null}
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
     </section>
   );
 }
