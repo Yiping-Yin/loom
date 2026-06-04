@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import React from 'react';
 
-import { HomeClient, formatNativeActivitySummary } from '../app/HomeClient';
+import { HomeClient } from '../app/HomeClient';
 
 const repoRoot = path.resolve(__dirname, '..');
 
@@ -128,17 +128,21 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   assert.doesNotMatch(html, />\s*&nbsp;\s*</i);
 });
 
-test('HomeClient hydrated native activity uses Sources and Draft vocabulary', () => {
-  const text = formatNativeActivitySummary({
-    panelCount: 2,
-    pursuitCount: 1,
-    weaveCount: 3,
-  });
+test('HomeClient no longer hydrates retired homepage activity counters', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'app/HomeClient.tsx'), 'utf8');
 
-  assert.equal(text, 'Draft: 2 items, Process: 1 path, Sources: 3 links');
-  assert.match(text, /Sources/);
-  assert.match(text, /Draft/);
-  assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);
+  assert.match(source, /RECENT_RECORDS_KEY/);
+  assert.match(source, /loadLatestRecentRecord/);
+  assert.doesNotMatch(source, /loadPanelRecords/);
+  assert.doesNotMatch(source, /loadPursuitRecords/);
+  assert.doesNotMatch(source, /loadWeaveRecords/);
+  assert.doesNotMatch(source, /PANEL_RECORDS_KEY/);
+  assert.doesNotMatch(source, /PURSUIT_RECORDS_KEY/);
+  assert.doesNotMatch(source, /WEAVE_RECORDS_KEY/);
+  assert.doesNotMatch(source, /formatNativeActivitySummary/);
+  assert.doesNotMatch(source, /formatHomepageActivitySummary/);
+  assert.doesNotMatch(source, /activitySummary=/);
+  assert.doesNotMatch(source, /ready=/);
 });
 
 test('HomeClient Open Sources uses literal Sources navigation, not Shuttle', () => {

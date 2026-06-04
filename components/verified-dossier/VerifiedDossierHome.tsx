@@ -27,8 +27,6 @@ import {
 import { InstitutionMark } from './InstitutionMark';
 
 export type VerifiedDossierHomeProps = {
-  activitySummary: string;
-  ready: boolean;
   hasRecent: boolean;
   onOpenSources: () => void;
   onOpenRecent: () => void;
