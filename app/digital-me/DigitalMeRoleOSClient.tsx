@@ -14,6 +14,7 @@ import {
   type DigitalMeClaimNode,
   type DigitalMeEvidenceStatus,
 } from '../../lib/new-loom/digital-me-role-os';
+import { VERIFIED_DOSSIER_TOP_NAV } from '../../lib/new-loom/verified-dossier-home';
 import styles from './DigitalMeRoleOS.module.css';
 
 const STATUS_LABELS: Record<DigitalMeEvidenceStatus, string> = {
@@ -180,12 +181,15 @@ export default function DigitalMeRoleOSClient() {
     <main className={styles.roleOsPage} aria-labelledby="digital-me-title">
       <nav className={styles.nav} aria-label="Digital Me navigation">
         <a href="/loom">Loom</a>
-        <a href="/about">About</a>
-        <a href="/education">Education</a>
-        <a href="/experience">Experience</a>
-        <a aria-current="page" href="/digital-me">
-          Digital Me
-        </a>
+        {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
+          <a
+            key={item.label}
+            href={item.href}
+            aria-current={item.href === '/digital-me' ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))}
       </nav>
 
       <header className={styles.roleLens}>
