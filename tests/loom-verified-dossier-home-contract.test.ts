@@ -9,8 +9,6 @@ import {
   VERIFIED_DOSSIER_AI_PROMPT,
   VERIFIED_DOSSIER_ARTIFACTS,
   VERIFIED_DOSSIER_ARTIFACTS_BY_ID,
-  VERIFIED_DOSSIER_DIGITAL_ME_CANVASES,
-  VERIFIED_DOSSIER_DIGITAL_ME_MODES,
   VERIFIED_DOSSIER_HISTORY,
   VERIFIED_DOSSIER_HOME_COPY,
   VERIFIED_DOSSIER_LOOM_INTRO,
@@ -20,6 +18,7 @@ import {
   VERIFIED_DOSSIER_TOP_NAV,
   VERIFIED_DOSSIER_UNSW_COURSES,
   VERIFIED_DOSSIER_WORKBENCH,
+  resolveVerifiedDossierCourseHandbookHref,
   resolveVerifiedDossierArtifact,
 } from '../lib/new-loom/verified-dossier-home';
 
@@ -63,10 +62,12 @@ test('verified dossier home data preserves approved evidence workbench definitio
   assert.notEqual(VERIFIED_DOSSIER_HOME_COPY.headline, 'Sources become cited work');
   assert.notEqual(VERIFIED_DOSSIER_HOME_COPY.body, 'Verified source workspace');
   assert.equal(VERIFIED_DOSSIER_WORKBENCH.activeSectionId, 'unsw');
-  assert.deepEqual(
-    VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds,
-    ['econ-ps2', 'econ-slides', 'econ-tutorial', 'econ-notes'],
-  );
+  assert.deepEqual(VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds, [
+    'econ-ps2',
+    'econ-slides',
+    'econ-tutorial',
+    'econ-notes',
+  ]);
   assert.deepEqual(
     VERIFIED_DOSSIER_WORKBENCH.provenanceSteps.map((step) => step.title),
     ['Sources', 'Draft', 'Answer'],
@@ -99,6 +100,7 @@ test('personal IA routes exist as importable app pages', async () => {
     'app/education/page.tsx',
     'app/experience/page.tsx',
     'app/digital-me/page.tsx',
+    'app/loom/page.tsx',
   ]) {
     assert.ok(existsSync(join(repoRoot, routePage)), `${routePage} should exist`);
   }
@@ -133,7 +135,9 @@ test('verified dossier home groups source shelves into presentation categories',
     ['About', 'Education', 'Experience', 'Digital Me'],
   );
   assert.deepEqual(
-    VERIFIED_DOSSIER_TOP_NAV.slice(0, VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.length).map((item) => [item.label, item.href]),
+    VERIFIED_DOSSIER_TOP_NAV.slice(0, VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.length).map(
+      (item) => [item.label, item.href],
+    ),
     VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => [category.label, category.href]),
   );
 
@@ -143,16 +147,24 @@ test('verified dossier home groups source shelves into presentation categories',
     assert.ok(category.artifactIds.length > 0, `${category.id} should map to artifacts`);
 
     for (const sectionId of category.sourceSectionIds) {
-      assert.ok(sectionIds.has(sectionId), `${category.id} references missing source section ${sectionId}`);
+      assert.ok(
+        sectionIds.has(sectionId),
+        `${category.id} references missing source section ${sectionId}`,
+      );
     }
 
     for (const artifactId of category.artifactIds) {
-      assert.ok(artifactIds.has(artifactId), `${category.id} references missing artifact ${artifactId}`);
+      assert.ok(
+        artifactIds.has(artifactId),
+        `${category.id} references missing artifact ${artifactId}`,
+      );
       assert.equal(resolveVerifiedDossierArtifact(artifactId).id, artifactId);
     }
   }
 
-  const education = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'education');
+  const education = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find(
+    (category) => category.id === 'education',
+  );
   assert.ok(education, 'Education presentation category should exist');
   for (const sourceSectionId of ['unsw', 'quantnet', 'wqu', 'claude'] as const) {
     assert.ok(
@@ -161,7 +173,9 @@ test('verified dossier home groups source shelves into presentation categories',
     );
   }
 
-  const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'digital-me');
+  const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find(
+    (category) => category.id === 'digital-me',
+  );
   assert.ok(digitalMe, 'Digital Me presentation category should exist');
   assert.deepEqual(digitalMe.foundationCategoryIds, ['about', 'education', 'experience']);
   assert.ok(digitalMe.capabilities.some((capability) => /citation/i.test(capability)));
@@ -191,12 +205,16 @@ test('presentation categories expose real homepage visual assets', () => {
 });
 
 test('Digital Me is based on About, Education, and Experience layers', async () => {
-  const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'digital-me');
+  const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find(
+    (category) => category.id === 'digital-me',
+  );
   assert.ok(digitalMe, 'Digital Me presentation category should exist');
   assert.deepEqual(digitalMe.foundationCategoryIds, ['about', 'education', 'experience']);
 
   const foundations = digitalMe.foundationCategoryIds.map((categoryId) => {
-    const foundation = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === categoryId);
+    const foundation = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find(
+      (category) => category.id === categoryId,
+    );
     assert.ok(foundation, `${categoryId} should resolve to a presentation category`);
     return foundation;
   });
@@ -220,25 +238,32 @@ test('Digital Me is based on About, Education, and Experience layers', async () 
   };
   const html = renderToStaticMarkup(React.createElement(DigitalMePage));
 
-  assert.match(html, /A living personal interface/);
-  assert.match(html, /interactive representation of a person/i);
+  assert.match(html, /Quant Researcher \/ Trader/);
+  assert.match(html, /Role Lens/);
+  assert.match(html, /Evidence Graph/);
+  assert.match(html, /Claim Engine/);
+  assert.match(html, /Artifact Runtime/);
+  assert.match(html, /Boundary/);
+  assert.match(html, /Next Growth Action/);
   assert.match(html, /Built from About, Education, and Experience/);
   assert.match(html, /About foundation/);
   assert.match(html, /Education foundation/);
   assert.match(html, /Experience foundation/);
-  assert.match(html, /identity, learning, and work evidence/i);
+  assert.doesNotMatch(html, /A living personal interface/);
+  assert.doesNotMatch(html, /interactive representation of a person/i);
 });
 
-test('Digital Me exposes answer, canvas, portfolio, process, and action modes', async () => {
-  assert.deepEqual(
-    VERIFIED_DOSSIER_DIGITAL_ME_MODES.map((mode) => mode.label),
-    ['Answer Mode', 'Canvas Mode', 'Portfolio Mode', 'Process Mode', 'Action Mode'],
-  );
+test('Digital Me exposes role-lens artifact runtime actions', async () => {
+  const {
+    DIGITAL_ME_ARTIFACT_MODES,
+    DIGITAL_ME_PROOF_PATH,
+  } = await import('../lib/new-loom/digital-me-role-os');
 
-  for (const mode of VERIFIED_DOSSIER_DIGITAL_ME_MODES) {
-    assert.ok(mode.summary.length > 20, `${mode.label} should explain what it does`);
-    assert.ok(mode.foundationCategoryIds.length > 0, `${mode.label} should bind to profile foundations`);
-  }
+  assert.deepEqual(
+    DIGITAL_ME_ARTIFACT_MODES.map((mode) => mode.label),
+    ['Capability Map', 'Interview Answer', 'Gap Roadmap', 'Source Graph', 'Portfolio Case'],
+  );
+  assert.ok(DIGITAL_ME_PROOF_PATH.claims.length >= 5);
 
   const { default: DigitalMePage } = await import('../app/digital-me/page');
   const { renderToStaticMarkup } = require('react-dom/server') as {
@@ -246,38 +271,25 @@ test('Digital Me exposes answer, canvas, portfolio, process, and action modes', 
   };
   const html = renderToStaticMarkup(React.createElement(DigitalMePage));
 
-  for (const mode of VERIFIED_DOSSIER_DIGITAL_ME_MODES) {
+  for (const mode of DIGITAL_ME_ARTIFACT_MODES) {
     assert.match(html, new RegExp(mode.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
+  assert.match(html, /Capability Map/);
+  assert.match(html, /Interview Answer/);
+  assert.match(html, /Gap Roadmap/);
 });
 
-test('Digital Me can route an ask into a topic presentation canvas', async () => {
-  const tradingCanvas = VERIFIED_DOSSIER_DIGITAL_ME_CANVASES.find((canvas) => canvas.id === 'trading');
-  assert.ok(tradingCanvas, 'Trading canvas should exist');
-  assert.deepEqual(tradingCanvas.foundationCategoryIds, ['about', 'education', 'experience']);
-  assert.ok(tradingCanvas.triggerTerms.some((term) => /^trading$/i.test(term)));
-  assert.match(tradingCanvas.description, /ask/i);
-  assert.match(tradingCanvas.description, /canvas/i);
+test('Digital Me renders the Quant proof path with evidence statuses and gaps', async () => {
+  const {
+    DIGITAL_ME_PROOF_PATH,
+    getDigitalMeEvidenceForClaim,
+  } = await import('../lib/new-loom/digital-me-role-os');
 
-  assert.deepEqual(
-    tradingCanvas.columns.map((column) => column.label),
-    ['Trading Knowledge', 'Programming', 'Experience and Process'],
-  );
-  assert.ok(
-    tradingCanvas.columns
-      .find((column) => column.label === 'Trading Knowledge')
-      ?.items.some((item) => /FINS 3666/.test(item.label)),
-  );
-  assert.ok(
-    tradingCanvas.columns
-      .find((column) => column.label === 'Trading Knowledge')
-      ?.items.some((item) => /MATH 2991/.test(item.label)),
-  );
-  assert.ok(
-    tradingCanvas.columns
-      .find((column) => column.label === 'Programming')
-      ?.items.some((item) => /Python/.test(item.label)),
-  );
+  assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'strong'));
+  assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'partial'));
+  assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'direction'));
+  assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'missing'));
+  assert.ok(getDigitalMeEvidenceForClaim('mathematical-reasoning').length > 0);
 
   const { default: DigitalMePage } = await import('../app/digital-me/page');
   const { renderToStaticMarkup } = require('react-dom/server') as {
@@ -285,19 +297,23 @@ test('Digital Me can route an ask into a topic presentation canvas', async () =>
   };
   const html = renderToStaticMarkup(React.createElement(DigitalMePage));
 
-  assert.match(html, /From ask to canvas/);
-  assert.match(html, /Trading Knowledge/);
-  assert.match(html, /FINS 3666/);
-  assert.match(html, /MATH 2991/);
-  assert.match(html, /Programming/);
-  assert.match(html, /Python/);
-  assert.match(html, /Experience and Process/);
-  assert.match(html, /Digital Me can turn a conversation into a structured presentation/);
+  assert.match(html, /Mathematical reasoning/);
+  assert.match(html, /Optimisation thinking/);
+  assert.match(html, /Programming foundations/);
+  assert.match(html, /Market structure/);
+  assert.match(html, /Research output gap/);
+  assert.match(html, /Strong evidence/);
+  assert.match(html, /Partial evidence/);
+  assert.match(html, /Direction only/);
+  assert.match(html, /Missing proof/);
+  assert.match(html, /Create a small quant research project/);
 });
 
 test('Digital Me page ships professional section-page layout styles', () => {
   const cssPath = join(repoRoot, 'app/globals.css');
-  const css = existsSync(cssPath) ? require('node:fs').readFileSync(cssPath, 'utf8') as string : '';
+  const css = existsSync(cssPath)
+    ? (require('node:fs').readFileSync(cssPath, 'utf8') as string)
+    : '';
 
   for (const selector of [
     '.vd-section-page',
@@ -313,6 +329,23 @@ test('Digital Me page ships professional section-page layout styles', () => {
     assert.match(css, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
+  const roleCssPath = join(repoRoot, 'app/digital-me/DigitalMeRoleOS.module.css');
+  const roleCss = existsSync(roleCssPath)
+    ? (require('node:fs').readFileSync(roleCssPath, 'utf8') as string)
+    : '';
+
+  for (const selector of [
+    '.roleOsPage',
+    '.roleLens',
+    '.proofPath',
+    '.claimRail',
+    '.artifactStage',
+    '.evidencePanel',
+    '.boundaryPanel',
+  ]) {
+    assert.match(roleCss, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+
   assert.match(css, /\.vd-section-page__canvas[\s\S]*grid-template-columns/);
   assert.match(css, /\.vd-section-page__foundations[\s\S]*grid-template-columns/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page/);
@@ -322,7 +355,10 @@ test('verified dossier profile photo points to a tracked public asset path', () 
   assert.match(VERIFIED_DOSSIER_PROFILE.photoSrc, /^\/profile\/.+\.png$/);
 
   const publicPath = join(repoRoot, 'public', VERIFIED_DOSSIER_PROFILE.photoSrc);
-  assert.ok(existsSync(publicPath), `${VERIFIED_DOSSIER_PROFILE.photoSrc} should exist under public/`);
+  assert.ok(
+    existsSync(publicPath),
+    `${VERIFIED_DOSSIER_PROFILE.photoSrc} should exist under public/`,
+  );
 });
 
 test('verified dossier home includes ECON3202 artifacts and file kinds', () => {
@@ -377,7 +413,10 @@ test('verified dossier home presents UNSW as a course shelf before ECON3202 deta
     'INFS 3822',
     'COMM 3030',
   ]) {
-    assert.ok(VERIFIED_DOSSIER_UNSW_COURSES.some((course) => course.code === code), `${code} should be indexed`);
+    assert.ok(
+      VERIFIED_DOSSIER_UNSW_COURSES.some((course) => course.code === code),
+      `${code} should be indexed`,
+    );
   }
   assert.ok(
     VERIFIED_DOSSIER_UNSW_COURSES.every((course) => course.folder.startsWith('UNSW/')),
@@ -387,6 +426,41 @@ test('verified dossier home presents UNSW as a course shelf before ECON3202 deta
     VERIFIED_DOSSIER_UNSW_COURSES.every((course) => course.fileCount > 0),
     'course folders should expose real local file counts',
   );
+  const moodleBackedCourses = VERIFIED_DOSSIER_UNSW_COURSES.filter((course) => course.moodleHref);
+  const handbookBackedCourses = VERIFIED_DOSSIER_UNSW_COURSES.filter((course) =>
+    resolveVerifiedDossierCourseHandbookHref(course),
+  );
+  const math2991 = VERIFIED_DOSSIER_UNSW_COURSES.find((course) => course.code === 'MATH 2991');
+
+  assert.equal(
+    handbookBackedCourses.length,
+    VERIFIED_DOSSIER_UNSW_COURSES.length,
+    'every UNSW course folder should bind to an official Handbook page',
+  );
+  assert.ok(
+    handbookBackedCourses.every((course) =>
+      resolveVerifiedDossierCourseHandbookHref(course)?.startsWith(
+        'https://handbook.unsw.edu.au/undergraduate/courses/',
+      ),
+    ),
+    'Handbook-backed folders should link to official UNSW Handbook pages',
+  );
+  assert.ok(
+    moodleBackedCourses.length >= 13,
+    'current Moodle course folders should keep official Moodle links',
+  );
+  assert.ok(
+    moodleBackedCourses.every((course) =>
+      course.moodleHref?.startsWith('https://moodle.telt.unsw.edu.au/course/view.php?id='),
+    ),
+    'Moodle-backed folders should link to the official course page',
+  );
+  assert.equal(math2991?.moodleOffering, '2026 T2');
+  assert.equal(
+    math2991 ? resolveVerifiedDossierCourseHandbookHref(math2991) : undefined,
+    'https://handbook.unsw.edu.au/undergraduate/courses/2026/MATH2991',
+  );
+  assert.match(math2991?.moodleTitle ?? '', /Data and Algorithms in Trading/);
 });
 
 test('verified dossier sections and AI citations resolve to known artifacts', () => {
@@ -400,7 +474,10 @@ test('verified dossier sections and AI citations resolve to known artifacts', ()
 
   for (const section of VERIFIED_DOSSIER_SECTIONS) {
     for (const artifactId of section.artifactIds) {
-      assert.ok(artifactIds.has(artifactId), `${section.id} references missing artifact ${artifactId}`);
+      assert.ok(
+        artifactIds.has(artifactId),
+        `${section.id} references missing artifact ${artifactId}`,
+      );
       assert.equal(resolveVerifiedDossierArtifact(artifactId).id, artifactId);
     }
   }
@@ -415,12 +492,18 @@ test('verified dossier workbench graph binds relationships to real artifact ids'
   const artifactIds = new Set(VERIFIED_DOSSIER_ARTIFACTS.map((artifact) => artifact.id));
 
   for (const artifactId of VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds) {
-    assert.ok(artifactIds.has(artifactId), `active story references missing artifact ${artifactId}`);
+    assert.ok(
+      artifactIds.has(artifactId),
+      `active story references missing artifact ${artifactId}`,
+    );
   }
 
   for (const node of VERIFIED_DOSSIER_WORKBENCH.sourceGraph.nodes) {
     if ('artifactId' in node && node.artifactId) {
-      assert.ok(artifactIds.has(node.artifactId), `graph node references missing artifact ${node.artifactId}`);
+      assert.ok(
+        artifactIds.has(node.artifactId),
+        `graph node references missing artifact ${node.artifactId}`,
+      );
     }
   }
 
@@ -462,11 +545,20 @@ test('featured ECON3202 artifacts carry realistic document preview metadata', ()
     const artifact = resolveVerifiedDossierArtifact(artifactId);
 
     assert.ok(artifact.preview, `${artifact.label} should include preview metadata`);
-    assert.ok(artifact.sourcePath?.startsWith('UNSW/ECON 3202/'), `${artifact.label} should bind to a real source path`);
-    assert.ok(artifact.pageCount && artifact.pageCount > 0, `${artifact.label} should carry a real page count`);
+    assert.ok(
+      artifact.sourcePath?.startsWith('UNSW/ECON 3202/'),
+      `${artifact.label} should bind to a real source path`,
+    );
+    assert.ok(
+      artifact.pageCount && artifact.pageCount > 0,
+      `${artifact.label} should carry a real page count`,
+    );
     assert.ok(artifact.fileSize, `${artifact.label} should carry a real file size`);
     assert.ok(artifact.modifiedAt, `${artifact.label} should carry a real modified date`);
-    assert.ok(artifact.thumbnailSrc?.startsWith('/verified-sources/econ3202/'), `${artifact.label} should carry a real thumbnail`);
+    assert.ok(
+      artifact.thumbnailSrc?.startsWith('/verified-sources/econ3202/'),
+      `${artifact.label} should carry a real thumbnail`,
+    );
     assert.match(artifact.preview.metadata, /pages - .+ - modified/);
     assert.ok(artifact.preview.lines.length >= 3, `${artifact.label} should include preview lines`);
     assert.match(artifact.preview.tag, /03_Problem_Set|02_Week\/W08/);
