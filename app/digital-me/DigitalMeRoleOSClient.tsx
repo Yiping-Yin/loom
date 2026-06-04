@@ -14,33 +14,7 @@ import {
   type DigitalMeClaimNode,
   type DigitalMeEvidenceStatus,
 } from '../../lib/new-loom/digital-me-role-os';
-import type cssModuleClasses from './DigitalMeRoleOS.module.css';
-
-type DigitalMeRoleOSStyles = typeof cssModuleClasses;
-
-const styles: DigitalMeRoleOSStyles = {
-  roleOsPage: 'roleOsPage',
-  nav: 'nav',
-  roleLens: 'roleLens',
-  roleLensCriteria: 'roleLensCriteria',
-  proofPath: 'proofPath',
-  claimRail: 'claimRail',
-  claimButton: 'claimButton',
-  artifactStage: 'artifactStage',
-  stageHeader: 'stageHeader',
-  artifactActions: 'artifactActions',
-  artifactOutput: 'artifactOutput',
-  answerArtifact: 'answerArtifact',
-  roadmapArtifact: 'roadmapArtifact',
-  sourceGraphArtifact: 'sourceGraphArtifact',
-  caseArtifact: 'caseArtifact',
-  capabilityArtifact: 'capabilityArtifact',
-  evidencePanel: 'evidencePanel',
-  evidenceList: 'evidenceList',
-  emptyEvidence: 'emptyEvidence',
-  boundaryPanel: 'boundaryPanel',
-  foundationStrip: 'foundationStrip',
-};
+import styles from './DigitalMeRoleOS.module.css';
 
 const STATUS_LABELS: Record<DigitalMeEvidenceStatus, string> = {
   strong: 'Strong evidence',
