@@ -13,6 +13,7 @@ import { FileBadge } from '../components/verified-dossier/FileBadge';
 import {
   VERIFIED_DOSSIER_AI_PROMPT,
   VERIFIED_DOSSIER_SECTIONS,
+  VERIFIED_DOSSIER_UNSW_COURSES,
   VERIFIED_DOSSIER_WORKBENCH,
   type VerifiedDossierFileKind,
 } from '../lib/new-loom/verified-dossier-home';
@@ -83,37 +84,47 @@ test('ActiveEvidenceStory renders the UNSW workbench proof case', () => {
     <ActiveEvidenceStory
       section={unswSection}
       artifactIds={VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds}
+      courseFolders={VERIFIED_DOSSIER_UNSW_COURSES}
     />,
   );
 
   assert.match(html, /vd-active-story/);
   assert.match(html, /aria-label="UNSW Sydney"/);
   assert.match(html, /vd-active-story__title/);
-  assert.match(html, /Active evidence story/);
-  assert.match(html, /UNSW \/ ECON3202/);
-  assert.match(html, /4 files/);
+  assert.match(html, /Active source shelf/);
+  assert.match(html, />UNSW</);
+  assert.match(html, new RegExp(`${VERIFIED_DOSSIER_UNSW_COURSES.length} courses`));
+  assert.match(html, /UNSW course folders/);
+  assert.match(html, /ECON 3202/);
+  assert.match(html, /MATH 2991/);
+  assert.match(html, /FINS 3666/);
+  assert.match(html, /MATH 3856/);
+  assert.match(html, /INFS 3822/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /W8 A Concave-Functions\.pdf/);
   assert.match(html, /W8 C Suggested Exercises\.pdf/);
-  assert.match(html, /Problem2\.pdf/);
+  assert.doesNotMatch(html, /vd-file-badge__label">Problem2\.pdf/);
+  assert.doesNotMatch(html, /UNSW \/ ECON3202/);
 });
 
 test('SourceGraph renders semantic source relationships from real artifacts', () => {
   const html = render(<SourceGraph graph={VERIFIED_DOSSIER_WORKBENCH.sourceGraph} />);
 
   assert.match(html, /vd-source-graph/);
-  assert.match(html, /aria-label="Source relationship graph"/);
-  assert.match(html, /<ul class="vd-source-graph__canvas" aria-label="Source graph nodes">/);
-  assert.match(html, /<ul class="vd-source-graph__edges" aria-label="Source graph relationships">/);
+  assert.match(html, /aria-label="Cited answer evidence"/);
+  assert.match(html, /Cited output/);
+  assert.match(html, /<ul class="vd-source-graph__canvas" aria-label="Citation proof assets">/);
   assert.match(html, /<li class="vd-source-graph__node vd-source-graph__node--source" aria-label="Problem Set 02\.pdf"/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /W8 A Concave-Functions\.pdf/);
   assert.match(html, /Concavity and optimisation summary\.md/);
   assert.match(html, /Grounded explanation/);
-  assert.match(html, /Problem context/);
-  assert.match(html, /Concept source/);
-  assert.match(html, /Cited output/);
-  assert.match(html, /aria-label="Problem Set 02\.pdf: Problem context to Concavity and optimisation summary\.md"/);
+  assert.doesNotMatch(html, /Problem context/);
+  assert.doesNotMatch(html, /Concept source/);
+  assert.doesNotMatch(html, /aria-label="Problem Set 02\.pdf: Problem context to Concavity and optimisation summary\.md"/);
+  assert.doesNotMatch(html, /Source PDF/);
+  assert.doesNotMatch(html, /Lecture source/);
+  assert.doesNotMatch(html, /source links/);
 });
 
 test('ProvenanceChain renders Sources to Draft to Answer as the product explanation', () => {
@@ -123,7 +134,7 @@ test('ProvenanceChain renders Sources to Draft to Answer as the product explanat
   assert.match(html, /Sources/);
   assert.match(html, /Draft/);
   assert.match(html, /Answer/);
-  assert.match(html, /4 ECON3202 files/);
+  assert.match(html, /UNSW course shelf/);
   assert.match(html, /Concavity and optimisation summary\.md/);
   assert.match(html, /Grounded explanation/);
 });
