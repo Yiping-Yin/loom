@@ -63,6 +63,8 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.match(html, /Source-backed personal profile/);
   assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
   assert.match(html, /Built with Loom/);
+  assert.match(html, /Loom trust layer/);
+  assert.match(html, /class="vd-personal-stage"/);
   assert.match(html, /Loom is the underlying trust mechanism/);
   assert.match(html, /real sources become drafts/);
   assert.match(html, /Digital Me answers/);
@@ -72,9 +74,12 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.match(html, /W8 A Concave-Functions\.pdf/);
   assert.match(html, /Sources[\s\S]*Draft[\s\S]*Digital Me/);
   assert.match(html, /Sources[\s\S]{0,80}Draft[\s\S]{0,80}Answer/);
-  assert.match(html, /Cited answer/);
   assert.match(html, /concavity/i);
   assert.match(html, /aria-label="Loom history"/);
+  assert.doesNotMatch(html, /id="cited-answer"/);
+  assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
+  assert.doesNotMatch(html, /vd-loom-intro-link/);
+  assert.doesNotMatch(html, /Problem Set 02\.pdf \/ W8 A Concave-Functions\.pdf/);
 
   for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
@@ -119,11 +124,13 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   assert.match(html, /Source-backed personal profile/);
   assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
   assert.match(html, /Built with Loom/);
+  assert.match(html, /Loom trust layer/);
   assert.match(html, /Sources[\s\S]*Draft[\s\S]*Digital Me/);
   assert.match(html, /Cited output/);
-  assert.match(html, /Cited answer/);
   assert.match(html, /Knowledge identity/);
   assert.match(html, /Real-file workflow/);
+  assert.doesNotMatch(html, /id="cited-answer"/);
+  assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
   for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }

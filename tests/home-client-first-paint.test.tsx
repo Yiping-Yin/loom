@@ -33,10 +33,10 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'Experience',
     'Digital Me',
     'Built with Loom',
+    'Loom trust layer',
     'Sources',
     'Draft',
     'real sources',
-    'Cited answer',
     'UNSW',
     'ECON 3202',
     'MATH 2991',
@@ -44,17 +44,12 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'WQU',
     'Claude',
     'Open Digital Me',
-    'No recent Draft',
-    'Draft opens after a saved record.',
+    '1 source file / 1 shelf',
+    '5 source files / 4 shelves',
     'Problem Set 02.pdf',
     'W8 A Concave-Functions.pdf',
     'W8 C Suggested Exercises.pdf',
-    'About me page.docx',
-    'QuantNet Online C++ Course.pdf',
-    'WQU index.html',
-    'Claude Certificate.html',
-    'concavity',
-    'first-order conditions',
+    'Concavity and optimisation summary.md',
   ]) {
     assert.match(text, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
@@ -72,15 +67,23 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
 
   assert.equal(text.match(/Cited answer/g)?.length ?? 0, 1);
   assert.match(html, /class="vd-home/);
+  assert.match(html, /class="vd-personal-stage"/);
   assert.match(html, /class="vd-workbench-grid"/);
   assert.match(html, /class="vd-active-story/);
   assert.match(html, /class="vd-source-graph/);
   assert.match(
     html,
-    /<a class="vd-search vd-loom-intro-link" href="#loom-intro" aria-label="How this profile is built with Loom">/,
+    /<a class="vd-wordmark" href="#loom-trust-layer" aria-label="Open Loom trust layer">/,
   );
   assert.match(html, /<nav class="vd-profile-links" aria-label="Profile links">/);
-  assert.match(html, /<aside id="cited-answer" class="vd-inspector" aria-label="Cited answer">/);
+  assert.doesNotMatch(html, /<aside id="cited-answer" class="vd-inspector"/);
+  assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
+  assert.doesNotMatch(text, /Workflow/);
+  assert.doesNotMatch(text, /Activity/);
+  assert.doesNotMatch(text, /No recent Draft/);
+  assert.doesNotMatch(text, /Draft opens after a saved record\./);
+  assert.doesNotMatch(html, /vd-loom-intro-link/);
+  assert.doesNotMatch(html, /Problem Set 02\.pdf \/ W8 A Concave-Functions\.pdf/);
   assert.doesNotMatch(text, /Verified source workspace/);
   assert.doesNotMatch(text, /Sources become cited work/);
   assert.doesNotMatch(text, /Source index/);

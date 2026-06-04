@@ -3,6 +3,7 @@ import React from 'react';
 import {
   VERIFIED_DOSSIER_AI_PROMPT,
   VERIFIED_DOSSIER_DIGITAL_ME_CANVASES,
+  VERIFIED_DOSSIER_DIGITAL_ME_MODES,
   VERIFIED_DOSSIER_LOOM_INTRO,
   VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
   resolveVerifiedDossierArtifact,
@@ -33,9 +34,26 @@ export default function DigitalMePage() {
       </nav>
       <header className="vd-section-page__hero">
         <p>Digital Me</p>
-        <h1 id="digital-me-title">A grounded digital-person layer, not only an ask box.</h1>
+        <h1 id="digital-me-title">A living personal interface.</h1>
         <span>{category.summary}</span>
       </header>
+      <section className="vd-section-page__modes" aria-labelledby="digital-me-modes-title">
+        <div>
+          <h2 id="digital-me-modes-title">The interactive representation of a person</h2>
+          <p>
+            Digital Me is the top layer of Loom. It can answer, present, explain, prove, and
+            produce from the same verified identity, learning, work, and process record.
+          </p>
+        </div>
+        <div>
+          {VERIFIED_DOSSIER_DIGITAL_ME_MODES.map((mode) => (
+            <article key={mode.label}>
+              <strong>{mode.label}</strong>
+              <span>{mode.summary}</span>
+            </article>
+          ))}
+        </div>
+      </section>
       <section className="vd-section-page__list" aria-label="Digital Me capabilities">
         {category.capabilities.map((capability) => (
           <article key={capability}>

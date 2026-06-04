@@ -334,6 +334,12 @@ export type VerifiedDossierDigitalMeCanvas = {
   }[];
 };
 
+export type VerifiedDossierDigitalMeMode = {
+  label: 'Answer Mode' | 'Canvas Mode' | 'Portfolio Mode' | 'Process Mode' | 'Action Mode';
+  summary: string;
+  foundationCategoryIds: readonly Exclude<VerifiedDossierPresentationCategoryId, 'digital-me'>[];
+};
+
 export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
   { label: 'About', href: '/about' },
   { label: 'Education', href: '/education' },
@@ -456,7 +462,7 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     label: 'Digital Me',
     href: '/digital-me',
     summary:
-      'A grounded interaction layer that can answer, cite, and turn conversations into presentation canvases built from About, Education, and Experience.',
+      'A living personal interface that can answer, present, explain, prove, and produce from verified knowledge, education, experience, portfolio, and process history.',
     proof: 'About + Education + Experience',
     sourceSectionIds: ['about', 'unsw', 'quantnet', 'wqu', 'claude'],
     artifactIds: ['about-doc', 'econ-ps2', 'econ-slides', 'quantnet-python-foundations', 'claude-certificate'],
@@ -470,6 +476,34 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     foundationCategoryIds: ['about', 'education', 'experience'],
   },
 ] as const satisfies readonly VerifiedDossierPresentationCategory[];
+
+export const VERIFIED_DOSSIER_DIGITAL_ME_MODES = [
+  {
+    label: 'Answer Mode',
+    summary: 'Answers questions about the person and cites the source files, drafts, and artifacts behind the answer.',
+    foundationCategoryIds: ['about', 'education', 'experience'],
+  },
+  {
+    label: 'Canvas Mode',
+    summary: 'Turns a conversation topic into a structured presentation canvas that connects learning, work, and proof.',
+    foundationCategoryIds: ['education', 'experience'],
+  },
+  {
+    label: 'Portfolio Mode',
+    summary: 'Surfaces related projects, coursework, files, case studies, and finished outputs as a public-facing body of work.',
+    foundationCategoryIds: ['about', 'education', 'experience'],
+  },
+  {
+    label: 'Process Mode',
+    summary: 'Replays how a result was formed: sources, notes, reasoning path, drafts, revisions, and final artifact.',
+    foundationCategoryIds: ['education', 'experience'],
+  },
+  {
+    label: 'Action Mode',
+    summary: 'Uses the Draft layer to produce new outputs such as a case study, presentation, application answer, or learning map.',
+    foundationCategoryIds: ['about', 'education', 'experience'],
+  },
+] as const satisfies readonly VerifiedDossierDigitalMeMode[];
 
 export const VERIFIED_DOSSIER_DIGITAL_ME_CANVASES = [
   {

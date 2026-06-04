@@ -10,6 +10,7 @@ import {
   VERIFIED_DOSSIER_ARTIFACTS,
   VERIFIED_DOSSIER_ARTIFACTS_BY_ID,
   VERIFIED_DOSSIER_DIGITAL_ME_CANVASES,
+  VERIFIED_DOSSIER_DIGITAL_ME_MODES,
   VERIFIED_DOSSIER_HISTORY,
   VERIFIED_DOSSIER_HOME_COPY,
   VERIFIED_DOSSIER_LOOM_INTRO,
@@ -197,11 +198,35 @@ test('Digital Me is based on About, Education, and Experience layers', async () 
   };
   const html = renderToStaticMarkup(React.createElement(DigitalMePage));
 
+  assert.match(html, /A living personal interface/);
+  assert.match(html, /interactive representation of a person/i);
   assert.match(html, /Built from About, Education, and Experience/);
   assert.match(html, /About foundation/);
   assert.match(html, /Education foundation/);
   assert.match(html, /Experience foundation/);
   assert.match(html, /identity, learning, and work evidence/i);
+});
+
+test('Digital Me exposes answer, canvas, portfolio, process, and action modes', async () => {
+  assert.deepEqual(
+    VERIFIED_DOSSIER_DIGITAL_ME_MODES.map((mode) => mode.label),
+    ['Answer Mode', 'Canvas Mode', 'Portfolio Mode', 'Process Mode', 'Action Mode'],
+  );
+
+  for (const mode of VERIFIED_DOSSIER_DIGITAL_ME_MODES) {
+    assert.ok(mode.summary.length > 20, `${mode.label} should explain what it does`);
+    assert.ok(mode.foundationCategoryIds.length > 0, `${mode.label} should bind to profile foundations`);
+  }
+
+  const { default: DigitalMePage } = await import('../app/digital-me/page');
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
+  const html = renderToStaticMarkup(React.createElement(DigitalMePage));
+
+  for (const mode of VERIFIED_DOSSIER_DIGITAL_ME_MODES) {
+    assert.match(html, new RegExp(mode.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
 });
 
 test('Digital Me can route an ask into a topic presentation canvas', async () => {
@@ -257,6 +282,7 @@ test('Digital Me page ships professional section-page layout styles', () => {
     '.vd-section-page__nav',
     '.vd-section-page__hero',
     '.vd-section-page__list',
+    '.vd-section-page__modes',
     '.vd-section-page__foundations',
     '.vd-section-page__canvas',
     '.vd-section-page__answer',

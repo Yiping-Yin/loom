@@ -27,10 +27,12 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(html, /Source-backed personal profile/);
   assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
   assert.match(html, /Built with Loom/);
+  assert.match(html, /Loom trust layer/);
+  assert.match(html, /class="vd-personal-stage"/);
   assert.match(html, /real sources|Real files/);
   assert.match(html, /trust mechanism/i);
-  assert.match(html, /Cited answer/);
   assert.match(html, /proof|evidence/i);
+  assert.match(html, /href="#loom-trust-layer" aria-label="Open Loom trust layer"/);
 
   for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
@@ -45,12 +47,10 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
     'Draft',
     'Problem Set 02.pdf',
     'W8 A Concave-Functions.pdf',
-    'About me page.docx',
-    'QuantNet Online C++ Course.pdf',
-    'Python Foundations.pdf',
-    'WQU index.html',
-    'Claude Certificate.html',
-    'concavity',
+    '1 source file / 1 shelf',
+    '5 source files / 4 shelves',
+    '3 source files / 3 shelves',
+    'Concavity and optimisation summary.md',
     'Original Loom',
     'Private Wiki',
   ]) {
@@ -62,6 +62,10 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.doesNotMatch(html, /Source Dossier/);
   assert.doesNotMatch(html, /Ask this profile/);
   assert.doesNotMatch(html, /Ask a follow-up/);
+  assert.doesNotMatch(html, /vd-loom-intro-link/);
+  assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
+  assert.doesNotMatch(html, /id="cited-answer"/);
+  assert.doesNotMatch(html, /Problem Set 02\.pdf \/ W8 A Concave-Functions\.pdf/);
   assert.doesNotMatch(html, /One workspace for source material, one surface for writing from it\./);
   assert.doesNotMatch(html, /personal knowledge display platform/i);
   assert.doesNotMatch(html, /Recent progress|Product story|Process timeline|Output previews/);
