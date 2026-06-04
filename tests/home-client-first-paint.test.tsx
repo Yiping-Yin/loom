@@ -22,7 +22,6 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   const text = visibleText(html);
   const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
   const categorySectionHtml = html.match(/<section class="vd-personal-categories"[\s\S]*?<\/section>/)?.[0] ?? '';
-  const proofBandHtml = html.match(/<section class="vd-proof-band"[\s\S]*?<\/section>/)?.[0] ?? '';
 
   for (const label of [
     'Yiping Yin',
@@ -34,24 +33,13 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'Education',
     'Experience',
     'Digital Me',
-    'Built with Loom',
-    'Loom trust layer',
-    'Sources',
-    'Draft',
-    'real sources',
     'UNSW',
-    'ECON 3202',
-    'MATH 2991',
-    'FINS 3666',
-    'WQU',
-    'Claude',
-    'Open Digital Me',
-    '1 source file / 1 shelf',
-    '5 source files / 4 shelves',
-    'Problem Set 02.pdf',
-    'W8 A Concave-Functions.pdf',
-    'W8 C Suggested Exercises.pdf',
-    'Concavity and optimisation summary.md',
+    'WorldQuant University',
+    'QuantNet',
+    'Profile',
+    'Course record',
+    'Project evidence',
+    'Answer canvas',
   ]) {
     assert.match(text, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
@@ -67,25 +55,33 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     );
   }
 
-  assert.match(categorySectionHtml, /Cited answer routed into a personal interface/);
-  assert.match(proofBandHtml, /Cited answer sample/);
   assert.match(html, /class="vd-home/);
   assert.match(html, /class="vd-personal-stage"/);
-  assert.match(html, /class="vd-workbench-grid"/);
-  assert.match(html, /class="vd-active-story/);
-  assert.match(html, /class="vd-source-graph/);
-  assert.match(
-    html,
-    /<a class="vd-wordmark" href="#loom-trust-layer" aria-label="Open Loom trust layer">/,
-  );
+  assert.match(categorySectionHtml, /role="img" aria-label="Profile source"/);
+  assert.match(categorySectionHtml, /role="img" aria-label="Course shelves"/);
+  assert.match(categorySectionHtml, /role="img" aria-label="Project proof"/);
+  assert.match(categorySectionHtml, /role="img" aria-label="Answer canvas"/);
   assert.match(html, /<nav class="vd-profile-links" aria-label="Profile links">/);
+  assert.match(html, /<a class="vd-hero-link vd-hero-link--primary" href="\/digital-me">Digital Me/);
+  assert.match(html, /<a class="vd-hero-link vd-hero-link--button" href="\/about">Profile<\/a>/);
   assert.doesNotMatch(html, /<aside id="cited-answer" class="vd-inspector"/);
   assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
+  assert.doesNotMatch(html, /vd-category-visual__caption/);
   assert.doesNotMatch(text, /Workflow/);
   assert.doesNotMatch(text, /Activity/);
   assert.doesNotMatch(text, /No recent Draft/);
   assert.doesNotMatch(text, /Draft opens after a saved record\./);
+  assert.doesNotMatch(text, /Built with Loom/);
+  assert.doesNotMatch(text, /Loom trust layer/);
+  assert.doesNotMatch(text, /Sources and Draft proof/);
+  assert.doesNotMatch(text, /Cited answer sample/);
+  assert.doesNotMatch(text, /Loom is the underlying trust mechanism/);
   assert.doesNotMatch(html, /vd-loom-intro-link/);
+  assert.doesNotMatch(html, /vd-loom-intro/);
+  assert.doesNotMatch(html, /vd-proof-band/);
+  assert.doesNotMatch(html, /vd-workbench-grid/);
+  assert.doesNotMatch(html, /vd-active-story/);
+  assert.doesNotMatch(html, /vd-source-graph/);
   assert.doesNotMatch(html, /Problem Set 02\.pdf \/ W8 A Concave-Functions\.pdf/);
   assert.doesNotMatch(text, /Verified source workspace/);
   assert.doesNotMatch(text, /Sources become cited work/);
@@ -104,8 +100,10 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   assert.doesNotMatch(text, /Ask a follow-up/);
   assert.doesNotMatch(text, /Open recent Draft/);
   assert.doesNotMatch(text, /Open Draft/);
+  assert.doesNotMatch(text, /Open Sources/);
   assert.doesNotMatch(text, /UNSW \/ ECON3202/);
   assert.doesNotMatch(html, /href="\/draft"/);
+  assert.doesNotMatch(html, /href="#loom-trust-layer"/);
   assert.doesNotMatch(html, /id="ask-this-profile"/);
   assert.doesNotMatch(text, /A knowledge profile people can inspect and ask\./);
   assert.doesNotMatch(
@@ -128,11 +126,16 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   assert.doesNotMatch(html, />\s*&nbsp;\s*</i);
 });
 
-test('HomeClient no longer hydrates retired homepage activity counters', () => {
+test('HomeClient stays a static portfolio cover without operational plumbing', () => {
   const source = fs.readFileSync(path.join(repoRoot, 'app/HomeClient.tsx'), 'utf8');
 
-  assert.match(source, /RECENT_RECORDS_KEY/);
-  assert.match(source, /loadLatestRecentRecord/);
+  assert.match(source, /<VerifiedDossierHome \/>/);
+  assert.doesNotMatch(source, /RECENT_RECORDS_KEY/);
+  assert.doesNotMatch(source, /loadLatestRecentRecord/);
+  assert.doesNotMatch(source, /subscribeLoomMirror/);
+  assert.doesNotMatch(source, /callNativeBridge/);
+  assert.doesNotMatch(source, /handleOpenSources/);
+  assert.doesNotMatch(source, /handleOpenRecent/);
   assert.doesNotMatch(source, /loadPanelRecords/);
   assert.doesNotMatch(source, /loadPursuitRecords/);
   assert.doesNotMatch(source, /loadWeaveRecords/);
@@ -145,14 +148,14 @@ test('HomeClient no longer hydrates retired homepage activity counters', () => {
   assert.doesNotMatch(source, /ready=/);
 });
 
-test('HomeClient Open Sources uses literal Sources navigation, not Shuttle', () => {
-  const source = fs.readFileSync(path.join(repoRoot, 'app/HomeClient.tsx'), 'utf8');
-  const openSourcesMatch = source.match(/const handleOpenSources = \(\) => \{[\s\S]*?\n  \};/);
+test('homepage primary actions stay presentation-oriented', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'components/verified-dossier/VerifiedDossierHome.tsx'), 'utf8');
 
-  assert.ok(openSourcesMatch, 'HomeClient should define handleOpenSources');
-  assert.doesNotMatch(source, /import\s+\{\s*openShuttle\s*\}/);
-  assert.doesNotMatch(openSourcesMatch[0], /\bopenShuttle\s*\(/);
-  assert.match(openSourcesMatch[0], /const href = '\/knowledge'/);
-  assert.match(openSourcesMatch[0], /callNativeBridge\('navigate', \{ href \}\)/);
-  assert.match(openSourcesMatch[0], /window\.location\.href = href/);
+  assert.match(source, /href="\/digital-me"/);
+  assert.match(source, /href="\/about"/);
+  assert.doesNotMatch(source, /Open Sources/);
+  assert.doesNotMatch(source, /Recent Draft/);
+  assert.doesNotMatch(source, /onOpenSources/);
+  assert.doesNotMatch(source, /onOpenRecent/);
+  assert.doesNotMatch(source, /href=\{draftRecordDetailHref/);
 });

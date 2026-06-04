@@ -54,32 +54,29 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   const categorySectionHtml = html.match(/<section class="vd-personal-categories"[\s\S]*?<\/section>/)?.[0] ?? '';
 
   assert.match(html, /Yiping Yin/);
-  assert.match(html, /Source-backed personal profile/);
-  assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
-  assert.match(html, /Built with Loom/);
-  assert.match(html, /Loom trust layer/);
+  assert.match(html, /Student · Builder · Learner · Sydney, Australia/);
   assert.match(html, /class="vd-personal-stage"/);
   assert.match(categorySectionHtml, /class="[^"]*\bvd-category-visual\b/);
   assert.match(categorySectionHtml, /class="[^"]*\bvd-category-visual__media\b/);
   assert.match(categorySectionHtml, /<img[^>]*alt=""[^>]*aria-hidden="true"/);
   assert.doesNotMatch(categorySectionHtml, /<img[^>]*alt="(?:Profile source|Course shelves|Project proof|Answer canvas)"/);
-  assert.match(categorySectionHtml, /<strong>Profile source<\/strong>/);
-  assert.match(categorySectionHtml, /Portrait, role, and public identity record/);
-  assert.match(categorySectionHtml, /<strong>Course shelves<\/strong>/);
-  assert.match(categorySectionHtml, /UNSW, WQU, QuantNet, and Claude learning evidence/);
-  assert.match(categorySectionHtml, /<strong>Project proof<\/strong>/);
-  assert.match(categorySectionHtml, /Programming and worked-output evidence/);
-  assert.match(categorySectionHtml, /<strong>Answer canvas<\/strong>/);
-  assert.match(categorySectionHtml, /Cited answer routed into a personal interface/);
+  assert.match(categorySectionHtml, /role="img" aria-label="Profile source"/);
+  assert.match(categorySectionHtml, /role="img" aria-label="Course shelves"/);
+  assert.match(categorySectionHtml, /role="img" aria-label="Project proof"/);
+  assert.match(categorySectionHtml, /role="img" aria-label="Answer canvas"/);
+  assert.match(categorySectionHtml, /<h2>About<\/h2><span>Profile<\/span>/);
+  assert.match(categorySectionHtml, /<h2>Education<\/h2><span>Course record<\/span>/);
+  assert.match(categorySectionHtml, /<h2>Experience<\/h2><span>Project evidence<\/span>/);
+  assert.match(categorySectionHtml, /<h2>Digital Me<\/h2><span>Answer canvas<\/span>/);
+  assert.doesNotMatch(categorySectionHtml, /vd-category-visual__caption/);
+  assert.doesNotMatch(categorySectionHtml, /Portrait, role, and public identity record/);
+  assert.doesNotMatch(categorySectionHtml, /UNSW, WQU, QuantNet, and Claude learning evidence/);
+  assert.doesNotMatch(categorySectionHtml, /Programming and worked-output evidence/);
+  assert.doesNotMatch(categorySectionHtml, /Cited answer routed into a personal interface/);
   assert.doesNotMatch(categorySectionHtml, /Problem Set 02\.pdf/);
   assert.doesNotMatch(categorySectionHtml, /W8 A Concave-Functions\.pdf/);
   assert.doesNotMatch(categorySectionHtml, /UNSW, QuantNet, WQU, Claude Certificate/);
-  assert.match(html, /Course shelves/);
   assert.match(html, /Answer canvas/);
-  assert.match(html, /real sources|Real files/);
-  assert.match(html, /trust mechanism/i);
-  assert.match(html, /proof|evidence/i);
-  assert.match(html, /href="#loom-trust-layer" aria-label="Open Loom trust layer"/);
 
   for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
@@ -90,20 +87,24 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
     'Education',
     'Experience',
     'Digital Me',
-    'Sources',
-    'Draft',
-    'Problem Set 02.pdf',
-    'W8 A Concave-Functions.pdf',
-    '1 source file / 1 shelf',
-    '5 source files / 4 shelves',
-    '3 source files / 3 shelves',
-    'Concavity and optimisation summary.md',
-    'Original Loom',
-    'Private Wiki',
+    'Profile',
+    'Course record',
+    'Project evidence',
+    'Answer canvas',
   ]) {
     assert.match(html, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
+  assert.doesNotMatch(html, /Built with Loom/);
+  assert.doesNotMatch(html, /Loom trust layer/);
+  assert.doesNotMatch(html, /Sources and Draft proof/);
+  assert.doesNotMatch(html, /Cited answer sample/);
+  assert.doesNotMatch(html, /Loom is the underlying trust mechanism/);
+  assert.doesNotMatch(html, /href="#loom-trust-layer"/);
+  assert.doesNotMatch(html, /vd-loom-intro/);
+  assert.doesNotMatch(html, /vd-proof-band/);
+  assert.doesNotMatch(html, /vd-workbench-grid/);
+  assert.doesNotMatch(html, /aria-label="Loom history"/);
   assert.doesNotMatch(html, /Verified source workspace/);
   assert.doesNotMatch(html, /Sources become cited work/);
   assert.doesNotMatch(html, /Source Dossier/);
@@ -135,7 +136,7 @@ test('personal positioning CSS keeps category visuals stable and compact', () =>
   const profilePhotoImage = cssBlock(css, '.vd-category-visual--profile-photo .vd-category-visual__media img');
   const mobile = cssBlock(css, '@media (max-width: 680px)', '.vd-category-visual');
 
-  assert.match(profilePhoto, /aspect-ratio:\s*1\.12/);
+  assert.match(profilePhoto, /aspect-ratio:\s*1\.48/);
   assert.match(profilePhotoImage, /object-position:\s*center\s+28%/);
   assert.match(mobile, /\.vd-category-visual\s*{[\s\S]*aspect-ratio:\s*auto/);
 });

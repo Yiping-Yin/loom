@@ -77,26 +77,32 @@ test('HomeClient renders mature platform modules on first paint', () => {
   const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
   assert.match(html, /Yiping Yin/);
-  assert.match(html, /Source-backed personal profile/);
-  assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
-  assert.match(html, /Built with Loom/);
-  assert.match(html, /Loom trust layer/);
+  assert.match(html, /Student · Builder · Learner · Sydney, Australia/);
   assert.match(html, /class="vd-personal-stage"/);
-  assert.match(html, /Loom is the underlying trust mechanism/);
-  assert.match(html, /real sources become drafts/);
-  assert.match(html, /Digital Me answers/);
-  assert.match(html, /ECON 3202/);
-  assert.match(html, /MATH 2991/);
-  assert.match(html, /Problem Set 02\.pdf/);
-  assert.match(html, /W8 A Concave-Functions\.pdf/);
-  assert.match(html, /Sources[\s\S]*Draft[\s\S]*Digital Me/);
-  assert.match(html, /Sources[\s\S]{0,80}Draft[\s\S]{0,80}Answer/);
-  assert.match(html, /concavity/i);
-  assert.match(html, /aria-label="Loom history"/);
+  assert.match(html, /role="img" aria-label="Profile source"/);
+  assert.match(html, /role="img" aria-label="Course shelves"/);
+  assert.match(html, /role="img" aria-label="Project proof"/);
+  assert.match(html, /role="img" aria-label="Answer canvas"/);
+  assert.match(html, /<h2>About<\/h2><span>Profile<\/span>/);
+  assert.match(html, /<h2>Education<\/h2><span>Course record<\/span>/);
+  assert.match(html, /<h2>Experience<\/h2><span>Project evidence<\/span>/);
+  assert.match(html, /<h2>Digital Me<\/h2><span>Answer canvas<\/span>/);
   assert.doesNotMatch(html, /id="cited-answer"/);
   assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
   assert.doesNotMatch(html, /vd-loom-intro-link/);
+  assert.doesNotMatch(html, /vd-loom-intro/);
+  assert.doesNotMatch(html, /vd-proof-band/);
+  assert.doesNotMatch(html, /vd-workbench-grid/);
+  assert.doesNotMatch(html, /aria-label="Loom history"/);
   assert.doesNotMatch(html, /Problem Set 02\.pdf \/ W8 A Concave-Functions\.pdf/);
+  assert.doesNotMatch(html, /Built with Loom/);
+  assert.doesNotMatch(html, /Loom trust layer/);
+  assert.doesNotMatch(html, /Loom is the underlying trust mechanism/);
+  assert.doesNotMatch(html, /real sources become drafts/);
+  assert.doesNotMatch(html, /Problem Set 02\.pdf/);
+  assert.doesNotMatch(html, /W8 A Concave-Functions\.pdf/);
+  assert.doesNotMatch(html, /Concavity and optimisation summary\.md/);
+  assert.doesNotMatch(html, /Sources[\s\S]{0,80}Draft[\s\S]{0,80}Answer/);
 
   for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
@@ -104,10 +110,6 @@ test('HomeClient renders mature platform modules on first paint', () => {
 
   for (const retiredPrimaryNav of ['UNSW', 'Quantnet', 'WQU', 'Claude']) {
     assert.doesNotMatch(primaryNavHtml, new RegExp(`>${retiredPrimaryNav}<`));
-  }
-
-  for (const label of ['Original Loom', 'Private Wiki', 'Knowledge identity', 'Real-file workflow', 'Sources', 'Draft']) {
-    assert.match(html, new RegExp(label));
   }
 
   assert.doesNotMatch(html, /Verified source workspace/);
@@ -135,13 +137,14 @@ test('homepage CSS protects picture-first personal category cards', () => {
   const categoryMediaImage = cssBlock(css, '.vd-category-visual__media img');
   const categoryBody = cssBlock(css, '.vd-personal-category-card__body');
 
-  assert.match(categoryVisual, /aspect-ratio:\s*1\.58/);
-  assert.match(categoryVisual, /grid-template-rows:\s*minmax\(0,\s*1fr\)\s+auto/);
+  assert.match(categoryVisual, /aspect-ratio:\s*1\.48/);
+  assert.doesNotMatch(categoryVisual, /grid-template-rows/);
   assert.match(categoryVisual, /overflow:\s*hidden/);
   assert.match(categoryMedia, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(categoryMedia, /overflow:\s*hidden/);
+  assert.match(categoryMedia, /height:\s*100%/);
   assert.match(categoryMediaImage, /object-fit:\s*cover/);
-  assert.match(categoryBody, /grid-template-rows:\s*auto\s+auto\s+auto\s+auto/);
+  assert.match(categoryBody, /grid-template-rows:\s*auto\s+auto/);
 });
 
 test('repo homepage exposes the personal knowledge identity evidence model', () => {
@@ -154,14 +157,20 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
   assert.match(html, /Yiping Yin/);
-  assert.match(html, /Source-backed personal profile/);
-  assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
-  assert.match(html, /Built with Loom/);
-  assert.match(html, /Loom trust layer/);
-  assert.match(html, /Sources[\s\S]*Draft[\s\S]*Digital Me/);
-  assert.match(html, /Cited output/);
-  assert.match(html, /Knowledge identity/);
-  assert.match(html, /Real-file workflow/);
+  assert.match(html, /Student · Builder · Learner · Sydney, Australia/);
+  assert.match(html, /Digital Me/);
+  assert.match(html, /Profile/);
+  assert.match(html, /Course record/);
+  assert.match(html, /Project evidence/);
+  assert.match(html, /Answer canvas/);
+  assert.doesNotMatch(html, /Sources[\s\S]*Draft[\s\S]*Digital Me/);
+  assert.doesNotMatch(html, /Cited output/);
+  assert.doesNotMatch(html, /Knowledge identity/);
+  assert.doesNotMatch(html, /Real-file workflow/);
+  assert.doesNotMatch(html, /Built with Loom/);
+  assert.doesNotMatch(html, /Loom trust layer/);
+  assert.doesNotMatch(html, /vd-proof-band/);
+  assert.doesNotMatch(html, /vd-loom-intro/);
   assert.doesNotMatch(html, /id="cited-answer"/);
   assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
   for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
@@ -173,8 +182,8 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   for (const model of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {
     assert.ok(PERSONAL_PLATFORM_MODEL.includes(model as (typeof PERSONAL_PLATFORM_MODEL)[number]));
   }
-  assert.match(html, /ECON 3202/);
-  assert.match(html, /FINS 3666/);
+  assert.doesNotMatch(html, /ECON 3202/);
+  assert.doesNotMatch(html, /FINS 3666/);
   assert.doesNotMatch(html, /Sources become cited work/);
   assert.doesNotMatch(html, /Verified source workspace/);
   assert.doesNotMatch(html, /personal knowledge display platform/i);
