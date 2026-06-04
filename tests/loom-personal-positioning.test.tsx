@@ -56,7 +56,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(html, /Student · Builder · Learner · Sydney, Australia/);
   assert.match(html, /class="vd-home vd-home--cover"/);
   assert.match(html, /class="vd-personal-stage"/);
-  assert.match(html, /href="\/loom" aria-label="Open Loom history"/);
+  assert.match(html, /href="\/loom" aria-label="Open Loom product"/);
   assert.match(html, /class="vd-personal-showcase"/);
   assert.match(html, /class="vd-personal-category-stack"/);
   assert.equal((html.match(/class="vd-personal-category-card(?:\s|")/g) ?? []).length, 4);
@@ -85,6 +85,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
+  assert.doesNotMatch(primaryNavHtml, />Home</);
   assert.doesNotMatch(primaryNavHtml, />Draft</);
   assert.doesNotMatch(primaryNavHtml, /href="\/drafts?"/);
 
@@ -145,8 +146,9 @@ test('personal positioning CSS keeps the Home cover visual and non-operational',
   const mobileShowcase = cssBlock(css, '@media (max-width: 680px)', '.vd-personal-showcase');
   const mobileStack = cssBlock(css, '@media (max-width: 680px)', '.vd-personal-category-stack');
 
-  assert.match(coverNav, /grid-template-columns:\s*auto\s+minmax\(0,\s*1fr\)/);
-  assert.match(personalStage, /grid-template-columns:\s*minmax\(16rem,\s*0\.5fr\)\s+minmax\(0,\s*1\.5fr\)/);
+  assert.match(coverNav, /display:\s*flex/);
+  assert.match(coverNav, /justify-content:\s*center/);
+  assert.match(personalStage, /grid-template-columns:\s*minmax\(17rem,\s*0\.44fr\)\s+minmax\(0,\s*1\.56fr\)/);
   assert.match(showcase, /grid-template-columns:\s*minmax\(20rem,\s*1\.05fr\)\s+minmax\(16rem,\s*0\.85fr\)/);
   assert.match(showcase, /min-height:\s*clamp\(32rem,\s*64vh,\s*46rem\)/);
   assert.match(categoryStack, /display:\s*grid/);

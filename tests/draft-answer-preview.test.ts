@@ -130,16 +130,19 @@ test('Draft AI Answer can publish a manually written Answer section without prov
 test('Digital Me owns the cited answer surface while Draft preview remains publishable', () => {
   const home = read('components/verified-dossier/VerifiedDossierHome.tsx');
   const digitalMePage = read('app/digital-me/page.tsx');
+  const digitalMeClient = read('app/digital-me/DigitalMeRoleOSClient.tsx');
   const answerInspector = read('components/verified-dossier/AnswerInspector.tsx');
 
   assert.doesNotMatch(home, /loadDraftAnswerPreview/);
   assert.doesNotMatch(home, /useDraftAnswerPreview/);
   assert.doesNotMatch(home, /draftAnswerPreview=\{draftAnswerPreview\}/);
   assert.doesNotMatch(home, /AnswerInspector/);
-  assert.match(digitalMePage, /VERIFIED_DOSSIER_AI_PROMPT/);
-  assert.match(digitalMePage, /digital-me-answer-title/);
-  assert.match(digitalMePage, /FileBadge/);
-  assert.match(digitalMePage, /citations\.map/);
+  assert.doesNotMatch(digitalMePage, /VERIFIED_DOSSIER_AI_PROMPT/);
+  assert.match(digitalMePage, /DIGITAL_ME_PROOF_PATH/);
+  assert.match(digitalMePage, /DigitalMeRoleOSClient/);
+  assert.match(digitalMeClient, /digital-me-answer-title/);
+  assert.match(digitalMeClient, /FileBadge/);
+  assert.match(digitalMeClient, /resolveDigitalMeEvidenceArtifact/);
   assert.match(answerInspector, /draftAnswerPreview/);
   assert.match(answerInspector, /Draft preview/);
   assert.match(answerInspector, /Draft sources/);
