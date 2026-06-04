@@ -51,12 +51,14 @@ function assertSafeHref(href: string) {
 }
 
 test('verified dossier home data preserves approved evidence workbench definition', () => {
-  assert.equal(VERIFIED_DOSSIER_HOME_COPY.headline, 'Sources become cited work');
-  assert.equal(VERIFIED_DOSSIER_HOME_COPY.body, 'Verified source workspace');
+  assert.equal(VERIFIED_DOSSIER_HOME_COPY.headline, 'Yiping Yin');
+  assert.equal(VERIFIED_DOSSIER_HOME_COPY.body, 'Source-backed personal profile');
   assert.match(
     VERIFIED_DOSSIER_HOME_COPY.shortDefinition,
-    /Sources stay inspectable\. Draft turns them into cited answers\./,
+    /About, education, experience, and Digital Me/,
   );
+  assert.notEqual(VERIFIED_DOSSIER_HOME_COPY.headline, 'Sources become cited work');
+  assert.notEqual(VERIFIED_DOSSIER_HOME_COPY.body, 'Verified source workspace');
   assert.equal(VERIFIED_DOSSIER_WORKBENCH.activeSectionId, 'unsw');
   assert.deepEqual(
     VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds,

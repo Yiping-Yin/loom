@@ -72,7 +72,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
 test('verified dossier data contract keeps the approved short definition', () => {
   assert.equal(
     VERIFIED_DOSSIER_HOME_COPY.shortDefinition,
-    'Sources stay inspectable. Draft turns them into cited answers.',
+    'About, education, experience, and Digital Me are backed by real sources, drafts, and cited outputs.',
   );
 });
 
