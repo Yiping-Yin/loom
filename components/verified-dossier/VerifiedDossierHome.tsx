@@ -4,22 +4,35 @@ import { useEffect, useState } from 'react';
 import {
   VERIFIED_DOSSIER_AI_PROMPT,
   VERIFIED_DOSSIER_HISTORY,
-  VERIFIED_DOSSIER_HOME_COPY,
+  VERIFIED_DOSSIER_LOOM_INTRO,
+  VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
   VERIFIED_DOSSIER_PROFILE,
   VERIFIED_DOSSIER_SECTIONS,
   VERIFIED_DOSSIER_TOP_NAV,
+  VERIFIED_DOSSIER_UNSW_COURSES,
   VERIFIED_DOSSIER_WORKBENCH,
+  resolveVerifiedDossierArtifact,
 } from '../../lib/new-loom/verified-dossier-home';
 import {
   loadReferenceCitationCandidates,
   type ReferenceCitationClientCandidate,
 } from '../../lib/new-loom/reference-citation-client';
+import {
+  loadDraftAnswerPreview,
+  NEW_LOOM_DRAFT_ANSWER_PREVIEW_KEY,
+  type NewLoomDraftAnswerPreview,
+} from '../../lib/new-loom/draft-answer-preview';
+import {
+  draftRecordDetailHref,
+  loadLatestDraftRecord,
+  NEW_LOOM_DRAFT_RECORDS_KEY,
+  type NewLoomDraftRecord,
+} from '../../lib/new-loom/draft-records';
 import { AnswerInspector } from './AnswerInspector';
 import {
   ActiveEvidenceStory,
   ProvenanceChain,
   SourceGraph,
-  SourceIndex,
 } from './EvidenceWorkbench';
 import { InstitutionMark } from './InstitutionMark';
 
@@ -32,7 +45,8 @@ export type VerifiedDossierHomeProps = {
 };
 
 const FEATURED_UNSW_SECTION = VERIFIED_DOSSIER_SECTIONS.find((section) => section.id === 'unsw');
-const KNOWLEDGE_AREA_SECTIONS = VERIFIED_DOSSIER_SECTIONS.filter((section) => section.id !== 'unsw');
+const PRIMARY_NAV_LABELS = new Set(['About', 'Education', 'Experience', 'Digital Me']);
+const HOMEPAGE_ACTIVITY_FALLBACK = 'Education: UNSW courses, Digital Me: cited answer';
 
 function useReferenceCitationCandidates() {
   const [citationCandidates, setCitationCandidates] = useState<ReferenceCitationClientCandidate[]>([]);
@@ -54,6 +68,44 @@ function useReferenceCitationCandidates() {
   }, []);
 
   return citationCandidates;
+}
+
+function useDraftAnswerPreview() {
+  const [draftAnswerPreview, setDraftAnswerPreview] = useState<NewLoomDraftAnswerPreview | null>(null);
+
+  useEffect(() => {
+    setDraftAnswerPreview(loadDraftAnswerPreview());
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === NEW_LOOM_DRAFT_ANSWER_PREVIEW_KEY) {
+        setDraftAnswerPreview(loadDraftAnswerPreview());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  return draftAnswerPreview;
+}
+
+function useLatestDraftRecord() {
+  const [recentDraftRecord, setRecentDraftRecord] = useState<NewLoomDraftRecord | null>(null);
+
+  useEffect(() => {
+    setRecentDraftRecord(loadLatestDraftRecord());
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === NEW_LOOM_DRAFT_RECORDS_KEY) {
+        setRecentDraftRecord(loadLatestDraftRecord());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  return recentDraftRecord;
 }
 
 function ArrowIcon() {
@@ -100,6 +152,9 @@ export function VerifiedDossierHome({
   onOpenRecent,
 }: VerifiedDossierHomeProps) {
   const citationCandidates = useReferenceCitationCandidates();
+  const draftAnswerPreview = useDraftAnswerPreview();
+  const recentDraftRecord = useLatestDraftRecord();
+  const hasWorkflowDraft = Boolean(recentDraftRecord) || hasRecent;
   const citationRegistryShelfLabels = new Set(citationCandidates
     .map((candidate) => candidate.category ?? candidate.label ?? candidate.title)
     .filter((label): label is string => Boolean(label)));
@@ -112,14 +167,14 @@ export function VerifiedDossierHome({
           Loom
         </a>
         <div className="vd-nav__links">
-          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
+          {VERIFIED_DOSSIER_TOP_NAV.filter((item) => PRIMARY_NAV_LABELS.has(item.label)).map((item) => (
             <a key={item.label} className={item.label === 'Sources' ? 'is-active' : undefined} href={item.href}>
               {item.label}
             </a>
           ))}
         </div>
-        <a className="vd-search" href="#source-index-title" aria-label="Jump to source index">
-          <span>Source index</span>
+        <a className="vd-search vd-loom-intro-link" href="#loom-intro" aria-label="How this profile is built with Loom">
+          <span>Built with Loom</span>
           <ArrowIcon />
         </a>
         <a className="vd-avatar" href="/about" aria-label="Open Yiping Yin profile">
@@ -168,7 +223,16 @@ export function VerifiedDossierHome({
                 <span>Open Sources</span>
                 <ArrowIcon />
               </button>
-              {hasRecent ? (
+              {recentDraftRecord ? (
+                <a className="vd-action-button" href={draftRecordDetailHref(recentDraftRecord)}>
+                  <DraftIcon />
+                  <span className="vd-action-button__copy">
+                    <strong>{recentDraftRecord.title}</strong>
+                    <small>{formatDraftRecordStatus(recentDraftRecord.status)}</small>
+                  </span>
+                  <ArrowIcon />
+                </a>
+              ) : hasRecent ? (
                 <button className="vd-action-button" type="button" onClick={onOpenRecent}>
                   <DraftIcon />
                   <span>Open recent Draft</span>
@@ -187,9 +251,9 @@ export function VerifiedDossierHome({
             <h2>Activity</h2>
             <p>
               <span className="vd-status-dot" aria-hidden="true" />
-              {ready ? activitySummary : 'Sources and Draft ready'}
+              {ready ? activitySummary : HOMEPAGE_ACTIVITY_FALLBACK}
             </p>
-            {!hasRecent ? <span className="vd-activity__hint">Draft opens after a saved record.</span> : null}
+            {!hasWorkflowDraft ? <span className="vd-activity__hint">Draft opens after a saved record.</span> : null}
           </section>
         </aside>
 
@@ -197,37 +261,70 @@ export function VerifiedDossierHome({
           <section className="vd-evidence-hero" aria-labelledby="verified-dossier-title">
             <div className="vd-evidence-hero__header">
               <div>
-                <p className="vd-section-kicker">{VERIFIED_DOSSIER_HOME_COPY.body}</p>
+                <p className="vd-section-kicker">Source-backed personal profile</p>
                 <div className="vd-title-lockup">
                   <a className="vd-title-avatar" href="/about" aria-label="Open Yiping Yin profile">
                     <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="" draggable={false} />
                   </a>
                   <h1 id="verified-dossier-title" className="vd-title">
-                    {VERIFIED_DOSSIER_HOME_COPY.headline}
+                    Yiping Yin
                   </h1>
                 </div>
+                <p className="vd-hero-summary">
+                  About, education, experience, and Digital Me are backed by real sources, drafts, and cited outputs.
+                </p>
               </div>
-              {FEATURED_UNSW_SECTION ? (
-                <a className="vd-hero-link" href={FEATURED_UNSW_SECTION.href}>
-                  Open UNSW / ECON3202 <ArrowIcon />
-                </a>
-              ) : null}
+              <a className="vd-hero-link" href="/digital-me">
+                Open Digital Me <ArrowIcon />
+              </a>
             </div>
+
+            <section id="loom-intro" className="vd-loom-intro" aria-labelledby="loom-intro-title">
+              <div>
+                <p className="vd-section-kicker">Trust mechanism</p>
+                <h2 id="loom-intro-title">{VERIFIED_DOSSIER_LOOM_INTRO.title}</h2>
+                <p>{VERIFIED_DOSSIER_LOOM_INTRO.summary}</p>
+              </div>
+              <div className="vd-loom-intro__steps" aria-label="How Loom builds this profile">
+                {VERIFIED_DOSSIER_LOOM_INTRO.steps.map((step) => (
+                  <article key={step.label} className="vd-loom-intro__step">
+                    <h3>{step.label}</h3>
+                    <p>{step.text}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
 
             <div className="vd-workbench-grid">
               {FEATURED_UNSW_SECTION ? (
                 <ActiveEvidenceStory
                   section={FEATURED_UNSW_SECTION}
                   artifactIds={VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds}
+                  courseFolders={VERIFIED_DOSSIER_UNSW_COURSES}
+                  draftRecords={recentDraftRecord ? [recentDraftRecord] : []}
                 />
               ) : null}
               <SourceGraph graph={VERIFIED_DOSSIER_WORKBENCH.sourceGraph} />
             </div>
 
+            <section className="vd-personal-categories" aria-label="Personal presentation sections">
+              {VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => (
+                <a key={category.id} className="vd-personal-category-card" href={category.href}>
+                  <p>{category.proof}</p>
+                  <h2>{category.label}</h2>
+                  <p>{category.summary}</p>
+                  <span>{category.capabilities.slice(0, 2).join(' / ')}</span>
+                  <small>
+                    {category.artifactIds
+                      .map((artifactId) => resolveVerifiedDossierArtifact(artifactId).label)
+                      .join(' / ')}
+                  </small>
+                </a>
+              ))}
+            </section>
+
             <ProvenanceChain steps={VERIFIED_DOSSIER_WORKBENCH.provenanceSteps} />
           </section>
-
-          <SourceIndex sections={KNOWLEDGE_AREA_SECTIONS} />
 
           <section className="vd-history" aria-label="Loom history">
             {VERIFIED_DOSSIER_HISTORY.map((item) => (
@@ -240,14 +337,22 @@ export function VerifiedDossierHome({
           </section>
         </section>
 
-        <aside id="answer-inspector" className="vd-inspector" aria-label="Answer inspector">
+        <aside id="cited-answer" className="vd-inspector" aria-label="Cited answer">
           <AnswerInspector
             prompt={VERIFIED_DOSSIER_AI_PROMPT}
             citationRegistryCount={citationCandidates.length}
             citationRegistryLabels={citationRegistryLabels}
+            draftAnswerPreview={draftAnswerPreview}
+            draftRecord={recentDraftRecord}
           />
         </aside>
       </div>
     </main>
   );
+}
+
+function formatDraftRecordStatus(status: NewLoomDraftRecord['status']) {
+  if (status === 'previewed') return 'Previewed';
+  if (status === 'published') return 'Published';
+  return 'Drafting';
 }

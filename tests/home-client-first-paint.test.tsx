@@ -20,10 +20,7 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
 
   const html = renderToStaticMarkup(<HomeClient />);
   const text = visibleText(html);
-
-  assert.match(text, /Verified source workspace/);
-  assert.match(text, /Sources become cited work/);
-  assert.match(text, /Sources\s+→\s+Draft\s+→\s+Answer/);
+  const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
   for (const label of [
     'Yiping Yin',
@@ -32,62 +29,76 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     'Learner',
     'Sydney, Australia',
     'About',
+    'Education',
+    'Experience',
+    'Digital Me',
+    'Built with Loom',
     'Sources',
     'Draft',
-    'Sources become cited work',
-    'Answer inspector',
-    'Verified source workspace',
-    'Active evidence story',
-    'Source graph',
-    'UNSW / ECON3202',
-    'Quantnet',
+    'real sources',
+    'Cited answer',
+    'UNSW',
+    'ECON 3202',
+    'MATH 2991',
+    'FINS 3666',
     'WQU',
     'Claude',
-    'History',
-    'Open Sources',
+    'Open Digital Me',
     'No recent Draft',
     'Draft opens after a saved record.',
     'Problem Set 02.pdf',
     'W8 A Concave-Functions.pdf',
     'W8 C Suggested Exercises.pdf',
-    'Problem2.pdf',
     'About me page.docx',
     'QuantNet Online C++ Course.pdf',
-    'Python Foundations.pdf',
     'WQU index.html',
     'Claude Certificate.html',
-    'PDF',
-    'DOCX',
-    'HTML',
-    'Problem Set 02',
-    'W8 A Concave-Functions.pdf',
-    '2 pages - 79 KB - modified 15 Mar 2026',
-    '27 pages - 227 KB - modified 06 Apr 2026',
-    'UNSW/ECON 3202/03_Problem_Set/Problem Set 02.pdf',
-    'UNSW/ECON 3202/02_Week/W08/W8 A Concave-Functions.pdf',
-    'Concavity and optimisation summary.md',
-    'Cited sources',
     'concavity',
     'first-order conditions',
-    'economic choice problem',
-    'Draft',
   ]) {
     assert.match(text, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
-  assert.equal(text.match(/Answer inspector/g)?.length ?? 0, 1);
+  for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
+    assert.match(primaryNavHtml, new RegExp(`>${label}<`));
+  }
+
+  for (const retiredPrimaryNav of ['Quantnet', 'WQU', 'Claude', 'History']) {
+    assert.doesNotMatch(
+      primaryNavHtml,
+      new RegExp(`>${retiredPrimaryNav.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}<`),
+    );
+  }
+
+  assert.equal(text.match(/Cited answer/g)?.length ?? 0, 1);
   assert.match(html, /class="vd-home/);
   assert.match(html, /class="vd-workbench-grid"/);
   assert.match(html, /class="vd-active-story/);
   assert.match(html, /class="vd-source-graph/);
-  assert.match(html, /<a class="vd-search" href="#source-index-title" aria-label="Jump to source index">/);
+  assert.match(
+    html,
+    /<a class="vd-search vd-loom-intro-link" href="#loom-intro" aria-label="How this profile is built with Loom">/,
+  );
   assert.match(html, /<nav class="vd-profile-links" aria-label="Profile links">/);
-  assert.match(html, /<aside id="answer-inspector" class="vd-inspector" aria-label="Answer inspector">/);
+  assert.match(html, /<aside id="cited-answer" class="vd-inspector" aria-label="Cited answer">/);
+  assert.doesNotMatch(text, /Verified source workspace/);
+  assert.doesNotMatch(text, /Sources become cited work/);
+  assert.doesNotMatch(text, /Source index/);
+  assert.doesNotMatch(text, /blocking onboarding/);
+  assert.doesNotMatch(text, /Answer inspector/);
+  assert.doesNotMatch(text, /Selected trail/);
+  assert.doesNotMatch(text, /Problem-set evidence/);
+  assert.doesNotMatch(text, /Lecture source/);
+  assert.doesNotMatch(text, /Exercise source/);
+  assert.doesNotMatch(text, /Problem context/);
+  assert.doesNotMatch(text, /Concept source/);
+  assert.doesNotMatch(text, /source links/);
   assert.doesNotMatch(text, /Source Dossier/);
   assert.doesNotMatch(text, /Ask this profile/);
   assert.doesNotMatch(text, /Ask a follow-up/);
   assert.doesNotMatch(text, /Open recent Draft/);
   assert.doesNotMatch(text, /Open Draft/);
+  assert.doesNotMatch(text, /UNSW \/ ECON3202/);
   assert.doesNotMatch(html, /href="\/draft"/);
   assert.doesNotMatch(html, /id="ask-this-profile"/);
   assert.doesNotMatch(text, /A knowledge profile people can inspect and ask\./);

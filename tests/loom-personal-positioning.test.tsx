@@ -21,19 +21,26 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   };
 
   const html = renderToStaticMarkup(<HomeClient />);
+  const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
-  assert.match(html, /Verified source workspace/);
-  assert.match(html, /Sources become cited work/);
-  assert.match(html, /Sources\s*<!-- -->→<!-- -->\s*Draft\s*<!-- -->→<!-- -->\s*Answer|Sources[\s\S]{0,40}Draft[\s\S]{0,40}Answer/);
-  assert.match(html, /Answer inspector/);
-  assert.match(html, /Knowledge identity/);
+  assert.match(html, /Yiping Yin/);
+  assert.match(html, /Source-backed personal profile/);
+  assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
+  assert.match(html, /Built with Loom/);
+  assert.match(html, /real sources|Real files/);
+  assert.match(html, /trust mechanism/i);
+  assert.match(html, /Cited answer/);
   assert.match(html, /proof|evidence/i);
 
-  for (const shelf of ['About', 'UNSW', 'Quantnet', 'WQU', 'Claude']) {
-    assert.match(html, new RegExp(shelf));
+  for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
+    assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
 
   for (const label of [
+    'About',
+    'Education',
+    'Experience',
+    'Digital Me',
     'Sources',
     'Draft',
     'Problem Set 02.pdf',
@@ -43,18 +50,15 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
     'Python Foundations.pdf',
     'WQU index.html',
     'Claude Certificate.html',
-    'PDF',
-    'DOCX',
-    'HTML',
-    'Sources',
     'concavity',
     'Original Loom',
     'Private Wiki',
-    'Knowledge identity',
   ]) {
     assert.match(html, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
+  assert.doesNotMatch(html, /Verified source workspace/);
+  assert.doesNotMatch(html, /Sources become cited work/);
   assert.doesNotMatch(html, /Source Dossier/);
   assert.doesNotMatch(html, /Ask this profile/);
   assert.doesNotMatch(html, /Ask a follow-up/);
@@ -96,7 +100,7 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(about, /Proof/);
   assert.match(about, /about-doc/);
   assert.match(verifiedDossierData, /About me page\.docx/);
-  assert.match(about, /UNSW \/ ECON3202/);
+  assert.match(about, /First proof shelf', 'UNSW'/);
   assert.match(about, /Ask this profile/);
   assert.match(about, /Product story/i);
   assert.match(about, /\/product-history/);

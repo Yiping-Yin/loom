@@ -64,6 +64,22 @@ export function formatNativeActivitySummary({
   ].join(', ');
 }
 
+function formatHomepageActivitySummary({
+  panelCount,
+  pursuitCount,
+  weaveCount,
+}: {
+  panelCount: number;
+  pursuitCount: number;
+  weaveCount: number;
+}) {
+  if (panelCount + pursuitCount + weaveCount > 0) {
+    return formatNativeActivitySummary({ panelCount, pursuitCount, weaveCount });
+  }
+
+  return 'Education: UNSW courses, Digital Me: cited answer';
+}
+
 export function HomeClient() {
   const [ready, setReady] = useState(false);
   const [recent, setRecent] = useState<LoomRecentRecord | null>(null);
@@ -144,14 +160,14 @@ export function HomeClient() {
   };
 
   const handleOpenRecent = () => {
-    if (!recent) return;
-    if (callNativeBridge('navigate', { href: recent.href })) return;
-    window.location.href = recent.href;
+    const href = recent?.href ?? '/draft';
+    if (callNativeBridge('navigate', { href })) return;
+    window.location.href = href;
   };
 
   return (
     <VerifiedDossierHome
-      activitySummary={formatNativeActivitySummary({ panelCount, pursuitCount, weaveCount })}
+      activitySummary={formatHomepageActivitySummary({ panelCount, pursuitCount, weaveCount })}
       ready={ready}
       hasRecent={Boolean(recent)}
       onOpenSources={handleOpenSources}
