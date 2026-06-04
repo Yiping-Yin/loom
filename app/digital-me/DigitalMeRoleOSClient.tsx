@@ -66,9 +66,7 @@ function ArtifactOutput({
     return (
       <article className={`${styles.artifactOutput} ${styles.answerArtifact}`}>
         <p>Interview Answer</p>
-        <h2 id="digital-me-answer-title">
-          How does your evidence support Quant Researcher / Trader readiness?
-        </h2>
+        <h2>How does your evidence support Quant Researcher / Trader readiness?</h2>
         <p>
           My strongest current proof is {getClaimTitle(selectedClaim).toLowerCase()}. The
           evidence comes from inspectable About, Education, and Experience sources rather than a
@@ -218,7 +216,11 @@ export default function DigitalMeRoleOSClient() {
           ))}
         </aside>
 
-        <section className={styles.artifactStage} aria-label="Artifact Runtime">
+        <section
+          className={styles.artifactStage}
+          aria-label="Artifact Runtime"
+          id="digital-me-answer-title"
+        >
           <div className={styles.stageHeader}>
             <p>Artifact Runtime</p>
             <h2>{activeMode.label}</h2>

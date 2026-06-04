@@ -10,6 +10,6 @@ export default function DigitalMePage() {
     throw new Error('Missing Digital Me proof path claims');
   }
 
-  // DigitalMeRoleOSClient owns the artifact output, including #digital-me-answer-title.
+  // DigitalMeRoleOSClient keeps #digital-me-answer-title mounted for citation links.
   return <DigitalMeRoleOSClient />;
 }
