@@ -54,9 +54,11 @@ function getClaimTitle(claim: DigitalMeClaimNode) {
 function ArtifactOutput({
   mode,
   selectedClaim,
+  onSelectClaim,
 }: {
   mode: DigitalMeArtifactModeId;
   selectedClaim: DigitalMeClaimNode;
+  onSelectClaim: (claimId: string) => void;
 }) {
   const selectedEvidence = getDigitalMeEvidenceForClaim(selectedClaim.id);
 
@@ -153,7 +155,7 @@ function ArtifactOutput({
           key={claim.id}
           type="button"
           data-active={claim.id === selectedClaim.id}
-          onClick={() => undefined}
+          onClick={() => onSelectClaim(claim.id)}
         >
           <strong>{getClaimTitle(claim)}</strong>
           <span>{STATUS_LABELS[claim.evidenceStatus]}</span>
@@ -234,7 +236,11 @@ export default function DigitalMeRoleOSClient() {
               </button>
             ))}
           </div>
-          <ArtifactOutput mode={activeArtifactMode} selectedClaim={selectedClaim} />
+          <ArtifactOutput
+            mode={activeArtifactMode}
+            selectedClaim={selectedClaim}
+            onSelectClaim={setSelectedClaimId}
+          />
         </section>
 
         <aside className={styles.evidencePanel} aria-label="Evidence Graph">
