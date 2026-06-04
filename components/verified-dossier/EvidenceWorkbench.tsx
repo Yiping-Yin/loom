@@ -1,12 +1,15 @@
 import {
+  formatVerifiedDossierCourseFileCount,
   resolveVerifiedDossierArtifact,
   type VerifiedDossierArtifactId,
+  type VerifiedDossierCourseFolder,
   type VerifiedDossierGraphEdge,
   type VerifiedDossierGraphNode,
   type VerifiedDossierSection,
   type VerifiedDossierWorkbenchStep,
 } from '../../lib/new-loom/verified-dossier-home';
-import { DocumentPreviewCard } from './DocumentPreviewCard';
+import { buildDraftUrlFromArtifacts } from '../../lib/new-loom/source-to-draft';
+import { draftRecordDetailHref, type NewLoomDraftRecord } from '../../lib/new-loom/draft-records';
 import { FileBadge } from './FileBadge';
 import { InstitutionMark } from './InstitutionMark';
 
@@ -35,42 +38,87 @@ function StepArrow() {
 export function ActiveEvidenceStory({
   section,
   artifactIds,
+  courseFolders = [],
+  draftRecords = [],
 }: {
   section: VerifiedDossierSection;
   artifactIds: readonly VerifiedDossierArtifactId[];
+  courseFolders?: readonly VerifiedDossierCourseFolder[];
+  draftRecords?: readonly NewLoomDraftRecord[];
 }) {
   const artifacts = artifactIds.map(resolveVerifiedDossierArtifact);
-  const featuredArtifacts = artifacts.slice(0, 2);
-  const supportArtifacts = artifacts.slice(2);
+  const sampleArtifacts = artifacts.slice(0, 3);
+  const visibleCourseFolders = courseFolders.slice(0, 6);
+  const draftUrl = buildDraftUrlFromArtifacts(artifacts, { type: 'ai-answer' });
+  const artifactHrefs = new Set(artifacts.map((artifact) => artifact.href));
+  const linkedDraftRecords = draftRecords.filter((record) =>
+    record.sourceHrefs.some((href) => artifactHrefs.has(href) || href.startsWith(section.href)),
+  );
 
   return (
-    <article className="vd-active-story" aria-labelledby="active-evidence-story-title">
+    <article className="vd-active-story vd-active-story--shelf" aria-labelledby="active-evidence-story-title">
       <div className="vd-active-story__header">
         <InstitutionMark kind={section.id} />
         <div className="vd-active-story__title">
-          <small>Active evidence story</small>
+          <small>Active source shelf</small>
           <h2 id="active-evidence-story-title">{section.label}</h2>
         </div>
-        <strong>{artifacts.length} files</strong>
+        <strong>{courseFolders.length} courses</strong>
       </div>
-      <div className="vd-active-story__featured">
-        {featuredArtifacts.map((artifact) => (
-          <DocumentPreviewCard key={artifact.id} artifact={artifact} />
-        ))}
+      <div className="vd-active-story__actions">
+        <a className="vd-active-story__link vd-active-story__draft-link" href={draftUrl}>
+          Draft with sources <ArrowIcon />
+        </a>
+        <a className="vd-active-story__link" href={section.href}>
+          Open source shelf <ArrowIcon />
+        </a>
       </div>
-      <div className="vd-active-story__support">
-        {supportArtifacts.map((artifact) => (
-          <a key={artifact.id} className="vd-active-story__support-row" href={artifact.href}>
-            <FileBadge kind={artifact.kind} label={artifact.label} compact />
-            <span>{artifact.role}</span>
-          </a>
-        ))}
+
+      <div className="vd-active-story__shelf-panel">
+        <div className="vd-course-folder-grid" aria-label="UNSW course folders">
+          {visibleCourseFolders.map((course) => (
+            <a key={course.id} className="vd-course-folder-card" href={course.href}>
+              <span className="vd-course-folder-card__icon" aria-hidden="true" />
+              <span>
+                <strong>{course.code}</strong>
+                <small>{formatVerifiedDossierCourseFileCount(course.fileCount)}</small>
+              </span>
+              <em>{course.status}</em>
+            </a>
+          ))}
+        </div>
+
+        <div className="vd-active-story__sample-strip" aria-label="Sample UNSW source files">
+          {sampleArtifacts.map((artifact) => (
+            <a key={artifact.id} className="vd-active-story__sample-chip" href={artifact.href}>
+              <FileBadge kind={artifact.kind} label={artifact.label} compact />
+            </a>
+          ))}
+        </div>
+
+        {linkedDraftRecords.length > 0 ? (
+          <div className="vd-active-story__draft-records" aria-label="Draft records">
+            <h3>Draft records</h3>
+            <div>
+              {linkedDraftRecords.map((record) => (
+                <a key={record.id} href={draftRecordDetailHref(record)}>
+                  <span>{record.title}</span>
+                  <small>{formatDraftRecordStatus(record.status)}</small>
+                  <ArrowIcon />
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
-      <a className="vd-active-story__link" href={section.href}>
-        Open source shelf <ArrowIcon />
-      </a>
     </article>
   );
+}
+
+function formatDraftRecordStatus(status: NewLoomDraftRecord['status']) {
+  if (status === 'previewed') return 'Previewed';
+  if (status === 'published') return 'Published';
+  return 'Drafting';
 }
 
 export function SourceGraph({

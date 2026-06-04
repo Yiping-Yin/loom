@@ -175,9 +175,11 @@ test('presentation categories expose real homepage visual assets', () => {
     assert.match(category.visualAsset.caption, /\S/);
 
     const assetPaths = [
-      category.visualAsset.src,
-      ...(category.visualAsset.srcs ?? []),
-    ].filter((src): src is string => Boolean(src));
+      ...('src' in category.visualAsset ? [category.visualAsset.src] : []),
+      ...('srcs' in category.visualAsset ? category.visualAsset.srcs : []),
+    ]
+      .filter(Boolean)
+      .map(String);
 
     assert.ok(assetPaths.length > 0, `${category.id} should bind to at least one image or logo`);
 

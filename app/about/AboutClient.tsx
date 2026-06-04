@@ -54,7 +54,7 @@ const COMMITMENTS = [
 const IDENTITY_FACTS = [
   ['Current base', VERIFIED_DOSSIER_PROFILE.location],
   ['Public role', VERIFIED_DOSSIER_PROFILE.roles.join(' / ')],
-  ['First proof shelf', 'UNSW / ECON3202'],
+  ['First proof shelf', 'UNSW'],
   ['Product direction', 'Personal knowledge identity'],
 ];
 

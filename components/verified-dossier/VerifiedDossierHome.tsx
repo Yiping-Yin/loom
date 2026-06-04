@@ -103,7 +103,7 @@ function CategoryVisualAsset({ category }: { category: VerifiedDossierPresentati
   const assetPaths = asset.src ? [asset.src] : asset.srcs ?? [];
 
   return (
-    <div className={`vd-category-visual vd-category-visual--${asset.kind}`} aria-label={asset.label}>
+    <div className={`vd-category-visual vd-category-visual--${asset.kind}`}>
       <div className="vd-category-visual__media">
         {assetPaths.slice(0, 4).map((src) => (
           <img key={src} src={src} alt="" aria-hidden="true" draggable={false} />
