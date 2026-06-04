@@ -21,6 +21,8 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
   const html = renderToStaticMarkup(<HomeClient />);
   const text = visibleText(html);
   const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
+  const categorySectionHtml = html.match(/<section class="vd-personal-categories"[\s\S]*?<\/section>/)?.[0] ?? '';
+  const proofBandHtml = html.match(/<section class="vd-proof-band"[\s\S]*?<\/section>/)?.[0] ?? '';
 
   for (const label of [
     'Yiping Yin',
@@ -65,7 +67,8 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     );
   }
 
-  assert.equal(text.match(/Cited answer/g)?.length ?? 0, 2);
+  assert.match(categorySectionHtml, /Cited answer routed into a personal interface/);
+  assert.match(proofBandHtml, /Cited answer sample/);
   assert.match(html, /class="vd-home/);
   assert.match(html, /class="vd-personal-stage"/);
   assert.match(html, /class="vd-workbench-grid"/);

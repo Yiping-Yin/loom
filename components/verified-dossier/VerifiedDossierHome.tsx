@@ -106,7 +106,7 @@ function CategoryVisualAsset({ category }: { category: VerifiedDossierPresentati
     <div className={`vd-category-visual vd-category-visual--${asset.kind}`} aria-label={asset.label}>
       <div className="vd-category-visual__media">
         {assetPaths.slice(0, 4).map((src) => (
-          <img key={src} src={src} alt={asset.label} draggable={false} />
+          <img key={src} src={src} alt="" aria-hidden="true" draggable={false} />
         ))}
       </div>
       <div className="vd-category-visual__caption">
