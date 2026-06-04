@@ -97,10 +97,32 @@ test('verified dossier home explains Loom as the underlying trust mechanism', ()
 });
 
 test('verified dossier home groups source shelves into presentation categories', () => {
+  const sectionIds = new Set(VERIFIED_DOSSIER_SECTIONS.map((section) => section.id));
+  const artifactIds = new Set(VERIFIED_DOSSIER_ARTIFACTS.map((artifact) => artifact.id));
+
   assert.deepEqual(
     VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => category.label),
     ['About', 'Education', 'Experience', 'Digital Me'],
   );
+  assert.deepEqual(
+    VERIFIED_DOSSIER_TOP_NAV.map((item) => [item.label, item.href]),
+    VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => [category.label, category.href]),
+  );
+
+  for (const category of VERIFIED_DOSSIER_PRESENTATION_CATEGORIES) {
+    assertSafeHref(category.href);
+    assert.ok(category.sourceSectionIds.length > 0, `${category.id} should map to source sections`);
+    assert.ok(category.artifactIds.length > 0, `${category.id} should map to artifacts`);
+
+    for (const sectionId of category.sourceSectionIds) {
+      assert.ok(sectionIds.has(sectionId), `${category.id} references missing source section ${sectionId}`);
+    }
+
+    for (const artifactId of category.artifactIds) {
+      assert.ok(artifactIds.has(artifactId), `${category.id} references missing artifact ${artifactId}`);
+      assert.equal(resolveVerifiedDossierArtifact(artifactId).id, artifactId);
+    }
+  }
 
   const education = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'education');
   assert.ok(education, 'Education presentation category should exist');
