@@ -87,7 +87,7 @@ test('verified dossier home keeps canonical navigation and profile identity', ()
   assert.ok(VERIFIED_DOSSIER_PROFILE.memberships.some((item) => item.label === 'UNSW Sydney'));
 });
 
-test('personal IA routes exist as app pages', () => {
+test('personal IA routes exist as importable app pages', async () => {
   for (const routePage of [
     'app/education/page.tsx',
     'app/experience/page.tsx',
@@ -95,6 +95,16 @@ test('personal IA routes exist as app pages', () => {
   ]) {
     assert.ok(existsSync(join(repoRoot, routePage)), `${routePage} should exist`);
   }
+
+  const [educationPage, experiencePage, digitalMePage] = await Promise.all([
+    import('../app/education/page'),
+    import('../app/experience/page'),
+    import('../app/digital-me/page'),
+  ]);
+
+  assert.equal(typeof educationPage.default, 'function');
+  assert.equal(typeof experiencePage.default, 'function');
+  assert.equal(typeof digitalMePage.default, 'function');
 });
 
 test('verified dossier home explains Loom as the underlying trust mechanism', () => {

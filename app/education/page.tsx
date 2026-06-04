@@ -12,7 +12,8 @@ export const metadata = { title: 'Education · Loom' };
 export default function EducationPage() {
   const category = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((item) => item.id === 'education');
   if (!category) throw new Error('Missing Education category');
-  const sections = VERIFIED_DOSSIER_SECTIONS.filter((section) => category.sourceSectionIds.includes(section.id));
+  const educationSourceSectionIds = new Set<string>(category.sourceSectionIds);
+  const sections = VERIFIED_DOSSIER_SECTIONS.filter((section) => educationSourceSectionIds.has(section.id));
   const artifacts = category.artifactIds.map(resolveVerifiedDossierArtifact);
 
   return (
