@@ -10,6 +10,8 @@ import {
   VERIFIED_DOSSIER_ARTIFACTS_BY_ID,
   VERIFIED_DOSSIER_HISTORY,
   VERIFIED_DOSSIER_HOME_COPY,
+  VERIFIED_DOSSIER_LOOM_INTRO,
+  VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
   VERIFIED_DOSSIER_PROFILE,
   VERIFIED_DOSSIER_SECTIONS,
   VERIFIED_DOSSIER_TOP_NAV,
@@ -21,7 +23,11 @@ const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const SAFE_INTERNAL_HREFS = new Set([
   '/about',
+  '/education',
+  '/experience',
+  '/digital-me',
   '/knowledge',
+  '/drafts',
   '/knowledge/unsw',
   '/knowledge/quantnet',
   '/knowledge/wqu',
@@ -66,12 +72,49 @@ test('verified dossier home data preserves approved evidence workbench definitio
 test('verified dossier home keeps canonical navigation and profile identity', () => {
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.label),
-    ['Sources', 'UNSW / ECON3202', 'Quantnet', 'WQU', 'Claude', 'History'],
+    ['About', 'Education', 'Experience', 'Digital Me'],
   );
+  assert.deepEqual(
+    VERIFIED_DOSSIER_TOP_NAV.map((item) => item.href),
+    ['/about', '/education', '/experience', '/digital-me'],
+  );
+  assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'Sources'));
+  assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'UNSW'));
   assert.equal(VERIFIED_DOSSIER_PROFILE.name, 'Yiping Yin');
   assert.match(VERIFIED_DOSSIER_PROFILE.location, /Sydney/);
   assert.ok(VERIFIED_DOSSIER_PROFILE.links.some((link) => link.label === 'LinkedIn'));
   assert.ok(VERIFIED_DOSSIER_PROFILE.memberships.some((item) => item.label === 'UNSW Sydney'));
+});
+
+test('verified dossier home explains Loom as the underlying trust mechanism', () => {
+  assert.equal(VERIFIED_DOSSIER_LOOM_INTRO.title, 'Built with Loom');
+  assert.match(VERIFIED_DOSSIER_LOOM_INTRO.summary, /underlying trust mechanism/i);
+  assert.deepEqual(
+    VERIFIED_DOSSIER_LOOM_INTRO.steps.map((step) => step.label),
+    ['Sources', 'Draft', 'Digital Me'],
+  );
+  assert.equal(VERIFIED_DOSSIER_LOOM_INTRO.blocking, false);
+});
+
+test('verified dossier home groups source shelves into presentation categories', () => {
+  assert.deepEqual(
+    VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => category.label),
+    ['About', 'Education', 'Experience', 'Digital Me'],
+  );
+
+  const education = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'education');
+  assert.ok(education, 'Education presentation category should exist');
+  for (const sourceSectionId of ['unsw', 'quantnet', 'wqu', 'claude']) {
+    assert.ok(
+      education.sourceSectionIds.includes(sourceSectionId),
+      `Education should include ${sourceSectionId} source section`,
+    );
+  }
+
+  const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'digital-me');
+  assert.ok(digitalMe, 'Digital Me presentation category should exist');
+  assert.ok(digitalMe.capabilities.some((capability) => /citation/i.test(capability)));
+  assert.ok(digitalMe.capabilities.some((capability) => /process/i.test(capability)));
 });
 
 test('verified dossier profile photo points to a tracked public asset path', () => {

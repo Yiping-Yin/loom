@@ -236,6 +236,31 @@ export type VerifiedDossierSection = {
   artifactIds: readonly VerifiedDossierArtifactId[];
 };
 
+export type VerifiedDossierPresentationCategoryId = 'about' | 'education' | 'experience' | 'digital-me';
+
+export type VerifiedDossierPresentationCategory = {
+  id: VerifiedDossierPresentationCategoryId;
+  label: string;
+  href: string;
+  summary: string;
+  proof: string;
+  sourceSectionIds: readonly VerifiedDossierSection['id'][];
+  artifactIds: readonly VerifiedDossierArtifactId[];
+  capabilities: readonly string[];
+};
+
+export type VerifiedDossierLoomIntroStep = {
+  label: 'Sources' | 'Draft' | 'Digital Me';
+  text: string;
+};
+
+export type VerifiedDossierLoomIntro = {
+  title: string;
+  summary: string;
+  blocking: boolean;
+  steps: readonly VerifiedDossierLoomIntroStep[];
+};
+
 export type VerifiedDossierHistoryItem = {
   title: string;
   text: string;
@@ -280,12 +305,10 @@ export type VerifiedDossierWorkbench = {
 };
 
 export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
-  { label: 'Sources', href: '/knowledge' },
-  { label: 'UNSW / ECON3202', href: '/knowledge/unsw' },
-  { label: 'Quantnet', href: '/knowledge/quantnet' },
-  { label: 'WQU', href: '/knowledge/wqu' },
-  { label: 'Claude', href: '/knowledge/claude' },
-  { label: 'History', href: '/product-history' },
+  { label: 'About', href: '/about' },
+  { label: 'Education', href: '/education' },
+  { label: 'Experience', href: '/experience' },
+  { label: 'Digital Me', href: '/digital-me' },
 ];
 
 export const VERIFIED_DOSSIER_HOME_COPY = {
@@ -353,6 +376,61 @@ export const VERIFIED_DOSSIER_SECTIONS: VerifiedDossierSection[] = [
     artifactIds: ['claude-certificate'],
   },
 ];
+
+export const VERIFIED_DOSSIER_LOOM_INTRO = {
+  title: 'Built with Loom',
+  summary:
+    'Loom is the underlying trust mechanism for this profile: real sources become drafts, and Digital Me answers from the same archive.',
+  blocking: false,
+  steps: [
+    { label: 'Sources', text: 'Real files, courses, credentials, projects, and evidence stay inspectable.' },
+    { label: 'Draft', text: 'Source material turns into cited notes, answers, and portfolio-ready work.' },
+    { label: 'Digital Me', text: 'The AI-facing layer answers, cites, explains process, and walks through evidence.' },
+  ],
+} as const satisfies VerifiedDossierLoomIntro;
+
+export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
+  {
+    id: 'about',
+    label: 'About',
+    href: '/about',
+    summary: 'Self-introduction, direction, public links, and source-backed identity.',
+    proof: 'Profile record',
+    sourceSectionIds: ['about'],
+    artifactIds: ['about-doc'],
+    capabilities: ['Identity summary', 'Public context', 'Source-backed profile'],
+  },
+  {
+    id: 'education',
+    label: 'Education',
+    href: '/education',
+    summary: 'Courses, coursework, certificates, and learning outputs backed by real files.',
+    proof: 'UNSW, QuantNet, WQU, Claude Certificate',
+    sourceSectionIds: ['unsw', 'quantnet', 'wqu', 'claude'],
+    artifactIds: ['econ-ps2', 'econ-slides', 'quantnet-cpp-course', 'wqu-index', 'claude-certificate'],
+    capabilities: ['Course folders', 'Credential evidence', 'Learning process'],
+  },
+  {
+    id: 'experience',
+    label: 'Experience',
+    href: '/experience',
+    summary: 'Projects, work, competitions, and built systems shown with process evidence.',
+    proof: 'Project and build records',
+    sourceSectionIds: ['about', 'unsw', 'quantnet'],
+    artifactIds: ['about-doc', 'quantnet-python-foundations', 'econ-notes'],
+    capabilities: ['Project evidence', 'Competition records', 'Build process'],
+  },
+  {
+    id: 'digital-me',
+    label: 'Digital Me',
+    href: '/digital-me',
+    summary: 'A grounded digital-person layer that answers from sources, drafts, and process.',
+    proof: 'Grounded cited answers',
+    sourceSectionIds: ['about', 'unsw', 'quantnet', 'wqu', 'claude'],
+    artifactIds: ['about-doc', 'econ-ps2', 'econ-slides', 'claude-certificate'],
+    capabilities: ['Citation-backed answers', 'Source retrieval', 'Process replay', 'Draft generation'],
+  },
+] as const satisfies readonly VerifiedDossierPresentationCategory[];
 
 export const VERIFIED_DOSSIER_AI_PROMPT = {
   question: 'How does concavity connect to optimisation in ECON3202?',
