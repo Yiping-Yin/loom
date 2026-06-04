@@ -184,6 +184,10 @@ const DIGITAL_ME_CLAIMS = [
   },
 ] as const satisfies readonly DigitalMeClaimNode[];
 
+const DIGITAL_ME_EVIDENCE_BY_ID = Object.fromEntries(
+  DIGITAL_ME_EVIDENCE.map((evidence) => [evidence.id, evidence]),
+) as Record<string, DigitalMeEvidenceNode | undefined>;
+
 export const DIGITAL_ME_PROOF_PATH = {
   roleLensId: 'quant-researcher-trader',
   activeArtifactMode: 'capability-map',
@@ -207,7 +211,7 @@ export function getDigitalMeEvidenceForClaim(claimId: string): DigitalMeEvidence
   }
 
   return claim.evidenceIds
-    .map((evidenceId) => DIGITAL_ME_PROOF_PATH.evidence.find((evidence) => evidence.id === evidenceId))
+    .map((evidenceId) => DIGITAL_ME_EVIDENCE_BY_ID[evidenceId])
     .filter((evidence): evidence is DigitalMeEvidenceNode => Boolean(evidence));
 }
 
