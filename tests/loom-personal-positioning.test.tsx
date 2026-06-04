@@ -51,46 +51,48 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
 
   const html = renderToStaticMarkup(<HomeClient />);
   const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
-  const categorySectionHtml = html.match(/<section class="vd-personal-categories"[\s\S]*?<\/section>/)?.[0] ?? '';
 
   assert.match(html, /Yiping Yin/);
   assert.match(html, /Student · Builder · Learner · Sydney, Australia/);
+  assert.match(html, /class="vd-home vd-home--cover"/);
   assert.match(html, /class="vd-personal-stage"/);
-  assert.match(categorySectionHtml, /class="[^"]*\bvd-category-visual\b/);
-  assert.match(categorySectionHtml, /class="[^"]*\bvd-category-visual__media\b/);
-  assert.match(categorySectionHtml, /<img[^>]*alt=""[^>]*aria-hidden="true"/);
-  assert.doesNotMatch(categorySectionHtml, /<img[^>]*alt="(?:Profile source|Course shelves|Project proof|Answer canvas)"/);
-  assert.match(categorySectionHtml, /role="img" aria-label="Profile source"/);
-  assert.match(categorySectionHtml, /role="img" aria-label="Course shelves"/);
-  assert.match(categorySectionHtml, /role="img" aria-label="Project proof"/);
-  assert.match(categorySectionHtml, /role="img" aria-label="Answer canvas"/);
-  assert.match(categorySectionHtml, /<h2>About<\/h2><span>Profile<\/span>/);
-  assert.match(categorySectionHtml, /<h2>Education<\/h2><span>Course record<\/span>/);
-  assert.match(categorySectionHtml, /<h2>Experience<\/h2><span>Project evidence<\/span>/);
-  assert.match(categorySectionHtml, /<h2>Digital Me<\/h2><span>Answer canvas<\/span>/);
-  assert.doesNotMatch(categorySectionHtml, /vd-category-visual__caption/);
-  assert.doesNotMatch(categorySectionHtml, /Portrait, role, and public identity record/);
-  assert.doesNotMatch(categorySectionHtml, /UNSW, WQU, QuantNet, and Claude learning evidence/);
-  assert.doesNotMatch(categorySectionHtml, /Programming and worked-output evidence/);
-  assert.doesNotMatch(categorySectionHtml, /Cited answer routed into a personal interface/);
-  assert.doesNotMatch(categorySectionHtml, /Problem Set 02\.pdf/);
-  assert.doesNotMatch(categorySectionHtml, /W8 A Concave-Functions\.pdf/);
-  assert.doesNotMatch(categorySectionHtml, /UNSW, QuantNet, WQU, Claude Certificate/);
-  assert.match(html, /Answer canvas/);
+  assert.match(html, /href="\/loom" aria-label="Open Loom history"/);
+  assert.match(html, /class="vd-personal-showcase"/);
+  assert.match(html, /class="vd-personal-category-stack"/);
+  assert.equal((html.match(/class="vd-personal-category-card(?:\s|")/g) ?? []).length, 4);
+  assert.ok((html.match(/class="vd-category-visual\b/g) ?? []).length >= 4);
+  assert.match(html, /\/profile\/yiping-profile-photo\.png/);
+  assert.match(html, /\/brand\/unsw\/unsw-crest\.png/);
+  assert.match(html, /\/brand\/wqu\/wqu-logo\.svg/);
+  assert.match(html, /\/brand\/quantnet\/quantnet-logo\.png/);
+  assert.match(html, /\/verified-sources\/quantnet\/python-foundations\.png/);
+  assert.match(html, /\/verified-sources\/econ3202\/problem2-answer\.png/);
+  assert.doesNotMatch(html, /class="vd-home-asset-grid"/);
+  assert.doesNotMatch(html, /vd-home-asset-grid__/);
+  assert.doesNotMatch(html, /class="vd-profile-asset"/);
+  assert.doesNotMatch(html, /class="vd-institution-badge"/);
+  assert.doesNotMatch(html, /class="vd-document-preview-asset\b/);
+  assert.doesNotMatch(html, /class="vd-course-asset-row"/);
+  assert.doesNotMatch(html, /class="vd-process-step-asset\b/);
+  assert.doesNotMatch(html, /Problem Set 02\.pdf/);
+  assert.doesNotMatch(html, /W8 A Concave-Functions\.pdf/);
+  assert.doesNotMatch(html, /Python Foundations\.pdf/);
+  assert.doesNotMatch(html, /Open Digital Me/);
+  assert.doesNotMatch(html, /Open Sources/);
+  assert.doesNotMatch(html, /class="vd-avatar"/);
+  assert.doesNotMatch(html, /vd-personal-stage__photo/);
 
   for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
+  assert.doesNotMatch(primaryNavHtml, />Draft</);
+  assert.doesNotMatch(primaryNavHtml, /href="\/drafts?"/);
 
   for (const label of [
     'About',
     'Education',
     'Experience',
     'Digital Me',
-    'Profile',
-    'Course record',
-    'Project evidence',
-    'Answer canvas',
   ]) {
     assert.match(html, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
@@ -130,15 +132,34 @@ test('verified dossier data contract keeps the approved short definition', () =>
   );
 });
 
-test('personal positioning CSS keeps category visuals stable and compact', () => {
+test('personal positioning CSS keeps the Home cover visual and non-operational', () => {
   const css = read('app/globals.css');
-  const profilePhoto = cssBlock(css, '.vd-category-visual--profile-photo');
-  const profilePhotoImage = cssBlock(css, '.vd-category-visual--profile-photo .vd-category-visual__media img');
-  const mobile = cssBlock(css, '@media (max-width: 680px)', '.vd-category-visual');
+  const coverNav = cssBlock(css, '.vd-home--cover > .vd-nav');
+  const personalStage = cssBlock(css, '.vd-personal-stage');
+  const showcase = cssBlock(css, '.vd-personal-showcase');
+  const categoryStack = cssBlock(css, '.vd-personal-category-stack');
+  const categoryCard = cssBlock(css, '.vd-personal-category-card');
+  const categoryVisual = cssBlock(css, '.vd-category-visual', 'aspect-ratio');
+  const categoryMedia = cssBlock(css, '.vd-category-visual__media');
+  const categoryMediaImage = cssBlock(css, '.vd-category-visual__media img');
+  const mobileShowcase = cssBlock(css, '@media (max-width: 680px)', '.vd-personal-showcase');
+  const mobileStack = cssBlock(css, '@media (max-width: 680px)', '.vd-personal-category-stack');
 
-  assert.match(profilePhoto, /aspect-ratio:\s*1\.48/);
-  assert.match(profilePhotoImage, /object-position:\s*center\s+28%/);
-  assert.match(mobile, /\.vd-category-visual\s*{[\s\S]*aspect-ratio:\s*auto/);
+  assert.match(coverNav, /grid-template-columns:\s*auto\s+minmax\(0,\s*1fr\)/);
+  assert.match(personalStage, /grid-template-columns:\s*minmax\(16rem,\s*0\.5fr\)\s+minmax\(0,\s*1\.5fr\)/);
+  assert.match(showcase, /grid-template-columns:\s*minmax\(20rem,\s*1\.05fr\)\s+minmax\(16rem,\s*0\.85fr\)/);
+  assert.match(showcase, /min-height:\s*clamp\(32rem,\s*64vh,\s*46rem\)/);
+  assert.match(categoryStack, /display:\s*grid/);
+  assert.match(categoryStack, /grid-template-rows:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(categoryCard, /position:\s*relative/);
+  assert.match(categoryCard, /min-height:\s*0/);
+  assert.match(categoryVisual, /aspect-ratio:\s*auto/);
+  assert.match(categoryVisual, /overflow:\s*hidden/);
+  assert.match(categoryMedia, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(categoryMediaImage, /object-fit:\s*cover/);
+  assert.match(mobileShowcase, /grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  assert.match(mobileStack, /grid-template-rows:\s*repeat\(3,\s*minmax\(13\.4rem,\s*auto\)\)/);
+  assert.doesNotMatch(css, /vd-home-asset-grid/);
 });
 
 test('Sources and Draft descriptions serve personal learning paths, resources, portfolio, and process work', () => {
@@ -176,15 +197,82 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(help, /source-bound understanding/i);
   assert.match(help, /\/about/);
 
-  assert.match(productHistory, /Why Loom is called Loom/i);
-  assert.match(productHistory, /Portfolio with proof/i);
-  assert.match(productHistory, /Source to identity/i);
-  assert.match(productHistory, /AI persona/i);
+  assert.match(productHistory, /Loom is a cognitive growth system/i);
+  assert.match(productHistory, /source-backed thinking into personal growth/i);
+  assert.match(productHistory, /Library \/ Eyes \/ Memory/i);
+  assert.match(productHistory, /past material reaches the present/i);
+  assert.match(productHistory, /present attention becomes judgment/i);
+  assert.match(productHistory, /judged understanding reaches the future/i);
+  assert.match(productHistory, /Human \/ System \/ AI/i);
+  assert.match(productHistory, /attention, questions, judgment, and relation choices/i);
+  assert.match(productHistory, /anchoring, organization, connection, and preservation/i);
+  assert.match(productHistory, /AI accelerates inference/i);
+  assert.match(productHistory, /Source is sacred/i);
+  assert.match(productHistory, /Personal growth loop/i);
+  assert.match(productHistory, /Source/);
+  assert.match(productHistory, /Attention/);
+  assert.match(productHistory, /Question/);
+  assert.match(productHistory, /Judgment/);
+  assert.match(productHistory, /Practice/);
+  assert.match(productHistory, /Draft/);
+  assert.match(productHistory, /Output/);
+  assert.match(productHistory, /Identity/);
+  assert.match(productHistory, /Next source/);
+  assert.match(productHistory, /Five product layers/i);
+  assert.match(productHistory, /Public identity surface/);
+  assert.match(productHistory, /Evidence and source layer/);
+  assert.match(productHistory, /Growth and capability layer/);
+  assert.match(productHistory, /Cognitive structuring layer/);
+  assert.match(productHistory, /AI and production layer/);
+  assert.match(productHistory, /Functional reuse and innovation/i);
+  assert.match(productHistory, /source shelf/);
+  assert.match(productHistory, /citation-backed Digital Me answers/i);
+  assert.match(productHistory, /process replay and output production/i);
+  assert.match(productHistory, /Product evolution/i);
+  assert.match(productHistory, /what was learned/i);
+  assert.match(productHistory, /Real evidence assets/i);
+  assert.match(productHistory, /\/loom\/history\/early-version\/01-reading-thinking-environment\.jpg/);
+  assert.match(productHistory, /\/loom\/history\/early-version\/02-name-mark-library-eyes-memory\.jpg/);
+  assert.match(productHistory, /\/loom\/history\/early-version\/05-weaver-vocabulary\.jpg/);
+  assert.match(productHistory, /\/loom\/history\/early-version\/08-paper-reading-source\.jpg/);
+  assert.match(productHistory, /\/loom\/history\/evolution\/2026-04-17-wordmark-structure\.png/);
+  assert.match(productHistory, /\/loom\/history\/evolution\/2026-04-24-frontispiece-vellum\.jpg/);
+  assert.match(productHistory, /\/loom\/history\/evolution\/2026-06-02-profile-home\.png/);
+  assert.match(productHistory, /\/loom\/history\/evolution\/2026-06-03-source-dossier\.png/);
+  assert.match(productHistory, /\/loom\/history\/evolution\/2026-06-04-evidence-workbench\.png/);
+  assert.match(productHistory, /\/loom\/history\/evolution\/2026-06-04-current-home\.png/);
+  assert.doesNotMatch(productHistory, /VERIFIED_DOSSIER_PROFILE/);
+  assert.doesNotMatch(productHistory, /generic SaaS landing page/i);
+  assert.doesNotMatch(productHistory, /always-visible AI assistant/i);
 
   assert.match(privacy, /local Mac app for personal reading and thinking/i);
   assert.match(privacy, /everything stays on your Mac/i);
   assert.match(support, /local Mac app for reading and thinking/i);
   assert.doesNotMatch([about, help, productHistory, privacy, support].join('\n'), /personal knowledge display platform/i);
+});
+
+test('Loom product history evolution assets are curated under Loom folders', () => {
+  const assetNames = [
+    '2026-04-17-wordmark-structure.png',
+    '2026-04-24-frontispiece-vellum.jpg',
+    '2026-06-02-profile-home.png',
+    '2026-06-03-source-dossier.png',
+    '2026-06-04-evidence-workbench.png',
+    '2026-06-04-current-home.png',
+  ];
+
+  for (const assetName of assetNames) {
+    assert.ok(
+      fs.existsSync(path.join(repoRoot, 'public/loom/history/evolution', assetName)),
+      `${assetName} should have a public Loom history copy`,
+    );
+    assert.ok(
+      fs.existsSync(path.join(repoRoot, 'resources/loom-history/evolution', assetName)),
+      `${assetName} should have a source Loom history copy`,
+    );
+  }
+
+  assert.ok(fs.existsSync(path.join(repoRoot, 'resources/loom-history/evolution/README.md')));
 });
 
 test('canonical docs no longer present Loom as a generic public product', () => {
