@@ -22,6 +22,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
 
   const html = renderToStaticMarkup(<HomeClient />);
   const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
+  const categorySectionHtml = html.match(/<section class="vd-personal-categories"[\s\S]*?<\/section>/)?.[0] ?? '';
 
   assert.match(html, /Yiping Yin/);
   assert.match(html, /Source-backed personal profile/);
@@ -29,8 +30,15 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(html, /Built with Loom/);
   assert.match(html, /Loom trust layer/);
   assert.match(html, /class="vd-personal-stage"/);
-  assert.match(html, /class="vd-category-visual/);
-  assert.match(html, /class="vd-category-visual__media/);
+  assert.match(categorySectionHtml, /class="[^"]*\bvd-category-visual\b/);
+  assert.match(categorySectionHtml, /class="[^"]*\bvd-category-visual__media\b/);
+  assert.match(categorySectionHtml, /alt="Profile source"/);
+  assert.match(categorySectionHtml, /alt="Course shelves"/);
+  assert.match(categorySectionHtml, /alt="Project proof"/);
+  assert.match(categorySectionHtml, /Answer canvas/);
+  assert.doesNotMatch(categorySectionHtml, /Problem Set 02\.pdf/);
+  assert.doesNotMatch(categorySectionHtml, /W8 A Concave-Functions\.pdf/);
+  assert.doesNotMatch(categorySectionHtml, /UNSW, QuantNet, WQU, Claude Certificate/);
   assert.match(html, /Course shelves/);
   assert.match(html, /Answer canvas/);
   assert.match(html, /real sources|Real files/);

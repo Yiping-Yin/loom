@@ -12,6 +12,7 @@ import {
   VERIFIED_DOSSIER_WORKBENCH,
   resolveVerifiedDossierArtifact,
 } from '../../lib/new-loom/verified-dossier-home';
+import type { VerifiedDossierPresentationCategory } from '../../lib/new-loom/verified-dossier-home';
 import {
   draftRecordDetailHref,
   loadLatestDraftRecord,
@@ -95,6 +96,37 @@ function formatCategoryEvidence(artifactCount: number, shelfCount: number) {
   const sourceFileLabel = artifactCount === 1 ? 'source file' : 'source files';
   const shelfLabel = shelfCount === 1 ? 'shelf' : 'shelves';
   return `${artifactCount} ${sourceFileLabel} / ${shelfCount} ${shelfLabel}`;
+}
+
+function formatCategoryCardProof(category: VerifiedDossierPresentationCategory) {
+  if (category.proof.includes(',')) {
+    return `${category.label} evidence`;
+  }
+
+  return category.proof;
+}
+
+function formatCategoryVisualCaption(caption: string) {
+  return caption.replace(/^Cited answer\b/, 'Answer');
+}
+
+function CategoryVisualAsset({ category }: { category: VerifiedDossierPresentationCategory }) {
+  const asset = category.visualAsset;
+  const assetPaths = asset.src ? [asset.src] : asset.srcs ?? [];
+
+  return (
+    <div className={`vd-category-visual vd-category-visual--${asset.kind}`} aria-label={asset.label}>
+      <div className="vd-category-visual__media">
+        {assetPaths.slice(0, 4).map((src) => (
+          <img key={src} src={src} alt={asset.label} draggable={false} />
+        ))}
+      </div>
+      <div className="vd-category-visual__caption">
+        <strong>{asset.label}</strong>
+        <span>{formatCategoryVisualCaption(asset.caption)}</span>
+      </div>
+    </div>
+  );
 }
 
 export function VerifiedDossierHome({
@@ -181,11 +213,13 @@ export function VerifiedDossierHome({
               <section className="vd-personal-categories" aria-label="Personal presentation sections">
                 {VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => (
                   <a key={category.id} className="vd-personal-category-card" href={category.href}>
-                    <p>{category.proof}</p>
-                    <h2>{category.label}</h2>
-                    <p>{category.summary}</p>
-                    <span>{category.capabilities.slice(0, 2).join(' / ')}</span>
-                    <small>{formatCategoryEvidence(category.artifactIds.length, category.sourceSectionIds.length)}</small>
+                    <CategoryVisualAsset category={category} />
+                    <div className="vd-personal-category-card__body">
+                      <p>{formatCategoryCardProof(category)}</p>
+                      <h2>{category.label}</h2>
+                      <span>{category.capabilities.slice(0, 2).join(' / ')}</span>
+                      <small>{formatCategoryEvidence(category.artifactIds.length, category.sourceSectionIds.length)}</small>
+                    </div>
                   </a>
                 ))}
               </section>
