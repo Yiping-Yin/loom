@@ -176,6 +176,7 @@ test('visible support surfaces use approved personal-identity and local-app posi
   const about = read('app/about/AboutClient.tsx');
   const verifiedDossierData = read('lib/new-loom/verified-dossier-home.ts');
   const help = read('app/help/page.tsx');
+  const loomRoute = read('app/loom/page.tsx');
   const productHistory = read('app/product-history/page.tsx');
   const privacy = read('public/privacy.html');
   const support = read('public/support.html');
@@ -196,6 +197,9 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(help, /reading-and-thinking environment/i);
   assert.match(help, /source-bound understanding/i);
   assert.match(help, /\/about/);
+
+  assert.match(loomRoute, /Loom · Product System/);
+  assert.doesNotMatch(loomRoute, /Loom · History/);
 
   assert.match(productHistory, /Loom is a cognitive growth system/i);
   assert.match(productHistory, /source-backed thinking into personal growth/i);

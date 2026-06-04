@@ -25,6 +25,13 @@ const THESIS_POINTS = [
   'The lasting output is structured understanding, not a chat log.',
 ] as const;
 
+const HERO_SIGNALS = [
+  { label: 'Human judgment', detail: THESIS_POINTS[0] },
+  { label: 'System memory', detail: THESIS_POINTS[1] },
+  { label: 'AI inference', detail: THESIS_POINTS[2] },
+  { label: 'Structured output', detail: THESIS_POINTS[3] },
+] as const;
+
 const TIME_STRUCTURE = [
   {
     title: 'Library',
@@ -237,9 +244,11 @@ export default function ProductHistoryPage() {
           <p className={styles.label}>Loom product system</p>
           <h1 id="history-title">Loom is a cognitive growth system.</h1>
           <p className={styles.lead}>{HERO_STATEMENT}</p>
-          <div className={styles.thesisList}>
-            {THESIS_POINTS.map((point) => (
-              <span key={point}>{point}</span>
+          <div className={styles.heroSignals} aria-label="Loom product assumptions">
+            {HERO_SIGNALS.map((signal) => (
+              <span key={signal.label} title={signal.detail}>
+                {signal.label}
+              </span>
             ))}
           </div>
         </div>

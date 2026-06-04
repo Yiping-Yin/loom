@@ -156,20 +156,21 @@
   line-height: 1.3;
 }
 
-.thesisList {
-  display: grid;
-  gap: 0.45rem;
+.heroSignals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem 1.1rem;
   max-width: 46rem;
-  padding-top: 0.4rem;
+  padding-top: 0.98rem;
+  border-top: 1px solid var(--history-border);
 }
 
-.thesisList span {
-  display: block;
-  padding-top: 0.55rem;
-  border-top: 1px solid var(--history-border);
-  color: var(--history-muted);
-  font-size: 0.92rem;
-  line-height: 1.38;
+.heroSignals span {
+  color: var(--history-accent);
+  font-size: 0.78rem;
+  font-weight: 820;
+  line-height: 1.15;
+  text-transform: uppercase;
 }
 
 .timeStructure,
