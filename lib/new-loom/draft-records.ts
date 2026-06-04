@@ -6,6 +6,8 @@ import {
 } from '../browser-storage';
 
 export const NEW_LOOM_DRAFT_RECORDS_KEY = 'loom.new.draft-records.v1';
+const DIGITAL_ME_ANSWER_ROUTE = '/digital-me';
+const DIGITAL_ME_ANSWER_ANCHOR = '#digital-me-answer-title';
 
 export type NewLoomDraftRecordStatus = 'drafting' | 'previewed' | 'published';
 
@@ -38,7 +40,7 @@ export function buildDraftRecord(input: {
     answer: cleanDraftRecordText(input.answer),
     sourceLabels: input.sourceLabels.map(cleanDraftRecordText).filter(Boolean),
     sourceHrefs: input.sourceHrefs.map(cleanDraftRecordText).filter(Boolean),
-    draftUrl: cleanDraftRecordText(input.draftUrl) || '/draft',
+    draftUrl: cleanDraftRecordText(input.draftUrl) || `${DIGITAL_ME_ANSWER_ROUTE}${DIGITAL_ME_ANSWER_ANCHOR}`,
     status: input.status,
     updatedAt,
   };
@@ -83,7 +85,7 @@ export function loadDraftRecordById(
 }
 
 export function draftRecordDetailHref(record: Pick<NewLoomDraftRecord, 'id'>) {
-  return `/drafts/${encodeURIComponent(record.id)}`;
+  return `${DIGITAL_ME_ANSWER_ROUTE}?draftRecord=${encodeURIComponent(record.id)}${DIGITAL_ME_ANSWER_ANCHOR}`;
 }
 
 function isDraftRecord(value: unknown): value is NewLoomDraftRecord {
