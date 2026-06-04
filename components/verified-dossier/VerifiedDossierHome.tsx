@@ -279,34 +279,6 @@ export function VerifiedDossierHome({
               </a>
             </div>
 
-            <section id="loom-intro" className="vd-loom-intro" aria-labelledby="loom-intro-title">
-              <div>
-                <p className="vd-section-kicker">Trust mechanism</p>
-                <h2 id="loom-intro-title">{VERIFIED_DOSSIER_LOOM_INTRO.title}</h2>
-                <p>{VERIFIED_DOSSIER_LOOM_INTRO.summary}</p>
-              </div>
-              <div className="vd-loom-intro__steps" aria-label="How Loom builds this profile">
-                {VERIFIED_DOSSIER_LOOM_INTRO.steps.map((step) => (
-                  <article key={step.label} className="vd-loom-intro__step">
-                    <h3>{step.label}</h3>
-                    <p>{step.text}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <div className="vd-workbench-grid">
-              {FEATURED_UNSW_SECTION ? (
-                <ActiveEvidenceStory
-                  section={FEATURED_UNSW_SECTION}
-                  artifactIds={VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds}
-                  courseFolders={VERIFIED_DOSSIER_UNSW_COURSES}
-                  draftRecords={recentDraftRecord ? [recentDraftRecord] : []}
-                />
-              ) : null}
-              <SourceGraph graph={VERIFIED_DOSSIER_WORKBENCH.sourceGraph} />
-            </div>
-
             <section className="vd-personal-categories" aria-label="Personal presentation sections">
               {VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => (
                 <a key={category.id} className="vd-personal-category-card" href={category.href}>
@@ -323,7 +295,42 @@ export function VerifiedDossierHome({
               ))}
             </section>
 
-            <ProvenanceChain steps={VERIFIED_DOSSIER_WORKBENCH.provenanceSteps} />
+            <section id="loom-intro" className="vd-loom-intro" aria-labelledby="loom-intro-title">
+              <div>
+                <p className="vd-section-kicker">Trust mechanism</p>
+                <h2 id="loom-intro-title">{VERIFIED_DOSSIER_LOOM_INTRO.title}</h2>
+                <p>{VERIFIED_DOSSIER_LOOM_INTRO.summary}</p>
+              </div>
+              <div className="vd-loom-intro__steps" aria-label="How Loom builds this profile">
+                {VERIFIED_DOSSIER_LOOM_INTRO.steps.map((step) => (
+                  <article key={step.label} className="vd-loom-intro__step">
+                    <h3>{step.label}</h3>
+                    <p>{step.text}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="vd-proof-band" aria-labelledby="verified-profile-proof-title">
+              <div className="vd-proof-band__header">
+                <h2 id="verified-profile-proof-title">Sources and Draft proof</h2>
+                <a className="vd-text-link" href="/knowledge">
+                  Open Sources <ArrowIcon />
+                </a>
+              </div>
+              <div className="vd-workbench-grid">
+                {FEATURED_UNSW_SECTION ? (
+                  <ActiveEvidenceStory
+                    section={FEATURED_UNSW_SECTION}
+                    artifactIds={VERIFIED_DOSSIER_WORKBENCH.activeArtifactIds}
+                    courseFolders={VERIFIED_DOSSIER_UNSW_COURSES}
+                    draftRecords={recentDraftRecord ? [recentDraftRecord] : []}
+                  />
+                ) : null}
+                <SourceGraph graph={VERIFIED_DOSSIER_WORKBENCH.sourceGraph} />
+              </div>
+              <ProvenanceChain steps={VERIFIED_DOSSIER_WORKBENCH.provenanceSteps} />
+            </section>
           </section>
 
           <section className="vd-history" aria-label="Loom history">
