@@ -459,7 +459,7 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     label: 'Education',
     href: '/education',
     summary: 'Courses, coursework, certificates, and learning outputs backed by real files.',
-    proof: 'UNSW, QuantNet, WQU, Claude Certificate',
+    proof: 'Education evidence',
     visualAsset: {
       kind: 'logo-strip',
       label: 'Course shelves',

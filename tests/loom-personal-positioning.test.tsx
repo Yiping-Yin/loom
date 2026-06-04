@@ -37,9 +37,9 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(categorySectionHtml, /alt="Project proof"/);
   assert.match(categorySectionHtml, /Answer canvas/);
   assert.match(categorySectionHtml, /Cited answer routed into a personal interface/);
-  assert.match(categorySectionHtml, /UNSW, QuantNet, WQU, Claude Certificate/);
   assert.doesNotMatch(categorySectionHtml, /Problem Set 02\.pdf/);
   assert.doesNotMatch(categorySectionHtml, /W8 A Concave-Functions\.pdf/);
+  assert.doesNotMatch(categorySectionHtml, /UNSW, QuantNet, WQU, Claude Certificate/);
   assert.match(html, /Course shelves/);
   assert.match(html, /Answer canvas/);
   assert.match(html, /real sources|Real files/);
