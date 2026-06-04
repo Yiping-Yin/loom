@@ -57,33 +57,39 @@ test('HomeClient renders mature platform modules on first paint', () => {
   };
 
   const html = renderToStaticMarkup(<HomeClient />);
+  const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
-  assert.match(html, /Verified source workspace/);
-  assert.match(html, /Sources become cited work/);
-  assert.match(html, /UNSW \/ ECON3202/);
+  assert.match(html, /Yiping Yin/);
+  assert.match(html, /Source-backed personal profile/);
+  assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
+  assert.match(html, /Built with Loom/);
+  assert.match(html, /Loom is the underlying trust mechanism/);
+  assert.match(html, /real sources become drafts/);
+  assert.match(html, /Digital Me answers/);
+  assert.match(html, /ECON 3202/);
+  assert.match(html, /MATH 2991/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /W8 A Concave-Functions\.pdf/);
+  assert.match(html, /Sources[\s\S]*Draft[\s\S]*Digital Me/);
   assert.match(html, /Sources[\s\S]{0,80}Draft[\s\S]{0,80}Answer/);
-  assert.match(html, /Answer inspector/);
+  assert.match(html, /Cited answer/);
   assert.match(html, /concavity/i);
   assert.match(html, /aria-label="Loom history"/);
 
-  for (const label of [
-    'About',
-    'UNSW',
-    'Quantnet',
-    'WQU',
-    'Claude',
-    'Original Loom',
-    'Private Wiki',
-    'Knowledge identity',
-    'Real-file workflow',
-    'Sources',
-    'Draft',
-  ]) {
+  for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
+    assert.match(primaryNavHtml, new RegExp(`>${label}<`));
+  }
+
+  for (const retiredPrimaryNav of ['UNSW', 'Quantnet', 'WQU', 'Claude']) {
+    assert.doesNotMatch(primaryNavHtml, new RegExp(`>${retiredPrimaryNav}<`));
+  }
+
+  for (const label of ['Original Loom', 'Private Wiki', 'Knowledge identity', 'Real-file workflow', 'Sources', 'Draft']) {
     assert.match(html, new RegExp(label));
   }
 
+  assert.doesNotMatch(html, /Verified source workspace/);
+  assert.doesNotMatch(html, /Sources become cited work/);
   for (const retired of [
     /A knowledge profile people can inspect and ask/,
     /Ask this profile/,
@@ -107,21 +113,30 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   };
 
   const html = renderToStaticMarkup(<HomeClient />);
+  const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
-  assert.match(html, /Sources become cited work/);
-  assert.match(html, /Verified source workspace/);
-  assert.match(html, /Active evidence story/);
-  assert.match(html, /Source graph/);
-  assert.match(html, /Answer inspector/);
+  assert.match(html, /Yiping Yin/);
+  assert.match(html, /Source-backed personal profile/);
+  assert.match(html, /About, education, experience, and Digital Me are backed by real sources/);
+  assert.match(html, /Built with Loom/);
+  assert.match(html, /Sources[\s\S]*Draft[\s\S]*Digital Me/);
+  assert.match(html, /Cited output/);
+  assert.match(html, /Cited answer/);
   assert.match(html, /Knowledge identity/);
   assert.match(html, /Real-file workflow/);
-  for (const label of ['About', 'UNSW', 'Quantnet', 'WQU', 'Claude']) {
-    assert.match(html, new RegExp(`>${label}<|${label}`));
+  for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
+    assert.match(primaryNavHtml, new RegExp(`>${label}<`));
+  }
+  for (const retiredPrimaryNav of ['UNSW', 'Quantnet', 'WQU', 'Claude']) {
+    assert.doesNotMatch(primaryNavHtml, new RegExp(`>${retiredPrimaryNav}<`));
   }
   for (const model of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {
     assert.ok(PERSONAL_PLATFORM_MODEL.includes(model as (typeof PERSONAL_PLATFORM_MODEL)[number]));
   }
-  assert.match(html, /ECON3202/);
+  assert.match(html, /ECON 3202/);
+  assert.match(html, /FINS 3666/);
+  assert.doesNotMatch(html, /Sources become cited work/);
+  assert.doesNotMatch(html, /Verified source workspace/);
   assert.doesNotMatch(html, /personal knowledge display platform/i);
   assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
   assert.doesNotMatch(html, /AI Engineer|Citadel/i);

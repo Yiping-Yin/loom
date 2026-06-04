@@ -1,3 +1,5 @@
+import React from 'react';
+
 import type { VerifiedDossierFileKind } from '../../lib/new-loom/verified-dossier-home';
 
 const FILE_KIND_EXTENSIONS: Record<VerifiedDossierFileKind, string> = {

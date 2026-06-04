@@ -3,11 +3,13 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import React from 'react';
 
 import {
   VERIFIED_DOSSIER_AI_PROMPT,
   VERIFIED_DOSSIER_ARTIFACTS,
   VERIFIED_DOSSIER_ARTIFACTS_BY_ID,
+  VERIFIED_DOSSIER_DIGITAL_ME_CANVASES,
   VERIFIED_DOSSIER_HISTORY,
   VERIFIED_DOSSIER_HOME_COPY,
   VERIFIED_DOSSIER_LOOM_INTRO,
@@ -75,14 +77,16 @@ test('verified dossier home data preserves approved evidence workbench definitio
 test('verified dossier home keeps canonical navigation and profile identity', () => {
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.label),
-    ['About', 'Education', 'Experience', 'Digital Me', 'Draft'],
+    ['About', 'Education', 'Experience', 'Digital Me'],
   );
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.href),
-    ['/about', '/education', '/experience', '/digital-me', '/drafts'],
+    ['/about', '/education', '/experience', '/digital-me'],
   );
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'Sources'));
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'UNSW'));
+  assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'Draft'));
+  assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.href === '/drafts'));
   assert.equal(VERIFIED_DOSSIER_PROFILE.name, 'Yiping Yin');
   assert.match(VERIFIED_DOSSIER_PROFILE.location, /Sydney/);
   assert.ok(VERIFIED_DOSSIER_PROFILE.links.some((link) => link.label === 'LinkedIn'));
@@ -158,8 +162,90 @@ test('verified dossier home groups source shelves into presentation categories',
 
   const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'digital-me');
   assert.ok(digitalMe, 'Digital Me presentation category should exist');
+  assert.deepEqual(digitalMe.foundationCategoryIds, ['about', 'education', 'experience']);
   assert.ok(digitalMe.capabilities.some((capability) => /citation/i.test(capability)));
   assert.ok(digitalMe.capabilities.some((capability) => /process/i.test(capability)));
+});
+
+test('Digital Me is based on About, Education, and Experience layers', async () => {
+  const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'digital-me');
+  assert.ok(digitalMe, 'Digital Me presentation category should exist');
+  assert.deepEqual(digitalMe.foundationCategoryIds, ['about', 'education', 'experience']);
+
+  const foundations = digitalMe.foundationCategoryIds.map((categoryId) => {
+    const foundation = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === categoryId);
+    assert.ok(foundation, `${categoryId} should resolve to a presentation category`);
+    return foundation;
+  });
+
+  assert.deepEqual(
+    foundations.map((foundation) => foundation.label),
+    ['About', 'Education', 'Experience'],
+  );
+  assert.deepEqual(
+    foundations.map((foundation) => foundation.href),
+    ['/about', '/education', '/experience'],
+  );
+  assert.ok(digitalMe.sourceSectionIds.includes('about'));
+  for (const educationSection of ['unsw', 'quantnet', 'wqu', 'claude'] as const) {
+    assert.ok(digitalMe.sourceSectionIds.includes(educationSection));
+  }
+
+  const { default: DigitalMePage } = await import('../app/digital-me/page');
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
+  const html = renderToStaticMarkup(React.createElement(DigitalMePage));
+
+  assert.match(html, /Built from About, Education, and Experience/);
+  assert.match(html, /About foundation/);
+  assert.match(html, /Education foundation/);
+  assert.match(html, /Experience foundation/);
+  assert.match(html, /identity, learning, and work evidence/i);
+});
+
+test('Digital Me can route an ask into a topic presentation canvas', async () => {
+  const tradingCanvas = VERIFIED_DOSSIER_DIGITAL_ME_CANVASES.find((canvas) => canvas.id === 'trading');
+  assert.ok(tradingCanvas, 'Trading canvas should exist');
+  assert.deepEqual(tradingCanvas.foundationCategoryIds, ['about', 'education', 'experience']);
+  assert.ok(tradingCanvas.triggerTerms.some((term) => /^trading$/i.test(term)));
+  assert.match(tradingCanvas.description, /ask/i);
+  assert.match(tradingCanvas.description, /canvas/i);
+
+  assert.deepEqual(
+    tradingCanvas.columns.map((column) => column.label),
+    ['Trading Knowledge', 'Programming', 'Experience and Process'],
+  );
+  assert.ok(
+    tradingCanvas.columns
+      .find((column) => column.label === 'Trading Knowledge')
+      ?.items.some((item) => /FINS 3666/.test(item.label)),
+  );
+  assert.ok(
+    tradingCanvas.columns
+      .find((column) => column.label === 'Trading Knowledge')
+      ?.items.some((item) => /MATH 2991/.test(item.label)),
+  );
+  assert.ok(
+    tradingCanvas.columns
+      .find((column) => column.label === 'Programming')
+      ?.items.some((item) => /Python/.test(item.label)),
+  );
+
+  const { default: DigitalMePage } = await import('../app/digital-me/page');
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
+  const html = renderToStaticMarkup(React.createElement(DigitalMePage));
+
+  assert.match(html, /From ask to canvas/);
+  assert.match(html, /Trading Knowledge/);
+  assert.match(html, /FINS 3666/);
+  assert.match(html, /MATH 2991/);
+  assert.match(html, /Programming/);
+  assert.match(html, /Python/);
+  assert.match(html, /Experience and Process/);
+  assert.match(html, /Digital Me can turn a conversation into a structured presentation/);
 });
 
 test('verified dossier profile photo points to a tracked public asset path', () => {

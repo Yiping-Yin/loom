@@ -247,6 +247,7 @@ export type VerifiedDossierPresentationCategory = {
   sourceSectionIds: readonly VerifiedDossierSection['id'][];
   artifactIds: readonly VerifiedDossierArtifactId[];
   capabilities: readonly string[];
+  foundationCategoryIds?: readonly Exclude<VerifiedDossierPresentationCategoryId, 'digital-me'>[];
 };
 
 export type VerifiedDossierLoomIntroStep = {
@@ -259,6 +260,16 @@ export type VerifiedDossierLoomIntro = {
   summary: string;
   blocking: boolean;
   steps: readonly VerifiedDossierLoomIntroStep[];
+};
+
+export type VerifiedDossierCourseFolder = {
+  id: string;
+  code: string;
+  folder: string;
+  status: string;
+  fileCount: number;
+  href: string;
+  sampleArtifactId?: VerifiedDossierArtifactId;
 };
 
 export type VerifiedDossierHistoryItem = {
@@ -304,6 +315,21 @@ export type VerifiedDossierWorkbench = {
   provenanceSteps: readonly VerifiedDossierWorkbenchStep[];
 };
 
+export type VerifiedDossierDigitalMeCanvas = {
+  id: string;
+  title: string;
+  description: string;
+  triggerTerms: readonly string[];
+  foundationCategoryIds: readonly Exclude<VerifiedDossierPresentationCategoryId, 'digital-me'>[];
+  columns: readonly {
+    label: string;
+    items: readonly {
+      label: string;
+      source: string;
+    }[];
+  }[];
+};
+
 export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
   { label: 'About', href: '/about' },
   { label: 'Education', href: '/education' },
@@ -346,10 +372,10 @@ export const VERIFIED_DOSSIER_SECTIONS: VerifiedDossierSection[] = [
   },
   {
     id: 'unsw',
-    label: 'UNSW / ECON3202',
+    label: 'UNSW',
     href: '/knowledge/unsw',
-    summary: 'Course sources, problem-set work, and learning evidence.',
-    status: 'Featured evidence story',
+    summary: 'Course folders, official sources, weekly material, and study evidence.',
+    status: 'Course source shelf',
     artifactIds: ['econ-ps2', 'econ-slides', 'econ-tutorial', 'econ-notes'],
   },
   {
@@ -430,8 +456,172 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     sourceSectionIds: ['about', 'unsw', 'quantnet', 'wqu', 'claude'],
     artifactIds: ['about-doc', 'econ-ps2', 'econ-slides', 'claude-certificate'],
     capabilities: ['Citation-backed answers', 'Source retrieval', 'Process replay', 'Draft generation'],
+    foundationCategoryIds: ['about', 'education', 'experience'],
   },
 ] as const satisfies readonly VerifiedDossierPresentationCategory[];
+
+export const VERIFIED_DOSSIER_DIGITAL_ME_CANVASES = [
+  {
+    id: 'trading',
+    title: 'Trading Knowledge Canvas',
+    description:
+      'When someone asks about trading, Digital Me can turn a conversation into a structured presentation canvas.',
+    triggerTerms: ['trading', 'quant finance', 'market making', 'portfolio'],
+    foundationCategoryIds: ['about', 'education', 'experience'],
+    columns: [
+      {
+        label: 'Trading Knowledge',
+        items: [
+          { label: 'FINS 3666 market structure and quant finance notes', source: 'Education' },
+          { label: 'MATH 2991 mathematical tools for modelling', source: 'Education' },
+          { label: 'ECON 3202 optimisation and concavity reasoning', source: 'Education' },
+        ],
+      },
+      {
+        label: 'Programming',
+        items: [
+          { label: 'Python Foundations practice and implementation records', source: 'Education' },
+          { label: 'QuantNet C++ programming for financial engineering', source: 'Education' },
+        ],
+      },
+      {
+        label: 'Experience and Process',
+        items: [
+          { label: 'Project evidence and build process records', source: 'Experience' },
+          { label: 'Draft generation, citation replay, and answer grounding', source: 'Digital Me' },
+        ],
+      },
+    ],
+  },
+] as const satisfies readonly VerifiedDossierDigitalMeCanvas[];
+
+export const VERIFIED_DOSSIER_UNSW_COURSES = [
+  {
+    id: 'econ-3202',
+    code: 'ECON 3202',
+    folder: 'UNSW/ECON 3202',
+    status: 'Course dossier',
+    fileCount: 51,
+    href: '/knowledge/unsw/econ3202',
+    sampleArtifactId: 'econ-ps2',
+  },
+  {
+    id: 'math-2991',
+    code: 'MATH 2991',
+    folder: 'UNSW/MATH 2991',
+    status: 'Generated manual',
+    fileCount: 5,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'fins-3666',
+    code: 'FINS 3666',
+    folder: 'UNSW/FINS 3666',
+    status: 'Quant finance',
+    fileCount: 174,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'fins-3640',
+    code: 'FINS 3640',
+    folder: 'UNSW/FINS 3640',
+    status: 'Weekly archive',
+    fileCount: 73,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'math-3856',
+    code: 'MATH 3856',
+    folder: 'UNSW/MATH 3856',
+    status: 'ML references',
+    fileCount: 6,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'infs-3822',
+    code: 'INFS 3822',
+    folder: 'UNSW/INFS 3822',
+    status: 'Data archive',
+    fileCount: 2929,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'comm-3030',
+    code: 'COMM 3030',
+    folder: 'UNSW/COMM 3030',
+    status: 'Project course',
+    fileCount: 77,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'fins-3616',
+    code: 'FINS 3616',
+    folder: 'UNSW/FINS 3616',
+    status: 'Course archive',
+    fileCount: 40,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'fins-3635',
+    code: 'FINS 3635',
+    folder: 'UNSW/FINS 3635',
+    status: 'Market source',
+    fileCount: 35,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'fins-3646',
+    code: 'FINS 3646',
+    folder: 'UNSW/FINS 3646',
+    status: 'Project archive',
+    fileCount: 219,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'math-1141',
+    code: 'MATH 1141',
+    folder: 'UNSW/MATH 1141',
+    status: 'Math notes',
+    fileCount: 5,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'math-1241',
+    code: 'MATH 1241',
+    folder: 'UNSW/MATH 1241',
+    status: 'Math notes',
+    fileCount: 4,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'math-2018',
+    code: 'MATH 2018',
+    folder: 'UNSW/MATH 2018',
+    status: 'Tutorial source',
+    fileCount: 62,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'math-2089',
+    code: 'MATH 2089',
+    folder: 'UNSW/MATH 2089',
+    status: 'Numerical methods',
+    fileCount: 1,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+  {
+    id: 'math-2901',
+    code: 'MATH 2901',
+    folder: 'UNSW/MATH 2901',
+    status: 'Assessment archive',
+    fileCount: 29,
+    href: '/knowledge/unsw#all-unsw-course-folders',
+  },
+] as const satisfies readonly VerifiedDossierCourseFolder[];
+
+export function formatVerifiedDossierCourseFileCount(fileCount: number) {
+  return `${fileCount.toLocaleString()} ${fileCount === 1 ? 'file' : 'files'}`;
+}
 
 export const VERIFIED_DOSSIER_AI_PROMPT = {
   question: 'How does concavity connect to optimisation in ECON3202?',
@@ -483,8 +673,8 @@ export const VERIFIED_DOSSIER_WORKBENCH = {
     {
       number: '01',
       title: 'Sources',
-      summary: '4 ECON3202 files',
-      detail: 'Course materials, weekly PDFs, exercises, and problem-set work.',
+      summary: 'UNSW course shelf',
+      detail: 'Course folders, official PDFs, weekly material, and answer evidence stay in Sources.',
     },
     {
       number: '02',
