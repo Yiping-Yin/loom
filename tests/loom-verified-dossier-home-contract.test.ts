@@ -248,6 +248,28 @@ test('Digital Me can route an ask into a topic presentation canvas', async () =>
   assert.match(html, /Digital Me can turn a conversation into a structured presentation/);
 });
 
+test('Digital Me page ships professional section-page layout styles', () => {
+  const cssPath = join(repoRoot, 'app/globals.css');
+  const css = existsSync(cssPath) ? require('node:fs').readFileSync(cssPath, 'utf8') as string : '';
+
+  for (const selector of [
+    '.vd-section-page',
+    '.vd-section-page__nav',
+    '.vd-section-page__hero',
+    '.vd-section-page__list',
+    '.vd-section-page__foundations',
+    '.vd-section-page__canvas',
+    '.vd-section-page__answer',
+    '.vd-section-page__loom-layer',
+  ]) {
+    assert.match(css, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+
+  assert.match(css, /\.vd-section-page__canvas[\s\S]*grid-template-columns/);
+  assert.match(css, /\.vd-section-page__foundations[\s\S]*grid-template-columns/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page/);
+});
+
 test('verified dossier profile photo points to a tracked public asset path', () => {
   assert.match(VERIFIED_DOSSIER_PROFILE.photoSrc, /^\/profile\/.+\.png$/);
 
