@@ -317,15 +317,19 @@ export type VerifiedDossierWorkbench = {
 
 export type VerifiedDossierDigitalMeCanvas = {
   id: string;
-  title: string;
+  topic: string;
+  promptExample: string;
   description: string;
   triggerTerms: readonly string[];
   foundationCategoryIds: readonly Exclude<VerifiedDossierPresentationCategoryId, 'digital-me'>[];
   columns: readonly {
     label: string;
+    summary: string;
     items: readonly {
       label: string;
-      source: string;
+      detail: string;
+      href?: string;
+      artifactIds?: readonly VerifiedDossierArtifactId[];
     }[];
   }[];
 };
@@ -451,11 +455,18 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     id: 'digital-me',
     label: 'Digital Me',
     href: '/digital-me',
-    summary: 'A grounded digital-person layer that answers from sources, drafts, and process.',
-    proof: 'Grounded cited answers',
+    summary:
+      'A grounded interaction layer that can answer, cite, and turn conversations into presentation canvases built from About, Education, and Experience.',
+    proof: 'About + Education + Experience',
     sourceSectionIds: ['about', 'unsw', 'quantnet', 'wqu', 'claude'],
-    artifactIds: ['about-doc', 'econ-ps2', 'econ-slides', 'claude-certificate'],
-    capabilities: ['Citation-backed answers', 'Source retrieval', 'Process replay', 'Draft generation'],
+    artifactIds: ['about-doc', 'econ-ps2', 'econ-slides', 'quantnet-python-foundations', 'claude-certificate'],
+    capabilities: [
+      'Citation-backed answers',
+      'Topic-to-canvas routing',
+      'Process replay',
+      'Knowledge and experience display',
+      'Draft-backed output generation',
+    ],
     foundationCategoryIds: ['about', 'education', 'experience'],
   },
 ] as const satisfies readonly VerifiedDossierPresentationCategory[];
@@ -463,32 +474,74 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
 export const VERIFIED_DOSSIER_DIGITAL_ME_CANVASES = [
   {
     id: 'trading',
-    title: 'Trading Knowledge Canvas',
+    topic: 'Trading',
+    promptExample: 'Show my trading knowledge and how it connects to programming and experience.',
     description:
-      'When someone asks about trading, Digital Me can turn a conversation into a structured presentation canvas.',
-    triggerTerms: ['trading', 'quant finance', 'market making', 'portfolio'],
+      'When an ask turns toward Trading, Digital Me can turn a conversation into a structured presentation canvas that connects identity, learning, and work evidence.',
+    triggerTerms: ['Trading', 'market making', 'quant finance', 'portfolio construction'],
     foundationCategoryIds: ['about', 'education', 'experience'],
     columns: [
       {
         label: 'Trading Knowledge',
+        summary: 'Course and mathematical foundations that explain the trading lens.',
         items: [
-          { label: 'FINS 3666 market structure and quant finance notes', source: 'Education' },
-          { label: 'MATH 2991 mathematical tools for modelling', source: 'Education' },
-          { label: 'ECON 3202 optimisation and concavity reasoning', source: 'Education' },
+          {
+            label: 'FINS 3666',
+            detail: 'Quant analysis, financial markets, trading intuition, and market structure context.',
+            href: '/knowledge/unsw#all-unsw-course-folders',
+          },
+          {
+            label: 'MATH 2991',
+            detail: 'Mathematical tools for modelling, probability, optimisation, and analytical reasoning.',
+            href: '/knowledge/unsw#all-unsw-course-folders',
+          },
+          {
+            label: 'ECON 3202',
+            detail: 'Optimisation, concavity, and economic choice foundations used in trading decisions.',
+            href: '/knowledge/unsw/econ3202',
+            artifactIds: ['econ-slides', 'econ-ps2'],
+          },
         ],
       },
       {
         label: 'Programming',
+        summary: 'Implementation layer for research, backtesting, and quantitative workflow.',
         items: [
-          { label: 'Python Foundations practice and implementation records', source: 'Education' },
-          { label: 'QuantNet C++ programming for financial engineering', source: 'Education' },
+          {
+            label: 'Python',
+            detail: 'Python Foundations and quant tooling for data work, modelling, and notebooks.',
+            href: '/knowledge/quantnet/python-foundations',
+            artifactIds: ['quantnet-python-foundations'],
+          },
+          {
+            label: 'C++',
+            detail: 'Financial engineering programming foundation for performance-sensitive systems.',
+            href: '/knowledge/quantnet/quantnet-online-cpp-course',
+            artifactIds: ['quantnet-cpp-course'],
+          },
         ],
       },
       {
         label: 'Experience and Process',
+        summary: 'How the knowledge becomes portfolio material, answers, and visible reasoning.',
         items: [
-          { label: 'Project evidence and build process records', source: 'Experience' },
-          { label: 'Draft generation, citation replay, and answer grounding', source: 'Digital Me' },
+          {
+            label: 'Problem-set reasoning',
+            detail: 'Worked ECON3202 material shows the mathematical process behind an answer.',
+            href: '/knowledge/unsw/econ3202/ps02',
+            artifactIds: ['econ-ps2', 'econ-notes'],
+          },
+          {
+            label: 'Source-to-answer workflow',
+            detail: 'Sources are transformed into Draft-backed explanations before they appear in Digital Me.',
+            artifactIds: ['econ-slides', 'econ-tutorial'],
+          },
+          {
+            label: 'Personal direction',
+            detail: 'The About layer explains goals, public context, and why these topics belong together.',
+            href: '/about',
+            artifactIds: ['about-doc'],
+          },
         ],
       },
     ],

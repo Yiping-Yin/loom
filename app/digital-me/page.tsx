@@ -58,17 +58,27 @@ export default function DigitalMePage() {
       </section>
       <section className="vd-section-page__canvas" aria-labelledby="digital-me-canvas-title">
         <p>From ask to canvas</p>
-        <h2 id="digital-me-canvas-title">{topicCanvas.title}</h2>
+        <h2 id="digital-me-canvas-title">{topicCanvas.topic} Knowledge Canvas</h2>
         <span>{topicCanvas.description}</span>
         <div>
           {topicCanvas.columns.map((column) => (
             <article key={column.label}>
               <strong>{column.label}</strong>
+              <p>{column.summary}</p>
               <ul>
                 {column.items.map((item) => (
                   <li key={item.label}>
-                    <span>{item.label}</span>
-                    <small>{item.source}</small>
+                    {'href' in item && item.href ? (
+                      <a href={item.href}>
+                        <span>{item.label}</span>
+                        <small>{item.detail}</small>
+                      </a>
+                    ) : (
+                      <>
+                        <span>{item.label}</span>
+                        <small>{item.detail}</small>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>
