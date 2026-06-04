@@ -15,6 +15,7 @@ import {
   VERIFIED_DOSSIER_PROFILE,
   VERIFIED_DOSSIER_SECTIONS,
   VERIFIED_DOSSIER_TOP_NAV,
+  VERIFIED_DOSSIER_UNSW_COURSES,
   VERIFIED_DOSSIER_WORKBENCH,
   resolveVerifiedDossierArtifact,
 } from '../lib/new-loom/verified-dossier-home';
@@ -72,11 +73,11 @@ test('verified dossier home data preserves approved evidence workbench definitio
 test('verified dossier home keeps canonical navigation and profile identity', () => {
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.label),
-    ['About', 'Education', 'Experience', 'Digital Me'],
+    ['About', 'Education', 'Experience', 'Digital Me', 'Draft'],
   );
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.href),
-    ['/about', '/education', '/experience', '/digital-me'],
+    ['/about', '/education', '/experience', '/digital-me', '/drafts'],
   );
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'Sources'));
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'UNSW'));
@@ -84,6 +85,16 @@ test('verified dossier home keeps canonical navigation and profile identity', ()
   assert.match(VERIFIED_DOSSIER_PROFILE.location, /Sydney/);
   assert.ok(VERIFIED_DOSSIER_PROFILE.links.some((link) => link.label === 'LinkedIn'));
   assert.ok(VERIFIED_DOSSIER_PROFILE.memberships.some((item) => item.label === 'UNSW Sydney'));
+});
+
+test('personal IA routes exist as app pages', () => {
+  for (const routePage of [
+    'app/education/page.tsx',
+    'app/experience/page.tsx',
+    'app/digital-me/page.tsx',
+  ]) {
+    assert.ok(existsSync(join(repoRoot, routePage)), `${routePage} should exist`);
+  }
 });
 
 test('verified dossier home explains Loom as the underlying trust mechanism', () => {
@@ -105,7 +116,7 @@ test('verified dossier home groups source shelves into presentation categories',
     ['About', 'Education', 'Experience', 'Digital Me'],
   );
   assert.deepEqual(
-    VERIFIED_DOSSIER_TOP_NAV.map((item) => [item.label, item.href]),
+    VERIFIED_DOSSIER_TOP_NAV.slice(0, VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.length).map((item) => [item.label, item.href]),
     VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => [category.label, category.href]),
   );
 
@@ -126,7 +137,7 @@ test('verified dossier home groups source shelves into presentation categories',
 
   const education = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'education');
   assert.ok(education, 'Education presentation category should exist');
-  for (const sourceSectionId of ['unsw', 'quantnet', 'wqu', 'claude']) {
+  for (const sourceSectionId of ['unsw', 'quantnet', 'wqu', 'claude'] as const) {
     assert.ok(
       education.sourceSectionIds.includes(sourceSectionId),
       `Education should include ${sourceSectionId} source section`,
@@ -170,11 +181,43 @@ test('verified dossier home includes ECON3202 artifacts and file kinds', () => {
 test('verified dossier home keeps five sections and Loom history', () => {
   assert.deepEqual(
     VERIFIED_DOSSIER_SECTIONS.map((section) => section.label),
-    ['About', 'UNSW / ECON3202', 'Quantnet', 'WQU', 'Claude'],
+    ['About', 'UNSW', 'Quantnet', 'WQU', 'Claude'],
   );
   assert.deepEqual(
     VERIFIED_DOSSIER_HISTORY.map((item) => item.title),
     ['Original Loom', 'Private Wiki', 'Knowledge identity', 'Real-file workflow'],
+  );
+});
+
+test('verified dossier home presents UNSW as a course shelf before ECON3202 detail', () => {
+  const unsw = VERIFIED_DOSSIER_SECTIONS.find((section) => section.id === 'unsw');
+
+  assert.ok(unsw, 'UNSW section should exist');
+  assert.equal(unsw.label, 'UNSW');
+  assert.equal(unsw.status, 'Course source shelf');
+  assert.ok(VERIFIED_DOSSIER_UNSW_COURSES.length >= 15);
+  for (const code of [
+    'ECON 3202',
+    'MATH 2991',
+    'FINS 3666',
+    'FINS 3640',
+    'FINS 3616',
+    'FINS 3635',
+    'FINS 3646',
+    'MATH 3856',
+    'MATH 2018',
+    'INFS 3822',
+    'COMM 3030',
+  ]) {
+    assert.ok(VERIFIED_DOSSIER_UNSW_COURSES.some((course) => course.code === code), `${code} should be indexed`);
+  }
+  assert.ok(
+    VERIFIED_DOSSIER_UNSW_COURSES.every((course) => course.folder.startsWith('UNSW/')),
+    'course folders should stay under the top-level UNSW shelf',
+  );
+  assert.ok(
+    VERIFIED_DOSSIER_UNSW_COURSES.every((course) => course.fileCount > 0),
+    'course folders should expose real local file counts',
   );
 });
 
