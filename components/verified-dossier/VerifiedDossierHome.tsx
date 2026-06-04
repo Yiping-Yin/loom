@@ -98,18 +98,6 @@ function formatCategoryEvidence(artifactCount: number, shelfCount: number) {
   return `${artifactCount} ${sourceFileLabel} / ${shelfCount} ${shelfLabel}`;
 }
 
-function formatCategoryCardProof(category: VerifiedDossierPresentationCategory) {
-  if (category.proof.includes(',')) {
-    return `${category.label} evidence`;
-  }
-
-  return category.proof;
-}
-
-function formatCategoryVisualCaption(caption: string) {
-  return caption.replace(/^Cited answer\b/, 'Answer');
-}
-
 function CategoryVisualAsset({ category }: { category: VerifiedDossierPresentationCategory }) {
   const asset = category.visualAsset;
   const assetPaths = asset.src ? [asset.src] : asset.srcs ?? [];
@@ -123,7 +111,7 @@ function CategoryVisualAsset({ category }: { category: VerifiedDossierPresentati
       </div>
       <div className="vd-category-visual__caption">
         <strong>{asset.label}</strong>
-        <span>{formatCategoryVisualCaption(asset.caption)}</span>
+        <span>{asset.caption}</span>
       </div>
     </div>
   );
@@ -215,7 +203,7 @@ export function VerifiedDossierHome({
                   <a key={category.id} className="vd-personal-category-card" href={category.href}>
                     <CategoryVisualAsset category={category} />
                     <div className="vd-personal-category-card__body">
-                      <p>{formatCategoryCardProof(category)}</p>
+                      <p>{category.proof}</p>
                       <h2>{category.label}</h2>
                       <span>{category.capabilities.slice(0, 2).join(' / ')}</span>
                       <small>{formatCategoryEvidence(category.artifactIds.length, category.sourceSectionIds.length)}</small>

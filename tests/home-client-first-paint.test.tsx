@@ -65,7 +65,7 @@ test('HomeClient first paint is not a blank shell when client state has not hydr
     );
   }
 
-  assert.equal(text.match(/Cited answer/g)?.length ?? 0, 1);
+  assert.equal(text.match(/Cited answer/g)?.length ?? 0, 2);
   assert.match(html, /class="vd-home/);
   assert.match(html, /class="vd-personal-stage"/);
   assert.match(html, /class="vd-workbench-grid"/);
