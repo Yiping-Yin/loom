@@ -29,6 +29,10 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(html, /Built with Loom/);
   assert.match(html, /Loom trust layer/);
   assert.match(html, /class="vd-personal-stage"/);
+  assert.match(html, /class="vd-category-visual/);
+  assert.match(html, /class="vd-category-visual__media/);
+  assert.match(html, /Course shelves/);
+  assert.match(html, /Answer canvas/);
   assert.match(html, /real sources|Real files/);
   assert.match(html, /trust mechanism/i);
   assert.match(html, /proof|evidence/i);
@@ -62,6 +66,8 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.doesNotMatch(html, /Source Dossier/);
   assert.doesNotMatch(html, /Ask this profile/);
   assert.doesNotMatch(html, /Ask a follow-up/);
+  assert.doesNotMatch(html, /Self-introduction, direction, public links, and source-backed identity\./);
+  assert.doesNotMatch(html, /Courses, coursework, certificates, and learning outputs backed by real files\./);
   assert.doesNotMatch(html, /vd-loom-intro-link/);
   assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
   assert.doesNotMatch(html, /id="cited-answer"/);

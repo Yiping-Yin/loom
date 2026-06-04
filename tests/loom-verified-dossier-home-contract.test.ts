@@ -168,6 +168,26 @@ test('verified dossier home groups source shelves into presentation categories',
   assert.ok(digitalMe.capabilities.some((capability) => /process/i.test(capability)));
 });
 
+test('presentation categories expose real homepage visual assets', () => {
+  for (const category of VERIFIED_DOSSIER_PRESENTATION_CATEGORIES) {
+    assert.ok(category.visualAsset, `${category.id} should expose a visual asset`);
+    assert.match(category.visualAsset.label, /\S/);
+    assert.match(category.visualAsset.caption, /\S/);
+
+    const assetPaths = [
+      category.visualAsset.src,
+      ...(category.visualAsset.srcs ?? []),
+    ].filter((src): src is string => Boolean(src));
+
+    assert.ok(assetPaths.length > 0, `${category.id} should bind to at least one image or logo`);
+
+    for (const src of assetPaths) {
+      assert.match(src, /^\//, `${src} should be a public asset path`);
+      assert.ok(existsSync(join(repoRoot, 'public', src)), `${src} should exist under public/`);
+    }
+  }
+});
+
 test('Digital Me is based on About, Education, and Experience layers', async () => {
   const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((category) => category.id === 'digital-me');
   assert.ok(digitalMe, 'Digital Me presentation category should exist');

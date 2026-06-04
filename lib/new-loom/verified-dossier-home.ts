@@ -238,12 +238,22 @@ export type VerifiedDossierSection = {
 
 export type VerifiedDossierPresentationCategoryId = 'about' | 'education' | 'experience' | 'digital-me';
 
+export type VerifiedDossierHomeVisualAsset = {
+  kind: 'profile-photo' | 'document-preview' | 'logo-strip' | 'source-thumbnails' | 'ui-preview';
+  label: string;
+  caption: string;
+  src?: string;
+  srcs?: readonly string[];
+  artifactIds?: readonly VerifiedDossierArtifactId[];
+};
+
 export type VerifiedDossierPresentationCategory = {
   id: VerifiedDossierPresentationCategoryId;
   label: string;
   href: string;
   summary: string;
   proof: string;
+  visualAsset: VerifiedDossierHomeVisualAsset;
   sourceSectionIds: readonly VerifiedDossierSection['id'][];
   artifactIds: readonly VerifiedDossierArtifactId[];
   capabilities: readonly string[];
@@ -433,6 +443,13 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     href: '/about',
     summary: 'Self-introduction, direction, public links, and source-backed identity.',
     proof: 'Profile record',
+    visualAsset: {
+      kind: 'profile-photo',
+      label: 'Profile source',
+      caption: 'Portrait, role, and public identity record',
+      src: '/profile/yiping-profile-photo.png',
+      artifactIds: ['about-doc'],
+    },
     sourceSectionIds: ['about'],
     artifactIds: ['about-doc'],
     capabilities: ['Identity summary', 'Public context', 'Source-backed profile'],
@@ -443,6 +460,18 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     href: '/education',
     summary: 'Courses, coursework, certificates, and learning outputs backed by real files.',
     proof: 'UNSW, QuantNet, WQU, Claude Certificate',
+    visualAsset: {
+      kind: 'logo-strip',
+      label: 'Course shelves',
+      caption: 'UNSW, WQU, QuantNet, and Claude learning evidence',
+      srcs: [
+        '/brand/unsw/unsw-crest.png',
+        '/brand/wqu/wqu-logo.svg',
+        '/brand/quantnet/quantnet-logo.png',
+        '/verified-sources/claude/claude-certificate.png',
+      ],
+      artifactIds: ['econ-ps2', 'econ-slides', 'quantnet-cpp-course', 'wqu-index', 'claude-certificate'],
+    },
     sourceSectionIds: ['unsw', 'quantnet', 'wqu', 'claude'],
     artifactIds: ['econ-ps2', 'econ-slides', 'quantnet-cpp-course', 'wqu-index', 'claude-certificate'],
     capabilities: ['Course folders', 'Credential evidence', 'Learning process'],
@@ -453,6 +482,16 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     href: '/experience',
     summary: 'Projects, work, competitions, and built systems shown with process evidence.',
     proof: 'Project and build records',
+    visualAsset: {
+      kind: 'source-thumbnails',
+      label: 'Project proof',
+      caption: 'Programming and worked-output evidence',
+      srcs: [
+        '/verified-sources/quantnet/python-foundations.png',
+        '/verified-sources/econ3202/problem2-answer.png',
+      ],
+      artifactIds: ['quantnet-python-foundations', 'econ-notes'],
+    },
     sourceSectionIds: ['about', 'unsw', 'quantnet'],
     artifactIds: ['about-doc', 'quantnet-python-foundations', 'econ-notes'],
     capabilities: ['Project evidence', 'Competition records', 'Build process'],
@@ -464,6 +503,16 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     summary:
       'A living personal interface that can answer, present, explain, prove, and produce from verified knowledge, education, experience, portfolio, and process history.',
     proof: 'About + Education + Experience',
+    visualAsset: {
+      kind: 'ui-preview',
+      label: 'Answer canvas',
+      caption: 'Cited answer routed into a personal interface',
+      srcs: [
+        '/verified-sources/econ3202/problem-set-02.png',
+        '/verified-sources/econ3202/w8-a-concave-functions.png',
+      ],
+      artifactIds: ['econ-ps2', 'econ-slides', 'claude-certificate'],
+    },
     sourceSectionIds: ['about', 'unsw', 'quantnet', 'wqu', 'claude'],
     artifactIds: ['about-doc', 'econ-ps2', 'econ-slides', 'quantnet-python-foundations', 'claude-certificate'],
     capabilities: [
