@@ -1,0 +1,653 @@
+.roleOsPage {
+  --role-page: #f6f7f3;
+  --role-surface: #ffffff;
+  --role-surface-soft: #eef2ec;
+  --role-ink: #111714;
+  --role-muted: #657068;
+  --role-subtle: #89938a;
+  --role-border: #d9e1d8;
+  --role-border-strong: #bdc9bf;
+  --role-accent: #15513f;
+  --role-accent-strong: #0d3a2d;
+  --role-row-active: #edf5ef;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--role-page);
+  color: var(--role-ink);
+  font-family: var(--sans);
+}
+
+.roleOsPage *,
+.roleOsPage *::before,
+.roleOsPage *::after {
+  box-sizing: border-box;
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 1.35rem;
+  min-height: 4rem;
+  padding: 0.7rem clamp(1rem, 3vw, 3rem);
+  border-bottom: 1px solid var(--role-border);
+  background: rgba(246, 247, 243, 0.94);
+  backdrop-filter: blur(16px);
+}
+
+.nav a {
+  position: relative;
+  color: #313a35;
+  font-size: 0.84rem;
+  font-weight: 720;
+  line-height: 1.1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav a:first-child {
+  margin-right: auto;
+  color: var(--role-ink);
+  font-family: var(--display);
+  font-size: 1.72rem;
+  font-weight: 560;
+  line-height: 0.95;
+}
+
+.nav a:hover,
+.nav a[aria-current="page"] {
+  color: var(--role-accent-strong);
+}
+
+.nav a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1.05rem;
+  left: 0;
+  height: 2px;
+  background: currentColor;
+}
+
+.roleLens,
+.proofPath,
+.foundationStrip {
+  width: min(100%, 116rem);
+  margin: 0 auto;
+  padding-right: clamp(1rem, 3vw, 3rem);
+  padding-left: clamp(1rem, 3vw, 3rem);
+}
+
+.roleLens {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 30rem);
+  gap: 1rem clamp(2rem, 4vw, 4.2rem);
+  align-items: end;
+  padding-top: clamp(2.4rem, 5vw, 4.8rem);
+  padding-bottom: clamp(1.8rem, 4vw, 3rem);
+  border-bottom: 1px solid var(--role-border);
+}
+
+.roleLens p,
+.claimRail > p,
+.stageHeader p,
+.artifactOutput > p,
+.evidencePanel > p {
+  margin: 0;
+  color: var(--role-accent);
+  font-size: 0.7rem;
+  font-weight: 820;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.roleLens h1 {
+  max-width: 17ch;
+  margin: 0;
+  color: var(--role-ink);
+  font-family: var(--display);
+  font-size: clamp(2.55rem, 4.8vw, 5.2rem);
+  font-weight: 560;
+  letter-spacing: 0;
+  line-height: 0.95;
+}
+
+.roleLens > span {
+  max-width: 58rem;
+  margin: 0;
+  color: var(--role-muted);
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 1.5vw, 1.34rem);
+  line-height: 1.48;
+}
+
+.roleLensCriteria {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: stretch;
+  display: grid;
+  align-content: end;
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--role-border-strong);
+  border-bottom: 1px solid var(--role-border-strong);
+  list-style: none;
+}
+
+.roleLensCriteria li {
+  min-width: 0;
+  padding: 0.72rem 0;
+  border-bottom: 1px solid var(--role-border);
+  color: #334039;
+  font-size: 0.86rem;
+  font-weight: 680;
+  line-height: 1.35;
+}
+
+.roleLensCriteria li:last-child {
+  border-bottom: 0;
+}
+
+.proofPath {
+  display: grid;
+  grid-template-columns: minmax(13.5rem, 18rem) minmax(26rem, 1fr) minmax(18rem, 24rem);
+  gap: 0;
+  align-items: start;
+  padding-top: clamp(1.6rem, 3vw, 2.4rem);
+  padding-bottom: clamp(1.9rem, 4vw, 3rem);
+}
+
+.claimRail,
+.artifactStage,
+.evidencePanel {
+  min-width: 0;
+  border-top: 1px solid var(--role-border-strong);
+}
+
+.claimRail,
+.evidencePanel {
+  position: sticky;
+  top: 5rem;
+  align-self: start;
+  max-height: calc(100vh - 6rem);
+  overflow: auto;
+}
+
+.claimRail {
+  padding: 1rem 1.1rem 1rem 0;
+}
+
+.artifactStage {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem clamp(1.1rem, 2vw, 1.6rem);
+  border-right: 1px solid var(--role-border);
+  border-left: 1px solid var(--role-border);
+  background: var(--role-surface);
+}
+
+.evidencePanel {
+  display: grid;
+  align-content: start;
+  gap: 0.78rem;
+  padding: 1rem 0 1rem 1.1rem;
+}
+
+.claimButton,
+.artifactActions button,
+.capabilityArtifact button {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.claimButton {
+  display: grid;
+  gap: 0.26rem;
+  width: 100%;
+  padding: 0.86rem 0;
+  border-bottom: 1px solid var(--role-border);
+}
+
+.claimButton strong,
+.capabilityArtifact strong {
+  color: var(--role-ink);
+  font-size: 0.91rem;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.claimButton span,
+.capabilityArtifact span,
+.capabilityArtifact small {
+  color: var(--role-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.claimButton[aria-pressed="true"] {
+  padding-left: 0.72rem;
+  border-left: 3px solid var(--role-accent);
+  background: var(--role-row-active);
+}
+
+.claimButton:hover,
+.capabilityArtifact button:hover,
+.sourceGraphArtifact a:hover,
+.evidenceList a:hover {
+  color: var(--role-accent-strong);
+}
+
+.claimButton:focus-visible,
+.artifactActions button:focus-visible,
+.capabilityArtifact button:focus-visible,
+.sourceGraphArtifact a:focus-visible,
+.evidenceList a:focus-visible,
+.foundationStrip a:focus-visible {
+  outline: 2px solid var(--role-accent);
+  outline-offset: 3px;
+}
+
+.stageHeader {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--role-border);
+}
+
+.stageHeader h2,
+.artifactOutput h2,
+.evidencePanel h2 {
+  margin: 0;
+  color: var(--role-ink);
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 2.4vw, 2.55rem);
+  font-weight: 560;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.stageHeader span,
+.artifactOutput p,
+.evidencePanel > span,
+.boundaryPanel p {
+  margin: 0;
+  color: var(--role-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.artifactActions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--role-border);
+  background: var(--role-surface-soft);
+}
+
+.artifactActions button {
+  width: 100%;
+  min-height: 2.45rem;
+  padding: 0.5rem 0.6rem;
+  border-right: 1px solid var(--role-border);
+  color: #344039;
+  font-size: 0.76rem;
+  font-weight: 760;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.artifactActions button:last-child {
+  border-right: 0;
+}
+
+.artifactActions button[aria-pressed="true"],
+.capabilityArtifact button[data-active="true"] {
+  background: var(--role-accent);
+  color: #ffffff;
+}
+
+.artifactActions button[aria-pressed="true"]:hover,
+.capabilityArtifact button[data-active="true"]:hover {
+  color: #ffffff;
+}
+
+.artifactOutput {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-height: 23rem;
+  padding: clamp(1rem, 2vw, 1.45rem);
+  border: 1px solid var(--role-border);
+  background: #fbfcf9;
+}
+
+.artifactOutput ul,
+.artifactOutput ol {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.artifactOutput li {
+  color: #2c3530;
+  font-size: 0.91rem;
+  line-height: 1.48;
+}
+
+.answerArtifact {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.answerArtifact li {
+  display: grid;
+  grid-template-columns: minmax(9rem, auto) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.answerArtifact a,
+.sourceGraphArtifact a,
+.evidenceList a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.roadmapArtifact ol {
+  counter-reset: roadmap;
+  padding-left: 0;
+  list-style: none;
+}
+
+.roadmapArtifact li {
+  position: relative;
+  padding: 0.72rem 0 0.72rem 2.1rem;
+  border-top: 1px solid var(--role-border);
+}
+
+.roadmapArtifact li::before {
+  counter-increment: roadmap;
+  content: counter(roadmap, decimal-leading-zero);
+  position: absolute;
+  top: 0.82rem;
+  left: 0;
+  color: var(--role-accent);
+  font-size: 0.7rem;
+  font-weight: 820;
+}
+
+.sourceGraphArtifact {
+  gap: 0.4rem;
+}
+
+.sourceGraphArtifact a,
+.evidenceList a {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.74rem 0;
+  border-bottom: 1px solid var(--role-border);
+}
+
+.sourceGraphArtifact span {
+  color: #2d3631;
+  font-size: 0.9rem;
+  font-weight: 680;
+  line-height: 1.35;
+}
+
+.sourceGraphArtifact small,
+.evidenceList small {
+  color: var(--role-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.caseArtifact {
+  border-left: 4px solid var(--role-accent);
+}
+
+.caseArtifact ul {
+  padding-left: 0;
+  list-style: none;
+}
+
+.caseArtifact li {
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--role-border);
+}
+
+.capabilityArtifact {
+  gap: 0;
+  padding: 0;
+}
+
+.capabilityArtifact > p,
+.capabilityArtifact > h2 {
+  padding: 1rem 1rem 0;
+}
+
+.capabilityArtifact button {
+  display: grid;
+  gap: 0.32rem;
+  width: 100%;
+  padding: 0.88rem 1rem;
+  border-top: 1px solid var(--role-border);
+}
+
+.capabilityArtifact button[data-active="true"] strong,
+.capabilityArtifact button[data-active="true"] span,
+.capabilityArtifact button[data-active="true"] small {
+  color: #ffffff;
+}
+
+.emptyEvidence {
+  padding: 0.82rem 0;
+  color: var(--role-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.boundaryPanel {
+  display: grid;
+  gap: 0.46rem;
+  margin-top: 0.4rem;
+  padding-top: 0.95rem;
+  border-top: 2px solid var(--role-border-strong);
+}
+
+.boundaryPanel strong {
+  color: var(--role-ink);
+  font-size: 0.78rem;
+  font-weight: 820;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.boundaryPanel p + strong {
+  margin-top: 0.55rem;
+}
+
+.foundationStrip {
+  display: grid;
+  grid-template-columns: minmax(13rem, 18rem) repeat(3, minmax(8rem, auto)) minmax(18rem, 1fr);
+  gap: 0.7rem 1rem;
+  align-items: center;
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+  border-top: 1px solid var(--role-border-strong);
+  color: var(--role-muted);
+}
+
+.foundationStrip strong {
+  color: var(--role-ink);
+  font-size: 0.86rem;
+  line-height: 1.25;
+}
+
+.foundationStrip a {
+  color: var(--role-accent);
+  font-size: 0.84rem;
+  font-weight: 760;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.foundationStrip a:hover {
+  color: var(--role-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.foundationStrip span {
+  min-width: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 1180px) {
+  .proofPath {
+    grid-template-columns: minmax(12rem, 15rem) minmax(22rem, 1fr) minmax(16rem, 19rem);
+  }
+
+  .artifactActions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .artifactActions button:nth-child(3n) {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .roleLens {
+    grid-template-columns: 1fr;
+  }
+
+  .roleLensCriteria {
+    grid-column: auto;
+    grid-row: auto;
+    align-content: start;
+  }
+
+  .proofPath {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .claimRail,
+  .evidencePanel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .claimRail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 1rem;
+  }
+
+  .claimRail > p {
+    grid-column: 1 / -1;
+  }
+
+  .artifactStage {
+    border-right: 0;
+    border-left: 0;
+  }
+
+  .foundationStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .foundationStrip strong,
+  .foundationStrip span {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .nav {
+    align-content: center;
+    gap: 0.7rem 0.95rem;
+  }
+
+  .nav a:first-child {
+    flex-basis: 100%;
+    margin-right: 0;
+  }
+
+  .nav a[aria-current="page"]::after {
+    bottom: -0.35rem;
+  }
+
+  .roleLens h1 {
+    font-size: clamp(2.35rem, 11vw, 3.55rem);
+  }
+
+  .claimRail {
+    grid-template-columns: 1fr;
+  }
+
+  .artifactActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .artifactActions button,
+  .artifactActions button:nth-child(3n) {
+    border-right: 1px solid var(--role-border);
+  }
+
+  .artifactActions button:nth-child(2n),
+  .artifactActions button:last-child {
+    border-right: 0;
+  }
+
+  .answerArtifact li {
+    grid-template-columns: 1fr;
+  }
+
+  .foundationStrip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .roleLens,
+  .proofPath,
+  .foundationStrip {
+    padding-right: 0.9rem;
+    padding-left: 0.9rem;
+  }
+
+  .roleLensCriteria li,
+  .artifactOutput li,
+  .stageHeader span,
+  .artifactOutput p,
+  .evidencePanel > span,
+  .boundaryPanel p {
+    font-size: 0.86rem;
+  }
+
+  .artifactStage {
+    padding-right: 0.9rem;
+    padding-left: 0.9rem;
+  }
+
+  .artifactOutput {
+    min-height: 18rem;
+  }
+}

@@ -5,6 +5,16 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import React from 'react';
 
+const cssModuleClassMap = new Proxy(
+  {},
+  { get: (_target, className) => (typeof className === 'string' ? className : '') },
+) as Record<string, string>;
+const cssModuleExports = { __esModule: true, default: cssModuleClassMap };
+
+require.extensions['.css'] = (module: { exports: typeof cssModuleExports }) => {
+  module.exports = cssModuleExports;
+};
+
 import {
   VERIFIED_DOSSIER_AI_PROMPT,
   VERIFIED_DOSSIER_ARTIFACTS,
