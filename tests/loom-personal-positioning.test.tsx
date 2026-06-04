@@ -53,7 +53,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
   assert.match(html, /Yiping Yin/);
-  assert.match(html, /Student · Builder · Learner · Sydney, Australia/);
+  assert.match(html, /UNSW student building Loom in Sydney/);
   assert.match(html, /class="vd-home vd-home--cover"/);
   assert.match(html, /class="vd-personal-stage"/);
   assert.match(html, /href="\/loom" aria-label="Open Loom product"/);
@@ -148,9 +148,10 @@ test('personal positioning CSS keeps the Home cover visual and non-operational',
 
   assert.match(coverNav, /display:\s*flex/);
   assert.match(coverNav, /justify-content:\s*center/);
-  assert.match(personalStage, /grid-template-columns:\s*minmax\(17rem,\s*0\.44fr\)\s+minmax\(0,\s*1\.56fr\)/);
-  assert.match(showcase, /grid-template-columns:\s*minmax\(20rem,\s*1\.05fr\)\s+minmax\(16rem,\s*0\.85fr\)/);
-  assert.match(showcase, /min-height:\s*clamp\(32rem,\s*64vh,\s*46rem\)/);
+  assert.match(personalStage, /display:\s*grid/);
+  assert.match(personalStage, /min-height:\s*calc\(100vh - 4\.25rem\)/);
+  assert.match(showcase, /grid-template-columns:\s*minmax\(24rem,\s*1\.16fr\)\s+minmax\(20rem,\s*0\.84fr\)/);
+  assert.match(showcase, /min-height:\s*clamp\(34rem,\s*68vh,\s*48rem\)/);
   assert.match(categoryStack, /display:\s*grid/);
   assert.match(categoryStack, /grid-template-rows:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(categoryCard, /position:\s*relative/);

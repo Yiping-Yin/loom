@@ -63,7 +63,7 @@ function assertSafeHref(href: string) {
 
 test('verified dossier home data preserves approved evidence workbench definition', () => {
   assert.equal(VERIFIED_DOSSIER_HOME_COPY.headline, 'Yiping Yin');
-  assert.equal(VERIFIED_DOSSIER_HOME_COPY.body, 'Source-backed personal profile');
+  assert.equal(VERIFIED_DOSSIER_HOME_COPY.body, 'UNSW student building Loom in Sydney');
   assert.match(
     VERIFIED_DOSSIER_HOME_COPY.shortDefinition,
     /About, education, experience, and Digital Me/,

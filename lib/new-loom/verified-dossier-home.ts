@@ -359,7 +359,7 @@ export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
 
 export const VERIFIED_DOSSIER_HOME_COPY = {
   headline: 'Yiping Yin',
-  body: 'Source-backed personal profile',
+  body: 'UNSW student building Loom in Sydney',
   shortDefinition:
     'About, education, experience, and Digital Me are backed by real sources, drafts, and cited outputs.',
 };

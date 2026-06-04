@@ -166,7 +166,7 @@ function ArtifactOutput({
 }
 
 export default function DigitalMeRoleOSClient() {
-  const [selectedClaimId, setSelectedClaimId] = useState(DIGITAL_ME_PROOF_PATH.claims[0].id);
+  const [selectedClaimId, setSelectedClaimId] = useState<string>(DIGITAL_ME_PROOF_PATH.claims[0].id);
   const [activeArtifactMode, setActiveArtifactMode] = useState<DigitalMeArtifactModeId>(
     DIGITAL_ME_PROOF_PATH.activeArtifactMode,
   );
