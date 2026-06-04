@@ -94,6 +94,9 @@ test('Digital Me renders source-grounded citations instead of a homepage ask pro
   assert.doesNotMatch(home, /useReferenceCitationCandidates/);
   assert.doesNotMatch(home, /citationCandidates\.length/);
   assert.doesNotMatch(home, /citationRegistryLabels=\{citationRegistryLabels\}/);
+  assert.doesNotMatch(digitalMePage, /VERIFIED_DOSSIER_AI_PROMPT/);
+  assert.doesNotMatch(digitalMePage, /resolveVerifiedDossierArtifact/);
+  assert.doesNotMatch(digitalMePage, /FileBadge/);
   assert.match(digitalMePage, /DIGITAL_ME_PROOF_PATH/);
   assert.match(digitalMePage, /DigitalMeRoleOSClient/);
   assert.match(digitalMePage, /digital-me-answer-title/);

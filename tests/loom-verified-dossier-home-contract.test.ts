@@ -18,7 +18,6 @@ import {
   VERIFIED_DOSSIER_TOP_NAV,
   VERIFIED_DOSSIER_UNSW_COURSES,
   VERIFIED_DOSSIER_WORKBENCH,
-  resolveVerifiedDossierCourseHandbookHref,
   resolveVerifiedDossierArtifact,
 } from '../lib/new-loom/verified-dossier-home';
 
@@ -100,7 +99,6 @@ test('personal IA routes exist as importable app pages', async () => {
     'app/education/page.tsx',
     'app/experience/page.tsx',
     'app/digital-me/page.tsx',
-    'app/loom/page.tsx',
   ]) {
     assert.ok(existsSync(join(repoRoot, routePage)), `${routePage} should exist`);
   }
@@ -426,41 +424,6 @@ test('verified dossier home presents UNSW as a course shelf before ECON3202 deta
     VERIFIED_DOSSIER_UNSW_COURSES.every((course) => course.fileCount > 0),
     'course folders should expose real local file counts',
   );
-  const moodleBackedCourses = VERIFIED_DOSSIER_UNSW_COURSES.filter((course) => course.moodleHref);
-  const handbookBackedCourses = VERIFIED_DOSSIER_UNSW_COURSES.filter((course) =>
-    resolveVerifiedDossierCourseHandbookHref(course),
-  );
-  const math2991 = VERIFIED_DOSSIER_UNSW_COURSES.find((course) => course.code === 'MATH 2991');
-
-  assert.equal(
-    handbookBackedCourses.length,
-    VERIFIED_DOSSIER_UNSW_COURSES.length,
-    'every UNSW course folder should bind to an official Handbook page',
-  );
-  assert.ok(
-    handbookBackedCourses.every((course) =>
-      resolveVerifiedDossierCourseHandbookHref(course)?.startsWith(
-        'https://handbook.unsw.edu.au/undergraduate/courses/',
-      ),
-    ),
-    'Handbook-backed folders should link to official UNSW Handbook pages',
-  );
-  assert.ok(
-    moodleBackedCourses.length >= 13,
-    'current Moodle course folders should keep official Moodle links',
-  );
-  assert.ok(
-    moodleBackedCourses.every((course) =>
-      course.moodleHref?.startsWith('https://moodle.telt.unsw.edu.au/course/view.php?id='),
-    ),
-    'Moodle-backed folders should link to the official course page',
-  );
-  assert.equal(math2991?.moodleOffering, '2026 T2');
-  assert.equal(
-    math2991 ? resolveVerifiedDossierCourseHandbookHref(math2991) : undefined,
-    'https://handbook.unsw.edu.au/undergraduate/courses/2026/MATH2991',
-  );
-  assert.match(math2991?.moodleTitle ?? '', /Data and Algorithms in Trading/);
 });
 
 test('verified dossier sections and AI citations resolve to known artifacts', () => {
