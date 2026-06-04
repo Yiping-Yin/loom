@@ -11767,6 +11767,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-category-visual {
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 0.46rem;
   min-width: 0;
   aspect-ratio: 1.58;
@@ -11774,6 +11775,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border: 1px solid rgba(31, 58, 47, 0.13);
   border-radius: 7px;
   background: #f9fbf8;
+  overflow: hidden;
 }
 
 .vd-category-visual__media {
@@ -11781,6 +11783,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.34rem;
   min-height: 0;
+  overflow: hidden;
 }
 
 .vd-category-visual__media img {
@@ -11798,6 +11801,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-category-visual--profile-photo .vd-category-visual__media,
 .vd-category-visual--document-preview .vd-category-visual__media {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.vd-category-visual--profile-photo {
+  aspect-ratio: 1.12;
+}
+
+.vd-category-visual--profile-photo .vd-category-visual__media img {
+  object-position: center 28%;
 }
 
 .vd-category-visual--logo-strip .vd-category-visual__media img {

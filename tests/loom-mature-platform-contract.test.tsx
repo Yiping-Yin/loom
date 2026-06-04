@@ -21,6 +21,23 @@ function readRepo(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
+function cssBlock(css: string, selector: string) {
+  const start = css.indexOf(`${selector} {`);
+  assert.notEqual(start, -1, `${selector} block should exist`);
+
+  const openBrace = css.indexOf('{', start);
+  let depth = 0;
+  for (let index = openBrace; index < css.length; index += 1) {
+    if (css[index] === '{') depth += 1;
+    if (css[index] === '}') {
+      depth -= 1;
+      if (depth === 0) return css.slice(start, index + 1);
+    }
+  }
+
+  assert.fail(`${selector} block should close`);
+}
+
 test('personal platform data keeps five sections and the mature section model', () => {
   assert.deepEqual(
     PERSONAL_PLATFORM_SECTIONS.map((section) => section.label),
@@ -113,12 +130,18 @@ test('HomeClient renders mature platform modules on first paint', () => {
 
 test('homepage CSS protects picture-first personal category cards', () => {
   const css = readRepo('app/globals.css');
+  const categoryVisual = cssBlock(css, '.vd-category-visual');
+  const categoryMedia = cssBlock(css, '.vd-category-visual__media');
+  const categoryMediaImage = cssBlock(css, '.vd-category-visual__media img');
+  const categoryBody = cssBlock(css, '.vd-personal-category-card__body');
 
-  assert.match(css, /\.vd-category-visual\s*{[\s\S]*aspect-ratio/);
-  assert.match(css, /\.vd-category-visual__media\s*{[\s\S]*grid-template-columns/);
-  assert.match(css, /\.vd-category-visual__media img\s*{[\s\S]*object-fit:\s*cover/);
-  assert.match(css, /\.vd-personal-category-card__body\s*{[\s\S]*grid-template-rows/);
-  assert.match(css, /@media \(max-width: 680px\)[\s\S]*\.vd-category-visual/);
+  assert.match(categoryVisual, /aspect-ratio:\s*1\.58/);
+  assert.match(categoryVisual, /grid-template-rows:\s*minmax\(0,\s*1fr\)\s+auto/);
+  assert.match(categoryVisual, /overflow:\s*hidden/);
+  assert.match(categoryMedia, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(categoryMedia, /overflow:\s*hidden/);
+  assert.match(categoryMediaImage, /object-fit:\s*cover/);
+  assert.match(categoryBody, /grid-template-rows:\s*auto\s+auto\s+auto\s+auto/);
 });
 
 test('repo homepage exposes the personal knowledge identity evidence model', () => {

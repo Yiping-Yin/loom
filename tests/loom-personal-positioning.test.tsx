@@ -14,6 +14,35 @@ function read(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
+function cssBlock(css: string, selector: string, requiredContent?: string) {
+  let searchFrom = 0;
+
+  while (searchFrom < css.length) {
+    const start = css.indexOf(`${selector} {`, searchFrom);
+    assert.notEqual(start, -1, `${selector} block should exist`);
+
+    const openBrace = css.indexOf('{', start);
+    let depth = 0;
+    let advanced = false;
+    for (let index = openBrace; index < css.length; index += 1) {
+      if (css[index] === '{') depth += 1;
+      if (css[index] === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          const block = css.slice(start, index + 1);
+          if (!requiredContent || block.includes(requiredContent)) return block;
+          searchFrom = index + 1;
+          advanced = true;
+          break;
+        }
+      }
+    }
+    if (!advanced) assert.fail(`${selector} block should close`);
+  }
+
+  assert.fail(`${selector} block should include ${requiredContent}`);
+}
+
 test('home first paint frames Loom as an inspectable personal knowledge identity', () => {
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = require('react-dom/server') as {
@@ -102,12 +131,13 @@ test('verified dossier data contract keeps the approved short definition', () =>
 
 test('personal positioning CSS keeps category visuals stable and compact', () => {
   const css = read('app/globals.css');
+  const profilePhoto = cssBlock(css, '.vd-category-visual--profile-photo');
+  const profilePhotoImage = cssBlock(css, '.vd-category-visual--profile-photo .vd-category-visual__media img');
+  const mobile = cssBlock(css, '@media (max-width: 680px)', '.vd-category-visual');
 
-  assert.match(css, /\.vd-category-visual\s*{[\s\S]*aspect-ratio/);
-  assert.match(css, /\.vd-category-visual__media\s*{[\s\S]*grid-template-columns/);
-  assert.match(css, /\.vd-category-visual__media img\s*{[\s\S]*object-fit:\s*cover/);
-  assert.match(css, /\.vd-personal-category-card__body\s*{[\s\S]*grid-template-rows/);
-  assert.match(css, /@media \(max-width: 680px\)[\s\S]*\.vd-category-visual/);
+  assert.match(profilePhoto, /aspect-ratio:\s*1\.12/);
+  assert.match(profilePhotoImage, /object-position:\s*center\s+28%/);
+  assert.match(mobile, /\.vd-category-visual\s*{[\s\S]*aspect-ratio:\s*auto/);
 });
 
 test('Sources and Draft descriptions serve personal learning paths, resources, portfolio, and process work', () => {
