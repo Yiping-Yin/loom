@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getAiSurface } from '../lib/ai/stage-model';
-import { openLoomOverlay, openLoomReview } from '../lib/ai/surface-actions';
+import { openLoomReview } from '../lib/ai/surface-actions';
 import { contextFromPathname } from '../lib/doc-context';
 import { REFRESH_RESUME_KEY, type RefreshResumePayload } from '../lib/refresh-resume';
 import { summarizeLearningSurface, type LearningSurfaceSummary } from '../lib/learning-status';
@@ -98,11 +98,9 @@ export function RefreshCoach() {
     openLoomReview(learning.latestAnchorId);
   };
 
-  const openOverlay = (id: 'rehearsal' | 'examiner') => {
-    openLoomOverlay({ id });
-  };
+  const openDraft = () => router.push('/draft');
 
-  const openPatterns = () => router.push(ctx.docId ? `/patterns?focus=${encodeURIComponent(ctx.docId)}` : '/patterns');
+  const openReaderNotes = () => router.push('/sources#reader-notes');
   const primaryAction = refreshPrimaryAction(learning.nextAction);
   const bodyText = refreshBodyText(learning, payload?.source);
 
@@ -137,26 +135,26 @@ export function RefreshCoach() {
           }}
         >
           {completion === 'settled'
-            ? 'Re-finalized'
+            ? 'Reader notes updated'
             : completion === 'verified'
-              ? 'Passed'
+              ? 'Review saved'
               : 'Keep this active'}
         </span>
       </div>
 
       <div className="t-footnote" style={{ color: 'var(--fg-secondary)', lineHeight: 1.5 }}>
         {completion === 'settled'
-          ? 'This panel is no longer stale. It has been re-finalized in your patterns.'
+          ? 'This reader note is no longer stale. Open reader notes and update the source context if it drifts again.'
           : completion === 'verified'
-            ? 'Your latest examiner pass succeeded. Keep going only if you want to deepen the understanding.'
+            ? 'Your latest source check succeeded. Keep going only if you want to extend the understanding.'
             : bodyText}
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {completion === 'settled' ? (
           <>
-            <button type="button" onClick={openPatterns} style={actionStyle(true)}>
-              Open panel in Patterns
+            <button type="button" onClick={openReaderNotes} style={actionStyle(true)}>
+              Open reader notes
             </button>
           </>
         ) : completion === 'verified' ? (
@@ -171,8 +169,8 @@ export function RefreshCoach() {
               type="button"
               onClick={() => {
                 if (primaryAction === 'review') openReview();
-                else if (primaryAction === 'rehearsal') openOverlay('rehearsal');
-                else if (primaryAction === 'examiner') openOverlay('examiner');
+                else if (primaryAction === 'rehearsal') openDraft();
+                else if (primaryAction === 'examiner') openReaderNotes();
               }}
               style={actionStyle(true)}
             >
@@ -200,15 +198,15 @@ function refreshPrimaryAction(nextAction: LearningSurfaceSummary['nextAction']) 
 
 function refreshBodyText(learning: LearningSurfaceSummary, source?: RefreshResumePayload['source']) {
   if (learning.nextAction === 'refresh') {
-    return 'Re-enter review and warm the panel back up.';
+    return 'Re-enter review and bring the reader note back up to date.';
   }
   if (learning.nextAction === 'rehearse') {
-    return 'The panel needs another written pass before it is stable.';
+    return 'The reader note needs another written pass before it is stable.';
   }
   if (learning.nextAction === 'examine') {
-    return 'The panel is ready to verify while the thinking is still fresh.';
+    return 'The reader note is ready to review while the thinking is still fresh.';
   }
-  return 'Review the current shape and decide whether to deepen or finalize it.';
+  return 'Review the current shape and decide whether to extend or finalize it.';
 }
 
 function actionStyle(primary: boolean) {

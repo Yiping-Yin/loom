@@ -124,15 +124,6 @@ function extLabel(ext: string) {
   return ext.replace(/^\./, '').toUpperCase();
 }
 
-function SearchIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function ArrowIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1388,8 +1379,8 @@ export function CategoryLandingClient({
 
   return (
     <main className={`vd-home ${styles.page}`} aria-labelledby={`${dossier.id}-shelf-title`}>
-      <nav className="vd-nav" aria-label="Verified dossier navigation">
-        <a className="vd-wordmark" href="/" aria-label="Loom home">
+      <nav className="vd-nav vd-nav--simple" aria-label="Verified dossier navigation">
+        <a className="vd-wordmark" href="/loom" aria-label="Open Loom product">
           Loom
         </a>
         <div className="vd-nav__links">
@@ -1399,13 +1390,6 @@ export function CategoryLandingClient({
             </a>
           ))}
         </div>
-        <label className="vd-search">
-          <SearchIcon />
-          <input type="search" placeholder={`Search ${verifiedShelf.label}`} aria-label={`Search ${verifiedShelf.label}`} />
-        </label>
-        <a className="vd-avatar" href="/about" aria-label="Open Yiping Yin profile">
-          <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
-        </a>
       </nav>
 
       <section className={styles.hero}>

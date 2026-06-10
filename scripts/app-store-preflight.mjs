@@ -15,7 +15,7 @@ const maxKeywordsChars = 100;
 const maxPromotionalTextChars = 170;
 const maxDescriptionChars = 4000;
 const expectedScreenshots = [
-  '01-library.jpg',
+  '01-sources.jpg',
   '02-home.jpg',
   '03-draft.jpg',
   '04-patterns.jpg',

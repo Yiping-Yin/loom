@@ -109,12 +109,12 @@ export const PERSONAL_PLATFORM_SECTIONS: PersonalPlatformSection[] = [
     label: 'UNSW',
     href: '/knowledge/unsw',
     summary: 'The academic shelf where course materials, notes, and study outputs become a traceable learning path.',
-    status: 'Reference shelf anchors formal coursework and source-backed study progress.',
-    nextAction: 'Keep weekly sources, notes, and draft outputs connected to assessment goals.',
-    pathSteps: ['Course sources', 'Weekly study path', 'Assessment-ready outputs'],
+    status: 'ECON 3202 is active as the first complete source-backed course path.',
+    nextAction: 'Turn ECON 3202 weeks and problem sets into visible study evidence.',
+    pathSteps: ['ECON 3202 course source', 'Weekly mathematical path', 'Problem-set outputs'],
     sourceGroups: [
-      { title: 'Official sources', items: ['Handbook pages', 'Moodle pages', 'Course outlines'] },
-      { title: 'Study sources', items: ['Lecture slides', 'Week notes', 'Problem sets'] },
+      { title: 'Official sources', items: ['ECON3202 handbook', 'Course outline', 'Moodle source'] },
+      { title: 'Study sources', items: ['Weekly PDFs', 'Reference books', 'Problem sets'] },
     ],
     processItems: [
       'Verify official source truth before summarizing.',
@@ -122,8 +122,8 @@ export const PERSONAL_PLATFORM_SECTIONS: PersonalPlatformSection[] = [
     ],
     outputs: [
       {
-        title: 'Course study shelf',
-        text: 'A course-by-course portfolio of learning evidence, notes, and next actions.',
+        title: 'ECON 3202 course shelf',
+        text: 'A course path that shows source truth, weekly material, problem-set evidence, and next actions.',
         href: '/knowledge/unsw',
       },
     ],

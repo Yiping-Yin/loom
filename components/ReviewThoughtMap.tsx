@@ -28,7 +28,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LearningTargetStateControls } from './LearningTargetStateControls';
 import { WorkSessionHandoff } from './WorkSessionHandoff';
 import { SelectionEditToolbar } from './SelectionEditToolbar';
-import { openLoomOverlay, openLoomReview } from '../lib/ai/surface-actions';
+import { openLoomReview } from '../lib/ai/surface-actions';
 import { matchesThoughtContainerCrystallizeEvent } from '../lib/thought-containers';
 import { contextFromPathname } from '../lib/doc-context';
 import { buildLearningTargets, buildPanelLearningTarget, type LearningTarget } from '../lib/learning-targets';
@@ -477,7 +477,7 @@ export function ReviewThoughtMap({ active }: { active: boolean }) {
             gap: 8,
           }}
         >
-          <span style={{ fontSize: '0.84rem', opacity: 0.9 }}>Thought Map</span>
+          <span style={{ fontSize: '0.84rem', opacity: 0.9 }}>Reader notes</span>
           <span aria-hidden style={{ flex: 1, height: 1, background: 'var(--mat-border)' }} />
           <span style={{ color: 'var(--muted)', fontSize: '0.8rem', opacity: 0.7 }}>{thoughtItems.length}</span>
           {smallScreen && (
@@ -513,8 +513,8 @@ export function ReviewThoughtMap({ active }: { active: boolean }) {
           panel={currentPanel}
           panelCrystallized={panelCrystallized}
           panelRelations={panelRelations}
-          onOpenPatterns={() => router.push(ctx.docId ? `/patterns?focus=${encodeURIComponent(ctx.docId)}` : '/patterns')}
-          onOpenRelations={() => router.push(ctx.docId ? `/weaves?focus=${encodeURIComponent(ctx.docId)}` : '/weaves')}
+          onOpenPatterns={() => router.push('/sources#reader-notes')}
+          onOpenRelations={() => router.push('/sources#reader-notes')}
           onUncrystallize={uncrystallizePanel}
           currentSessionTarget={currentSessionTarget}
           nextSessionTarget={nextSessionTarget}
@@ -838,7 +838,7 @@ function WideThoughtList({
           panel={panel}
           panelCrystallized={panelCrystallized}
           panelRelations={panelRelations}
-          onOpenRelatedDoc={(docId) => window.location.assign(`/weaves?focus=${encodeURIComponent(docId)}`)}
+          onOpenRelatedDoc={() => window.location.assign('/sources#reader-notes')}
           currentSessionTarget={currentSessionTarget}
           nextSessionTarget={nextSessionTarget}
           highlightPanelRevision={highlightPanelRevision}
@@ -933,7 +933,7 @@ function WideThoughtHeader({
     );
   };
 
-  const heading = thought.summary.trim() || thought.content.trim() || 'This weave is still taking shape.';
+  const heading = thought.summary.trim() || thought.content.trim() || 'This reader note is still taking shape.';
   const excerpt = thought.quote?.trim() || thought.anchorBlockText?.trim() || '';
   const revisions = panel ? sortedPanelRevisions(panel) : [];
   const currentRevision = revisions[0] ?? null;
@@ -944,6 +944,7 @@ function WideThoughtHeader({
   const panelTarget = useMemo(() => (panel ? buildPanelLearningTarget(panel) : null), [panel]);
   const targetState = useLearningTargetState();
   const workSession = useWorkSession();
+  const router = useRouter();
   const sessionCurrentMatches = Boolean(panelTarget && currentSessionTarget && panelTarget.id === currentSessionTarget.id);
   const panelChangeResolved = panelTarget ? isTargetChangeResolved(panelTarget, workSession.lastCompletedSession) : false;
 
@@ -1065,7 +1066,7 @@ function WideThoughtHeader({
                 type="button"
                 onClick={() => {
                   if (panelTarget) workSession.setResolutionKind(panelTarget, 'reworked');
-                  openLoomOverlay({ id: 'rehearsal', seedDraft: revisionSeed.seedDraft, seedLabel: revisionSeed.seedLabel });
+                  router.push('/draft');
                 }}
                 style={settledActionStyle(true)}
               >
@@ -1076,7 +1077,7 @@ function WideThoughtHeader({
               type="button"
               onClick={() => {
                 if (panelTarget) workSession.setResolutionKind(panelTarget, 'verified');
-                openLoomOverlay({ id: 'examiner' });
+                router.push('/sources#reader-notes');
               }}
               style={settledActionStyle(false)}
             >
@@ -1497,7 +1498,17 @@ function WideThoughtCard({
               marginBottom: 6,
             }}
           >
-            Settled into Patterns
+            Settled into a reader note
+          </div>
+          <div
+            style={{
+              color: 'var(--accent)',
+              fontSize: '0.78rem',
+              lineHeight: 1.5,
+              marginBottom: 8,
+            }}
+          >
+            Saved to reader notes.
           </div>
           <div
             style={{
@@ -1507,14 +1518,14 @@ function WideThoughtCard({
               marginBottom: 8,
             }}
           >
-            This panel is no longer provisional. If you want to keep weaving here, uncrystallize it first.
+            This reader note is no longer provisional. If you want to keep editing here, uncrystallize it first.
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button type="button" onClick={onOpenPatterns} style={settledActionStyle(true)}>
-              Patterns
+              Reader notes
             </button>
             <button type="button" onClick={onOpenRelations} style={settledActionStyle(false)}>
-              Weaves
+              Note connections
             </button>
             <button type="button" onClick={() => void onUncrystallize()} style={settledActionStyle(false)}>
               Uncrystallize
@@ -1539,7 +1550,7 @@ function WideThoughtCard({
               marginBottom: 6,
             }}
           >
-            Local thread locked
+            Local note locked
           </div>
           <div
             style={{

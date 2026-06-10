@@ -267,7 +267,7 @@ export default function DocClient() {
       <main className="prose-notion">
         <TrackView id={doc.trackId} title={doc.title} href={doc.href} />
         <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
-          <Link href="/desk">Desk</Link> › <Link href="/uploads">Intake</Link>
+          <Link href="/sources">Sources</Link>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <h1 style={{ flex: 1 }}>{doc.title}</h1>
@@ -317,8 +317,8 @@ export default function DocClient() {
               marginBottom: 'var(--space-3)',
             }}
           >
-            <Link href="/desk" className="t-caption" style={{ color: 'var(--muted)', textDecoration: 'none', fontWeight: 600 }}>
-              Desk
+            <Link href="/sources" className="t-caption" style={{ color: 'var(--muted)', textDecoration: 'none', fontWeight: 600 }}>
+              Sources
             </Link>
             <span className="t-caption" style={{ color: 'var(--muted)' }}>›</span>
             <Link

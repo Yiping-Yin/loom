@@ -1,5 +1,7 @@
-import DeskPage from './DeskPage';
+import { redirect } from 'next/navigation';
 
-export const metadata = { title: 'Desk · Loom' };
+export const metadata = { title: 'Sources · Loom' };
 
-export default DeskPage;
+export default function LegacyDeskRoutePage() {
+  redirect('/sources');
+}

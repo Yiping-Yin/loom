@@ -25,6 +25,12 @@ const nextConfig = {
     process.env.LOOM_NEXT_OUTPUT === 'standalone' ? 'standalone'
     : process.env.LOOM_NEXT_OUTPUT === 'export' ? 'export'
     : undefined,
+  // The default dev indicator floats over the bottom-left corner and obscures
+  // mobile previews of Loom's reading surfaces.
+  devIndicators: false,
+  // The in-app browser uses 127.0.0.1 while the dev server listens on
+  // 0.0.0.0, so allow that local origin for Next internal assets.
+  allowedDevOrigins: ['127.0.0.1'],
   // Static export writes image bitmaps via an optimizer that requires
   // a runtime. Disable so the export mode works with untouched image tags.
   images: process.env.LOOM_NEXT_OUTPUT === 'export' ? { unoptimized: true } : undefined,

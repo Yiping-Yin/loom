@@ -1,13 +1,7 @@
-import FrontispieceClient from '../FrontispieceClient';
+import { redirect } from 'next/navigation';
 
-export const metadata = { title: 'Frontispiece · Loom' };
+export const metadata = { title: 'Sources · Loom' };
 
-/**
- * /frontispiece — The book's title page (front matter).
- *
- * Ceremonial opening — Loom wordmark, edition, tagline. Like Colophon
- * this is chrome/identity, so art fonts are allowed.
- */
-export default function FrontispiecePage() {
-  return <FrontispieceClient />;
+export default function LegacyFrontispiecePage() {
+  redirect('/sources');
 }

@@ -232,7 +232,7 @@ function CaptureRenderInner() {
           <PageFrame
             breadcrumb={
               <a
-                href="loom://bundle/loom-render/captures/"
+                href="/sources"
                 style={{
                   color: 'var(--thread)',
                   textDecoration: 'none',
@@ -244,7 +244,7 @@ function CaptureRenderInner() {
                 }}
               >
                 <span style={{ fontSize: 'var(--font-caption)' }}>‹</span>
-                <span>Captures</span>
+                <span>Sources</span>
               </a>
             }
             eyebrow={domain || 'Capture'}

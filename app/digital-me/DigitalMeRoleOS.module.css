@@ -1,20 +1,48 @@
 .roleOsPage {
-  --role-page: #f6f7f3;
-  --role-surface: #ffffff;
-  --role-surface-soft: #eef2ec;
-  --role-ink: #111714;
-  --role-muted: #657068;
-  --role-subtle: #89938a;
-  --role-border: #d9e1d8;
-  --role-border-strong: #bdc9bf;
-  --role-accent: #15513f;
-  --role-accent-strong: #0d3a2d;
-  --role-row-active: #edf5ef;
+  --role-page: #0B0B0B;
+  --role-surface: #101010;
+  --role-surface-soft: #0d0d0d;
+  --role-ink: #F4F1EB;
+  --role-muted: #9A9892;
+  --role-subtle: #6B6A65;
+  --role-border: #212120;
+  --role-border-strong: #2C2B29;
+  --role-accent: #C9A15C;
+  --role-accent-strong: #D8B978;
+  --role-row-active: #141210;
+  --role-ok: #5FA37E;
+  --role-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --role-shell: 1320px;
+  --role-gutter: clamp(28px, 4vw, 48px);
+  /* Glass material on the dark base (chrome layers only) */
+  --role-glass: rgba(18, 18, 18, 0.55);
+  --role-glass-border: rgba(255, 255, 255, 0.07);
+  --role-glass-shadow: 0 16px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --role-chrome: rgba(11, 11, 11, 0.6);
+  position: relative;
+  width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  background: var(--role-page);
+  /* Subtle warm graphite glow top-center fading to near-black, so glass has something to refract */
+  background:
+    radial-gradient(120% 80% at 50% -8%, #14130e 0%, var(--role-page) 55%),
+    var(--role-page);
   color: var(--role-ink);
   font-family: var(--sans);
+}
+
+/* Full-viewport dark canvas painted behind everything so no browser-default
+   white can leak in side gutters or the bottom band — the outer layout
+   wrapper and html/body are transparent on this page. */
+.roleOsPage::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 80% at 50% -8%, #14130e 0%, var(--role-page) 55%),
+    var(--role-page);
+  pointer-events: none;
 }
 
 .roleOsPage *,
@@ -32,17 +60,19 @@
   align-items: center;
   gap: 0.55rem 1.35rem;
   min-height: 4rem;
-  padding: 0.7rem clamp(1rem, 3vw, 3rem);
-  border-bottom: 1px solid var(--role-border);
-  background: rgba(246, 247, 243, 0.94);
-  backdrop-filter: blur(16px);
+  padding-block: 0.7rem;
+  padding-inline: max(var(--role-gutter), calc((100% - var(--role-shell)) / 2));
+  border-bottom: 1px solid var(--role-glass-border);
+  background: var(--role-chrome);
+  -webkit-backdrop-filter: blur(24px) saturate(115%);
+  backdrop-filter: blur(24px) saturate(115%);
 }
 
 .nav a {
   position: relative;
-  color: #313a35;
+  color: var(--role-muted);
   font-size: 0.84rem;
-  font-weight: 720;
+  font-weight: 560;
   line-height: 1.1;
   text-decoration: none;
   white-space: nowrap;
@@ -57,9 +87,12 @@
   line-height: 0.95;
 }
 
-.nav a:hover,
+.nav a:hover {
+  color: var(--role-ink);
+}
+
 .nav a[aria-current="page"] {
-  color: var(--role-accent-strong);
+  color: var(--role-ink);
 }
 
 .nav a[aria-current="page"]::after {
@@ -69,16 +102,17 @@
   bottom: -1.05rem;
   left: 0;
   height: 2px;
-  background: currentColor;
+  background: var(--role-accent);
 }
 
 .roleLens,
 .proofPath,
 .foundationStrip {
-  width: min(100%, 116rem);
+  width: 100%;
+  max-width: var(--role-shell);
   margin: 0 auto;
-  padding-right: clamp(1rem, 3vw, 3rem);
-  padding-left: clamp(1rem, 3vw, 3rem);
+  padding-right: var(--role-gutter);
+  padding-left: var(--role-gutter);
 }
 
 .roleLens {
@@ -86,9 +120,14 @@
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 30rem);
   gap: 1rem clamp(2rem, 4vw, 4.2rem);
   align-items: end;
-  padding-top: clamp(2.4rem, 5vw, 4.8rem);
-  padding-bottom: clamp(1.8rem, 4vw, 3rem);
-  border-bottom: 1px solid var(--role-border);
+  margin-top: clamp(1.6rem, 3vw, 2.6rem);
+  padding: clamp(2.2rem, 4vw, 3.4rem) clamp(1.6rem, 3vw, 2.6rem) clamp(1.8rem, 3.5vw, 2.8rem);
+  border: 1px solid var(--role-glass-border);
+  border-radius: 14px;
+  background: var(--role-glass);
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+  backdrop-filter: blur(20px) saturate(115%);
+  box-shadow: var(--role-glass-shadow);
 }
 
 .roleLens p,
@@ -98,9 +137,10 @@
 .evidencePanel > p {
   margin: 0;
   color: var(--role-accent);
+  font-family: var(--role-mono);
   font-size: 0.7rem;
-  font-weight: 820;
-  letter-spacing: 0;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -111,7 +151,7 @@
   color: var(--role-ink);
   font-family: var(--display);
   font-size: clamp(2.55rem, 4.8vw, 5.2rem);
-  font-weight: 560;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 0.95;
 }
@@ -144,9 +184,9 @@
   min-width: 0;
   padding: 0.72rem 0;
   border-bottom: 1px solid var(--role-border);
-  color: #334039;
+  color: var(--role-ink);
   font-size: 0.86rem;
-  font-weight: 680;
+  font-weight: 560;
   line-height: 1.35;
 }
 
@@ -157,17 +197,23 @@
 .proofPath {
   display: grid;
   grid-template-columns: minmax(13.5rem, 18rem) minmax(26rem, 1fr) minmax(18rem, 24rem);
-  gap: 0;
+  gap: clamp(0.9rem, 1.6vw, 1.4rem);
   align-items: start;
   padding-top: clamp(1.6rem, 3vw, 2.4rem);
   padding-bottom: clamp(1.9rem, 4vw, 3rem);
 }
 
+/* Glass chrome shared by the three proof-path panels */
 .claimRail,
 .artifactStage,
 .evidencePanel {
   min-width: 0;
-  border-top: 1px solid var(--role-border-strong);
+  border: 1px solid var(--role-glass-border);
+  border-radius: 12px;
+  background: var(--role-glass);
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+  backdrop-filter: blur(20px) saturate(115%);
+  box-shadow: var(--role-glass-shadow);
 }
 
 .claimRail,
@@ -180,23 +226,20 @@
 }
 
 .claimRail {
-  padding: 1rem 1.1rem 1rem 0;
+  padding: 1rem 1.1rem;
 }
 
 .artifactStage {
   display: grid;
   gap: 1rem;
   padding: 1rem clamp(1.1rem, 2vw, 1.6rem);
-  border-right: 1px solid var(--role-border);
-  border-left: 1px solid var(--role-border);
-  background: var(--role-surface);
 }
 
 .evidencePanel {
   display: grid;
   align-content: start;
   gap: 0.78rem;
-  padding: 1rem 0 1rem 1.1rem;
+  padding: 1rem 1.1rem;
 }
 
 .claimButton,
@@ -272,7 +315,7 @@
   color: var(--role-ink);
   font-family: var(--display);
   font-size: clamp(1.6rem, 2.4vw, 2.55rem);
-  font-weight: 560;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1;
 }
@@ -291,8 +334,13 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
-  border: 1px solid var(--role-border);
-  background: var(--role-surface-soft);
+  border: 1px solid var(--role-glass-border);
+  border-radius: 10px;
+  background: rgba(18, 18, 18, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+  backdrop-filter: blur(18px) saturate(115%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
 }
 
 .artifactActions button {
@@ -300,9 +348,9 @@
   min-height: 2.45rem;
   padding: 0.5rem 0.6rem;
   border-right: 1px solid var(--role-border);
-  color: #344039;
+  color: var(--role-muted);
   font-size: 0.76rem;
-  font-weight: 760;
+  font-weight: 560;
   line-height: 1.2;
   text-align: center;
 }
@@ -314,12 +362,12 @@
 .artifactActions button[aria-pressed="true"],
 .capabilityArtifact button[data-active="true"] {
   background: var(--role-accent);
-  color: #ffffff;
+  color: #0B0B0B;
 }
 
 .artifactActions button[aria-pressed="true"]:hover,
 .capabilityArtifact button[data-active="true"]:hover {
-  color: #ffffff;
+  color: #0B0B0B;
 }
 
 .artifactOutput {
@@ -328,8 +376,9 @@
   gap: 1rem;
   min-height: 23rem;
   padding: clamp(1rem, 2vw, 1.45rem);
-  border: 1px solid var(--role-border);
-  background: #fbfcf9;
+  border: 1px solid var(--role-glass-border);
+  border-radius: 10px;
+  background: rgba(13, 13, 13, 0.5);
 }
 
 .artifactOutput ul,
@@ -341,7 +390,7 @@
 }
 
 .artifactOutput li {
-  color: #2c3530;
+  color: var(--role-ink);
   font-size: 0.91rem;
   line-height: 1.48;
 }
@@ -383,8 +432,10 @@
   top: 0.82rem;
   left: 0;
   color: var(--role-accent);
+  font-family: var(--role-mono);
   font-size: 0.7rem;
-  font-weight: 820;
+  font-weight: 500;
+  letter-spacing: 0.05em;
 }
 
 .sourceGraphArtifact {
@@ -400,9 +451,9 @@
 }
 
 .sourceGraphArtifact span {
-  color: #2d3631;
+  color: var(--role-ink);
   font-size: 0.9rem;
-  font-weight: 680;
+  font-weight: 560;
   line-height: 1.35;
 }
 
@@ -448,7 +499,7 @@
 .capabilityArtifact button[data-active="true"] strong,
 .capabilityArtifact button[data-active="true"] span,
 .capabilityArtifact button[data-active="true"] small {
-  color: #ffffff;
+  color: #0B0B0B;
 }
 
 .emptyEvidence {
@@ -467,9 +518,11 @@
 }
 
 .boundaryPanel strong {
-  color: var(--role-ink);
-  font-size: 0.78rem;
-  font-weight: 820;
+  color: var(--role-accent);
+  font-family: var(--role-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -498,7 +551,7 @@
 .foundationStrip a {
   color: var(--role-accent);
   font-size: 0.84rem;
-  font-weight: 760;
+  font-weight: 560;
   line-height: 1.25;
   text-decoration: none;
 }
@@ -550,8 +603,6 @@
     position: static;
     max-height: none;
     overflow: visible;
-    padding-right: 0;
-    padding-left: 0;
   }
 
   .claimRail {
@@ -562,11 +613,6 @@
 
   .claimRail > p {
     grid-column: 1 / -1;
-  }
-
-  .artifactStage {
-    border-right: 0;
-    border-left: 0;
   }
 
   .foundationStrip {
@@ -649,5 +695,136 @@
 
   .artifactOutput {
     min-height: 18rem;
+  }
+}
+
+/* Live Market Room — the Optibook replica as a launchable Digital Me feature.
+   Immersive real-terminal backdrop, scrim, gold launch affordance. */
+.marketRoom {
+  position: relative;
+  max-width: var(--role-shell);
+  margin: 26px auto 0;
+  padding: 0;
+  border: 1px solid var(--role-glass-border);
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 330px;
+  display: flex;
+  align-items: flex-end;
+  box-shadow: var(--role-glass-shadow);
+}
+
+.marketRoomShot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  opacity: 0.85;
+}
+
+.marketRoomScrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(11, 11, 11, 0.88) 0%, rgba(11, 11, 11, 0.55) 42%, rgba(11, 11, 11, 0.12) 75%, rgba(11, 11, 11, 0.05) 100%),
+    linear-gradient(180deg, rgba(11, 11, 11, 0.25) 0%, rgba(11, 11, 11, 0.08) 38%, rgba(11, 11, 11, 0.7) 80%, rgba(11, 11, 11, 0.92) 100%);
+}
+
+.marketRoomBody {
+  position: relative;
+  z-index: 1;
+  padding: 26px 30px 28px;
+  max-width: 46rem;
+}
+
+.marketRoomEyebrow {
+  margin: 0;
+  font-family: var(--role-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--role-accent);
+}
+
+.marketRoomTitle {
+  margin: 10px 0 0;
+  font-family: var(--display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--role-ink);
+}
+
+.marketRoomLede {
+  margin: 10px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--role-muted);
+  max-width: 36rem;
+}
+
+.marketRoomMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 14px;
+  font-family: var(--role-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--role-muted);
+}
+
+.marketRoomMeta span::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--role-accent);
+  margin-right: 8px;
+  vertical-align: 2px;
+}
+
+.marketRoomLaunch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 11px 18px;
+  border: 1px solid rgba(201, 161, 92, 0.55);
+  border-radius: 8px;
+  background: rgba(201, 161, 92, 0.14);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  backdrop-filter: blur(14px) saturate(115%);
+  color: var(--role-accent);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease, gap 0.15s ease;
+}
+
+.marketRoomLaunch:hover {
+  background: rgba(201, 161, 92, 0.24);
+  gap: 14px;
+}
+
+.marketRoomLaunch svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+
+@media (max-width: 900px) {
+  .marketRoom {
+    min-height: 260px;
+  }
+  .marketRoomBody {
+    padding: 20px 18px 22px;
+  }
+  .marketRoomTitle {
+    font-size: 1.5rem;
   }
 }

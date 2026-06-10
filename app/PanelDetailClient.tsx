@@ -229,15 +229,15 @@ export default function PanelDetailClient({ id }: Props) {
     return (
       <article className="loom-panel-detail loom-panel-detail--empty">
         <nav className="loom-panel-detail-back">
-          <Link href="/patterns">{'\u2190 Patterns'}</Link>
+          <Link href="/sources#reader-notes">{'\u2190 Reader notes'}</Link>
         </nav>
         <section className="loom-panel-detail-body">
-          <div className="loom-panel-detail-eyebrow">Panel</div>
+          <div className="loom-panel-detail-eyebrow">Reader note</div>
           <h1 className="loom-panel-detail-title">
             No held panel matches this route.
           </h1>
           <p className="loom-panel-detail-subtitle">
-            Open Patterns and choose a real panel; this detail view no longer invents placeholder prose.
+            Open reader notes in Sources and choose a real record; this detail view no longer invents placeholder prose.
           </p>
         </section>
       </article>
@@ -247,7 +247,7 @@ export default function PanelDetailClient({ id }: Props) {
   return (
     <article className="loom-panel-detail">
       <nav className="loom-panel-detail-back">
-        <Link href="/patterns">{'\u2190 Patterns'}</Link>
+        <Link href="/sources#reader-notes">{'\u2190 Reader notes'}</Link>
       </nav>
 
       <section className="loom-panel-detail-body">

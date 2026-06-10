@@ -15,12 +15,12 @@ import Ornament from '../components/Ornament';
  *   <prose about the type>
  *   <prose about the palette>
  *
- *   Woven by one hand.
+ *   Built by one hand.
  *   With thanks to anyone who waited.
  *
  *   ── · ──
  *
- *   © 2026 · All threads respected
+ *   © 2026 · All rights respected
  *
  * Typography:
  *   - Eyebrow "COLOPHON" — small-caps, muted
@@ -124,7 +124,7 @@ export default function ColophonClient() {
 
         {/* Hand paragraph */}
         <p style={bodyStyle}>
-          Woven by one hand.
+          Built by one hand.
           <br />
           With thanks to anyone who waited.
         </p>
@@ -142,7 +142,7 @@ export default function ColophonClient() {
             marginTop: '0.5rem',
           }}
         >
-          © 2026 · All threads respected
+          © 2026 · All rights respected
         </div>
       </article>
     </main>

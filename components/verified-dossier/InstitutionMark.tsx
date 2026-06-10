@@ -1,10 +1,10 @@
 export type InstitutionMarkKind = 'about' | 'unsw' | 'quantnet' | 'wqu' | 'claude';
 
 const INSTITUTION_MARKS: Record<InstitutionMarkKind, { label: string; imageSrc: string }> = {
-  about: { label: 'About', imageSrc: '/profile/yiping-avatar.png' },
+  about: { label: 'About', imageSrc: '/profile/yiping-profile-white-shirt.png' },
   unsw: { label: 'UNSW Sydney', imageSrc: '/brand/unsw/unsw-crest.png' },
-  quantnet: { label: 'QuantNet', imageSrc: '/brand/quantnet/quantnet-logo.png' },
-  wqu: { label: 'WorldQuant University', imageSrc: '/brand/wqu/wqu-logo.svg' },
+  quantnet: { label: 'QuantNet', imageSrc: '/brand/quantnet/quantnet-icon.png' },
+  wqu: { label: 'WorldQuant University', imageSrc: '/brand/wqu/wqu-icon.png' },
   claude: { label: 'Claude', imageSrc: '/brand/claude/claude-icon.png' },
 };
 

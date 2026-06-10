@@ -68,7 +68,6 @@ export function bucketFor(path) {
     path.startsWith('lib/trace/')
     || path.startsWith('lib/note/')
     || path.startsWith('lib/capture/')
-    || path.startsWith('lib/view/')
     || path === 'lib/ai/system-prompt.ts'
     || path === 'lib/ai-cli.ts'
     || path === 'lib/embed.ts'
@@ -103,7 +102,7 @@ export function stageHint(bucket) {
     case 'macos-shell':
       return 'git add macos-app/Loom';
     case 'note-trace-runtime':
-      return 'git add lib/trace lib/note lib/capture lib/view lib/ai/system-prompt.ts lib/ai-cli.ts lib/embed.ts lib/doc-context.ts lib/knowledge-types.ts lib/use-animated-presence.ts lib/use-history.ts lib/use-pins.ts lib/use-cli-model.ts tsconfig.json';
+      return 'git add lib/trace lib/note lib/capture lib/ai/system-prompt.ts lib/ai-cli.ts lib/embed.ts lib/doc-context.ts lib/knowledge-types.ts lib/use-animated-presence.ts lib/use-history.ts lib/use-pins.ts lib/use-cli-model.ts tsconfig.json';
     case 'pwa-runtime':
       return 'git add public/manifest.webmanifest public/sw.js';
     case 'docs-specs':

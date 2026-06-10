@@ -300,7 +300,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
           {!isCrystallized && readingTrace && (
             <button
               onClick={crystallize}
-              aria-label="Crystallize this panel into your Patterns"
+              aria-label="Crystallize this panel into your reader notes"
               title="Crystallize · finalize this panel in Patterns"
               style={{
                 background: 'transparent', border: 0, cursor: 'pointer',
@@ -344,12 +344,12 @@ export function LiveArtifact({ docId }: { docId: string }) {
                   fontWeight: 700,
                 }}
               >
-                Settled into Patterns
+                Settled into reader notes
               </span>
               <span aria-hidden style={{ flex: 1, height: 1, background: 'var(--mat-border)' }} />
               <button
                 type="button"
-                onClick={() => router.push(`/patterns?focus=${encodeURIComponent(docId)}`)}
+                onClick={() => router.push('/sources#reader-notes')}
                 style={{
                   appearance: 'none',
                   border: 0,
@@ -362,7 +362,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
                   cursor: 'pointer',
                 }}
               >
-                Open this panel in Patterns
+                Open reader notes
               </button>
               <button
                 type="button"
@@ -390,7 +390,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
                 marginBottom: incomingDocThreads + outgoingDocThreads > 0 ? 8 : 0,
               }}
             >
-              {settledSummary || readingTrace?.crystallizedSummary || 'This panel is no longer provisional. It is now finalized in Patterns.'}
+              {settledSummary || readingTrace?.crystallizedSummary || 'This panel is no longer provisional. It is now finalized in your reader notes.'}
             </div>
             {incomingDocThreads + outgoingDocThreads > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -407,7 +407,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
                 >
                   <button
                     type="button"
-                    onClick={() => router.push(`/weaves?focus=${encodeURIComponent(docId)}`)}
+                    onClick={() => router.push('/sources#reader-notes')}
                     style={{
                       appearance: 'none',
                       border: 0,
@@ -440,7 +440,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
                       <button
                         key={item.docId}
                         type="button"
-                        onClick={() => router.push(`/weaves?focus=${encodeURIComponent(item.docId)}`)}
+                        onClick={() => router.push('/sources#reader-notes')}
                         style={settledRelationLinkStyle}
                       >
                         {item.title}
@@ -468,7 +468,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
                       <button
                         key={item.docId}
                         type="button"
-                        onClick={() => router.push(`/weaves?focus=${encodeURIComponent(item.docId)}`)}
+                        onClick={() => router.push('/sources#reader-notes')}
                         style={settledRelationLinkStyle}
                       >
                         {item.title}
@@ -522,7 +522,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
                 color: 'var(--fg)',
               }}
             >
-              {focusThought.summary || focusThought.content || 'This weave is still taking shape.'}
+              {focusThought.summary || focusThought.content || 'This reader note is still taking shape.'}
             </div>
 
             {focusThought.quote ? (
@@ -703,7 +703,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
         {!streamingDocId && totalVersions > 0 && (
           <button
             onClick={() => (isCrystallized ? uncrystallize() : crystallize())}
-            aria-label={isCrystallized ? 'Uncrystallize this panel' : 'Crystallize this panel into your Patterns'}
+            aria-label={isCrystallized ? 'Uncrystallize this panel' : 'Crystallize this panel into your reader notes'}
             title={isCrystallized
               ? 'Crystallized — click to undo'
               : 'Crystallize · finalize this panel in Patterns'}

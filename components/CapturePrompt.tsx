@@ -56,7 +56,7 @@ export function CapturePrompt() {
       setState({
         anchorId,
         quote: quote.slice(0, 120),
-        reviewHint: String(detail.reviewHint ?? '⌘/ 打开 Thought Map 延伸'),
+        reviewHint: String(detail.reviewHint ?? '⌘/ 打开 reader notes 延伸'),
         left: anchorX,
         top: nearLowerHalf && anchorY !== null ? Math.max(20, anchorY - 58) : null,
         bottom: !nearLowerHalf && anchorY !== null ? Math.max(20, vh - (anchorY + anchorH + 18)) : 20,

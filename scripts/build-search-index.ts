@@ -18,6 +18,14 @@ import { getAllDocs } from '../lib/knowledge-store';
 
 const ROOT = process.cwd();
 
+type ArtifactStateField = {
+  targetId?: string;
+  kind?: string;
+  label?: string;
+  state?: string;
+  stateLabel?: string;
+};
+
 type Item = {
   id: string;
   title: string;
@@ -26,6 +34,7 @@ type Item = {
   subcategory: string;
   sourcePath: string;
   body: string;
+  artifactState?: ArtifactStateField;
 };
 
 function stripMDX(s: string): string {
@@ -92,7 +101,7 @@ async function main() {
   const ms = new MiniSearch({
     idField: 'id',
     fields: ['title', 'category', 'body'],
-    storeFields: ['title', 'href', 'category', 'subcategory', 'sourcePath'],
+    storeFields: ['title', 'href', 'category', 'subcategory', 'sourcePath', 'body', 'artifactState'],
     searchOptions: {
       boost: { title: 4, category: 2 },
       fuzzy: 0.15,

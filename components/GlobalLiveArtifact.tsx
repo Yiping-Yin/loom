@@ -27,6 +27,7 @@ export function GlobalLiveArtifact() {
   if (!mounted) return null;
 
   const ctx = contextFromPathname(pathname);
+  if (pathname === '/') return null;
   if (!ctx.isFree) return null; // doc pages mount their own
 
   // Wrap in .prose-notion so the artifact matches the typography & width

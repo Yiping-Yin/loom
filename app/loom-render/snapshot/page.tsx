@@ -323,7 +323,7 @@ function SnapshotInner() {
   const domain = useMemo(() => extractDomain(sub, eyebrowParam), [sub, eyebrowParam]);
   const timestamp = useMemo(() => extractTimestamp(eyebrowParam), [eyebrowParam]);
   const sourceURL = useMemo(() => extractSourceURL(eyebrowParam), [eyebrowParam]);
-  const backHref = 'loom://bundle/loom-render/captures/';
+  const backHref = '/sources';
 
   // Reader URL: switch from snapshot mode → reader mode at the same
   // capture entry. capture/page.tsx accepts root/sub/title/eyebrow.
@@ -746,7 +746,7 @@ function SnapshotInner() {
       <div className="loom-snapshot-shell error-shell">
         <Style />
         <div className="topbar minimal">
-          <a className="back" href={backHref}>‹ Captures</a>
+          <a className="back" href={backHref}>‹ Sources</a>
         </div>
         <Surface tone="card" radius="sm" padded="lg" className="error-panel">
           <Stack gap="sm">
@@ -757,7 +757,7 @@ function SnapshotInner() {
               <span className="error-msg">{fetchError}</span>
             </Body>
             <Body tone="secondary" className="error-back">
-              <a href={backHref}>← Back to Captures</a>
+              <a href={backHref}>← Back to Sources</a>
             </Body>
           </Stack>
         </Surface>
@@ -798,7 +798,7 @@ function SnapshotInner() {
       {!fullscreen && (
         <div className="topbar">
           <div className="topbar-left">
-            <a className="back" href={backHref} title="Back to captures (Esc)">‹ Captures</a>
+            <a className="back" href={backHref} title="Back to Sources (Esc)">‹ Sources</a>
             {chain.length > 1 && currentChainIndex >= 0 && (
               <span className="chain-nav" title={`${currentChainIndex + 1} of ${chain.length} · scope: ${chainScope}`}>
                 <button className="chain-btn" onClick={() => navigateChain(-1)} title="Previous capture (←)">‹ prev</button>
@@ -1173,7 +1173,7 @@ function ChainScopeMenu({
 function KeyboardHelpOverlay({ onDismiss }: { onDismiss: () => void }) {
   const rows: { keys: string[]; label: string; hidden?: boolean }[] = [
     { keys: ['?'], label: 'Show / hide this help' },
-    { keys: ['Esc'], label: 'Close overlay · Exit fullscreen · Back to captures' },
+    { keys: ['Esc'], label: 'Close overlay · Exit fullscreen · Back to Sources' },
     { keys: ['F'], label: 'Toggle fullscreen' },
     { keys: ['O'], label: 'Open original URL in new window' },
     { keys: ['←', '→'], label: 'Previous / next capture in current chain' },

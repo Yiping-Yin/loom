@@ -89,7 +89,7 @@ const PRODUCT_LAYERS = [
   },
   {
     title: 'Cognitive structuring layer',
-    text: 'Source, anchor, judgment, relation, panel, weave, pattern, and Thought Map describe how understanding forms.',
+    text: 'Source, anchor, judgment, relation, reader note, note connection, pattern, and draft describe how understanding forms.',
   },
   {
     title: 'AI and production layer',
@@ -227,7 +227,7 @@ export default function ProductHistoryPage() {
   return (
     <main className={styles.page} aria-labelledby="history-title">
       <nav className={styles.nav} aria-label="Product system navigation">
-        <a className={styles.wordmark} href="/" aria-label="Open Loom home">
+        <a className={styles.wordmark} href="/loom" aria-label="Open Loom product" aria-current="page">
           Loom
         </a>
         <div className={styles.navLinks}>
@@ -244,6 +244,11 @@ export default function ProductHistoryPage() {
           <p className={styles.label}>Loom product system</p>
           <h1 id="history-title">Loom is a cognitive growth system.</h1>
           <p className={styles.lead}>{HERO_STATEMENT}</p>
+          <p className={styles.lead}>
+            Why Loom is called Loom: it weaves separate sources into one fabric of
+            understanding. Loom is a source-bound knowledge display platform — every
+            claim stays tied to the material it came from.
+          </p>
           <div className={styles.heroSignals} aria-label="Loom product assumptions">
             {HERO_SIGNALS.map((signal) => (
               <span key={signal.label} title={signal.detail}>

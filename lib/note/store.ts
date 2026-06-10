@@ -111,35 +111,6 @@ export async function appendNote(input: {
 }
 
 /**
- * Append a rehearsal Note — a Note anchored to the whole doc with long
- * content, representing one iteration of the user's reconstruction. This
- * is the write path for the RehearsalPanel component.
- */
-export async function appendRehearsal(input: {
-  docId: SourceDocId;
-  docHref: string;
-  docTitle: string;
-  content: string;
-}): Promise<{ noteId: string; anchorId: string }> {
-  return appendNote({
-    docId: input.docId,
-    docHref: input.docHref,
-    docTitle: input.docTitle,
-    content: input.content,
-    summary: `📝 ${deriveSummary(input.content)}`,
-    anchor: {
-      target: input.docId,
-      blockText: 'rehearsal',
-      blockId: 'loom-rehearsal-root',
-      rangeStartId: 'loom-rehearsal-root',
-      rangeStartText: 'rehearsal',
-      rangeEndId: 'loom-rehearsal-root',
-      rangeEndText: 'rehearsal',
-    },
-  });
-}
-
-/**
  * Supersede an existing Note by appending a new Note at the same anchor
  * with updated content. Trace events are append-only, so the old event
  * stays in the log; the adapter + query.currentStateNotes() hide it via

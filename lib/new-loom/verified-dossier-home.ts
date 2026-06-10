@@ -1,4 +1,11 @@
-export type VerifiedDossierFileKind = 'pdf' | 'word' | 'ppt' | 'excel' | 'markdown' | 'html' | 'text';
+export type VerifiedDossierFileKind =
+  | 'pdf'
+  | 'word'
+  | 'ppt'
+  | 'excel'
+  | 'markdown'
+  | 'html'
+  | 'text';
 
 export type VerifiedDossierNavItem = {
   label: string;
@@ -13,6 +20,15 @@ export type VerifiedDossierProfileLink = {
 export type VerifiedDossierMembership = {
   label: string;
   kind: 'unsw' | 'wqu' | 'quantnet';
+};
+
+export type VerifiedDossierProfile = {
+  name: string;
+  roles: readonly string[];
+  location: string;
+  photoSrc: string;
+  links: readonly VerifiedDossierProfileLink[];
+  memberships: readonly VerifiedDossierMembership[];
 };
 
 export type VerifiedDossierArtifact = {
@@ -44,7 +60,7 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     kind: 'word',
     shelf: 'about',
     role: 'Profile notes, values, direction',
-    href: '/about',
+    href: '/verified-sources/about/cv-yiping-yin.pdf',
     preview: {
       title: 'About Me',
       kicker: 'Yiping Yin / Personal Knowledge Postcard',
@@ -75,7 +91,11 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
       kicker: 'ECON3202 - Mathematical Economics',
       metadata: '2 pages - 79 KB - modified 15 Mar 2026',
       tag: '03_Problem_Set',
-      lines: ['UNSW/ECON 3202/03_Problem_Set', 'PDF metadata verified locally', 'Set 2 - Term 1, 2026'],
+      lines: [
+        'UNSW/ECON 3202/03_Problem_Set',
+        'PDF metadata verified locally',
+        'Set 2 - Term 1, 2026',
+      ],
     },
   },
   {
@@ -117,7 +137,11 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
       kicker: 'Week 8 - Practice layer',
       metadata: '2 pages - 81 KB - modified 06 Apr 2026',
       tag: '02_Week/W08',
-      lines: ['UNSW/ECON 3202/02_Week/W08', 'Exercise source file', 'Suggested exercises for Week 8'],
+      lines: [
+        'UNSW/ECON 3202/02_Week/W08',
+        'Exercise source file',
+        'Suggested exercises for Week 8',
+      ],
     },
   },
   {
@@ -138,7 +162,11 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
       kicker: 'Private working answer',
       metadata: '5 pages - 1.5 MB - modified 18 May 2026',
       tag: '03_Problem_Set',
-      lines: ['UNSW/ECON 3202/03_Problem_Set', 'Handwritten answer scan', 'Private synthesis, not official source truth'],
+      lines: [
+        'UNSW/ECON 3202/03_Problem_Set',
+        'Handwritten answer scan',
+        'Private synthesis, not official source truth',
+      ],
     },
   },
   {
@@ -169,7 +197,8 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     shelf: 'quantnet',
     role: 'Programming source',
     href: '/knowledge/quantnet/python-foundations',
-    sourcePath: 'Quant/Python for Quant/Python Foundations/Section 1 Orientation/Python Foundations.pdf',
+    sourcePath:
+      'Quant/Python for Quant/Python Foundations/Section 1 Orientation/Python Foundations.pdf',
     sourceFolder: 'Python for Quant/Python Foundations',
     pageCount: 117,
     fileSize: '7.6 MB',
@@ -180,7 +209,11 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
       kicker: 'QuantNet / Python for Quant',
       metadata: '117 pages - 7.6 MB - modified 03 Oct 2025',
       tag: 'Python Foundations',
-      lines: ['Quant/Python for Quant/Python Foundations', 'Install the Python Quant Stack', 'Real local PDF'],
+      lines: [
+        'Quant/Python for Quant/Python Foundations',
+        'Install the Python Quant Stack',
+        'Real local PDF',
+      ],
     },
   },
   {
@@ -220,7 +253,35 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
       kicker: 'Claude / certificate source',
       metadata: 'HTML - 18 KB - modified 28 May 2026',
       tag: 'Credential evidence',
-      lines: ['Claude Certificate/Claude Certificate.html', 'Official-first certificate record', 'Real local HTML source'],
+      lines: [
+        'Claude Certificate/Claude Certificate.html',
+        'Official-first certificate record',
+        'Real local HTML source',
+      ],
+    },
+  },
+  {
+    id: 'optibook-market-lens',
+    label: 'Open the Optibook replica',
+    kind: 'html',
+    shelf: 'unsw',
+    role: 'Live market project evidence',
+    // The Optibook replica build is copied into public/optibook/ by a
+    // later integration step; the href is already canonical.
+    href: '/optibook/index.html',
+    fileSize: '1.4 MB',
+    modifiedAt: '06 Jun 2026',
+    thumbnailSrc: '/verified-sources/digital-me/optibook-market-lens.png',
+    preview: {
+      title: 'Optibook Market Lens',
+      kicker: 'Optiver & UNSW - Data and Algorithms in Trading',
+      metadata: 'PNG screenshot - 1.4 MB - modified 06 Jun 2026',
+      tag: 'Trading Academy',
+      lines: [
+        'Optibook trading interface capture',
+        'Pair trading and order-book statistics practice',
+        'Replica build ships at /optibook/',
+      ],
     },
   },
 ] as const satisfies readonly VerifiedDossierArtifact[];
@@ -236,10 +297,14 @@ export type VerifiedDossierSection = {
   artifactIds: readonly VerifiedDossierArtifactId[];
 };
 
-export type VerifiedDossierPresentationCategoryId = 'about' | 'education' | 'experience' | 'digital-me';
+export type VerifiedDossierPresentationCategoryId =
+  | 'about'
+  | 'education'
+  | 'experience'
+  | 'digital-me';
 
-export type VerifiedDossierHomeVisualAsset = {
-  kind: 'profile-photo' | 'document-preview' | 'logo-strip' | 'source-thumbnails' | 'ui-preview';
+export type VerifiedDossierVisualAsset = {
+  kind: 'document-preview' | 'logo-strip' | 'source-thumbnails' | 'ui-preview';
   label: string;
   caption: string;
   src?: string;
@@ -247,17 +312,42 @@ export type VerifiedDossierHomeVisualAsset = {
   artifactIds?: readonly VerifiedDossierArtifactId[];
 };
 
+export type VerifiedDossierHomeVisualAsset = VerifiedDossierVisualAsset;
+
 export type VerifiedDossierPresentationCategory = {
   id: VerifiedDossierPresentationCategoryId;
   label: string;
   href: string;
   summary: string;
   proof: string;
-  visualAsset: VerifiedDossierHomeVisualAsset;
+  visualAsset: VerifiedDossierVisualAsset;
   sourceSectionIds: readonly VerifiedDossierSection['id'][];
   artifactIds: readonly VerifiedDossierArtifactId[];
   capabilities: readonly string[];
   foundationCategoryIds?: readonly Exclude<VerifiedDossierPresentationCategoryId, 'digital-me'>[];
+};
+
+export type VerifiedDossierExperienceCategory = 'work' | 'trading-program' | 'project';
+
+/**
+ * One CV-backed experience entry. Every fact (organisation, role, dates,
+ * highlights) is transcribed from the real CV PDF at
+ * public/verified-sources/about/cv-yiping-yin.pdf. Entries that exist only
+ * as profile-cover claims are marked 'pending-documentation' and must not
+ * carry invented dates or proof.
+ */
+export type VerifiedDossierExperienceEntry = {
+  id: string;
+  organisation: string;
+  role: string;
+  category: VerifiedDossierExperienceCategory;
+  period?: string;
+  location?: string;
+  summary: string;
+  highlights: readonly string[];
+  proofArtifactIds: readonly VerifiedDossierArtifactId[];
+  verification: 'cv-pdf' | 'pending-documentation';
+  verificationNote: string;
 };
 
 export type VerifiedDossierLoomIntroStep = {
@@ -280,6 +370,10 @@ export type VerifiedDossierCourseFolder = {
   fileCount: number;
   href: string;
   sampleArtifactId?: VerifiedDossierArtifactId;
+  handbookYear?: string;
+  moodleTitle?: string;
+  moodleHref?: string;
+  moodleOffering?: string;
 };
 
 export type VerifiedDossierHistoryItem = {
@@ -340,6 +434,7 @@ export type VerifiedDossierDigitalMeCanvas = {
       detail: string;
       href?: string;
       artifactIds?: readonly VerifiedDossierArtifactId[];
+      assetIds?: readonly VerifiedDossierArtifactId[];
     }[];
   }[];
 };
@@ -351,6 +446,7 @@ export type VerifiedDossierDigitalMeMode = {
 };
 
 export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
+  { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
   { label: 'Education', href: '/education' },
   { label: 'Experience', href: '/experience' },
@@ -359,27 +455,27 @@ export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
 
 export const VERIFIED_DOSSIER_HOME_COPY = {
   headline: 'Yiping Yin',
-  body: 'UNSW student building Loom in Sydney',
+  body: 'Quant T/R | AI Founder',
   shortDefinition:
-    'About, education, experience, and Digital Me are backed by real sources, drafts, and cited outputs.',
+    'Explore the source-backed systems that define my knowledge, work, and Digital Me.',
 };
 
 export const VERIFIED_DOSSIER_PROFILE = {
   name: 'Yiping Yin',
-  roles: ['Student', 'Builder', 'Learner'],
-  location: 'Sydney, Australia',
-  photoSrc: '/profile/yiping-avatar.png',
+  roles: ['Quant T/R', 'AI Founder'],
+  location: '🇨🇳 Wuhan | 🇦🇺 Sydney',
+  photoSrc: '/profile/yiping-profile-photo.png',
   links: [
-    { label: 'LinkedIn', href: '/about#linkedin' },
-    { label: 'GitHub', href: '/about#github' },
-    { label: 'Website', href: 'https://fanpu.io' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/yiping-yin/' },
+    { label: 'GitHub', href: 'https://github.com/Yiping-Yin' },
+    { label: 'Website', href: '/' },
   ] satisfies VerifiedDossierProfileLink[],
   memberships: [
     { label: 'UNSW Sydney', kind: 'unsw' },
     { label: 'WorldQuant University', kind: 'wqu' },
     { label: 'QuantNet', kind: 'quantnet' },
   ] satisfies VerifiedDossierMembership[],
-};
+} as const satisfies VerifiedDossierProfile;
 
 export const VERIFIED_DOSSIER_SECTIONS: VerifiedDossierSection[] = [
   {
@@ -430,11 +526,119 @@ export const VERIFIED_DOSSIER_LOOM_INTRO = {
     'Loom is the underlying trust mechanism for this profile: real sources become drafts, and Digital Me answers from the same archive.',
   blocking: false,
   steps: [
-    { label: 'Sources', text: 'Real files, courses, credentials, projects, and evidence stay inspectable.' },
-    { label: 'Draft', text: 'Source material turns into cited notes, answers, and portfolio-ready work.' },
-    { label: 'Digital Me', text: 'The AI-facing layer answers, cites, explains process, and walks through evidence.' },
+    {
+      label: 'Sources',
+      text: 'Real files, courses, credentials, projects, and evidence stay inspectable.',
+    },
+    {
+      label: 'Draft',
+      text: 'Source material turns into cited notes, answers, and portfolio-ready work.',
+    },
+    {
+      label: 'Digital Me',
+      text: 'The AI-facing layer answers, cites, explains process, and walks through evidence.',
+    },
   ],
 } as const satisfies VerifiedDossierLoomIntro;
+
+export const VERIFIED_DOSSIER_EXPERIENCE_ENTRIES = [
+  {
+    id: 'optiver-unsw-trading-academy',
+    organisation: 'Optiver & UNSW',
+    role: 'Trading Academy Participant',
+    category: 'trading-program',
+    period: 'May 2026 – August 2026',
+    location: 'Sydney, Australia',
+    summary:
+      'Trading academy run with UNSW Data and Algorithms in Trading — a training program, not an employment role.',
+    highlights: [
+      'Completing training in Python trading algorithms, order books, VWAP and market making.',
+      'Implemented trading strategies on Optibook using pair trading and order-book statistics.',
+    ],
+    proofArtifactIds: ['optibook-market-lens', 'about-doc'],
+    verification: 'cv-pdf',
+    verificationNote: 'Listed in the CV PDF under Relevant Projects as a trading academy program.',
+  },
+  {
+    id: 'oak-financial-group',
+    organisation: 'Oak Financial Group',
+    role: 'Property Portfolio Assistant',
+    category: 'work',
+    period: 'January 2024 – May 2026',
+    location: 'Sydney, Australia',
+    summary:
+      'Portfolio administration for a private Sydney rental portfolio held by the founder and managing directors.',
+    highlights: [
+      'Provided trusted portfolio administration support for a managing director’s Sydney rental assets.',
+      'Managed property associated with A$10,250 weekly income.',
+      'Tracked tenant, lease, rental-income and maintenance records for portfolio oversight.',
+    ],
+    proofArtifactIds: ['about-doc'],
+    verification: 'cv-pdf',
+    verificationNote: 'Listed in the CV PDF under Work Experience.',
+  },
+  {
+    id: 'gumtree-smart-listing-assistant',
+    organisation: 'Gumtree Smart Listing Assistant',
+    role: 'Business Analytics Consultant · Team Project',
+    category: 'project',
+    period: 'February 2026 – April 2026',
+    location: 'Sydney, Australia',
+    summary:
+      'Built a Smart Listing Assistant proof of concept with ML price guidance, Gemini rewriting and agentic recommendations.',
+    highlights: [
+      'Engineered vehicle-age and text-quality signals from titles and descriptions.',
+      'Converted Gradient Boosting outputs into seller-facing price ranges and recommendations.',
+    ],
+    proofArtifactIds: ['about-doc'],
+    verification: 'cv-pdf',
+    verificationNote: 'Listed in the CV PDF under Relevant Projects.',
+  },
+  {
+    id: 'python-financial-data-portfolio-analytics',
+    organisation: 'Python Financial Data & Portfolio Analytics',
+    role: 'Student Project',
+    category: 'project',
+    period: 'February 2026 – May 2026',
+    location: 'Sydney, Australia',
+    summary: 'Completed Python finance projects on market-data processing and portfolio analytics.',
+    highlights: [
+      'Processed price data, corporate actions, earnings-surprise signals and portfolio holdings.',
+      'Achieved 96.25/100 individual and 92.71/100 group project results.',
+    ],
+    proofArtifactIds: ['about-doc'],
+    verification: 'cv-pdf',
+    verificationNote: 'Listed in the CV PDF under Relevant Projects.',
+  },
+  {
+    id: 'jiangren-lets-go-travel-app',
+    organisation: 'Jiangren – Let’s GO Travel Planning App',
+    role: 'Project Contributor',
+    category: 'project',
+    location: 'Remote, Australia',
+    summary:
+      'Contributed to a React/TypeScript travel-planning app with maps, chatbot and itinerary management.',
+    highlights: [
+      'Worked with Supabase, Playwright and Storybook across a 17-contributor GitHub project.',
+    ],
+    proofArtifactIds: ['about-doc'],
+    verification: 'cv-pdf',
+    verificationNote: 'Listed in the CV PDF under Relevant Projects without dates; none are shown here.',
+  },
+  {
+    id: 'unsw-research-assistant',
+    organisation: 'UNSW',
+    role: 'Research Assistant',
+    category: 'work',
+    summary:
+      'Quantitative finance research assistance, advertised on the profile cover.',
+    highlights: [],
+    proofArtifactIds: [],
+    verification: 'pending-documentation',
+    verificationNote:
+      'This cover claim is not yet documented in the CV PDF; dates and records stay hidden until evidence is attached.',
+  },
+] as const satisfies readonly VerifiedDossierExperienceEntry[];
 
 export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
   {
@@ -444,10 +648,10 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     summary: 'Self-introduction, direction, public links, and source-backed identity.',
     proof: 'Profile record',
     visualAsset: {
-      kind: 'profile-photo',
-      label: 'Profile source',
-      caption: 'Portrait, role, and public identity record',
-      src: '/profile/yiping-profile-photo.png',
+      kind: 'document-preview',
+      label: 'CV source',
+      caption: 'CV, profile direction, and public identity record',
+      src: '/verified-sources/about/cv-yiping-yin.png',
       artifactIds: ['about-doc'],
     },
     sourceSectionIds: ['about'],
@@ -468,12 +672,24 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
         '/brand/unsw/unsw-crest.png',
         '/brand/wqu/wqu-logo.svg',
         '/brand/quantnet/quantnet-logo.png',
-        '/verified-sources/claude/claude-certificate.png',
+        '/brand/claude/claude-icon.png',
       ],
-      artifactIds: ['econ-ps2', 'econ-slides', 'quantnet-cpp-course', 'wqu-index', 'claude-certificate'],
+      artifactIds: [
+        'econ-ps2',
+        'econ-slides',
+        'quantnet-cpp-course',
+        'wqu-index',
+        'claude-certificate',
+      ],
     },
     sourceSectionIds: ['unsw', 'quantnet', 'wqu', 'claude'],
-    artifactIds: ['econ-ps2', 'econ-slides', 'quantnet-cpp-course', 'wqu-index', 'claude-certificate'],
+    artifactIds: [
+      'econ-ps2',
+      'econ-slides',
+      'quantnet-cpp-course',
+      'wqu-index',
+      'claude-certificate',
+    ],
     capabilities: ['Course folders', 'Credential evidence', 'Learning process'],
   },
   {
@@ -484,17 +700,17 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     proof: 'Project and build records',
     visualAsset: {
       kind: 'source-thumbnails',
-      label: 'Project proof',
-      caption: 'Programming and worked-output evidence',
+      label: 'Work and project proof',
+      caption: 'CV-backed work, trading-program, and project evidence',
       srcs: [
-        '/verified-sources/quantnet/python-foundations.png',
-        '/verified-sources/econ3202/problem2-answer.png',
+        '/verified-sources/digital-me/optibook-market-lens.png',
+        '/verified-sources/about/cv-yiping-yin.png',
       ],
-      artifactIds: ['quantnet-python-foundations', 'econ-notes'],
+      artifactIds: ['optibook-market-lens', 'about-doc'],
     },
     sourceSectionIds: ['about', 'unsw', 'quantnet'],
-    artifactIds: ['about-doc', 'quantnet-python-foundations', 'econ-notes'],
-    capabilities: ['Project evidence', 'Competition records', 'Build process'],
+    artifactIds: ['about-doc', 'optibook-market-lens', 'quantnet-python-foundations'],
+    capabilities: ['Work experience', 'Trading-program evidence', 'Project records'],
   },
   {
     id: 'digital-me',
@@ -514,7 +730,14 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
       artifactIds: ['econ-ps2', 'econ-slides', 'claude-certificate'],
     },
     sourceSectionIds: ['about', 'unsw', 'quantnet', 'wqu', 'claude'],
-    artifactIds: ['about-doc', 'econ-ps2', 'econ-slides', 'quantnet-python-foundations', 'claude-certificate'],
+    artifactIds: [
+      'about-doc',
+      'econ-ps2',
+      'econ-slides',
+      'quantnet-python-foundations',
+      'claude-certificate',
+      'optibook-market-lens',
+    ],
     capabilities: [
       'Citation-backed answers',
       'Topic-to-canvas routing',
@@ -529,27 +752,32 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
 export const VERIFIED_DOSSIER_DIGITAL_ME_MODES = [
   {
     label: 'Answer Mode',
-    summary: 'Answers questions about the person and cites the source files, drafts, and artifacts behind the answer.',
+    summary:
+      'Answers questions about the person and cites the source files, drafts, and artifacts behind the answer.',
     foundationCategoryIds: ['about', 'education', 'experience'],
   },
   {
     label: 'Canvas Mode',
-    summary: 'Turns a conversation topic into a structured presentation canvas that connects learning, work, and proof.',
+    summary:
+      'Turns a conversation topic into a structured presentation canvas that connects learning, work, and proof.',
     foundationCategoryIds: ['education', 'experience'],
   },
   {
     label: 'Portfolio Mode',
-    summary: 'Surfaces related projects, coursework, files, case studies, and finished outputs as a public-facing body of work.',
+    summary:
+      'Surfaces related projects, coursework, files, case studies, and finished outputs as a public-facing body of work.',
     foundationCategoryIds: ['about', 'education', 'experience'],
   },
   {
     label: 'Process Mode',
-    summary: 'Replays how a result was formed: sources, notes, reasoning path, drafts, revisions, and final artifact.',
+    summary:
+      'Replays how a result was formed: sources, notes, reasoning path, drafts, revisions, and final artifact.',
     foundationCategoryIds: ['education', 'experience'],
   },
   {
     label: 'Action Mode',
-    summary: 'Uses the Draft layer to produce new outputs such as a case study, presentation, application answer, or learning map.',
+    summary:
+      'Uses the Draft layer to produce new outputs such as a case study, presentation, application answer, or learning map.',
     foundationCategoryIds: ['about', 'education', 'experience'],
   },
 ] as const satisfies readonly VerifiedDossierDigitalMeMode[];
@@ -570,19 +798,23 @@ export const VERIFIED_DOSSIER_DIGITAL_ME_CANVASES = [
         items: [
           {
             label: 'FINS 3666',
-            detail: 'Quant analysis, financial markets, trading intuition, and market structure context.',
+            detail:
+              'Quant analysis, financial markets, trading intuition, and market structure context.',
             href: '/knowledge/unsw#all-unsw-course-folders',
           },
           {
             label: 'MATH 2991',
-            detail: 'Mathematical tools for modelling, probability, optimisation, and analytical reasoning.',
+            detail:
+              'Mathematical tools for modelling, probability, optimisation, and analytical reasoning.',
             href: '/knowledge/unsw#all-unsw-course-folders',
           },
           {
             label: 'ECON 3202',
-            detail: 'Optimisation, concavity, and economic choice foundations used in trading decisions.',
+            detail:
+              'Optimisation, concavity, and economic choice foundations used in trading decisions.',
             href: '/knowledge/unsw/econ3202',
             artifactIds: ['econ-slides', 'econ-ps2'],
+            assetIds: ['econ-slides', 'econ-ps2'],
           },
         ],
       },
@@ -595,12 +827,15 @@ export const VERIFIED_DOSSIER_DIGITAL_ME_CANVASES = [
             detail: 'Python Foundations and quant tooling for data work, modelling, and notebooks.',
             href: '/knowledge/quantnet/python-foundations',
             artifactIds: ['quantnet-python-foundations'],
+            assetIds: ['quantnet-python-foundations'],
           },
           {
             label: 'C++',
-            detail: 'Financial engineering programming foundation for performance-sensitive systems.',
+            detail:
+              'Financial engineering programming foundation for performance-sensitive systems.',
             href: '/knowledge/quantnet/quantnet-online-cpp-course',
             artifactIds: ['quantnet-cpp-course'],
+            assetIds: ['quantnet-cpp-course'],
           },
         ],
       },
@@ -613,17 +848,22 @@ export const VERIFIED_DOSSIER_DIGITAL_ME_CANVASES = [
             detail: 'Worked ECON3202 material shows the mathematical process behind an answer.',
             href: '/knowledge/unsw/econ3202/ps02',
             artifactIds: ['econ-ps2', 'econ-notes'],
+            assetIds: ['econ-ps2', 'econ-notes'],
           },
           {
             label: 'Source-to-answer workflow',
-            detail: 'Sources are transformed into Draft-backed explanations before they appear in Digital Me.',
+            detail:
+              'Sources are transformed into Draft-backed explanations before they appear in Digital Me.',
             artifactIds: ['econ-slides', 'econ-tutorial'],
+            assetIds: ['econ-slides', 'econ-tutorial'],
           },
           {
             label: 'Personal direction',
-            detail: 'The About layer explains goals, public context, and why these topics belong together.',
+            detail:
+              'The About layer explains goals, public context, and why these topics belong together.',
             href: '/about',
             artifactIds: ['about-doc'],
+            assetIds: ['about-doc'],
           },
         ],
       },
@@ -631,95 +871,136 @@ export const VERIFIED_DOSSIER_DIGITAL_ME_CANVASES = [
   },
 ] as const satisfies readonly VerifiedDossierDigitalMeCanvas[];
 
-export const VERIFIED_DOSSIER_UNSW_COURSES = [
+export const VERIFIED_DOSSIER_UNSW_COURSES: readonly VerifiedDossierCourseFolder[] = [
   {
     id: 'econ-3202',
     code: 'ECON 3202',
     folder: 'UNSW/ECON 3202',
     status: 'Course dossier',
-    fileCount: 51,
+    fileCount: 52,
     href: '/knowledge/unsw/econ3202',
     sampleArtifactId: 'econ-ps2',
+    handbookYear: '2026',
+    moodleTitle: 'ECON3202 - Mathematical Economics - T1/2026',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=97199',
+    moodleOffering: '2026 T1',
   },
   {
     id: 'math-2991',
     code: 'MATH 2991',
     folder: 'UNSW/MATH 2991',
     status: 'Generated manual',
-    fileCount: 5,
+    fileCount: 6,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2026',
+    moodleTitle: 'MATH2991-MATH2991-Data and Algorithms in Trading (2026 T2)',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=97989',
+    moodleOffering: '2026 T2',
   },
   {
     id: 'fins-3666',
     code: 'FINS 3666',
     folder: 'UNSW/FINS 3666',
     status: 'Quant finance',
-    fileCount: 174,
+    fileCount: 185,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'FINS3666-Trading&Market Making T1 2025',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=88214',
+    moodleOffering: '2025 T1',
   },
   {
     id: 'fins-3640',
     code: 'FINS 3640',
     folder: 'UNSW/FINS 3640',
     status: 'Weekly archive',
-    fileCount: 73,
+    fileCount: 83,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'FINS3640-Investment Mgmt Modeling - T3 2025',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=94538',
+    moodleOffering: '2025 T3',
   },
   {
     id: 'math-3856',
     code: 'MATH 3856',
     folder: 'UNSW/MATH 3856',
     status: 'ML references',
-    fileCount: 6,
+    fileCount: 7,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2026',
   },
   {
     id: 'infs-3822',
     code: 'INFS 3822',
     folder: 'UNSW/INFS 3822',
     status: 'Data archive',
-    fileCount: 2929,
+    fileCount: 2947,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2026',
+    moodleTitle: 'INFS3822-AI for Business Analytics - T1/2026',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=96378',
+    moodleOffering: '2026 T1',
   },
   {
     id: 'comm-3030',
     code: 'COMM 3030',
     folder: 'UNSW/COMM 3030',
     status: 'Project course',
-    fileCount: 77,
+    fileCount: 91,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2026',
+    moodleTitle: 'COMM3030 Social Entrepreneurship Practicum Summer 2026',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=95131',
+    moodleOffering: 'Summer 2026',
   },
   {
     id: 'fins-3616',
     code: 'FINS 3616',
     folder: 'UNSW/FINS 3616',
     status: 'Course archive',
-    fileCount: 40,
+    fileCount: 41,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'FINS3616-International Business Finance - T2 2025',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=91053',
+    moodleOffering: '2025 T2',
   },
   {
     id: 'fins-3635',
     code: 'FINS 3635',
     folder: 'UNSW/FINS 3635',
     status: 'Market source',
-    fileCount: 35,
+    fileCount: 38,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'FINS3635-Options, Futures&Risk Mgmt T1 2025',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=88189',
+    moodleOffering: '2025 T1',
   },
   {
     id: 'fins-3646',
     code: 'FINS 3646',
     folder: 'UNSW/FINS 3646',
     status: 'Project archive',
-    fileCount: 219,
+    fileCount: 235,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2026',
+    moodleTitle: 'FINS3646-Toolkit for Finance T1 2026',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=95750',
+    moodleOffering: '2026 T1',
   },
   {
     id: 'math-1141',
     code: 'MATH 1141',
     folder: 'UNSW/MATH 1141',
     status: 'Math notes',
-    fileCount: 5,
+    fileCount: 7,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'MATH1141-Higher Mathematics 1A (2025 T1)',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=87798',
+    moodleOffering: '2025 T1',
   },
   {
     id: 'math-1241',
@@ -728,35 +1009,66 @@ export const VERIFIED_DOSSIER_UNSW_COURSES = [
     status: 'Math notes',
     fileCount: 4,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'MATH1241-Higher Mathematics 1B (2025 T2)',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=90682',
+    moodleOffering: '2025 T2',
   },
   {
     id: 'math-2018',
     code: 'MATH 2018',
     folder: 'UNSW/MATH 2018',
     status: 'Tutorial source',
-    fileCount: 62,
+    fileCount: 63,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'MATH2018-Engineering Mathematics 2D (2025 T3)',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=93201',
+    moodleOffering: '2025 T3',
   },
   {
     id: 'math-2089',
     code: 'MATH 2089',
     folder: 'UNSW/MATH 2089',
     status: 'Numerical methods',
-    fileCount: 1,
+    fileCount: 3,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'MATH2089-Numerical Methods & Statistics (2025 T3)',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=93167',
+    moodleOffering: '2025 T3',
   },
   {
     id: 'math-2901',
     code: 'MATH 2901',
     folder: 'UNSW/MATH 2901',
     status: 'Assessment archive',
-    fileCount: 29,
+    fileCount: 34,
     href: '/knowledge/unsw#all-unsw-course-folders',
+    handbookYear: '2025',
+    moodleTitle: 'MATH2901-Higher Theory of Statistics (2025 T2)',
+    moodleHref: 'https://moodle.telt.unsw.edu.au/course/view.php?id=90689',
+    moodleOffering: '2025 T2',
   },
-] as const satisfies readonly VerifiedDossierCourseFolder[];
+];
 
 export function formatVerifiedDossierCourseFileCount(fileCount: number) {
   return `${fileCount.toLocaleString()} ${fileCount === 1 ? 'file' : 'files'}`;
+}
+
+export function formatVerifiedDossierCourseMeta(course: VerifiedDossierCourseFolder) {
+  return [
+    formatVerifiedDossierCourseFileCount(course.fileCount),
+    course.moodleOffering ? `Moodle ${course.moodleOffering}` : null,
+    course.handbookYear ? `Handbook ${course.handbookYear}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+export function resolveVerifiedDossierCourseHandbookHref(course: VerifiedDossierCourseFolder) {
+  if (!course.handbookYear) return undefined;
+  return `https://handbook.unsw.edu.au/undergraduate/courses/${course.handbookYear}/${course.code.replace(/\s+/g, '')}`;
 }
 
 export const VERIFIED_DOSSIER_AI_PROMPT = {
@@ -810,7 +1122,8 @@ export const VERIFIED_DOSSIER_WORKBENCH = {
       number: '01',
       title: 'Sources',
       summary: 'UNSW course shelf',
-      detail: 'Course folders, official PDFs, weekly material, and answer evidence stay in Sources.',
+      detail:
+        'Course folders, official PDFs, weekly material, and answer evidence stay in Sources.',
     },
     {
       number: '02',
@@ -835,7 +1148,9 @@ export const VERIFIED_DOSSIER_ARTIFACTS_BY_ID = VERIFIED_DOSSIER_ARTIFACTS.reduc
   {} as Record<VerifiedDossierArtifactId, VerifiedDossierArtifact>,
 );
 
-export function resolveVerifiedDossierArtifact(id: VerifiedDossierArtifactId): VerifiedDossierArtifact {
+export function resolveVerifiedDossierArtifact(
+  id: VerifiedDossierArtifactId,
+): VerifiedDossierArtifact {
   return VERIFIED_DOSSIER_ARTIFACTS_BY_ID[id];
 }
 

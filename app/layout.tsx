@@ -9,9 +9,6 @@ import { TraceMigrator } from '../components/TraceMigrator';
 import { GlobalLiveArtifact } from '../components/GlobalLiveArtifact';
 import { FreeInput } from '../components/FreeInput';
 import { IngestionOverlay } from '../components/IngestionOverlay';
-import { RecursingOverlay } from '../components/RecursingOverlay';
-import { RehearsalOverlay } from '../components/RehearsalOverlay';
-import { ExaminerOverlay } from '../components/ExaminerOverlay';
 import { ExportAction } from '../components/ExportAction';
 import { CrystallizeListener } from '../components/CrystallizeListener';
 import { PanelSync } from '../components/PanelSync';
@@ -24,7 +21,7 @@ import { InterlaceInstaller } from '../components/InterlaceInstaller';
 
 export const metadata = {
   title: 'Loom',
-  description: 'Weave lasting patterns of understanding from your reading and thinking.',
+  description: 'Add sources and draft clear writing from them.',
   icons: {
     icon: [
       { url: '/favicon.ico', type: 'image/x-icon', sizes: '32x32' },
@@ -77,11 +74,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <KeyboardShortcuts />
         <LinkPreview />
         <DropZone />
-        <RehearsalOverlay />
-        <ExaminerOverlay />
         <PageScopedChrome />
         <IngestionOverlay />
-        <RecursingOverlay />
         <ExportAction />
         <CrystallizeListener />
         <PanelSync />

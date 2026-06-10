@@ -8,6 +8,8 @@ import { WeftShuttle } from '../../components/DocViewer';
 
 type Phase = 'pick' | 'scope' | 'scanning' | 'done' | 'error';
 
+const ONBOARDING_DONE_ROUTE = '/sources';
+
 declare global {
   interface Window {
     webkit?: {
@@ -83,7 +85,7 @@ export function OnboardingClient() {
         throw new Error(body.error || `ingest failed (${ing.status})`);
       }
       setPhase('done');
-      setTimeout(() => router.push('/desk'), 600);
+      setTimeout(() => router.push(ONBOARDING_DONE_ROUTE), 600);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setPhase('error');
@@ -123,7 +125,7 @@ export function OnboardingClient() {
           paddingRight: '2rem',
         }}
       >
-        <Eyebrow>Frontispiece · the first book</Eyebrow>
+        <Eyebrow>Setup · sources</Eyebrow>
 
         <h1
           style={{
@@ -178,7 +180,7 @@ export function OnboardingClient() {
             onScopeSaved={() => {
               setScopeModalOpen(false);
               setPhase('done');
-              setTimeout(() => router.push('/desk'), 600);
+              setTimeout(() => router.push(ONBOARDING_DONE_ROUTE), 600);
             }}
           />
         )}
@@ -195,7 +197,7 @@ export function OnboardingClient() {
               color: 'var(--accent-text)',
             }}
           >
-            All set — opening Desk…
+            All set — opening Sources…
           </p>
         )}
 

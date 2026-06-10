@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
-export const metadata = { title: 'Desk · Loom' };
+export const metadata = { title: 'Sources · Loom' };
 
-export default function AtlasShelfPage() {
-  redirect('/desk');
+export default function LegacyAtlasShelfPage() {
+  redirect('/sources');
 }

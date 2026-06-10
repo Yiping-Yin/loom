@@ -12,11 +12,19 @@ export type AiStageId =
   | 'capture-organize'
   | 'cowork-tidy'
   | 'cowork-suggest'
+  | 'draft-compose'
   | 'selection-tighten'
   | 'selection-expand'
   | 'selection-rewrite';
 
-export type AiSurfaceId = 'selection' | 'free' | 'rehearsal' | 'examiner' | 'ingestion' | 'capture';
+export type AiSurfaceId =
+  | 'selection'
+  | 'free'
+  | 'rehearsal'
+  | 'examiner'
+  | 'ingestion'
+  | 'capture'
+  | 'draft';
 
 export type AiSurfaceSpec = {
   id: AiSurfaceId;
@@ -47,10 +55,10 @@ const SURFACES: Record<AiSurfaceId, AiSurfaceSpec> = {
   },
   free: {
     id: 'free',
-    title: 'Recompile the current weave',
-    launcherTitle: 'Today weave',
+    title: 'Ask across your sources',
+    launcherTitle: 'Ask Loom',
     helper: 'One free prompt · one live artifact',
-    placeholder: 'Recompile the current weave…',
+    placeholder: 'Ask across your sources…',
   },
   rehearsal: {
     id: 'rehearsal',
@@ -68,16 +76,23 @@ const SURFACES: Record<AiSurfaceId, AiSurfaceSpec> = {
   },
   ingestion: {
     id: 'ingestion',
-    title: 'Ingest one source',
-    launcherTitle: 'Import',
-    helper: 'Drop one source, then let Loom hold the first thread',
+    title: 'Add one source',
+    launcherTitle: 'Add source',
+    helper: 'Drop one source, then let Loom hold the first reader note',
   },
   capture: {
     id: 'capture',
-    title: 'Organize into note',
+    title: 'Organize into a reader note',
     launcherTitle: 'Capture',
-    helper: 'One source page · one organized note',
+    helper: 'One source page · one reader note',
     placeholder: 'Start writing, paste rough notes, or drop one source…',
+  },
+  draft: {
+    id: 'draft',
+    title: 'Compose a draft',
+    launcherTitle: 'Draft',
+    helper: 'Source-backed writing · citations stay close',
+    placeholder: 'Continue this source-backed draft...',
   },
 };
 
@@ -158,6 +173,13 @@ const STAGES: Record<AiStageId, AiStageSpec> = {
     title: 'Suggest related library material',
     role: 'recommender',
     output: 'one ranked list of related library docs',
+  },
+  'draft-compose': {
+    id: 'draft-compose',
+    family: 'draft',
+    title: SURFACES.draft.title,
+    role: 'drafting partner',
+    output: 'one source-backed draft continuation or edit',
   },
   'selection-tighten': {
     id: 'selection-tighten',

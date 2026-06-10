@@ -17,6 +17,7 @@ import {
   referenceDocsByCategory,
 } from '../../../lib/new-loom/reference-artifact-bindings';
 import { CategoryLandingClient, type CategoryDocCard } from './CategoryLandingClient';
+import UnswShelfPage from '../unsw/page';
 
 const REFERENCE_SHELF_CATEGORIES: KnowledgeCategory[] = PERSONAL_PLATFORM_SECTIONS
   .filter((section) => section.href.startsWith('/knowledge/'))
@@ -76,6 +77,10 @@ function toDocCard(doc: Awaited<ReturnType<typeof docsByCategory>>[number]): Cat
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;
+  if (category === 'unsw') {
+    return <UnswShelfPage />;
+  }
+
   const knowledgeCategories = await getSourceLibraryCategories();
   const cat = sourceLibraryCategoryFor(category, knowledgeCategories);
   if (!cat) notFound();

@@ -54,3 +54,12 @@ tsconfig*.tsbuildinfo
 * 2/
 * 3/
 .app-store/
+
+# local Loom archives and private design resources
+archive/backups/
+archive/screenshots/
+archive/snapshots/
+resources/design/
+
+# Optibook replica build (Optiver IP — lives in private repo Yiping-Yin/optibook-replica)
+/public/optibook/

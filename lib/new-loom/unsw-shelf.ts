@@ -82,7 +82,12 @@ const ECON3202_FILE_ROOT = 'file:///Users/yinyiping/Desktop/Private%20Wiki/UNSW/
 const ECON3202_MANUAL_ROOT =
   'file:///Users/yinyiping/Desktop/Private%20Wiki/UNSW/UNSW%20HTML/ECON%203202';
 
-function econFile(relativePath: string, label: string, role: string, pages?: string): UnswEcon3202LocalFile {
+function econFile(
+  relativePath: string,
+  label: string,
+  role: string,
+  pages?: string,
+): UnswEcon3202LocalFile {
   const encodedPath = relativePath.split('/').map(encodeURIComponent).join('/');
   return {
     label,
@@ -111,6 +116,11 @@ export const UNSW_SHELF_SOURCE_LINKS: UnswShelfLink[] = [
     note: 'Official course identity and UOC reference.',
   },
   {
+    label: 'MATH2991 Handbook',
+    href: 'https://handbook.unsw.edu.au/undergraduate/courses/2026/MATH2991',
+    note: 'Official 2026 catalogue page for Data and Algorithms in Trading.',
+  },
+  {
     label: 'Course outline',
     href: 'https://www.unsw.edu.au/course-outlines/course-outline#year=2026&term=Term%201&deliveryMode=In%20Person&deliveryFormat=Standard&teachingPeriod=T1&deliveryLocation=Kensington&courseCode=ECON3202&activityGroupId=1',
     note: 'Assessment, CLO, offering, and delivery source.',
@@ -120,12 +130,17 @@ export const UNSW_SHELF_SOURCE_LINKS: UnswShelfLink[] = [
     href: 'https://moodle.telt.unsw.edu.au/course/view.php?id=97199',
     note: 'Week sequence and course material source.',
   },
+  {
+    label: 'Moodle dashboard',
+    href: 'https://moodle.telt.unsw.edu.au/my/',
+    note: 'Course overview captured on 04 Jun 2026 for official course ids, offerings, and MATH2991 T2 status.',
+  },
 ];
 
 export const UNSW_SHELF_SOURCE_GROUPS = [
   {
     title: 'Official source layer',
-    items: ['Handbook', 'Course outline', 'Moodle source'],
+    items: ['Handbook', 'MATH2991 Handbook', 'Course outline', 'Moodle source', 'Moodle dashboard'],
   },
   {
     title: 'Reference layer',
@@ -170,17 +185,29 @@ export const UNSW_SHELF_PATH: UnswShelfPathBlock[] = [
   {
     label: 'W07',
     focus: 'Differentiation in multidimensional spaces',
-    sources: ['W7 A Differentiation Multidim Spaces', 'W7 B Partial Derivatives', 'W7 C Implicit Function Theorem'],
+    sources: [
+      'W7 A Differentiation Multidim Spaces',
+      'W7 B Partial Derivatives',
+      'W7 C Implicit Function Theorem',
+    ],
   },
   {
     label: 'W08',
     focus: 'Concave functions',
-    sources: ['W8 A Concave-Functions', 'W8 B Multidim Concave Functions', 'W8 C Suggested Exercises'],
+    sources: [
+      'W8 A Concave-Functions',
+      'W8 B Multidim Concave Functions',
+      'W8 C Suggested Exercises',
+    ],
   },
   {
     label: 'W09',
     focus: 'Unconstrained optimisation',
-    sources: ['W9 A Unconstrained Optimisation 1', 'W9 B Unconstrained Optimisation n', 'W9 C Exercises'],
+    sources: [
+      'W9 A Unconstrained Optimisation 1',
+      'W9 B Unconstrained Optimisation n',
+      'W9 C Exercises',
+    ],
   },
   {
     label: 'W10',
@@ -282,8 +309,16 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
       econFile('02_Week/W01/W1 A Elements Logic.pdf', 'W1 A Elements Logic.pdf', 'Lecture'),
       econFile('02_Week/W01/W1 B Set Theory.pdf', 'W1 B Set Theory.pdf', 'Lecture'),
       econFile('02_Week/W01/W1 C Euclidean Spaces.pdf', 'W1 C Euclidean Spaces.pdf', 'Lecture'),
-      econFile('02_Week/W01/W1 D Suggested Exercises.pdf', 'W1 D Suggested Exercises.pdf', 'Exercises'),
-      econFile('02_Week/W01/W1 E Suggested Solutions.pdf', 'W1 E Suggested Solutions.pdf', 'Solutions'),
+      econFile(
+        '02_Week/W01/W1 D Suggested Exercises.pdf',
+        'W1 D Suggested Exercises.pdf',
+        'Exercises',
+      ),
+      econFile(
+        '02_Week/W01/W1 E Suggested Solutions.pdf',
+        'W1 E Suggested Solutions.pdf',
+        'Solutions',
+      ),
     ],
     references: ['JR A1.1', 'JR A1.2.1'],
     output: 'Foundation for PS01 and a glossary of proof language.',
@@ -296,7 +331,11 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
       econFile('02_Week/W02/W2 A Convex Sets.pdf', 'W2 A Convex Sets.pdf', 'Lecture'),
       econFile('02_Week/W02/W2 B Elements Topology.pdf', 'W2 B Elements Topology.pdf', 'Lecture'),
       econFile('02_Week/W02/W2 C Open Sets.pdf', 'W2 C Open Sets.pdf', 'Lecture'),
-      econFile('02_Week/W02/W2 D Suggested Exercises.pdf', 'W2 D Suggested Exercises.pdf', 'Exercises'),
+      econFile(
+        '02_Week/W02/W2 D Suggested Exercises.pdf',
+        'W2 D Suggested Exercises.pdf',
+        'Exercises',
+      ),
     ],
     references: ['JR A1.2.2', 'JR A1.3'],
     output: 'Convexity and topology notes ready to connect to optimisation.',
@@ -308,8 +347,16 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
     files: [
       econFile('02_Week/W03/W3 A Functions.pdf', 'W3 A Functions.pdf', 'Lecture'),
       econFile('02_Week/W03/W3 B Continuity.pdf', 'W3 B Continuity.pdf', 'Lecture'),
-      econFile('02_Week/W03/W3 C Continuity in Multidim Spaces.pdf', 'W3 C Continuity in Multidim Spaces.pdf', 'Lecture'),
-      econFile('02_Week/W03/W3 D Suggested Exercises.pdf', 'W3 D Suggested Exercises.pdf', 'Exercises'),
+      econFile(
+        '02_Week/W03/W3 C Continuity in Multidim Spaces.pdf',
+        'W3 C Continuity in Multidim Spaces.pdf',
+        'Lecture',
+      ),
+      econFile(
+        '02_Week/W03/W3 D Suggested Exercises.pdf',
+        'W3 D Suggested Exercises.pdf',
+        'Exercises',
+      ),
     ],
     references: ['JR A1.3.1'],
     output: 'Continuity language for proof-based model reading.',
@@ -320,9 +367,17 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
     question: 'When can a mathematical object be shown to exist?',
     files: [
       econFile('02_Week/W04/W4 A Sequences.pdf', 'W4 A Sequences.pdf', 'Lecture'),
-      econFile('02_Week/W04/W4 B Limits and Continuity.pdf', 'W4 B Limits and Continuity.pdf', 'Lecture'),
+      econFile(
+        '02_Week/W04/W4 B Limits and Continuity.pdf',
+        'W4 B Limits and Continuity.pdf',
+        'Lecture',
+      ),
       econFile('02_Week/W04/W4 C Existence Theorem.pdf', 'W4 C Existence Theorem.pdf', 'Lecture'),
-      econFile('02_Week/W04/W4 D Sugggested Exercises.pdf', 'W4 D Sugggested Exercises.pdf', 'Exercises'),
+      econFile(
+        '02_Week/W04/W4 D Sugggested Exercises.pdf',
+        'W4 D Sugggested Exercises.pdf',
+        'Exercises',
+      ),
     ],
     references: ['JR A1.3.2'],
     output: 'Existence-theorem notes that can later support equilibrium reasoning.',
@@ -333,9 +388,17 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
     question: 'How do linear structure and single-variable derivatives enter optimisation?',
     files: [
       econFile('02_Week/W05/W5 A Linear Functions.pdf', 'W5 A Linear Functions.pdf', 'Lecture'),
-      econFile('02_Week/W05/W5 B Univariate Differentiation.pdf', 'W5 B Univariate Differentiation.pdf', 'Lecture'),
+      econFile(
+        '02_Week/W05/W5 B Univariate Differentiation.pdf',
+        'W5 B Univariate Differentiation.pdf',
+        'Lecture',
+      ),
       econFile('02_Week/W05/W5 C Properties.pdf', 'W5 C Properties.pdf', 'Lecture'),
-      econFile('02_Week/W05/W5 D Suggested Exercises.pdf', 'W5 D Suggested Exercises.pdf', 'Exercises'),
+      econFile(
+        '02_Week/W05/W5 D Suggested Exercises.pdf',
+        'W5 D Suggested Exercises.pdf',
+        'Exercises',
+      ),
     ],
     references: ['JR A2.1.1', 'Chiang methods review'],
     output: 'Differentiation base for PS02 and later first-order-condition work.',
@@ -343,12 +406,29 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
   {
     label: 'W07',
     focus: 'Differentiation in multidimensional spaces',
-    question: 'How do partial derivatives and implicit functions carry economic comparative statics?',
+    question:
+      'How do partial derivatives and implicit functions carry economic comparative statics?',
     files: [
-      econFile('02_Week/W07/W7 A Differentiation Multidim Spaces.pdf', 'W7 A Differentiation Multidim Spaces.pdf', 'Lecture'),
-      econFile('02_Week/W07/W7 B Partial Derivatives.pdf', 'W7 B Partial Derivatives.pdf', 'Lecture'),
-      econFile('02_Week/W07/W7 C Implicit Function Theorem.pdf', 'W7 C Implicit Function Theorem.pdf', 'Lecture'),
-      econFile('02_Week/W07/W7 D Suggested Exercises.pdf', 'W7 D Suggested Exercises.pdf', 'Exercises'),
+      econFile(
+        '02_Week/W07/W7 A Differentiation Multidim Spaces.pdf',
+        'W7 A Differentiation Multidim Spaces.pdf',
+        'Lecture',
+      ),
+      econFile(
+        '02_Week/W07/W7 B Partial Derivatives.pdf',
+        'W7 B Partial Derivatives.pdf',
+        'Lecture',
+      ),
+      econFile(
+        '02_Week/W07/W7 C Implicit Function Theorem.pdf',
+        'W7 C Implicit Function Theorem.pdf',
+        'Lecture',
+      ),
+      econFile(
+        '02_Week/W07/W7 D Suggested Exercises.pdf',
+        'W7 D Suggested Exercises.pdf',
+        'Exercises',
+      ),
     ],
     references: ['JR A2.1.2'],
     output: 'Implicit-function and comparative-statics bridge for portfolio explanation.',
@@ -359,8 +439,16 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
     question: 'How does concavity turn optimisation into economically meaningful structure?',
     files: [
       econFile('02_Week/W08/W8 A Concave-Functions.pdf', 'W8 A Concave-Functions.pdf', 'Lecture'),
-      econFile('02_Week/W08/W8 B Multidim Concave Functions.pdf', 'W8 B Multidim Concave Functions.pdf', 'Lecture'),
-      econFile('02_Week/W08/W8 C Suggested Exercises.pdf', 'W8 C Suggested Exercises.pdf', 'Exercises'),
+      econFile(
+        '02_Week/W08/W8 B Multidim Concave Functions.pdf',
+        'W8 B Multidim Concave Functions.pdf',
+        'Lecture',
+      ),
+      econFile(
+        '02_Week/W08/W8 C Suggested Exercises.pdf',
+        'W8 C Suggested Exercises.pdf',
+        'Exercises',
+      ),
     ],
     references: ['JR A1.4.2'],
     output: 'Concavity evidence for PS03 and optimisation interpretation.',
@@ -370,8 +458,16 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
     focus: 'Unconstrained optimisation',
     question: 'How do first-order and second-order conditions produce optimal choices?',
     files: [
-      econFile('02_Week/W09/W9 A Unconstrained Optimisation 1 .pdf', 'W9 A Unconstrained Optimisation 1 .pdf', 'Lecture'),
-      econFile('02_Week/W09/W9 B Unconstrained Optimisation n.pdf', 'W9 B Unconstrained Optimisation n.pdf', 'Lecture'),
+      econFile(
+        '02_Week/W09/W9 A Unconstrained Optimisation 1 .pdf',
+        'W9 A Unconstrained Optimisation 1 .pdf',
+        'Lecture',
+      ),
+      econFile(
+        '02_Week/W09/W9 B Unconstrained Optimisation n.pdf',
+        'W9 B Unconstrained Optimisation n.pdf',
+        'Lecture',
+      ),
       econFile('02_Week/W09/W9 C Exercises.pdf', 'W9 C Exercises.pdf', 'Exercises'),
     ],
     references: ['Sundaram optimisation theory'],
@@ -381,9 +477,7 @@ export const UNSW_ECON3202_WEEKS: UnswEcon3202Week[] = [
     label: 'W10',
     focus: 'Lagrange method',
     question: 'How do constraints change the optimisation story?',
-    files: [
-      econFile('02_Week/W10/W10 A Lagrange.pdf', 'W10 A Lagrange.pdf', 'Lecture'),
-    ],
+    files: [econFile('02_Week/W10/W10 A Lagrange.pdf', 'W10 A Lagrange.pdf', 'Lecture')],
     references: ['Sundaram constrained optimisation'],
     output: 'Constrained-optimisation close for exam preparation.',
   },
@@ -400,7 +494,11 @@ export const UNSW_ECON3202_PROBLEM_SETS: UnswEcon3202ProblemSet[] = [
     files: [
       econFile('03_Problem_Set/Problem Set 01.pdf', 'Problem Set 01.pdf', 'Assignment', '2 pages'),
       econFile('03_Problem_Set/Problem1.pdf', 'Problem1.pdf', 'Answer', '4 pages'),
-      econFile('03_Problem_Set/Problem1-codex-explanation.pdf', 'Problem1-codex-explanation.pdf', 'Codex explanation'),
+      econFile(
+        '03_Problem_Set/Problem1-codex-explanation.pdf',
+        'Problem1-codex-explanation.pdf',
+        'Codex explanation',
+      ),
     ],
     evidence: 'Shows the first conversion from source PDFs into worked reasoning and explanation.',
     claim:
@@ -448,7 +546,8 @@ export const UNSW_ECON3202_PROBLEM_SETS: UnswEcon3202ProblemSet[] = [
       econFile('03_Problem_Set/Problem Set 02.pdf', 'Problem Set 02.pdf', 'Assignment', '2 pages'),
       econFile('03_Problem_Set/Problem2.pdf', 'Problem2.pdf', 'Answer', '5 pages'),
     ],
-    evidence: 'Connects W03-W05 continuity and derivative material to a marked problem-set sequence.',
+    evidence:
+      'Connects W03-W05 continuity and derivative material to a marked problem-set sequence.',
     claim:
       'PS02 is the bridge from definitions to calculus-based reasoning: continuity and differentiation become visible answer work.',
     relatedWeeks: ['W03', 'W04', 'W05'],
@@ -489,7 +588,11 @@ export const UNSW_ECON3202_PROBLEM_SETS: UnswEcon3202ProblemSet[] = [
     files: [
       econFile('03_Problem_Set/Problem Set 03.pdf', 'Problem Set 03.pdf', 'Assignment', '1 page'),
       econFile('03_Problem_Set/Problem 3.pdf', 'Problem 3.pdf', 'Answer', '5 pages'),
-      econFile('03_Problem_Set/Problem3-codex-explanation.pdf', 'Problem3-codex-explanation.pdf', 'Codex explanation'),
+      econFile(
+        '03_Problem_Set/Problem3-codex-explanation.pdf',
+        'Problem3-codex-explanation.pdf',
+        'Codex explanation',
+      ),
     ],
     evidence: 'Turns concavity and multidimensional differentiation into inspectable work product.',
     claim:

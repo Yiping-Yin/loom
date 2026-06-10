@@ -1,12 +1,7 @@
-import { Suspense } from 'react';
-import CollectionClient from '../CollectionClient';
+import { redirect } from 'next/navigation';
 
-export const metadata = { title: 'Collection · Loom' };
+export const metadata = { title: 'Sources · Loom' };
 
-export default function CollectionPage() {
-  return (
-    <Suspense fallback={null}>
-      <CollectionClient />
-    </Suspense>
-  );
+export default function LegacySourceCategoryPage() {
+  redirect('/sources');
 }

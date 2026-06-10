@@ -3,6 +3,7 @@ import { FileBadge } from './FileBadge';
 
 export type DocumentPreviewCardProps = {
   artifact: VerifiedDossierArtifact;
+  index?: number;
 };
 
 export function DocumentPreviewCard({ artifact }: DocumentPreviewCardProps) {
@@ -52,13 +53,14 @@ export function DocumentPreviewCard({ artifact }: DocumentPreviewCardProps) {
   );
 }
 
-export function ArtifactCitationCard({ artifact }: DocumentPreviewCardProps) {
+export function ArtifactCitationCard({ artifact, index }: DocumentPreviewCardProps) {
   const preview = artifact.preview;
   const lines = preview?.lines.slice(0, 2) ?? [artifact.role, artifact.label];
 
   return (
     <a className="vd-citation-card" href={artifact.href} aria-label={`Open cited source ${artifact.label}`}>
       <span className="vd-citation-card__copy">
+        {typeof index === 'number' ? <small>{String(index).padStart(2, '0')}</small> : null}
         <FileBadge kind={artifact.kind} label={artifact.label} compact />
         <span>{preview?.metadata ?? artifact.role}</span>
       </span>

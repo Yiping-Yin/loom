@@ -1,7 +1,9 @@
 import {
   VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
   VERIFIED_DOSSIER_SECTIONS,
+  VERIFIED_DOSSIER_TOP_NAV,
   VERIFIED_DOSSIER_UNSW_COURSES,
+  formatVerifiedDossierCourseMeta,
   resolveVerifiedDossierArtifact,
 } from '../../lib/new-loom/verified-dossier-home';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
@@ -13,17 +15,20 @@ export default function EducationPage() {
   const category = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((item) => item.id === 'education');
   if (!category) throw new Error('Missing Education category');
   const educationSourceSectionIds = new Set<string>(category.sourceSectionIds);
-  const sections = VERIFIED_DOSSIER_SECTIONS.filter((section) => educationSourceSectionIds.has(section.id));
+  const sections = VERIFIED_DOSSIER_SECTIONS.filter((section) =>
+    educationSourceSectionIds.has(section.id),
+  );
   const artifacts = category.artifactIds.map(resolveVerifiedDossierArtifact);
 
   return (
     <main className="vd-section-page" aria-labelledby="education-title">
       <nav className="vd-section-page__nav" aria-label="Education navigation">
-        <a href="/">Loom</a>
-        <a href="/about">About</a>
-        <a aria-current="page" href="/education">Education</a>
-        <a href="/experience">Experience</a>
-        <a href="/digital-me">Digital Me</a>
+        <a href="/loom">Loom</a>
+        {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
+          <a key={item.label} href={item.href} aria-current={item.href === '/education' ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))}
       </nav>
       <header className="vd-section-page__hero">
         <p>Education</p>
@@ -41,9 +46,9 @@ export default function EducationPage() {
       </section>
       <section className="vd-section-page__course-strip" aria-label="UNSW course folders">
         {VERIFIED_DOSSIER_UNSW_COURSES.slice(0, 8).map((course) => (
-          <a key={course.id} href={course.href}>
+          <a key={course.id} href={course.href} title={courseTitle(course)}>
             <strong>{course.code}</strong>
-            <span>{course.status}</span>
+            <span>{formatVerifiedDossierCourseMeta(course) || course.status}</span>
           </a>
         ))}
       </section>
@@ -55,5 +60,13 @@ export default function EducationPage() {
         ))}
       </section>
     </main>
+  );
+}
+
+function courseTitle(course: (typeof VERIFIED_DOSSIER_UNSW_COURSES)[number]) {
+  return (
+    [course.moodleTitle, course.handbookYear ? `UNSW Handbook ${course.handbookYear}` : null]
+      .filter(Boolean)
+      .join(' / ') || course.status
   );
 }

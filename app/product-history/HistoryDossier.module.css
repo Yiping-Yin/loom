@@ -35,6 +35,10 @@
   text-decoration: none;
 }
 
+.wordmark[aria-current="page"] {
+  color: var(--history-accent);
+}
+
 .navLinks {
   display: flex;
   flex-wrap: wrap;
@@ -45,6 +49,10 @@
 }
 
 .navLinks a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.1rem;
   color: #242b27;
   font-size: 0.88rem;
   font-weight: 720;
@@ -55,6 +63,22 @@
 
 .navLinks a:hover {
   color: var(--history-accent);
+}
+
+.navLinks a[aria-current="page"] {
+  color: var(--history-accent);
+}
+
+.navLinks a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0.18rem;
+  left: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.72;
 }
 
 .hero,

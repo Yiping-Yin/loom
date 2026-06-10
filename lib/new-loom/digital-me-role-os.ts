@@ -47,7 +47,8 @@ export type DigitalMeProofPath = {
   activeArtifactMode: DigitalMeArtifactModeId;
   claims: readonly DigitalMeClaimNode[];
   evidence: readonly DigitalMeEvidenceNode[];
-  nextGrowthActions: readonly string[];
+  /** Claim-specific next growth actions, keyed by claim id. */
+  nextGrowthActions: Readonly<Record<string, string>>;
 };
 
 export const DIGITAL_ME_QUANT_ROLE_LENS = {
@@ -139,6 +140,13 @@ const DIGITAL_ME_EVIDENCE = [
     supportedCapability: 'personal role framing',
     roleUse: 'Ties the role lens back to the profile direction and keeps Digital Me grounded in identity evidence.',
   },
+  {
+    id: 'optibook-live-market-practice',
+    artifactId: 'optibook-market-lens',
+    supportedCapability: 'live market implementation practice',
+    roleUse:
+      'Shows pair-trading and order-book strategy practice on Optibook from the Optiver & UNSW trading academy.',
+  },
 ] as const satisfies readonly DigitalMeEvidenceNode[];
 
 const DIGITAL_ME_CLAIMS = [
@@ -176,11 +184,11 @@ const DIGITAL_ME_CLAIMS = [
   },
   {
     id: 'live-market-project-proof',
-    text: 'Yiping still needs a complete live market research or trading project that demonstrates end-to-end execution.',
+    text: 'Yiping is assembling live market proof, starting from trading-strategy practice on Optibook in the Optiver & UNSW trading academy.',
     roleRelevance: 'Hiring proof for this role is strongest when analysis, implementation, evaluation, and reflection are visible.',
-    evidenceStatus: 'missing',
-    evidenceIds: [],
-    artifactActions: ['Create project brief', 'Define source inputs', 'Track implementation output'],
+    evidenceStatus: 'partial',
+    evidenceIds: ['optibook-live-market-practice'],
+    artifactActions: ['Open the Optibook replica', 'Define source inputs', 'Track implementation output'],
   },
 ] as const satisfies readonly DigitalMeClaimNode[];
 
@@ -193,11 +201,18 @@ export const DIGITAL_ME_PROOF_PATH = {
   activeArtifactMode: 'capability-map',
   claims: DIGITAL_ME_CLAIMS,
   evidence: DIGITAL_ME_EVIDENCE,
-  nextGrowthActions: [
-    'Create one end-to-end quant research project with data, model notes, code, and evaluation.',
-    'Turn optimisation coursework into a portfolio case that explains assumptions and limits.',
-    'Add implementation proof that connects Python prototypes to C++ performance practice.',
-  ],
+  nextGrowthActions: {
+    'mathematical-reasoning':
+      'Create a small quant research project with data, a hypothesis, model notes, evaluation, and limits.',
+    'optimisation-thinking':
+      'Turn optimisation coursework into a portfolio case that explains assumptions and limits.',
+    'programming-foundations':
+      'Add implementation proof that connects Python prototypes to C++ performance practice.',
+    'finance-learning-context':
+      'Connect WQU and UNSW finance learning to one dated market-structure analysis artifact.',
+    'live-market-project-proof':
+      'Grow the Optibook trading-academy practice into one end-to-end project with data, model notes, code, and evaluation.',
+  },
 } as const satisfies DigitalMeProofPath;
 
 export function getDigitalMeClaimById(id: string): DigitalMeClaimNode | undefined {

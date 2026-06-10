@@ -165,14 +165,14 @@ export default function PursuitDetailClient({ id }: Props) {
     // hard "are you sure" beat before firing the native writer. The web
     // side intentionally uses the browser confirm (vs a custom modal) to
     // keep this path dead simple; parity with Finder's "move to trash".
-    if (!window.confirm('Remove this pursuit?')) return;
+    if (!window.confirm('Remove this question?')) return;
     postToBridge('deletePursuit', { id: pursuit.id });
     // Short delay so the acknowledgement isn't swallowed by the
     // navigation — gives the user a beat to see their choice register
-    // before landing back on the Pursuits list (where the mirror will
-    // have already dropped this row).
+    // before landing back in Sources (where the mirror will have
+    // already dropped this row).
     setTimeout(() => {
-      window.location.href = '/pursuits';
+      window.location.href = '/sources';
     }, 150);
   }
 
@@ -193,8 +193,8 @@ export default function PursuitDetailClient({ id }: Props) {
           It may have been set down, or never opened.
         </p>
         <div className="loom-pursuit-detail-actions">
-          <Link href="/pursuits" className="loom-pursuit-detail-action">
-            Return to Pursuits
+          <Link href="/sources" className="loom-pursuit-detail-action">
+            Return to Sources
           </Link>
         </div>
       </div>
@@ -242,7 +242,7 @@ export default function PursuitDetailClient({ id }: Props) {
 
       {panels.length > 0 && (
         <section className="loom-pursuit-detail-section">
-          <div className="loom-pursuit-detail-section-label">Panels formed within</div>
+          <div className="loom-pursuit-detail-section-label">Reader notes formed within</div>
           {panels.map((panel: PursuitPanelItem) => (
             <Link
               key={panel.id}
@@ -256,8 +256,8 @@ export default function PursuitDetailClient({ id }: Props) {
       )}
 
       <div className="loom-pursuit-detail-actions">
-        <Link href="/pursuits" className="loom-pursuit-detail-action">
-          Return to Pursuits
+        <Link href="/sources" className="loom-pursuit-detail-action">
+          Return to Sources
         </Link>
         <button
           type="button"

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import {
   VERIFIED_DOSSIER_ARTIFACTS,
-  VERIFIED_DOSSIER_PROFILE,
   VERIFIED_DOSSIER_SECTIONS,
   VERIFIED_DOSSIER_TOP_NAV,
   resolveVerifiedDossierArtifact,
@@ -54,15 +53,6 @@ const SOURCE_FLOW = [
     text: 'Turn the source trail into work, explanations, portfolio pages, and grounded AI answers.',
   },
 ];
-
-function SearchIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 export function KnowledgeHomeStatic({
   sourceLibraryGroups,
@@ -150,8 +140,8 @@ export function KnowledgeHomeStatic({
 
   return (
     <main className={`vd-home ${styles.page}`} aria-labelledby="sources-title">
-      <nav className="vd-nav" aria-label="Verified dossier navigation">
-        <a className="vd-wordmark" href="/" aria-label="Loom home">
+      <nav className="vd-nav vd-nav--simple" aria-label="Verified dossier navigation">
+        <a className="vd-wordmark" href="/loom" aria-label="Open Loom product">
           Loom
         </a>
         <div className="vd-nav__links">
@@ -161,13 +151,6 @@ export function KnowledgeHomeStatic({
             </a>
           ))}
         </div>
-        <label className="vd-search">
-          <SearchIcon />
-          <input type="search" placeholder="Search sources" aria-label="Search sources" />
-        </label>
-        <a className="vd-avatar" href="/about" aria-label="Open Yiping Yin profile">
-          <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
-        </a>
       </nav>
 
       <section className={styles.hero}>
@@ -450,7 +433,7 @@ export function KnowledgeHomeStatic({
             })}
           </div>
 
-          <SourceBlock id="reader-notes" title="Reader notes" empty="No reader notes yet." />
+          <SourceBlock id="reader-notes" title="Reader notes" empty="No reader notes yet."></SourceBlock>
         </div>
       </section>
     </main>

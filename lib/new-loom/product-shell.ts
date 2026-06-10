@@ -105,6 +105,14 @@ export const NEW_LOOM_INTERNAL_ROUTES = [
 
 export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES = [
   '/wiki',
+  '/digital-me',
+  '/drafts',
+  '/education',
+  '/experience',
+  '/knowledge/[category]',
+  '/knowledge/unsw',
+  '/loom',
+  '/uploads/[name]',
 ] as const;
 
 export const NEW_LOOM_ROUTE_CLASSIFICATION = {

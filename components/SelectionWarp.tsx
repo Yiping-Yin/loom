@@ -230,7 +230,7 @@ export function SelectionWarp() {
           detail: {
             anchorId: captured.anchorId,
             quote: captured.quote,
-            reviewHint: '⌘/ Thought Map',
+            reviewHint: '⌘/ Reader notes',
           },
         }));
         window.dispatchEvent(new CustomEvent('loom:capture-success', {
@@ -407,7 +407,7 @@ export function SelectionWarp() {
           detail: {
             anchorId: captured.anchorId,
             quote: captured.quote,
-            reviewHint: '⌘/ Thought Map',
+            reviewHint: '⌘/ Reader notes',
           },
         }));
         window.dispatchEvent(new CustomEvent('loom:capture-success', {
@@ -438,7 +438,7 @@ export function SelectionWarp() {
       detail: {
         anchorId: captured.anchorId,
         quote: captured.quote,
-        reviewHint: '⌘/ 打开 Thought Map 延伸',
+        reviewHint: '⌘/ 打开 reader notes 延伸',
         viewport: { x: spot.left, y: spot.top, height: spot.height },
       },
     }));

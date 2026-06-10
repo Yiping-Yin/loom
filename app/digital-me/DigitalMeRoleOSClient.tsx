@@ -42,14 +42,16 @@ const CLAIM_BOUNDARIES: Record<string, string> = {
   'finance-learning-context':
     'Finance learning context is visible, but live market structure analysis still needs a dated output artifact.',
   'live-market-project-proof':
-    'This is intentionally marked missing until analysis, implementation, evaluation, and reflection are all inspectable.',
+    'The Optibook replica is first partial proof; analysis, implementation, evaluation, and reflection still need to be inspectable end to end.',
 };
-
-const NEXT_GROWTH_ACTION =
-  'Create a small quant research project with data, a hypothesis, model notes, evaluation, and limits.';
 
 function getClaimTitle(claim: DigitalMeClaimNode) {
   return CLAIM_TITLES[claim.id] ?? claim.id.replaceAll('-', ' ');
+}
+
+function getClaimGrowthAction(claimId: string) {
+  const actions: Readonly<Record<string, string>> = DIGITAL_ME_PROOF_PATH.nextGrowthActions;
+  return actions[claimId] ?? '';
 }
 
 function ArtifactOutput({
@@ -97,9 +99,10 @@ function ArtifactOutput({
         <p>Gap Roadmap</p>
         <h2>From current proof to role-ready output</h2>
         <ol>
-          <li>{NEXT_GROWTH_ACTION}</li>
-          {DIGITAL_ME_PROOF_PATH.nextGrowthActions.map((action) => (
-            <li key={action}>{action}</li>
+          {DIGITAL_ME_PROOF_PATH.claims.map((claim) => (
+            <li key={claim.id}>
+              <strong>{getClaimTitle(claim)}.</strong> {getClaimGrowthAction(claim.id)}
+            </li>
           ))}
         </ol>
       </article>
@@ -272,9 +275,46 @@ export default function DigitalMeRoleOSClient() {
             <strong>Boundary</strong>
             <p>{CLAIM_BOUNDARIES[selectedClaim.id]}</p>
             <strong>Next Growth Action</strong>
-            <p>{NEXT_GROWTH_ACTION}</p>
+            <p>{getClaimGrowthAction(selectedClaim.id)}</p>
           </section>
         </aside>
+      </section>
+
+      <section className={styles.marketRoom} aria-label="Live Market Room — Optibook replica">
+        <img
+          className={styles.marketRoomShot}
+          src="/verified-sources/digital-me/optibook-market-lens.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+        <span className={styles.marketRoomScrim} aria-hidden="true" />
+        <div className={styles.marketRoomBody}>
+          <p className={styles.marketRoomEyebrow}>Live Market Room · Optibook replica</p>
+          <h2 className={styles.marketRoomTitle}>A working exchange, not a screenshot</h2>
+          <p className={styles.marketRoomLede}>
+            A self-contained replica of the Optiver &amp; UNSW Optibook exchange — order book,
+            leaderboard, trade ticker, and market-making practice that keeps running offline
+            after the source retires.
+          </p>
+          <div className={styles.marketRoomMeta}>
+            <span>44 teams</span>
+            <span>26 instruments</span>
+            <span>Zero remote dependencies</span>
+            <span>Snapshot 2026-06-10</span>
+          </div>
+          <a
+            className={styles.marketRoomLaunch}
+            href="/optibook/index.html"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Launch the Optibook replica
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+        </div>
       </section>
 
       <section

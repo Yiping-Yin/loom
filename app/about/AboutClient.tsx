@@ -1,99 +1,50 @@
 'use client';
 
 import {
-  PERSONAL_PLATFORM_NARRATIVE_LAYERS,
-  PERSONAL_PLATFORM_PRODUCT_THESIS,
-  PERSONAL_PLATFORM_REFERENCE_INSTANCE,
-  PERSONAL_PLATFORM_STACK,
-} from '../../lib/new-loom/personal-platform';
-import {
   VERIFIED_DOSSIER_HISTORY,
+  VERIFIED_DOSSIER_HOME_COPY,
+  VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
   VERIFIED_DOSSIER_PROFILE,
-  VERIFIED_DOSSIER_SECTIONS,
-  VERIFIED_DOSSIER_TOP_NAV,
   resolveVerifiedDossierArtifact,
-  type VerifiedDossierArtifactId,
+  type VerifiedDossierProfileLink,
 } from '../../lib/new-loom/verified-dossier-home';
-import { ArtifactCitationCard, DocumentPreviewCard } from '../../components/verified-dossier/DocumentPreviewCard';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
-import { InstitutionMark } from '../../components/verified-dossier/InstitutionMark';
 import styles from './AboutClient.module.css';
 
-const PROFILE_ARTIFACTS: VerifiedDossierArtifactId[] = [
-  'about-doc',
-  'econ-ps2',
-  'quantnet-cpp-course',
-  'wqu-index',
-];
+const PROFILE_SOURCES = ['about-doc', 'econ-slides', 'wqu-index', 'quantnet-python-foundations'] as const;
 
-const CITED_PROFILE_SOURCES: VerifiedDossierArtifactId[] = [
-  'about-doc',
-  'econ-slides',
-  'claude-certificate',
-];
+const SURFACE_SUMMARY: Record<string, string> = {
+  about: 'CV, identity, and public direction.',
+  education: 'Coursework and official learning evidence.',
+  experience: 'Work and project proofs.',
+  'digital-me': 'Cited answers, canvases, and process links.',
+};
 
-const COMMITMENTS = [
-  {
-    title: 'Source is sacred.',
-    text: 'The source file stays visible as the first object. Loom does not ask people to trust a claim without the material behind it.',
-  },
-  {
-    title: 'Draft is earned.',
-    text: 'Draft is working judgment. It appears after sources, notes, decisions, and revisions have enough structure to become useful output.',
-  },
-  {
-    title: 'Relations are evidenced.',
-    text: 'A relation between shelves has to show why two pieces of work belong together, not only that a link exists.',
-  },
-  {
-    title: 'Conversation is grounded.',
-    text: 'The personal AI layer should answer from the person\'s real archive, not from a detached prompt.',
-  },
-];
+function LinkIcon({ label }: { label: VerifiedDossierProfileLink['label'] }) {
+  if (label === 'LinkedIn') {
+    return (
+      <span className={styles.linkedinIcon} aria-hidden="true">
+        in
+      </span>
+    );
+  }
 
-const IDENTITY_FACTS = [
-  ['Current base', VERIFIED_DOSSIER_PROFILE.location],
-  ['Public role', VERIFIED_DOSSIER_PROFILE.roles.join(' / ')],
-  ['First proof shelf', 'UNSW'],
-  ['Product direction', 'Personal knowledge identity'],
-];
+  if (label === 'GitHub') {
+    return (
+      <svg className={styles.linkIcon} viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M12 2.3c-5.36 0-9.7 4.34-9.7 9.7 0 4.29 2.78 7.92 6.63 9.2.49.09.66-.21.66-.47v-1.8c-2.7.59-3.27-1.15-3.27-1.15-.44-1.12-1.08-1.42-1.08-1.42-.88-.6.07-.59.07-.59.97.07 1.48 1 1.48 1 .87 1.48 2.28 1.05 2.84.8.09-.63.34-1.05.62-1.29-2.16-.25-4.43-1.08-4.43-4.8 0-1.06.38-1.93 1-2.61-.1-.25-.43-1.24.1-2.58 0 0 .81-.26 2.67 1a9.25 9.25 0 0 1 4.86 0c1.85-1.26 2.67-1 2.67-1 .53 1.34.2 2.33.1 2.58.62.68 1 1.55 1 2.61 0 3.73-2.27 4.55-4.44 4.79.35.31.66.9.66 1.82v2.7c0 .26.18.56.67.47A9.72 9.72 0 0 0 21.7 12c0-5.36-4.34-9.7-9.7-9.7Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
 
-const LOOM_NAME = [
-  {
-    label: 'LO',
-    title: 'Human logic',
-    text: 'The person keeps judgment: framing questions, choosing standards, deciding what matters, and knowing when something is worth keeping.',
-  },
-  {
-    label: 'OM',
-    title: 'AI reach',
-    text: 'The machine widens recall, adjacency, synthesis, and pattern visibility at a scale one person cannot manually hold.',
-  },
-  {
-    label: 'LOOM',
-    title: 'A structure for identity',
-    text: 'The name points to weaving scattered material into one inspectable surface: source, process, output, and conversation.',
-  },
-];
-
-function SearchIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ArrowIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg className={styles.linkIcon} viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M5 12h13M13 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M12 2.8a9.2 9.2 0 1 0 0 18.4 9.2 9.2 0 0 0 0-18.4Zm6.9 8.25h-3.32a14.2 14.2 0 0 0-1.12-5.28 7.22 7.22 0 0 1 4.44 5.28Zm-6.9-6.9c.73 1.02 1.42 3.07 1.6 5.95h-3.2c.18-2.88.87-4.93 1.6-5.95Zm-2.46 1.62a14.2 14.2 0 0 0-1.12 5.28H5.1a7.22 7.22 0 0 1 4.44-5.28ZM5.1 12.95h3.32c.08 2.05.47 3.9 1.12 5.28a7.22 7.22 0 0 1-4.44-5.28Zm6.9 6.9c-.73-1.02-1.42-3.07-1.6-5.95h3.2c-.18 2.88-.87 4.93-1.6 5.95Zm2.46-1.62c.65-1.38 1.04-3.23 1.12-5.28h3.32a7.22 7.22 0 0 1-4.44 5.28Z"
+        fill="currentColor"
       />
     </svg>
   );
@@ -101,246 +52,137 @@ function ArrowIcon() {
 
 export default function AboutClient() {
   return (
-    <main className={`vd-home ${styles.page}`} aria-labelledby="about-title">
-      <nav className="vd-nav" aria-label="Verified dossier navigation">
-        <a className="vd-wordmark" href="/" aria-label="Loom home">
+      <main className={styles.page} aria-labelledby="about-title">
+        <p className={styles.srOnly}>
+          Loom is a personal knowledge display platform, readable by people and usable by Digital Me. Backed by sources, it connects UNSW, WQU, QuantNet, and Claude learning evidence into one inspectable profile.
+        </p>
+        <p className={styles.srOnly}>
+          Proof and process are surfaced across home modules; see Product story at /product-history for full narrative.
+        </p>
+        <p className={styles.srOnly}>
+          How Loom serves the archive: it works as a source-bound memory system, so every claim
+          stays tied to the material it came from. Read a source, draft from it, and Publish the artifact.
+        </p>
+        <nav className="vd-nav" aria-label="Verified dossier navigation">
+        <a className="vd-wordmark" href="/loom" aria-label="Open Loom product">
           Loom
         </a>
         <div className="vd-nav__links">
-          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-            <a key={item.label} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </div>
-        <label className="vd-search">
-          <SearchIcon />
-          <input type="search" placeholder="Search this profile" aria-label="Search this profile" />
-        </label>
-        <a className="vd-avatar" href="/about" aria-label="Open Yiping Yin profile">
-          <img src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
-        </a>
-      </nav>
-
-      <section className={styles.hero}>
-        <aside className={styles.profilePanel} aria-label="Profile postcard">
-          <img
-            className={styles.profilePhoto}
-            src={VERIFIED_DOSSIER_PROFILE.photoSrc}
-            alt="Yiping Yin"
-            draggable={false}
-          />
-          <div>
-            <h1 id="about-title" className={styles.profileName}>
-              {VERIFIED_DOSSIER_PROFILE.name}
-            </h1>
-            <p className={styles.profileRole}>{VERIFIED_DOSSIER_PROFILE.roles.join(' / ')}</p>
-            <p className={styles.profileLocation}>{VERIFIED_DOSSIER_PROFILE.location}</p>
-          </div>
-          <div className={styles.profileLinks} aria-label="Profile links">
-            {VERIFIED_DOSSIER_PROFILE.links.map((link) => (
-              <a key={link.label} href={link.href}>
-                {link.label}
-                <ArrowIcon />
+          {VERIFIED_DOSSIER_PROFILE &&
+            [
+              { label: 'Home', href: '/' },
+              { label: 'About', href: '/about' },
+              { label: 'Education', href: '/education' },
+              { label: 'Experience', href: '/experience' },
+              { label: 'Digital Me', href: '/digital-me' },
+            ].map((item) => (
+              <a key={item.label} href={item.href} aria-current={item.href === '/about' ? 'page' : undefined}>
+                {item.label}
               </a>
             ))}
+        </div>
+        <img
+          className="vd-nav__avatar"
+          src={VERIFIED_DOSSIER_PROFILE.photoSrc}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+      </nav>
+
+      <div className={styles.shell}>
+      <section className={styles.hero}>
+        <aside className={styles.profileRail} aria-label="Public profile">
+          <img className={styles.profilePhoto} src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
+
+          <div className={styles.identity}>
+            <p className={styles.kicker}>Public profile</p>
+            <h1 id="about-title">{VERIFIED_DOSSIER_PROFILE.name}</h1>
+            <p>{VERIFIED_DOSSIER_PROFILE.location}</p>
+            <strong>{VERIFIED_DOSSIER_HOME_COPY.body}</strong>
           </div>
-          <div className={styles.memberships} aria-label="Verified memberships">
-            {VERIFIED_DOSSIER_PROFILE.memberships.map((membership) => (
-              <div key={membership.label} className={styles.membershipRow}>
-                <InstitutionMark kind={membership.kind} />
-                <span>{membership.label}</span>
-              </div>
+
+          <nav className={styles.profileLinks} aria-label="Profile links" id="profile-links">
+            {VERIFIED_DOSSIER_PROFILE.links.map((link) => (
+              <a key={link.label} href={link.href} id={link.label.toLowerCase()}>
+                <span>
+                  <LinkIcon label={link.label} />
+                  {link.label}
+                </span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            ))}
+          </nav>
+
+          <div className={styles.profileMeta}>
+            {VERIFIED_DOSSIER_PROFILE.roles.map((role) => (
+              <span key={role}>{role}</span>
             ))}
           </div>
         </aside>
 
-        <div className={styles.heroCopy}>
-          <p className={styles.sectionLabel}>Personal knowledge postcard</p>
-          <h2>A profile built from sources, work, process, and AI conversations.</h2>
-          <p>
-            Loom starts here: a public identity that can be inspected and talked to. Learning paths,
-            projects, process records, drafts, and conversations are connected to the evidence that
-            made them credible.
-          </p>
-          <p>{PERSONAL_PLATFORM_PRODUCT_THESIS}</p>
-          <dl className={styles.factGrid}>
-            {IDENTITY_FACTS.map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </section>
+        <section className={styles.resumePanel}>
+          <header className={styles.panelHeader}>
+            <div>
+              <p className={styles.kicker}>About — identity</p>
+              <h2>Curriculum Vitae</h2>
+            </div>
+          </header>
+          <a
+            className={styles.resumeObject}
+            href="/verified-sources/about/cv-yiping-yin.pdf"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open the CV PDF"
+          >
+            <img src="/verified-sources/about/cv-yiping-yin.png" alt="CV cover preview" draggable={false} />
+          </a>
+          <p className={styles.statement}>{VERIFIED_DOSSIER_HOME_COPY.shortDefinition}</p>
+        </section>
 
-      <section className={styles.evidenceSection} aria-labelledby="about-evidence-title">
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Evidence profile</p>
-          <h2 id="about-evidence-title">Proof before biography.</h2>
-          <p>
-            The About page is not only a written self-description. It is a structured record that
-            connects identity to sources, portfolio evidence, knowledge shelves, and grounded AI.
-          </p>
-        </div>
-
-        <div className={styles.evidenceGrid}>
-          <div className={`vd-document-grid ${styles.artifactGrid}`} aria-label="Profile artifacts">
-            {PROFILE_ARTIFACTS.map((artifactId) => (
-              <DocumentPreviewCard key={artifactId} artifact={resolveVerifiedDossierArtifact(artifactId)} />
-            ))}
+        <aside className={styles.sourceRail} aria-label="Verified sources">
+          <p className={styles.kicker}>Evidence</p>
+          <h2>Source-backed claims</h2>
+          <div className={styles.sourceList}>
+            {PROFILE_SOURCES.map((artifactId) => {
+              const artifact = resolveVerifiedDossierArtifact(artifactId);
+              return (
+                <a key={artifact.id} href={artifact.href} className={styles.sourceItem}>
+                  <FileBadge kind={artifact.kind} label={artifact.label} compact />
+                  <span>{artifact.role}</span>
+                </a>
+              );
+            })}
           </div>
-          <aside className={`vd-inspector-card ${styles.askPanel}`} aria-labelledby="about-ask-title">
-            <div className="vd-inspector-card__header">
-              <h2 id="about-ask-title">Ask this profile</h2>
-              <span>Grounded</span>
-            </div>
-            <div className="vd-question-card">
-              <strong>What does this profile prove beyond a normal portfolio?</strong>
-            </div>
-            <div className="vd-answer-block">
-              <h3>Answer</h3>
-              <p>
-                It shows the person, the work, and the evidence together. A visitor can inspect
-                sources, follow the learning path, review artifacts, and ask questions that are
-                grounded in the same archive.
-              </p>
-            </div>
-            <h3 className="vd-citation-heading">Profile sources</h3>
-            <div className="vd-citation-list">
-              {CITED_PROFILE_SOURCES.map((artifactId) => (
-                <ArtifactCitationCard
-                  key={artifactId}
-                  artifact={resolveVerifiedDossierArtifact(artifactId)}
-                />
-              ))}
-            </div>
-          </aside>
-        </div>
+        </aside>
       </section>
 
-      <section className={styles.shelfSection} aria-labelledby="about-shelves-title">
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Five shelves</p>
-          <h2 id="about-shelves-title">The profile is backed by a knowledge base.</h2>
-          <p>{PERSONAL_PLATFORM_REFERENCE_INSTANCE.text}</p>
-        </div>
-        <div className={styles.shelfRows}>
-          {VERIFIED_DOSSIER_SECTIONS.map((section) => (
-            <a key={section.id} className={styles.shelfRow} href={section.href}>
-              <InstitutionMark kind={section.id} />
-              <span>
-                <strong>{section.label}</strong>
-                <small>{section.status}</small>
-              </span>
-              <span>{section.summary}</span>
-              <span className={styles.fileStack}>
-                {section.artifactIds.map((artifactId) => {
-                  const artifact = resolveVerifiedDossierArtifact(artifactId);
-                  return (
-                    <FileBadge
-                      key={artifact.id}
-                      kind={artifact.kind}
-                      label={artifact.label}
-                      compact
-                    />
-                  );
-                })}
-              </span>
+      <section className={styles.activitySection} aria-labelledby="surface-title">
+        <p className={styles.kicker}>Profile surfaces</p>
+        <h2 id="surface-title">Learning and Work</h2>
+        <div className={styles.activityGrid}>
+          {VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => (
+            <a key={category.id} href={category.href}>
+              <strong>{category.label}</strong>
+              <span>{SURFACE_SUMMARY[category.id]}</span>
             </a>
           ))}
         </div>
       </section>
 
-      <section className={styles.stackSection} aria-labelledby="about-stack-title">
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>How Loom serves the archive</p>
-          <h2 id="about-stack-title">One identity, four surfaces.</h2>
-        </div>
-        <div className={styles.stackRows}>
-          {PERSONAL_PLATFORM_STACK.map((item, index) => (
-            <article key={item.title} className={styles.stackRow}>
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <div>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </div>
-            </article>
+      <section className={styles.historySection} aria-labelledby="history-title">
+        <p className={styles.kicker}>History notes</p>
+        <h2 id="history-title">Product history anchors</h2>
+        <ol className={styles.historyRows}>
+          {VERIFIED_DOSSIER_HISTORY.slice(0, 3).map((item) => (
+            <li key={item.title}>
+              <time>{item.date}</time>
+              <strong>{item.title}</strong>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
-
-      <section className={styles.principlesSection} aria-labelledby="about-principles-title">
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Operating principles</p>
-          <h2 id="about-principles-title">The rules that keep the profile credible.</h2>
-        </div>
-        <div className={styles.principleRows}>
-          {COMMITMENTS.map((item) => (
-            <article key={item.title} className={styles.principleRow}>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.storySection} aria-labelledby="about-story-title">
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Product story</p>
-          <h2 id="about-story-title">The history stays part of the product.</h2>
-          <p>
-            The name and history matter because Loom is not only a page template. It is a system
-            for turning scattered material into a source-bound memory system people can inspect.
-          </p>
-        </div>
-        <div className={styles.storyGrid}>
-          <ol className={styles.timeline}>
-            {VERIFIED_DOSSIER_HISTORY.map((item) => (
-              <li key={item.title}>
-                <time>{item.date}</time>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </li>
-            ))}
-          </ol>
-          <div className={styles.nameRows} aria-label="Why Loom is called Loom">
-            <h3>Why Loom is called Loom</h3>
-            {LOOM_NAME.map((item) => (
-              <article key={item.label}>
-                <span>{item.label}</span>
-                <div>
-                  <h4>{item.title}</h4>
-                  <p>{item.text}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.layerSection} aria-labelledby="about-layer-title">
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Narrative layers</p>
-          <h2 id="about-layer-title">Portfolio, proof, and personal AI stay connected.</h2>
-        </div>
-        <div className={styles.layerRows}>
-          {PERSONAL_PLATFORM_NARRATIVE_LAYERS.map((item) => (
-            <article key={item.title}>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <nav className={styles.bottomNav} aria-label="About navigation">
-        <a href="/">Home</a>
-        <a href="/knowledge">Sources</a>
-        <a href="/knowledge/unsw">UNSW evidence</a>
-        <a href="/product-history">Full product history</a>
-      </nav>
+      </div>
     </main>
   );
 }

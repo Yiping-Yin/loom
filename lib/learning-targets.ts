@@ -67,22 +67,22 @@ export function buildPanelLearningTarget(panel: Panel): LearningTarget {
   let priority = 0;
   if (panel.status === 'contested') {
     priority += 100;
-    priorityReasons.push('Panel is contested');
+    priorityReasons.push('Reader note is in revision');
   } else if (panel.learning.nextAction === 'rehearse') {
     priority += 80;
     priorityReasons.push('Needs another written pass');
   } else if (panel.learning.nextAction === 'examine') {
     priority += 70;
-    priorityReasons.push('Ready to verify');
+    priorityReasons.push('Ready to review');
   } else if (panel.learning.nextAction === 'refresh') {
     priority += 60;
-    priorityReasons.push('Panel has gone cold');
+    priorityReasons.push('Reader note has gone cold');
   } else if (panel.learning.nextAction === 'revisit') {
     priority += 50;
-    priorityReasons.push('Panel should be reviewed');
+    priorityReasons.push('Reader note should be reviewed');
   } else {
     priority += 30;
-    priorityReasons.push('Panel remains open');
+    priorityReasons.push('Reader note remains open');
   }
   if (panel.learning.recency === 'stale') priorityReasons.push('Stale recency');
   if (panel.revisions.length > 1) {
@@ -103,14 +103,14 @@ export function buildPanelLearningTarget(panel: Panel): LearningTarget {
     latestAnchorId: panel.latestAnchorId,
     docId: panel.docId,
     reason: panel.status === 'contested'
-      ? 'Panel is in revision'
+      ? 'Reader note is in revision'
       : panel.learning.nextAction === 'refresh'
-        ? 'Panel has gone cold'
+        ? 'Reader note has gone cold'
         : panel.learning.nextAction === 'rehearse'
-          ? 'Panel needs another written pass'
+          ? 'Reader note needs another written pass'
           : panel.learning.nextAction === 'examine'
-          ? 'Panel is ready to verify'
-            : 'Panel is ready to review',
+          ? 'Reader note is ready to review'
+            : 'Reader note is ready to review',
     changeToken: `panel:${panel.docId}:${panel.status}:${panel.revisions.reduce((max, item) => Math.max(max, item.at), 0)}:${signatureForLines(panel.openTensions)}`,
     reentryHint: panel.status === 'contested' ? 'panel-review' : undefined,
     revisionCount: panelRevisionCount({ revisions: panel.revisions }),
@@ -173,7 +173,7 @@ export function buildWeaveLearningTarget(
     action,
     priority,
     priorityReasons,
-    href: `/graph?focus=${encodeURIComponent(fromPanel.docId)}&relation=${encodeURIComponent(weave.id)}&relationAction=${relationAction}`,
+    href: '/sources#reader-notes',
     sourceHref: fromPanel.href,
     latestAnchorId: fromPanel.latestAnchorId,
     docId: fromPanel.docId,
@@ -213,7 +213,7 @@ export function learningTargetActionLabel(action: LearningTargetAction) {
   switch (action) {
     case 'refresh': return 'Return';
     case 'rehearse': return 'Write';
-    case 'examine': return 'Ask';
+    case 'examine': return 'Review';
     case 'capture': return 'Open';
     case 'strengthen-relation': return 'Strengthen';
     case 'question-relation': return 'Question';
@@ -223,11 +223,11 @@ export function learningTargetActionLabel(action: LearningTargetAction) {
 }
 
 export function learningTargetEyebrow(target: LearningTarget) {
-  return target.kind === 'weave' ? 'Work this relation' : 'Keep this panel warm';
+  return target.kind === 'weave' ? 'Work this relation' : 'Keep this reader note current';
 }
 
 export function learningTargetSecondaryLabel(target: LearningTarget) {
-  return target.kind === 'weave' ? 'Open graph' : 'Open source';
+  return target.kind === 'weave' ? 'Open reader notes' : 'Open source';
 }
 
 export function learningTargetWhyNow(target: LearningTarget, limit = 2) {
@@ -238,14 +238,6 @@ export function learningTargetWhyNow(target: LearningTarget, limit = 2) {
 
 export function openLearningTarget(router: RouterLike, target: LearningTarget) {
   if (target.kind === 'weave') {
-    if (target.reentryHint === 'weave-focused-question' && target.relationId) {
-      router.push(`/graph?focus=${encodeURIComponent(target.docId)}&relation=${encodeURIComponent(target.relationId)}&relationAction=question`);
-      return;
-    }
-    if (target.reentryHint === 'weave-focused-review' && target.relationId) {
-      router.push(`/graph?focus=${encodeURIComponent(target.docId)}&relation=${encodeURIComponent(target.relationId)}&relationAction=review`);
-      return;
-    }
     router.push(target.href);
     return;
   }

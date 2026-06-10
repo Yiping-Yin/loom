@@ -40,7 +40,7 @@ if (FORMAT !== 'jpeg' && FORMAT !== 'png') {
 // Hero surfaces: one screenshot each, no dark variant, no responsive
 // breakpoint. Apple reviewers glance at these; showcase the product soul.
 const SHOTS = [
-  { slug: '01-library',    url: '/desk',         caption: 'Your library, as a bookshelf.' },
+  { slug: '01-sources',    url: '/sources',      caption: 'Your sources, in one workspace.' },
   { slug: '02-home',       url: '/',             caption: 'A room for slow reading.' },
   { slug: '03-draft',      url: '/soan',         caption: 'Cards become a thinking draft.' },
   { slug: '04-patterns',   url: '/patterns',     caption: 'Thoughts that return settle here.' },

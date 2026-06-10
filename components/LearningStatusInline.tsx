@@ -3,10 +3,10 @@
 import type { LearningStatusSummary } from '../lib/learning-status';
 
 const STEP_META = [
-  { key: 'capture', label: 'Marked' },
+  { key: 'capture', label: 'Noted' },
   { key: 'rehearsal', label: 'Written' },
-  { key: 'examiner', label: 'Asked' },
-  { key: 'crystallized', label: 'Woven' },
+  { key: 'examiner', label: 'Reviewed' },
+  { key: 'crystallized', label: 'Current' },
 ] as const;
 
 export function LearningStatusInline({
@@ -100,13 +100,13 @@ export function LearningStatusInline({
 function compactStageLabel(status: LearningStatusSummary) {
   switch (status.stage) {
     case 'crystallized':
-      return 'Woven';
+      return 'Current';
     case 'examined':
-      return status.examinerCount > 1 ? `Asked ${status.examinerCount}` : 'Asked';
+      return status.examinerCount > 1 ? `Reviewed ${status.examinerCount}` : 'Reviewed';
     case 'rehearsed':
       return status.rehearsalCount > 1 ? `Written ${status.rehearsalCount}` : 'Written';
     case 'captured':
-      return status.captureCount > 1 ? `Marked ${status.captureCount}` : 'Marked';
+      return status.captureCount > 1 ? `Noted ${status.captureCount}` : 'Noted';
     case 'opened':
       return 'Opened';
     default:

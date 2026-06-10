@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { isNativeMode } from '../lib/is-native-mode';
 
 /**
- * One-click "rehearse this doc" action on the doc reading page. Closes the
- * reverse loop of the category page's "Rehearse this folder" — now any
+ * One-click "review this source" action on the doc reading page. Closes the
+ * reverse loop of the category page's "Review this folder" — now any
  * single doc can also spawn a cowork that's pre-seeded with it.
  *
- * The button is intentionally small + quiet. Rehearsal is a deliberate act,
+ * The button is intentionally small + quiet. A source review is a deliberate act,
  * not an ambient default; we don't want it to feel promotional.
  */
 export function RehearseThisButton({
@@ -82,7 +82,7 @@ export function RehearseThisButton({
       type="button"
       onClick={handleClick}
       disabled={busy}
-      title="Start a rehearsal cowork pre-loaded with this document"
+      title="Open a source review cowork pre-loaded with this document"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -100,7 +100,7 @@ export function RehearseThisButton({
         opacity: busy ? 0.6 : 1,
       }}
     >
-      {errored ? 'Failed — try again' : busy ? 'Creating…' : '✨ Rehearse this'}
+      {errored ? 'Failed — try again' : busy ? 'Creating…' : '✨ Review this source'}
     </button>
   );
 }

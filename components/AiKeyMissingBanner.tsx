@@ -24,6 +24,18 @@ function isReadingPath(pathname: string) {
   );
 }
 
+function isPresentationPath(pathname: string) {
+  return (
+    pathname === '/' ||
+    pathname === '/loom' ||
+    pathname === '/product-history' ||
+    pathname === '/about' ||
+    pathname === '/education' ||
+    pathname === '/experience' ||
+    pathname === '/digital-me'
+  );
+}
+
 export function AiKeyMissingBanner() {
   const pathname = usePathname() ?? '/';
   const [visible, setVisible] = useState(false);
@@ -50,9 +62,9 @@ export function AiKeyMissingBanner() {
     return () => { cancelled = true; };
   }, []);
 
-  // Don't show on pure reading surfaces or the identity homepage. Those
+  // Don't show on pure reading surfaces or presentation pages. Those
   // surfaces should open cleanly before provider setup becomes relevant.
-  if (!visible || pathname === '/' || isReadingPath(pathname)) return null;
+  if (!visible || isPresentationPath(pathname) || isReadingPath(pathname)) return null;
 
   const dismiss = () => {
     try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
@@ -63,39 +75,55 @@ export function AiKeyMissingBanner() {
     <div
       role="status"
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-3)',
-        padding: '0.55rem var(--space-5)',
-        fontSize: 'var(--fs-small)',
-        color: 'var(--fg-secondary)',
-        background: 'color-mix(in srgb, var(--accent-soft) 18%, var(--mat-thin-bg))',
-        borderBottom: '0.5px solid color-mix(in srgb, var(--accent) 24%, var(--mat-border))',
+        borderBottom: '0.5px solid color-mix(in srgb, var(--accent) 18%, var(--mat-border))',
+        background: 'color-mix(in srgb, var(--accent-soft) 12%, var(--mat-thin-bg))',
       }}
     >
-      <span aria-hidden style={{ fontSize: 'var(--fs-body)' }}>✦</span>
-      <span style={{ flex: 1, minWidth: 0 }}>
-        Add your Anthropic API key in Settings (<kbd style={kbdStyle}>⌘</kbd><kbd style={kbdStyle}>,</kbd>) to enable AI features. Reading and anchoring work without it.
-      </span>
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="Dismiss"
+      <div
         style={{
-          border: 0,
-          background: 'transparent',
-          color: 'var(--muted)',
-          cursor: 'pointer',
-          padding: '2px 6px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.7rem',
+          maxWidth: '76rem',
+          margin: '0 auto',
+          padding: '0.52rem clamp(1.1rem, 4vw, 4rem)',
           fontSize: 'var(--fs-small)',
-          borderRadius: 'var(--r-1)',
+          color: 'var(--fg-secondary)',
         }}
       >
-        Dismiss
-      </button>
+        <span aria-hidden style={statusDotStyle} />
+        <span style={{ flex: 1, minWidth: 0 }}>
+          AI features are off. Add an Anthropic API key in Settings (<kbd style={kbdStyle}>⌘</kbd><kbd style={kbdStyle}>,</kbd>). Sources and reading still work.
+        </span>
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Dismiss"
+          style={{
+            border: 0,
+            background: 'transparent',
+            color: 'var(--muted)',
+            cursor: 'pointer',
+            padding: '2px 6px',
+            fontSize: 'var(--fs-small)',
+            borderRadius: 'var(--r-1)',
+          }}
+        >
+          Dismiss
+        </button>
+      </div>
     </div>
   );
 }
+
+const statusDotStyle: React.CSSProperties = {
+  display: 'inline-block',
+  width: 7,
+  height: 7,
+  borderRadius: 999,
+  background: 'var(--fg-secondary)',
+  flex: '0 0 auto',
+};
 
 const kbdStyle: React.CSSProperties = {
   display: 'inline-block',

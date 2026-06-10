@@ -1,5 +1,7 @@
-import { permanentRedirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
-export default function KesiPage() {
-  permanentRedirect('/patterns');
+export const metadata = { title: 'Sources · Loom' };
+
+export default function LegacyKesiPage() {
+  redirect('/sources#reader-notes');
 }

@@ -14,9 +14,9 @@ import { callAiPrompt } from '../../lib/ai/runtime';
  *   - Save & examine: move directly into the Examiner loop on the same doc
  *   - Esc to clear the local draft without saving
  *
- * The Producing preset (lib/view/presets.ts) places this panel in the center.
- * For tonight it persists via appendRehearsal() which writes a thought-anchor
- * trace event; the adapter picks it up in the Notes list next render.
+ * It persists through appendNote() with a rehearsal-root anchor, which
+ * writes a thought-anchor trace event; the adapter picks it up in the
+ * Notes list next render.
  *
  * No fancy editor (CodeMirror/Tiptap) yet — plain textarea is enough to
  * validate the flow. Round 4 will upgrade to CodeMirror with markdown
@@ -26,9 +26,43 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import type { SourceDocId } from '../../lib/note/types';
-import { appendRehearsal } from '../../lib/note/store';
+import { appendNote } from '../../lib/note/store';
 import { openPanelReview } from '../../lib/panel-resume';
 import { AiInlineNotice, AiStageEmptyState, AiStageHeader, aiStageButtonStyle } from './AiStagePrimitives';
+
+function rehearsalSummary(content: string): string {
+  const firstLine = content.split('\n').find((l) => l.trim().length > 0)?.trim() ?? '';
+  const summary = firstLine.length > 100 ? firstLine.slice(0, 100) + '…' : firstLine;
+  return `📝 ${summary}`;
+}
+
+/**
+ * Append a rehearsal Note — a Note anchored to the whole doc with long
+ * content, representing one iteration of the user's reconstruction.
+ */
+async function appendRehearsal(input: {
+  docId: SourceDocId;
+  docHref: string;
+  docTitle: string;
+  content: string;
+}): Promise<{ noteId: string; anchorId: string }> {
+  return appendNote({
+    docId: input.docId,
+    docHref: input.docHref,
+    docTitle: input.docTitle,
+    content: input.content,
+    summary: rehearsalSummary(input.content),
+    anchor: {
+      target: input.docId,
+      blockText: 'rehearsal',
+      blockId: 'loom-rehearsal-root',
+      rangeStartId: 'loom-rehearsal-root',
+      rangeStartText: 'rehearsal',
+      rangeEndId: 'loom-rehearsal-root',
+      rangeEndText: 'rehearsal',
+    },
+  });
+}
 
 const MarkdownPreview = dynamic(
   () => import('../NoteRenderer').then((m) => m.NoteRenderer),

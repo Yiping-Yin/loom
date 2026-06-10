@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
 import { DocumentPreviewCard } from '../../../components/verified-dossier/DocumentPreviewCard';
 import {
+  VERIFIED_DOSSIER_UNSW_COURSES,
+  formatVerifiedDossierCourseFileCount,
+  formatVerifiedDossierCourseMeta,
   resolveVerifiedDossierArtifact,
   type VerifiedDossierArtifactId,
 } from '../../../lib/new-loom/verified-dossier-home';
 import {
-  UNSW_ECON3202_MANUAL,
   UNSW_ECON3202_PROBLEM_SETS,
-  UNSW_SHELF_COURSE,
   UNSW_SHELF_NEXT_ACTIONS,
   UNSW_SHELF_OUTPUTS,
   UNSW_SHELF_PATH,
@@ -15,6 +16,7 @@ import {
   UNSW_SHELF_SOURCE_LINKS,
 } from '../../../lib/new-loom/unsw-shelf';
 import styles from './UnswDossier.module.css';
+import { UnswCrestMark } from './UnswCrestMark';
 import { UnswStudyNav } from './UnswStudyNav';
 
 export const metadata = { title: 'UNSW · Loom' };
@@ -26,7 +28,29 @@ const FEATURED_ARTIFACTS: VerifiedDossierArtifactId[] = [
   'econ-notes',
 ];
 
+const HERO_COURSE_PREVIEW_LIMIT = 6;
+const HERO_COURSE_FOLDERS = VERIFIED_DOSSIER_UNSW_COURSES.slice(0, HERO_COURSE_PREVIEW_LIMIT);
+const HIDDEN_COURSE_COUNT = VERIFIED_DOSSIER_UNSW_COURSES.length - HERO_COURSE_FOLDERS.length;
+const MOODLE_BACKED_COURSE_COUNT = VERIFIED_DOSSIER_UNSW_COURSES.filter(
+  (course) => course.moodleHref,
+).length;
+const HANDBOOK_BACKED_COURSE_COUNT = VERIFIED_DOSSIER_UNSW_COURSES.filter(
+  (course) => course.handbookYear,
+).length;
+
 const METRICS = [
+  {
+    value: String(VERIFIED_DOSSIER_UNSW_COURSES.length),
+    label: 'Course folders',
+  },
+  {
+    value: String(MOODLE_BACKED_COURSE_COUNT),
+    label: 'Moodle-backed',
+  },
+  {
+    value: String(HANDBOOK_BACKED_COURSE_COUNT),
+    label: 'Handbook-backed',
+  },
   {
     value: String(UNSW_SHELF_SOURCE_LINKS.length),
     label: 'Official sources',
@@ -38,10 +62,6 @@ const METRICS = [
   {
     value: String(UNSW_ECON3202_PROBLEM_SETS.length),
     label: 'Problem sets',
-  },
-  {
-    value: String(UNSW_SHELF_OUTPUTS.length),
-    label: 'Portfolio outputs',
   },
 ];
 
@@ -70,41 +90,91 @@ export default function UnswShelfPage() {
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.sectionLabel}>UNSW evidence shelf</p>
-          <h1 id="unsw-title">Academic work with inspectable proof.</h1>
+          <p className={styles.sectionLabel}>Course source shelf</p>
+          <h1 id="unsw-title">UNSW</h1>
           <p className={styles.heroLead}>
-            The UNSW shelf turns official sources, weekly mathematics, problem-set answers, and
-            explanation files into a public learning record that can be inspected before it is
-            trusted.
+            Course folders, official source records, weekly material, and Draft-ready study evidence
+            stay together before any single course dossier opens.
           </p>
           <div className={styles.heroActions}>
             <a className={styles.buttonLink} href="/knowledge/unsw/econ3202">
               Open ECON3202 dossier
             </a>
-            <a className={styles.textLink} href={UNSW_ECON3202_MANUAL.href}>
-              Open local course manual
+            <a className={styles.textLink} href="#all-unsw-course-folders">
+              View course folders
             </a>
           </div>
         </div>
 
-        <aside className={styles.coursePanel} aria-labelledby="unsw-course-title">
+        <aside
+          className={`${styles.coursePanel} ${styles.courseShelfPanel}`}
+          aria-labelledby="unsw-course-title"
+        >
           <div className={styles.identityLine}>
-            <span className={styles.unswMark} aria-label="UNSW Sydney">
-              UNSW
-            </span>
-            <p className={styles.sectionLabel}>First real course instance</p>
+            <UnswCrestMark />
+            <p className={styles.sectionLabel}>Source folders</p>
           </div>
-          <h2 id="unsw-course-title">
-            {UNSW_SHELF_COURSE.code} · {UNSW_SHELF_COURSE.title}
-          </h2>
-          <p>{UNSW_SHELF_COURSE.summary}</p>
-          <dl className={styles.factGrid}>
-            <Fact label="Offering" value={UNSW_SHELF_COURSE.offering} />
-            <Fact label="Units" value={UNSW_SHELF_COURSE.units} />
-            <Fact label="Delivery" value={UNSW_SHELF_COURSE.delivery} />
-            <Fact label="Owner" value={UNSW_SHELF_COURSE.owner} />
-          </dl>
+          <h2 id="unsw-course-title">{VERIFIED_DOSSIER_UNSW_COURSES.length} course folders</h2>
+          <div className={styles.courseFolderGrid} aria-label="Featured UNSW course folders">
+            {HERO_COURSE_FOLDERS.map((course) => (
+              <a
+                key={course.id}
+                className={styles.courseFolderCard}
+                href={course.href}
+                title={courseTitle(course)}
+              >
+                <span className={styles.courseFolderIcon} aria-hidden="true" />
+                <span>
+                  <strong>{course.code}</strong>
+                  <small>
+                    {formatVerifiedDossierCourseMeta(course) ||
+                      formatVerifiedDossierCourseFileCount(course.fileCount)}
+                  </small>
+                </span>
+                <em>{course.moodleTitle ?? course.status}</em>
+              </a>
+            ))}
+          </div>
+          {HIDDEN_COURSE_COUNT > 0 ? (
+            <a className={styles.courseFolderMore} href="#all-unsw-course-folders">
+              +{HIDDEN_COURSE_COUNT} more
+            </a>
+          ) : null}
         </aside>
+      </section>
+
+      <section
+        id="all-unsw-course-folders"
+        className={`${styles.section} ${styles.courseDirectory}`}
+        aria-labelledby="all-unsw-course-folders-title"
+      >
+        <div className={styles.courseDirectoryHeader}>
+          <div>
+            <p className={styles.sectionLabel}>UNSW directory</p>
+            <h2 id="all-unsw-course-folders-title">Course folders</h2>
+          </div>
+          <strong>{VERIFIED_DOSSIER_UNSW_COURSES.length} folders</strong>
+        </div>
+        <div className={styles.courseDirectoryGrid} aria-label="All UNSW course folders">
+          {VERIFIED_DOSSIER_UNSW_COURSES.map((course) => (
+            <a
+              key={course.id}
+              className={styles.courseFolderCard}
+              href={course.href}
+              title={courseTitle(course)}
+            >
+              <span className={styles.courseFolderIcon} aria-hidden="true" />
+              <span>
+                <strong>{course.code}</strong>
+                <small>
+                  {formatVerifiedDossierCourseMeta(course) ||
+                    formatVerifiedDossierCourseFileCount(course.fileCount)}
+                </small>
+              </span>
+              <em>{course.moodleTitle ?? course.status}</em>
+            </a>
+          ))}
+        </div>
       </section>
 
       <section className={styles.section} aria-label="UNSW evidence metrics">
@@ -120,12 +190,15 @@ export default function UnswShelfPage() {
 
       <SplitSection
         label="01"
-        title="Real artifacts"
-        intro="The shelf opens with file objects from the course archive, not abstract feature tiles."
+        title="Featured ECON3202 evidence"
+        intro="ECON3202 is the first detailed course dossier inside the broader UNSW shelf."
       >
         <div className={styles.documentGrid} aria-label="Featured ECON3202 document previews">
           {FEATURED_ARTIFACTS.map((artifactId) => (
-            <DocumentPreviewCard key={artifactId} artifact={resolveVerifiedDossierArtifact(artifactId)} />
+            <DocumentPreviewCard
+              key={artifactId}
+              artifact={resolveVerifiedDossierArtifact(artifactId)}
+            />
           ))}
         </div>
         <div className={styles.chain} aria-label="Sources to Draft to Answer">
@@ -180,7 +253,11 @@ export default function UnswShelfPage() {
       >
         <div id="unsw-learning-spine" className={styles.phaseGrid}>
           {LEARNING_PHASES.map((phase) => (
-            <section key={phase.title} className={styles.phase} aria-labelledby={sectionId(phase.title)}>
+            <section
+              key={phase.title}
+              className={styles.phase}
+              aria-labelledby={sectionId(phase.title)}
+            >
               <h3 id={sectionId(phase.title)}>{phase.title}</h3>
               <p>{phase.text}</p>
               <ol className={styles.weekList}>
@@ -269,15 +346,6 @@ export default function UnswShelfPage() {
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className={styles.fact}>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
-  );
-}
-
 function SplitSection({
   label,
   title,
@@ -311,4 +379,12 @@ function findWeek(label: string) {
     throw new Error(`Missing UNSW week ${label}`);
   }
   return week;
+}
+
+function courseTitle(course: (typeof VERIFIED_DOSSIER_UNSW_COURSES)[number]) {
+  return (
+    [course.moodleTitle, course.handbookYear ? `UNSW Handbook ${course.handbookYear}` : null]
+      .filter(Boolean)
+      .join(' / ') || course.status
+  );
 }

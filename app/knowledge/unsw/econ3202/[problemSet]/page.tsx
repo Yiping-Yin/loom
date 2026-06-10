@@ -8,6 +8,7 @@ import {
   UNSW_ECON3202_WEEKS,
 } from '../../../../../lib/new-loom/unsw-shelf';
 import styles from '../../UnswDossier.module.css';
+import { UnswCrestMark } from '../../UnswCrestMark';
 import { UnswStudyNav } from '../../UnswStudyNav';
 
 export async function generateStaticParams() {
@@ -52,9 +53,7 @@ export default async function Econ3202ProblemSetPage({
 
         <aside className={styles.coursePanel} aria-labelledby="problem-set-state">
           <div className={styles.identityLine}>
-            <span className={styles.unswMark} aria-label="UNSW Sydney">
-              UNSW
-            </span>
+            <UnswCrestMark />
             <p className={styles.sectionLabel}>Evidence state</p>
           </div>
           <h2 id="problem-set-state">{set.label}</h2>

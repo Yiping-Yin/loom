@@ -11,6 +11,7 @@ import {
   UNSW_SHELF_COURSE,
 } from '../../../../lib/new-loom/unsw-shelf';
 import styles from '../UnswDossier.module.css';
+import { UnswCrestMark } from '../UnswCrestMark';
 import { UnswStudyNav } from '../UnswStudyNav';
 
 export const metadata = { title: 'ECON3202 · Loom' };
@@ -40,9 +41,7 @@ export default function Econ3202Page() {
 
         <aside className={styles.coursePanel} aria-labelledby="econ3202-source-object">
           <div className={styles.identityLine}>
-            <span className={styles.unswMark} aria-label="UNSW Sydney">
-              UNSW
-            </span>
+            <UnswCrestMark />
             <p className={styles.sectionLabel}>Current source object</p>
           </div>
           <h2 id="econ3202-source-object">
