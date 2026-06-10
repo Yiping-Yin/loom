@@ -28,7 +28,7 @@
 >
 > **The unifying principle**: Loom is a substrate. Substrates have summoned utilities (Word's spell-check, Excel's formulas), not always-visible AI bars. Option ε v2 = Cursor's IDE pattern (⌘K + chat panel + background lint) translated to prose with paper canon as the rendering layer.
 >
-> **Read order**: this doc → `LOOM_RULES.md` (invariants/law) → `LOOM_USER_PROFILE.md` (audience) → relevant plan in `plans/` → memory entries surface as needed.
+> **Read order**: this doc → `docs/canon/LOOM_RULES.md` (invariants/law) → `docs/canon/LOOM_USER_PROFILE.md` (audience) → relevant plan in `plans/` → memory entries surface as needed.
 >
 > **Maintained by**: the AI assistant currently working on Loom. Substantive shape changes (modifying the loop, splitting AI modes, adding a third primitive) require product owner approval. Clarifications and §12 Open Question additions can be appended unilaterally with a peer-chat HOT-FILE declaration.
 
@@ -229,7 +229,7 @@ See:
 - `plans/loom-cmd-k-palette.md` — ⌘K palette engineering spec (NEW v4.1)
 - `plans/loom-cli.md` — external AI integration spec
 - `docs/design/LOOM_AI_SURFACE_PATTERN_2026-05-02.md` — full Option ε v2 design rationale (NEW v4.1)
-- `LOOM_RULES.md` §7.5 — operating rules including generative-vs-non-generative boundary
+- `docs/canon/LOOM_RULES.md` §7.5 — operating rules including generative-vs-non-generative boundary
 
 ---
 
@@ -304,7 +304,7 @@ User experience: across multiple sessions on related sources, artifacts accumula
 
 Loom's role: short-term memory delegate. Loom remembers your prior thinking better than you can; surfaces it when relevant.
 
-What's defended: source-anchored persistence + cross-source detection without auto-clustering (`LOOM_RULES.md` V5).
+What's defended: source-anchored persistence + cross-source detection without auto-clustering (`docs/canon/LOOM_RULES.md` V5).
 
 Technical hints (Tier 5/6 implementation): Last-read tracking via per-`ContentRoot` last-visit timestamp stored in `LoomFileStore`. Echoes detection via on-device or sandbox-only embedding store (`LoomEmbeddingStore`) computed at compile time + when source is opened; surface filtered to top-1 quietest match per page render. No cross-user data, no central server, no graph view exposed.
 
@@ -330,7 +330,7 @@ Loom hosts TWO distinct AI modes. They serve different cognitive states. They ar
 
 **Surface**: Ask AI panel (`LoomAIBar` in macos-app, summoned via Cmd+E or right-click → Ask AI).
 
-**AI behavior**: streaming Q&A. Source-aware (knows the user's prior notes on the same source via Tier 1 source-aware context, see `LOOM_RULES.md §8 2026-04-26`). Curiosity-led (V4 — AI never quizzes the user). Dismissable.
+**AI behavior**: streaming Q&A. Source-aware (knows the user's prior notes on the same source via Tier 1 source-aware context, see `docs/canon/LOOM_RULES.md §8 2026-04-26`). Curiosity-led (V4 — AI never quizzes the user). Dismissable.
 
 **Metaphor**: tutor / teacher. Answers when asked. Stays silent otherwise.
 
@@ -352,7 +352,7 @@ Loom hosts TWO distinct AI modes. They serve different cognitive states. They ar
 
 The user can have Ask panel open AND be writing in scratch simultaneously. Modes are not exclusive. Loom does not require the user to declare which mode they are in; the surface they touch determines the mode.
 
-This is consistent with `LOOM_RULES.md §2.5` (one primitive over many — the Page is the primitive, both modes operate on it) and V3 (no always-visible AI chrome — Ask panel is summonable, dismissable).
+This is consistent with `docs/canon/LOOM_RULES.md §2.5` (one primitive over many — the Page is the primitive, both modes operate on it) and V3 (no always-visible AI chrome — Ask panel is summonable, dismissable).
 
 ### Mode handshake (shared context envelope)
 
@@ -380,7 +380,7 @@ This is consistent with `feedback_loom_language_mirror.md` memory (2026-04-27): 
 
 ## 5. The Page Primitive
 
-Per `LOOM_RULES.md §2.3`: *"Loom = pages. The page (a `ContentRoot`) is the primary unit of meaning."*
+Per `docs/canon/LOOM_RULES.md §2.3`: *"Loom = pages. The page (a `ContentRoot`) is the primary unit of meaning."*
 
 Every source maps to a Page. Every Page has its own `Loom.md`. Both AI modes operate on this Page. All learning verbs collapse to operations on the Page:
 
@@ -537,7 +537,7 @@ A separate AI input (chat box, command palette, side panel) would create a featu
 
 ### How content arrives in Loom
 
-Five equivalent input streams (per §1 / §2 / §3 of LOOM.md):
+Five equivalent input streams (per §1 / §2 / §3 of docs/canon/LOOM.md):
 
 1. **Type / dictate** directly into a Loom document (paper canon styled writing surface)
 2. **Voice** — OS dictation (⌥ hotkey) or 3rd-party tool transcribes into the active Loom document
@@ -739,7 +739,7 @@ The user controls which provider receives this. Apple Foundation Models (default
 
 ### Export & sovereignty
 
-Per `LOOM_RULES.md` V6 (markdown only, no proprietary formats): user can export their entire `LoomFileStore` directory at any time — it is plain markdown + media files. No database, no proprietary index, no DRM. Loom can be uninstalled and the user's data remains fully readable in any markdown editor.
+Per `docs/canon/LOOM_RULES.md` V6 (markdown only, no proprietary formats): user can export their entire `LoomFileStore` directory at any time — it is plain markdown + media files. No database, no proprietary index, no DRM. Loom can be uninstalled and the user's data remains fully readable in any markdown editor.
 
 A future "Reveal in Finder" affordance (or `Export Knowledge System...`) makes this explicit. Already implicitly true via Files.app sandbox access.
 
@@ -809,7 +809,7 @@ Each incumbent would have to fundamentally rebuild their data model + design sys
 | Notability replacement | Notability is handwriting capture for reading; Loom is the typed-thinking + AI-typesetting loop |
 | Research-management tool | Bibliography/citation managers are out of scope; Loom is for thinking, not for managing references |
 | AI study guide generator | Loom does not generate content from nothing; AI's role is teach-when-asked or typeset-when-clicked |
-| Note-taking app | Notes are byproducts of learning, not the object (`LOOM_RULES.md §2.1`); collection-as-end is punished by V8 (per-book grouping) |
+| Note-taking app | Notes are byproducts of learning, not the object (`docs/canon/LOOM_RULES.md §2.1`); collection-as-end is punished by V8 (per-book grouping) |
 | Chat shell | Chat (LEARN mode) is a means, not the product. The product is the loop |
 | Dashboard | Loom does not aggregate metrics; it hosts thinking on individual sources |
 | Publishing platform | Artifacts are for the user's own thinking. Sharing/export is Phase D scope, not v1 |
@@ -861,7 +861,7 @@ Each incumbent would have to fundamentally rebuild their data model + design sys
 | 4 | Cosmic canon v1.0 SEALED + brand surfaces (splash / about / empty) | 3-4 weeks | Net-new product work; cosmic canon doc TBD |
 | 5 | Connect surface (Echoes eyebrow) — AI cross-source detection + quiet eyebrow UI | ~6 weeks (includes detection R&D) | Net-new product work |
 | 6 | Return surface (Last-read eyebrow) + Compile Subtask C (visualizations + interactive elements) | ~3-4 weeks | Net-new product work |
-| **C.M1** | **v4.0 thesis filed — LOOM.md §1.5 + §6.5 + §6.7 + LOOM_RULES §7.5 + plans/loom-ai-passes.md + plans/loom-cli.md + design doc + correction-log entry-007** | now | **filed 2026-05-02 (this commit)** |
+| **C.M1** | **v4.0 thesis filed — docs/canon/LOOM.md §1.5 + §6.5 + §6.7 + LOOM_RULES §7.5 + plans/loom-ai-passes.md + plans/loom-cli.md + design doc + correction-log entry-007** | now | **filed 2026-05-02 (this commit)** |
 | **C.M2** | **Single Article shape contenteditable prototype + naïve MD roundtrip (NO AI passes yet)** | 3-5 days | gated on user authorization |
 | **C.M3** | **Decision gate after M2 user data (1 week test)** | review only | gated on M2 data |
 | **C.M4** | **Full editable render MVP (4 modules: contenteditable + DOM↔MD bind + invariant guard + versioning). NO AI co-edit affordances per v4.0.** | ~10-12 days | gated on M3 |
@@ -991,10 +991,10 @@ For the OpenAI-hackathon context (May 2026): this is itself a story worth tellin
 
 | Document | Layer | What it covers |
 |----------|-------|----------------|
-| **`LOOM.md` (this doc)** | Product canon | What Loom IS — vision, framing, architecture, moat |
-| `LOOM_RULES.md` | Invariants / law | What Loom MUST and MUST NOT do — 12 vetoes, North Star principles, decision log §8 |
-| `LOOM_USER_PROFILE.md` | Audience | Who Loom is FOR — user habits, working patterns, preferences |
-| `plans/loom-unified-product-vision.md` | Implementation map | Reduced from v1 vision doc to the plan/sub-plan navigation map under LOOM.md |
+| **`docs/canon/LOOM.md` (this doc)** | Product canon | What Loom IS — vision, framing, architecture, moat |
+| `docs/canon/LOOM_RULES.md` | Invariants / law | What Loom MUST and MUST NOT do — 12 vetoes, North Star principles, decision log §8 |
+| `docs/canon/LOOM_USER_PROFILE.md` | Audience | Who Loom is FOR — user habits, working patterns, preferences |
+| `plans/loom-unified-product-vision.md` | Implementation map | Reduced from v1 vision doc to the plan/sub-plan navigation map under docs/canon/LOOM.md |
 | `plans/phase-c-presentation-layer.md` | Implementation | Render-layer milestones M1-M4 |
 | `plans/loom-design-system-v1.md` | Implementation | Token system + 4-night migration tranches |
 | `plans/design-system-migration-inventory.md` | Implementation | Hex-by-hex migration shopping list |
@@ -1017,9 +1017,9 @@ Plus memory entries (private to AI assistant) at `~/.claude/projects/-Users-yiny
 - 30+ other Loom memories surface naturally via the auto-memory system
 
 **Read order on session start**:
-1. **This document (LOOM.md)** — what is Loom
-2. `LOOM_RULES.md` — what Loom must / must not do
-3. `LOOM_USER_PROFILE.md` — who the user is
+1. **This document (docs/canon/LOOM.md)** — what is Loom
+2. `docs/canon/LOOM_RULES.md` — what Loom must / must not do
+3. `docs/canon/LOOM_USER_PROFILE.md` — who the user is
 4. Relevant plan in `plans/` for the specific task at hand
 5. Memory entries surface naturally via auto-memory; check `MEMORY.md` index if newly arrived
 

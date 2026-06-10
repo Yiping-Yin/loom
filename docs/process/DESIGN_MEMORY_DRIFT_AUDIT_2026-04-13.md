@@ -8,7 +8,7 @@ Branch / commit context: local working tree on `main`
 Related docs reviewed:
 
 - `docs/design/DESIGN_MEMORY.md`
-- `docs/design/CURRENT_DESIGN_CANON.md`
+- `docs/canon/CURRENT_DESIGN_CANON.md`
 - `docs/design/CAPTURE_SPEC.md`
 - `docs/design/DESIGN_ONBOARDING.md`
 

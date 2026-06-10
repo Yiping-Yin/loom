@@ -24,7 +24,7 @@ Recommended cadence:
 ## 1. Mother document alignment
 
 - Which sections of `DESIGN_MEMORY.md` were reviewed?
-- Which sections of `CURRENT_DESIGN_CANON.md` were reviewed?
+- Which sections of `docs/canon/CURRENT_DESIGN_CANON.md` were reviewed?
 - Which topic specs were reviewed?
 - Any contradictions found between memory, canon, spec, and implementation?
 

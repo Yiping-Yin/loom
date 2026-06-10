@@ -47,7 +47,7 @@ The design-document stack has four roles:
    The mother document. Holds immutable principles, rationale, process, and
    historical feedback.
 
-2. `docs/design/CURRENT_DESIGN_CANON.md`
+2. `docs/canon/CURRENT_DESIGN_CANON.md`
    The operative current truth. Answers: what Loom is *right now*, what
    interaction model is active, and what historical directions are rejected.
 
@@ -61,7 +61,7 @@ The design-document stack has four roles:
 
 If these documents disagree, precedence stays:
 
-1. `CURRENT_DESIGN_CANON.md`
+1. `docs/canon/CURRENT_DESIGN_CANON.md`
 2. topic spec documents
 3. `DESIGN_MEMORY.md`
 4. implementation
@@ -149,7 +149,7 @@ When new owner feedback arrives, follow this sequence.
 
 4. Derive sync tasks.
    Explicitly decide whether the change requires updates to:
-   - `CURRENT_DESIGN_CANON.md`
+   - `docs/canon/CURRENT_DESIGN_CANON.md`
    - one or more spec documents
    - prompts
    - implementation
@@ -179,7 +179,7 @@ Use this matrix:
 Two hard rules:
 
 - Never update product-defining behavior without checking whether
-  `DESIGN_MEMORY.md` or `CURRENT_DESIGN_CANON.md` must change.
+  `DESIGN_MEMORY.md` or `docs/canon/CURRENT_DESIGN_CANON.md` must change.
 - Never add a lasting design-memory rule without deciding what product surface
   it must touch.
 

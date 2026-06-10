@@ -231,7 +231,7 @@ The file gradually heals itself; no destructive migration script needed.
 
 ## 7.5. Substrate / Editable Render / AI Surface Pattern — v4.1 (rewritten 2026-05-02)
 
-> **v4.0 of this section** had Loom positioned as "no AI panel anywhere; AI = invisible plumbing globally." User clarified next turn: "在阅读层面 Ask AI 我觉得是有用的; 在写作层面 [substrate] 是另一种形式." v4.0 was over-推generalized. **v4.1 corrects** via Cursor-pattern adaptation: unimodal Loom + 3 AI surfaces split by **role** not by mode. See `LOOM.md` §1.5 (rewritten v4.1) and `tmp/loom-correction-log.md` entry-009/010/011.
+> **v4.0 of this section** had Loom positioned as "no AI panel anywhere; AI = invisible plumbing globally." User clarified next turn: "在阅读层面 Ask AI 我觉得是有用的; 在写作层面 [substrate] 是另一种形式." v4.0 was over-推generalized. **v4.1 corrects** via Cursor-pattern adaptation: unimodal Loom + 3 AI surfaces split by **role** not by mode. See `docs/canon/LOOM.md` §1.5 (rewritten v4.1) and `tmp/loom-correction-log.md` entry-009/010/011.
 
 ### The thesis (50 words, user-confirmed 2026-05-02 with role-scope)
 
@@ -251,7 +251,7 @@ The file gradually heals itself; no destructive migration script needed.
 **AI Surface 1: ⌘K Palette (NEW v4.1, M6 spec, M7 ship)**
 
 7. ⌘K is the universal **summoned generative invocation**. Triggers via keystroke; opens a small floating prompt anchored to context.
-8. **Hard cap: ≤7 distinct actions** in the palette. Prevents feature-pile drift. As of v4.1: rewrite, expand, distill, translate, cite-source, restructure, ask. No more without LOOM.md amendment.
+8. **Hard cap: ≤7 distinct actions** in the palette. Prevents feature-pile drift. As of v4.1: rewrite, expand, distill, translate, cite-source, restructure, ask. No more without docs/canon/LOOM.md amendment.
 9. ⌘K **output is contextual**: selection → in-place edit (margin-marked); document → write/restructure (margin-marked); ask-prefix → answer in popover (no doc modification).
 10. ⌘K **does NOT replace AskAIWindow**. Long Q&A sessions go through AskAIWindow (⌘⇧E). ⌘K is one-shot only.
 
@@ -291,13 +291,13 @@ The file gradually heals itself; no destructive migration script needed.
 - ❌ **Don't add AI agent-loop in Loom internal AI.** ⌘K is single-step (one API call per invocation). Multi-step / spawn / cross-file work goes through external AI calling Loom CLI.
 - ❌ **Don't continuous-render AI** (every keystroke triggers AI). Distracting. v4.1 model is idle 3-5s + on open + manual. Continuous is v4.2+ opt-in.
 - ❌ **Don't expand wiki-scale work in v4.1**. Single-document only.
-- ❌ **Don't add ⌘K palette actions beyond cap of 7.** Each addition needs LOOM.md amendment + user approval.
+- ❌ **Don't add ⌘K palette actions beyond cap of 7.** Each addition needs docs/canon/LOOM.md amendment + user approval.
 - ❌ **Don't merge AskAIWindow into ⌘K palette.** They serve different roles.
 - ❌ **Don't delete LoomAIBar / distill panel before M6 ⌘K palette ships.** Delete-without-replace = user loses functionality.
 
 ### Phased shipping (v4.1 — updated milestones)
 
-- **M1 (filed 2026-05-02)**: thesis docs only — this section + LOOM.md §1.5 + §6.5 + §6.7 + plans + design doc + correction-log entries 007/009/010/011.
+- **M1 (filed 2026-05-02)**: thesis docs only — this section + docs/canon/LOOM.md §1.5 + §6.5 + §6.7 + plans + design doc + correction-log entries 007/009/010/011.
 - **M2 (~5 days, gated on user GO)**: Article shape contenteditable + naïve MD roundtrip. **Modules (a)+(b) only — was 4 modules, scope cut**. NO AI surfaces yet.
 - **M3**: decision gate after 1 week M2 user data.
 - **M4 (~5-7 days, gated on M3 PASS)**: editable render hardening — add modules (d) invariant guard + (e) versioning IF M2 data justified.
@@ -310,10 +310,10 @@ The file gradually heals itself; no destructive migration script needed.
 
 ### Cross-references
 
-- `LOOM.md` §1.5 — Loom positioning (re-rewritten v4.1)
-- `LOOM.md` §6.5 — Camp C editable render (M2 scope cut to a+b in v4.1)
-- `LOOM.md` §6.7 — input surface + AI passes (scope corrected v4.1)
-- `LOOM.md` §7 — Compile Pipeline (background pass scope clarified)
+- `docs/canon/LOOM.md` §1.5 — Loom positioning (re-rewritten v4.1)
+- `docs/canon/LOOM.md` §6.5 — Camp C editable render (M2 scope cut to a+b in v4.1)
+- `docs/canon/LOOM.md` §6.7 — input surface + AI passes (scope corrected v4.1)
+- `docs/canon/LOOM.md` §7 — Compile Pipeline (background pass scope clarified)
 - `plans/loom-camp-c-editable-render.md` — M2 scope cut; updated milestones
 - `plans/loom-ai-passes.md` — internal AI passes engineering spec; v4.1 adds non-generative hard rule
 - `plans/loom-cmd-k-palette.md` — ⌘K palette engineering spec (NEW v4.1)
@@ -390,7 +390,7 @@ Reverse-chronological. Date in YYYY-MM-DD.
 **Decision:** Ask AI now automatically includes the user's existing notes on the same PDF as context in every call. System prompt instructs the model to reference prior notes when relevant (e.g., "your earlier note on p.3..."). No UI change — invisible by default, qualitatively transforms responses.
 **Rationale:** Loom's unique substrate is the user's accumulated per-passage notes. No other PDF+AI tool (Adobe AI Assistant, NotebookLM, Readwise) knows your prior thinking on a specific document. Using it elevates Ask AI from "fresh AI per passage" to "AI that's been reading along with you."
 **Implementation:** `SourceFileView.gatherPriorNotesFromPage()` reads the parent's `Loom.md`, finds the per-book section matching the current PDF, strips jump-link lines, caps at 8000 chars (most-recent tail when truncated), passes as `priorNotes:` to `buildAskPrompt`.
-**Aligns with:** `LOOM_USER_PROFILE.md` §8 ("AI can act on the user's accumulated record"). First concrete step toward the broader substrate vision.
+**Aligns with:** `docs/canon/LOOM_USER_PROFILE.md` §8 ("AI can act on the user's accumulated record"). First concrete step toward the broader substrate vision.
 **Tier 2 deferred:** AI-generated suggested questions above the input field — defer until Tier 1 has been validated in actual reading sessions.
 
 ### 2026-04-26 — Two creation paths only (drop "+ Add note")
@@ -477,15 +477,15 @@ Reverse-chronological. Date in YYYY-MM-DD.
 
 Loom is being built toward a vision where AI can act *as the user would*, not just *as told*. This requires three substrates working together:
 
-1. **`LOOM_RULES.md`** — what Loom is (product invariants, vetoes, architecture). Constrains AI from violating product principles.
-2. **`LOOM_USER_PROFILE.md`** — who the user is (observed habits, preferences, working patterns). Tells AI how to fit the user's grain.
+1. **`docs/canon/LOOM_RULES.md`** — what Loom is (product invariants, vetoes, architecture). Constrains AI from violating product principles.
+2. **`docs/canon/LOOM_USER_PROFILE.md`** — who the user is (observed habits, preferences, working patterns). Tells AI how to fit the user's grain.
 3. **`LoomFileStore` data** — what the user has done (notes, pages, anchors, AI conversation history). The actual substrate AI acts on.
 
 (1) and (2) constrain. (3) is the material. Together they make autonomous task completion possible.
 
 **First autonomous task to attempt** (when ready): *Cross-source surfacing* — when the user opens a PDF, surface their own past notes from other books that engaged with similar passages. Low-stakes (just suggestions), high-value (impossible without the substrate), uses all three layers.
 
-**Architectural implication**: when Loom-the-app eventually adds personalization features, they MUST read `LOOM_USER_PROFILE.md` (either copied into `LoomFileStore` on launch or read via a known path). Do not duplicate the profile inside the app — keep one source of truth.
+**Architectural implication**: when Loom-the-app eventually adds personalization features, they MUST read `docs/canon/LOOM_USER_PROFILE.md` (either copied into `LoomFileStore` on launch or read via a known path). Do not duplicate the profile inside the app — keep one source of truth.
 
 ## 9. Open Questions / In Flight
 

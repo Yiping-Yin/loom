@@ -14,7 +14,7 @@
 
 This plan implements the approved spec:
 
-`docs/superpowers/specs/2026-06-03-loom-evidence-workbench-homepage-design.md`
+`docs/archive/ai-build-log/specs/2026-06-03-loom-evidence-workbench-homepage-design.md`
 
 Included:
 

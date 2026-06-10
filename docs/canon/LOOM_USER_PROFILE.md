@@ -193,7 +193,7 @@ The user has expressed interest in Loom evolving so that:
 
 This file currently lives at the project root for AI-tool reachability. **If Loom is ever published as a public repository**, this file MUST be added to `.gitignore` or split into:
 - `LOOM_USER_PROFILE.template.md` (sanitized, public) — structure + section headings, no observations
-- `LOOM_USER_PROFILE.md` (private, gitignored) — actual observations
+- `docs/canon/LOOM_USER_PROFILE.md` (private, gitignored) — actual observations
 
 The user's email, course codes, and observed patterns are personal data. Treat this file accordingly.
 
@@ -253,13 +253,13 @@ Update **in the same commit** as the work that revealed the new information.
 - Don't infer mental states or motivations beyond what was stated.
 - Don't pathologize ("user has trouble with X") — describe behavior, not deficit.
 - Don't summarize so heavily that signal is lost. Concrete > abstract.
-- Don't merge with `LOOM_RULES.md` — that's product spec, this is user observation. Keep them separate.
+- Don't merge with `docs/canon/LOOM_RULES.md` — that's product spec, this is user observation. Keep them separate.
 
 ### How AI should USE this profile
 
 When working on a Loom task or any task for this user:
 
-1. **Read this file first** (and `LOOM_RULES.md` if Loom code is involved).
+1. **Read this file first** (and `docs/canon/LOOM_RULES.md` if Loom code is involved).
 2. **Frame proposals against §3-§5**: would this fit the user's reading style, working pattern, aesthetic?
 3. **Pre-empt objections from §7**: if a proposal is likely to trigger "this duplicates X" or "too much chrome", revise before presenting.
 4. **Match communication style from §4**: short, direct, with clear recommendations. Use ultrathink-level depth only when invoked.

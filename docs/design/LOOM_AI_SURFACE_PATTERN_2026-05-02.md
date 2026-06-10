@@ -1,7 +1,7 @@
 # Loom AI Surface Pattern — Option ε v2 Design Rationale
 
 **Filed:** 2026-05-02 (v4.1, replacing portions of v4.0 thinking)
-**Status:** Design rationale for `LOOM.md` §1.5 (rewritten v4.1) + `LOOM_RULES.md` §7.5 v4.1 + `plans/loom-cmd-k-palette.md` (NEW v4.1)
+**Status:** Design rationale for `docs/canon/LOOM.md` §1.5 (rewritten v4.1) + `docs/canon/LOOM_RULES.md` §7.5 v4.1 + `plans/loom-cmd-k-palette.md` (NEW v4.1)
 **Author:** Claude, in dialog with product owner
 **Trigger:** Five strategic reframes in one session culminated in user-confirmed Option ε v2: unimodal Loom + 3 AI surfaces split by role (not by mode).
 
@@ -267,11 +267,11 @@ Loom v4.1's position: **substrate + paper canon + 3 AI roles done right** = the 
 
 ## 10. Cross-references
 
-- `LOOM.md` §1.5 v4.1 — substrate positioning + role taxonomy summary (canonical)
-- `LOOM.md` §6.5 v4.1 — Camp C editable render (M2 scope cut to a+b)
-- `LOOM.md` §6.7 v4.1 — input surface + AI passes (scope clarified)
-- `LOOM.md` §11 — roadmap (M-series milestones updated)
-- `LOOM_RULES.md` §7.5 v4.1 — operating rules + 12 bans
+- `docs/canon/LOOM.md` §1.5 v4.1 — substrate positioning + role taxonomy summary (canonical)
+- `docs/canon/LOOM.md` §6.5 v4.1 — Camp C editable render (M2 scope cut to a+b)
+- `docs/canon/LOOM.md` §6.7 v4.1 — input surface + AI passes (scope clarified)
+- `docs/canon/LOOM.md` §11 — roadmap (M-series milestones updated)
+- `docs/canon/LOOM_RULES.md` §7.5 v4.1 — operating rules + 12 bans
 - `plans/loom-camp-c-editable-render.md` v4.1 — M2 scope cut, AI co-edit deleted
 - `plans/loom-ai-passes.md` v4.1 — non-generative hard rule added
 - `plans/loom-cmd-k-palette.md` v4.1 — NEW spec for the 3rd AI surface

@@ -14,7 +14,7 @@
 
 Implement the approved design spec:
 
-- `docs/superpowers/specs/2026-06-04-loom-personal-home-ia-design.md`
+- `docs/archive/ai-build-log/specs/2026-06-04-loom-personal-home-ia-design.md`
 
 Do not migrate source files. Do not delete `/knowledge`, `/drafts`, `/knowledge/unsw`, or source-detail routes. This is a presentation-layer IA change.
 

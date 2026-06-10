@@ -14,7 +14,7 @@ control panels, onboarding shells, or generic AI product chrome.
 
 Use this with:
 
-- `docs/design/CURRENT_DESIGN_CANON.md`
+- `docs/canon/CURRENT_DESIGN_CANON.md`
 - `docs/design/DESIGN_MEMORY.md`
 - `docs/design/DESIGN_REVIEW_CHECKLIST.md`
 

@@ -289,7 +289,7 @@ Historical shipped vocab (2026-05-11 在 running app 现场验证, superseded):
 
 **作用范围**：新增 UI string、新增 surface 名、新增 CTA、新增 menu item、新增 status 文案。**Internal 类名 / 包名 / 文件名不受此条约束**。
 
-**追溯清理**：根目录 `LOOM.md` / `LOOM_RULES.md` / `docs/design/*` 多处仍用 *kesi* vocabulary —— 标为 stale，followup sweep PR 单独处理，**不阻塞**当下工作。
+**追溯清理**：根目录 `docs/canon/LOOM.md` / `docs/canon/LOOM_RULES.md` / `docs/design/*` 多处仍用 *kesi* vocabulary —— 标为 stale，followup sweep PR 单独处理，**不阻塞**当下工作。
 
 **为什么这是 Refusal 而不是 Style Guide**：命名是产品教学的第一道关。一个"Pursuit"按钮强迫用户先学 Loom 术语再用功能；一个"Add Question"按钮直接让功能露出来。前者是 onboarding 税，后者不是 —— 而 Plate III 的精神正是**不向用户征收任何不必要的税**。所以它属于宪法，不属于风格。
 
@@ -626,7 +626,7 @@ Loom 不是 chrome-style SaaS dashboard。它的视觉宪法在 `Material Audit.
 
 - Plate III Refusals（6 条 + §III.7 命名纪律）
 - Plate IV 19 surfaces + Plate IV addendum 2026-05-12 sidebar/list 交互语法
-- `docs/design/CURRENT_DESIGN_CANON.md` §3 Attention Contract（本 amendment 是它的 hard tightening：把"应当有一个 foreground"升格为"MUST 有 + 三层结构 + 反面禁令"）
+- `docs/canon/CURRENT_DESIGN_CANON.md` §3 Attention Contract（本 amendment 是它的 hard tightening：把"应当有一个 foreground"升格为"MUST 有 + 三层结构 + 反面禁令"）
 
 ---
 

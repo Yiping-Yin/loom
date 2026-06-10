@@ -660,7 +660,7 @@ git commit -m "feat: separate raw source library from llm wiki"
 
 ## Execution Handoff
 
-Plan complete and saved to `docs/superpowers/plans/2026-04-19-atlas-source-library-ia.md`. Two execution options:
+Plan complete and saved to `docs/archive/ai-build-log/plans/2026-04-19-atlas-source-library-ia.md`. Two execution options:
 
 1. Subagent-Driven (recommended) - I dispatch a fresh subagent per task, review between tasks, fast iteration
 

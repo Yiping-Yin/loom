@@ -1,7 +1,7 @@
 # Prism vs. Notes vs. Loom — Camp C as Loom's Render Position
 
 **Filed:** 2026-05-01
-**Status:** Design rationale for `LOOM.md` §1.5 (Camp C positioning) + §6.5 (engineering decomposition) + `plans/loom-camp-c-editable-render.md` (phased plan)
+**Status:** Design rationale for `docs/canon/LOOM.md` §1.5 (Camp C positioning) + §6.5 (engineering decomposition) + `plans/loom-camp-c-editable-render.md` (phased plan)
 **Author:** Claude, in dialog with product owner
 **Trigger:** Product owner observation that Apple Notes + AI workflow demonstrated a third path between LaTeX/Prism's frozen-beautiful and Notion/Notes' editable-mediocre
 
@@ -183,7 +183,7 @@ This positioning is closer to **Word in 1990s** (universal substrate, conservati
 
 ## 6. Integration with the 3-layer architecture (also added v3.0)
 
-`LOOM.md` §1.5 introduces the 3-layer architecture: terminal AI thinks, Loom renders, user orchestrates. Camp C lives entirely in the **render** layer:
+`docs/canon/LOOM.md` §1.5 introduces the 3-layer architecture: terminal AI thinks, Loom renders, user orchestrates. Camp C lives entirely in the **render** layer:
 
 ```
 User (orchestrator: vision keeper / capability router / verify gate / memory enforcer)
@@ -205,7 +205,7 @@ Camp C is the SURFACE where "user reads + edits + AI co-edits" happens. Without 
 
 ---
 
-## 7. Honest unknowns (filed in `LOOM.md` §12 and this doc)
+## 7. Honest unknowns (filed in `docs/canon/LOOM.md` §12 and this doc)
 
 These don't block thesis filing but block M3 → M4 promotion until M2 surfaces real data:
 
@@ -239,7 +239,7 @@ These don't block thesis filing but block M3 → M4 promotion until M2 surfaces 
 ## 8. Decision log for this design
 
 - 2026-05-01 — Camp C reframe filed by Claude in dialog with product owner. Triggered by user observation: "我看你今天要你做 note，把笔记放到 notes 上，你也做好了很好的排版，但是我随时可以在 notes 上对你进行 edit，这也是个很重要的事情。" Apple Note workflow demonstrated the principle; Loom should deliver the same at paper-canon quality.
-- 2026-05-01 — Decision: file thesis (this doc + LOOM.md §1.5 + §6.5 + LOOM_RULES §7.5 + plan), defer code. Honors `tmp/loom-correction-log.md` entry-005 ("don't ship rules for un-lived workflows").
+- 2026-05-01 — Decision: file thesis (this doc + docs/canon/LOOM.md §1.5 + §6.5 + LOOM_RULES §7.5 + plan), defer code. Honors `tmp/loom-correction-log.md` entry-005 ("don't ship rules for un-lived workflows").
 
 ---
 
@@ -258,10 +258,10 @@ These don't block thesis filing but block M3 → M4 promotion until M2 surfaces 
 
 ## 10. Cross-references
 
-- `LOOM.md` §1.5 — Camp C positioning summary (canonical)
-- `LOOM.md` §6.5 — Engineering decomposition of 5 modules (canonical)
-- `LOOM.md` §11 Tier C — Roadmap entries C.M1-M5
-- `LOOM_RULES.md` §7.5 — Operating rules + bans (binding for any agent touching Camp C work)
+- `docs/canon/LOOM.md` §1.5 — Camp C positioning summary (canonical)
+- `docs/canon/LOOM.md` §6.5 — Engineering decomposition of 5 modules (canonical)
+- `docs/canon/LOOM.md` §11 Tier C — Roadmap entries C.M1-M5
+- `docs/canon/LOOM_RULES.md` §7.5 — Operating rules + bans (binding for any agent touching Camp C work)
 - `plans/loom-camp-c-editable-render.md` — Phased plan with milestone exit criteria
 - `tmp/loom-correction-log.md` entry-005 — Don't-ship-un-lived-rules lesson (informs why M2 must validate before M4 ships)
 - `tmp/loom-correction-log.md` entry-006 — Strategic reframe entry covering this whole filing

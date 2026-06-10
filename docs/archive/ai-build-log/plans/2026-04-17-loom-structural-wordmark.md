@@ -4,7 +4,7 @@
 
 **Goal:** Produce a new Loom structural wordmark that embeds the approved `通经断纬` mechanism in the lettering itself, then integrate the chosen asset into the current app branding.
 
-**Architecture:** Use the approved spec at [2026-04-17-loom-logo-wordmark-design.md](/Users/yinyiping/Desktop/Wiki/docs/superpowers/specs/2026-04-17-loom-logo-wordmark-design.md) as the source of truth. Generate three tightly controlled candidate wordmarks, review them against the spec's evaluation criteria, refine the winner in one short second round, then export a final 1600×420 PNG and switch [components/LoomLogo.tsx](/Users/yinyiping/Desktop/Wiki/components/LoomLogo.tsx) to the new asset.
+**Architecture:** Use the approved spec at [2026-04-17-loom-logo-wordmark-design.md](/Users/yinyiping/Desktop/Wiki/docs/archive/ai-build-log/specs/2026-04-17-loom-logo-wordmark-design.md) as the source of truth. Generate three tightly controlled candidate wordmarks, review them against the spec's evaluation criteria, refine the winner in one short second round, then export a final 1600×420 PNG and switch [components/LoomLogo.tsx](/Users/yinyiping/Desktop/Wiki/components/LoomLogo.tsx) to the new asset.
 
 **Tech Stack:** OpenAI built-in `image_gen` tool, existing Next.js asset pipeline, PNG brand assets under `public/brand/`, Markdown design review docs.
 
@@ -12,9 +12,9 @@
 
 ## File Map
 
-- `docs/superpowers/specs/2026-04-17-loom-logo-wordmark-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-loom-logo-wordmark-design.md`
   Approved source-of-truth design spec for the new wordmark direction.
-- `docs/superpowers/plans/2026-04-17-loom-structural-wordmark.md`
+- `docs/archive/ai-build-log/plans/2026-04-17-loom-structural-wordmark.md`
   This execution plan.
 - `docs/design/WORDMARK_REVIEW_2026-04-17.md`
   Review matrix for scoring candidate A/B/C against the approved criteria.
@@ -41,7 +41,7 @@
 - Create: `public/brand/explorations/2026-04-17-structural-wordmark/candidate-a-upright.png`
 - Create: `public/brand/explorations/2026-04-17-structural-wordmark/candidate-b-slight-lean.png`
 - Create: `public/brand/explorations/2026-04-17-structural-wordmark/candidate-c-mechanism.png`
-- Reference: `docs/superpowers/specs/2026-04-17-loom-logo-wordmark-design.md`
+- Reference: `docs/archive/ai-build-log/specs/2026-04-17-loom-logo-wordmark-design.md`
 - Reference: `components/LoomLogo.tsx`
 
 - [ ] **Step 1: Confirm the current shipped asset shape and consumer**
@@ -127,7 +127,7 @@ git commit -m "design: add Loom structural wordmark exploration round"
 
 **Files:**
 - Create: `docs/design/WORDMARK_REVIEW_2026-04-17.md`
-- Reference: `docs/superpowers/specs/2026-04-17-loom-logo-wordmark-design.md`
+- Reference: `docs/archive/ai-build-log/specs/2026-04-17-loom-logo-wordmark-design.md`
 - Reference: `public/brand/explorations/2026-04-17-structural-wordmark/candidate-a-upright.png`
 - Reference: `public/brand/explorations/2026-04-17-structural-wordmark/candidate-b-slight-lean.png`
 - Reference: `public/brand/explorations/2026-04-17-structural-wordmark/candidate-c-mechanism.png`
@@ -189,7 +189,7 @@ git commit -m "design: review Loom structural wordmark candidates"
 - Create: `public/brand/explorations/2026-04-17-structural-wordmark/refine-1.png`
 - Create: `public/brand/explorations/2026-04-17-structural-wordmark/refine-2.png`
 - Reference: `docs/design/WORDMARK_REVIEW_2026-04-17.md`
-- Reference: `docs/superpowers/specs/2026-04-17-loom-logo-wordmark-design.md`
+- Reference: `docs/archive/ai-build-log/specs/2026-04-17-loom-logo-wordmark-design.md`
 
 - [ ] **Step 1: Generate refine-1 (tighter winner)**
 
@@ -306,7 +306,7 @@ Current wordmark priority:
 
 See:
 
-- `docs/superpowers/specs/2026-04-17-loom-logo-wordmark-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-loom-logo-wordmark-design.md`
 - `docs/design/WORDMARK_REVIEW_2026-04-17.md`
 ```
 

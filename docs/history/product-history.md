@@ -23,7 +23,7 @@ reading-and-thinking environment where source-bound understanding is woven into
 memory. This version made the core boundary clearer: Loom is not a dashboard,
 landing page, or chat shell.
 
-Source: `docs/design/CURRENT_DESIGN_CANON.md`
+Source: `docs/canon/CURRENT_DESIGN_CANON.md`
 
 ### 2026-04-17 · Structural Mark And Foreground Object
 
@@ -36,9 +36,9 @@ dominant foreground object, not a dashboard of equal cards.
 
 Sources:
 
-- `docs/superpowers/specs/2026-04-17-loom-logo-wordmark-design.md`
-- `docs/superpowers/specs/2026-04-17-loom-negative-space-wordmark-design.md`
-- `docs/superpowers/specs/2026-04-17-home-foreground-workbench-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-loom-logo-wordmark-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-loom-negative-space-wordmark-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-home-foreground-workbench-design.md`
 
 ### 2026-04-24 · Material Archive And Frontispiece
 
@@ -55,7 +55,7 @@ source-backed work. AI became a summoned helper by role, not a decorative
 always-on surface. The important object was still the user's durable source,
 note, and draft record.
 
-Source: `LOOM.md`
+Source: `docs/canon/LOOM.md`
 
 ### 2026-05-31 · Personal Knowledge Display
 
@@ -64,7 +64,7 @@ display platform: learning paths, source resources, portfolio work, and process
 records become source-backed pages. This personal version is the first real
 product surface; the later goal is a platform that can serve everyone.
 
-Source: `LOOM.md`, `README.md`
+Source: `docs/canon/LOOM.md`, `README.md`
 
 ### 2026-06-02 · Verified Profile And Source Dossier
 
@@ -73,7 +73,7 @@ coursework, certificates, and source files started replacing abstract product
 copy. This was the first clear movement from mark text toward picture assets and
 source evidence.
 
-Source: `docs/superpowers/specs/2026-06-02-loom-verified-dossier-design.md`
+Source: `docs/archive/ai-build-log/specs/2026-06-02-loom-verified-dossier-design.md`
 
 ### 2026-06-03 · Evidence Workbench
 
@@ -82,7 +82,7 @@ answer provenance, and cited outputs appeared together. This clarified an
 important boundary. The source chain is real and valuable, but it should not
 become the whole public homepage.
 
-Source: `docs/superpowers/specs/2026-06-03-loom-evidence-workbench-homepage-design.md`
+Source: `docs/archive/ai-build-log/specs/2026-06-03-loom-evidence-workbench-homepage-design.md`
 
 ### 2026-06-04 · Personal IA And Asset-Led Upgrade
 
@@ -104,8 +104,8 @@ explanatory text does.
 
 Sources:
 
-- `docs/superpowers/specs/2026-06-04-loom-personal-home-ia-design.md`
-- `docs/superpowers/specs/2026-06-04-loom-asset-led-upgrade-design.md`
+- `docs/archive/ai-build-log/specs/2026-06-04-loom-personal-home-ia-design.md`
+- `docs/archive/ai-build-log/specs/2026-06-04-loom-asset-led-upgrade-design.md`
 - `docs/design/LOOM_VISUAL_UPGRADE_PRINCIPLES_2026-06-04.md`
 - `docs/design/LOOM_EVOLUTION_INTEGRATION_MAP_2026-06-04.md`
 

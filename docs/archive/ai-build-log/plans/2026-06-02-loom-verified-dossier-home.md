@@ -1330,11 +1330,11 @@ Only commit if verification required additional repairs. If no repairs were made
 ## Task 7: Record Follow-up Scope For The Full Page System
 
 **Files:**
-- Create: `docs/superpowers/plans/2026-06-02-loom-verified-dossier-page-system-followup.md`
+- Create: `docs/archive/ai-build-log/plans/2026-06-02-loom-verified-dossier-page-system-followup.md`
 
 - [ ] **Step 1: Create the follow-up scope note**
 
-Create `docs/superpowers/plans/2026-06-02-loom-verified-dossier-page-system-followup.md`:
+Create `docs/archive/ai-build-log/plans/2026-06-02-loom-verified-dossier-page-system-followup.md`:
 
 ```md
 # Loom Verified Dossier Page System Follow-up
@@ -1366,7 +1366,7 @@ The first Home phase should not be considered final product completion until thi
 - [ ] **Step 2: Commit Task 7**
 
 ```bash
-git add docs/superpowers/plans/2026-06-02-loom-verified-dossier-page-system-followup.md
+git add docs/archive/ai-build-log/plans/2026-06-02-loom-verified-dossier-page-system-followup.md
 git commit -m "docs: outline verified dossier page system follow-up"
 ```
 

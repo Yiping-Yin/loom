@@ -92,11 +92,11 @@ If the AI sounds like a chatbot, the prompt is wrong.
 For quick orientation, read in this order:
 
 1. `docs/design/DESIGN_ONBOARDING.md`
-2. `docs/design/CURRENT_DESIGN_CANON.md`
+2. `docs/canon/CURRENT_DESIGN_CANON.md`
 3. `docs/design/CAPTURE_SPEC.md`
 4. `docs/design/DESIGN_MEMORY.md`
 
-If these documents disagree, `docs/design/CURRENT_DESIGN_CANON.md` wins.
+If these documents disagree, `docs/canon/CURRENT_DESIGN_CANON.md` wins.
 
 Treat `docs/design/CANVAS_SPEC.md` as historical only.
 

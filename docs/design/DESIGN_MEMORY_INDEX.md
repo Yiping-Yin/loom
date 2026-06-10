@@ -13,7 +13,7 @@ mother document.
 - [Design Onboarding](/Users/yinyiping/Desktop/LOOM/docs/design/DESIGN_ONBOARDING.md)
   Fastest collaborator entry point
 
-- [Current Design Canon](/Users/yinyiping/Desktop/LOOM/docs/design/CURRENT_DESIGN_CANON.md)
+- [Current Design Canon](/Users/yinyiping/Desktop/LOOM/docs/canon/CURRENT_DESIGN_CANON.md)
   Current operative truth
 
 - [Design Memory](/Users/yinyiping/Desktop/LOOM/docs/design/DESIGN_MEMORY.md)
@@ -46,7 +46,7 @@ mother document.
 ## Recommended Reading Order
 
 1. `DESIGN_ONBOARDING.md`
-2. `CURRENT_DESIGN_CANON.md`
+2. `docs/canon/CURRENT_DESIGN_CANON.md`
 3. `MATERIAL_ARCHIVE_DIRECTION.md`
 4. `CAPTURE_SPEC.md`
 5. `DESIGN_MEMORY.md`
@@ -58,7 +58,7 @@ This is an orientation order, not precedence.
 
 When documents disagree, use:
 
-1. `CURRENT_DESIGN_CANON.md`
+1. `docs/canon/CURRENT_DESIGN_CANON.md`
 2. topic spec documents
 3. `DESIGN_MEMORY.md`
 4. implementation
@@ -68,7 +68,7 @@ When documents disagree, use:
 
 If you are asking:
 
-- "What is Loom?" → `CURRENT_DESIGN_CANON.md`
+- "What is Loom?" → `docs/canon/CURRENT_DESIGN_CANON.md`
 - "How should I not break the product?" → `DESIGN_ONBOARDING.md`
 - "How should material archive surfaces feel?" → `MATERIAL_ARCHIVE_DIRECTION.md`
 - "What is the current capture model?" → `CAPTURE_SPEC.md`

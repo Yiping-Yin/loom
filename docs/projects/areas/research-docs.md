@@ -16,7 +16,7 @@ Key folders:
 
 - `docs/`
 - `docs/process/`
-- `docs/superpowers/`
+- `docs/archive/ai-build-log/`
 - `docs/design/`
 - `docs/projects/`
 

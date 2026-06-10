@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Upgrade `/loom` and `/product-history` from a history-led page into the deep Loom Product System page approved in `docs/superpowers/specs/2026-06-05-loom-product-system-page-design.md`.
+**Goal:** Upgrade `/loom` and `/product-history` from a history-led page into the deep Loom Product System page approved in `docs/archive/ai-build-log/specs/2026-06-05-loom-product-system-page-design.md`.
 
 **Architecture:** Keep the existing route and CSS module. Replace the page's hierarchy with page-local product-system data arrays plus existing verified dossier assets. Preserve the personal-first homepage; `/loom` carries the deeper product explanation.
 

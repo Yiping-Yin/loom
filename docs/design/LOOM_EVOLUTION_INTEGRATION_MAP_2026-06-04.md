@@ -364,11 +364,11 @@ personal development visible over time.
 
 These define the current product or active implementation:
 
-- `LOOM.md`
-- `LOOM_RULES.md`
+- `docs/canon/LOOM.md`
+- `docs/canon/LOOM_RULES.md`
 - `docs/design/LOOM_VISUAL_UPGRADE_PRINCIPLES_2026-06-04.md`
-- `docs/superpowers/specs/2026-06-04-loom-personal-home-ia-design.md`
-- `docs/superpowers/specs/2026-06-04-loom-asset-led-upgrade-design.md`
+- `docs/archive/ai-build-log/specs/2026-06-04-loom-personal-home-ia-design.md`
+- `docs/archive/ai-build-log/specs/2026-06-04-loom-asset-led-upgrade-design.md`
 - `lib/new-loom/`
 - `components/verified-dossier/`
 - `public/verified-sources/`
@@ -396,9 +396,9 @@ These files should be read for decisions, not surfaced wholesale:
 - `docs/design/LOOM_PERSONAL_GROWTH_MODEL_2026-06-04.md`
 - `docs/design/LOOM_PRODUCT_PHILOSOPHY_FOR_DESIGN_ENGINEERING_2026-06-04.md`
 - `docs/process/LOOM_STAGE_REVIEW_2026-04-15.md`
-- `docs/superpowers/specs/2026-04-17-loom-logo-wordmark-design.md`
-- `docs/superpowers/specs/2026-04-17-loom-negative-space-wordmark-design.md`
-- `docs/superpowers/specs/2026-04-17-home-foreground-workbench-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-loom-logo-wordmark-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-loom-negative-space-wordmark-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-home-foreground-workbench-design.md`
 - `docs/design/LOOM_VISUAL_GRAMMAR.md`
 - `docs/design/LOOM_PANEL_SYSTEM_PLAN.md`
 - `docs/design/LOOM_EPISTEMIC_GRAMMAR.md`

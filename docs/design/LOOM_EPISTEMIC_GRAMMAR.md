@@ -12,7 +12,7 @@ This file defines the **epistemic grammar** of Loom:
 - how an object advances, freezes, gets challenged, or gets withdrawn
 - what AI is allowed to do to each object
 
-If `CURRENT_DESIGN_CANON.md` explains Loom's product identity,
+If `docs/canon/CURRENT_DESIGN_CANON.md` explains Loom's product identity,
 and `LOOM_VISUAL_GRAMMAR.md` explains its visual discipline,
 this file explains **how understanding itself must be structured**.
 

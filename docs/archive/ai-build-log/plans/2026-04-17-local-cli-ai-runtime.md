@@ -574,7 +574,7 @@ git commit -m "feat: show local ai runtime fallback state in ai surfaces"
 - Modify: `app/help/page.tsx`
 - Modify: `docs/process/SHIP_AUDIT_2026-04-15.md`
 - Modify: `docs/process/STABILIZATION_FREEZE_2026-04-15.md`
-- Modify: `docs/superpowers/specs/2026-04-16-local-cli-ai-runtime-design.md`
+- Modify: `docs/archive/ai-build-log/specs/2026-04-16-local-cli-ai-runtime-design.md`
 
 - [ ] **Step 1: Update help copy to teach the actual runtime model**
 
@@ -601,7 +601,7 @@ Expected: only intentional references remain
 - [ ] **Step 4: Commit**
 
 ```bash
-git add app/help/page.tsx docs/process/SHIP_AUDIT_2026-04-15.md docs/process/STABILIZATION_FREEZE_2026-04-15.md docs/superpowers/specs/2026-04-16-local-cli-ai-runtime-design.md
+git add app/help/page.tsx docs/process/SHIP_AUDIT_2026-04-15.md docs/process/STABILIZATION_FREEZE_2026-04-15.md docs/archive/ai-build-log/specs/2026-04-16-local-cli-ai-runtime-design.md
 git commit -m "docs: align product language with local ai runtime model"
 ```
 

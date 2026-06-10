@@ -1,20 +1,88 @@
+<div align="center">
+
 # Loom
 
-**Loom is a personal knowledge identity platform.** It helps anyone turn scattered sources, learning paths, projects, drafts, and AI conversations into a living knowledge identity: a portfolio people can inspect, a knowledge base people can trust, and a personal AI people can talk to.
+### Build a digital extension of yourself.
 
-Yiping's Loom is the first reference instance. About, UNSW, Quantnet, WQU, and Claude are real shelves from one user's archive; they prove the product model, but they are not the product boundary.
+**A living knowledge identity for the AI era** — your learning, projects, work, and AI
+conversations woven into one source-backed self that grows over time and can answer for you.
 
-![Your library, as you arranged it.](docs/images/hero-library.jpg)
+</div>
+
+![Loom — the verified personal dossier](docs/images/product/cover.png)
+
+---
+
+## Why Loom
+
+Today we spend years learning, building projects, shipping portfolios, and talking to AI. But all
+of that knowledge fragments across documents, notes, chats, certificates, and platforms. So we keep
+losing context about who we are and what we can do — and every interview, collaboration, or
+introduction means **reconstructing our story from scratch**.
+
+Loom solves this by creating a **living knowledge identity**. It connects a person's learning
+journey, projects, experiences, and AI conversations into a searchable knowledge base that grows
+with them — and eventually becomes a **personalised AI that can represent and communicate their
+knowledge and expertise.**
+
+> In the AI era, your most valuable asset isn't your résumé or portfolio — it's your **accumulated
+> knowledge**. Loom helps you preserve it, showcase it, and unlock its value.
+
+The loop, in four moves:
+
+| Preserve | Connect | Showcase | Represent |
+|----------|---------|----------|-----------|
+| Capture sources — docs, slides, notes, certificates, AI chats — into one place. | Link them into an evidence graph: claims, sources, and the proof between them. | A dossier anyone can inspect — source-backed, never just asserted. | A personalised AI that answers for you, with citations to your real work. |
+
+---
+
+## The product
+
+### A source-backed dossier — not a résumé
+
+Every claim resolves to a real file. About · Education · Experience · Digital Me form one coherent,
+inspectable identity; visitors open the source behind any statement instead of taking it on trust.
+
+![Education and Experience](docs/images/product/experience-hero.png)
+
+### Digital Me — ask my knowledge, get cited answers
+
+Digital Me turns the dossier into a conversational interface. **Ask Yiping** anything; answers are
+drawn only from verified evidence, with citations back to the underlying sources. A Role OS maps
+each claim to how strongly its sources back it, and a working market-making replica is embedded as
+runnable proof.
+
+![Digital Me](docs/images/product/digital-me-hero.png)
+
+### Proof you can run — not a screenshot
+
+Capability is shown, not asserted: *Beebook* — a fully self-contained trading terminal inspired by
+the Optiver × UNSW trading academy — order book, leaderboard, trade ticker, and market-making
+practice — that keeps running **offline, after the source site retires.**
+
+![Beebook live-market terminal](docs/images/product/optibook-landing.png)
+
+---
+
+## Where it stands
+
+- **Live reference instance** — Yiping's Loom is a full working dossier, public on the web. The
+  real shelves (UNSW · QuantNet · WorldQuant · Claude · Optiver) prove the product model; they are
+  not the product boundary.
+- **Built test-first** — every surface is pinned by a contract test.
+- **Two runtimes, one core** — a native macOS app and a deployable web app.
+
+A roadshow pitch deck lives at [`docs/deck/loom.pptx`](docs/deck/loom.pptx).
 
 ---
 
 ## Install
 
 - **macOS 14 Sonoma or later**, Apple Silicon.
-- **Mac App Store** — coming soon. In the meantime, grab the signed + notarized Developer-ID build from the [Releases](https://github.com/Yiping-Yin/Wiki/releases) page: download the `.dmg`, drag *Loom.app* into *Applications*, open it, and press **⌘K** to open the command menu.
+- **Mac App Store** — coming soon. In the meantime, grab the signed + notarized Developer-ID build from the [Releases](https://github.com/Yiping-Yin/loom/releases) page: download the `.dmg`, drag *Loom.app* into *Applications*, open it, and press **⌘K** to open the command menu.
 - **From source** — see the **Dev Flow** section below.
 
-Your files stay on your Mac. Bring your own API key for Anthropic or OpenAI, or point Loom at a local Ollama. Keys live in the macOS Keychain.
+Your files stay on your Mac. Bring your own API key for Anthropic or OpenAI, or point Loom at a local Ollama. Keys live in the macOS Keychain. On the web, set `ANTHROPIC_API_KEY` to enable live *Ask Yiping* answers; without it the dossier degrades gracefully to showing the sources an answer would draw from.
 
 ---
 
@@ -32,17 +100,22 @@ Its core jobs are to:
 
 In the AI era, two things matter that no chat tool gives you at the same time: **speed** (your brain never stops, ideas leap, you talk to AI continuously) and **permanence** (the trail of that thinking doesn't disappear when you close the tab). Loom gives you both.
 
-## Current surfaces
+---
 
-- `/` — Home. A single foreground workbench showing the next quiet move.
-- `/today` — the daily desk for returns, review, and active threads.
-- `/knowledge` — Sources. Collection-level entry point into the user's local library.
-- `Draft` — source-backed portfolio output, process records, and decisions linked to the archive.
-- `/wiki/*`, `/knowledge/<category>/<doc>`, `/uploads/*` — reading surfaces where source capture, review, and grounded questions happen.
+## What this is not
+
+- **Not a note app.** Notes are dead text. Source-bound notes are living structures linked to sources.
+- **Not a chat app.** Chats are linear and disposable. Loom anchors understanding to source.
+- **Not a wiki.** Your archive is built from your sources, notes, and draft decisions.
+- **Not a generic AI assistant.** AI is grounded in the user's sources and archive; it supports source-backed work instead of inventing the record.
+- **Not a productivity tool.** Loom doesn't help you do more. It helps you understand more.
 
 ---
 
-## Historical origin: why it's called Loom
+<details>
+<summary><strong>Why it's called Loom</strong> — the kesi origin (historical framing)</summary>
+
+<br>
 
 This origin story explains the name and early design language. It is not the current product navigation model; current visible product language is Sources and Draft.
 
@@ -52,88 +125,9 @@ A kesi weaver sits before a loom. The loom holds the tension, aligns the threads
 
 A Loom user sits before a document. The AI organizes the answer, anchors it to the right passage, connects it to prior thoughts. The user's job is to choose what to ask and when to commit. Loom absorbs the organizational burden; the thinker focuses on intent.
 
-```
-Freehand painting  :  Kesi weaving    =  Handwriting  :  Loom
+The defining kesi technique is **continuous warp, broken weft** (通经断纬): the warp runs through the whole fabric unbroken — your sustained library of sources — while the weft moves only within one color block, so each thought keeps a clean boundary. ChatGPT is continuous warp *and* weft: everything blurs into one infinite scroll. Loom is continuous warp, broken weft — each thought has its own panel, and the picture emerges only as panels join. It is the discreteness that lets the picture be seen.
 
-The tool absorbs organization.
-The human keeps intent.
-```
-
-Every action in Loom is a physical act of kesi:
-
-| You do this | A weaver does this |
-|---|---|
-| Open a document | Sit before the loom |
-| Read the source | Study the pattern |
-| Select a passage and ask AI | Pass the shuttle through the warp |
-| AI organizes the answer | The loom aligns the thread |
-| Commit a thought-anchor | One color block is finished |
-| See your thought map | Step back to see the emerging fabric |
-| Crystallize | The panel joins the kesi |
-
----
-
-## Historical origin: five design principles
-
-These principles record the original metaphor that shaped the product. Treat the metaphor as historical framing, not as current route names, shelf names, or UI vocabulary.
-
-### 1. Loom is a loom
-
-The product does not reference kesi. The product IS kesi, performed on thought instead of thread. The weaver's workflow is the thinker's workflow.
-
-### 2. Silent spring rain
-
-The Chinese poet Du Fu: *moisten things silently, imperceptibly*. The tool exists, the work happens, the result is rich — but the user only notices the result. Not the tool arriving, not the AI working, not the interface changing.
-
-### 3. The source is sacred
-
-The document is never modified, never interrupted, never broken. Notes exist as tiny marks in the margin, visible only when you look for them. Three layers of progressive visibility: zero (reading) → dots (awareness) → hover (peeking) → full map (studying).
-
-### 4. Faster and cleaner than handwriting
-
-Not a replacement for pen and paper — structurally better output in less time. If any action takes more steps than handwriting, the design is wrong. If AI output is less structured than handwritten notes, the prompt is wrong.
-
-### 5. The thought map is the pattern
-
-A kesi weaver's mind holds the entire pattern before the first thread is laid. Loom's thought map is that mental pattern made visible: which sections you've understood, which are still blank, how your thinking maps to the source. Without it, Loom is just a chat tool. With it, Loom is a loom.
-
----
-
-## How it works
-
-**Reading** — open any document. The prose stays centered and stable. Source structure is quiet reference, not competing chrome.
-
-**Asking** — select a passage, click the accent thread that appears. The document focuses on that passage; you discuss it with AI. Fast, local, passage-bound.
-
-**Anchoring** — when you're done discussing, commit. One `◆` appears next to that passage. One passage, one anchored note.
-
-**Reviewing** — hover any `◆` to peek. Press `Cmd+/` to enter review mode: the source recedes, a centered glass **Live Note** becomes the main object of attention, and a companion **thought map** appears beside it.
-
-**Publishing** — when a document's thought map is complete, the Draft — your structured understanding of that document — becomes portfolio output linked to its source.
-
-**Living with your archive** — open Sources at `/knowledge` to return to the library, then continue in Draft where source-backed outputs, process records, and decisions stay linked to their evidence.
-
----
-
-## Historical technique: 通经断纬
-
-This technique section preserves the craft analogy behind the name. It is historical/origin context, not current product terminology.
-
-The Chinese silk-tapestry craft *kesi* has one defining technique: **continuous warp, broken weft**. The warp runs through the entire fabric unbroken — your sustained library of sources. The weft moves only within one color block — each thought has a clean boundary, never bleeding into the next.
-
-ChatGPT is continuous warp, continuous weft — everything blurs into one infinite scroll. Nothing has shape. Loom is continuous warp, broken weft — each thought has its own panel, each panel keeps its color, the picture emerges only as panels join.
-
-It is the discreteness that lets the picture be seen.
-
----
-
-## What this is not
-
-- **Not a note app.** Notes are dead text. Thought-anchors are living structures linked to sources.
-- **Not a chat app.** Chats are linear and disposable. Loom anchors understanding to source.
-- **Not a wiki.** Wikis are read by everyone. Your archive is built from your sources, notes, and draft decisions.
-- **Not a generic AI assistant.** AI is grounded in the user's sources and archive; it supports source-backed work instead of inventing the record.
-- **Not a productivity tool.** Loom doesn't help you do more. It helps you understand more.
+</details>
 
 ---
 
@@ -141,15 +135,11 @@ It is the discreteness that lets the picture be seen.
 
 - `npm install` then `npm run verify` runs typecheck, production build, and smoke checks in the correct order.
 - `npm run dev` starts the Next.js surface at `http://127.0.0.1:3000`.
+- `npm run test:contracts` runs the contract suite that pins every surface.
 - `npm run knowledge:refresh` rebuilds the local knowledge caches under `knowledge/.cache/` and prunes old generated files from `public/`.
 - `npm run app`, `npm run app:user`, and `npm run app:system` build and install the macOS shell.
 - `npm run app:where` prints the currently installed *Loom.app* location.
-- `npm run app:preflight` is the App Store submission preflight check.
-- GitHub Actions runs `build -> typecheck -> smoke` and intentionally skips the chat-specific smoke path.
-- Generated knowledge bodies, manifests, and derived indexes live in `knowledge/.cache/` rather than tracked `public/` or `lib/` files.
 - [docs/README.md](docs/README.md) indexes current design and process docs.
-- [DESIGN_ONBOARDING.md](docs/design/DESIGN_ONBOARDING.md) is the fastest collaborator-facing intro to the current product/design model.
-- [CURRENT_DESIGN_CANON.md](docs/design/CURRENT_DESIGN_CANON.md) is the shortest current product/design source of truth; use it before historical specs.
 
 ---
 
@@ -159,8 +149,8 @@ Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the
 shape of the project and the PR checklist. For security issues, see
 [SECURITY.md](SECURITY.md) — please don't file those as public issues.
 
-Loom is built with substantial help from OpenAI Codex. See
-[AUTHORS.md](AUTHORS.md) for how Codex-assisted commits are tagged in
+Loom is built with substantial help from OpenAI Codex and Claude. See
+[AUTHORS.md](AUTHORS.md) for how AI-assisted commits are tagged in
 the history.
 
 ## License
@@ -176,4 +166,8 @@ rename the fork.
 
 ---
 
-> *Think from Sources. Build in Draft.*
+<div align="center">
+
+*Think from Sources. Build in Draft.*
+
+</div>

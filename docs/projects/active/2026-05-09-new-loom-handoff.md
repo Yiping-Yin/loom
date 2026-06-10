@@ -145,7 +145,7 @@ legacy surfaces still available.
   activations cannot corrupt shared media queues.
 - Tightened `verify:capture-handoff` so a saved capture fails if the selected
   entry still contains unresolved temporary `loom://media/...` references.
-- Updated `docs/loom.md`, `LOOM_RULES.md`, and the active completion audit.
+- Updated `docs/loom.md`, `docs/canon/LOOM_RULES.md`, and the active completion audit.
 - Diagnosed Computer Use:
   - direct installed-app verification now works in this conversation;
   - Atlas page content is mostly opaque in the AX tree, but coordinate click on
@@ -2054,7 +2054,7 @@ privacy inspection, manual quality cases, remaining edge/error UX, and strict
 installed-app click acceptance once Computer Use can read the Loom window.
 
 At the 2026-05-10 Compile first-pulse pass, the onboarding pulse from
-`LOOM.md §13.5` / `plans/compile-pipeline-mvp.md §5.3` was narrowed.
+`docs/canon/LOOM.md §13.5` / `plans/compile-pipeline-mvp.md §5.3` was narrowed.
 `SourceFileView.shouldShowFirstCompilePulse(...)` now shows the pulse only when
 the active source scratch has at least 50 whitespace-delimited words, the active
 source section has no `### Compiled · ...` subsection, Compile is not already
@@ -4234,7 +4234,7 @@ the two approval-bound gates.
 
 - `docs/projects/active/2026-05-09-new-loom-completion-audit.md`
 - `docs/loom.md`
-- `LOOM_RULES.md`
+- `docs/canon/LOOM_RULES.md`
 - `/Users/yinyiping/.codex/computer-use/HEALTH.md`
 
 ## Important Constraint

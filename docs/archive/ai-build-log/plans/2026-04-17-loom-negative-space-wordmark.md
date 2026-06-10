@@ -12,9 +12,9 @@
 
 ## File Map
 
-- `docs/superpowers/specs/2026-04-17-loom-negative-space-wordmark-design.md`
+- `docs/archive/ai-build-log/specs/2026-04-17-loom-negative-space-wordmark-design.md`
   Source-of-truth design direction for the new route.
-- `docs/superpowers/plans/2026-04-17-loom-negative-space-wordmark.md`
+- `docs/archive/ai-build-log/plans/2026-04-17-loom-negative-space-wordmark.md`
   This execution plan.
 - `public/brand/explorations/2026-04-17-negative-space-wordmark/study-board-1.svg`
   First deterministic black-on-white preview board with three Loom studies.
@@ -23,14 +23,14 @@
 
 **Files:**
 - Create: `public/brand/explorations/2026-04-17-negative-space-wordmark/study-board-1.svg`
-- Reference: `docs/superpowers/specs/2026-04-17-loom-negative-space-wordmark-design.md`
+- Reference: `docs/archive/ai-build-log/specs/2026-04-17-loom-negative-space-wordmark-design.md`
 
 - [ ] **Step 1: Re-read the spec before drawing**
 
 Run:
 
 ```bash
-sed -n '1,240p' /Users/yinyiping/Desktop/Wiki/docs/superpowers/specs/2026-04-17-loom-negative-space-wordmark-design.md
+sed -n '1,240p' /Users/yinyiping/Desktop/Wiki/docs/archive/ai-build-log/specs/2026-04-17-loom-negative-space-wordmark-design.md
 ```
 
 Expected:

@@ -8,10 +8,10 @@ Objective: complete the new Loom product, not only phase 1.
 
 - Primary information architecture is `Sources` and `Draft`.
 - `Collect` and `Organize` are absorbed into `Sources`; `/collect` remains only as a compatibility entry into Sources.
-- `LOOM.md` now opens with a current operating definition for Sources / Draft
+- `docs/canon/LOOM.md` now opens with a current operating definition for Sources / Draft
   and marks older weaving/substrate language as historical context, not feature
   naming guidance.
-- `LOOM_RULES.md` now says AI is summoned without metaphor framing, and old
+- `docs/canon/LOOM_RULES.md` now says AI is summoned without metaphor framing, and old
   model names such as weave, panel, pursuit, and rehearsal may remain only as
   internal or compatibility names while default-visible labels stay literal.
 - Source intake is exposed as `Add files`, not the internal `Ingestion` label, on default menu, Shuttle, help, and sidebar paths.
@@ -70,7 +70,7 @@ Objective: complete the new Loom product, not only phase 1.
 - `npm run test:contracts`
   - Result: 586 tests, 586 pass, 0 fail.
 - `node scripts/verify-new-loom-completion-audit.mjs`
-  - Result: audit passes, with two approval-bound gates still open. Latest rerun also verifies retired `lib/view`/`appendRehearsal` removal, literal learning-status copy, `/cover` and `/frontispiece` redirects into Sources, retired Cover/Frontispiece client/CSS removal, legacy-compatibility classification for both routes, the current `LOOM.md` / `LOOM_RULES.md` Sources/Draft literal-naming guardrails, the active README continuation reading order, the release-quality full-product gate map, the knowledge-data current responsibility boundary, and the CI contract for the safe `verify:product` gate.
+  - Result: audit passes, with two approval-bound gates still open. Latest rerun also verifies retired `lib/view`/`appendRehearsal` removal, literal learning-status copy, `/cover` and `/frontispiece` redirects into Sources, retired Cover/Frontispiece client/CSS removal, legacy-compatibility classification for both routes, the current `docs/canon/LOOM.md` / `docs/canon/LOOM_RULES.md` Sources/Draft literal-naming guardrails, the active README continuation reading order, the release-quality full-product gate map, the knowledge-data current responsibility boundary, and the CI contract for the safe `verify:product` gate.
 - `npx tsx --test tests/loom-app-scripts.test.ts --test-name-pattern "new Loom completion audit verifier keeps approval-bound gates explicit"`
   - Result: 38 tests passed; this now includes the active README reading-order
     contract and verifies the completion audit keeps both approval-bound gates
