@@ -43,6 +43,15 @@ final class AIStreamBridgeHandler: NSObject, WKScriptMessageHandler {
         let maxTokensOverride = payload["maxTokens"] as? Int
         let provider = AIProviderKind.current
 
+        // Audit the provider body before dispatch: the web AI stream surface
+        // can post arbitrary prompts, so record which provider handled the
+        // request and the prompt size for the on-device privacy/usage log.
+        LoomAIRequestAudit.record(
+            surface: "web-ai-stream",
+            provider: provider,
+            promptLength: prompt.count
+        )
+
         let onChunkClosure: (String) -> Void = { [weak webView] chunk in
             Task { @MainActor [weak webView] in
                 guard let webView else { return }
@@ -127,6 +136,14 @@ final class AIStreamBridgeHandler: NSObject, WKScriptMessageHandler {
         onChunk: @escaping (String) -> Void
     ) async throws {
         switch provider {
+        case .appleFoundation:
+            // Route the on-device provider explicitly rather than letting it
+            // fall through to the Anthropic default — Apple Intelligence is the
+            // out-of-the-box default, so a stream request must reach the local
+            // model instead of silently calling a cloud API.
+            var opts = AppleFoundationClient.Options()
+            opts.onChunk = onChunk
+            _ = try await AppleFoundationClient.send(prompt: prompt, options: opts)
         case .openai:
             var opts = OpenAIClient.Options()
             if let m = modelOverride, !m.isEmpty { opts.model = m }
@@ -152,7 +169,7 @@ final class AIStreamBridgeHandler: NSObject, WKScriptMessageHandler {
                 domain: "LoomAI", code: 1,
                 userInfo: [NSLocalizedDescriptionKey: "AI is disabled in Settings."]
             )
-        default:
+        case .anthropic:
             var opts = AnthropicClient.Options()
             if let m = modelOverride, !m.isEmpty { opts.model = m }
             if let t = maxTokensOverride, t > 0 { opts.maxTokens = t }
@@ -190,6 +207,52 @@ final class AIStreamBridgeHandler: NSObject, WKScriptMessageHandler {
     private static func evaluateJavaScript(_ script: String, in webView: WKWebView?) async {
         guard let webView else { return }
         _ = try? await webView.evaluateJavaScript(script)
+    }
+}
+
+/// Lightweight on-device audit log for AI requests routed through the native
+/// bridges. Records which surface initiated the request, the active provider,
+/// and the prompt size so the installed app keeps a local privacy/usage trail
+/// without sending anything off-device. Writes are best-effort and never block
+/// or fail the request — the audit is a side channel, not a gate.
+enum LoomAIRequestAudit {
+    /// Record a single AI request. `surface` identifies the caller (e.g.
+    /// `"web-ai-stream"` for the WebView stream bridge); `provider` is the
+    /// active `AIProviderKind`; `promptLength` is the character count of the
+    /// outbound prompt (the prompt text itself is not stored).
+    static func record(surface: String, provider: AIProviderKind, promptLength: Int) {
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let line = "[\(timestamp)] surface=\(surface) provider=\(provider.rawValue) promptChars=\(promptLength)\n"
+        NSLog("[LoomAIRequestAudit] %@", line.trimmingCharacters(in: .whitespacesAndNewlines))
+        appendToLog(line)
+    }
+
+    private static var logURL: URL {
+        URL(fileURLWithPath: LoomRuntimePaths.userDataRoot())
+            .appendingPathComponent("Logs", isDirectory: true)
+            .appendingPathComponent("ai-request-audit.log", isDirectory: false)
+    }
+
+    private static func appendToLog(_ line: String) {
+        let url = logURL
+        let fm = FileManager.default
+        do {
+            try fm.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            guard let data = line.data(using: .utf8) else { return }
+            if let handle = try? FileHandle(forWritingTo: url) {
+                defer { try? handle.close() }
+                try handle.seekToEnd()
+                try handle.write(contentsOf: data)
+            } else {
+                try data.write(to: url, options: .atomic)
+            }
+        } catch {
+            // Audit is best-effort; never surface a failure to the caller.
+            NSLog("[LoomAIRequestAudit] append failed: \(error)")
+        }
     }
 }
 

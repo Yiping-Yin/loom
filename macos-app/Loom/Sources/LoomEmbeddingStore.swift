@@ -52,6 +52,12 @@ struct EmbeddingRecord: Codable, Identifiable {
     /// to compare embeddings only against same-family records (cross-
     /// language cosine values are noisy).
     let lang: String
+    /// Artifact states distilled from the capture's blocks (quizzes,
+    /// flashcards, anchors). Carried alongside the embedding so a
+    /// whole-corpus draft query can surface not just the matching body
+    /// but its live artifact state for prompt grounding. Optional so old
+    /// sidecars (written before this field existed) still decode.
+    let artifactStates: [LoomDraftArtifactState]?
 }
 
 enum LoomEmbeddingStore {
@@ -79,7 +85,8 @@ enum LoomEmbeddingStore {
         anchorLabel: String,
         targetPath: String,
         body: String,
-        capturedAt: Date = Date()
+        capturedAt: Date = Date(),
+        artifactStates: [LoomDraftArtifactState] = []
     ) {
         queue.async {
             guard let (vector, lang) = embed(body) else { return }
@@ -91,7 +98,8 @@ enum LoomEmbeddingStore {
                 snippet: snippetize(body),
                 capturedAt: ISO8601DateFormatter().string(from: capturedAt),
                 vector: vector,
-                lang: lang
+                lang: lang,
+                artifactStates: artifactStates.isEmpty ? nil : artifactStates
             )
             var records = loadSidecar(rootID: rootID)
             records.append(record)

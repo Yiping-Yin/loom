@@ -139,6 +139,19 @@ struct SlideDeckExtractor: IngestExtractor {
             return nil
         }
 
+        // iWork path: Keynote `.key` and Pages `.pages` packages are zips
+        // with `Index/*.iwa` body data + `Metadata/*.plist` document
+        // properties (no `ppt/slides/*.xml`). When we recognize that
+        // shape, delegate to the iWork reader instead of the OOXML reader.
+        let looksLikeIWork = archive.contains { entry in
+            entry.path.hasSuffix(".iwa")
+                || entry.path.hasPrefix("Metadata/")
+                || entry.path.hasPrefix("Data/QuickLook/")
+        }
+        if looksLikeIWork {
+            return parseIWorkArchiveText(archive: archive)
+        }
+
         let slideEntries = archive
             .compactMap { entry -> (Int, Entry, EntryKind)? in
                 if let n = slideNumber(fromPath: entry.path, prefix: "ppt/slides/slide") {
@@ -194,6 +207,213 @@ struct SlideDeckExtractor: IngestExtractor {
     }
 
     #if canImport(ZIPFoundation)
+    // MARK: - iWork path (Keynote / Pages)
+    //
+    // iWork packages are zips, not OOXML. The recoverable text lives in:
+    //   • `Metadata/*.plist` — document properties (title/author/subject/…).
+    //   • `Index/*.iwa` — Snappy-framed protobuf body; we don't decode the
+    //     protobuf, we sweep the decompressed bytes for embedded UTF-8 and
+    //     UTF-16LE string runs (the slide/page body text rides inline).
+    //   • `Data/QuickLook/Preview.pdf` — a rendered preview; when present we
+    //     run it through `PDFExtraction.extract` for high-fidelity text.
+    //
+    // We dedupe standalone slide/page markers (`Slide 1`, `第 2 页`) that
+    // also appear as a prefix of a labeled title (`Slide 1: Market design`)
+    // so the body doesn't carry the bare marker twice.
+
+    /// Read the recoverable iWork text from an open archive: metadata,
+    /// then IWA body runs, then a QuickLook preview PDF fallback.
+    static func parseIWorkArchiveText(archive: Archive) -> String? {
+        var sections: [String] = []
+
+        if let metadata = extractIWorkMetadataText(archive: archive),
+           !metadata.isEmpty {
+            sections.append("iWork metadata:\n" + metadata)
+        }
+
+        if let body = extractIWorkBodyText(archive: archive), !body.isEmpty {
+            sections.append("iWork body text:\n" + body)
+        }
+
+        if let preview = extractIWorkPreviewPDFText(archive: archive),
+           !preview.isEmpty {
+            sections.append("QuickLook preview:\n" + preview)
+        }
+
+        if sections.isEmpty { return nil }
+        var combined = sections.joined(separator: "\n\n---\n\n")
+        if combined.count > pptxMaxChars {
+            let end = combined.index(combined.startIndex, offsetBy: pptxMaxChars)
+            combined = String(combined[..<end])
+        }
+        return combined
+    }
+
+    /// Parse `Metadata/*.plist` property lists and emit `key: value`
+    /// lines for the document properties (title, author, subject, …).
+    static func extractIWorkMetadataText(archive: Archive) -> String? {
+        let plistEntries = archive.filter { entry in
+            entry.path.hasPrefix("Metadata/") && entry.path.hasSuffix(".plist")
+        }
+        var lines: [String] = []
+        for entry in plistEntries {
+            guard let data = entryData(entry, archive: archive) else { continue }
+            guard let plist = try? PropertyListSerialization.propertyList(
+                from: data, options: [], format: nil
+            ) as? [String: Any] else { continue }
+            for key in ["title", "author", "subject", "comment"] {
+                if let value = plist[key] as? String,
+                   !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    lines.append("\(key): \(value)")
+                }
+            }
+            if let keywords = plist["keywords"] as? [String], !keywords.isEmpty {
+                lines.append("keywords: " + keywords.joined(separator: ", "))
+            }
+        }
+        return lines.isEmpty ? nil : lines.joined(separator: "\n")
+    }
+
+    /// Sweep `Index/*.iwa` bytes for embedded UTF-8 and UTF-16LE string
+    /// runs (the slide/page body text), then dedupe standalone markers.
+    static func extractIWorkBodyText(archive: Archive) -> String? {
+        let iwaEntries = archive
+            .filter { $0.path.hasPrefix("Index/") && $0.path.hasSuffix(".iwa") }
+            .sorted { $0.path < $1.path }
+        var runs: [String] = []
+        for entry in iwaEntries {
+            guard let data = entryData(entry, archive: archive) else { continue }
+            runs.append(contentsOf: extractUTF8TextRuns(from: data))
+            runs.append(contentsOf: extractUTF16LETextRuns(from: data))
+        }
+        let cleaned = dedupeStandaloneMarkers(runs)
+        return cleaned.isEmpty ? nil : cleaned.joined(separator: "\n")
+    }
+
+    /// Render the nested `Data/QuickLook/Preview.pdf` (path ends in
+    /// `/preview.pdf`, case-insensitive) through `PDFExtraction.extract`.
+    static func extractIWorkPreviewPDFText(archive: Archive) -> String? {
+        guard let entry = archive.first(where: { entry in
+            let path = entry.path.lowercased()
+            return path.hasSuffix("/preview.pdf") || path == "preview.pdf"
+        }) else { return nil }
+        guard let data = entryData(entry, archive: archive) else { return nil }
+
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("loom-iwork-\(UUID().uuidString).pdf")
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        do {
+            try data.write(to: tmp)
+            let extracted = try PDFExtraction.extract(url: tmp, maxChars: pptxMaxChars)
+            return extracted.text
+        } catch {
+            return nil
+        }
+    }
+
+    /// Read all bytes for a zip entry, tolerating partial/streamed reads.
+    private static func entryData(_ entry: Entry, archive: Archive) -> Data? {
+        var buffer = Data()
+        do {
+            _ = try archive.extract(entry) { chunk in buffer.append(chunk) }
+        } catch {
+            return nil
+        }
+        return buffer
+    }
+
+    /// Minimum run length to keep — single stray ASCII chars are noise.
+    private static let iWorkMinRunLength = 3
+
+    /// Scan `data` for maximal contiguous runs of printable UTF-8 bytes
+    /// (ASCII visible + multi-byte sequences) and decode each run.
+    static func extractUTF8TextRuns(from data: Data) -> [String] {
+        var runs: [String] = []
+        var current = Data()
+        func flush() {
+            if !current.isEmpty,
+               let s = String(data: current, encoding: .utf8) {
+                let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+                if trimmed.count >= iWorkMinRunLength { runs.append(trimmed) }
+            }
+            current.removeAll(keepingCapacity: true)
+        }
+        for byte in data {
+            // Printable ASCII (space..~), newline, or a UTF-8 continuation/
+            // lead byte (≥0x80) — keeps multi-byte CJK runs intact.
+            if (byte >= 0x20 && byte <= 0x7e) || byte == 0x0a || byte >= 0x80 {
+                current.append(byte)
+            } else {
+                flush()
+            }
+        }
+        flush()
+        return runs
+    }
+
+    /// Scan `data` for runs of UTF-16LE-encoded ASCII (`X 00 Y 00 …`) and
+    /// decode each run. iWork stores some inline strings as UTF-16LE.
+    static func extractUTF16LETextRuns(from data: Data) -> [String] {
+        var runs: [String] = []
+        var current: [UInt8] = []
+        func flush() {
+            if current.count >= iWorkMinRunLength * 2 {
+                let bytes = Data(current)
+                if let s = String(data: bytes, encoding: .utf16LittleEndian) {
+                    let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if trimmed.count >= iWorkMinRunLength { runs.append(trimmed) }
+                }
+            }
+            current.removeAll(keepingCapacity: true)
+        }
+        let bytes = [UInt8](data)
+        var i = 0
+        while i + 1 < bytes.count {
+            let lo = bytes[i]
+            let hi = bytes[i + 1]
+            // Printable ASCII low byte with a zero high byte → UTF-16LE.
+            if hi == 0x00 && ((lo >= 0x20 && lo <= 0x7e) || lo == 0x0a) {
+                current.append(lo)
+                current.append(hi)
+                i += 2
+            } else {
+                flush()
+                i += 1
+            }
+        }
+        flush()
+        return runs
+    }
+
+    /// Drop a standalone marker run (`Slide 1`, `Page 2`, `第 3 页`) when a
+    /// later run begins with that same marker plus a separator (`Slide 1:`),
+    /// so the body keeps only the labeled title.
+    private static func dedupeStandaloneMarkers(_ runs: [String]) -> [String] {
+        var result: [String] = []
+        for (index, run) in runs.enumerated() {
+            if isStandaloneMarker(run) {
+                let hasLabeled = runs[(index + 1)...].contains { later in
+                    later != run
+                        && (later.hasPrefix(run + ":") || later.hasPrefix(run + "："))
+                }
+                if hasLabeled { continue }
+            }
+            result.append(run)
+        }
+        return result
+    }
+
+    /// A "standalone marker" is a short `Slide N` / `Page N` / `第 N 页`
+    /// run with no following colon body.
+    private static func isStandaloneMarker(_ run: String) -> Bool {
+        if run.contains(":") || run.contains("：") { return false }
+        let prefixes = ["Slide ", "Page ", "第"]
+        for prefix in prefixes where run.hasPrefix(prefix) {
+            return run.count <= 12
+        }
+        return false
+    }
+
     /// Distinguishes slide bodies from speaker notes in the sort pass.
     private enum EntryKind { case slide, notes }
 
@@ -227,7 +447,11 @@ struct SlideDeckExtractor: IngestExtractor {
     /// character data inside `<a:t>` elements and joins them with single
     /// spaces per slide.
     private static func parseTextRuns(xml data: Data) -> String? {
-        guard data.range(of: Data("<a:t".utf8)) != nil else {
+        // Slides may contribute body text (`<a:t>`) and/or accessibility
+        // alt text (`p:cNvPr` title/descr). Parse if either is present.
+        let hasTextRuns = data.range(of: Data("<a:t".utf8)) != nil
+        let hasAltText = data.range(of: Data("cNvPr".utf8)) != nil
+        guard hasTextRuns || hasAltText else {
             return ""
         }
 
@@ -249,10 +473,32 @@ struct SlideDeckExtractor: IngestExtractor {
     /// `<a:t>` can contain multiple `foundCharacters` callbacks (e.g.
     /// entity-escaped content), so we accumulate into `current` and
     /// only flush on element close.
+    ///
+    /// Beyond drawing text runs, the collector also harvests the
+    /// shape/image title and
+    /// description attributes on `cNvPr` non-visual drawing props.
+    /// PowerPoint stores accessibility alt text there (`title` / `descr`),
+    /// which is often the only machine-readable description of an embedded
+    /// chart or image. `appendAltText(from:)` folds those values into the
+    /// run list so a chart with no `<a:t>` body still contributes its
+    /// caption to the deck body.
     private final class TextRunCollector: NSObject, XMLParserDelegate {
         private(set) var runs: [String] = []
         private var current: String = ""
         private var depth: Int = 0
+
+        /// Pull `title` / `descr` alt text off a `p:cNvPr` element and
+        /// append each non-empty value as its own run.
+        func appendAltText(from attributeDict: [String: String]) {
+            if let title = attributeDict["title"]?
+                .trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
+                runs.append(title)
+            }
+            if let descr = attributeDict["descr"]?
+                .trimmingCharacters(in: .whitespacesAndNewlines), !descr.isEmpty {
+                runs.append(descr)
+            }
+        }
 
         func parser(
             _ parser: XMLParser,
@@ -263,6 +509,12 @@ struct SlideDeckExtractor: IngestExtractor {
         ) {
             if elementName == "a:t" {
                 depth += 1
+            }
+            // `p:cNvPr` carries the accessibility title/descr alt text for
+            // pictures and shapes. Harvest it even when the shape has no
+            // text body.
+            if elementName == "p:cNvPr" {
+                appendAltText(from: attributeDict)
             }
         }
 

@@ -56,15 +56,21 @@ struct AboutView: View {
                     .foregroundStyle(ink.opacity(0.88))
                     .padding(.top, 22)
 
+                // Product line — Loom as a personal knowledge display platform.
+                Text("A personal knowledge display platform.")
+                    .font(.custom("EB Garamond", size: 13))
+                    .foregroundStyle(muted)
+                    .padding(.top, 6)
+
                 ornament
                     .padding(.top, 18)
 
                 hairRule
                     .padding(.top, 18)
 
-                // "Woven by" block — small-caps eyebrow + body line.
+                // "Made by" block — small-caps eyebrow + body line.
                 VStack(spacing: 6) {
-                    Text("Woven by")
+                    Text("Made by")
                         .font(.system(size: 10, weight: .medium))
                         .kerning(3.2)
                         .textCase(.uppercase)
@@ -92,6 +98,13 @@ struct AboutView: View {
                     linkButton("Help") {
                         openWindow(id: KeyboardHelpWindow.id)
                     }
+                    linkButton("History") {
+                        NotificationCenter.default.post(
+                            name: .loomShuttleNavigate,
+                            object: nil,
+                            userInfo: ["path": "/product-history"]
+                        )
+                    }
                     linkButton("Colophon") {
                         NotificationCenter.default.post(
                             name: .loomShuttleNavigate,
@@ -105,7 +118,7 @@ struct AboutView: View {
                 Spacer(minLength: 20)
 
                 // Footer — italic Cormorant, muted.
-                Text("© 2026 · All threads respected")
+                Text("© 2026 · All rights respected")
                     .font(.custom("Cormorant Garamond", size: 12).italic())
                     .foregroundStyle(muted)
                     .padding(.bottom, 26)

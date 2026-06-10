@@ -250,9 +250,9 @@ struct FragmentDestinationPicker: View {
     @ViewBuilder
     private var pursuitSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Pursuits", count: pursuits.count)
+            sectionHeader("Questions", count: pursuits.count)
             if pursuits.isEmpty {
-                Text("No pursuits yet. Start a new question below.")
+                Text("No questions yet. Start a new question below.")
                     .font(LoomTokens.serif(size: 12, italic: true))
                     .foregroundStyle(LoomTokens.muted)
             } else {
@@ -331,7 +331,7 @@ struct FragmentDestinationPicker: View {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 6) {
-                sectionHeader("Panels", count: panels.count)
+                sectionHeader("Reader notes", count: panels.count)
                 VStack(spacing: 0) {
                     ForEach(panels) { row in
                         panelRowButton(row)
@@ -364,7 +364,7 @@ struct FragmentDestinationPicker: View {
                                      : LoomTokens.muted)
                     .font(.system(size: 12))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(row.title.isEmpty ? "(untitled panel)" : row.title)
+                    Text(row.title.isEmpty ? "(untitled reader note)" : row.title)
                         .font(LoomTokens.serif(size: 13, weight: .medium))
                         .foregroundStyle(LoomTokens.ink)
                         .lineLimit(2)
@@ -467,7 +467,7 @@ struct FragmentDestinationPicker: View {
             .disabled(!canSave)
             .help(canSave
                   ? "Attach the fragment to the chosen destination."
-                  : "Pick a Pursuit, a Panel, or start a new question.")
+                  : "Pick a question, a reader note, or start a new question.")
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)

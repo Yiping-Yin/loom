@@ -1,5 +1,7 @@
 import Foundation
 import PDFKit
+import Vision
+import AppKit
 
 // MARK: - PDFExtraction
 //
@@ -88,11 +90,48 @@ public enum PDFExtraction {
             pageTexts.append(page.string ?? "")
         }
 
+        do {
+            return try extract(pageTexts: pageTexts, ocrPageTexts: [], maxChars: maxChars)
+        } catch PDFExtractionError.empty {
+            // Scanned / image-only PDFs return no PDFKit `.string`; OCR.
+            let ocrPages = recognizeScannedText(document: document)
+            return try extract(pageTexts: pageTexts, ocrPageTexts: ocrPages, maxChars: maxChars)
+        }
+    }
+
+    /// Clean + range pipeline over already-extracted page text. `pageTexts`
+    /// holds PDFKit `.string` output per page; `ocrPageTexts` holds the
+    /// Vision OCR fallback lines per page (one inner array per page).
+    /// When PDFKit returned nothing, the OCR lines are joined per page and
+    /// used as the page body so scanned decks still produce cleaned text.
+    public static func extract(
+        pageTexts: [String],
+        ocrPageTexts: [[String]],
+        maxChars: Int = 6000
+    ) throws -> ExtractedPDF {
+        // Prefer PDFKit text; fall back to OCR lines per page when the
+        // PDFKit slice for that page is empty.
+        let ocrPages = ocrPageTexts.map { pageLines in
+            pageLines.joined(separator: "\n")
+        }
+        var resolvedPages: [String] = []
+        resolvedPages.reserveCapacity(max(pageTexts.count, ocrPages.count))
+        let pageCount = max(pageTexts.count, ocrPages.count)
+        for i in 0..<pageCount {
+            let pdfText = i < pageTexts.count ? pageTexts[i] : ""
+            if pdfText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               i < ocrPages.count {
+                resolvedPages.append(ocrPages[i])
+            } else {
+                resolvedPages.append(pdfText)
+            }
+        }
+
         // Match Node: pageTexts.join('\n\n').slice(0, maxChars). We
         // let CleanText.apply's own maxChars handle the final clip;
         // any earlier clip would risk a mid-transform truncation that
         // Node doesn't do.
-        let rawJoined = pageTexts.joined(separator: "\n\n")
+        let rawJoined = resolvedPages.joined(separator: "\n\n")
         // Raw-size safety cap: 200 KB matches the IngestionView
         // `maxBytes` limit — stops rogue PDFs from ballooning memory
         // through the cleaning passes.
@@ -119,10 +158,10 @@ public enum PDFExtraction {
         //
         // This is a best-effort map — see file-level docs.
         var ranges: [PageRange] = []
-        ranges.reserveCapacity(pageTexts.count)
+        ranges.reserveCapacity(resolvedPages.count)
         var cursor = 0
         let cleanedUTF16Len = cleaned.utf16.count
-        for (i, raw) in pageTexts.enumerated() {
+        for (i, raw) in resolvedPages.enumerated() {
             let pageCleaned = CleanText.apply(raw, maxChars: maxChars)
             let length = pageCleaned.utf16.count
             let start = min(cursor, cleanedUTF16Len)
@@ -137,5 +176,50 @@ public enum PDFExtraction {
         }
 
         return ExtractedPDF(text: cleaned, pageRanges: ranges, originalText: rawJoined)
+    }
+
+    // MARK: - Vision OCR fallback (scanned PDFs)
+
+    /// Thumbnail size to rasterize each page at before OCR. 1500pt on the
+    /// long edge keeps small body text legible to Vision while bounding
+    /// memory on very large pages.
+    private static func thumbnailSize(for page: PDFPage) -> NSSize {
+        let bounds = page.bounds(for: .mediaBox)
+        let maxEdge: CGFloat = 1500
+        let longest = max(bounds.width, bounds.height, 1)
+        let scale = min(maxEdge / longest, 4.0)
+        return NSSize(width: bounds.width * scale, height: bounds.height * scale)
+    }
+
+    /// Rasterize each page to an `NSImage` thumbnail and run
+    /// `VNRecognizeTextRequest` over it. Returns one inner array of
+    /// recognized lines per page (empty inner array when a page yields no
+    /// text). Pages are processed in order so OCR text aligns 1:1 with the
+    /// PDFKit page indices.
+    private static func recognizeScannedText(document: PDFDocument) -> [[String]] {
+        var pages: [[String]] = []
+        pages.reserveCapacity(document.pageCount)
+        for index in 0..<document.pageCount {
+            guard let page = document.page(at: index) else {
+                pages.append([])
+                continue
+            }
+            let thumbnail = page.thumbnail(of: thumbnailSize(for: page), for: .mediaBox)
+            guard let cgImage = thumbnail.cgImage(
+                forProposedRect: nil, context: nil, hints: nil
+            ) else {
+                pages.append([])
+                continue
+            }
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .accurate
+            request.usesLanguageCorrection = true
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
+            let lines = (request.results ?? [])
+                .compactMap { $0.topCandidates(1).first?.string }
+            pages.append(lines)
+        }
+        return pages
     }
 }

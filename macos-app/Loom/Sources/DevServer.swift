@@ -90,13 +90,43 @@ class DevServer: ObservableObject {
         return URL(string: "loom://bundle/index.html")!
     }
 
+    /// Centralized @Published writers. SwiftUI observable state must be
+    /// published from the main thread; background callbacks (timers,
+    /// URLSession completions, process termination handlers) route
+    /// through these helpers instead of assigning directly.
+    private func publishStatus(_ nextStatus: Status) {
+        if Thread.isMainThread {
+            status = nextStatus
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.status = nextStatus
+            }
+        }
+    }
+
+    private func publishCurrentPort(_ nextPort: Int) {
+        if Thread.isMainThread {
+            currentPort = nextPort
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.currentPort = nextPort
+            }
+        }
+    }
+
     /// Called by `AppDelegate` when we're launching in static-bundle
     /// mode (no dev server). The `loom://` scheme handler is always
     /// live — there's nothing to boot — so publish `.ready` right away
     /// so `ContentView.detailColumn` actually mounts the webview
     /// instead of sitting on the loading shimmer forever.
     func markReadyForStaticBundle() {
-        status = .ready
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.markReadyForStaticBundle()
+            }
+            return
+        }
+        publishStatus(.ready)
     }
 
     static func resolvedServerMode(
@@ -204,6 +234,12 @@ class DevServer: ObservableObject {
     }
 
     func start(resetRetry: Bool = true) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.start(resetRetry: resetRetry)
+            }
+            return
+        }
         pendingRetry?.cancel()
         pendingRetry = nil
 
@@ -212,7 +248,7 @@ class DevServer: ObservableObject {
         // via the `loom://` URL scheme handler. Short-circuit straight to
         // ready so the webview mounts immediately.
         if DevServer.isSandboxed {
-            status = .ready
+            publishStatus(.ready)
             return
         }
 
@@ -232,7 +268,7 @@ class DevServer: ObservableObject {
 
         if resetRetry {
             retryAttempt = 0
-            currentPort = preferredPort
+            publishCurrentPort(preferredPort)
             attemptedPorts = [preferredPort]
             logQueue.sync { recentLogs = [] }
         }
@@ -298,25 +334,19 @@ class DevServer: ObservableObject {
         )
 
         if let launchFailureMessage = runtimeLaunch.launchFailureMessage {
-            DispatchQueue.main.async {
-                self.status = .failed(launchFailureMessage)
-            }
+            publishStatus(.failed(launchFailureMessage))
             return
         }
 
         guard let projectPath = projectPath ?? runtimeLaunch.environment["LOOM_CONTENT_ROOT"] else {
-            DispatchQueue.main.async {
-                self.status = .failed("Could not find project root with package.json. Set LOOM_PROJECT_ROOT or place LOOM at ~/Desktop/LOOM.")
-            }
+            publishStatus(.failed("Could not find project root with package.json. Set LOOM_PROJECT_ROOT or place LOOM at ~/Desktop/LOOM."))
             return
         }
 
         if let executableMessage = DevServerPreflight.missingExecutableMessage(
             requiredExecutables: runtimeLaunch.requiredExecutables
         ) {
-            DispatchQueue.main.async {
-                self.status = .failed(executableMessage)
-            }
+            publishStatus(.failed(executableMessage))
             return
         }
 
@@ -324,16 +354,14 @@ class DevServer: ObservableObject {
             projectPath: projectPath,
             requiresProjectDependencies: runtimeLaunch.requiresProjectDependencies
         ) {
-            DispatchQueue.main.async {
-                self.status = .failed(dependencyMessage)
-            }
+            publishStatus(.failed(dependencyMessage))
             return
         }
 
         // Keep logs scoped to the current launch attempt so failure heuristics
         // (like EADDRINUSE detection) don't read stale history.
         logQueue.sync { recentLogs = [] }
-        DispatchQueue.main.async { self.status = .starting }
+        publishStatus(.starting)
 
         let p = Process()
         p.currentDirectoryURL = URL(fileURLWithPath: runtimeLaunch.currentDirectoryPath)
@@ -407,19 +435,17 @@ class DevServer: ObservableObject {
                 }
 
                 if let nextPort = self.nextFallbackPort() {
-                    self.currentPort = nextPort
+                    self.publishCurrentPort(nextPort)
                     self.attemptedPorts.insert(nextPort)
                     self.probePortAndLaunch(generation: generation)
                     return
                 }
 
-                DispatchQueue.main.async {
-                    self.status = .failed(
-                        self.composeFailureMessage(
-                            base: "All candidate localhost ports are already occupied by other servers."
-                        )
+                self.publishStatus(.failed(
+                    self.composeFailureMessage(
+                        base: "All candidate localhost ports are already occupied by other servers."
                     )
-                }
+                ))
                 return
             }
 
@@ -510,7 +536,7 @@ class DevServer: ObservableObject {
                     timer.invalidate()
                     self.retryAttempt = 0
                     self.startReadyMonitoring(generation: generation)
-                    DispatchQueue.main.async { self.status = .ready }
+                    self.publishStatus(.ready)
                     return
                 }
 
@@ -587,12 +613,12 @@ class DevServer: ObservableObject {
             || recentLogText.localizedCaseInsensitiveContains("address already in use")
 
         if retryable, addrInUse, let nextPort = nextFallbackPort() {
-            currentPort = nextPort
+            publishCurrentPort(nextPort)
             attemptedPorts.insert(nextPort)
             let message = composeFailureMessage(
                 base: "\(base)\nPort in use, switching to \(nextPort)..."
             )
-            DispatchQueue.main.async { self.status = .failed(message) }
+            publishStatus(.failed(message))
 
             let work = DispatchWorkItem { [weak self] in
                 self?.start(resetRetry: false)
@@ -608,7 +634,7 @@ class DevServer: ObservableObject {
             let message = composeFailureMessage(
                 base: "\(base)\nAuto-retrying in \(delaySeconds)s (\(retryAttempt)/\(maxAutoRetryAttempts))..."
             )
-            DispatchQueue.main.async { self.status = .failed(message) }
+            publishStatus(.failed(message))
 
             let work = DispatchWorkItem { [weak self] in
                 self?.start(resetRetry: false)
@@ -618,9 +644,7 @@ class DevServer: ObservableObject {
             return
         }
 
-        DispatchQueue.main.async {
-            self.status = .failed(self.composeFailureMessage(base: base))
-        }
+        publishStatus(.failed(composeFailureMessage(base: base)))
     }
 
     private func appendLogs(_ text: String) {

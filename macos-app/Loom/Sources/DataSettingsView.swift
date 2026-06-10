@@ -226,9 +226,9 @@ struct DataSettingsView: View {
     @ViewBuilder
     private var pursuitsGroup: some View {
         LoomContentGroup(
-            label: "Pursuits",
+            label: "Questions",
             count: pursuits.count,
-            emptyCopy: "No pursuits yet."
+            emptyCopy: "No questions saved yet."
         ) {
             pursuitRows
         }
@@ -253,9 +253,9 @@ struct DataSettingsView: View {
     @ViewBuilder
     private var panelsGroup: some View {
         LoomContentGroup(
-            label: "Panels",
+            label: "Reader notes",
             count: readingPanels.count,
-            emptyCopy: "No reading panels yet."
+            emptyCopy: "No reader notes saved yet."
         ) {
             panelRows
         }
@@ -280,9 +280,9 @@ struct DataSettingsView: View {
     @ViewBuilder
     private var soanGroup: some View {
         LoomContentGroup(
-            label: "Sōan",
+            label: "Draft cards",
             count: soanCards.count,
-            emptyCopy: "No Sōan cards yet."
+            emptyCopy: "No draft cards yet."
         ) {
             soanRows
         }
@@ -307,9 +307,9 @@ struct DataSettingsView: View {
     @ViewBuilder
     private var weavesGroup: some View {
         LoomContentGroup(
-            label: "Weaves",
+            label: "Note connections",
             count: weaves.count,
-            emptyCopy: "No weaves yet."
+            emptyCopy: "No note connections yet."
         ) {
             weaveRows
         }
@@ -562,12 +562,23 @@ struct DataSettingsView: View {
     }
 
     private func weaveRowTitle(_ w: LoomWeave) -> String {
-        // Resolve the endpoint panels' titles so the row is readable
-        // ("supports: Heat as motion → Entropy bounds"). Falls back to
+        // Resolve the endpoint reader notes' titles so the row is readable
+        // ("Supports: Heat as motion → Entropy bounds"). Falls back to
         // truncated ids when either endpoint has been deleted since.
         let from = resolvePanelTitle(w.fromPanelId)
         let to   = resolvePanelTitle(w.toPanelId)
-        return "\(w.kind): \(from) → \(to)"
+        return "\(noteConnectionKindLabel(w.kind)): \(from) → \(to)"
+    }
+
+    /// Maps stored note-connection kinds to the new Loom vocabulary.
+    private func noteConnectionKindLabel(_ kind: String) -> String {
+        switch kind {
+        case "supports": return "Supports"
+        case "contradicts": return "Contradicts"
+        case "elaborates": return "Adds detail"
+        case "echoes": return "Related"
+        default: return kind
+        }
     }
 
     private func resolvePanelTitle(_ id: String) -> String {

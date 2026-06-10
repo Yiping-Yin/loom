@@ -34,14 +34,21 @@ struct SelectableTextEditor: NSViewRepresentable {
         textView.isAutomaticTextReplacementEnabled = false
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.isContinuousSpellCheckingEnabled = true
-        // Transparent backgrounds so the host VStack's Vellum paper
-        // (or dark-mode equivalent) shows through. Without this the
-        // scroll view paints NSColor.textBackgroundColor — near-white
-        // in light mode, near-black in dark — which in Rehearsal's
-        // dark mode rendered as a stark black void over the paper.
+        // Transparent writing surface — no border, no focus ring, no
+        // persistent system scroll chrome. The host canvas is the page;
+        // the AppKit editor must never read as a bordered form field.
+        // Without the transparent backgrounds the scroll view paints
+        // NSColor.textBackgroundColor — near-white in light mode,
+        // near-black in dark — which rendered as a stark void over
+        // the paper.
+        scroll.borderType = .noBorder
         scroll.drawsBackground = false
         textView.drawsBackground = false
         textView.backgroundColor = .clear
+        scroll.focusRingType = .none
+        textView.focusRingType = .none
+        scroll.hasVerticalScroller = false
+        scroll.hasHorizontalScroller = false
         // labelColor is a dynamic system color: dark ink in light mode,
         // warm candle-white in dark mode. Matches Vellum's intent of
         // "earth ink, never neon" without hard-coding per mode.

@@ -175,6 +175,33 @@ final class CleanTextParityTests: XCTestCase {
         XCTAssertEqual(CleanText.apply(" A   B   C ", maxChars: 3), "A B")
     }
 
+    // MARK: - PDF OCR fallback
+    //
+    // Scanned / image-only PDFs return no PDFKit `.string` text per page.
+    // `PDFExtraction.extract(pageTexts:ocrPageTexts:)` re-cleans the Vision
+    // OCR lines per page so the deck still produces usable body text. Here
+    // the PDFKit pages are empty and the OCR overload supplies the text.
+
+    func testPDFExtractionFallsBackToOCRPageTextWhenPDFKitTextIsEmpty() throws {
+        // Two scanned pages: PDFKit returned empty strings, Vision OCR
+        // recovered the lines below.
+        let pdfKitPages = ["", ""]
+        let ocrPageTexts: [[String]] = [
+            ["Lecture 4: Demand", "When prices fall the demand curve shifts right"],
+            ["Welfare", "consumer surplus rises as quantity expands"],
+        ]
+        let extracted = try PDFExtraction.extract(
+            pageTexts: pdfKitPages,
+            ocrPageTexts: ocrPageTexts,
+            maxChars: 6000
+        )
+        XCTAssertTrue(extracted.text.contains("demand curve shifts right"),
+                      "OCR page 1 text missing; got: \(extracted.text)")
+        XCTAssertTrue(extracted.text.contains("consumer surplus"),
+                      "OCR page 2 text missing; got: \(extracted.text)")
+        XCTAssertEqual(extracted.pageRanges.count, 2)
+    }
+
     func testEmptyInputIsStable() {
         XCTAssertEqual(CleanText.apply(""), "")
         XCTAssertEqual(CleanText.apply("   \n  \n  "), "")

@@ -27,35 +27,27 @@ struct KeyboardHelpView: View {
     }
 
     let groups: [Group] = [
-        Group(title: "Learning", items: [
+        Group(title: "Reading", items: [
             .init(keys: "✦ click", label: "Ask AI about the selection"),
-            .init(keys: "⌘⇧A", label: "Capture selection as a thought-anchor"),
-            .init(keys: "⌘ click", label: "Capture directly from the warp thread"),
+            .init(keys: "⌘⇧A", label: "Save the selection as a reader note"),
+            .init(keys: "⌘ click", label: "Save directly from the source line"),
             .init(keys: "⌥ click", label: "Highlight the selection"),
-            .init(keys: "⌘/", label: "Settle the current weave in the thought map"),
+            .init(keys: "⌘/", label: "Open reader notes for the current source"),
             .init(keys: "⌘⇧.", label: "Correct a typo / mis-extraction in the source"),
         ]),
-        Group(title: "Tools (via ⌘P)", items: [
-            .init(keys: "Write", label: "Deepen a panel from memory · ⌘K shape · ⌘S save"),
-            .init(keys: "Ask", label: "Verify understanding · ⌘↩ submit"),
-            .init(keys: "Import", label: "Drag-drop .md/.txt files"),
+        Group(title: "AI", items: [
+            .init(keys: "Write", label: "Draft from your sources · ⌘K shape · ⌘S save"),
+            .init(keys: "Ask", label: "Check a reader note · ⌘↩ submit"),
+            .init(keys: "Add source", label: "Drop files into Sources"),
             .init(keys: "Export", label: "Download notes as JSON or Markdown"),
-        ]),
-        Group(title: "Cowork (rehearsal)", items: [
-            .init(keys: "⌘↵", label: "Tidy — AI cleans formatting without changing content"),
-            .init(keys: "⌘⇧E", label: "Toggle Edit / Read view"),
-            .init(keys: "@…", label: "Type \"@\" inline to link a source or wiki item"),
-            .init(keys: "Paste URL", label: "Auto-attach as a link material + chip"),
-            .init(keys: "Paste image", label: "Drop screenshots straight into scratch"),
-            .init(keys: "⌘Z · ⌘⇧Z", label: "Undo / redo cross-block scratch changes"),
         ]),
         Group(title: "Navigation", items: [
             .init(keys: "⌘K", label: "Open Shuttle — search everything"),
-            .init(keys: "⌘E", label: "Learn — ask AI about the selection / rehearse"),
-            .init(keys: "⌘⇧E", label: "Ask AI — quick question in a native window"),
-            .init(keys: "⌘⇧R", label: "Rehearsal — write from memory"),
-            .init(keys: "⌘⇧X", label: "Examiner — AI quizzes you"),
-            .init(keys: "⌘⇧I", label: "Ingestion — drop files for AI summary"),
+            .init(keys: "⌘E", label: "Review — ask AI about the selection"),
+            .init(keys: "⌘⇧E", label: "Ask Selection — quick question in a native window"),
+            .init(keys: "⌘⇧R", label: "Source practice — write from memory"),
+            .init(keys: "⌘⇧X", label: "Source check — AI reviews your answer"),
+            .init(keys: "⌘⇧I", label: "Add files — drop or pick PDFs, DOCX, slides, Pages, Markdown, and images"),
             .init(keys: "⌘N", label: "New topic"),
             .init(keys: "⌘[", label: "Back"),
             .init(keys: "⌘]", label: "Forward"),
@@ -71,23 +63,16 @@ struct KeyboardHelpView: View {
             .init(keys: "⌃⌘S", label: "Toggle Sidebar"),
             .init(keys: "⌘⇧⌥R", label: "Reload sources"),
         ]),
-        Group(title: "Actions (replace main view)", items: [
-            .init(keys: "⌘⇧R", label: "Rehearsal — write from memory"),
-            .init(keys: "⌘⇧X", label: "Examiner — AI quizzes you"),
-            .init(keys: "⌘⇧I", label: "Ingestion — drop files for AI summary"),
-        ]),
         Group(title: "Workspaces", items: [
             .init(keys: "⌘1", label: "Home"),
-            .init(keys: "⌘2", label: "Desk"),
-            .init(keys: "⌘3", label: "Coworks"),
-            .init(keys: "⌘4", label: "Patterns — what has settled"),
-            .init(keys: "⌘5", label: "Weaves — the constellation"),
+            .init(keys: "⌘2", label: "Sources"),
+            .init(keys: "⌘3", label: "Draft"),
         ]),
-        Group(title: "Thinking", items: [
-            .init(keys: "⌘⇧P", label: "Hold a Question — add a pursuit you're holding"),
-            .init(keys: "⌘⇧D", label: "Add a Sōan Card — place a thesis / counter / question"),
-            .init(keys: "⌘⇧L", label: "Connect Sōan Cards — draw support or echo edge"),
-            .init(keys: "⌘⇧W", label: "Weave Two Panels — add explicit relation between panels"),
+        Group(title: "Draft and notes", items: [
+            .init(keys: "⌘⇧P", label: "Add question — add a question you're holding"),
+            .init(keys: "⌘⇧D", label: "Add draft card — place a thesis / counter / question"),
+            .init(keys: "⌘⇧L", label: "Connect draft cards — draw support or related edge"),
+            .init(keys: "⌘⇧W", label: "Connect reader notes — add explicit relation between notes"),
         ]),
     ]
 

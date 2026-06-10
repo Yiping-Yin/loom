@@ -112,7 +112,7 @@ struct RehearsalView: View {
             Image(systemName: "pencil.and.outline")
                 .foregroundStyle(LoomTokens.thread)
                 .font(.system(size: 14))
-            Text("Rehearsal")
+            Text("Source practice")
                 .font(LoomTokens.display(size: 22, italic: true))
                 .foregroundStyle(LoomTokens.ink)
             Text("— write from memory; no peeking")
@@ -155,11 +155,11 @@ struct RehearsalView: View {
             }
             Spacer()
             reformatMenu
-            Button("Save & Ask") { saveAndAsk() }
+            Button("Save & Check") { saveAndAsk() }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .tint(LoomTokens.thread)
-                .help("Save the draft, then open Examiner seeded with this topic")
+                .help("Save the draft, then open Source check seeded with this topic")
                 .disabled(body_.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
             Button("Save draft") { save() }
                 .keyboardShortcut("s", modifiers: .command)
@@ -411,9 +411,9 @@ enum RehearsalWindow {
     static let id = "com.loom.window.rehearsal"
 }
 
-/// Examiner → Rehearsal hand-off channel. When the learner gets a RETRY
-/// verdict, pressing "Back to Rehearsal" stashes the topic here so the
-/// Rehearsal window opens pre-seeded with the same topic, ready to
+/// Source check → Source practice hand-off channel. When the learner gets a RETRY
+/// verdict, pressing "Back to Source practice" stashes the topic here so the
+/// Source practice window opens pre-seeded with the same topic, ready to
 /// rebuild the gap. Also used by ContentView.Coordinator to auto-seed
 /// the topic from whichever doc the webview has open when the user hits
 /// ⌘⇧R on a reading surface.
@@ -421,6 +421,12 @@ enum RehearsalWindow {
 final class RehearsalContext: ObservableObject {
     static let shared = RehearsalContext()
     @Published var pendingTopic: String?
+
+    /// Seed the pending Source-practice topic without callers reaching into
+    /// the shared singleton directly.
+    static func seedTopic(_ topic: String) {
+        shared.pendingTopic = topic
+    }
 
     func consume() -> String? {
         let t = pendingTopic

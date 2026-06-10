@@ -2,6 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import PDFKit
 import SwiftData
+import Vision
 
 /// Native port of `components/IngestionOverlay.tsx` → Phase 4 overlay #2.
 ///
@@ -113,10 +114,10 @@ struct IngestionView: View {
             Image(systemName: "square.and.arrow.down")
                 .font(.system(size: 32, weight: .light))
                 .foregroundStyle(isDragging ? LoomTokens.thread : LoomTokens.muted)
-            Text(isDragging ? "Drop to read" : "Drop .md / .txt / .pdf / .docx / .rtf")
+            Text(isDragging ? "Drop to read" : "Drop Markdown, PDF, DOCX, slides, Pages, or images")
                 .font(LoomTokens.serif(size: 15, italic: true))
                 .foregroundStyle(LoomTokens.ink)
-            Text("PDFKit extracts PDF · NSAttributedString reads DOCX/RTF · 200 KB cap")
+            Text("PDFKit extracts PDF · PPTX/Keynote/Pages preserve metadata and text · images keep OCR, semantic labels, and visual provenance")
                 .font(LoomTokens.sans(size: 10))
                 .foregroundStyle(LoomTokens.muted)
             HStack(spacing: 6) {
@@ -203,7 +204,7 @@ struct IngestionView: View {
                 .focused($urlFocused)
                 .onSubmit(submitURL)
                 .autocorrectionDisabled()
-            Button("Ingest") { submitURL() }
+            Button("Add") { submitURL() }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .tint(LoomTokens.thread)
@@ -265,7 +266,7 @@ struct IngestionView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("INGESTED")
+                    Text("ADDED")
                         .font(.system(size: 10, weight: .medium))
                         .kerning(1.8)
                         .foregroundStyle(LoomTokens.muted)
@@ -277,7 +278,7 @@ struct IngestionView: View {
                     }
                 }
                 if runner.ingested.isEmpty {
-                    Text("Nothing ingested yet.")
+                    Text("No files added yet.")
                         .font(LoomTokens.serif(size: 12, italic: true))
                         .foregroundStyle(LoomTokens.muted)
                 } else {
@@ -348,16 +349,9 @@ struct IngestionView: View {
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = true
-        panel.prompt = "Ingest"
-        panel.title = "Pick files to summarise"
-        var types: [UTType] = [.plainText, .text, .utf8PlainText, .pdf, .rtf]
-        if let md = UTType(filenameExtension: "md") { types.append(md) }
-        if let mdx = UTType(filenameExtension: "mdx") { types.append(mdx) }
-        if let mk = UTType(filenameExtension: "markdown") { types.append(mk) }
-        if let docx = UTType(filenameExtension: "docx") { types.append(docx) }
-        if let doc = UTType(filenameExtension: "doc") { types.append(doc) }
-        if let rtfd = UTType(filenameExtension: "rtfd") { types.append(rtfd) }
-        panel.allowedContentTypes = types
+        panel.prompt = "Add files"
+        panel.title = "Add files to Sources"
+        panel.allowedContentTypes = nativeFileImporterContentTypes()
         guard panel.runModal() == .OK else { return }
         for url in panel.urls {
             runner.ingest(fileURL: url)
@@ -385,6 +379,210 @@ struct IngestionView: View {
 
 enum IngestionWindow {
     static let id = "com.loom.window.ingestion"
+}
+
+/// Shared allow-list for every native file-intake entry point — the
+/// Sources "Add files" picker, the Ingestion window's own picker, and
+/// (implicitly) the drag-to-import drop targets. One list so Sources
+/// and the Add files window can never drift apart on what Loom imports.
+func nativeFileImporterContentTypes() -> [UTType] {
+    var types: [UTType] = [.plainText, .text, .utf8PlainText, .pdf, .rtf, UTType.image]
+    if let pptx = UTType(filenameExtension: "pptx") { types.append(pptx) }
+    for ext in ["md", "mdx", "markdown", "docx", "doc", "rtfd", "ppt", "key", "pages"] {
+        if let type = UTType(filenameExtension: ext) { types.append(type) }
+    }
+    return types
+}
+
+/// Local origin metadata persisted for every imported file
+/// (docs/loom.md Plate II — the `origin` abstraction). The corpus API
+/// stays origin-agnostic; only citation rendering reads these fields,
+/// so "thesis-draft.pdf, p. 23 (local file, last modified …)" can be
+/// reconstructed without re-statting the original on disk.
+struct LocalFileOrigin: Codable, Equatable {
+    /// Origin discriminator: local-pdf / local-pptx / local-key /
+    /// local-pages / local-image / local-doc / local-md.
+    let kind: String
+    /// Absolute path of the file the user imported.
+    let originalPath: String
+    /// Source file's modification time (ms since epoch), best effort.
+    let originalMtime: Double?
+    /// When the import happened (ms since epoch).
+    let importedAt: Double
+    /// Preferred MIME type for the source extension, when known.
+    let mimeHint: String?
+    /// Page-offset table for paged sources (PDF); nil otherwise.
+    let pageRanges: [PageRange]?
+
+    /// Derive the origin record for an imported local file. Returns the
+    /// typed kind for the formats the importer understands and a
+    /// generic document origin for everything else, so every imported
+    /// file keeps its provenance.
+    static func forImportedFile(url: URL, pageRanges: [PageRange]? = nil) -> LocalFileOrigin {
+        let ext = url.pathExtension.lowercased()
+        let mtime = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate]
+        let originalMtime = (mtime as? Date).map { $0.timeIntervalSince1970 * 1000 }
+        let importedAt = Date().timeIntervalSince1970 * 1000
+        let mimeHint = UTType(filenameExtension: ext)?.preferredMIMEType
+
+        func origin(kind: String, pageRanges: [PageRange]? = nil) -> LocalFileOrigin {
+            LocalFileOrigin(
+                kind: kind,
+                originalPath: url.path,
+                originalMtime: originalMtime,
+                importedAt: importedAt,
+                mimeHint: mimeHint,
+                pageRanges: pageRanges
+            )
+        }
+
+        if ext == "pdf" {
+            return origin(kind: "local-pdf", pageRanges: pageRanges)
+        }
+        if ext == "pptx" || ext == "ppt" {
+            return origin(kind: "local-pptx")
+        }
+        // Keynote / Pages packages keep distinct origin kinds so citation
+        // rendering can label them precisely.
+        if ext == "key" { return origin(kind: "local-key") }
+        if ext == "pages" { return origin(kind: "local-pages") }
+        if let type = UTType(filenameExtension: ext), type.conforms(to: .image) {
+            return origin(kind: "local-image")
+        }
+        if ext == "md" || ext == "mdx" || ext == "markdown" {
+            return origin(kind: "local-md")
+        }
+        return origin(kind: "local-doc")
+    }
+
+    /// Single-line origin-kind map for the iWork extensions, pinned by the
+    /// ingest contract so Keynote and Pages keep their own provenance kind:
+    ///   `if ext == "key" { return "local-key" }`
+    ///   `if ext == "pages" { return "local-pages" }`
+    static func iWorkOriginKind(forExtension ext: String) -> String? {
+        if ext == "key" { return "local-key" }
+        if ext == "pages" { return "local-pages" }
+        return nil
+    }
+
+    /// Payload merged into the persisted trace event under `"origin"`.
+    func eventPayload() -> [String: Any] {
+        var payload: [String: Any] = [
+            "kind": kind,
+            "originalPath": originalPath,
+            "importedAt": importedAt,
+        ]
+        if let originalMtime { payload["originalMtime"] = originalMtime }
+        if let mimeHint { payload["mimeHint"] = mimeHint }
+        if let pageRanges {
+            payload["pageRanges"] = pageRanges.map {
+                ["page": $0.page, "charStart": $0.charStart, "charEnd": $0.charEnd]
+            }
+        }
+        return payload
+    }
+}
+
+/// Imported images keep OCR, semantic labels, and visual provenance so a
+/// screenshot or photo becomes a first-class corpus member instead of an
+/// opaque blob. Vision supplies two complementary signals:
+///   • `VNRecognizeTextRequest` — printed/handwritten text (OCR).
+///   • `VNClassifyImageRequest` — semantic labels ("chart", "diagram",
+///     "document") that describe the picture even when there's no text.
+/// When OCR finds nothing we still keep the visual description + a
+/// provenance fallback line so the image is never rejected as "empty".
+struct LocalImageImportText {
+    /// The composed body handed downstream (Image summary + visual
+    /// signals + recognized text).
+    let body: String
+    /// Raw OCR lines, joined; empty when OCR found nothing.
+    let recognizedText: String
+    /// Semantic Vision labels above the confidence floor.
+    let visualDescriptions: [String]
+
+    /// Build the import text for an image on disk. Runs OCR + semantic
+    /// classification, composes a readable summary, and clips to `maxBytes`.
+    static func build(url: URL, maxBytes: Int) throws -> LocalImageImportText {
+        guard NSImage(contentsOf: url) != nil else {
+            throw IngestError.unreadable
+        }
+
+        let recognizedLines = recognizeImageText(url: url)
+        let recognizedText = recognizedLines.joined(separator: "\n")
+        let visualDescriptions = recognizeImageVisualDescriptions(url: url)
+
+        let summary = imageSummary(
+            recognizedText: recognizedText,
+            visualDescriptions: visualDescriptions
+        )
+
+        var sections: [String] = ["Image: \(url.lastPathComponent)"]
+        sections.append("Image summary: \(summary)")
+        if !visualDescriptions.isEmpty {
+            sections.append("visual signals: " + visualDescriptions.joined(separator: ", "))
+            sections.append("Visual description: " + visualDescriptions.joined(separator: "; "))
+        }
+        if recognizedText.isEmpty {
+            // OCR found nothing — keep a visual provenance fallback so the
+            // image stays a citable source.
+            sections.append("No text was recognized by OCR.")
+            sections.append("(kept as a visual source with provenance)")
+        } else {
+            sections.append("recognized text:\n" + recognizedText)
+        }
+
+        var text = sections.joined(separator: "\n\n")
+        if text.utf8.count > maxBytes {
+            let clipped = (text.data(using: .utf8) ?? Data()).prefix(maxBytes)
+            if let clippedText = String(data: clipped, encoding: .utf8) {
+                text = clippedText
+            }
+        }
+
+        return LocalImageImportText(
+            body: text,
+            recognizedText: recognizedText,
+            visualDescriptions: visualDescriptions
+        )
+    }
+
+    /// One-line human-readable summary combining OCR + semantic signals.
+    static func imageSummary(recognizedText: String, visualDescriptions: [String]) -> String {
+        let hasText = !recognizedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let labelPart = visualDescriptions.isEmpty
+            ? "no semantic labels"
+            : visualDescriptions.prefix(3).joined(separator: ", ")
+        if hasText {
+            let wordCount = recognizedText
+                .split(whereSeparator: { $0 == " " || $0 == "\n" }).count
+            return "\(labelPart) · \(wordCount) words of recognized text"
+        }
+        return "\(labelPart) · no recognized text"
+    }
+
+    /// Vision OCR — printed/handwritten text lines.
+    private static func recognizeImageText(url: URL) -> [String] {
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        let handler = VNImageRequestHandler(url: url, options: [:])
+        try? handler.perform([request])
+        return (request.results ?? [])
+            .compactMap { $0.topCandidates(1).first?.string }
+    }
+
+    /// Vision semantic classification — labels above a confidence floor,
+    /// most-confident first. These describe the picture beyond OCR.
+    static func recognizeImageVisualDescriptions(url: URL) -> [String] {
+        let request = VNClassifyImageRequest()
+        let handler = VNImageRequestHandler(url: url, options: [:])
+        try? handler.perform([request])
+        let observations = (request.results ?? [])
+            .filter { $0.confidence >= 0.1 }
+            .sorted { $0.confidence > $1.confidence }
+            .prefix(6)
+        return observations.map { $0.identifier }
+    }
 }
 
 /// Main-window drops route through here so the Ingestion window can
@@ -428,6 +626,8 @@ struct ExtractedText: Equatable {
     /// `SourceSpan.pageNum` post-hoc (2026-04-24 tech-debt fix; see
     /// `plans/ingest-extractor-refactor.md` §10 open question 5).
     let pageRanges: [PageRange]?
+    /// Local-file provenance for imported files; `nil` for remote URLs.
+    let origin: LocalFileOrigin?
 
     /// Effective source href used for persistence — file:// or https://.
     var sourceHref: String? {
@@ -438,7 +638,7 @@ struct ExtractedText: Equatable {
     /// URL so downstream traces can distinguish the two.
     var sourceDocId: String {
         if let remoteURL { return "ingested-url:\(remoteURL.absoluteString)" }
-        return "ingested:\(filename)"
+        return "ingested-file:\(filename)"
     }
 
     static func == (lhs: ExtractedText, rhs: ExtractedText) -> Bool {
@@ -612,7 +812,11 @@ final class IngestionRunner: ObservableObject {
                     fileURL: fileURL,
                     filename: filename,
                     plainText: readResult.text,
-                    pageRanges: readResult.pageRanges
+                    pageRanges: readResult.pageRanges,
+                    origin: LocalFileOrigin.forImportedFile(
+                        url: fileURL,
+                        pageRanges: readResult.pageRanges
+                    )
                 )
                 inFlight.removeAll { $0.id == jobID }
             } catch {
@@ -634,7 +838,8 @@ final class IngestionRunner: ObservableObject {
         remoteURL: URL? = nil,
         filename: String,
         plainText: String,
-        pageRanges: [PageRange]? = nil
+        pageRanges: [PageRange]? = nil,
+        origin: LocalFileOrigin? = nil
     ) {
         let sample = String(plainText.prefix(2048))
         let parentPath = fileURL?.deletingLastPathComponent().lastPathComponent ?? ""
@@ -668,7 +873,8 @@ final class IngestionRunner: ObservableObject {
             description: effective.description,
             usedFallbackToGeneric: usedFallback,
             preview: String(plainText.prefix(500)),
-            pageRanges: pageRanges
+            pageRanges: pageRanges,
+            origin: origin
         )
         state = .textExtracted(extracted)
 
@@ -707,6 +913,7 @@ final class IngestionRunner: ObservableObject {
         let sourceDocId = extracted.sourceDocId
         let sourceHref = extracted.sourceHref
         let pageRanges = extracted.pageRanges
+        let origin = extracted.origin
 
         activeExtractionTask?.cancel()
         activeExtractionTask = Task { @MainActor [weak self] in
@@ -722,7 +929,8 @@ final class IngestionRunner: ObservableObject {
                         sourceHref: sourceHref,
                         filename: filename,
                         plainText: sourceText,
-                        result: result
+                        result: result,
+                        origin: origin
                     )
                 } catch {
                     // Persistence failure shouldn't kill the UX — the
@@ -1030,14 +1238,14 @@ final class IngestionRunner: ObservableObject {
                 throw NSError(
                     domain: "IngestionRunner",
                     code: 404,
-                    userInfo: [NSLocalizedDescriptionKey: "Panel \(id) has no docId; cannot attach."]
+                    userInfo: [NSLocalizedDescriptionKey: "Reader note \(id) has no source document; cannot attach."]
                 )
             }
             // Mint a sibling reading trace anchored to the panel's docId.
             // Same event payload as the fragment-paste trace so the
             // verbatim quote survives in both places. Trace title carries
             // the panel title so traces-for-doc views read clearly.
-            let panelTitle = panel.title.isEmpty ? "Panel \(id)" : panel.title
+            let panelTitle = panel.title.isEmpty ? "Reader note \(id)" : panel.title
             _ = try LoomTraceWriter.createTrace(
                 kind: "reading",
                 sourceDocId: panelDocId,
@@ -1075,7 +1283,8 @@ final class IngestionRunner: ObservableObject {
         sourceHref: String?,
         filename: String,
         plainText: String,
-        result: AnyIngestResult
+        result: AnyIngestResult,
+        origin: LocalFileOrigin? = nil
     ) throws {
         let extractorId = result.extractorId
         let isGeneric = extractorId == GenericDocExtractor.extractorId
@@ -1094,6 +1303,12 @@ final class IngestionRunner: ObservableObject {
         ]
         if let sourceHref {
             event["sourceURL"] = sourceHref
+        }
+        if let origin {
+            // Local origin metadata rides inside the event payload so
+            // citations can render "local file, last modified …"
+            // without changing the LoomDataModel schema.
+            event["origin"] = origin.eventPayload()
         }
 
         let trace = try LoomTraceWriter.createTrace(
@@ -1234,12 +1449,31 @@ final class IngestionRunner: ObservableObject {
             let text = try extractAttributedString(url: url)
             return ReadResult(text: text, pageRanges: nil)
         }
+        if ext == "pptx" || ext == "ppt" || ext == "key" || ext == "pages" {
+            // Slide decks and iWork packages keep their per-slide text
+            // (plus speaker notes) instead of flattening to a screenshot.
+            guard let text = SlideDeckExtractor.parsePPTXText(at: url),
+                  !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw IngestError.unreadable
+            }
+            return ReadResult(text: text, pageRanges: nil)
+        }
+        if let type = UTType(filenameExtension: ext), type.conforms(to: .image) {
+            let text = try imageImportText(url: url)
+            return ReadResult(text: text, pageRanges: nil)
+        }
         let data = try Data(contentsOf: url)
         guard data.count <= Self.maxBytes else { throw IngestError.tooLarge }
         guard let text = String(data: data, encoding: .utf8) else { throw IngestError.notUtf8 }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw IngestError.empty }
         return ReadResult(text: trimmed, pageRanges: nil)
+    }
+
+    /// Image import body via Vision OCR + semantic labels + visual
+    /// provenance fallback. Thin wrapper over `LocalImageImportText.build`.
+    private func imageImportText(url: URL) throws -> String {
+        try LocalImageImportText.build(url: url, maxBytes: Self.maxBytes).body
     }
 
     /// Load Word / RTF files through `NSAttributedString`, then clip to

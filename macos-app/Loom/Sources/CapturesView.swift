@@ -484,10 +484,30 @@ enum CapturesIndex {
 struct CapturesView: View {
     let refreshToken: Int
     private let themeMode: String
+    /// Runtime readers return to Sources — the shared root toolbar owns
+    /// the back affordance, so the reader's own chrome row is optional.
+    private let onBackToSources: () -> Void
+    private let showReaderChrome: Bool
 
     init(refreshToken: Int = 0, themeMode: String = "light") {
+        self.init(
+            refreshToken: refreshToken,
+            themeMode: themeMode,
+            showReaderChrome: true,
+            onBackToSources: {}
+        )
+    }
+
+    init(
+        refreshToken: Int,
+        themeMode: String,
+        showReaderChrome: Bool,
+        onBackToSources: @escaping () -> Void
+    ) {
         self.refreshToken = refreshToken
         self.themeMode = themeMode
+        self.showReaderChrome = showReaderChrome
+        self.onBackToSources = onBackToSources
     }
 
     @State private var entries: [CaptureEntry] = []
@@ -521,7 +541,8 @@ struct CapturesView: View {
         // until the magazine view gets parity for delete / reveal.
         Group {
             if useNativeList, let entry = presentingCapture {
-                CaptureReaderView(entry: entry, themeMode: themeMode) {
+                CaptureReaderView(entry: entry, themeMode: themeMode, showChrome: showReaderChrome) {
+                    onBackToSources()
                     presentingCapture = nil
                 }
             } else if useNativeList {
@@ -825,6 +846,10 @@ struct CapturesView: View {
 struct CaptureReaderView: View {
     let entry: CaptureEntry
     var themeMode: String = "light"
+    /// The minimal shell's shared root toolbar already carries the
+    /// Sources back affordance; readers mounted there hide this row so
+    /// the installed app never shows a second back strip.
+    var showChrome: Bool = true
     var onBack: () -> Void
 
     @State private var source: String = ""
@@ -834,37 +859,39 @@ struct CaptureReaderView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Minimal SwiftUI chrome — title / eyebrow / source URL all
             // live inside the webview's PageFrame now. Native bar
-            // carries only the back button + reveal-in-Finder so the
-            // visual hierarchy isn't doubled.
-            HStack(spacing: 10) {
-                Button {
-                    onBack()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 11, weight: .medium))
-                        Text("Captures")
-                            .font(.system(size: 12, design: .serif))
+            // carries only the back-to-Sources button + reveal-in-Finder
+            // so the visual hierarchy isn't doubled.
+            if showChrome {
+                HStack(spacing: 10) {
+                    Button {
+                        onBack()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 11, weight: .medium))
+                            Text("Sources")
+                                .font(.system(size: 12, design: .serif))
+                        }
+                        .foregroundStyle(.secondary)
                     }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
+                    .help("Back to Sources (Esc)")
+                    Spacer()
+                    Button {
+                        NSWorkspace.shared.activateFileViewerSelecting([entry.fileURL])
+                    } label: {
+                        Image(systemName: "folder")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
+                    .help("Reveal Loom.md in Finder")
                 }
-                .buttonStyle(.plain)
-                .keyboardShortcut(.cancelAction)
-                .help("Back to captures list (Esc)")
-                Spacer()
-                Button {
-                    NSWorkspace.shared.activateFileViewerSelecting([entry.fileURL])
-                } label: {
-                    Image(systemName: "folder")
-                        .font(.system(size: 12))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .help("Reveal Loom.md in Finder")
+                .padding(.horizontal, 24)
+                .padding(.vertical, 10)
+                Divider()
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 10)
-            Divider()
             // Phase C M1 / Path B: render through the Next.js
             // /loom-render/capture route (PageFrame + WorkSurface +
             // NoteRenderer with KaTeX/marked) instead of native
@@ -1098,5 +1125,107 @@ struct BookmarkletDragPill: NSViewRepresentable {
             // independent of navigation policy.
             decisionHandler(.cancel)
         }
+    }
+}
+
+// MARK: - Capture setup workbench
+
+/// Capture-tools workbench: one continuous product surface with a
+/// primary tool lane (local file intake, browser extension, and
+/// bookmarklet install) and an inspector status lane describing how
+/// captures flow into Sources. The root shell owns the top body-start
+/// inset; this view keeps only its bottom breathing room. It shares
+/// the root app canvas background so the desktop never splits into a
+/// grid of independent cards.
+struct WebCaptureSetupView: View {
+    /// Hairline between the primary tool lane and the inspector lane.
+    private var toolColumnDivider: some View {
+        Rectangle()
+            .fill(LoomTokens.dsInk3.opacity(0.18))
+            .frame(width: 1)
+    }
+
+    var body: some View {
+        ScrollView {
+            HStack(alignment: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: DSSpace.lg.value) {
+                    fileIntakeCard
+                    extensionInstallCard
+                    installCard
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .padding(.trailing, DSSpace.lg.value)
+                toolColumnDivider
+                VStack(alignment: .leading, spacing: DSSpace.lg.value) {
+                    captureFlowCard
+                }
+                .frame(width: 280, alignment: .topLeading)
+                .padding(.leading, DSSpace.lg.value)
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 28)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .background(LoomTokens.dsPaperDeep)
+    }
+
+    /// Local files are the primary intake: drop or pick PDFs, DOCX,
+    /// slides, Pages, Markdown, and images straight into Sources.
+    private var fileIntakeCard: some View {
+        VStack(alignment: .leading, spacing: DSSpace.sm.value) {
+            Text("Add files")
+                .font(.system(size: 14, weight: .semibold, design: .serif))
+                .foregroundStyle(LoomTokens.dsInk1)
+            Text("Drop files anywhere in the Loom window, or use Add files in the Sources toolbar. PDFs, DOCX, slides, Pages, Markdown, and images land in Sources with their text extracted.")
+                .font(.system(size: 12, design: .serif))
+                .foregroundStyle(LoomTokens.dsInk2)
+            Button {
+                NotificationCenter.default.post(name: .loomSourcesAddFiles, object: nil)
+            } label: {
+                Label("Add files", systemImage: "plus")
+                    .font(.system(size: 12, design: .serif))
+            }
+            .buttonStyle(.bordered)
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    /// Browser-extension capture path.
+    private var extensionInstallCard: some View {
+        VStack(alignment: .leading, spacing: DSSpace.sm.value) {
+            Text("Browser extension")
+                .font(.system(size: 14, weight: .semibold, design: .serif))
+                .foregroundStyle(LoomTokens.dsInk1)
+            Text("Install the Loom capture extension to clip pages and selections from your browser. Settings > Capture has the install steps.")
+                .font(.system(size: 12, design: .serif))
+                .foregroundStyle(LoomTokens.dsInk2)
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    /// Bookmarklet install path — the universal no-extension fallback.
+    private var installCard: some View {
+        VStack(alignment: .leading, spacing: DSSpace.sm.value) {
+            Text("Bookmarklet")
+                .font(.system(size: 14, weight: .semibold, design: .serif))
+                .foregroundStyle(LoomTokens.dsInk1)
+            Text("No extension? Drag the capture bookmarklet to your bookmarks bar from Help > Set Up Captures…. One click sends the page back to Loom.")
+                .font(.system(size: 12, design: .serif))
+                .foregroundStyle(LoomTokens.dsInk2)
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    /// Inspector status lane: where captures land and how to read them.
+    private var captureFlowCard: some View {
+        VStack(alignment: .leading, spacing: DSSpace.sm.value) {
+            Text("How captures flow")
+                .font(.system(size: 12, weight: .semibold, design: .serif))
+                .foregroundStyle(LoomTokens.dsInk1)
+            Text("Captures land in your source folders as Loom.md entries. Recent captures surface on the Sources workbench; open one to read it inside Loom and send passages into Draft.")
+                .font(.system(size: 11, design: .serif))
+                .foregroundStyle(LoomTokens.dsInk2)
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 }

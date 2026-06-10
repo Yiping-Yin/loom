@@ -671,7 +671,7 @@ struct KnowledgeSidebarView: View {
                 Text("No source manifest yet.")
                     .font(.system(size: 11))
                     .foregroundStyle(sidebarSecondaryText)
-                Text("Run `npm run ingest` from the folder's root, or drop files into Ingestion to build one.")
+                Text("Add sources from the folder's root, or drop files in to build one.")
                     .font(.system(size: 10))
                     .foregroundStyle(sidebarTertiaryText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1916,7 +1916,7 @@ enum LibraryReloadFeedback: Equatable, Sendable {
         case .missingFolder:
             return "Choose a source folder in Settings -> Data."
         case .missingManifest:
-            return "No source manifest yet. Run npm run ingest or use Ingestion."
+            return "No source manifest yet. Add sources to build one."
         case .failed(let message):
             return message
         }

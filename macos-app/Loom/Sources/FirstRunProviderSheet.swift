@@ -49,9 +49,9 @@ struct FirstRunProviderSheet: View {
     private var providerStep: some View {
         VStack(alignment: .leading, spacing: 16) {
             header(
-                eyebrow: "Frontispiece · i of ii",
-                title: "The second voice.",
-                subtitle: "Loom works alongside you with a second weaver in the margin. Your key or CLI stays on your Mac; Loom never relays it."
+                eyebrow: "Setup · i of ii",
+                title: "Connect your AI.",
+                subtitle: "Loom helps you draft from sources with AI in the margin. Your key or CLI stays on your Mac; Loom never relays it."
             )
 
             VStack(alignment: .leading, spacing: 0) {
@@ -164,8 +164,8 @@ struct FirstRunProviderSheet: View {
     private var folderStep: some View {
         VStack(alignment: .leading, spacing: 16) {
             header(
-                eyebrow: "Frontispiece · ii of ii",
-                title: "A room for your books.",
+                eyebrow: "Setup · ii of ii",
+                title: "Choose your sources folder.",
                 subtitle: "Loom reads the Markdown, MDX, and PDF files already in this folder. Nothing is uploaded — the path stays on your Mac."
             )
 

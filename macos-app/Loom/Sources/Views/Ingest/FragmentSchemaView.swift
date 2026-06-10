@@ -162,11 +162,11 @@ struct FragmentSchemaView: View {
     private var destinationLabel: String {
         switch destination {
         case .pursuit(let id):
-            return "Attached to Pursuit · \(id.prefix(8))"
+            return "Attached to Question · \(id.prefix(8))"
         case .panel(let id):
-            return "Attached to Panel · \(id.prefix(8))"
+            return "Attached to Reader note · \(id.prefix(8))"
         case .newQuestion(let text):
-            return "New Pursuit: \(text)"
+            return "New question: \(text)"
         }
     }
 

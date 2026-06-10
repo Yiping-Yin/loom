@@ -73,10 +73,10 @@ struct ShuttleView: View {
         .init(label: "Workbench",       subtitle: "Writing with the loom visible", path: "/workbench", keywords: ["workbench", "writing", "draft", "compose", "desk"]),
         .init(label: "Sōan",            subtitle: "The thinking draft",       path: "/soan",        keywords: ["soan", "sōan", "thinking", "draft", "canvas", "pieces", "sheet"]),
         .init(label: "Pursuits",        subtitle: "Questions you are holding", path: "/pursuits",   keywords: ["pursuits", "questions", "mind", "inquiry", "held"]),
-        .init(label: "Hold a Question…", subtitle: "Open the hold-question dialog (⌘⇧P)", path: "", keywords: ["hold", "question", "pursuit", "new", "mint", "ask", "wonder", "capture"], notificationName: .loomShowHoldQuestionDialog),
-        .init(label: "Add a Sōan Card…", subtitle: "Open the add-card dialog (⌘⇧D)", path: "", keywords: ["soan", "sōan", "card", "add", "new", "thesis", "counter", "instance", "question", "fog", "weft", "sketch", "draft"], notificationName: .loomShowAddSoanCardDialog),
-        .init(label: "Connect Sōan Cards… · ⌘⇧L", subtitle: "Open the connect-cards dialog", path: "", keywords: ["soan", "sōan", "connect", "edge", "relation", "link", "support", "echo", "draw", "relate", "join"], notificationName: .loomShowConnectSoanCardsDialog),
-        .init(label: "Weave Two Panels… · ⌘⇧W", subtitle: "Open the weave-panels dialog", path: "", keywords: ["weave", "panels", "relation", "connect", "supports", "contradicts", "elaborates", "echoes", "link", "tie"], notificationName: .loomShowWeavePanelsDialog),
+        .init(label: "Add Question…", subtitle: "Open the add-question dialog (⌘⇧P)", path: "", keywords: ["hold", "question", "pursuit", "new", "mint", "ask", "wonder", "capture"], notificationName: .loomShowHoldQuestionDialog),
+        .init(label: "Add Draft Card…", subtitle: "Open the add-card dialog (⌘⇧D)", path: "", keywords: ["soan", "sōan", "card", "add", "new", "thesis", "counter", "instance", "question", "fog", "weft", "sketch", "draft"], notificationName: .loomShowAddSoanCardDialog),
+        .init(label: "Connect Draft Cards… · ⌘⇧L", subtitle: "Open the connect-cards dialog", path: "", keywords: ["soan", "sōan", "connect", "edge", "relation", "link", "support", "echo", "draw", "relate", "join"], notificationName: .loomShowConnectSoanCardsDialog),
+        .init(label: "Connect Reader Notes… · ⌘⇧W", subtitle: "Open the connect-notes dialog", path: "", keywords: ["weave", "panels", "relation", "connect", "supports", "contradicts", "elaborates", "echoes", "link", "tie"], notificationName: .loomShowWeavePanelsDialog),
         .init(label: "Sources",         subtitle: "Your materials, grouped", path: "/sources",    keywords: ["sources", "source", "library", "materials", "atlas", "bookshelf", "shelf", "browse", "knowledge"]),
         .init(label: "Patterns",        subtitle: "What has settled",         path: "/patterns",    keywords: ["patterns", "panels", "kesi", "mosaic", "settled", "held", "habitat"]),
         .init(label: "Weaves",          subtitle: "Focused constellation around a panel", path: "/weaves", keywords: ["weaves", "constellation", "graph", "relations", "panel", "focus"]),
@@ -90,10 +90,10 @@ struct ShuttleView: View {
         .init(label: "Quizzes",         subtitle: "Past attempts",            path: "/quizzes",     keywords: ["quiz", "quizzes", "check"]),
         .init(label: "Help",            subtitle: "Usage guide",              path: "/help",        keywords: ["help", "manual", "docs"]),
         .init(label: "Uploads",         subtitle: "Intake",                   path: "/uploads",     keywords: ["uploads", "intake", "files"]),
-        .init(label: "Rehearsal",       subtitle: "⌘⇧R",                      path: "",             keywords: ["rehearsal", "recall", "practice"], inspectorTab: "rehearsal"),
-        .init(label: "Examiner",        subtitle: "⌘⇧X",                      path: "",             keywords: ["examiner", "quiz", "check"],        inspectorTab: "examiner"),
-        .init(label: "Ingestion",       subtitle: "⌘⇧I",                      path: "",             keywords: ["ingestion", "intake", "import"],    inspectorTab: "ingestion"),
-        .init(label: "Reconstructions", subtitle: nil,                        path: "",             keywords: ["reconstructions", "rebuild"],       inspectorTab: "reconstructions"),
+        .init(label: "Source practice", subtitle: "⌘⇧R",                      path: "",             keywords: ["rehearsal", "recall", "practice", "source"], inspectorTab: "rehearsal"),
+        .init(label: "Source check",    subtitle: "⌘⇧X",                      path: "",             keywords: ["examiner", "quiz", "check", "source"],        inspectorTab: "examiner"),
+        .init(label: "Add files",       subtitle: "⌘⇧I",                      path: "",             keywords: ["ingestion", "intake", "import", "add", "files"],    inspectorTab: "ingestion"),
+        .init(label: "Practice notes",  subtitle: nil,                        path: "",             keywords: ["reconstructions", "rebuild", "practice", "notes"],       inspectorTab: "reconstructions"),
         .init(label: "Colophon",        subtitle: "The type, the palette, the hand", path: "/colophon", keywords: ["colophon", "back matter", "credits", "type", "palette"]),
         .init(label: "Contents",        subtitle: "A reader's map",           path: "/contents",    keywords: ["contents", "toc", "table of contents", "map", "index", "front matter", "chapters"]),
         .init(label: "Frontispiece",    subtitle: "The book's title page",    path: "/frontispiece", keywords: ["frontispiece", "title", "front matter", "cover page", "opening"]),
@@ -619,11 +619,13 @@ struct ShuttleView: View {
                 userInfo: ["path": "/soan?focusCardId=\(encode(c.id))"]
             )
             dismissWindow(id: ShuttleWindow.id)
-        case .weave(let w):
+        case .weave:
+            // Note connections now live under Sources reader notes; the
+            // panel-era weave detail route is retired.
             NotificationCenter.default.post(
                 name: .loomShuttleNavigate,
                 object: nil,
-                userInfo: ["path": "/weaves?weaveId=\(encode(w.id))"]
+                userInfo: ["path": "/sources#reader-notes"]
             )
             dismissWindow(id: ShuttleWindow.id)
         }

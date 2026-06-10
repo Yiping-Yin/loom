@@ -383,13 +383,13 @@ struct AskAIView: View {
             .help("Regenerate this answer")
 
             Button {
-                citeIntoRehearsal(msg)
+                citeIntoSourcePractice(msg)
             } label: {
                 Image(systemName: "text.quote")
             }
             .buttonStyle(.plain)
             .foregroundStyle(LoomTokens.muted)
-            .help("Send to Rehearsal as a passage")
+            .help("Send to Source practice as a passage")
         }
         .font(.system(size: 10))
     }
@@ -406,11 +406,11 @@ struct AskAIView: View {
         runner.stream(prompt: userMsg.content)
     }
 
-    /// Push the assistant message as a passage into Rehearsal. Matches
+    /// Push the assistant message as a passage into Source practice. Matches
     /// the existing ⌘⇧E selection flow but comes from AI output — turns
     /// a good answer into study material for the next round.
-    private func citeIntoRehearsal(_ msg: AskAIMessage) {
-        RehearsalContext.shared.pendingTopic = msg.content
+    private func citeIntoSourcePractice(_ msg: AskAIMessage) {
+        RehearsalContext.seedTopic(msg.content)
         NotificationCenter.default.post(name: .loomOpenRehearsalWindow, object: nil)
     }
 
@@ -824,6 +824,52 @@ struct AskAIDocRef: Identifiable, Hashable {
     let title: String
     let href: String
     let category: String
+    /// Live artifact state distilled from the search-index entry — lets a
+    /// referenced doc carry not just its body but its quiz/card/anchor
+    /// state into the AI prompt, mirroring the whole-corpus grounding the
+    /// Draft surface uses. Nil for plain prose references.
+    let artifactState: LoomDraftArtifactState?
+
+    init(
+        id: String,
+        title: String,
+        href: String,
+        category: String,
+        artifactState: LoomDraftArtifactState? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.href = href
+        self.category = category
+        self.artifactState = artifactState
+    }
+
+    /// Parse the artifact state out of a stored search-index field map.
+    /// Accepts either a nested `artifactState` object or the flattened
+    /// `artifactTargetId` / `artifactStateData` columns the index writer
+    /// emits, so both shapes ground the prompt identically.
+    static func artifactState(from fields: [String: Any]) -> LoomDraftArtifactState? {
+        if let nested = fields["artifactState"] as? [String: Any],
+           let targetId = nested["targetId"] as? String, !targetId.isEmpty {
+            return LoomDraftArtifactState(
+                targetId: targetId,
+                kind: nested["kind"] as? String,
+                label: nested["label"] as? String,
+                state: nested["state"] as? String,
+                stateLabel: nested["stateLabel"] as? String
+            )
+        }
+        guard let targetId = fields["artifactTargetId"] as? String, !targetId.isEmpty else {
+            return nil
+        }
+        return LoomDraftArtifactState(
+            targetId: targetId,
+            kind: fields["artifactKind"] as? String,
+            label: fields["artifactLabel"] as? String,
+            state: fields["artifactState"] as? String,
+            stateLabel: fields["artifactStateData"] as? String
+        )
+    }
 
     func resolveBody() async -> String? {
         // Only knowledge docs have a cache file — wiki references resolve
@@ -946,7 +992,15 @@ struct DocReferencePicker: View {
                       let href = fields["href"] as? String,
                       !title.isEmpty, !href.isEmpty else { continue }
                 let category = (fields["category"] as? String) ?? ""
-                out.append(AskAIDocRef(id: href, title: title, href: href, category: category))
+                out.append(
+                    AskAIDocRef(
+                        id: href,
+                        title: title,
+                        href: href,
+                        category: category,
+                        artifactState: AskAIDocRef.artifactState(from: fields)
+                    )
+                )
             }
             out.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
             await MainActor.run { self.docs = out }

@@ -19,10 +19,22 @@ struct LoomApp: App {
         return raw ?? true
     }
 
+    /// Hosted XCTest detection — when Loom.app is only the host process
+    /// for a unit-test bundle, the product root view must not mount and
+    /// create a second visible Loom room beside the tester's session.
+    private var isRunningInXCTestHost: Bool {
+        let env = ProcessInfo.processInfo.environment
+        return env["XCTestConfigurationFilePath"] != nil
+            || env["XCTestBundlePath"] != nil
+            || NSClassFromString("XCTestCase") != nil
+    }
+
     var body: some Scene {
         Window("Loom", id: MainWindow.id) {
             Group {
-                if minimalModeEnabled {
+                if isRunningInXCTestHost {
+                    EmptyView()
+                } else if minimalModeEnabled {
                     LoomMinimalRootView()
                         .environmentObject(delegate.server)
                 } else {
@@ -39,13 +51,11 @@ struct LoomApp: App {
         // clicking the app icon should always present the room.
         .restorationBehavior(.disabled)
         .defaultLaunchBehavior(.presented)
-        // `.unifiedCompact` collapses the titlebar+toolbar into one
-        // thin band. `.unified(showsTitle: true)` produces two visual
-        // bands — title on top, empty toolbar strip below — which the
-        // user kept flagging as dead space because we don't put
-        // anything in the toolbar. Compact gives macOS-native chrome
-        // density without looking barren.
-        .windowToolbarStyle(.unifiedCompact)
+        // The minimal scene window hides macOS titlebar chrome entirely —
+        // Draft renders navigation/title/capture in-window through the
+        // shared root toolbar, so a system toolbar/title strip would be
+        // a second top band above the one chrome owner.
+        .windowStyle(.hiddenTitleBar)
 
         Settings {
             TabView {
@@ -99,28 +109,28 @@ struct LoomApp: App {
         .defaultSize(width: 560, height: 520)
         .windowToolbarStyle(.unifiedCompact)
 
-        Window("Reconstructions", id: ReconstructionsWindow.id) {
+        Window("Practice notes", id: ReconstructionsWindow.id) {
             ReconstructionsView()
                 .paperChrome()
         }
         .defaultSize(width: 800, height: 520)
         .windowToolbarStyle(.unified)
 
-        Window("Ingestion", id: IngestionWindow.id) {
+        Window("Add files", id: IngestionWindow.id) {
             IngestionView()
                 .paperChrome()
         }
         .defaultSize(width: 560, height: 540)
         .windowToolbarStyle(.unifiedCompact)
 
-        Window("Rehearsal", id: RehearsalWindow.id) {
+        Window("Source practice", id: RehearsalWindow.id) {
             RehearsalView()
                 .paperChrome()
         }
         .defaultSize(width: 620, height: 560)
         .windowToolbarStyle(.unifiedCompact)
 
-        Window("Examiner", id: ExaminerWindow.id) {
+        Window("Source check", id: ExaminerWindow.id) {
             ExaminerView()
                 .paperChrome()
         }
@@ -140,7 +150,7 @@ struct LoomApp: App {
 
         .commands {
             CommandGroup(after: .textEditing) {
-                Button("Learn") { NotificationCenter.default.post(name: .loomLearn, object: nil) }
+                Button("Review") { NotificationCenter.default.post(name: .loomLearn, object: nil) }
                     .keyboardShortcut("e", modifiers: .command)
                 AskAIMenuItem()
                 AskAboutFileMenuItem()
@@ -246,9 +256,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var captureSpaceRestoreBehavior: NSWindow.CollectionBehavior?
     private var captureSpaceRestoreToken: UUID?
 
+    /// Hosted XCTest detection — when the running process is only the
+    /// host for a unit-test bundle, every main-window repair path must
+    /// no-op so verification does not activate a second Loom.app room.
+    private var isRunningInXCTestHost: Bool {
+        let env = ProcessInfo.processInfo.environment
+        return env["XCTestConfigurationFilePath"] != nil
+            || env["XCTestBundlePath"] != nil
+            || NSClassFromString("XCTestCase") != nil
+    }
+
     override init() {
         super.init()
         NSLog("[Loom] AppDelegate init")
+        guard !isRunningInXCTestHost else { return }
         DispatchQueue.main.async { [weak self] in
             Task { @MainActor in
                 self?.configureLaunchIfNeeded()
@@ -260,7 +281,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Task { @MainActor in
-            NSLog("[Loom] applicationDidFinishLaunching")
+            guard !isRunningInXCTestHost else { return }
             configureLaunchIfNeeded()
             ensureMainWindowVisible()
             scheduleMainWindowRepair()
@@ -269,9 +290,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidBecomeActive(_ notification: Notification) {
         Task { @MainActor in
-            NSLog("[Loom] applicationDidBecomeActive visibleWindows=%d", existingMainWindow(includeHidden: false) == nil ? 0 : 1)
+            guard !isRunningInXCTestHost else { return }
             configureLaunchIfNeeded()
-            if existingMainWindow(includeHidden: false) == nil {
+            // Returning to Loom should repair any titlebar chrome macOS
+            // restored while the app was inactive.
+            if let window = existingMainWindow(includeHidden: false, requireActiveSpace: true) {
+                configureMainWindowChrome(window)
+            } else {
                 ensureMainWindowVisible()
             }
         }
@@ -332,6 +357,110 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// SwiftUI's `Window(...).defaultLaunchBehavior(.presented)` is the
+    /// desired primary path, but in local installed builds macOS can
+    /// still start the process with zero scene windows after prior
+    /// close/restore state. Keep a narrow AppKit fallback so clicking
+    /// Loom, reopening from Dock, or receiving `loom://capture` never
+    /// leaves the user with a running app and no room.
+    @MainActor
+    private func ensureMainWindowVisible() {
+        guard !isRunningInXCTestHost else { return }
+        NSLog("[Loom] ensureMainWindowVisible windows=%d", NSApp.windows.count)
+        if let window = existingMainWindow(includeHidden: false, requireActiveSpace: true) {
+            NSLog("[Loom] ensureMainWindowVisible using visible window=%d", window.windowNumber)
+            presentWindowOnActiveSpace(window)
+            return
+        }
+        if let window = existingMainWindow(includeHidden: false) {
+            NSLog("[Loom] ensureMainWindowVisible replacing off-active window=%d", window.windowNumber)
+            closeMainWindow(window)
+            materializeFallbackMainWindow(ignoreHiddenWindow: true)
+            return
+        }
+        if let window = existingMainWindow(includeHidden: true) {
+            NSLog("[Loom] ensureMainWindowVisible replacing hidden window=%d", window.windowNumber)
+            closeMainWindow(window)
+            materializeFallbackMainWindow(ignoreHiddenWindow: true)
+            return
+        }
+        materializeFallbackMainWindow()
+    }
+
+    @MainActor
+    private func presentWindowOnActiveSpace(_ window: NSWindow) {
+        configureMainWindowChrome(window)
+        var currentSpaceBehavior = window.collectionBehavior
+        currentSpaceBehavior.remove(.canJoinAllSpaces)
+        currentSpaceBehavior.insert(.moveToActiveSpace)
+        window.collectionBehavior = currentSpaceBehavior
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        // Space transitions need a delayed repair after AppKit finishes
+        // moving the window.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak window] in
+            guard let window else { return }
+            Task { @MainActor in
+                self.configureMainWindowChrome(window)
+            }
+        }
+    }
+
+    /// Materialize a fallback main window, preferring promotion of any
+    /// healthy existing window over replacement.
+    @MainActor
+    private func materializeFallbackMainWindow(ignoreHiddenWindow: Bool = false) {
+        if let window = fallbackMainWindow, window.isVisible {
+            presentWindowOnActiveSpace(window)
+            return
+        }
+        if let window = existingMainWindow(includeHidden: false, requireActiveSpace: true) {
+            presentWindowOnActiveSpace(window)
+            return
+        }
+        if let window = existingMainWindow(includeHidden: false) {
+            NSLog("[Loom] materializeFallbackMainWindow replacing off-active window=%d", window.windowNumber)
+            closeMainWindow(window)
+            createFallbackMainWindow()
+            return
+        }
+        if !ignoreHiddenWindow, let window = existingMainWindow(includeHidden: true) {
+            NSLog("[Loom] materializeFallbackMainWindow replacing hidden window=%d", window.windowNumber)
+            closeMainWindow(window)
+            createFallbackMainWindow()
+            return
+        }
+        createFallbackMainWindow()
+    }
+
+    /// Fallback main window — same full-size hidden-titlebar chrome
+    /// contract as the SwiftUI scene window, hosting the minimal root.
+    @MainActor
+    private func createFallbackMainWindow() {
+        let rootView = LoomMinimalRootView()
+            .environmentObject(server)
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 1400, height: 900),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.identifier = NSUserInterfaceItemIdentifier(MainWindow.id)
+        window.title = "Loom"
+        window.center()
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.toolbar = nil
+        window.standardWindowButton(.toolbarButton)?.isHidden = true
+        window.collectionBehavior.insert(.fullScreenPrimary)
+        window.isRestorable = false
+        window.contentView = NSHostingView(rootView: rootView)
+        window.isReleasedWhenClosed = false
+        fallbackMainWindow = window
+        presentWindowOnActiveSpace(window)
+        NSLog("[Loom] createFallbackMainWindow window=%d", window.windowNumber)
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
             Task { @MainActor in
@@ -349,7 +478,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// AppleEvent handler for the `loom://` URL scheme. Routes the
     /// `loom://capture?payload=<json>` shape (Phase A3) to the
-    /// `.loomCaptureFromURL` notification; other paths fall through
+    /// `.loomCaptureFromURL` notification, and `loom://bundle/<route>`
+    /// to the installed support-route relay; other paths fall through
     /// (the existing in-webview scheme handler covers `loom://content`,
     /// `loom://anchor`, etc.).
     @objc func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent reply: NSAppleEventDescriptor) {
@@ -360,13 +490,63 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         else { return }
         // External capture entry point. Internal `loom://content/…` /
         // `loom://anchor?…` URLs are handled by `LoomURLSchemeHandler`
-        // inside the webview; only `loom://capture` arrives here from
-        // outside the app.
+        // inside the webview; `loom://capture` and `loom://bundle`
+        // arrive here from outside the app.
         if url.host == "capture" {
             Task { @MainActor in
                 handleCaptureURL(url)
             }
+        } else if url.host == "bundle" {
+            Task { @MainActor in
+                handleBundleURL(url)
+            }
         }
+    }
+
+    /// `loom://bundle/hour`, `loom://bundle/connections`, … — installed
+    /// support routes open inside the product shell instead of leaving
+    /// the user in a browser. The route is parked in the relay (in case
+    /// the root view has not mounted yet) and posted on the navigation
+    /// bus with delayed reposts so the shell catches it after the
+    /// window settles.
+    @MainActor
+    private func handleBundleURL(_ url: URL) {
+        guard let path = bundleRoutePath(from: url) else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        LoomBundleRouteRelay.savePendingRoute(path)
+        if existingMainWindow(includeHidden: false) == nil {
+            createFallbackMainWindow()
+        }
+        ensureMainWindowVisible()
+        postBundleNavigation(path)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.postBundleNavigation(path)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.postBundleNavigation(path)
+        }
+    }
+
+    /// `loom://bundle/<route>` → `/route` product path. Static-export
+    /// pages arrive either as clean routes (`loom://bundle/hour`) or as
+    /// exported documents (`loom://bundle/hour/index.html`).
+    private func bundleRoutePath(from url: URL) -> String? {
+        guard url.host == "bundle" else { return nil }
+        var path = url.path
+        if path.hasSuffix(".html") {
+            path = (path as NSString).deletingLastPathComponent
+        }
+        let trimmed = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        if trimmed.isEmpty { return "/" }
+        return "/" + trimmed
+    }
+
+    private func postBundleNavigation(_ path: String) {
+        NotificationCenter.default.post(
+            name: .loomShuttleNavigate,
+            object: nil,
+            userInfo: ["path": path]
+        )
     }
 
     @MainActor
@@ -415,67 +595,51 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    /// SwiftUI's `Window(...).defaultLaunchBehavior(.presented)` is the
-    /// desired primary path, but in local installed builds macOS can
-    /// still start the process with zero scene windows after prior
-    /// close/restore state. Keep a narrow AppKit fallback so clicking
-    /// Loom, reopening from Dock, or receiving `loom://capture` never
-    /// leaves the user with a running app and no room.
     @MainActor
-    private func ensureMainWindowVisible() {
-        NSLog("[Loom] ensureMainWindowVisible windows=%d", NSApp.windows.count)
-        if let window = existingMainWindow(includeHidden: false) {
-            NSLog("[Loom] ensureMainWindowVisible using existing window=%d", window.windowNumber)
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
-        }
-        if let fallbackMainWindow {
-            NSLog("[Loom] ensureMainWindowVisible reusing fallback window=%d", fallbackMainWindow.windowNumber)
-            fallbackMainWindow.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
-        }
-
-        let rootView: AnyView
-        let minimalModeEnabled = (UserDefaults.standard.object(forKey: "loom.minimal.enabled") as? Bool) ?? true
-        if minimalModeEnabled {
-            rootView = AnyView(LoomMinimalRootView().environmentObject(server))
-        } else {
-            rootView = AnyView(
-                ContentView()
-                    .environmentObject(server)
-                    .background(WindowOpener())
-            )
-        }
-
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1400, height: 900),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
-        window.identifier = NSUserInterfaceItemIdentifier(MainWindow.id)
-        window.title = "Loom"
-        window.center()
-        window.titlebarAppearsTransparent = true
-        window.toolbarStyle = .unifiedCompact
-        window.isRestorable = false
-        window.contentView = NSHostingView(rootView: rootView)
-        window.isReleasedWhenClosed = false
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-        fallbackMainWindow = window
-        NSLog("[Loom] ensureMainWindowVisible created fallback window=%d", window.windowNumber)
-    }
-
-    @MainActor
-    private func existingMainWindow(includeHidden: Bool) -> NSWindow? {
+    private func existingMainWindow(includeHidden: Bool, requireActiveSpace: Bool = false) -> NSWindow? {
         NSApp.windows.first { window in
             let isMainWindow = window.identifier?.rawValue == MainWindow.id || window.title == "Loom"
             guard isMainWindow, window.canBecomeKey, !window.isMiniaturized else { return false }
-            return includeHidden || window.isVisible
+            guard includeHidden || window.isVisible else { return false }
+            if requireActiveSpace && !window.isOnActiveSpace { return false }
+            return true
         }
+    }
+
+    @MainActor
+    private func closeMainWindow(_ window: NSWindow) {
+        if window === fallbackMainWindow {
+            fallbackMainWindow = nil
+        }
+        window.orderOut(nil)
+        window.close()
+    }
+
+    /// Main-window chrome repair — macOS can restore titlebar/toolbar
+    /// chrome during space transitions, fullscreen exits, and focus
+    /// changes. This must not rely only on the SwiftUI WindowConfigurator
+    /// background view, because reopen/URL-routing paths present windows
+    /// before SwiftUI updates run.
+    @MainActor
+    private func configureMainWindowChrome(_ window: NSWindow) {
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.styleMask.insert(.fullSizeContentView)
+        window.toolbar = nil
+        clearMainWindowTitlebarAccessories(window)
+        window.standardWindowButton(.toolbarButton)?.isHidden = true
+        window.collectionBehavior.insert(.fullScreenPrimary)
+    }
+
+    /// Clears accessory titlebar chrome through the guarded runtime
+    /// selector. SwiftUI's AppKitWindow subclass may not implement the
+    /// setter — assigning the accessory array directly crashes in the
+    /// installed app.
+    @MainActor
+    private func clearMainWindowTitlebarAccessories(_ window: NSWindow) {
+        let selector = Selector(("setTitlebarAccessoryViewControllers:"))
+        guard window.responds(to: selector) else { return }
+        window.perform(selector, with: [] as NSArray)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -534,7 +698,7 @@ struct AboutMenuItem: View {
 /// `openWindow(id:)` call.
 struct AskAIMenuItem: View {
     var body: some View {
-        Button("Ask AI") {
+        Button("Ask Selection") {
             NotificationCenter.default.post(name: .loomOpenAskAI, object: nil)
         }
         .keyboardShortcut("e", modifiers: [.command, .shift])
@@ -610,7 +774,7 @@ enum EveningWindow {
 /// `.loomShowHoldQuestionDialog`; ContentView owns the `.sheet` binding.
 struct HoldQuestionMenuItem: View {
     var body: some View {
-        Button("Hold a Question…") {
+        Button("Add Question…") {
             NotificationCenter.default.post(name: .loomShowHoldQuestionDialog, object: nil)
         }
         .keyboardShortcut("p", modifiers: [.command, .shift])
@@ -624,7 +788,7 @@ struct HoldQuestionMenuItem: View {
 /// ContentView owns the `.sheet` binding.
 struct AddSoanCardMenuItem: View {
     var body: some View {
-        Button("Add a Sōan Card…") {
+        Button("Add Draft Card…") {
             NotificationCenter.default.post(name: .loomShowAddSoanCardDialog, object: nil)
         }
         .keyboardShortcut("d", modifiers: [.command, .shift])
@@ -639,7 +803,7 @@ struct AddSoanCardMenuItem: View {
 /// binding.
 struct ConnectSoanCardsMenuItem: View {
     var body: some View {
-        Button("Connect Sōan Cards…") {
+        Button("Connect Draft Cards…") {
             NotificationCenter.default.post(name: .loomShowConnectSoanCardsDialog, object: nil)
         }
         .keyboardShortcut("l", modifiers: [.command, .shift])
@@ -654,7 +818,7 @@ struct ConnectSoanCardsMenuItem: View {
 /// `.loomShowWeavePanelsDialog`; ContentView owns the `.sheet` binding.
 struct WeavePanelsMenuItem: View {
     var body: some View {
-        Button("Weave Two Panels…") {
+        Button("Connect Reader Notes…") {
             NotificationCenter.default.post(name: .loomShowWeavePanelsDialog, object: nil)
         }
         .keyboardShortcut("w", modifiers: [.command, .shift])
@@ -664,7 +828,7 @@ struct WeavePanelsMenuItem: View {
 /// ⌘⇧X — opens Inspector to Examiner tab. Single-window consolidation.
 struct ExaminerMenuItem: View {
     var body: some View {
-        Button("Examiner") {
+        Button("Source check") {
             NotificationCenter.default.post(
                 name: .loomShowInspectorTab,
                 object: nil,
@@ -681,7 +845,7 @@ struct ExaminerMenuItem: View {
 /// surfacing the panel.
 struct RehearsalMenuItem: View {
     var body: some View {
-        Button("Rehearsal") {
+        Button("Source practice") {
             NotificationCenter.default.post(name: .loomOpenRehearsal, object: nil)
         }
         .keyboardShortcut("r", modifiers: [.command, .shift])
@@ -691,7 +855,7 @@ struct RehearsalMenuItem: View {
 /// ⌘⇧I — opens Inspector to Ingestion tab.
 struct IngestionMenuItem: View {
     var body: some View {
-        Button("Ingestion") {
+        Button("Add files") {
             NotificationCenter.default.post(
                 name: .loomShowInspectorTab,
                 object: nil,
@@ -705,7 +869,7 @@ struct IngestionMenuItem: View {
 /// Menu-only — opens Inspector to Reconstructions tab.
 struct ReconstructionsMenuItem: View {
     var body: some View {
-        Button("Reconstructions") {
+        Button("Practice notes") {
             NotificationCenter.default.post(
                 name: .loomShowInspectorTab,
                 object: nil,
@@ -731,6 +895,28 @@ struct ShuttleMenuItem: View {
 
 enum MainWindow {
     static let id = "com.loom.window.main"
+}
+
+/// Hands `loom://bundle/<route>` support-route navigations from the
+/// AppDelegate URL handler to whichever minimal root view mounts next.
+/// The route is parked in UserDefaults so a navigation arriving before
+/// the SwiftUI scene exists is consumed on the root view's first appear
+/// instead of being dropped.
+enum LoomBundleRouteRelay {
+    private static let pendingRouteDefaultsKey = "loom.pendingBundleRoute"
+
+    static func savePendingRoute(_ path: String) {
+        UserDefaults.standard.set(path, forKey: pendingRouteDefaultsKey)
+    }
+
+    static func consumePendingRoute() -> String? {
+        UserDefaults.standard.string(forKey: pendingRouteDefaultsKey)
+    }
+
+    static func clearPendingRoute(_ path: String) {
+        guard UserDefaults.standard.string(forKey: pendingRouteDefaultsKey) == path else { return }
+        UserDefaults.standard.removeObject(forKey: pendingRouteDefaultsKey)
+    }
 }
 
 /// Invisible helper that lives inside the main Window scene so it can use
@@ -925,22 +1111,14 @@ struct WorkspaceShortcutsCommands: View {
                 postNav("/")
             }
             .keyboardShortcut("1", modifiers: .command)
-            Button("Desk") {
-                postNav("/desk")
+            Button("Sources") {
+                postNav("/sources")
             }
             .keyboardShortcut("2", modifiers: .command)
-            Button("Coworks") {
-                postNav("/coworks")
+            Button("Draft") {
+                postNav("/draft")
             }
             .keyboardShortcut("3", modifiers: .command)
-            Button("Patterns") {
-                postNav("/patterns")
-            }
-            .keyboardShortcut("4", modifiers: .command)
-            Button("Weaves") {
-                postNav("/weaves")
-            }
-            .keyboardShortcut("5", modifiers: .command)
         }
     }
 

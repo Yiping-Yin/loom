@@ -965,9 +965,9 @@ struct ContentView: View {
             }
         }
         // Drop-anywhere ingestion: files dropped onto the main window
-        // stash into IngestionContext and open the native Ingestion
-        // window, which auto-consumes on appear. Plain text only (the
-        // underlying runner enforces the 200KB + UTF-8 filter).
+        // stash into IngestionContext and open the native "Add files"
+        // window, which auto-consumes on appear. The runner reads
+        // Markdown, PDF, DOCX, slides, Pages, and images.
         .onDrop(of: [.fileURL], isTargeted: nil, perform: handleDroppedFileURLs)
         // No `.toolbar { }` — every former toolbar action has a keyboard
         // shortcut (⌘[ / ⌘] / ⌘R / ⌘K) or is reachable via sidebar.
@@ -989,7 +989,7 @@ struct HoldQuestionSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Hold a Question")
+            Text("Add Question")
                 .font(.custom("Cormorant Garamond", size: 22).italic())
 
             TextField("What question is your mind holding?", text: $question, axis: .vertical)
@@ -1038,7 +1038,7 @@ struct AddSoanCardSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Add a Card to Sōan")
+            Text("Add a Draft Card")
                 .font(.custom("Cormorant Garamond", size: 22).italic())
 
             Picker("Kind", selection: $kind) {
@@ -1046,8 +1046,8 @@ struct AddSoanCardSheet: View {
                 Text("Instance").tag("instance")
                 Text("Counter").tag("counter")
                 Text("Question").tag("question")
-                Text("Fog (half-formed)").tag("fog")
-                Text("Weft (echo)").tag("weft")
+                Text("Unclear").tag("fog")
+                Text("Connection").tag("weft")
                 Text("Sketch").tag("sketch")
             }
 
@@ -1107,11 +1107,11 @@ struct ConnectSoanCardsSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Connect Two Cards")
+            Text("Connect Draft Cards")
                 .font(.custom("Cormorant Garamond", size: 22).italic())
 
             if cards.count < 2 {
-                Text("Sōan needs at least two cards before you can connect them. Add a card with ⌘⇧D first.")
+                Text("Draft needs at least two cards before you can connect them. Add a card with ⌘⇧D first.")
                     .font(.custom("EB Garamond", size: 13))
                     .foregroundStyle(LoomTokens.muted)
             } else {
@@ -1130,8 +1130,8 @@ struct ConnectSoanCardsSheet: View {
                 }
 
                 Picker("Relation", selection: $kind) {
-                    Text("support (solid bronze)").tag("support")
-                    Text("echo (dashed muted)").tag("echo")
+                    Text("Supports").tag("support")
+                    Text("Related").tag("echo")
                 }
             }
 
@@ -1180,33 +1180,33 @@ struct WeavePanelsSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Weave Two Panels")
+            Text("Connect Reader Notes")
                 .font(.custom("Cormorant Garamond", size: 22).italic())
 
             if panels.count < 2 {
-                Text("Weaving needs at least two panels. Crystallize a couple of readings first — a panel is a reading trace that has grown at least one thought or summary.")
+                Text("Connecting needs at least two reader notes. Save a couple of readings first — a reader note is a reading trace that has grown at least one thought or summary.")
                     .font(.custom("EB Garamond", size: 13))
                     .foregroundStyle(LoomTokens.muted)
             } else {
                 Picker("From", selection: $fromPanelId) {
-                    Text("(choose a panel)").tag("")
+                    Text("(choose a reader note)").tag("")
                     ForEach(panels, id: \.id) { p in
                         Text(p.title).tag(p.id)
                     }
                 }
 
                 Picker("To", selection: $toPanelId) {
-                    Text("(choose a panel)").tag("")
+                    Text("(choose a reader note)").tag("")
                     ForEach(panels, id: \.id) { p in
                         Text(p.title).tag(p.id)
                     }
                 }
 
                 Picker("Relation", selection: $kind) {
-                    Text("supports").tag("supports")
-                    Text("contradicts").tag("contradicts")
-                    Text("elaborates").tag("elaborates")
-                    Text("echoes").tag("echoes")
+                    Text("Supports").tag("supports")
+                    Text("Contradicts").tag("contradicts")
+                    Text("Adds detail").tag("elaborates")
+                    Text("Related").tag("echoes")
                 }
 
                 TextField("Rationale (optional)", text: $rationale, axis: .vertical)
@@ -1364,6 +1364,14 @@ struct DevHUD: View {
 struct WindowConfigurator: NSViewRepresentable {
     let title: String
     let isNight: Bool
+    /// Minimal mode extends the root canvas under the hidden titlebar so
+    /// the shell owns every pixel of top chrome.
+    var contentExtendsUnderTitlebar: Bool = false
+    /// Legacy ContentView may keep its toolbar, but minimal mode must be
+    /// able to opt out of the scene-managed NSWindow toolbar entirely —
+    /// macOS otherwise re-inserts an empty toolbar strip above Draft in
+    /// fullscreen/windowed transitions.
+    var removesSystemToolbar: Bool = false
 
     private func configure(_ window: NSWindow) {
         window.tabbingMode = .disallowed
@@ -1377,28 +1385,120 @@ struct WindowConfigurator: NSViewRepresentable {
         // `.toolbarColorScheme`/`containerBackground` stack on
         // macOS 26 — we saw "Loom" stay dark on night chrome even
         // with window.appearance = .darkAqua set. The title is
-        // re-rendered as a SwiftUI ToolbarItem(.principal) so it
-        // inherits the toolbar's color scheme cleanly.
+        // re-rendered in-window so it inherits the chrome's color
+        // scheme cleanly.
         window.titleVisibility = .hidden
         window.styleMask.insert(.fullSizeContentView)
+        if removesSystemToolbar {
+            window.toolbar = nil
+            clearTitlebarAccessories(window)
+            window.standardWindowButton(.toolbarButton)?.isHidden = true
+        }
+        // Custom chrome must not opt the window out of macOS fullscreen;
+        // Window > Enter Full Screen stays available for Draft.
+        window.collectionBehavior.insert(.fullScreenPrimary)
         window.isMovableByWindowBackground = true
         window.backgroundColor = NSColor.windowBackgroundColor
-        window.title = "Loom"  // keep the system window title stable; page title stays in the toolbar
+        window.title = "Loom"  // keep the system window title stable; page title stays in the chrome
         // Remember window size and position across launches
         window.setFrameAutosaveName("LoomMainWindow")
     }
 
+    /// macOS can restore accessory titlebar chrome separately from
+    /// `window.toolbar`. Clear it through the guarded runtime selector —
+    /// SwiftUI's AppKitWindow subclass may not implement the setter, and
+    /// direct assignment crashes in the installed app.
+    private func clearTitlebarAccessories(_ window: NSWindow) {
+        let selector = Selector(("setTitlebarAccessoryViewControllers:"))
+        guard window.responds(to: selector) else { return }
+        window.perform(selector, with: [] as NSArray)
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
+        configureWhenAttached(to: view, coordinator: context.coordinator)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        configureWhenAttached(to: nsView, coordinator: context.coordinator)
+    }
+
+    /// Applies the chrome contract to the attached window and refreshes
+    /// the coordinator's notification observers so fullscreen/space
+    /// transitions keep the currently attached main window in contract.
+    private func configureWhenAttached(to view: NSView, coordinator: Coordinator) {
         DispatchQueue.main.async {
             guard let window = view.window else { return }
             configure(window)
+            coordinator.observe(window: window) { [weak window] in
+                guard let window else { return }
+                configure(window)
+            }
         }
-        return view
     }
-    func updateNSView(_ nsView: NSView, context: Context) {
-        guard let window = nsView.window else { return }
-        configure(window)
+
+    /// Keeps fullscreen window chrome in contract after the initial
+    /// mount. macOS can restore toolbar/titlebar chrome during
+    /// fullscreen entry/exit, focus changes, Tahoe Fill resizes, and
+    /// display/space moves — each notification reasserts the contract
+    /// immediately and again after the window-management animations
+    /// settle.
+    final class Coordinator {
+        private var observers: [NSObjectProtocol] = []
+        private weak var observedWindow: NSWindow?
+        private var reapply: (() -> Void)?
+
+        func observe(window: NSWindow, reapply: @escaping () -> Void) {
+            self.reapply = reapply
+            guard observedWindow !== window else { return }
+            detach()
+            observedWindow = window
+            let names: [Notification.Name] = [
+                NSWindow.didEnterFullScreenNotification,
+                NSWindow.didExitFullScreenNotification,
+                NSWindow.didBecomeKeyNotification,
+                NSWindow.didResizeNotification,
+                NSWindow.didChangeScreenNotification,
+            ]
+            for name in names {
+                let token = NotificationCenter.default.addObserver(
+                    forName: name,
+                    object: window,
+                    queue: .main
+                ) { [weak self] _ in
+                    self?.reapplyNowAndAfterAnimations()
+                }
+                observers.append(token)
+            }
+        }
+
+        private func reapplyNowAndAfterAnimations() {
+            reapply?()
+            // Window-management animations can reinsert chrome after the
+            // current 0.75s repair window; sweep again at 2s.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) { [weak self] in
+                self?.reapply?()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                self?.reapply?()
+            }
+        }
+
+        private func detach() {
+            for token in observers {
+                NotificationCenter.default.removeObserver(token)
+            }
+            observers.removeAll()
+        }
+
+        deinit {
+            detach()
+        }
     }
 }
 
@@ -1748,6 +1848,18 @@ struct LoomWebView: NSViewRepresentable {
         userContentController.add(navBridge, name: NavigationBridgeHandler.name)
         context.coordinator.navBridge = navBridge
 
+        // Native-backed Draft store. Browser/dev `/draft` keeps its drafts in
+        // localStorage; the static native shell routes `list` / `create` /
+        // `update` through this reply bridge so web Draft and native Draft share
+        // the same `LoomDraftStore` on disk.
+        let draftBridge = DraftBridgeHandler()
+        userContentController.addScriptMessageHandler(
+            draftBridge,
+            contentWorld: .page,
+            name: DraftBridgeHandler.name
+        )
+        context.coordinator.draftBridge = draftBridge
+
         // Source-library shelf mutations. Browser/dev mode uses
         // `/api/source-library/*`; static native mode has no API server,
         // so `/sources` posts create/rename/delete/re-shelve actions here.
@@ -2094,6 +2206,7 @@ struct LoomWebView: NSViewRepresentable {
         var aiStreamBridge: AIStreamBridgeHandler?
         var migrationBridge: MigrationBridgeHandler?
         var navBridge: NavigationBridgeHandler?
+        var draftBridge: DraftBridgeHandler?
         var sourceLibraryBridge: SourceLibraryBridgeHandler?
         var embedBridge: EmbeddingBridgeHandler?
         var schemaCorrectionsBridge: LoomSchemaCorrectionsBridgeHandler?

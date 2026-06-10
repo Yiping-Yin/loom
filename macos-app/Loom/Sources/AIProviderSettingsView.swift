@@ -193,7 +193,7 @@ struct AIProviderSettingsView: View {
             Section {
                 Toggle("Auto-run extraction on drop", isOn: $autoRunExtraction)
             } header: {
-                Text("Ingest")
+                Text("Source extraction")
             } footer: {
                 Text("When off (default), Loom extracts the plain text and shows a preview. Click Extract to run the chosen extractor. When on, the extractor runs immediately — skips the opt-in gate.")
                     .font(.caption)

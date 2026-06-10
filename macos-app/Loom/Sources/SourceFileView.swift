@@ -50,6 +50,22 @@ struct SourceFileView: View {
     @State private var lastCaptureURL: URL? = nil
     @State private var captureBannerTask: Task<Void, Never>? = nil
 
+    // MARK: - Compile pipeline state (plans/compile-pipeline-mvp.md §5)
+    /// The live/streamed compiled artifact markdown.
+    @State private var compileDraft: String = ""
+    /// True while a compile stream is in flight.
+    @State private var isCompiling: Bool = false
+    /// Set when a re-compile would overwrite hand-edited compiled output —
+    /// the next Compile click confirms the replace.
+    @State private var compileReplaceWarningPending: Bool = false
+    /// First-compile onboarding pulse (§5.3) — once dismissed, never returns.
+    @State private var compilePulseDismissed: Bool = false
+    @State private var compilePulseActive: Bool = false
+    /// Non-fatal eyebrow notice (source unavailable, truncation, …).
+    @State private var compileContextNotice: String? = nil
+    /// Banner error (rate limit, provider failure).
+    @State private var compileError: String? = nil
+
     struct AskMessage: Identifiable, Equatable {
         let id: UUID
         let role: Role
@@ -142,6 +158,10 @@ struct SourceFileView: View {
                         .padding(20)
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
+            }
+            .overlay(alignment: .bottomLeading) {
+                compileActionPanel
+                    .padding(20)
             }
 
             if showAskPanel {
@@ -1672,6 +1692,571 @@ struct SourceFileView: View {
     /// selected text via Services. Building our own would just
     /// duplicate it.
 
+    // MARK: - Compile pipeline (plans/compile-pipeline-mvp.md)
+    //
+    // Compile reads the user's scratch (the prose region of this source's
+    // `## <file>` section), bounds the source/notes context, streams a
+    // typeset artifact from the configured provider through
+    // `LoomAI.sendStream`, and writes it back as a `### Compiled · …`
+    // subsection scoped to THIS source. The preview parser consumes reveal
+    // markers and surfaces unsupported-claim / contradiction annotations
+    // inline (no popups), per §5.5.
+
+    /// Compile action panel: the Compile button + first-compile pulse +
+    /// streamed preview + context/error banners. Anchored bottom-left of
+    /// the source body.
+    private var compileActionPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let compileError {
+                compileErrorBanner
+                    .help(compileError)
+            }
+            if compileContextNotice != nil {
+                compileContextNoticeBanner
+            }
+            if !compileDraft.isEmpty {
+                compilePreviewSummary
+            }
+            HStack(spacing: 8) {
+                Button("Compile") { startCompile() }
+                    .buttonStyle(.borderedProminent)
+                    .tint(LoomTokens.dsThread)
+                    .disabled(!hasCompilableScratch || isCompiling)
+                    .help(hasCompilableScratch
+                          ? "Compile your scratch into a typeset artifact"
+                          : "Write a few thoughts, then compile.")
+                if compilePulseActive {
+                    compileFirstPulseDot
+                }
+            }
+        }
+        .frame(maxWidth: 360, alignment: .leading)
+        .onAppear { refreshFirstCompilePulse() }
+    }
+
+    /// Re-evaluate whether the first-compile onboarding pulse should show
+    /// (§5.3): ≥50 words written, no compiled section yet, never dismissed.
+    private func refreshFirstCompilePulse() {
+        guard let rootID = parentRootID else { return }
+        let target = LoomFileStore.loomMDURL(for: rootID)
+        let source = (try? String(contentsOf: target, encoding: .utf8)) ?? ""
+        let scratch = SourceFileView.scratchForSource(file: displayName, in: source)
+        let hasCompiled = SourceFileView.hasCompiledSection(file: displayName, in: source)
+        compilePulseActive = SourceFileView.shouldShowFirstCompilePulse(
+            scratch: scratch,
+            hasCompiledSection: hasCompiled,
+            pulseDismissed: compilePulseDismissed
+        )
+    }
+
+    /// Rendered preview of the streamed/compiled artifact: a plain-markdown
+    /// render plus any unsupported/contradiction annotations the parser
+    /// extracted.
+    private var compilePreviewSummary: some View {
+        let artifact = SourceFileView.compilePreviewArtifact(markdown: compileDraft)
+        return VStack(alignment: .leading, spacing: 4) {
+            if let notice = artifact.notice {
+                Text(notice)
+                    .font(LoomTokens.sans(size: 10))
+                    .foregroundStyle(LoomTokens.dsInk3)
+            }
+            Text(artifact.body)
+                .font(LoomTokens.serif(size: 12))
+                .foregroundStyle(LoomTokens.dsInk1)
+                .lineLimit(8)
+                .textSelection(.enabled)
+            ForEach(artifact.annotations, id: \.self) { note in
+                Text(note)
+                    .font(LoomTokens.sans(size: 10))
+                    .foregroundStyle(LoomTokens.dsWarning)
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(LoomTokens.dsPaper)
+        )
+    }
+
+    /// Rate-limit / provider-failure banner near the button (§5.5).
+    private var compileErrorBanner: some View {
+        Text(compileError ?? "")
+            .font(LoomTokens.sans(size: 11))
+            .foregroundStyle(LoomTokens.dsWarning)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(LoomTokens.dsWarning.opacity(0.10))
+            )
+    }
+
+    /// Non-fatal eyebrow notice (source unavailable, truncation).
+    private var compileContextNoticeBanner: some View {
+        Text(compileContextNotice ?? "")
+            .font(LoomTokens.sans(size: 10))
+            .foregroundStyle(LoomTokens.dsInk3)
+    }
+
+    /// The single quiet pulsing dot (§5.3) — the only attention-grab in
+    /// Loom, shown once before the user's first compile.
+    private var compileFirstPulseDot: some View {
+        Circle()
+            .fill(LoomTokens.dsThread)
+            .frame(width: 6, height: 6)
+            .opacity(compilePulseActive ? 0.35 : 1.0)
+            .animation(
+                .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+                value: compilePulseActive
+            )
+    }
+
+    /// True when the scratch region has enough content to compile (§5.1:
+    /// ≥30 chars).
+    private var hasCompilableScratch: Bool {
+        compileScratchText().count >= 30
+    }
+
+    /// Read the user's scratch (prose above the first `### subsection`) out
+    /// of this source's `## <file>` section in Loom.md.
+    private func compileScratchText() -> String {
+        guard let rootID = parentRootID else { return "" }
+        let target = LoomFileStore.loomMDURL(for: rootID)
+        let source = (try? String(contentsOf: target, encoding: .utf8)) ?? ""
+        return SourceFileView.scratchForSource(file: displayName, in: source)
+    }
+
+    /// Drive a compile: read scratch, bound context, stream through
+    /// `LoomAI.sendStream`, and write the artifact back per-source.
+    private func startCompile() {
+        guard !isCompiling else { return }
+        compileError = nil
+        compileContextNotice = nil
+
+        let scratch = compileScratchText()
+        guard scratch.count >= 30 else {
+            showToast("Write a few thoughts, then compile.")
+            return
+        }
+        guard let rootID = parentRootID else {
+            showToast("Couldn't find this file's page.")
+            return
+        }
+
+        // Replace-warning gate (§5.4): if a compiled section already exists
+        // (which may carry hand edits), the first click warns; the next
+        // click proceeds.
+        let target = LoomFileStore.loomMDURL(for: rootID)
+        let existing = (try? String(contentsOf: target, encoding: .utf8)) ?? ""
+        if SourceFileView.hasCompiledSection(file: displayName, in: existing)
+            && !compileReplaceWarningPending {
+            showToast("Edits to the compiled section will be replaced. Compile anyway?")
+            compileReplaceWarningPending = true
+            return
+        }
+        compileReplaceWarningPending = false
+
+        // Mark the first-compile pulse as dismissed once compile runs.
+        compilePulseActive = false
+        compilePulseDismissed = true
+
+        let sourceExcerpt = compileSourceExcerpt()
+        compileContextNotice = SourceFileView.compileSourceNotice(sourceExcerpt: sourceExcerpt)
+        let priorNotes = gatherPriorNotesFromPage()
+        let askHistory = SourceFileView.archivedAskHistory(file: displayName, in: existing)
+
+        isCompiling = true
+        compileDraft = ""
+
+        Task {
+            do {
+                var compileStreamDraft = ""
+                _ = try await LoomAI.sendStream(
+                    prompt: LoomCompilePipeline.buildPrompt(
+                        scratch: scratch,
+                        sourceExcerpt: sourceExcerpt,
+                        priorNotes: priorNotes,
+                        askHistory: askHistory
+                    ),
+                    systemPrompt: LoomCompilePipeline.systemPrompt
+                ) { chunk in
+                    compileStreamDraft += chunk
+                    Task { @MainActor in
+                        compileDraft += chunk
+                    }
+                }
+                await MainActor.run {
+                    writeCompiledArtifact(
+                        compileStreamDraft,
+                        rootID: rootID,
+                        partial: false
+                    )
+                    isCompiling = false
+                }
+            } catch {
+                await MainActor.run {
+                    // Save whatever streamed so far as a partial section so
+                    // the user doesn't lose the output (§5.5).
+                    if !compileDraft.isEmpty {
+                        writeCompiledArtifact(compileDraft, rootID: rootID, partial: true)
+                        showToast("Compile interrupted; partial output saved.")
+                    }
+                    compileError = SourceFileView.compileErrorMessage(error)
+                    isCompiling = false
+                }
+            }
+        }
+    }
+
+    /// Write the compiled artifact into this source's `## <file>` section,
+    /// replacing any existing `### Compiled · …` subsection.
+    private func writeCompiledArtifact(_ artifact: String, rootID: UUID, partial: Bool) {
+        let target = LoomFileStore.loomMDURL(for: rootID)
+        do {
+            try FileManager.default.createDirectory(
+                at: target.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            let existing = (try? String(contentsOf: target, encoding: .utf8)) ?? ""
+            let updated = SourceFileView.upsertCompiledSection(
+                artifact: artifact,
+                file: displayName,
+                sourceURL: loomURL,
+                in: existing,
+                partial: partial,
+                now: Date()
+            )
+            try updated.write(to: target, atomically: true, encoding: .utf8)
+            if !partial {
+                showToast("Compiled to \(parentRootName ?? "page").")
+            }
+        } catch {
+            showToast("Couldn't save: \(error.localizedDescription)")
+        }
+    }
+
+    /// Excerpt of the source file for the compile envelope, or nil when the
+    /// source can't be read (drives the "compiled from notes only" eyebrow).
+    private func compileSourceExcerpt() -> String? {
+        guard let resolved = resolvedURL else { return nil }
+        if resolved.pathExtension.lowercased() == "pdf" {
+            return (try? PDFExtraction.extract(url: resolved, maxChars: 6000))?.text
+        }
+        return try? String(contentsOf: resolved, encoding: .utf8)
+    }
+
+    // MARK: - Compile static helpers (pure; unit-tested in LoomDraftStoreTests)
+
+    /// First-compile onboarding gate (§5.3): the pulse appears once the
+    /// user has written ≥50 words in scratch but has never compiled.
+    static func shouldShowFirstCompilePulse(
+        scratch: String,
+        hasCompiledSection: Bool,
+        pulseDismissed: Bool
+    ) -> Bool {
+        if pulseDismissed || hasCompiledSection { return false }
+        let words = scratch.split(whereSeparator: { $0 == " " || $0 == "\n" }).count
+        return words >= 50
+    }
+
+    /// Source-unavailable eyebrow (§5.5): present only when the excerpt is
+    /// missing. When a source excerpt exists, no notice.
+    static func compileSourceNotice(sourceExcerpt: String?) -> String? {
+        guard sourceExcerpt == nil else { return nil }
+        return "Source file unavailable; compiled from notes only."
+    }
+
+    /// Normalize a thrown compile error into user-facing copy (§5.5):
+    /// rate-limit gets the "try a different provider" banner; provider
+    /// setup / configuration errors are passed through verbatim.
+    static func compileErrorMessage(_ error: Error) -> String {
+        let raw = (error as? LoomAI.Failure)?.errorDescription
+            ?? error.localizedDescription
+        let lower = raw.lowercased()
+        if lower.contains("rate") || lower.contains("429") || lower.contains("quota") {
+            return "AI provider rate-limited. Try a different provider in Settings, or wait."
+        }
+        return raw
+    }
+
+    /// True when this source's `## <file>` section already contains a
+    /// `### Compiled · …` subsection (scoped — a compiled section under a
+    /// DIFFERENT source must not count).
+    static func hasCompiledSection(file: String, in source: String) -> Bool {
+        let section = sectionLines(file: file, in: source)
+        return section.contains { line in
+            line.trimmingCharacters(in: .whitespaces).hasPrefix("### Compiled ·")
+        }
+    }
+
+    /// Insert or replace the `### Compiled · …` subsection inside this
+    /// source's `## <file>` section. Partial saves get a `(partial)` suffix.
+    static func upsertCompiledSection(
+        artifact: String,
+        file: String,
+        sourceURL: URL?,
+        in source: String,
+        partial: Bool,
+        now: Date
+    ) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let stamp = formatter.string(from: now)
+        let heading = partial
+            ? "### Compiled · \(stamp) (partial)"
+            : "### Compiled · \(stamp)"
+        let block = heading + "\n\n" + artifact.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Strip any existing compiled subsection scoped to this source,
+        // then append the fresh one via the shared per-book inserter.
+        let stripped = removingCompiledSection(file: file, in: source)
+        return addEntryToBook(
+            body: block,
+            file: file,
+            sourceURL: sourceURL,
+            in: stripped
+        )
+    }
+
+    /// Remove the `### Compiled · …` subsection (and its body up to the next
+    /// `###`/`##`) from this source's section only.
+    private static func removingCompiledSection(file: String, in source: String) -> String {
+        var lines = source.components(separatedBy: "\n")
+        guard let range = sectionRange(file: file, in: lines) else { return source }
+        var compiledStart = -1
+        var compiledEnd = range.upperBound
+        for i in range {
+            let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
+            if compiledStart < 0 {
+                if trimmed.hasPrefix("### Compiled ·") { compiledStart = i }
+            } else if trimmed.hasPrefix("### ") || trimmed.hasPrefix("## ") {
+                compiledEnd = i
+                break
+            }
+        }
+        guard compiledStart >= 0 else { return source }
+        lines.removeSubrange(compiledStart..<compiledEnd)
+        return lines.joined(separator: "\n")
+    }
+
+    /// Lines inside the `## <file>` section (excluding the heading line).
+    private static func sectionLines(file: String, in source: String) -> [String] {
+        let lines = source.components(separatedBy: "\n")
+        guard let range = sectionRange(file: file, in: lines) else { return [] }
+        return Array(lines[range])
+    }
+
+    /// Half-open index range of the body of the `## <file>` section.
+    private static func sectionRange(file: String, in lines: [String]) -> Range<Int>? {
+        var start = -1
+        for (i, line) in lines.enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.hasPrefix("## "), !trimmed.hasPrefix("### ") else { continue }
+            let head = String(trimmed.dropFirst(3)).trimmingCharacters(in: .whitespaces)
+            let extracted: String = {
+                if head.hasPrefix("["), let close = head.range(of: "](") {
+                    return String(head[head.index(after: head.startIndex)..<close.lowerBound])
+                }
+                return head
+            }()
+            if extracted == file { start = i; break }
+        }
+        guard start >= 0 else { return nil }
+        var end = lines.count
+        for i in (start + 1)..<lines.count {
+            let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("## ") && !trimmed.hasPrefix("### ") { end = i; break }
+        }
+        return (start + 1)..<end
+    }
+
+    /// Extract the scratch prose for a source: everything in the `## <file>`
+    /// section before the first `### subsection`.
+    static func scratchForSource(file: String, in source: String) -> String {
+        let section = sectionLines(file: file, in: source)
+        var scratch: [String] = []
+        for line in section {
+            if line.trimmingCharacters(in: .whitespaces).hasPrefix("### ") { break }
+            scratch.append(line)
+        }
+        return scratch.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Pull archived Ask AI conversations out of this source's section so
+    /// the compile envelope can reference them (bounded later in the prompt).
+    static func archivedAskHistory(file: String, in source: String) -> [String] {
+        let section = sectionLines(file: file, in: source)
+        var blocks: [String] = []
+        var current: [String] = []
+        var inAsk = false
+        for line in section {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("### ") {
+                if inAsk, !current.isEmpty {
+                    blocks.append(current.joined(separator: "\n"))
+                }
+                current = []
+                inAsk = trimmed.localizedCaseInsensitiveContains("ask")
+                    || trimmed.localizedCaseInsensitiveContains("thread")
+                continue
+            }
+            if inAsk { current.append(line) }
+        }
+        if inAsk, !current.isEmpty { blocks.append(current.joined(separator: "\n")) }
+        return blocks
+    }
+
+    // MARK: - Compile preview parsing
+
+    /// A parsed compile preview: cleaned plain-markdown body plus the count
+    /// + text of unsupported-claim and contradiction annotations, and an
+    /// optional eyebrow notice for malformed structured output.
+    struct CompilePreviewArtifact: Equatable {
+        let body: String
+        let notice: String?
+        let unsupportedCount: Int
+        let contradictionCount: Int
+        let annotations: [String]
+    }
+
+    /// Parse streamed compile markdown into a `CompilePreviewArtifact`:
+    /// consume `[term:…]` reveal markers, lift `(unsupported)` and
+    /// `[user noted both …]` markers into inline annotations, and fall back
+    /// to a plain-markdown render when the structured output is malformed.
+    static func compilePreviewArtifact(markdown: String) -> CompilePreviewArtifact {
+        var annotations: [String] = []
+        var unsupportedCount = 0
+        var contradictionCount = 0
+
+        // Contradiction markers: `[user noted both X and Z]`.
+        let contradictionPattern = #"\[user noted both[^\]]*\]"#
+        if let regex = try? NSRegularExpression(pattern: contradictionPattern, options: [.caseInsensitive]) {
+            let ns = markdown as NSString
+            let matches = regex.matches(in: markdown, range: NSRange(location: 0, length: ns.length))
+            contradictionCount = matches.count
+            for match in matches {
+                let body = compilePreviewContradictionAnnotationBody(ns.substring(with: match.range))
+                annotations.append("Contradictory thinking: \(body)")
+            }
+        }
+
+        // Unsupported-claim markers: `(unsupported)`.
+        let ns = markdown as NSString
+        if let regex = try? NSRegularExpression(pattern: #"\(unsupported\)"#, options: [.caseInsensitive]) {
+            unsupportedCount = regex.numberOfMatches(in: markdown, range: NSRange(location: 0, length: ns.length))
+            for _ in 0..<unsupportedCount {
+                annotations.append("Unsupported claim flagged in this artifact.")
+            }
+        }
+
+        // Malformed structured output → plain-markdown fallback eyebrow.
+        let notice = isMalformedStructuredOutput(markdown)
+            ? "Output rendered without typesetting."
+            : nil
+
+        // Clean the body for a plain-markdown render: consume reveal markers
+        // and strip markdown syntax to readable text.
+        var body = consumeRevealMarkers(markdown)
+        body = compilePreviewCleanMarkdownCodeFenceMarker(body)
+        body = compilePreviewCleanInlineCode(body)
+        body = compilePreviewCleanMarkdownLinks(body)
+        body = compilePreviewCleanMarkdownEmphasis(body)
+        body = compilePreviewCleanMarkdownListMarker(body)
+        body = compilePreviewCleanMarkdownBlockquoteMarker(body)
+        body = body.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return CompilePreviewArtifact(
+            body: body,
+            notice: notice,
+            unsupportedCount: unsupportedCount,
+            contradictionCount: contradictionCount,
+            annotations: annotations
+        )
+    }
+
+    /// Strip the `[user noted both …]` wrapper down to the inner text.
+    static func compilePreviewContradictionAnnotationBody(_ marker: String) -> String {
+        var body = marker
+        if body.hasPrefix("[") { body.removeFirst() }
+        if body.hasSuffix("]") { body.removeLast() }
+        if body.lowercased().hasPrefix("user noted both") {
+            body = String(body.dropFirst("user noted both".count))
+        }
+        return body.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Consume `[term: explanation]` reveal markers — they don't appear in
+    /// the streamed preview text (§5.2). Keeps the term, drops the marker.
+    private static func consumeRevealMarkers(_ markdown: String) -> String {
+        let pattern = #"\[term:\s*([^\]]*)\]"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return markdown }
+        let ns = markdown as NSString
+        let result = NSMutableString(string: markdown)
+        let matches = regex.matches(in: markdown, range: NSRange(location: 0, length: ns.length)).reversed()
+        for match in matches {
+            let inner = match.numberOfRanges > 1
+                ? ns.substring(with: match.range(at: 1))
+                : ""
+            let term = inner.split(separator: "|").first.map(String.init)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            result.replaceCharacters(in: match.range, with: term)
+        }
+        return String(result)
+    }
+
+    /// Detect malformed structured output: e.g. an unclosed math block or
+    /// an unterminated frame fence. Triggers the plain-markdown fallback.
+    private static func isMalformedStructuredOutput(_ markdown: String) -> Bool {
+        let dollarRuns = markdown.components(separatedBy: "$$").count - 1
+        if dollarRuns % 2 != 0 { return true }
+        let fenceCount = markdown.components(separatedBy: "```").count - 1
+        if fenceCount % 2 != 0 { return true }
+        return false
+    }
+
+    /// Replace inline `` `code` `` with its inner text.
+    static func compilePreviewCleanInlineCode(_ text: String) -> String {
+        replacingRegex(text, pattern: "`([^`]*)`", template: "$1")
+    }
+
+    /// Replace `[label](href)` markdown links with the label.
+    static func compilePreviewCleanMarkdownLinks(_ text: String) -> String {
+        replacingRegex(text, pattern: #"\[([^\]]*)\]\(([^)]*)\)"#, template: "$1")
+    }
+
+    /// Strip `**bold**` / `*italic*` / `_emphasis_` markers.
+    static func compilePreviewCleanMarkdownEmphasis(_ text: String) -> String {
+        var out = replacingRegex(text, pattern: #"\*\*([^*]*)\*\*"#, template: "$1")
+        out = replacingRegex(out, pattern: #"\*([^*]*)\*"#, template: "$1")
+        out = replacingRegex(out, pattern: #"_([^_]*)_"#, template: "$1")
+        return out
+    }
+
+    /// Strip leading list markers (`- `, `* `, `1. `).
+    static func compilePreviewCleanMarkdownListMarker(_ text: String) -> String {
+        replacingRegex(text, pattern: #"(?m)^\s*(?:[-*]|\d+\.)\s+"#, template: "")
+    }
+
+    /// Strip leading blockquote markers (`> `).
+    static func compilePreviewCleanMarkdownBlockquoteMarker(_ text: String) -> String {
+        replacingRegex(text, pattern: #"(?m)^\s*>\s?"#, template: "")
+    }
+
+    /// Strip code-fence lines (```` ``` ````).
+    static func compilePreviewCleanMarkdownCodeFenceMarker(_ text: String) -> String {
+        replacingRegex(text, pattern: #"(?m)^\s*```.*$"#, template: "")
+    }
+
+    private static func replacingRegex(_ text: String, pattern: String, template: String) -> String {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return text }
+        let ns = text as NSString
+        return regex.stringByReplacingMatches(
+            in: text,
+            range: NSRange(location: 0, length: ns.length),
+            withTemplate: template
+        )
+    }
+
     /// UUID of the ContentRoot the current PDF lives under, derived
     /// from the `loom://content/<uuid>/...` URL.
     private var parentRootID: UUID? {
@@ -1765,6 +2350,88 @@ struct SourceFileView: View {
             resolvedURL = resolved
             resolveError = nil
         }
+    }
+}
+
+/// Compile pipeline prompt builder (plans/compile-pipeline-mvp.md §4.3).
+/// Pure prompt assembly so the system prompt + context bounding can be
+/// unit-tested without touching the provider stack.
+enum LoomCompilePipeline {
+    /// Context bounds (§6): source ~6k chars, prior notes ~2k, ask history
+    /// ~2k. Keeps the envelope inside the privacy/latency budget.
+    static let sourceCharBudget = 6000
+    static let priorNotesCharBudget = 2000
+    static let askHistoryCharBudget = 2000
+
+    /// The typesetter system prompt (full §4.3 text, abridged in comments).
+    static let systemPrompt = """
+    You are a typesetter for a learning artifact. The user has been studying a \
+    source and writing their thinking on it. Your job is to produce a \
+    well-typeset structured artifact from the user's raw notes — NOT to think \
+    for them.
+
+    YOUR JOB:
+    - Take the scratch and PRODUCE a typeset learning artifact.
+    - Recognize the content shape (math derivation, definition cluster, \
+      step-by-step process, conceptual explanation, Q&A reflection) and \
+      structure the output for it.
+    - DO NOT add information the user did not write. Only structure what's there.
+
+    RULES:
+    - Use $...$ for inline math, $$...$$ for blocks.
+    - For step-by-step content separate frames with `---` on their own line.
+    - For unfamiliar terms mark `[term: explanation]` for hover-reveal.
+    - If the user wrote multiple contradictory statements, surface BOTH: \
+      `[user noted both X and Z]`. Never silently choose.
+    - If a claim is not supported by the source or scratch, mark it `(unsupported)`.
+
+    LANGUAGE:
+    - Respond in the SAME language the user wrote in. If the source is English \
+      but the user wrote in Chinese, output Chinese (English source quotes \
+      preserved as block quotes). Math/LaTeX/code symbols are language-neutral.
+
+    LENGTH:
+    - Match the depth of the scratch. Do NOT pad.
+
+    Begin.
+    """
+
+    /// Build the compile prompt envelope: scratch (full) + bounded source +
+    /// bounded prior notes + bounded ask history. Mirrors the user's
+    /// language by passing scratch through verbatim (the system prompt does
+    /// the mirroring).
+    static func buildPrompt(
+        scratch: String,
+        sourceExcerpt: String?,
+        priorNotes: String?,
+        askHistory: [String]
+    ) -> String {
+        var sections: [String] = []
+        sections.append("SCRATCH (the user's raw thinking — structure THIS):\n" + scratch)
+
+        if let sourceExcerpt, !sourceExcerpt.isEmpty {
+            sections.append("SOURCE EXCERPT:\n" + bounded(sourceExcerpt, to: sourceCharBudget))
+        } else {
+            sections.append("SOURCE EXCERPT: (source unavailable — compile from notes only)")
+        }
+
+        if let priorNotes, !priorNotes.isEmpty {
+            sections.append("PRIOR NOTES:\n" + bounded(priorNotes, to: priorNotesCharBudget))
+        }
+
+        let joinedHistory = askHistory.joined(separator: "\n\n")
+        if !joinedHistory.isEmpty {
+            sections.append("ARCHIVED ASK AI HISTORY:\n" + bounded(joinedHistory, to: askHistoryCharBudget))
+        }
+
+        return sections.joined(separator: "\n\n---\n\n")
+    }
+
+    /// Clip `text` to `budget` UTF-16 chars (best effort; preserves head).
+    private static func bounded(_ text: String, to budget: Int) -> String {
+        guard text.count > budget else { return text }
+        let end = text.index(text.startIndex, offsetBy: budget)
+        return String(text[..<end])
     }
 }
 

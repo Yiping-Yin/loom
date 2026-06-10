@@ -133,6 +133,128 @@ final class SlideDeckExtractorTests: XCTestCase {
         XCTAssertTrue(text.contains("Good slide body"), "good slide body missing; got: \(text)")
     }
 
+    // MARK: - PPTX shape / image alt text
+    //
+    // `alt-text.pptx` carries `p:cNvPr` accessibility title/descr on an
+    // embedded picture and a callout shape. Those values are the only
+    // machine-readable description of the chart/callout, so the parser
+    // must fold them into the slide body.
+
+    func testParsePPTXIncludesShapeAndImageAltText() throws {
+        guard let url = Self.fixtureURL(name: "alt-text.pptx") else {
+            throw XCTSkip("fixture alt-text.pptx missing — run generate_slide_deck_fixtures.py")
+        }
+        guard let text = SlideDeckExtractor.parsePPTXText(at: url) else {
+            return XCTFail("parsePPTXText returned nil for alt-text.pptx")
+        }
+        XCTAssertTrue(text.contains("Revenue chart"),
+                      "image title alt text missing; got: \(text)")
+        XCTAssertTrue(text.contains("Line chart showing revenue increasing from Q1 to Q4"),
+                      "image descr alt text missing; got: \(text)")
+        XCTAssertTrue(text.contains("Warning callout: churn risk remains elevated"),
+                      "shape descr alt text missing; got: \(text)")
+    }
+
+    // MARK: - iWork packages (Keynote .key / Pages .pages)
+    //
+    // iWork packages are zips with `Metadata/*.plist` document properties,
+    // `Index/*.iwa` inline body text, and an optional nested QuickLook
+    // `Preview.pdf`. The body sweep dedupes standalone slide/page markers
+    // (e.g. `Slide 1`, `第 2 页`) that re-appear as labeled titles
+    // (`Slide 1: …`). Chinese markers like `第 3 页：机制设计例子` and
+    // `第 3 页：先理解再自测` use the full-width colon and are kept intact.
+
+    func testParseKeynoteIWorkArchiveIncludesDocumentMetadata() throws {
+        guard let url = Self.fixtureURL(name: "metadata.key") else {
+            throw XCTSkip("fixture metadata.key missing")
+        }
+        guard let text = SlideDeckExtractor.parsePPTXText(at: url) else {
+            return XCTFail("parsePPTXText returned nil for metadata.key")
+        }
+        XCTAssertTrue(text.contains("iWork metadata:"), "metadata section missing; got: \(text)")
+        XCTAssertTrue(text.contains("Keynote deck about market design"),
+                      "metadata title missing; got: \(text)")
+        XCTAssertTrue(text.contains("Avery Scholar"), "metadata author missing; got: \(text)")
+    }
+
+    func testParsePagesIWorkArchiveIncludesDocumentMetadata() throws {
+        guard let url = Self.fixtureURL(name: "metadata.pages") else {
+            throw XCTSkip("fixture metadata.pages missing")
+        }
+        guard let text = SlideDeckExtractor.parsePPTXText(at: url) else {
+            return XCTFail("parsePPTXText returned nil for metadata.pages")
+        }
+        XCTAssertTrue(text.contains("iWork metadata:"), "metadata section missing; got: \(text)")
+    }
+
+    func testParseKeynoteIWorkArchiveIncludesIWAStringBodyText() throws {
+        guard let url = Self.fixtureURL(name: "body.key") else {
+            throw XCTSkip("fixture body.key missing")
+        }
+        guard let text = SlideDeckExtractor.parsePPTXText(at: url) else {
+            return XCTFail("parsePPTXText returned nil for body.key")
+        }
+        XCTAssertTrue(text.contains("iWork body text:"), "body section missing; got: \(text)")
+        XCTAssertTrue(text.contains("Slide 1: Market design overview"),
+                      "UTF-8 IWA body run missing; got: \(text)")
+        XCTAssertTrue(text.contains("Matching markets allocate scarce seats"),
+                      "UTF-16LE IWA body run missing; got: \(text)")
+    }
+
+    func testParsePagesIWorkArchiveIncludesIWAStringBodyText() throws {
+        guard let url = Self.fixtureURL(name: "body.pages") else {
+            throw XCTSkip("fixture body.pages missing")
+        }
+        guard let text = SlideDeckExtractor.parsePPTXText(at: url) else {
+            return XCTFail("parsePPTXText returned nil for body.pages")
+        }
+        XCTAssertTrue(text.contains("Page 1: Learning loop overview"),
+                      "UTF-8 IWA body run missing; got: \(text)")
+        XCTAssertTrue(text.contains("Understanding before self-test"),
+                      "UTF-16LE IWA body run missing; got: \(text)")
+    }
+
+    func testParseKeynoteIWorkArchiveDropsDuplicateStandaloneSlideMarkers() throws {
+        guard let url = Self.fixtureURL(name: "body-duplicate-marker.key") else {
+            throw XCTSkip("fixture body-duplicate-marker.key missing")
+        }
+        guard let text = SlideDeckExtractor.parsePPTXText(at: url) else {
+            return XCTFail("parsePPTXText returned nil for body-duplicate-marker.key")
+        }
+        // The labeled title is kept; the bare `Slide 1` marker preceding it
+        // is dropped so the body doesn't carry the marker twice.
+        XCTAssertTrue(text.contains("Slide 1: Market design overview"),
+                      "labeled title missing; got: \(text)")
+        XCTAssertFalse(text.contains("\nSlide 1\n"),
+                       "standalone Slide 1 marker should be deduped; got: \(text)")
+    }
+
+    func testParsePagesIWorkArchiveDropsDuplicateStandalonePageMarkers() throws {
+        guard let url = Self.fixtureURL(name: "body-duplicate-marker.pages") else {
+            throw XCTSkip("fixture body-duplicate-marker.pages missing")
+        }
+        guard let text = SlideDeckExtractor.parsePPTXText(at: url) else {
+            return XCTFail("parsePPTXText returned nil for body-duplicate-marker.pages")
+        }
+        XCTAssertTrue(text.contains("Page 1: Learning loop overview"),
+                      "labeled page title missing; got: \(text)")
+        XCTAssertFalse(text.contains("\nPage 1\n"),
+                       "standalone Page 1 marker should be deduped; got: \(text)")
+    }
+
+    func testParsePagesIWorkArchiveExtractsNestedQuickLookPreviewPDF() throws {
+        guard let url = Self.fixtureURL(name: "preview-nested.pages") else {
+            throw XCTSkip("fixture preview-nested.pages missing")
+        }
+        guard let text = SlideDeckExtractor.parsePPTXText(at: url) else {
+            return XCTFail("parsePPTXText returned nil for preview-nested.pages")
+        }
+        XCTAssertTrue(text.contains("QuickLook preview:"),
+                      "QuickLook preview section missing; got: \(text)")
+        XCTAssertTrue(text.contains("Nested QuickLook preview evidence"),
+                      "nested preview PDF text missing; got: \(text)")
+    }
+
     // MARK: - Codable round-trip
 
     func testSchemaCodableRoundTrip() throws {

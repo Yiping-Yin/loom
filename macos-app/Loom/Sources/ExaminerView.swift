@@ -107,7 +107,7 @@ struct ExaminerView: View {
             Image(systemName: "questionmark.bubble")
                 .foregroundStyle(LoomTokens.thread)
                 .font(.system(size: 14))
-            Text("Examiner")
+            Text("Source check")
                 .font(LoomTokens.display(size: 22, italic: true))
                 .foregroundStyle(LoomTokens.ink)
             Text("— AI asks; you answer; AI grades")
@@ -236,7 +236,7 @@ struct ExaminerView: View {
                 .controlSize(.small)
                 .tint(LoomTokens.thread)
                 if !v.pass {
-                    Button("Back to Rehearsal") {
+                    Button("Back to Source practice") {
                         RehearsalContext.shared.pendingTopic = topic
                         openWindow(id: RehearsalWindow.id)
                     }

@@ -49,9 +49,87 @@ final class NavigationBridgeHandler: NSObject, WKScriptMessageHandler {
             handleDeletePursuit(body: payload)
         case "reviseTraceSummary":
             handleReviseTraceSummary(body: payload)
+        case "navigate":
+            handleNavigate(body: payload)
+        case "openReference":
+            handleOpenReference(body: payload)
+        case "startCapture":
+            postProductNavigation("/sources")
         default:
             NSLog("[NavigationBridgeHandler] unknown action: \(action)")
         }
+    }
+
+    /// Forward a product capability click (`HomeClient` workspace links) to
+    /// the native navigation coordinator. The web shell posts
+    /// `{ action: "navigate", href: "/sources" }`; we drive the same
+    /// `.loomShuttleNavigate` path the sidebar / shuttle already use so the
+    /// installed app routes through SwiftUI navigation instead of letting the
+    /// webview perform a full reload.
+    private func handleNavigate(body: [String: Any]) {
+        guard let href = body["href"] as? String, !href.isEmpty else {
+            NSLog("[Loom] navigate missing href")
+            return
+        }
+        postProductNavigation(href)
+    }
+
+    /// Open a Draft attached reference through the same native routing native
+    /// `LoomDraftView.openReference` uses, so web Draft reference clicks inside
+    /// the installed app land on PDFKit / QuickLook / the folder home / the
+    /// capture reader rather than a webview reload. Payload shape (from
+    /// `DraftClient.openDraftReference`): `{ href, label, kind }`.
+    ///
+    /// Routing mirrors native Draft:
+    ///   - capture / artifact-state refs and `/loom-render/capture/` URLs →
+    ///     `.loomOpenCapture`
+    ///   - `loom://content` refs → `.loomShowFolderHome` (folder/page) or
+    ///     `.loomOpenSourceFile` (file with extension)
+    ///   - other `loom://` refs → product navigation to `/sources`
+    ///   - everything else (web / `file://`) → `NSWorkspace`
+    private func handleOpenReference(body: [String: Any]) {
+        guard let href = body["href"] as? String,
+              let url = URL(string: href) else {
+            NSLog("[Loom] openReference missing or invalid href")
+            return
+        }
+        let kind = body["kind"] as? String ?? ""
+
+        if kind == "capture" || kind == "artifact-state" || url.absoluteString.contains("/loom-render/capture/") {
+            NotificationCenter.default.post(
+                name: .loomOpenCapture,
+                object: nil,
+                userInfo: ["url": url]
+            )
+            return
+        }
+
+        if url.scheme == "loom", url.host == "content" {
+            NotificationCenter.default.post(
+                name: url.pathExtension.isEmpty ? .loomShowFolderHome : .loomOpenSourceFile,
+                object: nil,
+                userInfo: ["url": url]
+            )
+            return
+        }
+
+        if url.scheme == "loom" {
+            postProductNavigation("/sources")
+            return
+        }
+
+        NSWorkspace.shared.open(url)
+    }
+
+    /// Broadcast a product navigation request. Mirrors the `.loomShuttleNavigate`
+    /// idiom the sidebar / shuttle / failed-load surfaces already post so a
+    /// single coordinator path drives SwiftUI navigation.
+    private func postProductNavigation(_ path: String) {
+        NotificationCenter.default.post(
+            name: .loomShuttleNavigate,
+            object: nil,
+            userInfo: ["path": path]
+        )
     }
 
     /// Flip a pursuit's `season` (active / waiting / held / retired /
@@ -298,4 +376,8 @@ extension Notification.Name {
     /// action — which is the only route that works reliably across
     /// macOS 14 / 15 / 26 after Apple deprecated the old selector.
     static let loomOpenSettings = Notification.Name("loomOpenSettings")
+    /// Posted from the navigation bridge (and native `LoomDraftView`) when a
+    /// Draft reference points at a capture artifact / artifact-state quote so
+    /// the capture reader surface opens instead of a webview reload.
+    static let loomOpenCapture = Notification.Name("loomOpenCapture")
 }

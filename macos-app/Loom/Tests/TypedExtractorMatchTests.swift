@@ -62,4 +62,58 @@ final class TypedExtractorMatchTests: XCTestCase {
             GenericDocExtractor.extractorId
         )
     }
+
+    // MARK: - Local image import (Vision OCR + semantic labels)
+    //
+    // `LocalImageImportText.build` runs Vision OCR + classification at
+    // call time, which is not hermetic, so these tests exercise the pure
+    // composition helpers (`imageSummary`) with fixed inputs instead of
+    // shelling out to the live Vision stack.
+
+    func testLocalImageImportTextIncludesRecognizedOCRTextWhenAvailable() {
+        let summary = LocalImageImportText.imageSummary(
+            recognizedText: "Quarterly revenue grew 12%",
+            visualDescriptions: ["chart", "document"]
+        )
+        XCTAssertTrue(summary.contains("words of recognized text"),
+                      "summary should report recognized OCR word count; got: \(summary)")
+        XCTAssertTrue(summary.contains("chart"))
+    }
+
+    func testLocalImageImportTextKeepsVisualFallbackWhenOCRFindsNoText() {
+        let summary = LocalImageImportText.imageSummary(
+            recognizedText: "",
+            visualDescriptions: ["photograph", "outdoor"]
+        )
+        XCTAssertTrue(summary.contains("no recognized text"),
+                      "no-OCR images keep a visual provenance fallback; got: \(summary)")
+        XCTAssertTrue(summary.contains("photograph"))
+    }
+
+    func testLocalImageImportTextIncludesSemanticVisualDescriptionsBeyondOCR() {
+        let visualDescriptions: [String] = ["diagram", "flowchart", "text"]
+        let summary = LocalImageImportText.imageSummary(
+            recognizedText: "",
+            visualDescriptions: visualDescriptions
+        )
+        // Semantic labels appear even when OCR produced nothing.
+        XCTAssertTrue(summary.contains("diagram"))
+        XCTAssertTrue(summary.contains("flowchart"))
+    }
+
+    func testLocalImageImportTextAddsReadableImageSummary() {
+        let withLabels = LocalImageImportText.imageSummary(
+            recognizedText: "hello world",
+            visualDescriptions: ["screenshot"]
+        )
+        XCTAssertTrue(withLabels.contains("·"),
+                      "summary should be a readable one-liner; got: \(withLabels)")
+
+        let withoutLabels = LocalImageImportText.imageSummary(
+            recognizedText: "",
+            visualDescriptions: []
+        )
+        XCTAssertTrue(withoutLabels.contains("no semantic labels"),
+                      "summary should note absent labels; got: \(withoutLabels)")
+    }
 }

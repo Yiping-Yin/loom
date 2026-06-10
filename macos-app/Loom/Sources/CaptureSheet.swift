@@ -1099,9 +1099,36 @@ enum CaptureWriter {
             anchorLabel: working.anchor.label,
             targetPath: target.path,
             body: bodyText(working),
-            capturedAt: working.capturedAt
+            capturedAt: working.capturedAt,
+            artifactStates: embeddingArtifactStates(from: working.captureAST)
         )
         return target
+    }
+
+    /// Distill the capture's structured blocks into the artifact states
+    /// the embedding sidecar carries for whole-corpus draft grounding.
+    /// Each block that names an identifiable artifact (a heading anchor,
+    /// a quiz, a card) becomes one `LoomDraftArtifactState` so a later
+    /// `/draft` query can quote not just the matching body but its live
+    /// artifact state. Returns `[]` when the AST has no addressable
+    /// blocks — keeps the sidecar field nil for plain captures.
+    private static func embeddingArtifactStates(from ast: CaptureAST?) -> [LoomDraftArtifactState] {
+        guard let blocks = ast?.blocks, !blocks.isEmpty else { return [] }
+        var out: [LoomDraftArtifactState] = []
+        for block in blocks {
+            guard let targetId = block.id, !targetId.isEmpty else { continue }
+            let label = block.title ?? block.text
+            out.append(
+                LoomDraftArtifactState(
+                    targetId: targetId,
+                    kind: block.kind,
+                    label: label?.isEmpty == false ? label : nil,
+                    state: block.mediaRole,
+                    stateLabel: block.provider
+                )
+            )
+        }
+        return out
     }
 
     /// Phase D media — decode each base64 attachment to disk under the
@@ -1807,7 +1834,7 @@ struct CaptureSheet: View {
     @ViewBuilder
     private func header(_ binding: Binding<CapturePayload>) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(binding.wrappedValue.source == .aiPaste ? "Capture AI thread" : "Capture")
+            Text(binding.wrappedValue.source == .aiPaste ? "Save AI conversation" : "Capture")
                 .font(.system(size: 18, weight: .semibold, design: .serif))
             Spacer()
             Text(timestampString(binding.wrappedValue.capturedAt))

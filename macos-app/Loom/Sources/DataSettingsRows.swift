@@ -112,10 +112,10 @@ struct PendingDeletion: Identifiable {
 
         var label: String {
             switch self {
-            case .pursuit: return "pursuit"
-            case .panel:   return "panel"
-            case .soan:    return "Sōan card"
-            case .weave:   return "weave"
+            case .pursuit: return "question"
+            case .panel:   return "reader note"
+            case .soan:    return "draft card"
+            case .weave:   return "note connection"
             }
         }
     }

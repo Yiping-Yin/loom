@@ -7,8 +7,9 @@ enum LoomCommandScripts {
     ///      ritual (M2 · Interlace).
     ///   2. If Interlace isn't mounted, or we're not on a doc page, fall back
     ///      to the passage-chat path (`loom:chat:focus`) which ChatFocus owns.
-    ///   3. If no selection exists at all, open the Rehearsal overlay —
-    ///      "no text in hand, so rehearse what you already know."
+    ///   3. If no selection exists at all, return 'empty-selection' so the
+    ///      native shell can open Source practice —
+    ///      "no text in hand, so practice what you already know."
     ///
     /// The native `AskAIWindow` that listens on ⌘⇧A stays untouched — that's
     /// for global prompts without any page context.
@@ -42,12 +43,8 @@ enum LoomCommandScripts {
                     detail: { text }
                 }));
             } else {
-                window.dispatchEvent(new CustomEvent('loom:overlay:open', {
-                    detail: { id: 'rehearsal' }
-                }));
-                window.dispatchEvent(new CustomEvent('loom:overlay:toggle', {
-                    detail: { id: 'rehearsal' }
-                }));
+                // No text in hand — let the native shell decide (Source practice).
+                return 'empty-selection';
             }
         })();
         """
