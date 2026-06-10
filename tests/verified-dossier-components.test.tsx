@@ -149,13 +149,23 @@ test('AnswerInspector is citation-first and no longer titled as a chatbot', () =
   );
 
   assert.match(html, /vd-answer-inspector/);
-  assert.match(html, />Answer inspector</);
+  assert.match(html, />Cited answer</);
   assert.match(html, />Grounded</);
-  assert.match(html, /Cited sources/);
+  assert.match(html, /Grounded cited answer/);
+  assert.match(html, /Sources/);
+  assert.match(html, /Cited PDFs/);
   assert.match(html, /Problem Set 02\.pdf/);
   assert.match(html, /12 registry sources available/);
-  assert.match(html, /Homepage answer inspector status/);
-  assert.match(html, /Citation preview is read-only on the homepage\./);
+  assert.match(html, /vd-citation-row/);
+  assert.match(html, /vd-citation-row__thumb/);
+  assert.doesNotMatch(html, /Problem-set evidence/);
+  assert.doesNotMatch(html, /Lecture source/);
+  assert.doesNotMatch(html, /Answer inspector/);
+  assert.doesNotMatch(html, /Selected trail/);
+  assert.doesNotMatch(html, /Source trail/);
+  assert.doesNotMatch(html, /Homepage answer inspector status/);
+  assert.doesNotMatch(html, /Read-only preview/);
+  assert.doesNotMatch(html, /vd-citation-card/);
   assert.doesNotMatch(html, /href="\/draft"/);
   assert.doesNotMatch(html, /Open Draft for follow-up work/);
   assert.doesNotMatch(html, /vd-followup-input/);

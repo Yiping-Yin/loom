@@ -75,15 +75,28 @@ test('ECON3202 problem-set trail exposes assignments, answers, and explanation e
 test('ECON3202 deep page is linked from the UNSW shelf and avoids a card dashboard shape', () => {
   const shelfPage = readText('app/knowledge/unsw/page.tsx');
   const deepPage = readText('app/knowledge/unsw/econ3202/page.tsx');
+  const detailPage = readText('app/knowledge/unsw/econ3202/[problemSet]/page.tsx');
+  const crestMark = readText('app/knowledge/unsw/UnswCrestMark.tsx');
+  const styles = readText('app/knowledge/unsw/UnswDossier.module.css');
 
   assert.match(shelfPage, /href="\/knowledge\/unsw\/econ3202"/);
   assert.match(shelfPage, /UnswDossier\.module\.css/);
-  assert.match(shelfPage, /Academic work with inspectable proof\./);
-  assert.match(shelfPage, /Real artifacts/);
+  assert.match(shelfPage, /<UnswCrestMark \/>/);
+  assert.match(deepPage, /<UnswCrestMark \/>/);
+  assert.match(detailPage, /<UnswCrestMark \/>/);
+  assert.match(crestMark, /\/brand\/unsw\/unsw-crest\.png/);
+  assert.match(styles, /\.unswMark img/);
+  assert.match(shelfPage, /Course source shelf/);
+  assert.match(shelfPage, /VERIFIED_DOSSIER_UNSW_COURSES/);
+  assert.match(shelfPage, /View course folders/);
+  assert.match(shelfPage, /all-unsw-course-folders/);
+  assert.match(shelfPage, /HERO_COURSE_FOLDERS/);
+  assert.match(shelfPage, /Featured ECON3202 evidence/);
   assert.match(shelfPage, /Source map/);
   assert.match(shelfPage, /Learning spine/);
   assert.match(shelfPage, /href=\{`\/knowledge\/unsw\/econ3202\/\$\{set\.slug\}`\}/);
   assert.match(shelfPage, /DocumentPreviewCard/);
+  assert.doesNotMatch(shelfPage, /First real course instance/);
   assert.match(deepPage, /Mathematical Economics with inspectable proof\./);
   assert.match(deepPage, /Weekly proof trail/);
   assert.match(deepPage, /Problem-set trail/);

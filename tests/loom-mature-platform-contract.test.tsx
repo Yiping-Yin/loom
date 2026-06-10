@@ -21,21 +21,33 @@ function readRepo(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-function cssBlock(css: string, selector: string) {
-  const start = css.indexOf(`${selector} {`);
-  assert.notEqual(start, -1, `${selector} block should exist`);
+function cssBlock(css: string, selector: string, requiredContent?: string) {
+  const selectorPattern = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const selectorRegex = new RegExp(`${selectorPattern}\\s*\\{`, 'g');
+  let match = selectorRegex.exec(css);
 
-  const openBrace = css.indexOf('{', start);
-  let depth = 0;
-  for (let index = openBrace; index < css.length; index += 1) {
-    if (css[index] === '{') depth += 1;
-    if (css[index] === '}') {
-      depth -= 1;
-      if (depth === 0) return css.slice(start, index + 1);
+  while (match) {
+    const start = match.index;
+    const openBrace = css.indexOf('{', start);
+    let depth = 0;
+    for (let index = openBrace; index < css.length; index += 1) {
+      if (css[index] === '{') depth += 1;
+      if (css[index] === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          const block = css.slice(start, index + 1);
+          if (!requiredContent || block.includes(requiredContent)) {
+            return block;
+          }
+          match = selectorRegex.exec(css);
+          break;
+        }
+      }
     }
+    if (!match) assert.fail(`${selector} block should include ${requiredContent}`);
   }
 
-  assert.fail(`${selector} block should close`);
+  assert.fail(`${selector} block should include ${requiredContent}`);
 }
 
 test('personal platform data keeps five sections and the mature section model', () => {
@@ -74,37 +86,106 @@ test('HomeClient renders mature platform modules on first paint', () => {
   };
 
   const html = renderToStaticMarkup(<HomeClient />);
-  const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
+  const primaryNavHtml = html.match(/<div class="lcv-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
   assert.match(html, /Yiping Yin/);
-  assert.match(html, /Student · Builder · Learner · Sydney, Australia/);
-  assert.match(html, /class="vd-personal-stage"/);
-  assert.match(html, /role="img" aria-label="Profile source"/);
-  assert.match(html, /role="img" aria-label="Course shelves"/);
-  assert.match(html, /role="img" aria-label="Project proof"/);
-  assert.match(html, /role="img" aria-label="Answer canvas"/);
-  assert.match(html, /<h2>About<\/h2><span>Profile<\/span>/);
-  assert.match(html, /<h2>Education<\/h2><span>Course record<\/span>/);
-  assert.match(html, /<h2>Experience<\/h2><span>Project evidence<\/span>/);
-  assert.match(html, /<h2>Digital Me<\/h2><span>Answer canvas<\/span>/);
+  assert.match(html, /🇨🇳 Wuhan/);
+  assert.match(html, /🇦🇺 Sydney/);
+  assert.match(html, /Quant T\/R/);
+  assert.match(html, /AI Founder/);
+  // Home v12 ledger cover: identity rail + four numbered evidence rows.
+  assert.match(html, /<main class="vd-home lcv" aria-labelledby="verified-dossier-title">/);
+  assert.match(html, /class="lcv-shell"/);
+  assert.match(html, /class="lcv-rail"/);
+  assert.match(html, /class="lcv-ledger"/);
+  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 4);
+  assert.match(html, /class="lcv-row lcv-row--about"/);
+  assert.match(html, /class="lcv-row lcv-row--education"/);
+  assert.match(html, /class="lcv-row lcv-row--experience"/);
+  assert.match(html, /class="lcv-row lcv-row--digital-me"/);
+  assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 4);
+  assert.equal((html.match(/class="lcv-view"/g) ?? []).length, 4);
+  assert.match(html, /<a class="lcv-view" href="\/digital-me">/);
+  assert.doesNotMatch(html, /class="vd-avatar"/);
+  assert.doesNotMatch(html, /vd-personal-stage/);
+  assert.match(html, /class="lcv-photo"/);
+  assert.match(html, /\/profile\/yiping-profile-photo\.png/);
+  assert.equal((html.match(/class="lcv-link-icon/g) ?? []).length, 3);
+  assert.match(html, /class="lcv-link-icon lcv-link-icon--linkedin"/);
+  assert.match(html, /\/brand\/unsw\/unsw-crest\.png/);
+  assert.match(html, /\/brand\/wqu\/wqu-logo\.svg/);
+  assert.match(html, /\/brand\/quantnet\/quantnet-logo\.png/);
+  assert.match(html, /\/brand\/claude\/claude-icon\.png/);
+  assert.match(html, /class="lcv-panel lcv-about"/);
+  assert.match(html, /class="lcv-cv"/);
+  assert.match(html, /class="lcv-panel lcv-edu"/);
+  assert.match(html, /class="lcv-panel lcv-dm"/);
+  assert.equal((html.match(/class="lcv-exp__card"/g) ?? []).length, 2);
+  // Experience cards: Optiver work + the UNSW Research Assistant entry (its
+  // CV-backed role, not the retired "UNSW RA" preview label).
+  assert.match(html, /Optiver/);
+  assert.match(html, /Research Assistant/);
+  // The mixed-case "UNSW Sydney" label appears exactly once: inside the
+  // canonical identity-rail memberships list (the logo strip and crest use the
+  // "UNSW SYDNEY" wordmark instead). It must not leak back into the retired
+  // hybrid personal-stage membership block.
+  assert.equal((html.match(/UNSW Sydney/g) ?? []).length, 1);
+  assert.match(html, /class="lcv-members__item lcv-members__item--unsw">[\s\S]*?UNSW Sydney/);
+  assert.match(html, /ECON 3202/);
+  assert.match(html, /MATH 2991/);
+  assert.match(html, /FINS 3666/);
+  assert.match(html, /more courses/);
+  assert.doesNotMatch(html, /class="vd-home-optibook-shot"/);
+  assert.doesNotMatch(html, /class="vd-home-answer-canvas"/);
+  assert.doesNotMatch(html, /class="vd-home-proof-steps"/);
+  assert.doesNotMatch(html, /class="vd-home-mini-table"/);
+  assert.doesNotMatch(html, /Market Lens/);
+  assert.doesNotMatch(html, /Source memory/);
+  assert.doesNotMatch(html, /NVDA/);
+  assert.doesNotMatch(html, /SPY/);
+  assert.doesNotMatch(html, /class="vd-profile-card"/);
+  assert.doesNotMatch(html, /class="vd-dossier"/);
+  assert.doesNotMatch(html, /class="vd-resume-safe-preview"/);
+  assert.doesNotMatch(html, /class="vd-evidence-row"/);
+  assert.doesNotMatch(html, /class="vd-home-asset-grid"/);
+  assert.doesNotMatch(html, /Python Foundations\.pdf/);
+  assert.doesNotMatch(html, /Claude Certificate\.html/);
+  assert.doesNotMatch(html, /Open Sources/);
+  assert.doesNotMatch(html, /vd-personal-stage__actions/);
+  assert.doesNotMatch(html, /vd-personal-stage__memberships/);
+  assert.doesNotMatch(html, /vd-personal-stage__actions/);
+  assert.doesNotMatch(html, /vd-personal-stage__memberships/);
   assert.doesNotMatch(html, /id="cited-answer"/);
   assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
   assert.doesNotMatch(html, /vd-loom-intro-link/);
   assert.doesNotMatch(html, /vd-loom-intro/);
   assert.doesNotMatch(html, /vd-proof-band/);
   assert.doesNotMatch(html, /vd-workbench-grid/);
+  assert.doesNotMatch(html, /vd-home-source-preview/);
+  assert.doesNotMatch(html, /vd-home-route-rail/);
+  assert.doesNotMatch(html, /vd-home-provenance/);
   assert.doesNotMatch(html, /aria-label="Loom history"/);
-  assert.doesNotMatch(html, /Problem Set 02\.pdf \/ W8 A Concave-Functions\.pdf/);
   assert.doesNotMatch(html, /Built with Loom/);
   assert.doesNotMatch(html, /Loom trust layer/);
   assert.doesNotMatch(html, /Loom is the underlying trust mechanism/);
   assert.doesNotMatch(html, /real sources become drafts/);
+  assert.doesNotMatch(html, /Concavity and optimisation summary\.md/);
+  assert.doesNotMatch(html, />Evidence Portal</);
+  assert.doesNotMatch(html, />Explore the source-backed systems/);
+  assert.doesNotMatch(html, />Profile \/ CV source</);
+  assert.doesNotMatch(html, />Open Digital Me/);
+  assert.doesNotMatch(html, />Live system</);
+  assert.doesNotMatch(html, /Sources → Reasoning → Artifact/);
+  // The Digital Me preview renders the concavity prompt and the member/footer
+  // lines are part of the ledger cover, so they are expected to be present.
+  assert.match(html, /How does concavity connect to optimisation/);
+  assert.match(html, /class="lcv-member">MEMBER SINCE APRIL 2024/);
+  assert.match(html, /LOOM — PERSONAL KNOWLEDGE, BACKED BY REAL SOURCES/);
+  // The retired source-file row labels must still not leak onto the home cover.
   assert.doesNotMatch(html, /Problem Set 02\.pdf/);
   assert.doesNotMatch(html, /W8 A Concave-Functions\.pdf/);
-  assert.doesNotMatch(html, /Concavity and optimisation summary\.md/);
-  assert.doesNotMatch(html, /Sources[\s\S]{0,80}Draft[\s\S]{0,80}Answer/);
 
-  for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
+  for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
 
@@ -130,21 +211,63 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
 });
 
-test('homepage CSS protects picture-first personal category cards', () => {
+test('homepage CSS protects balanced evidence portal layout', () => {
   const css = readRepo('app/globals.css');
-  const categoryVisual = cssBlock(css, '.vd-category-visual');
-  const categoryMedia = cssBlock(css, '.vd-category-visual__media');
-  const categoryMediaImage = cssBlock(css, '.vd-category-visual__media img');
-  const categoryBody = cssBlock(css, '.vd-personal-category-card__body');
+  const coverNav = cssBlock(css, '.vd-home--cover > .vd-nav', 'height: 68px');
+  const coverComposition = cssBlock(
+    css,
+    '.vd-home--cover .vd-personal-stage.vd-cover-composition.vd-hybrid-grid',
+    'minmax(20rem, 0.46fr) minmax(0, 1.54fr)',
+  );
+  const portraitCover = cssBlock(css, '.vd-home--cover .vd-portrait-cover', 'display: grid');
+  const headshot = cssBlock(css, '.vd-home--cover .vd-portrait-cover__headshot', 'object-position: center 34%');
+  const coverLinks = cssBlock(css, '.vd-home--cover .vd-cover-links', 'repeat(3, minmax(0, 1fr))');
+  const coverLink = cssBlock(css, '.vd-home--cover .vd-cover-link', 'justify-content: space-between');
+  const linkedinIcon = cssBlock(css, '.vd-home--cover .vd-cover-link__icon--linkedin', 'background: currentColor');
+  const proofCovers = cssBlock(
+    css,
+    '.vd-home--cover .vd-proof-covers.vd-hybrid-covers',
+    'display: grid',
+  );
+  const educationVisual = cssBlock(
+    css,
+    '.vd-home--cover .vd-proof-cover--education .vd-cover-art--education-hybrid',
+    'background:',
+  );
+  const experienceVisual = cssBlock(
+    css,
+    '.vd-home--cover .vd-proof-cover--experience .vd-cover-art--experience-hybrid',
+    'display: grid',
+  );
+  const digitalVisual = cssBlock(
+    css,
+    '.vd-home--cover .vd-proof-cover--digital-me .vd-cover-art--digital-me',
+    'display: grid',
+  );
 
-  assert.match(categoryVisual, /aspect-ratio:\s*1\.48/);
-  assert.doesNotMatch(categoryVisual, /grid-template-rows/);
-  assert.match(categoryVisual, /overflow:\s*hidden/);
-  assert.match(categoryMedia, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
-  assert.match(categoryMedia, /overflow:\s*hidden/);
-  assert.match(categoryMedia, /height:\s*100%/);
-  assert.match(categoryMediaImage, /object-fit:\s*cover/);
-  assert.match(categoryBody, /grid-template-rows:\s*auto\s+auto/);
+  assert.match(coverNav, /display:\s*grid/);
+  assert.match(coverNav, /grid-template-columns:\s*auto minmax\(0,\s*1fr\) auto/);
+  assert.match(coverNav, /background:\s*#030404/);
+  assert.match(coverComposition, /grid-template-columns:\s*minmax\(20rem,\s*0\.46fr\) minmax\(0,\s*1\.54fr\)/);
+  assert.match(coverComposition, /min-height:\s*calc\(100vh - 5\.1rem\)/);
+  assert.match(portraitCover, /display:\s*grid/);
+  assert.doesNotMatch(portraitCover, /grid-template-rows:\s*auto auto auto auto minmax\(0,\s*1fr\)/);
+  assert.match(headshot, /position:\s*relative/);
+  assert.doesNotMatch(headshot, /inset:\s*0/);
+  assert.match(headshot, /width:\s*clamp\(5\.2rem,\s*6\.2vw,\s*7\.4rem\)/);
+  assert.match(headshot, /aspect-ratio:\s*0\.78/);
+  assert.match(headshot, /object-fit:\s*cover/);
+  assert.match(headshot, /object-position:\s*center 34%/);
+  assert.match(coverLinks, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(coverLink, /justify-content:\s*space-between/);
+  assert.match(linkedinIcon, /background:\s*currentColor/);
+  assert.match(linkedinIcon, /color:\s*#000/);
+  assert.match(proofCovers, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(proofCovers, /grid-template-rows:\s*repeat\(2,\s*minmax\(15rem,\s*1fr\)\)/);
+  assert.match(educationVisual, /background:/);
+  assert.match(experienceVisual, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(digitalVisual, /display:\s*grid/);
+  assert.doesNotMatch(css, /vd-home-asset-grid/);
 });
 
 test('repo homepage exposes the personal knowledge identity evidence model', () => {
@@ -154,16 +277,39 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   };
 
   const html = renderToStaticMarkup(<HomeClient />);
-  const primaryNavHtml = html.match(/<div class="vd-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
+  const primaryNavHtml = html.match(/<div class="lcv-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
 
   assert.match(html, /Yiping Yin/);
-  assert.match(html, /Student · Builder · Learner · Sydney, Australia/);
+  assert.match(html, /Quant T\/R/);
+  assert.match(html, /AI Founder/);
   assert.match(html, /Digital Me/);
-  assert.match(html, /Profile/);
-  assert.match(html, /Course record/);
-  assert.match(html, /Project evidence/);
-  assert.match(html, /Answer canvas/);
-  assert.doesNotMatch(html, /Sources[\s\S]*Draft[\s\S]*Digital Me/);
+  // The mixed-case "UNSW Sydney" label appears exactly once: only in the
+  // canonical identity-rail memberships list, never re-introduced elsewhere.
+  assert.equal((html.match(/UNSW Sydney/g) ?? []).length, 1);
+  assert.match(html, /class="lcv-members__item lcv-members__item--unsw">[\s\S]*?UNSW Sydney/);
+  // The evidence model surfaces four numbered ledger rows: an About CV preview,
+  // an Education course/logo strip, two CV-backed Experience cards, and a
+  // Digital Me Sources → Draft → Answer flow — each with a verified pill.
+  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 4);
+  assert.match(html, /class="lcv-cv"/);
+  assert.match(html, /ECON 3202/);
+  assert.match(html, /class="lcv-edu__logos"/);
+  assert.match(html, /more courses/);
+  assert.equal((html.match(/class="lcv-exp__card"/g) ?? []).length, 2);
+  assert.match(html, /class="lcv-dm__flow"/);
+  assert.match(html, /class="lcv-dm__table"/);
+  assert.match(html, /class="lcv-dm__graph"/);
+  assert.match(html, /How does concavity connect to optimisation/);
+  assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 6);
+  assert.doesNotMatch(html, /class="vd-home-optibook-shot"/);
+  assert.doesNotMatch(html, /class="vd-home-answer-canvas"/);
+  assert.doesNotMatch(html, /class="vd-home-proof-steps"/);
+  assert.doesNotMatch(html, /class="vd-home-mini-table"/);
+  assert.doesNotMatch(html, /Market Lens/);
+  assert.doesNotMatch(html, /Source memory/);
+  assert.doesNotMatch(html, /NVDA/);
+  assert.doesNotMatch(html, /SPY/);
+  assert.doesNotMatch(html, /vd-hero-link/);
   assert.doesNotMatch(html, /Cited output/);
   assert.doesNotMatch(html, /Knowledge identity/);
   assert.doesNotMatch(html, /Real-file workflow/);
@@ -173,7 +319,7 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   assert.doesNotMatch(html, /vd-loom-intro/);
   assert.doesNotMatch(html, /id="cited-answer"/);
   assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
-  for (const label of ['About', 'Education', 'Experience', 'Digital Me']) {
+  for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
   for (const retiredPrimaryNav of ['UNSW', 'Quantnet', 'WQU', 'Claude']) {
@@ -182,8 +328,6 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   for (const model of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {
     assert.ok(PERSONAL_PLATFORM_MODEL.includes(model as (typeof PERSONAL_PLATFORM_MODEL)[number]));
   }
-  assert.doesNotMatch(html, /ECON 3202/);
-  assert.doesNotMatch(html, /FINS 3666/);
   assert.doesNotMatch(html, /Sources become cited work/);
   assert.doesNotMatch(html, /Verified source workspace/);
   assert.doesNotMatch(html, /personal knowledge display platform/i);

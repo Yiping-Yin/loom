@@ -19,6 +19,7 @@ import {
   VERIFIED_DOSSIER_AI_PROMPT,
   VERIFIED_DOSSIER_ARTIFACTS,
   VERIFIED_DOSSIER_ARTIFACTS_BY_ID,
+  VERIFIED_DOSSIER_EXPERIENCE_ENTRIES,
   VERIFIED_DOSSIER_HISTORY,
   VERIFIED_DOSSIER_HOME_COPY,
   VERIFIED_DOSSIER_LOOM_INTRO,
@@ -29,11 +30,13 @@ import {
   VERIFIED_DOSSIER_UNSW_COURSES,
   VERIFIED_DOSSIER_WORKBENCH,
   resolveVerifiedDossierArtifact,
+  type VerifiedDossierExperienceEntry,
 } from '../lib/new-loom/verified-dossier-home';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const SAFE_INTERNAL_HREFS = new Set([
+  '/',
   '/about',
   '/education',
   '/experience',
@@ -51,6 +54,10 @@ const SAFE_INTERNAL_HREFS = new Set([
   '/knowledge/wqu/wqu-index',
   '/knowledge/claude/claude-certificate',
   '/product-history',
+  // Real evidence documents served from public/ and the Optibook replica
+  // build that a later integration step copies into public/optibook/.
+  '/verified-sources/about/cv-yiping-yin.pdf',
+  '/optibook/index.html',
 ]);
 
 function assertSafeHref(href: string) {
@@ -63,10 +70,13 @@ function assertSafeHref(href: string) {
 
 test('verified dossier home data preserves approved evidence workbench definition', () => {
   assert.equal(VERIFIED_DOSSIER_HOME_COPY.headline, 'Yiping Yin');
-  assert.equal(VERIFIED_DOSSIER_HOME_COPY.body, 'UNSW student building Loom in Sydney');
+  assert.equal(
+    VERIFIED_DOSSIER_HOME_COPY.body,
+    'Quant T/R | AI Founder',
+  );
   assert.match(
     VERIFIED_DOSSIER_HOME_COPY.shortDefinition,
-    /About, education, experience, and Digital Me/,
+    /source-backed systems/,
   );
   assert.notEqual(VERIFIED_DOSSIER_HOME_COPY.headline, 'Sources become cited work');
   assert.notEqual(VERIFIED_DOSSIER_HOME_COPY.body, 'Verified source workspace');
@@ -88,18 +98,18 @@ test('verified dossier home data preserves approved evidence workbench definitio
 test('verified dossier home keeps canonical navigation and profile identity', () => {
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.label),
-    ['About', 'Education', 'Experience', 'Digital Me'],
+    ['Home', 'About', 'Education', 'Experience', 'Digital Me'],
   );
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.href),
-    ['/about', '/education', '/experience', '/digital-me'],
+    ['/', '/about', '/education', '/experience', '/digital-me'],
   );
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'Sources'));
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'UNSW'));
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'Draft'));
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.href === '/drafts'));
   assert.equal(VERIFIED_DOSSIER_PROFILE.name, 'Yiping Yin');
-  assert.match(VERIFIED_DOSSIER_PROFILE.location, /Sydney/);
+  assert.equal(VERIFIED_DOSSIER_PROFILE.location, '🇨🇳 Wuhan | 🇦🇺 Sydney');
   assert.ok(VERIFIED_DOSSIER_PROFILE.links.some((link) => link.label === 'LinkedIn'));
   assert.ok(VERIFIED_DOSSIER_PROFILE.memberships.some((item) => item.label === 'UNSW Sydney'));
 });
@@ -143,7 +153,7 @@ test('verified dossier home groups source shelves into presentation categories',
     ['About', 'Education', 'Experience', 'Digital Me'],
   );
   assert.deepEqual(
-    VERIFIED_DOSSIER_TOP_NAV.slice(0, VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.length).map(
+    VERIFIED_DOSSIER_TOP_NAV.filter((item) => item.label !== 'Home').map(
       (item) => [item.label, item.href],
     ),
     VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => [category.label, category.href]),
@@ -246,7 +256,7 @@ test('Digital Me is based on About, Education, and Experience layers', async () 
   };
   const html = renderToStaticMarkup(React.createElement(DigitalMePage));
 
-  assert.match(html, /Quant Researcher \/ Trader/);
+  assert.match(html, /Quant Researcher \/ Trader|Quant Trader|Quant T\/R/);
   assert.match(html, /Role Lens/);
   assert.match(html, /Evidence Graph/);
   assert.match(html, /Claim Engine/);
@@ -290,14 +300,22 @@ test('Digital Me exposes role-lens artifact runtime actions', async () => {
 test('Digital Me renders the Quant proof path with evidence statuses and gaps', async () => {
   const {
     DIGITAL_ME_PROOF_PATH,
+    getDigitalMeClaimById,
     getDigitalMeEvidenceForClaim,
   } = await import('../lib/new-loom/digital-me-role-os');
 
   assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'strong'));
   assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'partial'));
   assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'direction'));
-  assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'missing'));
   assert.ok(getDigitalMeEvidenceForClaim('mathematical-reasoning').length > 0);
+
+  // The Optibook screenshot upgraded live-market proof from missing to partial.
+  assert.equal(getDigitalMeClaimById('live-market-project-proof')?.evidenceStatus, 'partial');
+  assert.ok(
+    getDigitalMeEvidenceForClaim('live-market-project-proof').some(
+      (evidence) => evidence.artifactId === 'optibook-market-lens',
+    ),
+  );
 
   const { default: DigitalMePage } = await import('../app/digital-me/page');
   const { renderToStaticMarkup } = require('react-dom/server') as {
@@ -313,8 +331,90 @@ test('Digital Me renders the Quant proof path with evidence statuses and gaps', 
   assert.match(html, /Strong evidence/);
   assert.match(html, /Partial evidence/);
   assert.match(html, /Direction only/);
-  assert.match(html, /Missing proof/);
+  assert.doesNotMatch(html, /Missing proof/);
   assert.match(html, /Create a small quant research project/);
+});
+
+test('experience surface ships CV-backed entries with resolving proof artifacts', async () => {
+  const entries: readonly VerifiedDossierExperienceEntry[] = VERIFIED_DOSSIER_EXPERIENCE_ENTRIES;
+
+  assert.ok(entries.length >= 5, 'experience entries should exist');
+  assert.equal(
+    new Set(entries.map((entry) => entry.id)).size,
+    entries.length,
+    'experience entry ids must be unique',
+  );
+
+  for (const entry of entries) {
+    assert.match(entry.organisation, /\S/, `${entry.id} needs an organisation`);
+    assert.match(entry.role, /\S/, `${entry.id} needs a role`);
+    assert.ok(entry.summary.length > 20, `${entry.id} needs a real summary`);
+
+    if (entry.verification === 'cv-pdf') {
+      assert.ok(
+        entry.proofArtifactIds.length > 0,
+        `${entry.id} is CV-backed and must carry proof artifacts`,
+      );
+      for (const artifactId of entry.proofArtifactIds) {
+        assert.equal(
+          resolveVerifiedDossierArtifact(artifactId).id,
+          artifactId,
+          `${entry.id} proof artifact ${artifactId} must resolve`,
+        );
+      }
+    } else {
+      // Honesty rule: cover claims without CV documentation must say so
+      // and must not invent dates or proof.
+      assert.equal(entry.verification, 'pending-documentation');
+      assert.equal(entry.period, undefined, `${entry.id} must not invent dates`);
+      assert.ok(entry.verificationNote.length > 20, `${entry.id} needs a pending note`);
+    }
+  }
+
+  const optiver = entries.find((entry) => entry.id === 'optiver-unsw-trading-academy');
+  assert.ok(optiver, 'Optiver & UNSW trading academy entry should exist');
+  assert.match(optiver.organisation, /Optiver & UNSW/);
+  assert.equal(optiver.role, 'Trading Academy Participant');
+  assert.equal(optiver.period, 'May 2026 – August 2026');
+  assert.ok(optiver.proofArtifactIds.includes('optibook-market-lens'));
+
+  const oak = entries.find((entry) => entry.id === 'oak-financial-group');
+  assert.ok(oak, 'Oak Financial Group entry should exist');
+  assert.equal(oak.role, 'Property Portfolio Assistant');
+  assert.equal(oak.period, 'January 2024 – May 2026');
+
+  const { default: ExperiencePage } = await import('../app/experience/page');
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
+  const html = renderToStaticMarkup(React.createElement(ExperiencePage));
+
+  assert.match(html, /Optiver &(amp;)? UNSW/);
+  assert.match(html, /Trading Academy Participant/);
+  assert.match(html, /Oak Financial Group/);
+  assert.match(html, /Property Portfolio Assistant/);
+  assert.doesNotMatch(html, /Backed by source records and process artifacts\./);
+});
+
+test('CV and Optibook artifacts open real evidence targets', () => {
+  const aboutDoc = resolveVerifiedDossierArtifact('about-doc');
+  assert.equal(aboutDoc.href, '/verified-sources/about/cv-yiping-yin.pdf');
+  assert.ok(
+    existsSync(join(repoRoot, 'public/verified-sources/about/cv-yiping-yin.pdf')),
+    'the real CV PDF should exist under public/',
+  );
+
+  const optibook = resolveVerifiedDossierArtifact('optibook-market-lens');
+  assert.match(optibook.label, /Optibook/);
+  // The replica build is copied into public/optibook/ by a later
+  // integration step, so pin the href without asserting file existence.
+  assert.equal(optibook.href, '/optibook/index.html');
+  assert.ok(optibook.thumbnailSrc, 'Optibook artifact needs its screenshot thumbnail');
+  assert.equal(optibook.thumbnailSrc, '/verified-sources/digital-me/optibook-market-lens.png');
+  assert.ok(
+    existsSync(join(repoRoot, 'public', optibook.thumbnailSrc!)),
+    'the Optibook screenshot should exist under public/',
+  );
 });
 
 test('Digital Me page ships professional section-page layout styles', () => {

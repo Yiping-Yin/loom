@@ -103,6 +103,14 @@ test('reference shelf pages bind dossier artifacts to real whitelisted source fi
   assert.match(detailPage, /findReferenceDoc\(category, fileSlug\)\s*\?\?/);
 });
 
+test('dynamic UNSW category route delegates to the real UNSW course shelf', () => {
+  const page = read('app/knowledge/[category]/page.tsx');
+
+  assert.match(page, /import UnswShelfPage from '\.\.\/unsw\/page'/);
+  assert.match(page, /if \(category === 'unsw'\)/);
+  assert.match(page, /return <UnswShelfPage \/>/);
+});
+
 test('reference artifact bindings expose manifest targets and tolerate absent external files', () => {
   const manifest = readReferenceSourceManifest();
 

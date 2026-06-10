@@ -81,7 +81,7 @@ test('screenshot script defaults to Mac App Store dimensions and configurable in
   assert.match(source, /const WIDTH = Math\.round\(OUT_WIDTH \/ SCALE\)/);
   assert.match(source, /const HEIGHT = Math\.round\(OUT_HEIGHT \/ SCALE\)/);
   assert.match(source, /\.app-store\/screenshots/);
-  assert.match(source, /slug: '01-library',\s+url: '\/desk'/);
+  assert.match(source, /slug: '01-sources',\s+url: '\/sources'/);
   assert.match(source, /slug: '03-draft',\s+url: '\/soan'/);
   assert.doesNotMatch(source, /url: '\/knowledge'/);
   assert.match(source, /sessionStorage\.setItem\('loom:ai-key-banner-dismissed', '1'\)/);
@@ -94,7 +94,7 @@ test('app store preflight covers submission artifacts', () => {
   const source = fs.readFileSync(path.join(repoRoot, 'scripts', 'app-store-preflight.mjs'), 'utf8');
 
   for (const expected of [
-    '01-library.jpg',
+    '01-sources.jpg',
     '03-draft.jpg',
     '05-frontispiece.jpg',
     'jpegSize',

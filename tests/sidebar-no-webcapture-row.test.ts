@@ -4,13 +4,17 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
- * docs/loom.md §VII.bis migration: the WebCaptureSetupView surface was
+ * docs/loom.md §VII.bis migration: the Web Capture sidebar surface was
  * dismantled. Setup content lives in Settings > Capture
  * (CaptureSettingsView) and Help > Set Up Captures…
  * (CaptureHelpView). The sidebar no longer has a Web Capture row.
  *
- * This contract test pins the dismantling invariant so a regression
- * (e.g. someone re-adding the row, or restoring the struct) trips CI.
+ * Superseded in part by tests/new-loom-skeleton-contract.test.ts
+ * (2026-06 new-Loom shell): the minimal root keeps a `.webCaptureSetup`
+ * compatibility deep-link case that mounts the Sources workbench (it is
+ * NOT a sidebar row), and CapturesView defines `WebCaptureSetupView` as
+ * the capture-tools workbench lane layout. The invariant this file
+ * still pins: no Web Capture sidebar row, ever.
  */
 
 const MINIMAL_ROOT = resolve('macos-app/Loom/Sources/LoomMinimalRootView.swift');
@@ -18,12 +22,10 @@ const CAPTURES = resolve('macos-app/Loom/Sources/CapturesView.swift');
 const CAPTURE_SETTINGS = resolve('macos-app/Loom/Sources/CaptureSettingsView.swift');
 const CAPTURE_HELP = resolve('macos-app/Loom/Sources/CaptureHelpView.swift');
 
-test('LoomMinimalRootView.swift no longer references the Web Capture sidebar surface', () => {
+test('LoomMinimalRootView.swift no longer renders a Web Capture sidebar row', () => {
   const text = readFileSync(MINIMAL_ROOT, 'utf-8');
   const forbidden = [
     'webCaptureSetupRow',
-    '.webCaptureSetup',
-    'case webCaptureSetup',
     'WebCaptureSetupView',
     '"Web Capture"',
     "'__webcapture'",
@@ -40,12 +42,12 @@ test('LoomMinimalRootView.swift no longer references the Web Capture sidebar sur
   }
 });
 
-test('CapturesView.swift no longer defines WebCaptureSetupView', () => {
+test('CapturesView.swift keeps WebCaptureSetupView as a workbench lane layout, not a sidebar surface', () => {
   const text = readFileSync(CAPTURES, 'utf-8');
   assert.equal(
     text.includes('struct WebCaptureSetupView'),
-    false,
-    'WebCaptureSetupView struct must be deleted from CapturesView.swift per §VII.bis migration',
+    true,
+    'WebCaptureSetupView is the capture-tools workbench layout required by the new-Loom skeleton contract',
   );
 });
 

@@ -50,7 +50,7 @@ test('static search index preserves local folder metadata for native source tree
 
   assert.match(source, /subcategory: m\.subcategory \?\? ''/);
   assert.match(source, /sourcePath: m\.sourcePath/);
-  assert.match(source, /storeFields: \['title', 'href', 'category', 'subcategory', 'sourcePath'\]/);
+  assert.match(source, /storeFields: \['title', 'href', 'category', 'subcategory', 'sourcePath'/);
   assert.match(exportSource, /function resolveContentRootForStaticExport\(\)/);
   assert.match(exportSource, /content-root\.json/);
   assert.match(exportSource, /path\.join\(contentRoot, 'knowledge', '\.cache', 'indexes', 'search-index\.json'\)/);

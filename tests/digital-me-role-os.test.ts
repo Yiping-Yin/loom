@@ -28,15 +28,12 @@ test('Digital Me proof path has evidence-backed claims with honest statuses', ()
   assert.ok(statuses.has('strong'));
   assert.ok(statuses.has('partial'));
   assert.ok(statuses.has('direction'));
-  assert.ok(statuses.has('missing'));
 
   for (const claim of DIGITAL_ME_PROOF_PATH.claims) {
     assert.ok(claim.text.length > 30, `${claim.id} should be a real claim`);
     assert.ok(claim.roleRelevance.length > 20, `${claim.id} should explain role relevance`);
     assert.ok(claim.artifactActions.length > 0, `${claim.id} should expose artifact actions`);
-    if (claim.evidenceStatus !== 'missing') {
-      assert.ok(claim.evidenceIds.length > 0, `${claim.id} should connect to evidence`);
-    }
+    assert.ok(claim.evidenceIds.length > 0, `${claim.id} should connect to evidence`);
   }
 });
 
@@ -56,6 +53,19 @@ test('Digital Me claim evidence uses real verified dossier artifacts', () => {
   assert.ok(getDigitalMeEvidenceForClaim('programming-foundations').some((item) => item.artifactId === 'quantnet-python-foundations'));
 });
 
+test('live market proof claim is partially evidenced by the Optibook replica artifact', () => {
+  const liveMarketClaim = getDigitalMeClaimById('live-market-project-proof');
+  assert.equal(liveMarketClaim?.evidenceStatus, 'partial');
+  assert.ok(liveMarketClaim?.evidenceIds.length, 'live market claim should carry evidence');
+
+  const liveMarketEvidence = getDigitalMeEvidenceForClaim('live-market-project-proof');
+  const optibookEvidence = liveMarketEvidence.find(
+    (item) => item.artifactId === 'optibook-market-lens',
+  );
+  assert.ok(optibookEvidence, 'Optibook screenshot should evidence the live market claim');
+  assert.ok(optibookEvidence.roleUse.length > 12);
+});
+
 test('Digital Me artifact runtime exposes distinct role-specific outputs', () => {
   assert.deepEqual(
     DIGITAL_ME_ARTIFACT_MODES.map((mode) => mode.id),
@@ -68,5 +78,12 @@ test('Digital Me artifact runtime exposes distinct role-specific outputs', () =>
   }
 
   assert.equal(DIGITAL_ME_PROOF_PATH.activeArtifactMode, 'capability-map');
-  assert.ok(DIGITAL_ME_PROOF_PATH.nextGrowthActions.some((action) => /project/i.test(action)));
+
+  for (const claim of DIGITAL_ME_PROOF_PATH.claims) {
+    const action = DIGITAL_ME_PROOF_PATH.nextGrowthActions[claim.id];
+    assert.ok(action && action.length > 20, `${claim.id} needs a claim-specific next growth action`);
+  }
+  assert.ok(
+    Object.values(DIGITAL_ME_PROOF_PATH.nextGrowthActions).some((action) => /project/i.test(action)),
+  );
 });
