@@ -73,12 +73,16 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 4);
   assert.match(html, />01</);
   assert.match(html, />04</);
-  // Each row exposes a View details link to its category destination.
-  assert.equal((html.match(/class="lcv-view"/g) ?? []).length, 4);
-  assert.match(html, /<a class="lcv-view" href="\/about">/);
-  assert.match(html, /<a class="lcv-view" href="\/education">/);
-  assert.match(html, /<a class="lcv-view" href="\/experience">/);
-  assert.match(html, /<a class="lcv-view" href="\/digital-me">/);
+  // Each ledger row is itself a link to its category destination (the whole
+  // row is clickable; there is no separate floating "View details" element).
+  assert.doesNotMatch(html, /class="lcv-view"/);
+  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 4);
+  assert.match(html, /<a class="lcv-row lcv-row--about" href="\/about"/);
+  assert.match(html, /<a class="lcv-row lcv-row--education" href="\/education"/);
+  assert.match(html, /<a class="lcv-row lcv-row--experience" href="\/experience"/);
+  assert.match(html, /<a class="lcv-row lcv-row--digital-me" href="\/digital-me"/);
+  // Inline "Open →" affordance lives inside each label block (4 total).
+  assert.equal((html.match(/class="lcv-row__open"/g) ?? []).length, 4);
   // Identity rail: photo, three profile links (LinkedIn icon variant).
   assert.match(html, /class="lcv-photo"/);
   assert.match(html, /\/profile\/yiping-profile-photo\.png/);

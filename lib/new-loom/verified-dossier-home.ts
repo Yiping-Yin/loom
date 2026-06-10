@@ -262,25 +262,26 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
   },
   {
     id: 'optibook-market-lens',
-    label: 'Open the Optibook replica',
+    label: 'Open Beebook',
     kind: 'html',
     shelf: 'unsw',
     role: 'Live market project evidence',
-    // The Optibook replica build is copied into public/optibook/ by a
-    // later integration step; the href is already canonical.
+    // Beebook is Yiping's own market-making simulator (inspired by the
+    // Optiver & UNSW trading academy); the build is copied into
+    // public/optibook/ by a later integration step, so the href is canonical.
     href: '/optibook/index.html',
     fileSize: '1.4 MB',
     modifiedAt: '06 Jun 2026',
     thumbnailSrc: '/verified-sources/digital-me/optibook-market-lens.png',
     preview: {
-      title: 'Optibook Market Lens',
-      kicker: 'Optiver & UNSW - Data and Algorithms in Trading',
+      title: 'Beebook Market Lens',
+      kicker: 'Inspired by the Optiver & UNSW trading academy',
       metadata: 'PNG screenshot - 1.4 MB - modified 06 Jun 2026',
       tag: 'Trading Academy',
       lines: [
-        'Optibook trading interface capture',
+        'Beebook trading interface capture',
         'Pair trading and order-book statistics practice',
-        'Replica build ships at /optibook/',
+        'Self-built simulator ships at /optibook/',
       ],
     },
   },
@@ -553,7 +554,7 @@ export const VERIFIED_DOSSIER_EXPERIENCE_ENTRIES = [
       'Trading academy run with UNSW Data and Algorithms in Trading — a training program, not an employment role.',
     highlights: [
       'Completing training in Python trading algorithms, order books, VWAP and market making.',
-      'Implemented trading strategies on Optibook using pair trading and order-book statistics.',
+      'Implemented trading strategies using pair trading and order-book statistics, later rebuilt as Beebook, a self-contained market-making simulator.',
     ],
     proofArtifactIds: ['optibook-market-lens', 'about-doc'],
     verification: 'cv-pdf',

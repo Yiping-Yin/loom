@@ -71,11 +71,13 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(html, /class="lcv-row lcv-row--experience"/);
   assert.match(html, /class="lcv-row lcv-row--digital-me"/);
   assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 4);
-  assert.equal((html.match(/class="lcv-view"/g) ?? []).length, 4);
-  assert.match(html, /<a class="lcv-view" href="\/about">/);
-  assert.match(html, /<a class="lcv-view" href="\/education">/);
-  assert.match(html, /<a class="lcv-view" href="\/experience">/);
-  assert.match(html, /<a class="lcv-view" href="\/digital-me">/);
+  // The whole row is the link to its category — no separate "View details" element.
+  assert.doesNotMatch(html, /class="lcv-view"/);
+  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 4);
+  assert.match(html, /<a class="lcv-row lcv-row--about" href="\/about"/);
+  assert.match(html, /<a class="lcv-row lcv-row--education" href="\/education"/);
+  assert.match(html, /<a class="lcv-row lcv-row--experience" href="\/experience"/);
+  assert.match(html, /<a class="lcv-row lcv-row--digital-me" href="\/digital-me"/);
   assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 6);
   assert.match(html, /class="lcv-photo"/);
   assert.match(html, /\/profile\/yiping-profile-photo\.png/);
@@ -371,14 +373,14 @@ test('Loom product history evolution assets are curated under Loom folders', () 
 
 test('canonical docs no longer present Loom as a generic public product', () => {
   const readme = read('README.md');
-  const productDefinition = read('LOOM.md');
-  const productRules = read('LOOM_RULES.md');
+  const productDefinition = read('docs/canon/LOOM.md');
+  const productRules = read('docs/canon/LOOM_RULES.md');
   const appStoreCopy = read('docs/app-store-copy.md');
   const canonicalDocs = [readme, productDefinition, productRules].join('\n');
 
-  assert.match(readme, /personal knowledge identity platform/i);
-  assert.match(readme, /portfolio people can inspect/i);
-  assert.match(readme, /knowledge base people can trust/i);
+  assert.match(readme, /living knowledge identity/i);
+  assert.match(readme, /dossier anyone can inspect/i);
+  assert.match(readme, /source-backed self/i);
   assert.match(productDefinition, /personal knowledge\s*>?\s*identity platform/i);
   assert.match(productDefinition, /Yiping's Loom is the first reference instance/i);
   assert.match(productRules, /personal knowledge identity platform/i);

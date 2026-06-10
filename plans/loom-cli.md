@@ -5,9 +5,9 @@
 **Owner:** Claude (initial spec). Implementation TBD; coordinate via peer-chat at start.
 
 **Cross-references:**
-- `LOOM.md` §1.5 — substrate positioning (canonical)
-- `LOOM.md` §6.7 — input surface + AI passes (peer)
-- `LOOM_RULES.md` §7.5 — operating rules (binding; rule #11 covers external AI integration)
+- `docs/canon/LOOM.md` §1.5 — substrate positioning (canonical)
+- `docs/canon/LOOM.md` §6.7 — input surface + AI passes (peer)
+- `docs/canon/LOOM_RULES.md` §7.5 — operating rules (binding; rule #11 covers external AI integration)
 - `plans/loom-ai-passes.md` — internal AI passes (peer)
 - `tmp/loom-correction-log.md` entry-007 — substrate reframe context
 

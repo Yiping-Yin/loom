@@ -104,8 +104,10 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.match(html, /class="lcv-row lcv-row--experience"/);
   assert.match(html, /class="lcv-row lcv-row--digital-me"/);
   assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 4);
-  assert.equal((html.match(/class="lcv-view"/g) ?? []).length, 4);
-  assert.match(html, /<a class="lcv-view" href="\/digital-me">/);
+  // Whole-row links replace the retired floating "View details" element.
+  assert.doesNotMatch(html, /class="lcv-view"/);
+  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 4);
+  assert.match(html, /<a class="lcv-row lcv-row--digital-me" href="\/digital-me"/);
   assert.doesNotMatch(html, /class="vd-avatar"/);
   assert.doesNotMatch(html, /vd-personal-stage/);
   assert.match(html, /class="lcv-photo"/);

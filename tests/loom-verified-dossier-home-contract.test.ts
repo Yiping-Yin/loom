@@ -405,7 +405,7 @@ test('CV and Optibook artifacts open real evidence targets', () => {
   );
 
   const optibook = resolveVerifiedDossierArtifact('optibook-market-lens');
-  assert.match(optibook.label, /Optibook/);
+  assert.match(optibook.label, /Beebook/);
   // The replica build is copied into public/optibook/ by a later
   // integration step, so pin the href without asserting file existence.
   assert.equal(optibook.href, '/optibook/index.html');

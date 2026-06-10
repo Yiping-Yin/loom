@@ -5,8 +5,8 @@
 **Owner:** Claude (initial spec). Implementation TBD; coordinate via peer-chat at start.
 
 **Cross-references:**
-- `LOOM.md` §1.5 (rewritten v4.1) — Option ε v2 architecture (3 AI surfaces by role)
-- `LOOM_RULES.md` §7.5 v4.1 — operating rules + bans (binding)
+- `docs/canon/LOOM.md` §1.5 (rewritten v4.1) — Option ε v2 architecture (3 AI surfaces by role)
+- `docs/canon/LOOM_RULES.md` §7.5 v4.1 — operating rules + bans (binding)
 - `plans/loom-ai-passes.md` — background passes (peer surface)
 - `plans/loom-cli.md` — external AI integration (peer surface)
 - `tmp/loom-correction-log.md` entry-009/010/011 — v4.1 reframe context
@@ -32,7 +32,7 @@ v4.1 establishes that Loom has 3 AI surfaces by role:
 
 ---
 
-## The 7 actions (HARD CAP — adding beyond 7 requires LOOM.md amendment + user GO)
+## The 7 actions (HARD CAP — adding beyond 7 requires docs/canon/LOOM.md amendment + user GO)
 
 ### (1) **Rewrite** (selection-based)
 
@@ -221,4 +221,4 @@ Server-side validation: before applying, parse output as markdown and verify it 
 - When M6 ships: update this file with implementation commit refs
 - When user data surfaces: append "Real-world findings" section
 - When actions need adjustment (within the 7-cap): changelog entry
-- Adding 8th action: requires LOOM.md + LOOM_RULES amendment + user GO
+- Adding 8th action: requires docs/canon/LOOM.md + LOOM_RULES amendment + user GO

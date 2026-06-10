@@ -5,8 +5,8 @@
 **Owner:** Claude (initial spec). Implementation TBD; coordinate via peer-chat at M4.5 start.
 
 **Cross-references:**
-- `LOOM.md` §6.7 — Input Surface and AI Passes (canonical positioning)
-- `LOOM_RULES.md` §7.5 — Operating rules + bans (binding)
+- `docs/canon/LOOM.md` §6.7 — Input Surface and AI Passes (canonical positioning)
+- `docs/canon/LOOM_RULES.md` §7.5 — Operating rules + bans (binding)
 - `plans/loom-camp-c-editable-render.md` — editable render foundation (prerequisite)
 - `plans/loom-cli.md` — external AI integration (peer)
 - `tmp/loom-correction-log.md` entry-007 — substrate reframe context
@@ -21,7 +21,7 @@ v4.0 establishes that Loom internal AI runs as **invisible background passes** o
 
 **Background passes are STRUCTURAL or REFERENTIAL ONLY. NEVER generative.**
 
-Per `LOOM_RULES.md` §7.5 v4.1 rule #14, this is a HARD rule, not a guideline:
+Per `docs/canon/LOOM_RULES.md` §7.5 v4.1 rule #14, this is a HARD rule, not a guideline:
 
 - ✓ **Structural** (allowed): rearrange paragraphs, detect heading levels, format lists, apply 5-shape detection, wrap blockquotes, KaTeX math syntax detection, oldstyle figure formatting
 - ✓ **Referential** (allowed): cross-reference to other Loom documents, external citation lookup (DOI / Crossref / Semantic Scholar), add footnote references, suggest related captures
@@ -45,7 +45,7 @@ If a future feature seems to need background generative work, it should:
 
 ## What this plan does NOT do
 
-- Does NOT add AI UI features (panels, chat boxes, /ai commands, co-edit toolbars). Per `LOOM_RULES.md` §7.5 ban list.
+- Does NOT add AI UI features (panels, chat boxes, /ai commands, co-edit toolbars). Per `docs/canon/LOOM_RULES.md` §7.5 ban list.
 - Does NOT spec wiki-scale (multi-document) AI work. That's v4.1+ deferred.
 - Does NOT spec external AI integration. See `plans/loom-cli.md`.
 - Does NOT modify paper canon visual rules. Sealed v1.0.

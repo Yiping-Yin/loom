@@ -5,8 +5,8 @@
 **Owner:** Claude (initial spec), implementation TBD when M2 starts.
 
 **Cross-references:**
-- `LOOM.md` §1.5 (Camp C positioning) + §6.5 (engineering decomposition)
-- `LOOM_RULES.md` §7.5 (operating rules + bans)
+- `docs/canon/LOOM.md` §1.5 (Camp C positioning) + §6.5 (engineering decomposition)
+- `docs/canon/LOOM_RULES.md` §7.5 (operating rules + bans)
 - `docs/design/PRISM_VS_NOTES_VS_LOOM_2026-05-01.md` (design rationale)
 - `tmp/loom-correction-log.md` entry-006 (strategic reframe)
 
@@ -25,8 +25,8 @@ Knowledge tools have always forced a choice: Camp A (LaTeX/Prism — frozen-beau
 ## M1 — Thesis falling (now, 2026-05-01)
 
 **Scope (zero code):**
-- `LOOM.md` v3.0 — §1.5 (Camp C positioning) + §6.5 (engineering decomposition) + §11 Tier C entries
-- `LOOM_RULES.md` §7.5 — operating rules and bans
+- `docs/canon/LOOM.md` v3.0 — §1.5 (Camp C positioning) + §6.5 (engineering decomposition) + §11 Tier C entries
+- `docs/canon/LOOM_RULES.md` §7.5 — operating rules and bans
 - `plans/loom-camp-c-editable-render.md` (this file)
 - `docs/design/PRISM_VS_NOTES_VS_LOOM_2026-05-01.md`
 - `tmp/loom-correction-log.md` entry-006
@@ -85,7 +85,7 @@ Knowledge tools have always forced a choice: Camp A (LaTeX/Prism — frozen-beau
 
 **Exit criteria:**
 - Decision filed as a new `tmp/loom-correction-log.md` entry-NNN
-- If PASS: proceed to M4. If SCOPE-DOWN: spec the reduced version here. If ABORT: revert M2 commit + update `LOOM.md` §1.5 to reflect the wrong-thesis lesson.
+- If PASS: proceed to M4. If SCOPE-DOWN: spec the reduced version here. If ABORT: revert M2 commit + update `docs/canon/LOOM.md` §1.5 to reflect the wrong-thesis lesson.
 
 **Time:** 1 day (decision review)
 
@@ -93,7 +93,7 @@ Knowledge tools have always forced a choice: Camp A (LaTeX/Prism — frozen-beau
 
 ## M4 — Full Camp C MVP (gated on M3 PASS)
 
-**Scope (5 modules per `LOOM.md` §6.5):**
+**Scope (5 modules per `docs/canon/LOOM.md` §6.5):**
 
 ### Module (a) — Editable paper canon hardening
 - `contenteditable` on `.loom-capture-article` (already in M2)
@@ -176,12 +176,12 @@ Knowledge tools have always forced a choice: Camp A (LaTeX/Prism — frozen-beau
 ## What this plan does NOT do
 
 - ❌ Does not modify paper canon visual rules (sealed v1.0 2026-04-25)
-- ❌ Does not add an "Edit mode" button (per `LOOM_RULES.md` §7.5)
+- ❌ Does not add an "Edit mode" button (per `docs/canon/LOOM_RULES.md` §7.5)
 - ❌ Does not expose markdown source in UI (no split-pane)
 - ❌ Does not touch `LoomFileStore` sandbox model
 - ❌ Does not modify source folder permissions
 - ❌ Does not add new AI panels or popovers (the AI co-edit lives ON the existing selection toolbar)
-- ❌ Does not delete askPassage / distill (just downgrades from main entry to convenience shortcut — see `LOOM.md` §1.5 + §6.5)
+- ❌ Does not delete askPassage / distill (just downgrades from main entry to convenience shortcut — see `docs/canon/LOOM.md` §1.5 + §6.5)
 
 ---
 
@@ -189,7 +189,7 @@ Knowledge tools have always forced a choice: Camp A (LaTeX/Prism — frozen-beau
 
 - **M1**: Claude (this commit)
 - **M2-M5 implementation**: TBD per milestone. Either Claude or Codex; coordinate via peer-chat at milestone start.
-- **Camp C strategic ownership**: Claude (single editor of `plans/loom-camp-c-editable-render.md` + `LOOM.md` §1.5 / §6.5 / §7.5)
+- **Camp C strategic ownership**: Claude (single editor of `plans/loom-camp-c-editable-render.md` + `docs/canon/LOOM.md` §1.5 / §6.5 / §7.5)
 - **User decisions**: each gate (M3 especially) requires explicit user GO/SCOPE-DOWN/ABORT call
 
 ---

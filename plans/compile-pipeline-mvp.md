@@ -3,18 +3,18 @@
 > **Status update 2026-05-11**: Phase 1 landed natively. The `SourceFileView Compile UI/native streaming is wired` through `LoomCompilePipeline` → `LoomAI.sendStream` → per-source `### Compiled · …` writeback, with first-compile pulse, replace-warning toast, and the §5.5 error/edge banners (rate-limit, partial save, source-unavailable, malformed-output fallback, inline unsupported/contradiction annotations). Pure helpers are unit-tested in `LoomDraftStoreTests`.
 >
 > **Status**: filed 2026-05-01 — implementation plan, not yet started.
-> **Tier**: 2 (per `LOOM.md §11` roadmap). Prerequisite: Tier 1 complete (CaptureAST + reading-flow + DS v1 foundation).
+> **Tier**: 2 (per `docs/canon/LOOM.md §11` roadmap). Prerequisite: Tier 1 complete (CaptureAST + reading-flow + DS v1 foundation).
 > **Estimated effort**: 4-6 hours for working prototype; 1-2 weeks for shippable MVP with full error handling, tests, and UX polish.
-> **Source spec**: `LOOM.md §4` (mode handshake), `LOOM.md §7` (Compile pipeline + error cases), `LOOM.md §7.5` (privacy & data flow), `LOOM.md §13.5` (first-compile pulse).
+> **Source spec**: `docs/canon/LOOM.md §4` (mode handshake), `docs/canon/LOOM.md §7` (Compile pipeline + error cases), `docs/canon/LOOM.md §7.5` (privacy & data flow), `docs/canon/LOOM.md §13.5` (first-compile pulse).
 > **Owner**: TBD when started. Likely Claude on TS/Swift bridge + system prompt; Codex on Swift integration if its CaptureAST work continues.
 
 ---
 
 ## 1. Why this plan exists
 
-Per `LOOM.md §6`, Compile is the missing 8th of Loom's eight supporting pieces. Seven pieces are built or in flight. With Compile, the learning loop closes. Without it, Loom is "a great reading tool"; with it, Loom is "a learning loop" — the wow moment that takes Loom from useful tool to category-defining product.
+Per `docs/canon/LOOM.md §6`, Compile is the missing 8th of Loom's eight supporting pieces. Seven pieces are built or in flight. With Compile, the learning loop closes. Without it, Loom is "a great reading tool"; with it, Loom is "a learning loop" — the wow moment that takes Loom from useful tool to category-defining product.
 
-This plan operationalizes the Compile pipeline as it's described in `LOOM.md §7`, fills in the implementation specifics that were elided in the canon doc, and establishes a definition-of-done sharp enough to ship against.
+This plan operationalizes the Compile pipeline as it's described in `docs/canon/LOOM.md §7`, fills in the implementation specifics that were elided in the canon doc, and establishes a definition-of-done sharp enough to ship against.
 
 ---
 
@@ -23,7 +23,7 @@ This plan operationalizes the Compile pipeline as it's described in `LOOM.md §7
 Ship a Compile button on every Loom Page that, when clicked:
 
 1. Reads the user's scratch text in the Page body
-2. Builds a context envelope (per `LOOM.md §4` mode handshake): scratch + source + Tier 1 prior notes + Ask AI conversation history archived on this Page
+2. Builds a context envelope (per `docs/canon/LOOM.md §4` mode handshake): scratch + source + Tier 1 prior notes + Ask AI conversation history archived on this Page
 3. Streams a typeset learning artifact from the user's configured AI provider
 4. Parses embedded directives (LaTeX math, `[term:...]` hover-reveals, `---` frame separators)
 5. Renders the artifact in paper canon substrate
@@ -203,7 +203,7 @@ Begin.
 
 ### 4.4 Storage shape (in `Loom.md`)
 
-Per `LOOM_RULES.md §5` heal-on-load + per-book sections, and `LOOM.md §7` storage shape:
+Per `docs/canon/LOOM_RULES.md §5` heal-on-load + per-book sections, and `docs/canon/LOOM.md §7` storage shape:
 
 ```markdown
 ## ECON 3202 / Lecture 3 PDF
@@ -252,7 +252,7 @@ When clicked:
 - LaTeX math typesets as soon as a `$...$` or `$$...$$` block closes
 - `[term:...]` reveals don't appear in the streamed text (the marker is consumed)
 
-### 5.3 First-compile onboarding (per `LOOM.md §13.5`)
+### 5.3 First-compile onboarding (per `docs/canon/LOOM.md §13.5`)
 
 When the user has written ≥50 words on a Page body but never compiled:
 - A single quiet pulsing dot appears next to the Compile button (the only attention-grab in Loom — once)
@@ -282,7 +282,7 @@ After compile:
 
 ---
 
-## 6. Privacy (per `LOOM.md §7.5`)
+## 6. Privacy (per `docs/canon/LOOM.md §7.5`)
 
 ### What the AI provider sees during Compile
 
@@ -301,7 +301,7 @@ After compile:
 
 ### Default provider
 
-Apple Foundation Models (on-device, free, no data leaves the machine) is the default per `LOOM_RULES.md §8 2026-04-26`. Compile pipeline uses whatever provider `LoomAI.send` is configured to route to — no special-case logic for Compile.
+Apple Foundation Models (on-device, free, no data leaves the machine) is the default per `docs/canon/LOOM_RULES.md §8 2026-04-26`. Compile pipeline uses whatever provider `LoomAI.send` is configured to route to — no special-case logic for Compile.
 
 ### Telemetry
 
@@ -309,7 +309,7 @@ None. Compile failures are NOT reported to any service. Errors are user-visible 
 
 ---
 
-## 7. Multi-language behavior (per `LOOM.md §4`)
+## 7. Multi-language behavior (per `docs/canon/LOOM.md §4`)
 
 The system prompt instructs the AI to mirror the user's language. Test plan:
 - Scratch in English → output English ✓ (default)
@@ -330,7 +330,7 @@ This must be a **contract test**: feed the pipeline a known-Chinese scratch + kn
 - LaTeX math rendering via KaTeX in webview, or iosMath if native
 - `[term:...]` hover-reveals
 - `---` frame separators with smooth transitions
-- All 8 error/edge cases from `LOOM.md §7`
+- All 8 error/edge cases from `docs/canon/LOOM.md §7`
 - Multi-language support (per system prompt + contract test)
 - First-compile onboarding pulse
 - Tier 1 source-aware context envelope
@@ -386,7 +386,7 @@ The MVP ships when ALL FIVE of these are demonstrably true:
 
 1. **Functional**: Click Compile on a Page with substantive scratch → typeset artifact appears below scratch within 15 seconds, no errors.
 2. **Quality**: Manual test cases 1-5 from §9.3 produce output that the product owner subjectively rates as "this is what I would have written if I had Word/LaTeX skills".
-3. **Robustness**: All 8 error cases from `LOOM.md §7` handle gracefully (no silent failures, no UI crashes, no `Loom.md` corruption).
+3. **Robustness**: All 8 error cases from `docs/canon/LOOM.md §7` handle gracefully (no silent failures, no UI crashes, no `Loom.md` corruption).
 4. **Privacy**: AI provider sees ONLY the data specified in §6. Verified by log inspection (provider request body) on a test compile.
 5. **Multi-language**: Contract test from §9.1 passes (Chinese scratch + English source → Chinese output).
 
@@ -415,7 +415,7 @@ Phase 1 alone is the "wow demo" milestone (~half a day). Full MVP per Definition
 
 ## 12. Risks
 
-1. **AI quality variance**: Compile output quality is bounded by model capability. GPT-4o / Claude 3.5+ are sufficient for Subtasks A+B per `LOOM.md §7`. If the user's chosen provider underperforms (e.g. an older / smaller model in their config), output quality drops. Mitigation: surface provider quality hints in Settings; default to Apple Foundation Models on supported hardware.
+1. **AI quality variance**: Compile output quality is bounded by model capability. GPT-4o / Claude 3.5+ are sufficient for Subtasks A+B per `docs/canon/LOOM.md §7`. If the user's chosen provider underperforms (e.g. an older / smaller model in their config), output quality drops. Mitigation: surface provider quality hints in Settings; default to Apple Foundation Models on supported hardware.
 
 2. **Latency**: 5-15 second compile may feel slow if user expects ChatGPT-style instant. Mitigation: streaming UX shows progress immediately; the wow is in seeing the artifact form, not in instant completion.
 
@@ -453,7 +453,7 @@ These are NOT decisions; they are unresolved questions to surface to the product
 
 | Plan | How it relates |
 |------|----------------|
-| `LOOM.md` (root) | Source spec — §4 mode handshake, §7 pipeline, §7.5 privacy, §13.5 onboarding |
+| `docs/canon/LOOM.md` (root) | Source spec — §4 mode handshake, §7 pipeline, §7.5 privacy, §13.5 onboarding |
 | `plans/loom-unified-product-vision.md` | Navigation map — this plan is Tier 2 in its tier table |
 | `plans/phase-c-presentation-layer.md` | Phase C M2-M4 renderers will USE Compile output for content-shape-aware rendering of compiled artifacts; this plan unblocks them |
 | `plans/loom-design-system-v1.md` | Compile output rendering uses paper canon tokens from DS v1; tranche 2-4 migration affects the render layer |
@@ -474,4 +474,4 @@ It is NOT updated for every implementation tweak — those go in commit messages
 
 ---
 
-*Filed 2026-05-01 by Claude. Tier 2 plan derived from `LOOM.md` v2.0. Ready to start when Tier 1 is fully landed (CaptureAST stabilized, reading-flow committed (✓ as of `7351784`), DS v1 foundation stable). Pre-flight: confirm `LoomAI.sendStream` works for the user's default provider (Apple Foundation Models or otherwise).*
+*Filed 2026-05-01 by Claude. Tier 2 plan derived from `docs/canon/LOOM.md` v2.0. Ready to start when Tier 1 is fully landed (CaptureAST stabilized, reading-flow committed (✓ as of `7351784`), DS v1 foundation stable). Pre-flight: confirm `LoomAI.sendStream` works for the user's default provider (Apple Foundation Models or otherwise).*

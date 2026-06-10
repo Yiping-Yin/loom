@@ -32,10 +32,12 @@
     "**/*.mdx",
     "**/*.ts",
     "**/*.tsx",
+    ".next-app-dev/types/**/*.ts",
     ".next-build/types/**/*.ts",
+    ".next-diag/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-app-dev/types/**/*.ts"
+    ".next-preview/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

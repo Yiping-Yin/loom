@@ -1,8 +1,8 @@
 # Loom — Plan Navigation Map (formerly Unified Product Vision)
 
-> **Status**: SUPERSEDED 2026-05-01 by `LOOM.md` at repo root.
+> **Status**: SUPERSEDED 2026-05-01 by `docs/canon/LOOM.md` at repo root.
 > **Original filed**: 2026-04-30 as a v1 "six-verb decomposition" vision document.
-> **Current role**: navigation map showing where each sub-plan fits within the canonical product framing in `LOOM.md`.
+> **Current role**: navigation map showing where each sub-plan fits within the canonical product framing in `docs/canon/LOOM.md`.
 
 ---
 
@@ -14,15 +14,15 @@ The original v1 of this document attempted to be both a vision statement AND a s
 - The architectural primitive turned out to be the **Page** hosting **two AI modes** (LEARN / Teacher · THINK / Typesetter), not a "collapsing of six verbs".
 - The missing piece turned out to be a single **Compile pipeline** sitting on top of seven existing or in-flight substrate pieces — not multiple new surfaces.
 
-Rather than rewrite this document in place, the canonical product framing was elevated to **`LOOM.md` at repo root** (peer to `LOOM_RULES.md` and `LOOM_USER_PROFILE.md`). This file is now reduced to its still-useful function: a **navigation map** showing where each sub-plan fits.
+Rather than rewrite this document in place, the canonical product framing was elevated to **`docs/canon/LOOM.md` at repo root** (peer to `docs/canon/LOOM_RULES.md` and `docs/canon/LOOM_USER_PROFILE.md`). This file is now reduced to its still-useful function: a **navigation map** showing where each sub-plan fits.
 
 ---
 
-## 2. The current canonical framing — read `LOOM.md`
+## 2. The current canonical framing — read `docs/canon/LOOM.md`
 
-For "what is Loom", "what AI modes are there", "what's the moat", "what's the roadmap", "what's the privacy model", "how do the eight supporting pieces fit together" — read **`LOOM.md`**.
+For "what is Loom", "what AI modes are there", "what's the moat", "what's the roadmap", "what's the privacy model", "how do the eight supporting pieces fit together" — read **`docs/canon/LOOM.md`**.
 
-`LOOM.md` covers:
+`docs/canon/LOOM.md` covers:
 
 - §1 What Loom Is — In One Sentence
 - §2 The Learning Loop
@@ -54,19 +54,19 @@ For "what is Loom", "what AI modes are there", "what's the moat", "what's the ro
 | 1 | Design System v1 foundation | `plans/loom-design-system-v1.md` | Foundation shipped, tranche 1 done, tranches 2-4 pending |
 | 1 | Hex literal migration | `plans/design-system-migration-inventory.md` | Tranche 1 done; tranche 2 unblocked by tint family |
 | 1 | CaptureAST pivot | (No formal plan filed; tracked by Codex via task list and peer-chat msg-002 onward) | In flight |
-| 2 | Compile pipeline MVP | `plans/compile-pipeline-mvp.md` | TO BE FILED — derives from `LOOM.md §4`, §7, §7.5 |
+| 2 | Compile pipeline MVP | `plans/compile-pipeline-mvp.md` | TO BE FILED — derives from `docs/canon/LOOM.md §4`, §7, §7.5 |
 | 2-3 | Content-shape rendering | `plans/phase-c-presentation-layer.md` | M1/Path B partial; M2-M4 not started |
-| 4 | Cosmic substrate canon | `plans/cosmic-canon-v1.md` | TBD — derives from `LOOM.md §13` |
-| 5 | Connect surface | `plans/connect-surface-echoes.md` | TBD — derives from `LOOM.md §3` Span scale |
-| 6 | Return surface | `plans/return-surface-last-read.md` | TBD — derives from `LOOM.md §3` Arc scale |
+| 4 | Cosmic substrate canon | `plans/cosmic-canon-v1.md` | TBD — derives from `docs/canon/LOOM.md §13` |
+| 5 | Connect surface | `plans/connect-surface-echoes.md` | TBD — derives from `docs/canon/LOOM.md §3` Span scale |
+| 6 | Return surface | `plans/return-surface-last-read.md` | TBD — derives from `docs/canon/LOOM.md §3` Arc scale |
 
 ---
 
 ## 4. Read order on session start
 
-1. `LOOM.md` — what Loom is (canonical product definition)
-2. `LOOM_RULES.md` — what Loom must / must not do (12 vetoes + North Star principles + §8 decision log)
-3. `LOOM_USER_PROFILE.md` — who Loom is for
+1. `docs/canon/LOOM.md` — what Loom is (canonical product definition)
+2. `docs/canon/LOOM_RULES.md` — what Loom must / must not do (12 vetoes + North Star principles + §8 decision log)
+3. `docs/canon/LOOM_USER_PROFILE.md` — who Loom is for
 4. The relevant sub-plan in this map for the current task
 5. Memory entries surface naturally via auto-memory
 
@@ -78,10 +78,10 @@ This file should remain a **map**, not a vision document. Updates:
 - When a new sub-plan is filed, add a row to §3.
 - When a sub-plan's status changes (TBD → in flight → shipped), update the row.
 - When a sub-plan is renamed, fix the link.
-- When the canonical framing in `LOOM.md` changes substantively, this file does NOT need to be re-edited — the navigation map is decoupled from the framing.
+- When the canonical framing in `docs/canon/LOOM.md` changes substantively, this file does NOT need to be re-edited — the navigation map is decoupled from the framing.
 
-Substantive vision changes go in `LOOM.md`. Implementation details go in the per-tier sub-plans. This file is the index between them.
+Substantive vision changes go in `docs/canon/LOOM.md`. Implementation details go in the per-tier sub-plans. This file is the index between them.
 
 ---
 
-*Reduced 2026-05-01 by Claude. The original v1 content (six-verb framing, page-as-primitive, five-ones architecture, seven 静奢 disciplines, tier 1-6 sequencing) lives in git history and conceptually in `LOOM.md`'s richer v2 framing. No information was lost; the framing was sharpened.*
+*Reduced 2026-05-01 by Claude. The original v1 content (six-verb framing, page-as-primitive, five-ones architecture, seven 静奢 disciplines, tier 1-6 sequencing) lives in git history and conceptually in `docs/canon/LOOM.md`'s richer v2 framing. No information was lost; the framing was sharpened.*
