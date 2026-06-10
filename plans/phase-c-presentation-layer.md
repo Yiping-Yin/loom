@@ -80,7 +80,7 @@ Lower-frequency but identity-defining shapes — the existing `ProvenanceSlip` d
 - `PassageCardView`: page-on-deck inset, asymmetric padding, bronze pin, hairlines. Quote text in serif italic; source eyebrow; `→` link to the source URL.
 - `ConversationView`: alternating role bubbles, role label as small-caps eyebrow (USER / ASSISTANT), no chat-app skeuomorphism (no rounded bubbles → just typographic rhythm).
 
-**Definition of done:** existing `LOOM-Design-Resources/visual-language/PROVENANCE_SLIP_PREVIEW_PAPER_V7_FINAL.html` renders pixel-faithfully in SwiftUI. Conversation captures from M1 spec read like a stage-play transcript, not a Slack export.
+**Definition of done:** existing `resources/design/visual-language/PROVENANCE_SLIP_PREVIEW_PAPER_V7_FINAL.html` renders pixel-faithfully in SwiftUI. Conversation captures from M1 spec read like a stage-play transcript, not a Slack export.
 
 ### M3 · `SyllabusBoard` (2 days)
 

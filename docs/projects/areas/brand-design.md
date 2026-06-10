@@ -15,7 +15,7 @@ Primary responsibilities:
 Key folders:
 
 - `docs/design/`
-- private local resource archive: `/Users/yinyiping/Desktop/LOOM-Design-Resources`
+- private local resource archive: `resources/design/`
 - `public/brand/`
 - `public/design/`
 - `components/LoomLogo.tsx`

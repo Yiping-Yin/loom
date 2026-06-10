@@ -131,14 +131,16 @@ Loom 的 corpus 不是 web-only。学生从 Moodle 下载 PDF、研究生收到 
 | 来源格式 | Loom 处理 | 优先级 |
 |---|---|---|
 | **PDF**（学术 + Moodle 主力） | 文本抽取 + OCR 兜底 + 保留原档 + PDF.js 渲染 | **P0** |
-| **PPTX / Keynote** | 逐页截图 + 每张 slide 是独立 artifact + 文字抽取 | **P0** |
+| **PPTX / Keynote / Pages** | 逐页/页组结构抽取 + iWork 元数据 + IWA 正文文本 + QuickLook 预览文本 + marker 去重 + 保留原档 | **P0** |
 | **Markdown** | 直接 import | **P0** |
-| DOCX / Pages | Pandoc 转 MD + 保留原档 | **P1** |
+| DOCX / RTF | NSAttributedString 转文本 + 保留原档 | **P1** |
 | 图片（PNG/JPG/HEIC） | OCR + alt-text + 保留原档 | **P1** |
 | EPUB | 章节拆分 + 文字抽取 | **P2** |
 | 音频 / 视频 | Whisper 转写 + 链接源文件 | **P3** |
 | Apple Notes | 显式授权同步 | **P3**（已确认） |
 | Moodle / Canvas LMS API | 直接拉课件 / 作业 | P3+ |
+
+The native importer in the active checkout has PDF / PPTX / Keynote / Pages / Markdown / text / DOCX / RTF / image extraction wired end-to-end (P0/P1 rows above), with Vision OCR fallback for scanned PDFs and images, iWork 元数据 + IWA 正文文本 + QuickLook 预览文本 抽取, and `p:cNvPr` 图形/图片 alt text 折入正文。
 
 ### Origin 抽象
 
@@ -337,6 +339,12 @@ Historical shipped vocab (2026-05-11 在 running app 现场验证, superseded):
 | **Specimen / Colophon** | 标本 + 版权页 —— Loom 给自己留的笔迹 |
 
 **关键事实**：本地文件**不需要新 surface**，全部 fits into 上面的 current inventory。只有 Cover 和 citation 渲染显示 origin 区别。
+
+### 第一批 support surfaces（已实现）
+
+- **The Year** —— `/year` 已作为 first support surface 上线：twelve columns, one ribbon；wintering ribbon 显示冷却的素材，Question containers 收住未决的问题。
+- **The Hour, ticking** —— `/hour` 已作为 first support surface 上线，承载 current material：live watch、minute progress、breath bar，No alerts。
+- **Connections / Correspondents** —— `/connections` 已作为 first support surface 上线：correspondents 与 cross-origin 连接 first-class，可直接从连接进入 Draft。
 
 ### Superseded historical entries (not current inventory)
 
@@ -654,7 +662,17 @@ Loom 不是 chrome-style SaaS dashboard。它的视觉宪法在 `Material Audit.
 3. **`@` 引用 origin-agnostic**，支持 page / slide 锚点
 4. **⌘K inline edit**：选段 → 让 AI 改 → diff 接受
 5. **`/draft from #tag`** streaming
-6. **Drag-to-import**：PDF / PPT / MD / 图片 入库（P0 格式）
+6. **Drag-to-import**：把 PDF / PPT / MD / 图片直接拖进 main Loom window 即入库（P0 格式）——文件落进 Sources 的 Add files 流程，与 NSOpenPanel 选档共用同一条 ingestion 管线
+
+##### Draft 层现状（web + native 已落地）
+
+**草稿层已进入新 Loom 主线**：web 与 native 共享同一个 **ThinkingDraft** block 模型；live AI composer 的整稿生成仍 **approval-bound**，等人工确认后才落盘。`draftBlocksFromBody` 把 markdown 切成可逐个 review 的 block（heading / paragraph / quote / list / code），写作面不再只是一条 body string。block 之上有 single-block 编辑与 **multi-block operation**（`applyDraftBlockOperation` / `draftBlockOperationDiffHunks`）：选中多个 block，先看 reviewable diff，再决定是否一次性改写。
+
+- **AI 默认整库上下文 + `@` 引用 origin-agnostic**：内联 `@source:p7` / `@slides:slide3` / `@notes#heading` 带 page / slide / heading / artifact-state 锚点，由 `parseDraftInlineReferences` 解析、`draftInlineReferencePromptLines` 渲染进 **Draft AI prompt**；`buildBoundedDraftAIPrompt` 先 `selectDraftCorpusHits` 取整个 corpus 的近邻命中，把 `Corpus context:` 注入后再 compose。
+- **⌘K inline edit**：在写作面选段后按 ⌘K，把 selected passage 交给 AI；返回结果以 Diff preview 呈现，用户显式 **Accept** 或 Discard，只替换被选中的那一段，不动其余正文。
+- **`/draft from #tag`** streaming：在正文里写 `/draft from #unclear` 之类命令，`parseDraftFromTagCommand` 从 draft-board 匹配卡片，`buildDraftFromTagPrompt` 把第一批命中（first slice）喂给 AI 流式起稿。
+- **Atelier 多 source 平铺**已并入 Draft：source tiles（最多 4 个）贴在写作面旁边，支持 Insert quote 与 Provenance 回链，引用 excerpt 与出处都由 Draft 拥有，不再留在 Atelier。
+- **Working mode（公开版屏蔽私密）**：开启 public working mode 后，`publicWorkingDraftReferences` 只做展示层 masking——Draft references are masked，但底层草稿与引用不被改写。
 
 #### Phase 7 —— Process / long-running questions 容器
 

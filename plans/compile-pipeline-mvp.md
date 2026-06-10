@@ -1,5 +1,7 @@
 # Compile Pipeline MVP — Tier 2 Implementation Plan
 
+> **Status update 2026-05-11**: Phase 1 landed natively. The `SourceFileView Compile UI/native streaming is wired` through `LoomCompilePipeline` → `LoomAI.sendStream` → per-source `### Compiled · …` writeback, with first-compile pulse, replace-warning toast, and the §5.5 error/edge banners (rate-limit, partial save, source-unavailable, malformed-output fallback, inline unsupported/contradiction annotations). Pure helpers are unit-tested in `LoomDraftStoreTests`.
+>
 > **Status**: filed 2026-05-01 — implementation plan, not yet started.
 > **Tier**: 2 (per `LOOM.md §11` roadmap). Prerequisite: Tier 1 complete (CaptureAST + reading-flow + DS v1 foundation).
 > **Estimated effort**: 4-6 hours for working prototype; 1-2 weeks for shippable MVP with full error handling, tests, and UX polish.
