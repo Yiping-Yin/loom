@@ -1,16 +1,16 @@
 .page {
-  --about-bg: #0B0B0B;
-  --about-surface: #101010;
-  --about-inset: #0d0d0d;
-  --about-ink: #F4F1EB;
-  --about-muted: #9A9892;
-  --about-subtle: #6B6A65;
-  --about-line: #212120;
-  --about-line2: #2C2B29;
-  --about-gold: #C9A15C;
-  --about-gold2: #D8B978;
-  --about-ok: #5FA37E;
-  --about-strong: #C9A15C;
+  --about-bg: #0A0D11;
+  --about-surface: #161B22;
+  --about-inset: #1E242D;
+  --about-ink: #E6E9EE;
+  --about-muted: #9BA3AE;
+  --about-subtle: #5E6671;
+  --about-line: #232A33;
+  --about-line2: #232A33;
+  --about-gold: #C8A24A;
+  --about-gold2: #E3C56A;
+  --about-ok: #3FB37A;
+  --about-strong: #C8A24A;
   --about-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --about-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
 
@@ -20,7 +20,7 @@
   width: 100%;
   min-height: 100vh;
   background:
-    radial-gradient(120% 80% at 50% -8%, #14130e 0%, var(--about-bg) 55%);
+    radial-gradient(120% 80% at 50% -8%, #12161C 0%, var(--about-bg) 55%);
   background-color: var(--about-bg);
   color: var(--about-ink);
 }
@@ -33,9 +33,10 @@
   min-height: 4.6rem;
   padding: 0.55rem max(clamp(28px, 4vw, 48px), calc((100% - 1320px) / 2));
   border-bottom: 1px solid var(--about-line);
-  background: rgba(11, 11, 11, 0.6);
-  -webkit-backdrop-filter: blur(24px) saturate(115%);
-  backdrop-filter: blur(24px) saturate(115%);
+  background: rgba(13, 17, 22, 0.62);
+  -webkit-backdrop-filter: blur(28px) saturate(110%);
+  backdrop-filter: blur(28px) saturate(110%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 30px rgba(0, 0, 0, 0.45);
 }
 
 .page :global(.vd-wordmark) {
@@ -63,7 +64,7 @@
 
 .page :global(.vd-nav__links a) {
   min-height: 2.95rem;
-  color: var(--about-muted);
+  color: var(--about-subtle);
   font-size: 0.86rem;
   font-weight: 500;
 }
@@ -74,10 +75,18 @@
 
 .page :global(.vd-nav__links a[aria-current="page"]) {
   color: var(--about-ink);
-  border-bottom: 2px solid var(--about-gold);
+  border-bottom: none;
 }
 
 .page :global(.vd-nav__links a[aria-current="page"]::after) {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -0.32rem;
+  left: 0;
+  height: 2px;
+  border-radius: 0;
+  background: var(--about-gold);
   opacity: 1;
 }
 
@@ -110,7 +119,7 @@
 .resumePanel,
 .sourceRail,
 .historyRows {
-  background: rgba(18, 18, 18, 0.55);
+  background: rgba(24, 26, 32, 0.55);
   -webkit-backdrop-filter: blur(20px) saturate(115%);
   backdrop-filter: blur(20px) saturate(115%);
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -235,11 +244,15 @@
 }
 
 .linkedinIcon {
-  border-radius: 2px;
-  background: var(--about-gold);
-  color: #0B0B0B;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  border: 1px solid var(--about-line);
+  background: transparent;
+  color: var(--about-gold);
   font-size: 0.66rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .linkIcon {
@@ -324,7 +337,7 @@
   padding: 0.72rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  background: rgba(13, 13, 13, 0.5);
+  background: rgba(30, 32, 38, 0.5);
   -webkit-backdrop-filter: blur(10px) saturate(110%);
   backdrop-filter: blur(10px) saturate(110%);
   color: inherit;
@@ -369,7 +382,7 @@
   border-radius: 10px;
   color: inherit;
   text-decoration: none;
-  background: rgba(18, 18, 18, 0.5);
+  background: rgba(24, 26, 32, 0.5);
   -webkit-backdrop-filter: blur(16px) saturate(115%);
   backdrop-filter: blur(16px) saturate(115%);
   box-shadow:

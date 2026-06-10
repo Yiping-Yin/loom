@@ -1,31 +1,41 @@
 .roleOsPage {
-  --role-page: #0B0B0B;
-  --role-surface: #101010;
-  --role-surface-soft: #0d0d0d;
-  --role-ink: #F4F1EB;
-  --role-muted: #9A9892;
-  --role-subtle: #6B6A65;
-  --role-border: #212120;
-  --role-border-strong: #2C2B29;
-  --role-accent: #C9A15C;
-  --role-accent-strong: #D8B978;
-  --role-row-active: #141210;
-  --role-ok: #5FA37E;
-  --role-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  /* Digital Me scene — "alive, intelligent, signal" on the Evidence Desk
+     foundation. Base --ink-1 + a faint cool ambient glow; cyan is the
+     data-signal; gold appears ONLY on active states as a 1px hairline.
+     Spec: docs/archive/ai-build-log/specs/2026-06-11-loom-visual-system-design.md */
+  --role-page: var(--ink-1, #0A0D11);
+  --role-surface: var(--ink-3, #161B22);
+  --role-surface-soft: var(--ink-4, #1E242D);
+  --role-ink: var(--text-1, #E6E9EE);
+  --role-muted: var(--text-2, #9BA3AE);
+  --role-subtle: var(--text-3, #5E6671);
+  --role-border: var(--line-soft, #1A1F27);
+  --role-border-strong: var(--line, #232A33);
+  --role-accent: var(--gold, #C8A24A);
+  --role-accent-strong: var(--gold-hi, #E3C56A);
+  --role-signal: var(--cyan, #4BC5DE);
+  --role-row-active: var(--ink-5, #2A323D);
+  --role-ok: var(--up, #3FB37A);
+  --role-mono: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
   --role-shell: 1320px;
   --role-gutter: clamp(28px, 4vw, 48px);
-  /* Glass material on the dark base (chrome layers only) */
-  --role-glass: rgba(18, 18, 18, 0.55);
-  --role-glass-border: rgba(255, 255, 255, 0.07);
-  --role-glass-shadow: 0 16px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --role-chrome: rgba(11, 11, 11, 0.6);
+  /* Glass material — real optics: blur + 1px specular top edge (key light,
+     top-left) + inner bottom thickness shadow + long float shadow. */
+  --role-glass: rgba(16, 20, 26, 0.55);
+  --role-glass-border: var(--line, #232A33);
+  --role-glass-shadow:
+    var(--keylight, inset 0 1px 0 rgba(255, 255, 255, 0.05)),
+    var(--float-2, 0 24px 60px rgba(0, 0, 0, 0.55)),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  --role-chrome: rgba(10, 13, 17, 0.6);
   position: relative;
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
-  /* Subtle warm graphite glow top-center fading to near-black, so glass has something to refract */
+  /* Faint cool ambient glow, top-center — the live room's "powered-on" air —
+     fading into the cool-black desk. */
   background:
-    radial-gradient(120% 80% at 50% -8%, #14130e 0%, var(--role-page) 55%),
+    radial-gradient(120% 80% at 50% -8%, rgba(96, 148, 178, 0.07) 0%, rgba(96, 148, 178, 0) 55%),
     var(--role-page);
   color: var(--role-ink);
   font-family: var(--sans);
@@ -40,7 +50,7 @@
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(120% 80% at 50% -8%, #14130e 0%, var(--role-page) 55%),
+    radial-gradient(120% 80% at 50% -8%, rgba(96, 148, 178, 0.07) 0%, rgba(96, 148, 178, 0) 55%),
     var(--role-page);
   pointer-events: none;
 }
@@ -66,6 +76,12 @@
   background: var(--role-chrome);
   -webkit-backdrop-filter: blur(24px) saturate(115%);
   backdrop-filter: blur(24px) saturate(115%);
+  /* Real glass optics — match the /about nav + .lcv-nav: 1px top specular
+     key light + a soft float shadow so the bar reads as lifted glass, not a
+     flat blurred film. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 12px 30px rgba(0, 0, 0, 0.45);
 }
 
 .nav a {
@@ -99,9 +115,9 @@
   content: "";
   position: absolute;
   right: 0;
-  bottom: -1.05rem;
+  bottom: -5px;
   left: 0;
-  height: 2px;
+  height: 1px;
   background: var(--role-accent);
 }
 
@@ -136,7 +152,7 @@
 .artifactOutput > p,
 .evidencePanel > p {
   margin: 0;
-  color: var(--role-accent);
+  color: var(--role-subtle);
   font-family: var(--role-mono);
   font-size: 0.7rem;
   font-weight: 500;
@@ -280,7 +296,7 @@
 
 .claimButton[aria-pressed="true"] {
   padding-left: 0.72rem;
-  border-left: 3px solid var(--role-accent);
+  border-left: 1px solid var(--role-accent);
   background: var(--role-row-active);
 }
 
@@ -288,7 +304,7 @@
 .capabilityArtifact button:hover,
 .sourceGraphArtifact a:hover,
 .evidenceList a:hover {
-  color: var(--role-accent-strong);
+  color: var(--role-ink);
 }
 
 .claimButton:focus-visible,
@@ -336,10 +352,10 @@
   gap: 0;
   border: 1px solid var(--role-glass-border);
   border-radius: 10px;
-  background: rgba(18, 18, 18, 0.55);
-  -webkit-backdrop-filter: blur(18px) saturate(115%);
-  backdrop-filter: blur(18px) saturate(115%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: rgba(16, 20, 26, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(110%);
+  backdrop-filter: blur(18px) saturate(110%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
   overflow: hidden;
 }
 
@@ -359,15 +375,25 @@
   border-right: 0;
 }
 
-.artifactActions button[aria-pressed="true"],
+/* Active tab — NO fill. Raised --ink-5 surface + a 1px gold underline
+   (watch-hand discipline: gold as hairline only). */
+.artifactActions button[aria-pressed="true"] {
+  background: var(--role-row-active);
+  color: var(--role-ink);
+  box-shadow: inset 0 -1px 0 var(--role-accent);
+}
+
+/* Active capability — raised surface + a 1px cyan left hairline:
+   the data-signal marks which capability is live. */
 .capabilityArtifact button[data-active="true"] {
-  background: var(--role-accent);
-  color: #0B0B0B;
+  background: var(--role-row-active);
+  color: var(--role-ink);
+  box-shadow: inset 1px 0 0 var(--role-signal);
 }
 
 .artifactActions button[aria-pressed="true"]:hover,
 .capabilityArtifact button[data-active="true"]:hover {
-  color: #0B0B0B;
+  color: var(--role-ink);
 }
 
 .artifactOutput {
@@ -378,7 +404,7 @@
   padding: clamp(1rem, 2vw, 1.45rem);
   border: 1px solid var(--role-glass-border);
   border-radius: 10px;
-  background: rgba(13, 13, 13, 0.5);
+  background: rgba(15, 19, 24, 0.5);
 }
 
 .artifactOutput ul,
@@ -431,7 +457,7 @@
   position: absolute;
   top: 0.82rem;
   left: 0;
-  color: var(--role-accent);
+  color: var(--role-subtle);
   font-family: var(--role-mono);
   font-size: 0.7rem;
   font-weight: 500;
@@ -465,7 +491,7 @@
 }
 
 .caseArtifact {
-  border-left: 4px solid var(--role-accent);
+  border-left: 1px solid var(--role-accent);
 }
 
 .caseArtifact ul {
@@ -496,10 +522,13 @@
   border-top: 1px solid var(--role-border);
 }
 
-.capabilityArtifact button[data-active="true"] strong,
+.capabilityArtifact button[data-active="true"] strong {
+  color: var(--role-ink);
+}
+
 .capabilityArtifact button[data-active="true"] span,
 .capabilityArtifact button[data-active="true"] small {
-  color: #0B0B0B;
+  color: var(--role-muted);
 }
 
 .emptyEvidence {
@@ -518,7 +547,7 @@
 }
 
 .boundaryPanel strong {
-  color: var(--role-accent);
+  color: var(--role-subtle);
   font-family: var(--role-mono);
   font-size: 0.72rem;
   font-weight: 500;
@@ -549,17 +578,18 @@
 }
 
 .foundationStrip a {
-  color: var(--role-accent);
+  color: var(--role-ink);
   font-size: 0.84rem;
   font-weight: 560;
   line-height: 1.25;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: var(--role-border-strong);
+  text-underline-offset: 3px;
 }
 
 .foundationStrip a:hover {
-  color: var(--role-accent-strong);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: var(--role-ink);
+  text-decoration-color: var(--role-accent);
 }
 
 .foundationStrip span {
@@ -637,7 +667,7 @@
   }
 
   .nav a[aria-current="page"]::after {
-    bottom: -0.35rem;
+    bottom: -5px;
   }
 
   .roleLens h1 {
@@ -698,8 +728,9 @@
   }
 }
 
-/* Live Market Room — the Optibook replica as a launchable Digital Me feature.
-   Immersive real-terminal backdrop, scrim, gold launch affordance. */
+/* Live Market Room — the Beebook replica as a launchable Digital Me feature.
+   A real screen on the desk: the terminal screenshot recedes in slight
+   perspective with a faint glow, under a cool-black scrim. */
 .marketRoom {
   position: relative;
   max-width: var(--role-shell);
@@ -722,14 +753,19 @@
   object-fit: cover;
   object-position: center top;
   opacity: 0.85;
+  /* The screen recedes into the room — subtle, screen-like perspective. */
+  transform: perspective(1600px) rotateX(3deg) scale(1.05);
+  transform-origin: 50% 0;
 }
 
 .marketRoomScrim {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(11, 11, 11, 0.88) 0%, rgba(11, 11, 11, 0.55) 42%, rgba(11, 11, 11, 0.12) 75%, rgba(11, 11, 11, 0.05) 100%),
-    linear-gradient(180deg, rgba(11, 11, 11, 0.25) 0%, rgba(11, 11, 11, 0.08) 38%, rgba(11, 11, 11, 0.7) 80%, rgba(11, 11, 11, 0.92) 100%);
+    /* faint cool glow off the live screen */
+    radial-gradient(80% 55% at 72% 30%, rgba(75, 197, 222, 0.06) 0%, rgba(75, 197, 222, 0) 65%),
+    linear-gradient(90deg, rgba(7, 9, 12, 0.88) 0%, rgba(7, 9, 12, 0.55) 42%, rgba(7, 9, 12, 0.12) 75%, rgba(7, 9, 12, 0.05) 100%),
+    linear-gradient(180deg, rgba(7, 9, 12, 0.25) 0%, rgba(7, 9, 12, 0.08) 38%, rgba(7, 9, 12, 0.7) 80%, rgba(7, 9, 12, 0.92) 100%);
 }
 
 .marketRoomBody {
@@ -745,7 +781,7 @@
   font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--role-accent);
+  color: var(--role-subtle);
 }
 
 .marketRoomTitle {
@@ -782,31 +818,37 @@
   width: 4px;
   height: 4px;
   border-radius: 999px;
-  background: var(--role-accent);
+  background: var(--role-signal);
   margin-right: 8px;
   vertical-align: 2px;
 }
 
+/* Launch affordance — glass, never a gold fill. Gold lives only in the
+   1px hairline border (the active brand moment of this scene). */
 .marketRoomLaunch {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   margin-top: 18px;
   padding: 11px 18px;
-  border: 1px solid rgba(201, 161, 92, 0.55);
+  border: 1px solid color-mix(in srgb, var(--role-accent) 55%, transparent);
   border-radius: 8px;
-  background: rgba(201, 161, 92, 0.14);
-  -webkit-backdrop-filter: blur(14px) saturate(115%);
-  backdrop-filter: blur(14px) saturate(115%);
-  color: var(--role-accent);
+  background: rgba(16, 20, 26, 0.55);
+  -webkit-backdrop-filter: blur(14px) saturate(110%);
+  backdrop-filter: blur(14px) saturate(110%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--role-ink);
   font-size: 0.92rem;
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s ease, gap 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, gap 0.15s ease;
 }
 
 .marketRoomLaunch:hover {
-  background: rgba(201, 161, 92, 0.24);
+  border-color: var(--role-accent-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 24px rgba(200, 162, 74, 0.14);
   gap: 14px;
 }
 

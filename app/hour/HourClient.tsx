@@ -11,6 +11,8 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import styles from '../loom-support-page.module.css';
+import { LoomSupportNav } from '../LoomSupportNav';
 import { useAllTraces } from '../../lib/trace';
 import { loadPursuitRecords, type LoomPursuitRecord } from '../../lib/loom-pursuit-records';
 import {
@@ -94,17 +96,18 @@ export default function HourClient() {
     : 0;
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: 'var(--bg)',
-        color: 'var(--fg)',
-        padding: 'clamp(4rem, 8vh, 6rem) clamp(1.5rem, 5vw, 4rem)',
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
-      <article style={{ width: '100%', maxWidth: '40rem' }}>
+    <div className={styles.surface}>
+      <LoomSupportNav active="/hour" />
+      <main
+        style={{
+          background: 'var(--bg)',
+          color: 'var(--fg)',
+          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <article style={{ width: '100%', maxWidth: '40rem' }}>
         <header style={{ marginBottom: '2.2rem' }}>
           <div
             style={{
@@ -164,7 +167,7 @@ export default function HourClient() {
               style={{
                 width: `${minuteProgress.toFixed(1)}%`,
                 height: '100%',
-                background: 'color-mix(in srgb, var(--accent) 70%, var(--bg))',
+                background: 'color-mix(in srgb, var(--accent-info, var(--accent)) 70%, var(--bg))',
                 transition: 'width 1s linear',
               }}
             />
@@ -241,7 +244,8 @@ export default function HourClient() {
             Discipline
           </Link>
         </nav>
-      </article>
-    </main>
+        </article>
+      </main>
+    </div>
   );
 }

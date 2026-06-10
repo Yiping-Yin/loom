@@ -9,6 +9,8 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import styles from '../loom-support-page.module.css';
+import { LoomSupportNav } from '../LoomSupportNav';
 import { useAllTraces, type Trace } from '../../lib/trace';
 import {
   browserPublicWorkingStorage,
@@ -68,17 +70,18 @@ export default function ConnectionsClient() {
   );
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: 'var(--bg)',
-        color: 'var(--fg)',
-        padding: 'clamp(4rem, 8vh, 6rem) clamp(1.5rem, 5vw, 4rem)',
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
-      <article style={{ width: '100%', maxWidth: '44rem' }}>
+    <div className={styles.surface}>
+      <LoomSupportNav active="/connections" />
+      <main
+        style={{
+          background: 'var(--bg)',
+          color: 'var(--fg)',
+          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <article style={{ width: '100%', maxWidth: '44rem' }}>
         <header style={{ marginBottom: '2.2rem' }}>
           <div
             style={{
@@ -212,7 +215,8 @@ export default function ConnectionsClient() {
             </ul>
           )}
         </section>
-      </article>
-    </main>
+        </article>
+      </main>
+    </div>
   );
 }

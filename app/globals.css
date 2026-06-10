@@ -138,13 +138,18 @@ a[class*="loom-"] {
   --fg-secondary: #4A4339;      /* ink2 */
   --muted: #8A8373;             /* muted earth */
 
-  /* Accent — Thread (bronze). `--accent` at 3.8:1 is fine for icons
-     / selection bg / focus rings; `--accent-text` passes WCAG AA for
-     body-text links (4.8:1). Keep both. */
-  --accent: #9E7C3E;            /* thread — UI chips, selection, icons */
-  --accent-soft: rgba(158, 124, 62, 0.18);
-  --accent-text: #7A5E2E;       /* deeper bronze — body-text links */
-  --accent-secondary: #A8783E;  /* ochre */
+  /* Accent — refined champagne gold (Loom Visual System v1). `--accent`
+     drives UI chips, selection bg, focus rings, scrollbar, and global
+     links — always as a tint/hairline, never a solid fill. `--accent-text`
+     is the deeper gold used for body-text links so they stay legible on
+     the paper/dark surfaces. `--accent-info` is the restrained comet-cyan
+     used ONLY for informational/data affordances (link hover, secondary
+     focus, chart/flow accents) — never replacing the gold brand role. */
+  --accent: #C8A24A;            /* refined gold (light) — hairlines, marks, tints */
+  --accent-soft: rgba(200, 162, 74, 0.18);
+  --accent-text: #8A6E32;       /* deeper gold — body-text links */
+  --accent-secondary: #C8A24A;  /* gold */
+  --accent-info: #4BC5DE;       /* comet-cyan — informational/data accent only */
 
   /* Borders — hairline ink */
   --border: rgba(26, 23, 18, 0.06);
@@ -223,9 +228,10 @@ a[class*="loom-"] {
     --fg-secondary: #B9AE93;      /* candle2 */
     --muted: #6F6756;             /* muted-night */
 
-    --accent: #C4A468;            /* thread-hi on dark */
-    --accent-soft: rgba(196, 164, 104, 0.18);
-    --accent-text: #D4B478;       /* lighter bronze for dark-mode body links */
+    --accent: #C8A24A;            /* refined gold (dark) */
+    --accent-soft: rgba(200, 162, 74, 0.18);
+    --accent-text: #C8A24A;       /* gold for dark-mode body links */
+    --accent-info: #4BC5DE;       /* comet-cyan — informational/data accent only */
 
     --mat-border: rgba(232, 224, 206, 0.08);
     --mat-thin-bg: rgba(26, 24, 21, 0.45);
@@ -268,18 +274,115 @@ a[class*="loom-"] {
     --bg: color(display-p3 0.955 0.941 0.894);
     --fg: color(display-p3 0.165 0.145 0.125);
     --fg-secondary: color(display-p3 0.290 0.263 0.225);
-    --accent: color(display-p3 0.614 0.482 0.240);
-    --accent-soft: color(display-p3 0.614 0.482 0.240 / 0.20);
-    --accent-text: color(display-p3 0.478 0.368 0.180);
+    --accent: color(display-p3 0.773 0.643 0.318);       /* refined gold #C8A24A in P3 */
+    --accent-soft: color(display-p3 0.773 0.643 0.318 / 0.20);
+    --accent-text: color(display-p3 0.524 0.435 0.234);  /* deeper gold #8A6E32 in P3 */
+    --accent-info: color(display-p3 0.433 0.763 0.858);  /* comet-cyan #4BC5DE in P3 */
   }
   @media (prefers-color-scheme: dark) {
     html:not(.light):not(.dark) {
       --bg: color(display-p3 0.102 0.094 0.082);
       --fg: color(display-p3 0.910 0.875 0.808);
-      --accent: color(display-p3 0.768 0.643 0.408);
-      --accent-text: color(display-p3 0.830 0.705 0.470);
+      --accent: color(display-p3 0.773 0.643 0.318);     /* refined gold #C8A24A in P3 */
+      --accent-text: color(display-p3 0.773 0.643 0.318);
+      --accent-info: color(display-p3 0.433 0.763 0.858); /* comet-cyan #4BC5DE in P3 */
     }
   }
+}
+
+/* ============================================================
+   === Loom Visual System v1 — Evidence Desk foundation ===
+   Cool-black, luminance-layered. Structure is carried by the
+   --ink ramp + one global key light (top-left), NEVER by colour.
+   Colour is information only: gold = brand moments (watch-hand
+   discipline — hairlines/marks/numerals/glow, <5% area, never a
+   fill), cyan = data/signal, up/down = market numerals.
+   Spec: docs/archive/ai-build-log/specs/2026-06-11-loom-visual-system-design.md
+   ============================================================ */
+:root {
+  /* Canvas & ink ramp — cool-black, a hair of blue undertone
+     (NOT neutral black, NOT navy). */
+  --ink-0: #07090C;     /* page base (deepest) */
+  --ink-1: #0A0D11;     /* page / ambient */
+  --ink-2: #0F1318;     /* recessed */
+  --ink-3: #161B22;     /* surface / panel */
+  --ink-4: #1E242D;     /* elevated surface */
+  --ink-5: #2A323D;     /* raised / hover */
+  --line: #232A33;      /* hairline (1px, cool grey) */
+  --line-soft: #1A1F27; /* inner divider */
+  --text-1: #E6E9EE;    /* primary */
+  --text-2: #9BA3AE;    /* secondary */
+  --text-3: #5E6671;    /* tertiary / eyebrows / captions */
+
+  /* Accents — precious, sparse, information-only. */
+  --gold: #C8A24A;      /* champagne gold — hairline/mark/numeral/glow ONLY, never a fill */
+  --gold-hi: #E3C56A;   /* bright gold highlight */
+  --cyan: #4BC5DE;      /* comet-cyan — signal/data only */
+  --up: #3FB37A;        /* market up — price/PnL numerals + sparklines only */
+  --down: #E06A6A;      /* market down */
+
+  /* Type — the foundation reuses the Vellum stacks declared above:
+     --display (Cormorant Garamond — display ONLY, large, weight 500)
+     and --mono (ui-monospace / JetBrains Mono — eyebrows, data,
+     numerals). Body stays the neutral sans (--sans). --serif remains
+     the content/reading stack and is deliberately NOT re-pointed at
+     Cormorant: display serif on body prose is an anti-pattern. */
+
+  /* Light — one global key light, top-left, on every raised surface. */
+  --keylight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --float-1: 0 12px 30px rgba(0, 0, 0, 0.45);
+  --float-2: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* Glass — REAL optics, not a bare blur: backdrop blur+saturate, a 1px
+   specular top edge (the bevel catching the key light), an inner bottom
+   shadow (pane thickness), and the long float shadow. */
+.loom-glass {
+  background: rgba(16, 20, 26, 0.55);
+  -webkit-backdrop-filter: blur(28px) saturate(110%);
+  backdrop-filter: blur(28px) saturate(110%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--keylight), var(--float-2), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* Material card — a near-flat cool gradient sheen + edge light.
+   Never a flat colour block. */
+.loom-material {
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  border: 1px solid var(--line);
+  box-shadow: var(--keylight), var(--float-1);
+}
+
+/* Gold mark — text/stroke only. NEVER a fill. */
+.loom-gold-mark {
+  color: var(--gold);
+}
+
+/* Data numerals — mono, tabular, quiet. */
+.loom-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+
+/* Ambient canvas — the lit desk. Cool-black base with a single very
+   faint top-center cool glow (the key light's spill). Route scenes
+   paint their own surface over this; no warm/champagne canvas remains
+   at the body level. */
+body {
+  background-color: var(--ink-1);
+  background-image: radial-gradient(
+    120% 64% at 50% -12%,
+    rgba(108, 148, 180, 0.05) 0%,
+    transparent 62%
+  );
+  background-repeat: no-repeat;
+}
+
+/* The layout shell stays transparent — it sits on the lit desk. */
+.layout {
+  background: transparent;
 }
 
 /* Selection as warm glow, not rectangle. Works because MBP uses
@@ -358,11 +461,12 @@ html {
   .loom-vignette { display: none; }
 }
 
-/* Dark mode — tint the noise warm candle and use screen blend so the
-   fibers read as lamp-light scattering on ink-wash, not muddy specks. */
+/* Dark mode — tint the noise cool (a hair of blue, matching the
+   Evidence-Desk cool-black ambient) and use screen blend so the fibers
+   read as key-light scattering on the desk, not muddy specks. */
 @media (prefers-color-scheme: dark) {
   .loom-grain {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.92  0 0 0 0 0.88  0 0 0 0 0.78  0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.80  0 0 0 0 0.85  0 0 0 0 0.92  0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     mix-blend-mode: screen;
     opacity: 0.7;
   }
@@ -376,7 +480,7 @@ html {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(26, 23, 18, 0.05) 100%);
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(7, 9, 12, 0.05) 100%);
   mix-blend-mode: multiply;
 }
 
@@ -585,7 +689,10 @@ html {
 .loom-running-head a:hover {
   color: var(--accent-text);
   text-decoration: underline;
-  text-decoration-color: var(--accent);
+  /* Comet-cyan info accent on the hover underline only — a quiet data
+     affordance that signals "this is a link". Brand yellow stays the
+     dominant accent everywhere else. */
+  text-decoration-color: var(--accent-info, var(--accent));
   text-decoration-thickness: 0.5px;
   text-underline-offset: 3px;
 }
@@ -1415,12 +1522,23 @@ html {
   min-width: 0;
   gap: 0.55rem;
   padding: 0.42rem 0.52rem;
-  border: 1px solid var(--vd-border);
+  /* Evidence Desk default: a quiet recessed dark chip (NOT a white pill) so it
+     reads correctly on the cool-black pages. The light .vd-home surface
+     restores the paper look below. */
+  border: 1px solid var(--line, #232A33);
   border-radius: 7px;
-  background: var(--vd-surface);
-  color: #2a302d;
+  background: var(--ink-3, #161B22);
+  color: var(--text-1, #E6E9EE);
   font-size: 0.78rem;
   line-height: 1.2;
+  box-shadow: var(--keylight, inset 0 1px 0 rgba(255, 255, 255, 0.05));
+}
+
+/* Light Verified-Dossier home keeps its paper file badges. */
+.vd-home .vd-file-badge {
+  border-color: var(--vd-border);
+  background: var(--vd-surface);
+  color: #2a302d;
   box-shadow: 0 1px 0 rgba(18, 22, 21, 0.03);
 }
 
@@ -1458,13 +1576,16 @@ html {
   white-space: nowrap;
 }
 
-.vd-file-badge--pdf .vd-file-badge__icon { background: #d93025; }
-.vd-file-badge--word .vd-file-badge__icon { background: #2b579a; }
-.vd-file-badge--ppt .vd-file-badge__icon { background: #d24726; }
-.vd-file-badge--excel .vd-file-badge__icon { background: #217346; }
-.vd-file-badge--html .vd-file-badge__icon { background: #e34f26; }
+/* Muted document marks — desaturated/darkened toward the cool-black palette so
+   they read as quiet file-type chips, not bright candy, while staying
+   distinguishable. */
+.vd-file-badge--pdf .vd-file-badge__icon { background: #B24A45; }
+.vd-file-badge--word .vd-file-badge__icon { background: #3A5277; }
+.vd-file-badge--ppt .vd-file-badge__icon { background: #B25A40; }
+.vd-file-badge--excel .vd-file-badge__icon { background: #3C7A5C; }
+.vd-file-badge--html .vd-file-badge__icon { background: #B2563E; }
 .vd-file-badge--markdown .vd-file-badge__icon,
-.vd-file-badge--text .vd-file-badge__icon { background: #68716d; }
+.vd-file-badge--text .vd-file-badge__icon { background: #5E6671; }
 
 .vd-institution-mark {
   display: inline-flex;
@@ -1474,8 +1595,30 @@ html {
   width: 1.8rem;
   height: 1.8rem;
   overflow: hidden;
-  border: 1px solid transparent;
+  /* Logos sit on a quiet dark chip on the cool-black desk — no pure-white
+     discs. The light .vd-home surface restores its paper chip below. */
+  border: 1px solid var(--line, #232A33);
   border-radius: 999px;
+  background: var(--ink-4, #1E242D);
+}
+
+.vd-home .vd-institution-mark {
+  border-color: transparent;
+  background: #ffffff;
+}
+
+/* External brand artwork (UNSW crest, WQU, QuantNet) is drawn for light
+   backgrounds, so on the dark desk it sits on a muted paper chip rather than
+   a dark chip (where it would lose contrast). Still not pure white. */
+.vd-institution-mark--unsw,
+.vd-institution-mark--wqu,
+.vd-institution-mark--quantnet {
+  background: #E9E6DE;
+}
+
+.vd-home .vd-institution-mark--unsw,
+.vd-home .vd-institution-mark--wqu,
+.vd-home .vd-institution-mark--quantnet {
   background: #ffffff;
 }
 
@@ -2805,12 +2948,21 @@ html {
   min-width: 0;
   gap: 0.5rem;
   padding: 0.4rem 0.5rem;
-  border: 1px solid var(--vd-border);
+  /* Evidence Desk default: quiet recessed dark chip (paired block) — NOT a
+     white pill. Light .vd-home restores the paper look below. */
+  border: 1px solid var(--line, #232A33);
   border-radius: 7px;
-  background: #ffffff;
-  color: #2a302d;
+  background: var(--ink-3, #161B22);
+  color: var(--text-1, #E6E9EE);
   font-size: 0.78rem;
   line-height: 1.2;
+  box-shadow: var(--keylight, inset 0 1px 0 rgba(255, 255, 255, 0.05));
+}
+
+.vd-home .vd-file-badge {
+  border-color: var(--vd-border);
+  background: #ffffff;
+  color: #2a302d;
   box-shadow: 0 1px 0 rgba(18, 22, 21, 0.03);
 }
 
@@ -2848,13 +3000,15 @@ html {
   white-space: nowrap;
 }
 
-.vd-file-badge--pdf .vd-file-badge__icon { background: #d22d27; }
-.vd-file-badge--word .vd-file-badge__icon { background: #2b579a; }
-.vd-file-badge--ppt .vd-file-badge__icon { background: #c84624; }
-.vd-file-badge--excel .vd-file-badge__icon { background: #217346; }
+/* Muted document marks (see paired block above) — desaturated toward the
+   cool-black palette so they read as quiet file-type chips, not candy. */
+.vd-file-badge--pdf .vd-file-badge__icon { background: #B24A45; }
+.vd-file-badge--word .vd-file-badge__icon { background: #3A5277; }
+.vd-file-badge--ppt .vd-file-badge__icon { background: #B25A40; }
+.vd-file-badge--excel .vd-file-badge__icon { background: #3C7A5C; }
 .vd-file-badge--markdown .vd-file-badge__icon,
 .vd-file-badge--html .vd-file-badge__icon,
-.vd-file-badge--text .vd-file-badge__icon { background: #68716d; }
+.vd-file-badge--text .vd-file-badge__icon { background: #5E6671; }
 
 .vd-institution-mark {
   display: inline-flex;
@@ -2864,8 +3018,28 @@ html {
   width: 2rem;
   height: 2rem;
   overflow: hidden;
-  border: 1px solid transparent;
+  /* Quiet dark chip on the cool-black desk (paired block) — light .vd-home
+     restores the paper disc below. */
+  border: 1px solid var(--line, #232A33);
   border-radius: 8px;
+  background: var(--ink-4, #1E242D);
+}
+
+.vd-home .vd-institution-mark {
+  border-color: transparent;
+  background: #ffffff;
+}
+
+/* External brand artwork on the dark desk → muted paper chip (paired block). */
+.vd-institution-mark--unsw,
+.vd-institution-mark--wqu,
+.vd-institution-mark--quantnet {
+  background: #E9E6DE;
+}
+
+.vd-home .vd-institution-mark--unsw,
+.vd-home .vd-institution-mark--wqu,
+.vd-home .vd-institution-mark--quantnet {
   background: #ffffff;
 }
 
@@ -4369,9 +4543,10 @@ kbd:not(pre kbd):not(code kbd) {
   --fg-secondary: #B9AE93;
   --muted: #6F6756;
 
-  --accent: #C4A468;
-  --accent-soft: rgba(196, 164, 104, 0.18);
-  --accent-text: #D4B478;
+  --accent: #C8A24A;            /* refined gold (explicit dark) */
+  --accent-soft: rgba(200, 162, 74, 0.18);
+  --accent-text: #C8A24A;
+  --accent-info: #4BC5DE;       /* comet-cyan — informational/data accent only */
 
   --mat-border: rgba(232, 224, 206, 0.08);
   --mat-thin-bg: rgba(26, 24, 21, 0.45);
@@ -9906,8 +10081,13 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   display: block;
   overflow: hidden;
   min-height: 3.25rem;
-  border: 1px solid rgba(31, 58, 47, 0.12);
+  border: 1px solid var(--line, #232A33);
   border-radius: 6px;
+  background: var(--ink-4, #1E242D);
+}
+
+.vd-home .vd-citation-row__thumb {
+  border-color: rgba(31, 58, 47, 0.12);
   background: #f8faf7;
 }
 
@@ -10018,11 +10198,19 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.28rem;
   min-width: 0;
   padding: 0.46rem;
-  border: 1px solid var(--vd-border);
+  /* Quiet recessed row on the dark desk, not a bright white pill. */
+  border: 1px solid var(--line, #232A33);
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--ink-3, #161B22);
+  box-shadow: var(--keylight, inset 0 1px 0 rgba(255, 255, 255, 0.05));
   color: inherit;
   text-decoration: none;
+}
+
+.vd-home .vd-citation-row {
+  border-color: var(--vd-border);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: none;
 }
 
 .vd-citation-row > span:last-child {
@@ -18446,30 +18634,35 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   }
 }
 
-/* Verified Dossier section pages: About / Education / Experience / Digital Me. */
+/* Verified Dossier section pages: About / Education / Experience / Digital Me.
+   Loom Visual System v1 — Archive scene: restrained, credible,
+   document-forward. Base lifted to --ink-2 (the documents sit on a slightly
+   raised reading desk), material strength dialed DOWN so evidence reads
+   clearly, gold ONLY on verified marks (stroke, never a fill) + the thin
+   active-nav underline shared with the cover. */
 .vd-section-page {
-  --vd-section-ink: #F4F1EB;
-  --vd-section-muted: #9A9892;
-  --vd-section-subtle: #6B6A65;
-  --vd-section-border: #2C2B29;
-  --vd-section-hairline: #212120;
-  --vd-section-paper: #101010;
-  --vd-section-soft: #0d0d0d;
-  --vd-section-accent: #C9A15C;
-  --vd-section-accent-hover: #D8B978;
+  --vd-section-ink: var(--text-1);
+  --vd-section-muted: var(--text-2);
+  --vd-section-subtle: var(--text-3);
+  --vd-section-border: var(--line);
+  --vd-section-hairline: var(--line-soft);
+  --vd-section-paper: var(--ink-3);
+  --vd-section-soft: var(--ink-4);
+  --vd-section-accent: var(--gold);
+  --vd-section-accent-hover: var(--gold-hi);
   --vd-section-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --vd-section-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
-  /* liquid-glass material tokens (chrome layers only) */
-  --vd-section-glass: rgba(18, 18, 18, 0.55);
-  --vd-section-glass-nav: rgba(11, 11, 11, 0.6);
-  --vd-section-glass-border: rgba(255, 255, 255, 0.07);
-  --vd-section-glass-shadow: 0 16px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* glass material tokens (chrome/nav layer only) — real optics */
+  --vd-section-glass: rgba(16, 20, 26, 0.55);
+  --vd-section-glass-nav: rgba(10, 13, 17, 0.6);
+  --vd-section-glass-border: var(--line);
+  --vd-section-glass-shadow: var(--keylight), var(--float-2), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
   --vd-section-shell: 82.5rem; /* ~1320px centered content shell */
   width: 100%;
   min-height: 100vh;
   padding: 0 clamp(28px, 4vw, 48px) clamp(2.5rem, 5vw, 5rem);
-  /* full-bleed dark canvas with a barely-there warm graphite glow top-center */
-  background: radial-gradient(120% 80% at 50% -8%, #14130e 0%, #0B0B0B 55%) #0B0B0B;
+  /* lifted neutral canvas with a barely-there cool glow top-center */
+  background: radial-gradient(120% 80% at 50% -8%, var(--ink-3) 0%, var(--ink-2) 55%) var(--ink-2);
   color: var(--vd-section-ink);
   font-family: var(--sans);
 }
@@ -18492,22 +18685,25 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   padding: 0 max(clamp(28px, 4vw, 48px), calc((100% - var(--vd-section-shell)) / 2));
   border-bottom: 1px solid var(--vd-section-glass-border);
   background: var(--vd-section-glass-nav);
-  -webkit-backdrop-filter: blur(24px) saturate(115%);
-  backdrop-filter: blur(24px) saturate(115%);
+  -webkit-backdrop-filter: blur(28px) saturate(110%);
+  backdrop-filter: blur(28px) saturate(110%);
+  box-shadow: var(--keylight), var(--float-1);
 }
 
 .vd-section-page__nav a {
   position: relative;
-  color: var(--vd-section-muted);
+  color: var(--vd-section-subtle);
   font-size: 0.88rem;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
+  padding-bottom: 6px;
   transition: color 0.15s ease;
 }
 
 .vd-section-page__nav a:first-child {
   margin-right: auto;
+  padding-bottom: 0;
   color: var(--vd-section-ink);
   font-family: var(--vd-section-serif);
   font-size: 2rem;
@@ -18518,18 +18714,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   color: var(--vd-section-ink);
 }
 
+/* active link — IDENTICAL to .lcv-nav: ink text + single 1px gold hairline
+   underline spanning only the link text (the unified nav's one gold touch). */
 .vd-section-page__nav a[aria-current="page"] {
   color: var(--vd-section-ink);
-}
-
-.vd-section-page__nav a[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -1.45rem;
-  left: 0;
-  height: 2px;
-  background: var(--vd-section-accent);
+  border-bottom: 1px solid var(--vd-section-accent);
 }
 
 .vd-section-page__hero,
@@ -18556,7 +18745,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__hero p,
 .vd-section-page__canvas > p {
   margin: 0;
-  color: var(--vd-section-accent);
+  color: var(--vd-section-subtle);
   font-family: var(--vd-section-mono);
   font-size: 0.72rem;
   font-weight: 500;
@@ -18738,7 +18927,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__foundations strong {
-  color: var(--vd-section-accent);
+  color: var(--vd-section-ink);
   font-size: 0.9rem;
   font-weight: 760;
 }
@@ -18814,7 +19003,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__canvas li span {
-  color: var(--vd-section-accent);
+  color: var(--vd-section-ink);
   font-size: 0.88rem;
   font-weight: 760;
 }
@@ -18871,7 +19060,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__course-strip strong {
-  color: var(--vd-section-accent);
+  color: var(--vd-section-ink);
   font-weight: 780;
 }
 
@@ -18904,7 +19093,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__loom-layer strong {
-  color: var(--vd-section-accent);
+  color: var(--vd-section-ink);
   font-size: 0.9rem;
   font-weight: 780;
 }
@@ -18922,8 +19111,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   color: var(--vd-section-muted);
 }
 
+/* institution logos keep a muted-paper chip (reduced from the old off-white):
+   the QuantNet/WQU navy wordmarks are unreadable on a dark --ink-4 chip. */
 .vd-section-page .vd-institution-mark {
-  background: #f6f5f2;
+  background: #E9E6DE;
   border-color: var(--vd-section-border);
 }
 
@@ -18939,30 +19130,34 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__grid a:hover strong,
 .vd-section-page__course-strip a:hover strong {
-  color: var(--vd-section-accent-hover);
+  color: var(--vd-section-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--vd-section-subtle);
+  text-underline-offset: 0.2em;
 }
 
-/* Restrained liquid glass on the bordered container/card surfaces only.
-   Layout (grid, padding, radius) unchanged — just the surface material.
-   Body text and small chips keep their existing treatment. */
+/* Archive scene: material strength dialed DOWN. The bordered container/card
+   surfaces become quiet near-flat panels (one ink step up + the key-light
+   specular edge, no heavy glass or float) so the documents/evidence carried
+   inside them read first. Layout (grid, padding, radius) unchanged. */
 .vd-section-page__modes > div:last-child,
 .vd-section-page__foundations > div,
 .vd-section-page__canvas article,
 .vd-section-page__loom-layer li {
-  border-color: var(--vd-section-glass-border);
-  background: var(--vd-section-glass);
-  -webkit-backdrop-filter: blur(20px) saturate(115%);
-  backdrop-filter: blur(20px) saturate(115%);
-  box-shadow: var(--vd-section-glass-shadow);
+  border-color: var(--line-soft);
+  background: var(--ink-3);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--keylight);
 }
 
-/* file-badge dark insets get a lighter glass so they read as nested chips */
+/* file-badge insets read as quiet nested chips on the lifted desk */
 .vd-section-page .vd-file-badge {
-  border-color: var(--vd-section-glass-border);
-  background: var(--vd-section-glass);
-  -webkit-backdrop-filter: blur(16px) saturate(115%);
-  backdrop-filter: blur(16px) saturate(115%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border-color: var(--line-soft);
+  background: var(--ink-4);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--keylight);
 }
 
 @media (max-width: 980px) {
@@ -22058,26 +22253,31 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 /* ============================================================
    Home v12: ledger cover — isolated `.lcv` namespace.
-   Identity rail + numbered evidence ledger. Elegant-luxury:
-   near-black canvas, champagne gold accent, Cormorant serif.
+   Identity rail + numbered evidence ledger.
+   Loom Visual System v1 — Cover/Home scene: still, luxe.
+   Base = deepest --ink-0, max whitespace, structure carried by
+   the luminance ramp + one top-left key light. Gold budget on
+   this screen = 2 touches ONLY (active nav underline + the
+   pull-quote mark); NO cyan on home; no colour fills anywhere.
    Fully scoped under .lcv so none of the retired .vd-*cover*
    sediment applies to this markup.
    ============================================================ */
 .lcv{
-  --lcv-bg:#0B0B0B; --lcv-panel:#101010; --lcv-gold:#C9A15C; --lcv-gold2:#D8B978;
-  --lcv-ink:#F4F1EB; --lcv-ink2:#9A9892; --lcv-ink3:#6B6A65;
-  --lcv-line:#212120; --lcv-line2:#2C2B29; --lcv-ok:#5FA37E;
+  --lcv-bg:var(--ink-0); --lcv-panel:var(--ink-3); --lcv-gold:var(--gold); --lcv-gold2:var(--gold-hi);
+  --lcv-ink:var(--text-1); --lcv-ink2:var(--text-2); --lcv-ink3:var(--text-3);
+  --lcv-line:var(--line-soft); --lcv-line2:var(--line); --lcv-ok:var(--up);
   --lcv-serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
   --lcv-mono:ui-monospace,'JetBrains Mono','SF Mono',Menlo,monospace;
-  /* liquid-glass material tokens (chrome layers only) */
-  --lcv-glass:rgba(18,18,18,0.55);
-  --lcv-glass-nav:rgba(11,11,11,0.74);
-  --lcv-glass-border:rgba(255,255,255,0.07);
-  --lcv-glass-shadow:0 16px 50px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);
+  /* glass material tokens (chrome layers only) — real optics:
+     specular top edge + inner bottom thickness + long float shadow */
+  --lcv-glass:rgba(16,20,26,0.55);
+  --lcv-glass-nav:rgba(7,9,12,0.72);
+  --lcv-glass-border:var(--line);
+  --lcv-glass-shadow:var(--keylight),var(--float-2),inset 0 -1px 0 rgba(0,0,0,0.35);
   --lcv-shell-max:1440px;
   display:block; color:var(--lcv-ink);
-  /* full-bleed dark canvas with a barely-there warm graphite glow top-center */
-  background:radial-gradient(120% 80% at 50% -8%,#14130e 0%,var(--lcv-bg) 55%) var(--lcv-bg);
+  /* deepest cool-black desk with a barely-there cool glow top-center (key-light spill) */
+  background:radial-gradient(120% 80% at 50% -8%,var(--ink-2) 0%,var(--lcv-bg) 55%) var(--lcv-bg);
   width:100%; min-height:100vh; padding:0; margin:0;
   font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
 }
@@ -22091,14 +22291,16 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   padding:24px max(clamp(28px,4vw,48px),calc((100% - var(--lcv-shell-max)) / 2));
   border-bottom:1px solid var(--lcv-glass-border);
   background:var(--lcv-glass-nav);
-  -webkit-backdrop-filter:blur(24px) saturate(115%);
-  backdrop-filter:blur(24px) saturate(115%);
+  -webkit-backdrop-filter:blur(28px) saturate(110%);
+  backdrop-filter:blur(28px) saturate(110%);
+  box-shadow:var(--keylight),var(--float-1);
   position:sticky;top:0;z-index:10}
 .lcv-wordmark{font-size:30px;font-weight:600;letter-spacing:.01em;line-height:1}
-.lcv-nav__links{display:flex;gap:clamp(24px,3.5vw,44px);font-size:15px;color:var(--lcv-ink2)}
-.lcv-nav__links a{padding-bottom:6px;transition:color .15s}
+.lcv-nav__links{display:flex;gap:clamp(24px,3.5vw,44px);font-size:15px;color:var(--lcv-ink3)}
+.lcv-nav__links a{padding-bottom:6px;color:var(--lcv-ink3);transition:color .15s}
 .lcv-nav__links a:hover{color:var(--lcv-ink)}
-.lcv-nav__links a[aria-current="page"]{color:var(--lcv-ink);border-bottom:2px solid var(--lcv-gold)}
+/* gold touch 1 of 2 on this screen: the active-nav hairline underline */
+.lcv-nav__links a[aria-current="page"]{color:var(--lcv-ink);border-bottom:1px solid var(--lcv-gold)}
 .lcv-nav__avatar{width:42px;height:42px;border-radius:999px;object-fit:cover;
   object-position:center 20%;border:1px solid var(--lcv-line2)}
 
@@ -22115,8 +22317,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* memberships — real affiliations fill the rail below the pull-quote */
 .lcv-members{list-style:none;display:flex;flex-direction:column;gap:13px;margin:0;padding:0}
 .lcv-members__item{display:flex;align-items:center;gap:12px;font-size:14.5px;color:var(--lcv-ink2)}
-.lcv-members__dot{width:5px;height:5px;border-radius:999px;background:var(--lcv-gold);flex:0 0 auto;
-  box-shadow:0 0 6px rgba(201,161,92,.45)}
+.lcv-members__dot{width:5px;height:5px;border-radius:999px;background:var(--lcv-ink3);flex:0 0 auto}
 
 /* rail */
 .lcv-photo{width:100%;max-width:344px;aspect-ratio:344/316;object-fit:cover;
@@ -22124,49 +22325,58 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-name{font-size:58px;font-weight:600;line-height:.94;letter-spacing:-0.005em;
   margin:24px 0 0;white-space:nowrap}
 .lcv-loc{display:flex;align-items:center;gap:10px;font-size:17px;margin:22px 0 0;color:var(--lcv-ink)}
-.lcv-role{color:var(--lcv-gold);font-size:17px;margin:10px 0 0;letter-spacing:.01em}
+.lcv-role{color:var(--lcv-ink2);font-size:17px;margin:10px 0 0;letter-spacing:.01em}
 .lcv-rule{border:0;border-top:1px solid var(--lcv-line);margin:26px 0}
 .lcv-links{display:flex;flex-direction:column;gap:18px}
 .lcv-links a{display:flex;align-items:center;gap:14px;font-size:16px;color:var(--lcv-ink);transition:color .15s}
-.lcv-links a:hover{color:var(--lcv-gold)}
+.lcv-links a:hover{color:var(--lcv-ink);opacity:.82}
 .lcv-link-icon{width:20px;height:20px;flex:0 0 auto;fill:var(--lcv-ink);stroke:none}
 .lcv-link-icon[fill="none"]{stroke:var(--lcv-ink);stroke-width:1.6;fill:none}
-.lcv-link-icon--linkedin{fill:var(--lcv-gold)}
+.lcv-link-icon--linkedin{fill:var(--lcv-ink)}
 .lcv-quote{display:flex;gap:12px;margin:0}
+/* gold touch 2 of 2 on this screen: the single thin serif quote mark */
 .lcv-quote__mark{font-size:44px;color:var(--lcv-gold);line-height:.7}
 .lcv-quote p{font-size:16px;line-height:1.5;color:var(--lcv-ink);max-width:21rem;margin:0}
 .lcv-member{font-family:var(--lcv-mono);font-size:11px;letter-spacing:.18em;
   color:var(--lcv-ink3);margin:26px 0 0}
 
-/* ledger rows */
-.lcv-row{display:grid;grid-template-columns:232px minmax(0,1fr) 124px;gap:28px;
-  align-items:start;padding:30px 0 34px;border-bottom:1px solid var(--lcv-line)}
+/* ledger rows — entire row is one link; two columns (label block + asset). */
+.lcv-row{display:grid;grid-template-columns:248px minmax(0,1fr);gap:32px;
+  align-items:center;padding:20px 0;border-bottom:1px solid var(--lcv-line);
+  color:inherit;transition:border-color .15s}
 .lcv-row:last-child{border-bottom:0}
-.lcv-row__head{padding-top:2px}
-.lcv-row__num{font-family:var(--lcv-mono);font-size:13px;color:var(--lcv-gold);display:block;margin-bottom:12px}
+.lcv-row:hover{border-color:var(--lcv-line2)}
+.lcv-row__head{padding-top:0;display:flex;flex-direction:column;align-items:flex-start}
+/* row numbers: quiet mono ink, NOT gold (watch-hand discipline) */
+.lcv-row__num{font-family:var(--lcv-mono);font-size:13px;color:var(--lcv-ink2);display:block;margin-bottom:12px}
 .lcv-row__title{font-size:38px;font-weight:600;line-height:.95;margin:0}
 .lcv-row__desc{font-size:13.5px;color:var(--lcv-ink2);line-height:1.5;margin:12px 0 0;max-width:15rem}
-.lcv-verified{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--lcv-ink2);margin-top:20px}
-.lcv-verified svg{width:16px;height:16px;stroke:var(--lcv-ink2);fill:none;stroke-width:1.5}
-.lcv-view{display:flex;align-items:center;gap:8px;justify-content:flex-end;
-  color:var(--lcv-gold);font-size:14px;padding-top:4px;transition:gap .15s}
-.lcv-view:hover{gap:12px}
-.lcv-view svg{width:20px;height:20px;stroke:var(--lcv-gold);fill:none;stroke-width:1.5}
+/* verified marks: neutral text + a small desaturated --up tick (no fill) */
+.lcv-verified{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--lcv-ink2);margin-top:18px}
+.lcv-verified svg{width:16px;height:16px;stroke:var(--lcv-ok);fill:none;stroke-width:1.5}
+/* inline "Open →" affordance inside the label block (replaces the floating column) */
+.lcv-row__open{display:inline-flex;align-items:center;gap:7px;margin-top:16px;
+  color:var(--lcv-ink2);font-size:14px;transition:gap .15s,color .15s}
+.lcv-row:hover .lcv-row__open{gap:11px;color:var(--lcv-ink)}
+.lcv-row__open svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6}
 
-/* glass panel surface — restrained, single top highlight, no glossy streak */
+/* glass panel surface — real optics: blur + specular top edge + inner
+   bottom thickness + long float shadow (all via --lcv-glass-shadow) */
 .lcv-panel{border:1px solid var(--lcv-glass-border);border-radius:10px;
   background:var(--lcv-glass);
-  -webkit-backdrop-filter:blur(20px) saturate(115%);
-  backdrop-filter:blur(20px) saturate(115%);
+  -webkit-backdrop-filter:blur(28px) saturate(110%);
+  backdrop-filter:blur(28px) saturate(110%);
   box-shadow:var(--lcv-glass-shadow);overflow:hidden}
 
-/* about: CV doc */
+/* about: CV doc — a real paper sheet on the recessed desk: warm-neutral
+   stock, slight top-tilt perspective, soft float shadow from the key light */
 .lcv-about{display:grid;grid-template-columns:minmax(0,1fr) 188px}
-.lcv-cv{position:relative;height:212px;background:#0d0d0d;display:flex;
+.lcv-cv{position:relative;height:212px;background:var(--ink-2);display:flex;
   align-items:flex-start;justify-content:center;overflow:hidden;border-right:1px solid var(--lcv-line2)}
 .lcv-cv__sheet{position:relative;width:74%;margin-top:26px;
   background:linear-gradient(180deg,#f6f5f1,#e9e7e0);border-radius:3px 3px 0 0;
-  padding:22px 26px;box-shadow:0 18px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:7px}
+  padding:22px 26px;box-shadow:var(--float-1);display:flex;flex-direction:column;gap:7px;
+  transform:perspective(1200px) rotateX(3.5deg) rotateY(-1deg);transform-origin:50% 0}
 .lcv-cv__sheet::before{content:"";position:absolute;top:-12px;left:14px;right:-14px;height:30px;
   background:#cfccc3;border-radius:3px;z-index:-1;opacity:.5}
 .lcv-cv__kicker{font-family:var(--lcv-mono);font-size:9px;letter-spacing:.18em;color:#8a877e}
@@ -22187,9 +22397,12 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-edu__logos span{display:flex;align-items:center;justify-content:center;gap:11px;
   padding:24px 8px;border-right:1px solid var(--lcv-line2)}
 .lcv-edu__logos span:last-child{border-right:0}
-/* uniform off-white chip behind every logo so mixed source backgrounds read consistently */
-.lcv-edu__logos img{height:30px;width:auto;max-width:58px;object-fit:contain;
-  background:#f6f5f2;border-radius:7px;padding:6px 8px;box-sizing:content-box}
+/* uniform muted-paper chip behind every logo, reduced size — tested against
+   neutral --ink-4 chips: the QuantNet/WQU navy wordmarks are unreadable on
+   dark, so the quiet paper chip stays (smaller, lower-key than the old
+   off-white) for consistent legibility across mixed source backgrounds */
+.lcv-edu__logos img{height:26px;width:auto;max-width:54px;object-fit:contain;
+  background:#E9E6DE;border-radius:6px;padding:5px 7px;box-sizing:content-box}
 .lcv-edu__logos .lcv-edu__wide{max-width:84px}
 .lcv-edu__logos b{font-size:15px;font-weight:600;line-height:1}
 .lcv-edu__logos b small{display:block;font-family:var(--lcv-serif);font-size:9px;
@@ -22197,23 +22410,22 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-edu__chips{display:grid;grid-template-columns:repeat(4,1fr)}
 .lcv-edu__chips>div{padding:16px;border-right:1px solid var(--lcv-line2)}
 .lcv-edu__chips>div:last-child{border-right:0}
-.lcv-edu__code{display:block;color:var(--lcv-gold);font-size:13.5px;font-weight:600}
+.lcv-edu__code{display:block;color:var(--lcv-ink);font-family:var(--lcv-mono);font-size:12.5px;font-weight:600}
 .lcv-edu__title{display:block;font-size:12px;color:var(--lcv-ink2);margin-top:5px;line-height:1.4}
 .lcv-edu__more{display:flex;align-items:center;justify-content:center;text-align:center;
   border:1px dashed var(--lcv-line2);border-radius:4px;margin:12px}
 .lcv-edu__more span{font-size:12.5px;color:var(--lcv-ink2)}
 
-/* experience */
+/* experience — .loom-material cards: neutral cool gradient sheen + edge
+   light + key-light float; never a flat colour block */
 .lcv-exp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.lcv-exp__card{border:1px solid var(--lcv-glass-border);border-radius:10px;
-  background:var(--lcv-glass);
-  -webkit-backdrop-filter:blur(20px) saturate(115%);
-  backdrop-filter:blur(20px) saturate(115%);
-  box-shadow:var(--lcv-glass-shadow);
+.lcv-exp__card{border:1px solid var(--line);border-radius:10px;
+  background:linear-gradient(180deg,var(--ink-4),var(--ink-3));
+  box-shadow:var(--keylight),var(--float-1);
   padding:20px 22px;display:flex;flex-direction:column;gap:4px;min-height:150px}
 .lcv-exp__head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
 .lcv-exp__optiver{font-size:26px;font-weight:600;letter-spacing:.01em;line-height:1}
-.lcv-exp__tri{color:#E8552A;font-size:16px}
+.lcv-exp__tri{color:#C25E3F;font-size:16px}
 .lcv-exp__crest{height:30px;width:auto}
 .lcv-exp__unsw{font-size:18px;font-weight:600;line-height:1}
 .lcv-exp__unsw small{display:block;font-family:var(--lcv-serif);font-size:8px;
@@ -22233,9 +22445,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-dm__flowitem:nth-child(2){flex:1}
 .lcv-dm__step{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--lcv-ink2)}
 .lcv-dm__step svg{width:17px;height:17px;stroke:var(--lcv-ink2);fill:none;stroke-width:1.4}
-.lcv-dm__arrow{flex:1;min-width:34px;height:1px;background:linear-gradient(90deg,var(--lcv-gold),transparent);position:relative}
+.lcv-dm__arrow{flex:1;min-width:34px;height:1px;background:linear-gradient(90deg,var(--lcv-ink3),transparent);position:relative}
 .lcv-dm__arrow::after{content:"";position:absolute;right:0;top:-3px;
-  border-left:6px solid var(--lcv-gold);border-top:3px solid transparent;border-bottom:3px solid transparent}
+  border-left:6px solid var(--lcv-ink3);border-top:3px solid transparent;border-bottom:3px solid transparent}
 .lcv-dm__body{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:stretch}
 .lcv-dm__srcs{display:flex;align-items:center;gap:6px}
 .lcv-dm__src{width:46px;height:60px;background:linear-gradient(180deg,#f4f2ec,#dad8d0);border-radius:2px}
@@ -22246,15 +22458,15 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-dm__table td{padding:6px 8px;border:1px solid var(--lcv-line2);color:var(--lcv-ink2);vertical-align:middle}
 .lcv-dm__f{font-family:var(--lcv-mono);color:var(--lcv-ink)!important}
 .lcv-dm__spark{width:34px;height:12px}
-.lcv-dm__spark path{stroke:var(--lcv-gold);stroke-width:1.2}
-.lcv-dm__spark circle{fill:var(--lcv-gold)}
+.lcv-dm__spark path{stroke:var(--lcv-ink2);stroke-width:1.2}
+.lcv-dm__spark circle{fill:var(--lcv-ink2)}
 .lcv-dm__graph{border:1px solid var(--lcv-line2);border-radius:4px;padding:8px;display:flex;flex-direction:column}
 .lcv-dm__graphlbl{font-family:var(--lcv-mono);font-size:9px;color:var(--lcv-ink3);margin-bottom:2px}
 .lcv-dm__graph svg{width:100%;height:100%}
-.lcv-dm__axes{stroke:#3a3a38;stroke-width:1}
+.lcv-dm__axes{stroke:var(--line);stroke-width:1}
 .lcv-dm__curve{stroke:var(--lcv-ink);stroke-width:1.6}
-.lcv-dm__peak{fill:var(--lcv-gold)}
-.lcv-dm__drop{stroke:var(--lcv-gold);stroke-width:.8}
+.lcv-dm__peak{fill:var(--lcv-ink2)}
+.lcv-dm__drop{stroke:var(--lcv-ink3);stroke-width:.8}
 .lcv-dm__graph text{fill:var(--lcv-ink3);font-size:8px;font-family:var(--lcv-mono)}
 
 /* footer — full-bleed glass chrome, inner content capped + centered */
@@ -22262,8 +22474,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   padding:22px max(clamp(28px,4vw,48px),calc((100% - var(--lcv-shell-max)) / 2)) 28px;
   border-top:1px solid var(--lcv-glass-border);
   background:var(--lcv-glass-nav);
-  -webkit-backdrop-filter:blur(24px) saturate(115%);
-  backdrop-filter:blur(24px) saturate(115%);
+  -webkit-backdrop-filter:blur(28px) saturate(110%);
+  backdrop-filter:blur(28px) saturate(110%);
+  box-shadow:var(--keylight);
   font-family:var(--lcv-mono);font-size:11px;letter-spacing:.14em;color:var(--lcv-ink3)}
 .lcv-foot__all{display:flex;align-items:center;gap:8px}
 .lcv-foot__all svg{width:14px;height:14px;stroke:var(--lcv-ink3);fill:none;stroke-width:1.6}
@@ -22277,5 +22490,4 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   .lcv-ledger{padding:0 clamp(20px,4vw,40px)}
   .lcv-name{white-space:normal}
   .lcv-row{grid-template-columns:1fr;gap:16px}
-  .lcv-view{justify-content:flex-start}
 }

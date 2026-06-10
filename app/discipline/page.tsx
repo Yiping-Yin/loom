@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import styles from '../loom-support-page.module.css';
+import { LoomSupportNav } from '../LoomSupportNav';
 
 /**
  * /discipline — the six product refusals, written down as an in-app
@@ -43,17 +45,18 @@ const REFUSALS = [
 
 export default function DisciplinePage() {
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: 'var(--bg)',
-        color: 'var(--fg)',
-        padding: 'clamp(4rem, 8vh, 6rem) clamp(1.5rem, 5vw, 4rem)',
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
-      <article style={{ width: '100%', maxWidth: '40rem' }}>
+    <div className={styles.surface}>
+      <LoomSupportNav active="/discipline" />
+      <main
+        style={{
+          background: 'var(--bg)',
+          color: 'var(--fg)',
+          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <article style={{ width: '100%', maxWidth: '40rem' }}>
         <header style={{ marginBottom: '2.4rem' }}>
           <div
             style={{
@@ -145,7 +148,8 @@ export default function DisciplinePage() {
             Back to Sources
           </Link>
         </footer>
-      </article>
-    </main>
+        </article>
+      </main>
+    </div>
   );
 }

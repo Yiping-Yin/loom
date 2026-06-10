@@ -1,6 +1,8 @@
 'use client';
 
 import Ornament from '../components/Ornament';
+import styles from './loom-support-page.module.css';
+import { LoomSupportNav } from './LoomSupportNav';
 
 /**
  * ColophonClient — Loom's back matter.
@@ -36,19 +38,20 @@ import Ornament from '../components/Ornament';
  */
 export default function ColophonClient() {
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: 'var(--bg)',
-        color: 'var(--fg)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 'clamp(4rem, 8vh, 7rem) clamp(1.5rem, 5vw, 4rem)',
-        fontFamily: 'var(--serif)',
-      }}
-    >
-      <article
+    <div className={styles.surface}>
+      <LoomSupportNav active="/colophon" />
+      <main
+        style={{
+          background: 'var(--bg)',
+          color: 'var(--fg)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 'clamp(3rem, 6vh, 6rem) clamp(1.5rem, 5vw, 4rem)',
+          fontFamily: 'var(--serif)',
+        }}
+      >
+        <article
         style={{
           width: '100%',
           maxWidth: '34rem',
@@ -114,10 +117,13 @@ export default function ColophonClient() {
 
         {/* Palette paragraph */}
         <p style={bodyStyle}>
-          Palette begins in warm paper <Swatch value="#F4F0E4" label="#F4F0E4" />{' '}
-          and ends in the ink of a good pencil. Bronze thread is the AI’s
-          voice. Rose, sage, indigo, umber, plum, ochre are the categories —
-          all earth.
+          Palette is set in cool-black <Swatch value="#0A0D11" label="#0A0D11" />{' '}
+          with raised surfaces in <Swatch value="#161B22" label="#161B22" />. Champagne
+          gold <Swatch value="#C8A24A" label="#C8A24A" /> is the brand voice, held to
+          hairlines and single words;
+          comet-cyan <Swatch value="#4BC5DE" label="#4BC5DE" /> is kept for
+          informational and data accents only. Gain green and loss red carry
+          the market tones.
         </p>
 
         <Ornament />
@@ -144,8 +150,9 @@ export default function ColophonClient() {
         >
           © 2026 · All rights respected
         </div>
-      </article>
-    </main>
+        </article>
+      </main>
+    </div>
   );
 }
 

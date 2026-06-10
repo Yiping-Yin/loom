@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 
+import { AskYiping } from '../../components/verified-dossier/AskYiping';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import {
   DIGITAL_ME_ARTIFACT_MODES,
@@ -42,7 +43,7 @@ const CLAIM_BOUNDARIES: Record<string, string> = {
   'finance-learning-context':
     'Finance learning context is visible, but live market structure analysis still needs a dated output artifact.',
   'live-market-project-proof':
-    'The Optibook replica is first partial proof; analysis, implementation, evaluation, and reflection still need to be inspectable end to end.',
+    'Beebook is first partial proof; analysis, implementation, evaluation, and reflection still need to be inspectable end to end.',
 };
 
 function getClaimTitle(claim: DigitalMeClaimNode) {
@@ -206,6 +207,8 @@ export default function DigitalMeRoleOSClient() {
         </ul>
       </header>
 
+      <AskYiping />
+
       <section className={styles.proofPath} aria-label="Digital Me proof path">
         <aside className={styles.claimRail} aria-label="Claim Engine">
           <p>Claim Engine</p>
@@ -280,7 +283,7 @@ export default function DigitalMeRoleOSClient() {
         </aside>
       </section>
 
-      <section className={styles.marketRoom} aria-label="Live Market Room — Optibook replica">
+      <section className={styles.marketRoom} aria-label="Live Market Room — Beebook">
         <img
           className={styles.marketRoomShot}
           src="/verified-sources/digital-me/optibook-market-lens.png"
@@ -290,12 +293,12 @@ export default function DigitalMeRoleOSClient() {
         />
         <span className={styles.marketRoomScrim} aria-hidden="true" />
         <div className={styles.marketRoomBody}>
-          <p className={styles.marketRoomEyebrow}>Live Market Room · Optibook replica</p>
+          <p className={styles.marketRoomEyebrow}>Live Market Room · Beebook</p>
           <h2 className={styles.marketRoomTitle}>A working exchange, not a screenshot</h2>
           <p className={styles.marketRoomLede}>
-            A self-contained replica of the Optiver &amp; UNSW Optibook exchange — order book,
-            leaderboard, trade ticker, and market-making practice that keeps running offline
-            after the source retires.
+            Beebook is Yiping&apos;s own market-making simulator, inspired by the Optiver &amp; UNSW
+            trading academy — order book, leaderboard, trade ticker, and market-making practice
+            that keeps running offline, on its own.
           </p>
           <div className={styles.marketRoomMeta}>
             <span>44 teams</span>
@@ -309,7 +312,7 @@ export default function DigitalMeRoleOSClient() {
             target="_blank"
             rel="noreferrer"
           >
-            Launch the Optibook replica
+            Launch Beebook
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>

@@ -1,0 +1,133 @@
+/*
+ * loom-support-page.module.css — one styling source for the six Loom
+ * product support pages: /system, /discipline, /hour, /connections,
+ * /colophon, /year.
+ *
+ * These pages are token-driven (they read var(--bg) / var(--fg) /
+ * var(--accent) / var(--muted) / var(--fg-secondary) / var(--hairline)),
+ * so re-pointing those custom properties on a single wrapper recolours
+ * every page at once — no per-element hex edits. The palette is the
+ * Loom Visual System v1 foundation (Evidence Desk, Archive-scene
+ * defaults): cool-black luminance ramp, watch-hand champagne gold,
+ * comet-cyan for information/data only.
+ *
+ *   bg --ink-1 · surface --ink-3 · elevated --ink-4 · border --line
+ *   ink --text-1 / --text-2 / --text-3
+ *   accent --gold (hairline/word only, never a fill) · --cyan (info/data only)
+ */
+.surface {
+  --bg: var(--ink-1);
+  --bg-elevated: var(--ink-3);
+  --surface-2: var(--ink-3);
+  --surface-3: var(--ink-4);
+  --fg: var(--text-1);
+  --fg-secondary: var(--text-2);
+  --muted: var(--text-3);
+
+  /* Champagne gold is the sparse brand accent (hairlines, single words);
+     comet-cyan is the restrained informational/data accent (clock, year
+     weights, connection links). Never fills. */
+  --accent: var(--gold);
+  --accent-soft: rgba(200, 162, 74, 0.14);
+  --accent-text: var(--gold);
+  --accent-secondary: var(--gold-hi);
+  --accent-info: var(--cyan);
+
+  --border: var(--line);
+  --hairline: 1px solid var(--line);
+  --mat-border: var(--line);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Unified top nav — a single 1px gold hairline underline marks the
+   active surface; inactive links rest at --text-3 and lift to --text-1
+   on hover. Mirrors the .vd-nav idiom used across the CV/dossier pages.
+   Real glass: blur + 1px specular top edge + inner bottom thickness
+   shadow + float shadow (never blur alone). */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.9rem, 2vw, 1.8rem);
+  flex-wrap: wrap;
+  padding: 0.9rem clamp(1.5rem, 5vw, 4rem);
+  border-bottom: 1px solid var(--border);
+  background: rgba(10, 13, 17, 0.72);
+  -webkit-backdrop-filter: blur(28px) saturate(110%);
+  backdrop-filter: blur(28px) saturate(110%);
+  box-shadow:
+    var(--keylight),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    var(--float-1);
+}
+
+.navWordmark {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--fg);
+  text-decoration: none;
+  margin-right: 0.4rem;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.6rem);
+  flex-wrap: wrap;
+}
+
+.navLink {
+  position: relative;
+  padding: 0.35rem 0;
+  font-family: var(--sans);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text-3);
+  text-decoration: none;
+  transition: color 0.16s ease;
+}
+
+/* The global `a[class*="loom-"] { color: inherit }` reset (globals.css)
+   matches this module's hashed class names at 0,1,1 and would flatten
+   resting links to --fg; this 0,2,0 rule restores the text ramp. The
+   :hover / [aria-current] rules below also sit at 0,2,0 and win by
+   source order. */
+.nav .navLink {
+  color: var(--text-3);
+}
+
+.navLink:hover {
+  color: var(--text-1);
+}
+
+.navLink[aria-current='page'] {
+  color: var(--text-1);
+}
+
+.navLink[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.34rem;
+  height: 1px;
+  border-radius: 0;
+  background: var(--gold);
+}
+
+/* Inline body links (the prose "Sources"/"Draft" anchors and footer
+   rows) get a quiet comet-cyan hover so a link reads as a data
+   affordance while yellow stays the resting brand accent. */
+.surface a:not(.navLink):not(.navWordmark):hover {
+  text-decoration: underline;
+  text-decoration-color: var(--accent-info);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}

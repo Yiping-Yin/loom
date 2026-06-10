@@ -101,7 +101,7 @@ export function YearClient() {
                   borderRadius: 3,
                   background:
                     column.weight > 0
-                      ? 'color-mix(in srgb, var(--accent) 55%, var(--bg))'
+                      ? 'color-mix(in srgb, var(--accent-info, var(--accent)) 55%, var(--bg))'
                       : 'color-mix(in srgb, var(--fg) 8%, var(--bg))',
                 }}
               />

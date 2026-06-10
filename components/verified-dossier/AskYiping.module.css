@@ -1,0 +1,391 @@
+/* Ask Yiping — conversational core of Digital Me.
+   Evidence Desk scene tokens: inherits the foundation via the surrounding
+   roleOsPage's --role-* vars; falls back to the :root foundation tokens so
+   the panel still reads cool-black when mounted outside that page.
+   Cyan = the ask flow's data-signal (thinking caret, thread-of-light,
+   source hover); gold = 1px hairlines only, never a fill. */
+.askYiping {
+  --ask-ink: var(--role-ink, var(--text-1, #E6E9EE));
+  --ask-muted: var(--role-muted, var(--text-2, #9BA3AE));
+  --ask-subtle: var(--role-subtle, var(--text-3, #5E6671));
+  --ask-accent: var(--role-accent, var(--gold, #C8A24A));
+  --ask-accent-strong: var(--role-accent-strong, var(--gold-hi, #E3C56A));
+  --ask-signal: var(--role-signal, var(--cyan, #4BC5DE));
+  --ask-border: var(--role-glass-border, var(--line, #232A33));
+  --ask-border-strong: var(--role-border-strong, var(--line, #232A33));
+  --ask-glass: var(--role-glass, rgba(16, 20, 26, 0.55));
+  --ask-glass-shadow: var(
+    --role-glass-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35)
+  );
+  --ask-mono: var(--role-mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
+
+  width: 100%;
+  max-width: var(--role-shell, 1320px);
+  margin: clamp(1.4rem, 2.6vw, 2.2rem) auto 0;
+  padding: clamp(1.4rem, 2.6vw, 2.2rem) clamp(1.4rem, 2.6vw, 2.4rem);
+  border: 1px solid var(--ask-border);
+  border-radius: 14px;
+  background: var(--ask-glass);
+  -webkit-backdrop-filter: blur(28px) saturate(110%);
+  backdrop-filter: blur(28px) saturate(110%);
+  box-shadow: var(--ask-glass-shadow);
+}
+
+.header {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: clamp(1rem, 2vw, 1.4rem);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ask-subtle);
+  font-family: var(--ask-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--ask-ink);
+  font-family: var(--display);
+  font-size: clamp(1.9rem, 3.2vw, 3rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.lede {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--ask-muted);
+  font-family: var(--serif);
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  line-height: 1.5;
+}
+
+/* Question composer */
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+
+.input {
+  min-width: 0;
+  width: 100%;
+  padding: 0.82rem 1rem;
+  border: 1px solid var(--ask-border-strong);
+  border-radius: 10px;
+  background: rgba(15, 19, 24, 0.55);
+  color: var(--ask-ink);
+  font: inherit;
+  font-size: 0.96rem;
+  line-height: 1.4;
+}
+
+.input::placeholder {
+  color: var(--ask-subtle);
+}
+
+.input:focus-visible {
+  /* The ask flow lights up — cyan signal, not gold. */
+  outline: 1px solid var(--ask-signal);
+  outline-offset: 0;
+  border-color: var(--ask-signal);
+}
+
+/* Submit — raised material + a 1px gold hairline (the scene's single
+   active brand moment). NEVER a gold fill. */
+.submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.82rem 1.3rem;
+  border: 1px solid var(--ask-accent);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ink-5, #2A323D), var(--ink-4, #1E242D));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--ask-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 560;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.submit:hover:not(:disabled) {
+  border-color: var(--ask-accent-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 20px rgba(200, 162, 74, 0.14);
+}
+
+.submit:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.submit:focus-visible {
+  outline: 1px solid var(--ask-accent-strong);
+  outline-offset: 2px;
+}
+
+/* Suggested-question chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+/* Suggested-question chips — hairline border only, NO fill. */
+.chip {
+  padding: 0.46rem 0.85rem;
+  border: 1px solid var(--ask-border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ask-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 540;
+  line-height: 1.25;
+  text-align: left;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.chip:hover:not(:disabled) {
+  color: var(--ask-ink);
+  border-color: color-mix(in srgb, var(--ask-signal) 45%, var(--ask-border-strong));
+}
+
+.chip:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.chip:focus-visible {
+  outline: 1px solid var(--ask-signal);
+  outline-offset: 2px;
+}
+
+/* Answer surface */
+.answerArea {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+  margin-top: clamp(1.2rem, 2.4vw, 1.8rem);
+  padding-top: clamp(1.1rem, 2.2vw, 1.6rem);
+  border-top: 1px solid var(--ask-border-strong);
+}
+
+/* Thread-of-light — the weft. When an answer cites its sources, a thin
+   cyan line runs down the left edge, binding the asked question to the
+   cited-sources block. 1px, fading at both ends, light not paint. */
+.answerArea:has(.sources) {
+  padding-left: 1.05rem;
+}
+
+.answerArea:has(.sources)::before {
+  content: '';
+  position: absolute;
+  top: clamp(1.1rem, 2.2vw, 1.6rem);
+  bottom: 0.2rem;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(75, 197, 222, 0) 0%,
+    rgba(75, 197, 222, 0.4) 16%,
+    rgba(75, 197, 222, 0.4) 84%,
+    rgba(75, 197, 222, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.answerHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.answerHead p {
+  margin: 0;
+  color: var(--ask-subtle);
+  font-family: var(--ask-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.status {
+  color: var(--ask-muted);
+  font-family: var(--ask-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.askedQuestion {
+  margin: 0;
+  color: var(--ask-ink);
+  font-size: 1.02rem;
+  font-weight: 660;
+  line-height: 1.35;
+}
+
+.answerBody {
+  margin: 0;
+  color: var(--ask-ink);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Thinking state — the caret is the cyan data-signal, not gold. */
+.answerBody.streaming::after {
+  content: '';
+  display: inline-block;
+  width: 0.5ch;
+  height: 1.05em;
+  margin-left: 1px;
+  background: var(--ask-signal);
+  box-shadow: 0 0 10px rgba(75, 197, 222, 0.45);
+  vertical-align: -0.16em;
+  animation: askCaret 1s steps(1) infinite;
+}
+
+@keyframes askCaret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.placeholder {
+  margin: 0;
+  color: var(--ask-muted);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+/* Calm inline notes (no-key state + errors) — gold only as a 1px hairline. */
+.note {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.78rem 0.95rem;
+  border: 1px solid var(--ask-border-strong);
+  border-left: 1px solid var(--ask-accent);
+  border-radius: 8px;
+  background: rgba(15, 19, 24, 0.5);
+}
+
+.note strong {
+  color: var(--ask-subtle);
+  font-family: var(--ask-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.note p {
+  margin: 0;
+  color: var(--ask-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.error {
+  border-left-color: var(--down, #E06A6A);
+}
+
+.error strong {
+  color: var(--down, #E06A6A);
+}
+
+/* Cited sources — reuse the AnswerInspector visual language (title + kind + href). */
+.sources {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sourcesHeading {
+  margin: 0;
+  color: var(--ask-subtle);
+  font-family: var(--ask-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.sourceList {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.sourceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.62rem 0.8rem;
+  border: 1px solid var(--ask-border-strong);
+  border-radius: 8px;
+  background: rgba(15, 19, 24, 0.5);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.sourceRow:hover {
+  /* Source attended to — the data-signal picks it up. */
+  border-color: color-mix(in srgb, var(--ask-signal) 45%, var(--ask-border-strong));
+}
+
+.sourceRow:focus-visible {
+  outline: 1px solid var(--ask-signal);
+  outline-offset: 2px;
+}
+
+.sourceHref {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ask-subtle);
+  font-family: var(--ask-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .sourceRow {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .sourceHref {
+    text-align: left;
+  }
+}

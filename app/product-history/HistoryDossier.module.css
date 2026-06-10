@@ -1,12 +1,18 @@
 .page {
-  --history-ink: #151a17;
-  --history-muted: #626c66;
-  --history-subtle: #8c9690;
-  --history-border: #dfe5df;
-  --history-accent: #15513f;
+  --history-ink: var(--text-1);
+  --history-muted: var(--text-2);
+  --history-subtle: var(--text-3);
+  --history-border: var(--line);
+  --history-hairline: var(--line-soft);
+  --history-surface: var(--ink-3);
+  --history-elevated: var(--ink-4);
+  --history-accent: var(--gold);
+  --history-accent-dim: var(--gold-hi);
   min-height: 100vh;
   overflow-x: clip;
-  background: #ffffff;
+  background:
+    radial-gradient(120% 80% at 50% -8%, var(--ink-2) 0%, var(--ink-1) 55%),
+    var(--ink-1);
   color: var(--history-ink);
   font-family: var(--sans);
 }
@@ -22,8 +28,13 @@
   min-height: 4.2rem;
   padding: 0.78rem clamp(1.1rem, 3vw, 2.8rem);
   border-bottom: 1px solid var(--history-border);
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: saturate(170%) blur(18px);
+  background: rgba(10, 13, 17, 0.88);
+  -webkit-backdrop-filter: blur(28px) saturate(110%);
+  backdrop-filter: blur(28px) saturate(110%);
+  box-shadow:
+    var(--keylight),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    var(--float-1);
 }
 
 .wordmark {
@@ -53,7 +64,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 2.1rem;
-  color: #242b27;
+  color: var(--history-subtle);
   font-size: 0.88rem;
   font-weight: 720;
   line-height: 1.2;
@@ -62,23 +73,21 @@
 }
 
 .navLinks a:hover {
-  color: var(--history-accent);
+  color: var(--history-ink);
 }
 
 .navLinks a[aria-current="page"] {
-  color: var(--history-accent);
+  color: var(--history-ink);
 }
 
 .navLinks a[aria-current="page"]::after {
   content: "";
   position: absolute;
   right: 0;
-  bottom: 0.18rem;
+  bottom: -5px;
   left: 0;
-  height: 2px;
-  border-radius: 999px;
-  background: currentColor;
-  opacity: 0.72;
+  height: 1px;
+  background: var(--history-accent);
 }
 
 .hero,
@@ -114,12 +123,18 @@
 
 .label {
   margin: 0;
-  color: var(--history-accent);
+  color: var(--history-subtle);
   font-size: 0.78rem;
   font-weight: 820;
   letter-spacing: 0;
   line-height: 1.2;
   text-transform: uppercase;
+}
+
+/* Watch-hand discipline: the hero eyebrow is the page's single gold
+   word; every other eyebrow/data label rests on the text ramp. */
+.hero .label {
+  color: var(--history-accent);
 }
 
 .hero h1,
@@ -167,10 +182,12 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border: 1px solid #18231f;
-  background: #030404;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
   object-fit: contain;
-  box-shadow: 0 1.6rem 4.5rem rgba(18, 29, 24, 0.18);
+  box-shadow: var(--keylight), var(--float-1);
 }
 
 .heroMedia figcaption {
@@ -190,7 +207,7 @@
 }
 
 .heroSignals span {
-  color: var(--history-accent);
+  color: var(--history-subtle);
   font-size: 0.78rem;
   font-weight: 820;
   line-height: 1.15;
@@ -279,7 +296,7 @@
   gap: clamp(1.5rem, 4vw, 4rem);
   padding-top: clamp(2.8rem, 5vw, 5rem);
   padding-bottom: clamp(2.8rem, 5vw, 5rem);
-  background: #f6f5ef;
+  background: var(--history-surface);
 }
 
 .sourcePrinciple > div:first-child {
@@ -318,11 +335,13 @@
   place-items: center;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border: 1px solid rgba(34, 50, 43, 0.18);
-  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
   color: var(--history-subtle);
   font-size: 0.72rem;
   font-weight: 820;
+  box-shadow: var(--keylight), var(--float-1);
 }
 
 .sourcePlate img {
@@ -363,7 +382,7 @@
 
 .growthRail span,
 .layerRows article > span {
-  color: var(--history-accent);
+  color: var(--history-subtle);
   font-size: 0.72rem;
   font-weight: 820;
   line-height: 1.25;
@@ -476,8 +495,8 @@
 }
 
 .earlyArchive {
-  background: #030504;
-  color: #f4f5f0;
+  background: var(--history-surface);
+  color: var(--history-ink);
 }
 
 .earlyHeader,
@@ -498,13 +517,13 @@
 }
 
 .earlyHeader .label {
-  color: #84b9a5;
+  color: var(--history-subtle);
 }
 
 .earlyHeader h2 {
   max-width: 16ch;
   margin: 0;
-  color: #f5f6f1;
+  color: var(--history-ink);
   font-family: var(--display);
   font-size: clamp(2.6rem, 5.4vw, 6.2rem);
   font-weight: 560;
@@ -515,7 +534,7 @@
 .earlyHeader p:last-child {
   max-width: 44rem;
   margin: 0;
-  color: #9ba7a0;
+  color: var(--history-muted);
   font-size: clamp(0.96rem, 1.1vw, 1.08rem);
   line-height: 1.54;
 }
@@ -538,8 +557,11 @@
   display: block;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border: 1px solid rgba(151, 174, 163, 0.24);
-  background: #000000;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  box-shadow: var(--keylight), var(--float-1);
 }
 
 .earlyImage img {
@@ -555,20 +577,20 @@
 }
 
 .earlyFrame strong {
-  color: #f4f5ef;
+  color: var(--history-ink);
   font-family: var(--serif);
   font-size: 1.02rem;
   line-height: 1.2;
 }
 
 .earlyFrame span {
-  color: #8f9a94;
+  color: var(--history-subtle);
   font-size: 0.84rem;
   line-height: 1.42;
 }
 
 .evolutionSection {
-  background: #f6f5ef;
+  background: var(--history-surface);
 }
 
 .evolutionIntro {
@@ -621,7 +643,7 @@
   gap: 0.92rem;
   min-width: 0;
   padding-top: 0.9rem;
-  border-top: 1px solid rgba(42, 55, 48, 0.2);
+  border-top: 1px solid var(--history-border);
 }
 
 .evolutionStage:first-child,
@@ -640,9 +662,11 @@
   display: block;
   aspect-ratio: 16 / 9.4;
   overflow: hidden;
-  border: 1px solid rgba(34, 50, 43, 0.18);
-  background: #030504;
-  box-shadow: 0 1.2rem 3.2rem rgba(21, 26, 23, 0.1);
+  padding: 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  box-shadow: var(--keylight), var(--float-1);
 }
 
 .evolutionImage img {
@@ -662,7 +686,7 @@
 
 .evolutionStage time,
 .evolutionDecision dt {
-  color: var(--history-accent);
+  color: var(--history-subtle);
   font-size: 0.72rem;
   font-weight: 820;
   letter-spacing: 0;
@@ -789,11 +813,13 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border: 1px solid var(--history-border);
-  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
   color: var(--history-subtle);
   font-size: 0.68rem;
   font-weight: 800;
+  box-shadow: var(--keylight), var(--float-1);
 }
 
 .sourceThumb img {

@@ -13,6 +13,8 @@
  */
 
 import Link from 'next/link';
+import styles from './loom-support-page.module.css';
+import { LoomSupportNav } from './LoomSupportNav';
 
 const LOOP_STEPS = [
   {
@@ -44,17 +46,18 @@ const supportRowStyle = { display: 'flex', alignItems: 'baseline', gap: 10 } as 
 
 export default function SystemClient() {
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: 'var(--bg)',
-        color: 'var(--fg)',
-        padding: 'clamp(4rem, 8vh, 6rem) clamp(1.5rem, 5vw, 4rem)',
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
-      <article style={{ width: '100%', maxWidth: '44rem' }}>
+    <div className={styles.surface}>
+      <LoomSupportNav active="/system" />
+      <main
+        style={{
+          background: 'var(--bg)',
+          color: 'var(--fg)',
+          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <article style={{ width: '100%', maxWidth: '44rem' }}>
         <header style={{ marginBottom: '2.5rem' }}>
           <div
             style={{
@@ -185,7 +188,8 @@ export default function SystemClient() {
           Nothing here speaks unless you ask. Sources hold what came in; Draft holds what
           goes out; the loop is yours to walk.
         </footer>
-      </article>
-    </main>
+        </article>
+      </main>
+    </div>
   );
 }

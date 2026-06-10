@@ -66,17 +66,6 @@ function Verified({ label }: { label: string }) {
   );
 }
 
-function ViewDetails({ href }: { href: string }) {
-  return (
-    <a className="lcv-view" href={href}>
-      View details
-      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
-        <path d="M5 12h14M13 6l6 6-6 6" />
-      </svg>
-    </a>
-  );
-}
-
 function Arrow() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
@@ -326,18 +315,23 @@ function LedgerRow({
   verifiedLabel: string;
 }) {
   return (
-    <section className={`lcv-row lcv-row--${cat.id}`} aria-label={cat.label}>
+    <a className={`lcv-row lcv-row--${cat.id}`} href={cat.href} aria-label={cat.label}>
       <div className="lcv-row__head">
         <span className="lcv-row__num">{CATEGORY_NUMBER[cat.id]}</span>
         <h2 className="lcv-row__title lcv-serif">{cat.label}</h2>
         <p className="lcv-row__desc">{cat.summary}</p>
         <Verified label={verifiedLabel} />
+        <span className="lcv-row__open">
+          Open
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
       </div>
       <div className="lcv-row__asset">
         <CoverAsset category={cat} />
       </div>
-      <ViewDetails href={cat.href} />
-    </section>
+    </a>
   );
 }
 
