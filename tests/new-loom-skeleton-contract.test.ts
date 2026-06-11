@@ -1384,7 +1384,10 @@ test('fallback main Loom window uses the same full-size chrome contract as the s
   const loomApp = read('macos-app/Loom/Sources/LoomApp.swift');
 
   assert.match(loomApp, /private func createFallbackMainWindow\(\)/);
-  assert.match(loomApp, /let rootView = LoomMinimalRootView\(\)/);
+  // The fallback window mounts the same dossier web root as the SwiftUI scene
+  // (the macOS app now presents the latest web identity product, not the
+  // retired minimal Sources/Draft shell).
+  assert.match(loomApp, /let rootView = LoomDossierRootView\(\)/);
   assert.match(
     loomApp,
     /styleMask:\s*\[\.titled,\s*\.closable,\s*\.miniaturizable,\s*\.resizable,\s*\.fullSizeContentView\]/,

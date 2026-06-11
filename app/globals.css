@@ -4478,6 +4478,73 @@ kbd:not(pre kbd):not(code kbd) {
   --quiet-horizon-floor: rgba(0, 0, 0, 0.2);
 
   --shadow-3: 0 1.5rem 5rem rgba(0, 0, 0, 0.72);
+
+  /* Code chips: cool dark-ink recess. The :root --code-bg is a light
+     grey wash tuned for cream paper; on the ink ramp it reads warm. */
+  --code-bg: rgba(14, 18, 24, 0.6);
+}
+
+/* Legacy verified-dossier (vd-*) chrome — explicit-dark remap onto the
+   Evidence Desk ink ramp. The vd-* tokens are declared LIGHT on
+   .vd-home (twice: the artifact-first block and the source-first
+   upgrade block), not on :root. Knowledge/Sources surfaces re-skin
+   them per-module (KnowledgeHomeStatic / CategoryDossier / UnswDossier
+   .page scopes) and /about re-skins its nav in AboutClient.module.css;
+   every other consumer (today: /drafts, /drafts/[recordId], plus any
+   orphan vd-nav chrome rendered without a .vd-home ancestor) de-warms
+   here. Values mirror the knowledge .page aliases exactly. */
+.dark,
+.dark .vd-home {
+  --vd-ink: var(--text-1);
+  --vd-muted: var(--text-2);
+  --vd-subtle: var(--text-3);
+  --vd-border: var(--line);
+  --vd-border-strong: var(--ink-5);
+  --vd-surface: var(--ink-3);
+  --vd-surface-soft: var(--ink-2);
+  --vd-page: var(--ink-0);
+  --vd-paper: var(--ink-3);
+  --vd-paper-strong: var(--ink-4);
+  --vd-accent: var(--gold);
+  --vd-accent-strong: var(--gold-hi);
+  --vd-accent-soft: rgba(200, 162, 74, 0.12);
+  --vd-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+}
+
+/* The .vd-home shell and nav hard-code light paint the tokens can't
+   reach. :where() keeps each selector at the bare .dark+class
+   specificity so the later-loaded module re-skins (knowledge .page,
+   about .page) still win their ties; .lcv home keeps its own desk. */
+.dark .vd-home:where(:not(.lcv)) {
+  background:
+    radial-gradient(120% 78% at 50% -8%, #10141A 0%, var(--ink-0) 56%);
+  background-color: var(--ink-0);
+  color: var(--text-1);
+}
+
+.dark .vd-nav {
+  border-bottom: 1px solid var(--line);
+  background: rgba(13, 17, 22, 0.62);
+  -webkit-backdrop-filter: blur(28px) saturate(110%);
+  backdrop-filter: blur(28px) saturate(110%);
+}
+
+.dark .vd-nav__links a {
+  color: var(--text-2);
+}
+
+.dark .vd-nav__links a:hover,
+.dark .vd-nav__links a.is-active,
+.dark .vd-nav__links a[aria-current='page'] {
+  color: var(--text-1);
+}
+
+.dark .vd-draft-record-link {
+  border-color: rgba(200, 162, 74, 0.18);
+}
+
+.dark .vd-draft-record-link:hover {
+  border-color: rgba(200, 162, 74, 0.38);
 }
 
 .dark [data-theme='light'] {

@@ -34,11 +34,13 @@ struct LoomApp: App {
             Group {
                 if isRunningInXCTestHost {
                     EmptyView()
-                } else if minimalModeEnabled {
-                    LoomMinimalRootView()
-                        .environmentObject(delegate.server)
                 } else {
-                    ContentView()
+                    // The macOS app IS the latest web identity product: a
+                    // full-window WebView of the dossier (Home / About /
+                    // Education / Experience / Digital Me). The earlier
+                    // minimal Sources/Draft shell and the legacy ContentView
+                    // are retained in the codebase but no longer mounted.
+                    LoomDossierRootView()
                         .environmentObject(delegate.server)
                         .background(WindowOpener())
                 }
@@ -434,10 +436,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Fallback main window — same full-size hidden-titlebar chrome
-    /// contract as the SwiftUI scene window, hosting the minimal root.
+    /// contract as the SwiftUI scene window, hosting the dossier web root
+    /// (the latest Loom identity product), matching the SwiftUI scene.
     @MainActor
     private func createFallbackMainWindow() {
-        let rootView = LoomMinimalRootView()
+        let rootView = LoomDossierRootView()
             .environmentObject(server)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1400, height: 900),

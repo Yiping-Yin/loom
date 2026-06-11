@@ -45,6 +45,19 @@ const SHELVED = [
   'app/pursuit/[id]',
   'app/panels/[id]',
   'app/pursuits/[id]',
+  // More user-data / dynamic segments that `output: 'export'` cannot enumerate
+  // (no generateStaticParams). Not part of the core identity dossier, so they
+  // are shelved out of the static bundle; live ids stay addressable in dev.
+  'app/drafts/[recordId]',
+  'app/wiki/[slug]',
+  'app/knowledge/unsw/econ3202/[problemSet]',
+  // Pages that opt into dynamic rendering (searchParams / dynamic='error')
+  // and so cannot be prerendered by `output: 'export'`. /draft is the live
+  // writing workspace; loom-render/* are internal capture utilities. None are
+  // part of the static identity dossier the bundle ships.
+  'app/draft',
+  'app/loom-render/capture',
+  'app/loom-render/snapshot',
 ];
 
 function shelvedPathFor(rel) {
