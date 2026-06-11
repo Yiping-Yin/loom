@@ -17,7 +17,7 @@ import SwiftUI
 /// neon" rule (one canonical bronze thread, no user choice), and
 /// nothing in the web or native side actually read either value.
 struct AppearanceSettingsView: View {
-    @AppStorage("theme") private var theme: String = "auto"
+    @AppStorage("theme") private var theme: String = "dark"
     @AppStorage("wiki:reduce-motion") private var reduceMotion: String = ""
 
     var body: some View {

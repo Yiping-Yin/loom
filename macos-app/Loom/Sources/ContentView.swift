@@ -31,7 +31,9 @@ final class WebDebugState: ObservableObject {
 struct ContentView: View {
     @EnvironmentObject var server: DevServer
     @StateObject private var webState = WebDebugState()
-    @AppStorage("theme") private var theme: String = "auto"
+    // Evidence Desk default: the cool-black dark identity. "auto" (day/night
+    // rhythm) and "light" remain available in Appearance settings.
+    @AppStorage("theme") private var theme: String = "dark"
     @AppStorage("loom.showDebugHUD.v2") private var showDebugHUD = false
     // Central handle to open the Settings scene. The legacy
     // `showSettingsWindow:` selector is unreliable on macOS 14+, so

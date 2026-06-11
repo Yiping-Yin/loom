@@ -44,16 +44,16 @@ export function PageFrame({
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 'var(--space-2)',
-          paddingBottom: 'var(--space-4)',
-          borderBottom: '0.5px solid color-mix(in srgb, var(--mat-border) 70%, transparent)',
+          gap: 'var(--space-3)',
+          paddingBottom: 'var(--space-5)',
+          borderBottom: '1px solid var(--line)',
         }}
       >
         {breadcrumb ? (
           <div
             className="t-caption2"
             style={{
-              color: 'var(--muted)',
+              color: 'var(--text-3)',
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--space-2)',
@@ -78,10 +78,15 @@ export function PageFrame({
               <div
                 className="loom-smallcaps"
                 style={{
-                  color: 'var(--accent)',
-                  fontFamily: 'var(--serif)',
+                  /* Evidence Desk eyebrow — small uppercase mono, wide
+                     tracking, tertiary ink. Sits at the bottom of the
+                     luminance hierarchy as a quiet section label. */
+                  color: 'var(--text-3)',
+                  fontFamily: 'var(--mono)',
                   fontWeight: 500,
-                  fontSize: '0.82rem',
+                  fontSize: '0.72rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.16em',
                 }}
               >
                 {eyebrow}
@@ -97,7 +102,7 @@ export function PageFrame({
                 fontStyle: 'italic',
                 fontWeight: 400,
                 lineHeight: 1.05,
-                color: 'var(--fg)',
+                color: 'var(--text-1)',
               }}
             >
               {title}
@@ -106,10 +111,10 @@ export function PageFrame({
             {description ? (
               <div
                 style={{
-                  color: 'var(--fg-secondary)',
-                  fontSize: 'var(--fs-body)',
-                  lineHeight: 'var(--lh-body)',
-                  maxWidth: 640,
+                  color: 'var(--text-2)',
+                  fontSize: 'var(--fs-body-lg)',
+                  lineHeight: 'var(--lh-relaxed)',
+                  maxWidth: '42rem',
                 }}
               >
                 {description}
@@ -153,7 +158,7 @@ export function BreadcrumbHome({
               <a
                 href={item.href}
                 style={{
-                  color: 'var(--accent)',
+                  color: 'var(--gold)',
                   textDecoration: 'none',
                   fontSize: 'var(--fs-caption)',
                 }}
@@ -161,7 +166,7 @@ export function BreadcrumbHome({
                 {item.label}
               </a>
             ) : (
-              <span style={{ color: isLast ? 'var(--fg-secondary)' : 'var(--muted)', fontSize: 'var(--fs-caption)' }}>
+              <span style={{ color: isLast ? 'var(--text-2)' : 'var(--text-3)', fontSize: 'var(--fs-caption)' }}>
                 {item.label}
               </span>
             )}

@@ -33,8 +33,8 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F4F0E4' },
-    { media: '(prefers-color-scheme: dark)',  color: '#1A1815' },
+    { media: '(prefers-color-scheme: dark)',  color: '#07090C' },
+    { media: '(prefers-color-scheme: light)', color: '#07090C' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{localStorage.removeItem('wiki:reading-mode');}catch(e){}try{var root=document.documentElement;var t=localStorage.getItem('wiki:theme');if(t==='dark'){root.classList.add('dark');root.classList.remove('light');}else if(t==='light'){root.classList.add('light');root.classList.remove('dark');}}catch(e){}`,
+            __html: `try{localStorage.removeItem('wiki:reading-mode');}catch(e){}try{var root=document.documentElement;var t=localStorage.getItem('wiki:theme');if(t==='light'){root.classList.add('light');root.classList.remove('dark');}else{root.classList.add('dark');root.classList.remove('light');}}catch(e){root.classList.add('dark');}`,
           }}
         />
         <script

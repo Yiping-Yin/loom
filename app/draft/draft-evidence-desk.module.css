@@ -1,0 +1,749 @@
+/* =========================================================================
+   DRAFT — EVIDENCE DESK WORKING-SURFACE UPGRADE
+   Lane-owned override (app/draft/*). Loaded after globals.css via a
+   side-effect import in DraftClient.tsx, so these :global() rules win by
+   source order without renaming any contract-pinned class.
+
+   CSS Modules require "pure" selectors, so every rule is wrapped in
+   :global(...) (the same pattern app/about/AboutClient.module.css uses).
+
+   Strategy: the legacy .new-loom-draft block reads almost every value
+   from --draft-* custom properties. Re-point those onto the FIXED
+   cool-black --ink / --text / --line / --gold / --cyan tokens and the
+   whole surface flips to the identity-page bar. Then layer real lit-glass
+   material, generous layout, serif+eyebrow type hierarchy, luminance
+   hover/focus, the cyan thread-of-light, and a reading-comfortable raised
+   editor page on top.
+   ========================================================================= */
+
+/* Local anchor — attached to the SAME .new-loom-draft root element in
+   DraftClient.tsx so CSS-Modules "pure" mode accepts the :global() rules
+   below (same pattern as app/about/AboutClient.module.css's .page). It is
+   intentionally a no-op declaration (composes nothing) so it never
+   overrides the grid display the .new-loom-draft root sets. */
+.surface {
+  /* anchor only — a no-op custom property so the class is always emitted
+     without overriding the grid display the .new-loom-draft root sets. */
+  --draft-evidence-desk: 1;
+}
+
+/* ---- Token re-point: light palette -> fixed cool-black --------------- */
+.surface:global(.new-loom-draft) {
+  --draft-ink: var(--text-1);          /* #E6E9EE primary text */
+  --draft-muted: var(--text-2);        /* #9BA3AE secondary */
+  --draft-subtle: var(--text-3);       /* #5E6671 tertiary / captions */
+  --draft-line: var(--line);           /* #232A33 hairline */
+  --draft-line-strong: #2E3742;        /* slightly brighter hairline */
+  --draft-surface: var(--ink-4);       /* #1E242D card */
+  --draft-paper: var(--ink-3);         /* #161B22 lit page ground */
+  --draft-panel: var(--ink-2);         /* #0F1318 recessed rail */
+  --draft-panel-strong: var(--ink-3);
+  --draft-accent: var(--cyan);         /* signal links */
+  --draft-accent-strong: var(--gold-hi);
+  --draft-accent-soft: rgba(75, 197, 222, 0.10);
+
+  /* Reusable lit-glass material recipes (single key light, top-left). */
+  --draft-glass-bg:
+    radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.05), transparent 56%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  --draft-glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.40),
+    0 14px 36px rgba(0, 0, 0, 0.50);
+  --draft-raised-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 20px 52px rgba(0, 0, 0, 0.58);
+
+  color: var(--text-1);
+  caret-color: var(--gold-hi);
+  gap: 1px;
+  /* Cool-black ground with the faint cool spill of the key light. */
+  background-color: var(--ink-0);
+  background-image: radial-gradient(
+    120% 60% at 50% -10%,
+    rgba(108, 148, 180, 0.06) 0%,
+    transparent 60%
+  );
+}
+
+.surface :global(.new-loom-draft ::selection) {
+  background: rgba(200, 162, 74, 0.30);
+  color: var(--text-1);
+}
+
+/* ---- Links: signal-cyan, gold on hover ------------------------------- */
+.surface :global(.new-loom-draft a) { color: var(--cyan); }
+.surface :global(.new-loom-draft a:hover) { color: var(--gold-hi); }
+.surface :global(.new-loom-draft a:focus-visible),
+.surface :global(.new-loom-draft button:focus-visible),
+.surface :global(.new-loom-draft input:focus-visible),
+.surface :global(.new-loom-draft textarea:focus-visible) {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---- Eyebrow (additive): small uppercase mono ------------------------ */
+.surface :global(.new-loom-draft__eyebrow) {
+  margin: 0;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+/* ======================================================================
+   IDENTITY RAIL — left column
+   ====================================================================== */
+.surface :global(.new-loom-draft__identity-rail) {
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 1.9vw, 1.9rem) clamp(1.1rem, 1.7vw, 1.6rem);
+  background:
+    radial-gradient(130% 70% at 0% 0%, rgba(255, 255, 255, 0.03), transparent 52%),
+    linear-gradient(180deg, var(--ink-2), var(--ink-1));
+  border-right: 1px solid var(--line);
+}
+.surface :global(.new-loom-draft__wordmark) {
+  color: var(--text-1);
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.surface :global(.new-loom-draft__profile-card) {
+  gap: 0.5rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--line);
+}
+.surface :global(.new-loom-draft__profile-card img) {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 16px 38px rgba(0, 0, 0, 0.55);
+}
+.surface :global(.new-loom-draft__profile-card h2) {
+  font-family: var(--serif);
+  font-weight: 600;
+  color: var(--text-1);
+}
+.surface :global(.new-loom-draft__profile-card p),
+.surface :global(.new-loom-draft__profile-card span),
+.surface :global(.new-loom-draft__rail-section p) {
+  color: var(--text-2);
+}
+.surface :global(.new-loom-draft__rail-section) {
+  gap: 0.7rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--line);
+}
+.surface :global(.new-loom-draft__rail-section h3) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+.surface :global(.new-loom-draft__rail-section li) {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--line-soft);
+}
+.surface :global(.new-loom-draft__rail-section li span) { color: var(--text-2); }
+.surface :global(.new-loom-draft__rail-section li strong) {
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ======================================================================
+   MAIN / WORKSPACE — centre column
+   ====================================================================== */
+.surface :global(.new-loom-draft__main) {
+  gap: 1.15rem;
+  padding: clamp(1.5rem, 2.6vw, 2.75rem) clamp(1.25rem, 3.6vw, 3.5rem);
+  background:
+    radial-gradient(120% 50% at 50% 0%, rgba(108, 148, 180, 0.05), transparent 60%),
+    var(--ink-1);
+  /* Centre the writing column at a comfortable reading width. Merged from
+     the former __workspace class so the __main element keeps its exact
+     contract-pinned className while preserving the centred layout. */
+  width: 100%;
+  max-width: 60rem;
+  margin-inline: auto;
+}
+/* `new-loom-draft__workspace` is kept in the markup as an inert marker class
+   for the workspace-composition contract; its centring layout was merged into
+   __main above, so it intentionally has no style rule of its own. */
+.surface :global(.new-loom-draft__document-header) {
+  gap: 0.85rem;
+  padding-bottom: 0.3rem;
+}
+.surface :global(.new-loom-draft__document-meta) { color: var(--text-2); }
+.surface :global(.new-loom-draft__document-meta span),
+.surface :global(.new-loom-draft__document-meta small) {
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+}
+.surface :global(.new-loom-draft__document-meta strong) {
+  color: var(--text-1);
+  font-weight: 600;
+}
+.surface :global(.new-loom-draft__title) {
+  border-bottom: 1px solid var(--line);
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.surface :global(.new-loom-draft__title::placeholder) { color: var(--text-3); }
+.surface :global(.new-loom-draft__title:focus) { border-color: var(--gold); }
+
+/* Proof strip — a lit instrument cluster, luminance-separated tiles. */
+.surface :global(.new-loom-draft__proof-strip) {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--draft-glass-bg);
+  box-shadow: var(--draft-glass-shadow);
+  overflow: hidden;
+  gap: 1px;
+}
+.surface :global(.new-loom-draft__proof-strip span) {
+  padding: 0.85rem 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent);
+}
+.surface :global(.new-loom-draft__proof-strip span + span) {
+  box-shadow: inset 1px 0 0 var(--line);
+}
+.surface :global(.new-loom-draft__proof-strip strong) {
+  color: var(--text-1);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.surface :global(.new-loom-draft__proof-strip small) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+
+/* Type rail — glass shelf. */
+.surface :global(.new-loom-draft__type-rail) {
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--draft-glass-bg);
+  box-shadow: var(--draft-glass-shadow);
+}
+.surface :global(.new-loom-draft__type-copy h2) {
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.18rem;
+}
+.surface :global(.new-loom-draft__type-copy p) { color: var(--text-2); }
+
+/* Known-N set: explicit responsive ramp, never auto-fit orphan rows. */
+.surface :global(.new-loom-draft__type-buttons) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.surface :global(.new-loom-draft__type-button) {
+  min-height: 3rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  box-shadow: var(--keylight);
+  color: var(--text-2);
+  transition:
+    background 0.18s var(--ease),
+    border-color 0.18s var(--ease),
+    box-shadow 0.18s var(--ease),
+    transform 0.18s var(--ease);
+}
+.surface :global(.new-loom-draft__type-button span) {
+  color: var(--text-1);
+  font-weight: 500;
+}
+.surface :global(.new-loom-draft__type-button small) { color: var(--text-3); }
+.surface :global(.new-loom-draft__type-button:hover),
+.surface :global(.new-loom-draft__type-button:focus-visible) {
+  border-color: #2E3742;
+  background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
+  box-shadow: var(--keylight), 0 8px 22px rgba(0, 0, 0, 0.4);
+}
+.surface :global(.new-loom-draft__type-button[aria-pressed="true"]) {
+  border-color: rgba(200, 162, 74, 0.55);
+  background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
+  box-shadow:
+    var(--keylight),
+    inset 0 0 0 1px rgba(200, 162, 74, 0.22),
+    0 10px 26px rgba(0, 0, 0, 0.45);
+}
+.surface :global(.new-loom-draft__type-button[aria-pressed="true"] span) {
+  color: var(--gold-hi);
+}
+
+/* ======================================================================
+   EDITOR — the lit page on the desk
+   ====================================================================== */
+.surface :global(.new-loom-draft__editor-shell) {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--draft-glass-bg);
+  box-shadow: var(--draft-raised-shadow);
+}
+.surface :global(.new-loom-draft__editor-toolbar) {
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent);
+}
+.surface :global(.new-loom-draft__editor-toolbar > span) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+/* The writing field: slightly raised lit page (ink-3), comfortable
+   reading at full --text-1 luminance. */
+.surface :global(.new-loom-draft__body) {
+  padding: clamp(1.35rem, 2.4vw, 2.1rem);
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.025), transparent 50%),
+    var(--ink-3);
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 1.35vw, 1.18rem);
+  line-height: 1.72;
+}
+.surface :global(.new-loom-draft__body::placeholder) { color: var(--text-3); }
+.surface :global(.new-loom-draft__body:focus) {
+  box-shadow: inset 0 0 0 2px rgba(200, 162, 74, 0.22);
+}
+
+/* Footer / counts */
+.surface :global(.new-loom-draft__footer) { color: var(--text-3); }
+.surface :global(.new-loom-draft__count) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ======================================================================
+   BUTTONS — quiet glass chips, gold-hairline on hover; primary = cyan
+   ====================================================================== */
+.surface :global(.new-loom-draft .new-loom-shell__action),
+.surface :global(.new-loom-draft__reference-action) {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  box-shadow: var(--keylight);
+  color: var(--text-1);
+  font-weight: 500;
+  transition:
+    background 0.18s var(--ease),
+    border-color 0.18s var(--ease),
+    box-shadow 0.18s var(--ease),
+    color 0.18s var(--ease),
+    transform 0.18s var(--ease);
+}
+.surface :global(.new-loom-draft .new-loom-shell__action:hover:not(:disabled)),
+.surface :global(.new-loom-draft__reference-action:hover:not(:disabled)) {
+  border-color: rgba(200, 162, 74, 0.5);
+  background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
+  box-shadow: var(--keylight), 0 8px 22px rgba(0, 0, 0, 0.42);
+  color: var(--gold-hi);
+}
+.surface :global(.new-loom-draft .new-loom-shell__action:disabled),
+.surface :global(.new-loom-draft__reference-action:disabled) {
+  color: var(--text-3);
+  opacity: 0.55;
+}
+/* Primary actions read as cyan signal — the live tick of the surface. */
+.surface :global(.new-loom-draft .new-loom-shell__action) {
+  border-color: rgba(75, 197, 222, 0.4);
+  color: var(--cyan);
+}
+.surface :global(.new-loom-draft .new-loom-shell__action:hover:not(:disabled)) {
+  border-color: rgba(75, 197, 222, 0.7);
+  color: var(--cyan);
+}
+.surface :global(.new-loom-draft .new-loom-shell__eyebrow) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ======================================================================
+   REFERENCE PICKER
+   ====================================================================== */
+.surface :global(.new-loom-draft__reference-picker) {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--draft-glass-bg);
+  box-shadow: var(--draft-glass-shadow);
+}
+.surface :global(.new-loom-draft__reference-picker-head h2),
+.surface :global(.new-loom-draft__source-tiles h2),
+.surface :global(.new-loom-draft__reference-list h2),
+.surface :global(.new-loom-draft__provenance h2),
+.surface :global(.new-loom-draft__ai h2),
+.surface :global(.new-loom-draft__structure h2),
+.surface :global(.new-loom-draft__block-operation h3) {
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-weight: 600;
+}
+.surface :global(.new-loom-draft__reference-search) {
+  border: 1px solid var(--line);
+  background: var(--ink-2);
+  color: var(--text-1);
+}
+.surface :global(.new-loom-draft__reference-search:focus) {
+  border-color: var(--gold);
+  background: var(--ink-3);
+  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.16);
+}
+.surface :global(.new-loom-draft__reference-results) {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--ink-3);
+}
+.surface :global(.new-loom-draft__reference-result) {
+  border-bottom: 1px solid var(--line);
+  color: var(--text-1);
+  transition: background 0.18s var(--ease);
+}
+.surface :global(.new-loom-draft__reference-result:hover),
+.surface :global(.new-loom-draft__reference-result:focus-visible) {
+  background: var(--ink-4);
+}
+.surface :global(.new-loom-draft__reference-result span) {
+  color: var(--text-1);
+  font-weight: 500;
+}
+.surface :global(.new-loom-draft__reference-result small) {
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+/* ======================================================================
+   INSPECTOR — right column
+   ====================================================================== */
+.surface :global(.new-loom-draft__inspector) {
+  padding: clamp(1.25rem, 1.9vw, 1.7rem);
+  background:
+    radial-gradient(130% 60% at 100% 0%, rgba(255, 255, 255, 0.025), transparent 52%),
+    linear-gradient(180deg, var(--ink-2), var(--ink-1));
+  border-left: 1px solid var(--line);
+}
+.surface :global(.new-loom-draft__inspector-header span) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+.surface :global(.new-loom-draft__inspector-header h2) {
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-weight: 600;
+}
+.surface :global(.new-loom-draft__inspector-header p) { color: var(--text-2); }
+.surface :global(.new-loom-draft__inspector-tabs) {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(15, 19, 24, 0.86);
+  -webkit-backdrop-filter: saturate(140%) blur(16px);
+  backdrop-filter: saturate(140%) blur(16px);
+  box-shadow: var(--keylight);
+}
+.surface :global(.new-loom-draft__inspector-tab) {
+  color: var(--text-3);
+  font-weight: 500;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+.surface :global(.new-loom-draft__inspector-tab:hover) { color: var(--text-1); }
+.surface :global(.new-loom-draft__inspector-tab[aria-pressed="true"]) {
+  border-color: var(--line);
+  background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
+  color: var(--text-1);
+  box-shadow: var(--keylight), 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+.surface :global(.new-loom-draft__public-mode) {
+  border: 1px solid rgba(200, 162, 74, 0.32);
+  background: rgba(200, 162, 74, 0.08);
+  color: var(--gold-hi);
+}
+
+/* Inspector section frames */
+.surface :global(.new-loom-draft__next),
+.surface :global(.new-loom-draft__source-tiles),
+.surface :global(.new-loom-draft__reference-list),
+.surface :global(.new-loom-draft__provenance),
+.surface :global(.new-loom-draft__ai),
+.surface :global(.new-loom-draft__structure),
+.surface :global(.new-loom-draft__block-operation),
+.surface :global(.new-loom-draft__board) {
+  gap: 0.85rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--line);
+}
+.surface :global(.new-loom-draft__next p),
+.surface :global(.new-loom-draft__source-tiles p),
+.surface :global(.new-loom-draft__reference-list p),
+.surface :global(.new-loom-draft__provenance p),
+.surface :global(.new-loom-draft__ai p),
+.surface :global(.new-loom-draft__structure p),
+.surface :global(.new-loom-draft__block-operation p) {
+  color: var(--text-2);
+}
+.surface :global(.new-loom-draft__next h2) {
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-weight: 600;
+}
+
+/* ======================================================================
+   ANSWER FLOW — the Sources -> Draft -> Answer thread of light (cyan)
+   ====================================================================== */
+.surface :global(.new-loom-draft__answer-flow) {
+  gap: 0.7rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background:
+    linear-gradient(90deg, rgba(75, 197, 222, 0.10), transparent 70%),
+    var(--draft-glass-bg);
+  box-shadow: var(--draft-glass-shadow);
+  position: relative;
+}
+.surface :global(.new-loom-draft__answer-flow ol) {
+  position: relative;
+  gap: 0.5rem;
+}
+.surface :global(.new-loom-draft__answer-flow ol::before) {
+  content: "";
+  position: absolute;
+  top: 0.7rem;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(75, 197, 222, 0.5), transparent);
+  pointer-events: none;
+}
+.surface :global(.new-loom-draft__answer-flow li) {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  box-shadow: var(--keylight);
+}
+.surface :global(.new-loom-draft__answer-flow li[data-state="complete"]) {
+  border-color: rgba(75, 197, 222, 0.45);
+  background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
+}
+.surface :global(.new-loom-draft__answer-flow li[data-state="active"]) {
+  border-color: rgba(75, 197, 222, 0.75);
+  box-shadow: var(--keylight), 0 0 0 1px rgba(75, 197, 222, 0.25), 0 8px 22px rgba(0, 0, 0, 0.4);
+}
+.surface :global(.new-loom-draft__answer-flow span) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.surface :global(.new-loom-draft__answer-flow strong) { color: var(--text-1); }
+.surface :global(.new-loom-draft__answer-flow li[data-state="complete"] span),
+.surface :global(.new-loom-draft__answer-flow li[data-state="active"] span) {
+  color: var(--cyan);
+}
+.surface :global(.new-loom-draft__answer-flow-link) {
+  color: var(--cyan);
+  font-weight: 500;
+}
+.surface :global(.new-loom-draft__answer-flow-link:hover) { color: var(--gold-hi); }
+
+.surface :global(.new-loom-draft__ai-suggestion),
+.surface :global(.new-loom-draft__ai-empty) {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--ink-3);
+  color: var(--text-2);
+}
+.surface :global(.new-loom-draft__ai-suggestion) {
+  color: var(--text-1);
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.02), transparent 50%),
+    var(--ink-3);
+}
+.surface :global(.new-loom-draft__answer-preview-status) {
+  border: 1px solid rgba(75, 197, 222, 0.28);
+  background: rgba(75, 197, 222, 0.07);
+  color: var(--cyan);
+}
+
+/* ======================================================================
+   SOURCE TILES + REFERENCES — lit list rows
+   ====================================================================== */
+.surface :global(.new-loom-draft__source-tiles-head span) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.surface :global(.new-loom-draft__source-tile) {
+  padding: 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--draft-glass-bg);
+  box-shadow: var(--draft-glass-shadow);
+  transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.surface :global(.new-loom-draft__source-tile:hover) {
+  border-color: rgba(200, 162, 74, 0.4);
+  box-shadow: var(--draft-raised-shadow);
+}
+.surface :global(.new-loom-draft__source-tile > span:first-child),
+.surface :global(.new-loom-draft__reference-kind) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.surface :global(.new-loom-draft__source-tile a),
+.surface :global(.new-loom-draft__source-tile-title),
+.surface :global(.new-loom-draft__reference-title),
+.surface :global(.new-loom-draft__reference-list li > a) {
+  color: var(--text-1);
+  font-weight: 600;
+}
+.surface :global(.new-loom-draft__source-tile a:hover),
+.surface :global(.new-loom-draft__reference-list li > a:hover) {
+  color: var(--gold-hi);
+}
+.surface :global(.new-loom-draft__source-tile small),
+.surface :global(.new-loom-draft__reference-meta) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
+}
+.surface :global(.new-loom-draft__source-tile p),
+.surface :global(.new-loom-draft__reference-excerpt) {
+  color: var(--text-2);
+  font-family: var(--serif);
+}
+.surface :global(.new-loom-draft__source-tile-actions a) {
+  color: var(--cyan);
+  font-weight: 500;
+}
+.surface :global(.new-loom-draft__source-tile-actions a:hover) { color: var(--gold-hi); }
+.surface :global(.new-loom-draft__reference-list li) {
+  padding: 0.95rem 0;
+  border-top: 1px solid var(--line);
+}
+
+/* ======================================================================
+   PROVENANCE — numbered evidence rows, gold numerals
+   ====================================================================== */
+.surface :global(.new-loom-draft__provenance) {
+  padding: 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--draft-glass-bg);
+  box-shadow: var(--draft-glass-shadow);
+}
+.surface :global(.new-loom-draft__provenance li) {
+  border-top: 1px solid var(--line);
+  color: var(--text-2);
+}
+.surface :global(.new-loom-draft__provenance-n) {
+  border: 1px solid rgba(200, 162, 74, 0.45);
+  background: transparent;
+  color: var(--gold-hi);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.surface :global(.new-loom-draft__provenance-state) {
+  color: var(--text-3);
+  font-family: var(--mono);
+}
+
+/* ======================================================================
+   DIFF / STRUCTURE / BLOCK OPERATION
+   ====================================================================== */
+.surface :global(.new-loom-draft__diff) {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--ink-2);
+  color: var(--text-1);
+}
+.surface :global(.new-loom-draft__diff h3) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+.surface :global(.new-loom-draft__diff-line) {
+  color: var(--text-2);
+  font-family: var(--mono);
+}
+.surface :global(.new-loom-draft__diff-line.is-added) { color: var(--up); }
+.surface :global(.new-loom-draft__diff-line.is-removed) { color: var(--down); }
+.surface :global(.new-loom-draft__structure li) {
+  border-top: 1px solid var(--line);
+}
+.surface :global(.new-loom-draft__block-row > span > span) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.surface :global(.new-loom-draft__block-row strong) {
+  color: var(--text-1);
+  font-weight: 600;
+}
+.surface :global(.new-loom-draft__block-row small) { color: var(--text-3); }
+.surface :global(.new-loom-draft__block-row input) { accent-color: var(--cyan); }
+.surface :global(.new-loom-draft__block-operation textarea) {
+  border: 1px solid var(--line);
+  background: var(--ink-3);
+  color: var(--text-1);
+  font-family: var(--serif);
+}
+.surface :global(.new-loom-draft__block-operation textarea:focus) {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.16);
+}
+.surface :global(.new-loom-draft__block-operation [role="alert"]) { color: var(--down); }
+
+/* ======================================================================
+   RESPONSIVE — keep the type ramp clean, never orphan a row
+   ====================================================================== */
+@media (max-width: 1280px) {
+  .surface :global(.new-loom-draft__identity-rail) {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+@media (max-width: 1080px) {
+  .surface :global(.new-loom-draft__inspector) {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .surface :global(.new-loom-draft__type-buttons) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .surface :global(.new-loom-draft__rail-section li) {
+    background: var(--ink-3);
+  }
+}
+@media (max-width: 680px) {
+  .surface :global(.new-loom-draft__type-buttons) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .surface :global(.new-loom-draft__main) {
+    padding-inline: 1.1rem;
+  }
+}

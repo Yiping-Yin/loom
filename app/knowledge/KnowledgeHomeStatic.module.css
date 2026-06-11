@@ -262,6 +262,32 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+/* Featured artifact tiles read as lit glass with a single top-left key light,
+   and lift via luminance on hover (matches the reference shelves below). */
+.documentGrid :global(.vd-document-card) {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.documentGrid :global(.vd-document-card:hover) {
+  border-color: var(--ink-5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 34px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
+}
+
+.documentGrid :global(.vd-document-card:focus-visible) {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 2px;
+}
+
 /* Document previews without a thumbnail: lit-glass card, neutral kicker/title,
    no navy/excel-green fill (off-palette). The cyan hairline marks the
    source -> draft signal. */
@@ -286,6 +312,54 @@
 .documentGrid :global(.vd-document-preview__title) {
   color: var(--text-1);
   font-family: var(--serif);
+}
+
+/* econ-slides ships a hardcoded navy/green + #fff fill in globals; re-skin it to
+   the same lit-glass ground so the featured row holds one material. */
+.documentGrid :global(.vd-document-preview--econ-slides) {
+  border-color: var(--line);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  color: var(--text-2);
+}
+
+.documentGrid :global(.vd-document-preview--econ-slides .vd-document-preview__kicker),
+.documentGrid :global(.vd-document-preview--econ-slides .vd-document-preview__body span) {
+  color: var(--text-3);
+}
+
+.documentGrid :global(.vd-document-preview--econ-slides .vd-document-preview__title) {
+  color: var(--text-1);
+  font-size: clamp(1rem, 1.2vw, 1.2rem);
+  font-weight: 600;
+}
+
+/* Thumbnail previews leak a #fff/#f7f8f5 ground in globals — set the lit-glass
+   ground behind the image and seat the specimen on it instead of a white cutout. */
+.documentGrid :global(.vd-document-preview:has(.vd-document-preview__image)) {
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+}
+
+.documentGrid :global(.vd-document-preview__image) {
+  background: var(--ink-3);
+}
+
+/* Footer: real luminance step (title -> meta -> path/tag) + tabular figures. */
+.documentGrid :global(.vd-document-card__meta) {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.documentGrid :global(.vd-document-card__path) {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.documentGrid :global(.vd-document-card__tag) {
+  color: var(--text-3);
 }
 
 .flowRows {
@@ -548,21 +622,22 @@
 
 .sourceRows {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.7rem;
 }
 
+/* Library source rows share the reference-shelf baseline rhythm: same padding
+   ramp, same lit-glass float, same luminance lift on hover. */
 .sourceRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.8rem;
   align-items: center;
   min-width: 0;
-  padding: 0.62rem 0.7rem;
+  min-height: 3.4rem;
+  padding: clamp(0.85rem, 1.4vw, 1.05rem);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent 34%),
-    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  border-radius: 12px;
+  background: var(--shelf-glass);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 -1px 0 rgba(0, 0, 0, 0.35);
@@ -572,9 +647,10 @@
 .sourceRow:hover {
   border-color: var(--ink-5);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 10px 26px rgba(0, 0, 0, 0.45);
+    0 18px 44px rgba(0, 0, 0, 0.55);
+  transform: translateY(-1px);
 }
 
 .sourceLink {
@@ -591,6 +667,14 @@
   outline: 2px solid var(--gold-hi);
   outline-offset: 3px;
   border-radius: 6px;
+}
+
+.sourceLink strong {
+  transition: color 0.18s ease;
+}
+
+.sourceRow:hover .sourceLink strong {
+  color: var(--gold-hi);
 }
 
 .sourceLink > span {
@@ -660,6 +744,35 @@
   margin-top: 0.9rem;
   padding-top: 1.1rem;
   border-top: 1px solid var(--line);
+}
+
+/* Reader notes (loom-source-block) — promote from a bare hairline afterthought
+   to a lit-glass shelf section consistent with the rest of the library. */
+.page :global(.loom-source-block) {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding: clamp(1.05rem, 1.8vw, 1.3rem);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow: var(--shelf-float);
+}
+
+.page :global(.loom-source-block h3) {
+  margin: 0;
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.22;
+}
+
+.page :global(.loom-source-block p) {
+  margin: 0;
+  color: var(--text-2);
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  line-height: 1.55;
 }
 
 @media (max-width: 1180px) {

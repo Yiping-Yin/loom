@@ -51,7 +51,7 @@ struct LoomMinimalRootView: View {
 
     @State private var roots: [ContentRoot] = []
     @State private var selection: DetailSurface = .sources
-    @AppStorage("theme") private var theme: String = "auto"
+    @AppStorage("theme") private var theme: String = "dark"
     /// Public working mode masks private capture metadata on the Sources
     /// workbench (mirrors DraftClient's web-side toggle).
     @AppStorage("loom.publicWorkingMode") private var publicWorkingMode: Bool = false

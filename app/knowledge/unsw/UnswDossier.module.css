@@ -424,11 +424,25 @@
   white-space: nowrap;
 }
 
+/* Explicit responsive ramp chosen so the row fills for the data-driven N
+   (15 courses → 3 / 5 both divide it; never auto-fit, which orphans a row). */
 .courseDirectoryGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.62rem;
   min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .courseDirectoryGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1300px) {
+  .courseDirectoryGrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 .courseDirectoryGrid .courseFolderCard {
@@ -602,14 +616,19 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Column counts chosen from the actual data so each grid's last row fills:
+   .metricGrid renders 6 cells -> 3-up (3+3); .metricGridFive renders 5 cells
+   -> 5-up (one clean row). Never 4-up for 6 (strands 2). */
 .metricGrid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .metricGridFive {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+/* Nested stat/fact cells are a quieter glass tier (still catch the top-left key
+   light) rather than flat recessed blocks — keeps the luminance hierarchy. */
 .fact,
 .metric {
   display: grid;
@@ -618,7 +637,18 @@
   padding: 0.9rem;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--ink-2);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    linear-gradient(180deg, var(--ink-3), var(--ink-2));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Normalize metric cells to one baseline so tabular figures align across rows. */
+.metric {
+  min-height: 6.2rem;
+  align-content: space-between;
 }
 
 .fact dt,
@@ -683,9 +713,11 @@
   min-width: 0;
 }
 
+/* The Sources -> Draft -> Answer thread is exactly 3 steps: an explicit 3-up
+   that collapses to 1 at narrow widths, never an auto-fit that orphans a step. */
 .chain {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.78rem;
   margin-top: 0.95rem;
 }

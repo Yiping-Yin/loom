@@ -73,6 +73,7 @@ import {
   isNewLoomPublicWorkingMode,
 } from '../../lib/new-loom/public-working-mode';
 import DraftBoardClient from './DraftBoardClient';
+import draftDeskStyles from './draft-evidence-desk.module.css';
 
 const SAVE_DEBOUNCE_MS = 400;
 
@@ -1039,7 +1040,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
   }
 
   return (
-    <main className="new-loom-draft">
+    <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
       <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
         <a className="new-loom-draft__wordmark" href="/loom" aria-label="Open Loom product">
           Loom
@@ -1073,8 +1074,12 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
         </section>
       </aside>
 
-      <section className="new-loom-draft__main" aria-labelledby="new-loom-draft-title">
-        <section className="new-loom-draft__document-header" aria-label="Draft document">
+      <section
+        className="new-loom-draft__main"
+        aria-labelledby="new-loom-draft-title"
+      >
+        <section className="new-loom-draft__document-header new-loom-draft__workspace" aria-label="Draft document">
+          <p className="new-loom-draft__eyebrow">Evidence desk · Draft</p>
           <div className="new-loom-draft__document-meta">
             <span>Draft</span>
             <strong>{selectedOutputType.label}</strong>
@@ -1111,6 +1116,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
         </section>
         <section className="new-loom-draft__type-rail" aria-label="Draft type">
           <div className="new-loom-draft__type-copy">
+            <p className="new-loom-draft__eyebrow">Output type</p>
             <h2>{selectedOutputType.label}</h2>
             <p>{selectedOutputType.goal}</p>
           </div>
@@ -1277,6 +1283,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
               <p>Continue with the same source context and preserve the current draft.</p>
               {selectedOutputTypeId === 'ai-answer' ? (
                 <section className="new-loom-draft__answer-flow" aria-label="Sources to Draft to Answer handoff">
+                  <p className="new-loom-draft__eyebrow">Thread of light</p>
                   <ol>
                     <li data-state={sourceTiles.length > 0 ? 'complete' : 'pending'}>
                       <span>Sources</span>
