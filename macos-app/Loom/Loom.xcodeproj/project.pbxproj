@@ -106,6 +106,11 @@
 		70CB370592F2AA33745BD3F9 /* OllamaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19B1CAD81EF9A7257E0A312 /* OllamaClient.swift */; };
 		72DFEDD02D325EBAA571412D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B7F8CCD03C55D5771F90EF30 /* Assets.xcassets */; };
 		73CB7FC5A01BBAE29816A792 /* AskAIWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2394997C8F0A3A3728DB182F /* AskAIWindow.swift */; };
+		FA11C0DE0000000000000001 /* DraftBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA11C0DE0000000000000002 /* DraftBridgeHandler.swift */; };
+		FA11C0DE0000000000000003 /* LoomDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA11C0DE0000000000000004 /* LoomDraftStore.swift */; };
+		FA11C0DE0000000000000005 /* LoomDraftView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA11C0DE0000000000000006 /* LoomDraftView.swift */; };
+		FA11C0DE0000000000000007 /* CapturePlacementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA11C0DE0000000000000008 /* CapturePlacementTests.swift */; };
+		FA11C0DE0000000000000009 /* LoomDraftStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA11C0DE000000000000000A /* LoomDraftStoreTests.swift */; };
 		76A165A2E48D5FBA874D38C3 /* SyllabusPDFExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 205D0C36575281BF5B752F60 /* SyllabusPDFExtractor.swift */; };
 		76B91217C2746C5B4E380024 /* infs-3822.input.txt in Resources */ = {isa = PBXBuildFile; fileRef = A0D047A8E1EF761508015C42 /* infs-3822.input.txt */; };
 		78DAAAFE00FED02AD1C5E73B /* LoomRuntimePaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDA5A2EB4CB4022BE8541513 /* LoomRuntimePaths.swift */; };
@@ -263,6 +268,11 @@
 		20D558EB47DDE6FBBB469276 /* LoomMinimalRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomMinimalRootView.swift; sourceTree = "<group>"; };
 		238C0F1FC1A1955AE4835BCF /* EmbeddingBridgeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingBridgeHandler.swift; sourceTree = "<group>"; };
 		2394997C8F0A3A3728DB182F /* AskAIWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskAIWindow.swift; sourceTree = "<group>"; };
+		FA11C0DE0000000000000002 /* DraftBridgeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftBridgeHandler.swift; sourceTree = "<group>"; };
+		FA11C0DE0000000000000004 /* LoomDraftStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomDraftStore.swift; sourceTree = "<group>"; };
+		FA11C0DE0000000000000006 /* LoomDraftView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomDraftView.swift; sourceTree = "<group>"; };
+		FA11C0DE0000000000000008 /* CapturePlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturePlacementTests.swift; sourceTree = "<group>"; };
+		FA11C0DE000000000000000A /* LoomDraftStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomDraftStoreTests.swift; sourceTree = "<group>"; };
 		25231BBD91A2A3C053329A27 /* OpenAIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClientTests.swift; sourceTree = "<group>"; };
 		2746C5548C8E8ABC409DE737 /* SelectableTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextEditor.swift; sourceTree = "<group>"; };
 		285B1D2C82CC721003507E79 /* infs-3822.expected.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "infs-3822.expected.json"; sourceTree = "<group>"; };
@@ -523,6 +533,9 @@
 				68B37504F9F0ED3D43A8C341 /* AppearanceSettingsView.swift */,
 				4F2E342E50C5DBF4160D0E13 /* AppleFoundationClient.swift */,
 				2394997C8F0A3A3728DB182F /* AskAIWindow.swift */,
+				FA11C0DE0000000000000002 /* DraftBridgeHandler.swift */,
+				FA11C0DE0000000000000004 /* LoomDraftStore.swift */,
+				FA11C0DE0000000000000006 /* LoomDraftView.swift */,
 				8234D9206138808EBC9AC554 /* CaptureSheet.swift */,
 				A656001CFBAF47D899D567A8 /* CaptureHelpView.swift */,
 				7242EA5713234EF7A9EC7A54 /* CaptureSettingsView.swift */,
@@ -679,6 +692,8 @@
 				DE18F301846375F2AA33FFC3 /* CustomEndpointClientTests.swift */,
 				53F3A30BF1438BCFFDD5761F /* DevServerPreflightTests.swift */,
 				2A78D44A8A1E04F2FF2FF6ED /* DevServerTests.swift */,
+				FA11C0DE0000000000000008 /* CapturePlacementTests.swift */,
+				FA11C0DE000000000000000A /* LoomDraftStoreTests.swift */,
 				D98677EAB28D6F8769007F99 /* EmbeddingClientTests.swift */,
 				D7C554FF435D8BD9AC4D76B8 /* ExaminerVerdictParserTests.swift */,
 				3FE60DA1FF551CB4D99F9183 /* FirstRunProviderSheetTests.swift */,
@@ -964,6 +979,9 @@
 				4E0CF1C5476C505763E46097 /* AppearanceSettingsView.swift in Sources */,
 				3D7B65147CE3A01D0A41F29A /* AppleFoundationClient.swift in Sources */,
 				73CB7FC5A01BBAE29816A792 /* AskAIWindow.swift in Sources */,
+				FA11C0DE0000000000000001 /* DraftBridgeHandler.swift in Sources */,
+				FA11C0DE0000000000000003 /* LoomDraftStore.swift in Sources */,
+				FA11C0DE0000000000000005 /* LoomDraftView.swift in Sources */,
 				34A5AC9BDC88A4B84BFFC1FC /* CLIRuntimeClient.swift in Sources */,
 				3EECABA79A64B9A46CF65579 /* CaptureSheet.swift in Sources */,
 				AEDE74E10FBA4449A005DB0E /* CaptureHelpView.swift in Sources */,
@@ -1075,6 +1093,8 @@
 				274FC90F9C45C13A5DAE0582 /* CustomEndpointClientTests.swift in Sources */,
 				4A07C211A0D26822457C750D /* DevServerPreflightTests.swift in Sources */,
 				6432F892116325B00A613D05 /* DevServerTests.swift in Sources */,
+				FA11C0DE0000000000000007 /* CapturePlacementTests.swift in Sources */,
+				FA11C0DE0000000000000009 /* LoomDraftStoreTests.swift in Sources */,
 				B8B8C97E6FE0672756447FF8 /* EmbeddingClientTests.swift in Sources */,
 				B6CD9CD89ED30455F805D569 /* ExaminerVerdictParserTests.swift in Sources */,
 				48BAD02571CB0EE375243FBC /* FirstRunProviderSheetTests.swift in Sources */,
