@@ -4,6 +4,14 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeSlug from 'rehype-slug';
 import rehypePrettyCode from 'rehype-pretty-code';
+import { createHighlighter, createJavaScriptRegexEngine } from 'shiki';
+
+// Shiki's default WASM Oniguruma engine deadlocks next-swc during a cold
+// production build on this toolchain — the build hangs at 0% CPU compiling
+// `node_modules/vscode-oniguruma`. Shiki's pure-JS regex engine produces the
+// same highlighting without loading any WASM, so the cold build completes.
+// Created once and reused across all MDX files.
+const shikiJsEngine = createJavaScriptRegexEngine();
 
 const withMDX = createMDX({
   extension: /\.mdx?$/,
@@ -12,7 +20,16 @@ const withMDX = createMDX({
     rehypePlugins: [
       rehypeSlug,
       rehypeKatex,
-      [rehypePrettyCode, { theme: { dark: 'github-dark', light: 'github-light' }, keepBackground: false }],
+      [
+        rehypePrettyCode,
+        {
+          theme: { dark: 'github-dark', light: 'github-light' },
+          keepBackground: false,
+          // Use Shiki's JS regex engine (no WASM) — see shikiJsEngine above.
+          getHighlighter: (options) =>
+            createHighlighter({ ...options, engine: shikiJsEngine }),
+        },
+      ],
     ],
   },
 });
