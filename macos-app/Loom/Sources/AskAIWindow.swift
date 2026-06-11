@@ -828,7 +828,15 @@ enum AskAIDocReferenceIndex {
     static func load() async throws -> [AskAIDocRef] {
         guard let url = URL(string: "loom://bundle/search-index.json") else { return [] }
         let (data, _) = try await URLSession.shared.data(from: url)
-        guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+        return parse(data)
+    }
+
+    /// Pure parse of a Pagefind-style `search-index.json` payload into sorted
+    /// `AskAIDocRef`s. Split out of `load()` so the corpus-shaping logic stays
+    /// unit-testable without a live `loom://` scheme handler. Malformed or
+    /// empty payloads return `[]` so callers degrade quietly.
+    static func parse(_ data: Data) -> [AskAIDocRef] {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let index = root["index"] as? [String: Any],
               let stored = index["storedFields"] as? [String: Any] else { return [] }
         var out: [AskAIDocRef] = []

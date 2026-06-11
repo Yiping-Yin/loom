@@ -2001,12 +2001,11 @@ final class LoomDraftStoreTests: XCTestCase {
         )
     }
 
-    func testDocReferenceIndexReadsNativeBundleSearchIndex() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-        try fm.createDirectory(at: root, withIntermediateDirectories: true)
-
+    func testDocReferenceIndexParsesNativeBundleSearchIndex() throws {
+        // `load()` is now an async URLSession fetch from
+        // `loom://bundle/search-index.json`; the corpus-shaping logic lives in
+        // the pure `parse(_:)` helper, which is what this exercises (entries
+        // without an href are dropped; the rest sort by title).
         let payload = """
         {
           "index": {
@@ -2023,12 +2022,8 @@ final class LoomDraftStoreTests: XCTestCase {
           }
         }
         """
-        try payload.data(using: .utf8)?.write(to: root.appendingPathComponent("search-index.json"))
 
-        let docs = try AskAIDocReferenceIndex.load(
-            hostRoots: ["bundle": root],
-            fileManager: fm
-        )
+        let docs = AskAIDocReferenceIndex.parse(Data(payload.utf8))
 
         XCTAssertEqual(docs, [
             AskAIDocRef(

@@ -246,7 +246,12 @@ final class LoomURLSchemeHandler: NSObject, WKURLSchemeHandler {
         }
 
         guard let root = hostRoots[host] else { return nil }
-        guard !relative.isEmpty else { return nil }
+        // Empty path — `loom://bundle/` or a plain `<a href="/">` Home nav —
+        // resolves to the host root directory so the caller's index.html
+        // fallback serves `<root>/index.html` (a static host's directory-index
+        // behavior). Without this the Home link / landing 404s ("rejected
+        // path: loom://bundle/") and blanks the webview.
+        guard !relative.isEmpty else { return root }
 
         for segment in relative.split(separator: "/") {
             if segment == ".." { return nil }

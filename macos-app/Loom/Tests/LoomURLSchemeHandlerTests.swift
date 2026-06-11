@@ -25,10 +25,14 @@ final class LoomURLSchemeHandlerTests: XCTestCase {
         XCTAssertNil(LoomURLSchemeHandler.resolve(url, under: root))
     }
 
-    func testResolveRejectsEmptyPath() throws {
+    func testResolveEmptyPathMapsToRootForIndexFallback() throws {
+        // `loom://bundle/` (and a plain `<a href="/">` Home nav) carries an
+        // empty path. It must resolve to the root directory so start()'s
+        // index.html fallback can serve `<root>/index.html` — otherwise the
+        // Home link 404s ("rejected path: loom://bundle/") and blanks the webview.
         let root = try makeRoot()
         let url = URL(string: "loom://content/")!
-        XCTAssertNil(LoomURLSchemeHandler.resolve(url, under: root))
+        XCTAssertEqual(LoomURLSchemeHandler.resolve(url, under: root)?.path, root.path)
     }
 
     func testResolveMapsContentPathToRoot() throws {
@@ -166,6 +170,34 @@ final class LoomURLSchemeHandlerTests: XCTestCase {
 
         XCTAssertEqual(task.receivedData, Data(probe.utf8))
         XCTAssertEqual((task.response as? HTTPURLResponse)?.statusCode, 200)
+    }
+
+    func testEndToEndServesIndexHtmlForBundleRoot() throws {
+        // Regression: clicking the Home link (`<a href="/">`) navigates the
+        // webview to `loom://bundle/`. That empty-path request must serve
+        // `index.html`, not 404 — otherwise the dossier blanks on Home.
+        let contentRoot = try makeRoot()
+        let bundleRoot = try makeRoot()
+        let home = "<main>home cover</main>"
+        try home.write(
+            to: bundleRoot.appendingPathComponent("index.html"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        let handler = LoomURLSchemeHandler(hostRoots: [
+            "content": contentRoot,
+            "bundle": bundleRoot,
+        ])
+        let task = FakeSchemeTask(requestURL: URL(string: "loom://bundle/")!)
+        handler.webView(WKWebView(), start: task)
+
+        XCTAssertEqual(task.receivedData, Data(home.utf8))
+        XCTAssertEqual((task.response as? HTTPURLResponse)?.statusCode, 200)
+        XCTAssertEqual(
+            (task.response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type"),
+            "text/html; charset=utf-8"
+        )
     }
 
     func testEndToEnd404WhenFileMissing() throws {
