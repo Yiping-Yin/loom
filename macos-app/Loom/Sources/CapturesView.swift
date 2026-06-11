@@ -473,10 +473,127 @@ enum CapturesIndex {
         // each time a delete happens.
         while end > start + 1 && lines[end - 1].isEmpty { end -= 1 }
 
+        let removedBlock = lines[start..<end].joined(separator: "\n")
         lines.removeSubrange(start..<end)
         let rewritten = lines.joined(separator: "\n")
         try rewritten.write(to: url, atomically: true, encoding: .utf8)
+        try cleanupOwnedSidecars(
+            removedBlock: removedBlock,
+            remainingSource: rewritten,
+            directoryURL: url.deletingLastPathComponent()
+        )
         return true
+    }
+
+    /// Deletes the sidecar files the removed block owned — its CaptureAST
+    /// JSON, the snapshot(s) sharing that AST's timestamp, and media it
+    /// referenced — but never a file the remaining markdown still
+    /// mentions. Snapshot ownership comes from the AST timestamp alone:
+    /// `CaptureEntry.snapshotFilename` is "newest in directory" and may
+    /// point at another capture's snapshot.
+    private static func cleanupOwnedSidecars(
+        removedBlock: String,
+        remainingSource: String,
+        directoryURL: URL,
+        fileManager: FileManager = .default
+    ) throws {
+        let filenames = captureSidecarFilenames(
+            removedBlock: removedBlock,
+            directoryURL: directoryURL,
+            fileManager: fileManager
+        )
+        for filename in filenames where !remainingSource.contains(filename) {
+            let url = directoryURL.appendingPathComponent(filename)
+            if fileManager.fileExists(atPath: url.path) {
+                try fileManager.removeItem(at: url)
+            }
+        }
+    }
+
+    private static func captureSidecarFilenames(
+        removedBlock: String,
+        directoryURL: URL,
+        fileManager: FileManager
+    ) -> Set<String> {
+        var filenames = Set<String>()
+
+        for pattern in [
+            #"\bLoom-media-[A-Za-z0-9._-]+\.[A-Za-z0-9]+\b"#,
+            #"\bLoom-capture-ast-[A-Za-z0-9._-]+\.json\b"#,
+            #"\bLoom-snapshot-[A-Za-z0-9._-]+\.html\b"#,
+        ] {
+            filenames.formUnion(captureSidecarMatches(in: removedBlock, pattern: pattern))
+        }
+
+        if let astFilename = extractCaptureASTFilename(from: removedBlock),
+           isSafeCaptureSidecarFilename(astFilename) {
+            filenames.insert(astFilename)
+            filenames.formUnion(snapshotFilenames(
+                matchingCaptureASTFilename: astFilename,
+                in: directoryURL,
+                fileManager: fileManager
+            ))
+        }
+
+        return Set(filenames.filter(isSafeCaptureSidecarFilename))
+    }
+
+    private static func captureSidecarMatches(in source: String, pattern: String) -> Set<String> {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let ns = source as NSString
+        return Set(regex.matches(in: source, range: NSRange(location: 0, length: ns.length)).map {
+            ns.substring(with: $0.range)
+        })
+    }
+
+    private static func extractCaptureASTFilename(from body: String) -> String? {
+        let pattern = #"<!--\s*loom-capture-ast:\s*([^<>\s]+)\s*-->"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let ns = body as NSString
+        let range = NSRange(location: 0, length: ns.length)
+        guard let match = regex.firstMatch(in: body, range: range),
+              match.numberOfRanges >= 2 else {
+            return nil
+        }
+        let filename = ns.substring(with: match.range(at: 1))
+        guard filename.hasPrefix("Loom-capture-ast-"),
+              filename.hasSuffix(".json"),
+              !filename.contains("/") else {
+            return nil
+        }
+        return filename
+    }
+
+    /// Snapshots written for a capture share the AST filename's
+    /// `YYYYMMDD-HHMMSS` stamp, so the stamp is the ownership key.
+    private static func snapshotFilenames(
+        matchingCaptureASTFilename filename: String,
+        in dir: URL,
+        fileManager: FileManager
+    ) -> [String] {
+        let pattern = #"^Loom-capture-ast-(\d{8}-\d{6})-"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let ns = filename as NSString
+        guard let match = regex.firstMatch(in: filename, range: NSRange(location: 0, length: ns.length)),
+              match.numberOfRanges >= 2 else {
+            return []
+        }
+        let prefix = "Loom-snapshot-\(ns.substring(with: match.range(at: 1)))-"
+        guard let contents = try? fileManager.contentsOfDirectory(atPath: dir.path) else {
+            return []
+        }
+        return contents
+            .filter { $0.hasPrefix(prefix) && $0.hasSuffix(".html") }
+            .sorted()
+    }
+
+    private static func isSafeCaptureSidecarFilename(_ filename: String) -> Bool {
+        guard !filename.contains("/"), !filename.contains("..") else { return false }
+        return (
+            (filename.hasPrefix("Loom-media-") && filename.range(of: #"\.[A-Za-z0-9]+$"#, options: .regularExpression) != nil) ||
+            (filename.hasPrefix("Loom-capture-ast-") && filename.hasSuffix(".json")) ||
+            (filename.hasPrefix("Loom-snapshot-") && filename.hasSuffix(".html"))
+        )
     }
 }
 // MARK: CapturesView
