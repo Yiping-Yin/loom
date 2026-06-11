@@ -3,7 +3,7 @@
      foundation. Base --ink-1 + a faint cool ambient glow; cyan is the
      data-signal; gold appears ONLY on active states as a 1px hairline.
      Spec: docs/archive/ai-build-log/specs/2026-06-11-loom-visual-system-design.md */
-  --role-page: var(--ink-1, #0A0D11);
+  --role-page: var(--ink-0, #07090C);
   --role-surface: var(--ink-3, #161B22);
   --role-surface-soft: var(--ink-4, #1E242D);
   --role-ink: var(--text-1, #E6E9EE);
@@ -19,15 +19,35 @@
   --role-mono: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
   --role-shell: 1320px;
   --role-gutter: clamp(28px, 4vw, 48px);
-  /* Glass material — real optics: blur + 1px specular top edge (key light,
-     top-left) + inner bottom thickness shadow + long float shadow. */
-  --role-glass: rgba(16, 20, 26, 0.55);
+  /* Glass material — the locked site-wide recipe at full strength (Digital Me
+     is the lit scene): a top-left specular sheen (150deg, white .05 → transparent
+     32%) layered over a cool-black surface gradient (ink-4 → ink-3). Single key
+     light from the top-left. */
+  --role-glass:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    linear-gradient(180deg, rgba(30, 36, 45, 0.62), rgba(22, 27, 34, 0.94));
   --role-glass-border: var(--line, #232A33);
+  /* Real optics: 1px specular top edge (key light) + inner bottom thickness
+     + a soft directional float so the panel reads as lifted lit glass. */
   --role-glass-shadow:
-    var(--keylight, inset 0 1px 0 rgba(255, 255, 255, 0.05)),
-    var(--float-2, 0 24px 60px rgba(0, 0, 0, 0.55)),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-  --role-chrome: rgba(10, 13, 17, 0.6);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 18px 44px rgba(0, 0, 0, 0.5);
+  /* Softer float for calm/secondary surfaces (cover-room restraint). */
+  --role-glass-shadow-soft:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
+  /* Inset surface (nested panels: artifact output, inputs, source rows) — the
+     same optics one layer down, lighter sheen, no outer float. */
+  --role-glass-inset:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent 36%),
+    linear-gradient(180deg, rgba(26, 31, 39, 0.66), rgba(18, 22, 28, 0.92));
+  --role-glass-inset-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  --role-chrome:
+    linear-gradient(180deg, rgba(14, 18, 24, 0.72), rgba(10, 13, 17, 0.62));
   position: relative;
   width: 100%;
   min-height: 100vh;
@@ -76,12 +96,13 @@
   background: var(--role-chrome);
   -webkit-backdrop-filter: blur(24px) saturate(115%);
   backdrop-filter: blur(24px) saturate(115%);
-  /* Real glass optics — match the /about nav + .lcv-nav: 1px top specular
-     key light + a soft float shadow so the bar reads as lifted glass, not a
-     flat blurred film. */
+  /* Real glass optics — 1px top specular key light + inner bottom thickness +
+     a soft float so the bar reads as lifted lit glass, not a flat blurred
+     film. Matches the panel recipe strength. */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 12px 30px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
 }
 
 .nav a {
@@ -92,6 +113,13 @@
   line-height: 1.1;
   text-decoration: none;
   white-space: nowrap;
+  transition: color 0.18s ease;
+}
+
+.nav a:focus-visible {
+  outline: 1px solid var(--role-accent-strong);
+  outline-offset: 4px;
+  border-radius: 3px;
 }
 
 .nav a:first-child {
@@ -274,8 +302,11 @@
   display: grid;
   gap: 0.26rem;
   width: 100%;
-  padding: 0.86rem 0;
+  padding: 0.86rem 0.72rem;
   border-bottom: 1px solid var(--role-border);
+  border-left: 1px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
 .claimButton strong,
@@ -295,12 +326,20 @@
 }
 
 .claimButton[aria-pressed="true"] {
-  padding-left: 0.72rem;
   border-left: 1px solid var(--role-accent);
   background: var(--role-row-active);
 }
 
-.claimButton:hover,
+/* Hover lifts via luminance (+1 ink step), not color-only. */
+.claimButton:hover {
+  background: var(--role-surface-soft);
+  color: var(--role-ink);
+}
+
+.claimButton[aria-pressed="true"]:hover {
+  background: var(--role-row-active);
+}
+
 .capabilityArtifact button:hover,
 .sourceGraphArtifact a:hover,
 .evidenceList a:hover {
@@ -313,8 +352,8 @@
 .sourceGraphArtifact a:focus-visible,
 .evidenceList a:focus-visible,
 .foundationStrip a:focus-visible {
-  outline: 2px solid var(--role-accent);
-  outline-offset: 3px;
+  outline: 1px solid var(--role-accent-strong);
+  outline-offset: 2px;
 }
 
 .stageHeader {
@@ -346,16 +385,69 @@
   line-height: 1.55;
 }
 
+/* Evidence Signal — the cyan thread-of-light + area fill that traces proof
+   depth across the role's capability chain. Light, not paint: a glowing line
+   over a cyan→transparent gradient fill (the validated chart-fill recipe). */
+.evidenceSignalRow {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.evidenceSignal {
+  display: block;
+  width: 100%;
+  height: 2.2rem;
+  overflow: visible;
+}
+
+/* .evidenceSignalArea — fill set inline via url(#dmEvidenceFill): cyan 0.28 → 0 */
+
+.evidenceSignalLine {
+  stroke: var(--role-signal);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 3px rgba(75, 197, 222, 0.55));
+}
+
+.evidenceSignalNode {
+  fill: var(--role-signal);
+  fill-opacity: 0.55;
+  cursor: pointer;
+}
+
+.evidenceSignalNodeActive {
+  fill: var(--role-signal);
+  cursor: pointer;
+  filter: drop-shadow(0 0 4px rgba(75, 197, 222, 0.7));
+}
+
+.evidenceSignalNode:hover {
+  fill-opacity: 1;
+}
+
+.stageHeader span.evidenceSignalCaption {
+  color: var(--role-subtle);
+  font-family: var(--role-mono);
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
 .artifactActions {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
   border: 1px solid var(--role-glass-border);
   border-radius: 10px;
-  background: rgba(16, 20, 26, 0.55);
+  background: var(--role-glass-inset);
   -webkit-backdrop-filter: blur(18px) saturate(110%);
   backdrop-filter: blur(18px) saturate(110%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: var(--role-glass-inset-shadow);
   overflow: hidden;
 }
 
@@ -369,6 +461,12 @@
   font-weight: 560;
   line-height: 1.2;
   text-align: center;
+  transition: color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.artifactActions button:hover {
+  background: var(--role-surface-soft);
+  color: var(--role-ink);
 }
 
 .artifactActions button:last-child {
@@ -404,7 +502,8 @@
   padding: clamp(1rem, 2vw, 1.45rem);
   border: 1px solid var(--role-glass-border);
   border-radius: 10px;
-  background: rgba(15, 19, 24, 0.5);
+  background: var(--role-glass-inset);
+  box-shadow: var(--role-glass-inset-shadow);
 }
 
 .artifactOutput ul,
@@ -472,8 +571,18 @@
 .evidenceList a {
   display: grid;
   gap: 0.4rem;
-  padding: 0.74rem 0;
+  padding: 0.74rem 0.6rem;
+  margin-inline: -0.6rem;
+  border-radius: 8px;
   border-bottom: 1px solid var(--role-border);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+/* Source attended-to — luminance lift + a faint cyan data-signal hairline. */
+.sourceGraphArtifact a:hover,
+.evidenceList a:hover {
+  background: var(--role-surface-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--role-signal) 32%, transparent);
 }
 
 .sourceGraphArtifact span {
@@ -520,6 +629,11 @@
   width: 100%;
   padding: 0.88rem 1rem;
   border-top: 1px solid var(--role-border);
+  transition: color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.capabilityArtifact button:hover {
+  background: var(--role-surface-soft);
 }
 
 .capabilityArtifact button[data-active="true"] strong {
@@ -585,6 +699,7 @@
   text-decoration: underline;
   text-decoration-color: var(--role-border-strong);
   text-underline-offset: 3px;
+  transition: text-decoration-color 0.18s ease, color 0.18s ease;
 }
 
 .foundationStrip a:hover {
@@ -742,7 +857,16 @@
   min-height: 330px;
   display: flex;
   align-items: flex-end;
-  box-shadow: var(--role-glass-shadow);
+  /* Perspective stage — the live screen sits as a real lit object receding
+     into the room, not a flat screenshot pasted on black. */
+  perspective: 1800px;
+  /* The live screen recedes calmly — softer directional float, plus a deep
+     radial atmospheric glow + vignette behind the object on the cool-black. */
+  background:
+    radial-gradient(70% 90% at 72% 22%, rgba(75, 197, 222, 0.08) 0%, rgba(75, 197, 222, 0) 60%),
+    radial-gradient(120% 120% at 50% 0%, transparent 55%, rgba(7, 9, 12, 0.55) 100%),
+    var(--role-page);
+  box-shadow: var(--role-glass-shadow-soft);
 }
 
 .marketRoomShot {
@@ -752,10 +876,13 @@
   height: 100%;
   object-fit: cover;
   object-position: center top;
-  opacity: 0.85;
-  /* The screen recedes into the room — subtle, screen-like perspective. */
-  transform: perspective(1600px) rotateX(3deg) scale(1.05);
-  transform-origin: 50% 0;
+  opacity: 0.88;
+  /* The screen recedes into the room — staged perspective tilt with a touch
+     of rotateZ, anchored near its base, with a grounding drop-shadow beneath
+     so the object reads as lit and seated, not floating in a void. */
+  transform: rotateX(7deg) rotateZ(-0.6deg) scale(1.06);
+  transform-origin: 50% 82%;
+  filter: drop-shadow(0 26px 46px rgba(0, 0, 0, 0.55));
 }
 
 .marketRoomScrim {
@@ -766,6 +893,21 @@
     radial-gradient(80% 55% at 72% 30%, rgba(75, 197, 222, 0.06) 0%, rgba(75, 197, 222, 0) 65%),
     linear-gradient(90deg, rgba(7, 9, 12, 0.88) 0%, rgba(7, 9, 12, 0.55) 42%, rgba(7, 9, 12, 0.12) 75%, rgba(7, 9, 12, 0.05) 100%),
     linear-gradient(180deg, rgba(7, 9, 12, 0.25) 0%, rgba(7, 9, 12, 0.08) 38%, rgba(7, 9, 12, 0.7) 80%, rgba(7, 9, 12, 0.92) 100%);
+}
+
+/* Diagonal screen-glare — a low-opacity white sweep across the top of the
+   glass screen, the optical tell of a real lit object. pointer-events:none. */
+.marketRoomScrim::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.02) 22%,
+    transparent 46%
+  );
+  pointer-events: none;
 }
 
 .marketRoomBody {
@@ -833,10 +975,10 @@
   padding: 11px 18px;
   border: 1px solid color-mix(in srgb, var(--role-accent) 55%, transparent);
   border-radius: 8px;
-  background: rgba(16, 20, 26, 0.55);
+  background: var(--role-glass-inset);
   -webkit-backdrop-filter: blur(14px) saturate(110%);
   backdrop-filter: blur(14px) saturate(110%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--role-glass-inset-shadow);
   color: var(--role-ink);
   font-size: 0.92rem;
   font-weight: 500;
@@ -847,7 +989,7 @@
 .marketRoomLaunch:hover {
   border-color: var(--role-accent-strong);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    var(--role-glass-inset-shadow),
     0 0 24px rgba(200, 162, 74, 0.14);
   gap: 14px;
 }

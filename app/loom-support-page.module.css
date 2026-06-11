@@ -11,12 +11,12 @@
  * defaults): cool-black luminance ramp, watch-hand champagne gold,
  * comet-cyan for information/data only.
  *
- *   bg --ink-1 · surface --ink-3 · elevated --ink-4 · border --line
+ *   bg --ink-0 · surface --ink-3 · elevated --ink-4 · border --line
  *   ink --text-1 / --text-2 / --text-3
  *   accent --gold (hairline/word only, never a fill) · --cyan (info/data only)
  */
 .surface {
-  --bg: var(--ink-1);
+  --bg: var(--ink-0);
   --bg-elevated: var(--ink-3);
   --surface-2: var(--ink-3);
   --surface-3: var(--ink-4);
@@ -57,13 +57,15 @@
   flex-wrap: wrap;
   padding: 0.9rem clamp(1.5rem, 5vw, 4rem);
   border-bottom: 1px solid var(--border);
-  background: rgba(10, 13, 17, 0.72);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    rgba(15, 19, 24, 0.72);
   -webkit-backdrop-filter: blur(28px) saturate(110%);
   backdrop-filter: blur(28px) saturate(110%);
   box-shadow:
-    var(--keylight),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
-    var(--float-1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
 }
 
 .navWordmark {
@@ -89,22 +91,29 @@
   font-family: var(--sans);
   font-size: 0.84rem;
   font-weight: 500;
-  color: var(--text-3);
+  color: var(--text-2);
   text-decoration: none;
-  transition: color 0.16s ease;
+  transition: color 0.18s ease;
 }
 
 /* The global `a[class*="loom-"] { color: inherit }` reset (globals.css)
    matches this module's hashed class names at 0,1,1 and would flatten
    resting links to --fg; this 0,2,0 rule restores the text ramp. The
    :hover / [aria-current] rules below also sit at 0,2,0 and win by
-   source order. */
+   source order. Inactive nav rests at --text-2 (available), active at
+   --text-1 with a gold hairline underline. */
 .nav .navLink {
-  color: var(--text-3);
+  color: var(--text-2);
 }
 
 .navLink:hover {
   color: var(--text-1);
+}
+
+.navLink:focus-visible {
+  outline: none;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px var(--gold-hi);
 }
 
 .navLink[aria-current='page'] {

@@ -1,20 +1,94 @@
+/* UNSW dossier (/knowledge/unsw) — Evidence Desk, Archive scene. Cool-black
+   luminance ramp consuming the locked globals; quiet, evidence-first, with the
+   cyan Sources -> Draft -> Answer thread on the Ask panel. */
 .page {
-  --unsw-ink: #141916;
-  --unsw-muted: #5f6964;
-  --unsw-subtle: #8c9691;
-  --unsw-border: #e2e7e2;
-  --unsw-border-strong: #c9d2ca;
-  --unsw-surface: #ffffff;
-  --unsw-soft: #f7faf7;
-  --unsw-accent: #255c48;
-  --unsw-accent-strong: #123f31;
-  --unsw-gold: #ffd400;
+  /* Local aliases point at the locked globals — never private copies. */
+  --unsw-ink: var(--text-1);
+  --unsw-muted: var(--text-2);
+  --unsw-subtle: var(--text-3);
+  --unsw-border: var(--line);
+  --unsw-border-strong: var(--ink-5);
+  --unsw-surface: var(--ink-3);
+  --unsw-soft: var(--ink-2);
+  --unsw-accent: var(--gold);
+  --unsw-accent-strong: var(--gold-hi);
+  --unsw-gold: var(--gold);
+
+  /* DocumentPreviewCard chrome (vd-*) on this non-vd-home page. */
+  --vd-ink: var(--text-1);
+  --vd-muted: var(--text-2);
+  --vd-subtle: var(--text-3);
+  --vd-border: var(--line);
+  --vd-border-strong: var(--ink-5);
+  --vd-surface: var(--ink-3);
+  --vd-surface-soft: var(--ink-2);
+  --vd-accent: var(--gold);
+  --vd-accent-strong: var(--gold-hi);
+  --vd-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+
+  --shelf-glass:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  --shelf-float:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
+
   min-height: 100vh;
   overflow-x: clip;
   background:
-    linear-gradient(180deg, #ffffff 0%, #f7faf7 54%, #ffffff 100%);
-  color: var(--unsw-ink);
+    radial-gradient(120% 78% at 50% -8%, #10141A 0%, var(--ink-0) 56%);
+  background-color: var(--ink-0);
+  color: var(--text-1);
   font-family: var(--sans);
+}
+
+/* DocumentPreviewCard previews: lit-glass, neutral text, no white/green. */
+.page :global(.vd-document-card) {
+  border: 1px solid var(--line);
+  background: var(--shelf-glass);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.page :global(.vd-document-card:hover) {
+  border-color: var(--ink-5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 34px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
+}
+
+.page :global(.vd-document-preview),
+.page :global(.vd-document-preview--ppt) {
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  color: var(--text-2);
+}
+
+.page :global(.vd-document-preview__kicker),
+.page :global(.vd-document-preview--ppt .vd-document-preview__kicker),
+.page :global(.vd-document-preview__body span),
+.page :global(.vd-document-preview--ppt .vd-document-preview__body span) {
+  color: var(--text-3);
+}
+
+.page :global(.vd-document-preview__title),
+.page :global(.vd-document-preview--ppt .vd-document-preview__title) {
+  color: var(--text-1);
+  font-family: var(--serif);
+}
+
+.page :global(.vd-file-badge) {
+  border: 1px solid var(--line);
+  background: var(--ink-4);
+  color: var(--text-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .topNav {
@@ -26,16 +100,20 @@
   gap: 0.65rem 1.35rem;
   align-items: center;
   padding: 0.72rem clamp(1.2rem, 3vw, 2.8rem);
-  border-bottom: 1px solid var(--unsw-border);
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: saturate(170%) blur(18px);
+  border-bottom: 1px solid var(--line);
+  background: rgba(13, 17, 22, 0.62);
+  -webkit-backdrop-filter: saturate(140%) blur(18px);
+  backdrop-filter: saturate(140%) blur(18px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 12px 30px rgba(0, 0, 0, 0.45);
 }
 
 .brand {
-  color: var(--unsw-ink);
+  color: var(--text-1);
   font-family: var(--display);
   font-size: 1.62rem;
-  font-weight: 560;
+  font-weight: 600;
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
@@ -55,54 +133,71 @@
   grid-column: 1 / -1;
   justify-content: flex-start;
   padding-top: 0.62rem;
-  border-top: 1px solid #edf1ed;
+  border-top: 1px solid var(--line-soft);
 }
 
 .navLink,
 .problemLink,
 .textLink,
 .buttonLink {
-  color: var(--unsw-accent);
-  font-weight: 720;
+  color: var(--text-2);
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.2;
   text-decoration: none;
 }
 
 .navLink {
-  color: #232a27;
+  color: var(--text-2);
   font-size: 0.82rem;
   white-space: nowrap;
+  transition: color 0.18s ease;
 }
 
 .problemLink {
-  min-height: 1.85rem;
-  padding: 0.38rem 0.58rem;
-  border: 1px solid var(--unsw-border);
-  border-radius: 7px;
-  background: var(--unsw-surface);
-  color: var(--unsw-muted);
+  min-height: 1.95rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink-3);
+  color: var(--text-2);
   font-size: 0.75rem;
   white-space: nowrap;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
 
 .navLink:hover,
-.problemLink:hover,
-.textLink:hover,
-.buttonLink:hover {
-  color: var(--unsw-accent-strong);
+.textLink:hover {
+  color: var(--text-1);
   text-decoration: underline;
+  text-decoration-color: rgba(200, 162, 74, 0.6);
   text-underline-offset: 3px;
 }
 
+.problemLink:hover,
+.buttonLink:hover {
+  border-color: rgba(200, 162, 74, 0.5);
+  background: var(--ink-4);
+  color: var(--text-1);
+  text-decoration: none;
+}
+
+.navLink:focus-visible,
+.problemLink:focus-visible,
+.textLink:focus-visible,
+.buttonLink:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 2px;
+}
+
 .activeLink {
-  color: var(--unsw-accent-strong);
+  color: var(--text-1);
 }
 
 .activeProblem {
-  border-color: var(--unsw-accent);
-  background: #f1f6f2;
-  color: var(--unsw-accent-strong);
+  border-color: rgba(200, 162, 74, 0.5);
+  background: var(--ink-4);
+  color: var(--text-1);
 }
 
 .hero,
@@ -120,8 +215,8 @@
   grid-template-columns: minmax(0, 0.9fr) minmax(22rem, 0.48fr);
   gap: clamp(2rem, 5vw, 5rem);
   align-items: end;
-  padding-top: clamp(2rem, 4.6vw, 4.2rem);
-  padding-bottom: clamp(2rem, 4vw, 3.4rem);
+  padding-top: clamp(2.4rem, 4.6vw, 4.6rem);
+  padding-bottom: clamp(2rem, 4vw, 3.6rem);
 }
 
 .heroCopy,
@@ -136,18 +231,18 @@
 }
 
 .heroCopy {
-  gap: 1rem;
+  gap: 1.05rem;
 }
 
 .coursePanel,
 .answerPanel,
 .sourcePanel {
   gap: 1rem;
-  padding: clamp(1rem, 2vw, 1.25rem);
-  border: 1px solid var(--unsw-border);
-  border-radius: 10px;
-  background: var(--unsw-surface);
-  box-shadow: 0 1px 0 rgba(18, 22, 21, 0.03);
+  padding: clamp(1.05rem, 2vw, 1.35rem);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow: var(--shelf-float);
 }
 
 .courseShelfPanel {
@@ -157,7 +252,7 @@
 .courseFolderGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
+  gap: 0.62rem;
   min-width: 0;
 }
 
@@ -167,36 +262,44 @@
   gap: 0.42rem 0.52rem;
   min-width: 0;
   min-height: 4.05rem;
-  padding: 0.62rem;
-  border: 1px solid var(--unsw-border);
-  border-radius: 8px;
+  padding: 0.66rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(247, 250, 247, 0.96));
+    linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
   color: inherit;
   text-decoration: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .courseFolderCard:hover {
-  border-color: var(--unsw-border-strong);
-  background: #ffffff;
+  border-color: var(--ink-5);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    0 0.45rem 1.2rem rgba(18, 63, 49, 0.06);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 10px 26px rgba(0, 0, 0, 0.45);
+  transform: translateY(-1px);
 }
 
+.courseFolderCard:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 2px;
+}
+
+/* Folder mark — thin gold hairline glyph, not a filled green chip. */
 .courseFolderIcon {
   position: relative;
   width: 1.45rem;
   height: 1.08rem;
   margin-top: 0.08rem;
-  border: 1.35px solid var(--unsw-accent);
+  border: 1.2px solid var(--gold);
   border-radius: 4px;
-  background:
-    linear-gradient(180deg, #f7fbf8 0%, #e8f0ec 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.96),
-    0 1px 0 rgba(18, 63, 49, 0.08);
+  background: rgba(200, 162, 74, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .courseFolderIcon::before {
@@ -205,10 +308,10 @@
   left: 0.1rem;
   width: 0.76rem;
   height: 0.34rem;
-  border: 1.35px solid var(--unsw-accent);
+  border: 1.2px solid var(--gold);
   border-bottom: 0;
   border-radius: 4px 4px 0 0;
-  background: #f7fbf8;
+  background: var(--ink-3);
   content: "";
 }
 
@@ -227,25 +330,29 @@
 }
 
 .courseFolderCard strong {
-  color: var(--unsw-ink);
+  color: var(--text-1);
   font-size: 0.84rem;
-  line-height: 1.1;
+  font-weight: 600;
+  line-height: 1.12;
 }
 
 .courseFolderCard small {
-  color: var(--unsw-accent);
+  color: var(--gold);
+  font-family: var(--mono);
   font-size: 0.62rem;
-  font-weight: 760;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   line-height: 1.1;
 }
 
 .courseFolderCard em {
   grid-column: 1 / -1;
-  color: var(--unsw-muted);
+  color: var(--text-3);
   font-family: var(--mono);
-  font-size: 0.58rem;
+  font-size: 0.6rem;
   font-style: normal;
-  line-height: 1.15;
+  letter-spacing: 0.04em;
+  line-height: 1.18;
 }
 
 .courseFolderMore {
@@ -253,27 +360,33 @@
   align-items: center;
   justify-content: center;
   width: fit-content;
-  min-height: 2rem;
-  padding: 0 0.72rem;
-  border: 1px solid var(--unsw-border);
-  border-radius: 7px;
-  background: #fbfcfa;
-  color: var(--unsw-accent);
+  min-height: 2.1rem;
+  padding: 0 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink-3);
+  color: var(--text-2);
   font-size: 0.78rem;
-  font-weight: 780;
+  font-weight: 600;
   line-height: 1.1;
   text-decoration: none;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
 
 .courseFolderMore:hover {
-  border-color: var(--unsw-border-strong);
-  background: #ffffff;
-  color: var(--unsw-accent-strong);
+  border-color: rgba(200, 162, 74, 0.5);
+  background: var(--ink-4);
+  color: var(--text-1);
+}
+
+.courseFolderMore:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 2px;
 }
 
 .courseDirectory {
   display: grid;
-  gap: 1rem;
+  gap: 1.1rem;
 }
 
 .courseDirectoryHeader {
@@ -292,16 +405,21 @@
 
 .courseDirectoryHeader h2 {
   margin: 0;
-  color: var(--unsw-ink);
+  color: var(--text-1);
   font-family: var(--display);
   font-size: clamp(1.85rem, 3vw, 3rem);
-  font-weight: 560;
+  font-weight: 500;
+  letter-spacing: -0.005em;
   line-height: 1;
 }
 
 .courseDirectoryHeader strong {
-  color: var(--unsw-accent);
-  font-size: 0.86rem;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -315,26 +433,27 @@
 
 .courseDirectoryGrid .courseFolderCard {
   min-height: 3.75rem;
-  background: #ffffff;
 }
 
 .sectionLabel {
   margin: 0;
-  color: var(--unsw-accent);
-  font-size: 0.78rem;
-  font-weight: 820;
-  letter-spacing: 0;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .hero h1,
 .sectionHeader h2,
 .answerPanel h2 {
   margin: 0;
-  color: var(--unsw-ink);
+  color: var(--text-1);
   font-family: var(--display);
-  font-weight: 560;
-  letter-spacing: 0;
+  font-weight: 500;
+  letter-spacing: -0.005em;
   line-height: 0.98;
 }
 
@@ -356,9 +475,9 @@
 .sourcePanel p,
 .outputRow p {
   margin: 0;
-  color: var(--unsw-muted);
+  color: var(--text-2);
   font-size: clamp(0.92rem, 1vw, 1.02rem);
-  line-height: 1.52;
+  line-height: 1.55;
 }
 
 .heroLead {
@@ -375,22 +494,36 @@
   margin-top: 0.25rem;
 }
 
+/* Restrained ghost button — faint gold hairline, luminance hover. */
 .buttonLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.36rem;
-  padding: 0 0.95rem;
-  border: 1px solid var(--unsw-accent);
-  border-radius: 7px;
-  background: var(--unsw-accent);
-  color: #ffffff;
+  min-height: 2.4rem;
+  padding: 0 1.05rem;
+  border: 1px solid rgba(200, 162, 74, 0.45);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  color: var(--text-1);
   font-size: 0.86rem;
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .buttonLink:hover {
-  color: #ffffff;
-  background: var(--unsw-accent-strong);
+  border-color: rgba(227, 197, 106, 0.6);
+  background:
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  color: var(--text-1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 10px 26px rgba(0, 0, 0, 0.45);
+  transform: translateY(-1px);
   text-decoration: none;
 }
 
@@ -398,6 +531,7 @@
   display: inline-flex;
   align-items: center;
   width: fit-content;
+  color: var(--text-2);
   font-size: 0.86rem;
 }
 
@@ -408,18 +542,20 @@
   align-items: center;
 }
 
+/* UNSW crest sits on a cool desaturated chip (light-art legibility), not a
+   warm-paper or pure-white disc. */
 .unswMark {
   display: inline-grid;
   place-items: center;
   width: 3.1rem;
   height: 3.1rem;
-  padding: 0.22rem;
-  border: 1px solid var(--unsw-border-strong);
-  border-radius: 8px;
-  background: #ffffff;
+  padding: 0.24rem;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #DADDE2;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 1px 0 rgba(18, 22, 21, 0.04);
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
 }
 
 .unswMark img {
@@ -439,10 +575,11 @@
 .sourcePanel h3,
 .outputRow h3 {
   margin: 0;
-  color: var(--unsw-ink);
+  color: var(--text-1);
   font-family: var(--serif);
   font-size: 1.08rem;
-  line-height: 1.22;
+  font-weight: 600;
+  line-height: 1.24;
 }
 
 .coursePanel h2,
@@ -458,9 +595,7 @@
 .factGrid,
 .metricGrid {
   display: grid;
-  gap: 0;
-  border-top: 1px solid var(--unsw-border);
-  border-left: 1px solid var(--unsw-border);
+  gap: clamp(0.6rem, 1vw, 0.8rem);
 }
 
 .factGrid {
@@ -479,19 +614,21 @@
 .metric {
   display: grid;
   min-width: 0;
-  gap: 0.3rem;
-  padding: 0.86rem;
-  border-right: 1px solid var(--unsw-border);
-  border-bottom: 1px solid var(--unsw-border);
+  gap: 0.32rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--ink-2);
 }
 
 .fact dt,
 .metric span,
 .tableHead {
-  color: var(--unsw-subtle);
-  font-size: 0.68rem;
-  font-weight: 820;
-  letter-spacing: 0;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -499,34 +636,35 @@
 .fact dd,
 .metric strong {
   margin: 0;
-  color: var(--unsw-ink);
+  color: var(--text-1);
   font-size: 0.86rem;
-  font-weight: 740;
-  line-height: 1.28;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .metric strong {
   font-family: var(--serif);
   font-size: clamp(1.25rem, 2.1vw, 1.9rem);
-  font-weight: 720;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .splitSection,
 .section {
-  border-top: 1px solid var(--unsw-border);
+  border-top: 1px solid var(--line);
 }
 
 .splitSection {
   display: grid;
   grid-template-columns: minmax(17rem, 0.32fr) minmax(0, 1fr);
   gap: clamp(1.8rem, 4vw, 4rem);
-  padding-top: clamp(2rem, 4vw, 3.4rem);
-  padding-bottom: clamp(2rem, 4vw, 3.4rem);
+  padding-top: clamp(2.2rem, 4vw, 3.5rem);
+  padding-bottom: clamp(2.2rem, 4vw, 3.5rem);
 }
 
 .section {
-  padding-top: clamp(2rem, 4vw, 3.4rem);
-  padding-bottom: clamp(2rem, 4vw, 3.4rem);
+  padding-top: clamp(2.2rem, 4vw, 3.5rem);
+  padding-bottom: clamp(2.2rem, 4vw, 3.5rem);
 }
 
 .sectionHeader {
@@ -541,14 +679,14 @@
 .documentGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.72rem;
+  gap: 0.75rem;
   min-width: 0;
 }
 
 .chain {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  gap: 0.75rem;
+  gap: 0.78rem;
   margin-top: 0.95rem;
 }
 
@@ -557,19 +695,32 @@
 .outputRow {
   display: grid;
   min-width: 0;
-  gap: 0.38rem;
-  padding: 0.9rem;
-  border: 1px solid var(--unsw-border);
-  border-radius: 8px;
-  background: var(--unsw-surface);
+  gap: 0.4rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow: var(--shelf-float);
 }
 
-.chainStep span,
+/* Chain steps are the Sources -> Draft -> Answer thread: cyan markers. */
+.chainStep span {
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
 .problemIndex,
 .weekMarker {
-  color: var(--unsw-accent);
+  color: var(--gold);
+  font-family: var(--mono);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
   line-height: 1.2;
 }
 
@@ -580,51 +731,63 @@
 .outputList,
 .fileList {
   display: grid;
-  gap: 0;
+  gap: clamp(0.7rem, 1.2vw, 1rem);
   min-width: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* Evidence/problem/week/reference/output/file rows become lit-glass cards
+   (no flat hairline-divided cells). */
 .evidenceItem,
 .problemRow,
 .weekRow,
 .referenceRow,
 .outputRow,
 .fileItem {
-  border-top: 1px solid var(--unsw-border);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow: var(--shelf-float);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .evidenceItem {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
-  border-right: 0;
-  border-bottom: 0;
-  border-left: 0;
-  border-radius: 0;
-  background: transparent;
 }
 
 .evidenceCopy {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.36rem;
   min-width: 0;
 }
 
 .sourceGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.78rem;
 }
 
 .sourcePanel {
   color: inherit;
   text-decoration: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .sourcePanel:hover {
-  border-color: var(--unsw-border-strong);
+  border-color: var(--ink-5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 18px 44px rgba(0, 0, 0, 0.55);
+  transform: translateY(-1px);
+}
+
+.sourcePanel:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 2px;
 }
 
 .phaseGrid {
@@ -636,7 +799,7 @@
 .phase {
   display: grid;
   align-content: start;
-  gap: 0.75rem;
+  gap: 0.78rem;
   min-width: 0;
 }
 
@@ -649,7 +812,7 @@
   gap: clamp(0.9rem, 2.5vw, 1.7rem);
   align-items: start;
   min-width: 0;
-  padding: 1rem 0;
+  padding: clamp(0.95rem, 1.6vw, 1.2rem);
 }
 
 .problemRow {
@@ -667,23 +830,26 @@
 .rowBody,
 .fileBody {
   display: grid;
-  gap: 0.46rem;
+  gap: 0.48rem;
   min-width: 0;
 }
 
 .meta {
   margin: 0;
-  color: var(--unsw-subtle);
-  font-size: 0.78rem;
-  font-weight: 650;
-  line-height: 1.38;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
 }
 
 .badgeLine,
 .fileBadges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.36rem;
+  gap: 0.4rem;
   align-items: center;
   min-width: 0;
 }
@@ -706,7 +872,7 @@
   gap: 0.75rem 1.35rem;
   padding-top: clamp(1.5rem, 3vw, 2.2rem);
   padding-bottom: clamp(2.4rem, 5vw, 4rem);
-  border-top: 1px solid var(--unsw-border);
+  border-top: 1px solid var(--line);
 }
 
 @media (max-width: 1180px) {

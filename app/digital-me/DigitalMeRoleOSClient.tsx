@@ -55,6 +55,82 @@ function getClaimGrowthAction(claimId: string) {
   return actions[claimId] ?? '';
 }
 
+/* Evidence strength scored per claim, so the signal line traces real proof
+   depth across the role's capability chain rather than a decorative wiggle. */
+const EVIDENCE_WEIGHT: Record<DigitalMeEvidenceStatus, number> = {
+  strong: 1,
+  partial: 0.62,
+  direction: 0.34,
+  missing: 0.12,
+};
+
+/* Evidence Signal — the cyan thread-of-light over the role's capability chain.
+   A line with a soft glow above a cyan→transparent area fill (the validated
+   "chart area fill" recipe): defs linearGradient, accent @ 0.28 → 0, a filled
+   path closed to the baseline, fill=url(#grad). Cyan = the data-signal. */
+function EvidenceSignal({
+  claims,
+  selectedClaimId,
+  onSelectClaim,
+}: {
+  claims: readonly DigitalMeClaimNode[];
+  selectedClaimId: string;
+  onSelectClaim: (claimId: string) => void;
+}) {
+  const W = 100;
+  const H = 30;
+  const padX = 3;
+  const padY = 4;
+  const span = W - padX * 2;
+  const usable = H - padY * 2;
+  const n = claims.length;
+  const points = claims.map((claim, i) => {
+    const x = n === 1 ? W / 2 : padX + (span * i) / (n - 1);
+    const y = padY + usable * (1 - EVIDENCE_WEIGHT[claim.evidenceStatus]);
+    return { x, y, claim };
+  });
+  const linePath = points
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+    .join(' ');
+  const areaPath =
+    `${linePath} L ${points[points.length - 1].x.toFixed(2)} ${H - padY} ` +
+    `L ${points[0].x.toFixed(2)} ${H - padY} Z`;
+
+  return (
+    <svg
+      className={styles.evidenceSignal}
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      role="img"
+      aria-label="Evidence strength across the quant capability chain"
+    >
+      <defs>
+        <linearGradient id="dmEvidenceFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="var(--role-signal)" stopOpacity="0.28" />
+          <stop offset="1" stopColor="var(--role-signal)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path className={styles.evidenceSignalArea} d={areaPath} fill="url(#dmEvidenceFill)" />
+      <path className={styles.evidenceSignalLine} d={linePath} fill="none" />
+      {points.map((p) => {
+        const active = p.claim.id === selectedClaimId;
+        return (
+          <circle
+            key={p.claim.id}
+            className={active ? styles.evidenceSignalNodeActive : styles.evidenceSignalNode}
+            cx={p.x}
+            cy={p.y}
+            r={active ? 1.9 : 1.2}
+            onClick={() => onSelectClaim(p.claim.id)}
+          >
+            <title>{`${getClaimTitle(p.claim)} — ${STATUS_LABELS[p.claim.evidenceStatus]}`}</title>
+          </circle>
+        );
+      })}
+    </svg>
+  );
+}
+
 function ArtifactOutput({
   mode,
   selectedClaim,
@@ -235,6 +311,14 @@ export default function DigitalMeRoleOSClient() {
             <p>Artifact Runtime</p>
             <h2>{activeMode.label}</h2>
             <span>{activeMode.summary}</span>
+            <div className={styles.evidenceSignalRow}>
+              <EvidenceSignal
+                claims={DIGITAL_ME_PROOF_PATH.claims}
+                selectedClaimId={selectedClaim.id}
+                onSelectClaim={setSelectedClaimId}
+              />
+              <span className={styles.evidenceSignalCaption}>Evidence signal · proof depth across the role</span>
+            </div>
           </div>
           <div className={styles.artifactActions}>
             {DIGITAL_ME_ARTIFACT_MODES.map((mode) => (

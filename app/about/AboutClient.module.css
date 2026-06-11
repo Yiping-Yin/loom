@@ -1,26 +1,25 @@
 .page {
-  --about-bg: #0A0D11;
-  --about-surface: #161B22;
-  --about-inset: #1E242D;
+  --about-bg: var(--ink-0);
+  --about-surface: var(--ink-3);
+  --about-inset: var(--ink-4);
   --about-ink: #E6E9EE;
   --about-muted: #9BA3AE;
   --about-subtle: #5E6671;
-  --about-line: #232A33;
-  --about-line2: #232A33;
-  --about-gold: #C8A24A;
-  --about-gold2: #E3C56A;
+  --about-line: var(--line);
+  --about-gold: var(--gold);
+  --about-gold2: var(--gold-hi);
   --about-ok: #3FB37A;
-  --about-strong: #C8A24A;
+  --about-strong: var(--gold);
   --about-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --about-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
 
-  --section-gap: clamp(1rem, 1.8vw, 1.4rem);
+  --section-gap: clamp(1.4rem, 2.4vw, 2rem);
   --rail-gap: clamp(0.85rem, 1.4vw, 1rem);
 
   width: 100%;
   min-height: 100vh;
   background:
-    radial-gradient(120% 80% at 50% -8%, #12161C 0%, var(--about-bg) 55%);
+    radial-gradient(120% 80% at 50% -8%, #10141A 0%, var(--about-bg) 55%);
   background-color: var(--about-bg);
   color: var(--about-ink);
 }
@@ -54,7 +53,7 @@
   width: 1px;
   height: 1.15rem;
   margin-left: clamp(0.8rem, 1.6vw, 1.2rem);
-  background: var(--about-line2);
+  background: var(--about-line);
 }
 
 .page :global(.vd-nav__links) {
@@ -64,9 +63,10 @@
 
 .page :global(.vd-nav__links a) {
   min-height: 2.95rem;
-  color: var(--about-subtle);
+  color: var(--about-muted);
   font-size: 0.86rem;
   font-weight: 500;
+  transition: color 0.18s ease;
 }
 
 .page :global(.vd-nav__links a:hover) {
@@ -84,7 +84,7 @@
   right: 0;
   bottom: -0.32rem;
   left: 0;
-  height: 2px;
+  height: 1px;
   border-radius: 0;
   background: var(--about-gold);
   opacity: 1;
@@ -93,7 +93,7 @@
 .page :global(.vd-nav__avatar) {
   width: 2.3rem;
   height: 2.3rem;
-  border: 1px solid var(--about-line2);
+  border: 1px solid var(--about-line);
   border-radius: 999px;
   object-fit: cover;
   object-position: center 30%;
@@ -113,19 +113,7 @@
   display: grid;
   grid-template-columns: minmax(16rem, 20rem) minmax(0, 1.2fr) minmax(14rem, 19rem);
   gap: var(--section-gap);
-}
-
-.profileRail,
-.resumePanel,
-.sourceRail,
-.historyRows {
-  background: rgba(24, 26, 32, 0.55);
-  -webkit-backdrop-filter: blur(20px) saturate(115%);
-  backdrop-filter: blur(20px) saturate(115%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow:
-    0 16px 50px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  align-items: start;
 }
 
 .profileRail,
@@ -133,6 +121,16 @@
 .sourceRail,
 .historyRows {
   border-radius: 12px;
+  border: 1px solid var(--about-line);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    linear-gradient(180deg, var(--about-inset), var(--about-surface));
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+  backdrop-filter: blur(20px) saturate(115%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
 }
 
 .activityGrid {
@@ -151,7 +149,7 @@
   width: 100%;
   aspect-ratio: 1.06 / 1;
   border-radius: 5px;
-  border: 1px solid var(--about-line2);
+  border: 1px solid var(--about-line);
   object-fit: cover;
   object-position: center 30%;
 }
@@ -199,7 +197,7 @@
   margin: 0;
   color: var(--about-subtle);
   font-family: var(--about-mono);
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   font-weight: 400;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -224,6 +222,7 @@
   font-size: 0.74rem;
   font-weight: 500;
   text-decoration: none;
+  transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .profileLinks a:first-child {
@@ -231,7 +230,14 @@
 }
 
 .profileLinks a:hover {
-  color: var(--about-gold);
+  color: var(--about-ink);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 -1px 0 var(--about-gold);
+}
+
+.profileLinks a:focus-visible {
+  outline: 2px solid var(--about-gold2);
+  outline-offset: -2px;
 }
 
 .linkedinIcon,
@@ -259,30 +265,59 @@
   color: var(--about-gold);
 }
 
-.profileMeta {
+.profileTail {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-family: var(--about-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--about-subtle);
 }
 
-.profileMeta span {
-  border: 1px solid var(--about-line2);
+.profileTailDot {
+  flex: none;
+  width: 0.42rem;
+  height: 0.42rem;
   border-radius: 999px;
-  padding: 0.35rem 0.56rem;
-  font-size: 0.72rem;
-  color: var(--about-muted);
+  background: var(--about-ok);
+  box-shadow: 0 0 6px rgba(63, 179, 122, 0.6);
 }
 
 .resumePanel {
+  position: relative;
   display: grid;
   align-content: start;
-  gap: 0.9rem;
-  padding: var(--rail-gap);
+  gap: clamp(1rem, 1.8vw, 1.5rem);
+  padding: clamp(1.1rem, 1.8vw, 1.6rem) var(--rail-gap) clamp(1.4rem, 2.4vw, 2rem);
+  /* perspective parent — stages the CV as a real lit object on the desk */
+  perspective: 1800px;
+  perspective-origin: 50% 36%;
+  overflow: hidden;
+}
+
+/* low-opacity radial atmospheric glow behind the staged object */
+.resumePanel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(72% 52% at 50% 40%, rgba(75, 197, 222, 0.07), transparent 70%),
+    radial-gradient(120% 80% at 50% -4%, rgba(255, 255, 255, 0.04), transparent 60%);
+}
+
+.resumePanel > * {
+  position: relative;
+  z-index: 1;
 }
 
 .panelHeader h2,
 .sourceRail h2,
-.activitySection h2 {
+.activitySection h2,
+.historySection h2 {
   margin: 0.2rem 0 0;
   color: var(--about-ink);
   font-family: var(--about-serif);
@@ -291,31 +326,91 @@
   line-height: 0.98;
 }
 
+/* Decouple the narrow rail heading from the wide-panel ramp so it lands
+   cleanly on two lines instead of breaking mid-word across three. */
+.sourceRail h2 {
+  font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+/* Section heading sits slightly below the hero headings to respect hierarchy. */
+.historySection h2 {
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  line-height: 1;
+}
+
 .resumeObject {
   position: relative;
   display: block;
+  width: min(100%, 22rem);
+  margin: clamp(0.6rem, 1.4vw, 1.1rem) auto 0;
+  aspect-ratio: 1 / 1.294;
   overflow: hidden;
-  border: 1px solid var(--about-line2);
-  border-radius: 6px;
-  background: var(--about-inset);
-  min-height: clamp(18rem, 35vw, 26rem);
+  border: 1px solid var(--about-line);
+  border-radius: 8px;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.06), transparent 30%),
+    linear-gradient(180deg, var(--about-inset), var(--about-surface));
   cursor: pointer;
+  transform: rotateX(7deg) rotateZ(-0.6deg) translateY(-2px);
+  transform-origin: center 80%;
+  transition: transform 0.32s ease, box-shadow 0.32s ease;
+  /* float doubles as the grounding shadow that anchors the page on the desk */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 26px 60px rgba(0, 0, 0, 0.55);
+}
+
+.resumeObject:hover,
+.resumeObject:focus-visible {
+  transform: rotateX(4deg) rotateZ(-0.3deg) translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 32px 70px rgba(0, 0, 0, 0.58);
+  outline: none;
+}
+
+.resumeObject:focus-visible {
+  border-color: var(--about-gold2);
 }
 
 .resumeObject img {
   position: absolute;
-  inset: 3% 4%;
-  width: 92%;
-  height: 94%;
-  object-fit: cover;
-  object-position: top center;
-  filter: grayscale(0.1) blur(6px);
-  opacity: 0.92;
+  inset: 4% 5%;
+  width: 90%;
+  height: 92%;
+  object-fit: contain;
+  object-position: center top;
+  border-radius: 3px;
+  filter: blur(1px);
+  opacity: 0.97;
+}
+
+/* diagonal specular glare sweeping the glass screen */
+.resumeObject::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.02) 22%,
+    transparent 46%
+  );
 }
 
 .statement {
-  margin: 0;
-  font-size: 0.9rem;
+  margin: auto 0 0;
+  padding-top: clamp(0.6rem, 1.2vw, 1rem);
+  border-top: 1px solid var(--about-line);
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
 .sourceRail {
@@ -335,17 +430,37 @@
   gap: 0.45rem;
   min-width: 0;
   padding: 0.72rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--about-line);
   border-radius: 8px;
-  background: rgba(30, 32, 38, 0.5);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    linear-gradient(180deg, var(--about-inset), var(--about-surface));
   -webkit-backdrop-filter: blur(10px) saturate(110%);
   backdrop-filter: blur(10px) saturate(110%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 8px 22px rgba(0, 0, 0, 0.4);
   color: inherit;
   text-decoration: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
 }
 
 .sourceItem:hover {
-  border-color: var(--about-gold);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.06), transparent 34%),
+    linear-gradient(180deg, var(--ink-5), var(--about-inset));
+  border-color: rgba(200, 162, 74, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.32),
+    0 12px 30px rgba(0, 0, 0, 0.46);
+  transform: translateY(-1px);
+}
+
+.sourceItem:focus-visible {
+  outline: 2px solid var(--about-gold2);
+  outline-offset: 2px;
 }
 
 .sourceItem :global(.vd-file-badge) {
@@ -378,16 +493,20 @@
   gap: 0.25rem;
   min-width: 0;
   padding: 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--about-line);
   border-radius: 10px;
   color: inherit;
   text-decoration: none;
-  background: rgba(24, 26, 32, 0.5);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    linear-gradient(180deg, var(--about-inset), var(--about-surface));
   -webkit-backdrop-filter: blur(16px) saturate(115%);
   backdrop-filter: blur(16px) saturate(115%);
   box-shadow:
-    0 12px 36px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 8px 22px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
 }
 
 .activityGrid strong,
@@ -404,7 +523,20 @@
 }
 
 .activityGrid a:hover {
-  border-color: var(--about-gold);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.06), transparent 34%),
+    linear-gradient(180deg, var(--ink-5), var(--about-inset));
+  border-color: rgba(200, 162, 74, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.32),
+    0 12px 30px rgba(0, 0, 0, 0.46);
+  transform: translateY(-1px);
+}
+
+.activityGrid a:focus-visible {
+  outline: 2px solid var(--about-gold2);
+  outline-offset: 2px;
 }
 
 .historyRows {
@@ -434,6 +566,7 @@
   font-size: 0.72rem;
   font-weight: 400;
   letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
   text-transform: uppercase;
 }
 
@@ -534,5 +667,24 @@
   .profileRail,
   .activityGrid a {
     border-radius: 6px;
+  }
+
+  .resumeObject {
+    width: min(100%, 18rem);
+    transform: rotateX(5deg) translateY(-1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resumeObject,
+  .sourceItem,
+  .activityGrid a,
+  .profileLinks a {
+    transition: none;
+  }
+
+  .resumeObject:hover,
+  .resumeObject:focus-visible {
+    transform: rotateX(7deg) rotateZ(-0.6deg) translateY(-2px);
   }
 }

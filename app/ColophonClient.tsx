@@ -117,7 +117,7 @@ export default function ColophonClient() {
 
         {/* Palette paragraph */}
         <p style={bodyStyle}>
-          Palette is set in cool-black <Swatch value="#0A0D11" label="#0A0D11" />{' '}
+          Palette is set in cool-black <Swatch value="#07090C" label="#07090C" />{' '}
           with raised surfaces in <Swatch value="#161B22" label="#161B22" />. Champagne
           gold <Swatch value="#C8A24A" label="#C8A24A" /> is the brand voice, held to
           hairlines and single words;
@@ -186,8 +186,9 @@ function Swatch({ value, label }: { value: string; label: string }) {
           width: '0.72em',
           height: '0.72em',
           background: value,
-          border: '0.5px solid var(--border, rgba(26,23,18,0.08))',
+          border: '0.5px solid var(--border)',
           borderRadius: 2,
+          boxShadow: 'inset 0 0.5px 0 rgba(255, 255, 255, 0.12)',
           verticalAlign: 'baseline',
           transform: 'translateY(0.05em)',
         }}

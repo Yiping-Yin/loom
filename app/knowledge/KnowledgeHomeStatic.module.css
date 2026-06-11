@@ -1,6 +1,120 @@
+/* Knowledge / Sources home — Evidence Desk (Archive scene: restrained, quiet,
+   evidence-first). Cool-black luminance ramp consuming the locked globals;
+   structure carried by light, not colour. Watch-hand gold, comet-cyan as the
+   Sources -> Draft -> Answer thread of light. */
 .page {
+  /* Local aliases point at the locked globals — never private copies. */
+  --vd-ink: var(--text-1);
+  --vd-muted: var(--text-2);
+  --vd-subtle: var(--text-3);
+  --vd-border: var(--line);
+  --vd-border-strong: var(--ink-5);
+  --vd-surface: var(--ink-3);
+  --vd-surface-soft: var(--ink-2);
+  --vd-page: var(--ink-0);
+  --vd-paper: var(--ink-3);
+  --vd-paper-strong: var(--ink-4);
+  --vd-accent: var(--gold);
+  --vd-accent-strong: var(--gold-hi);
+  --vd-accent-soft: rgba(200, 162, 74, 0.12);
+  --vd-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+
+  --shelf-glass:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  --shelf-float:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
+
+  min-height: 100vh;
   background:
-    linear-gradient(180deg, #ffffff 0%, #f8faf8 56%, #ffffff 100%);
+    radial-gradient(120% 78% at 50% -8%, #10141A 0%, var(--ink-0) 56%);
+  background-color: var(--ink-0);
+  color: var(--text-1);
+}
+
+/* ----- Re-skin the globally-styled vd-home chrome to the dark desk ----- *
+ * .page and .vd-home are the same element, so .page:global(.vd-home) ... wins
+ * over the light .vd-home rules in globals.css by source-independent
+ * specificity (0,0,3,0 vs 0,0,2,0). */
+.page:global(.vd-home) {
+  background:
+    radial-gradient(120% 78% at 50% -8%, #10141A 0%, var(--ink-0) 56%);
+  background-color: var(--ink-0);
+  color: var(--text-1);
+}
+
+.page :global(.vd-nav) {
+  border-bottom: 1px solid var(--line);
+  background: rgba(13, 17, 22, 0.62);
+  -webkit-backdrop-filter: blur(28px) saturate(110%);
+  backdrop-filter: blur(28px) saturate(110%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.page :global(.vd-wordmark) {
+  color: var(--text-1);
+  font-family: var(--display);
+  font-weight: 600;
+}
+
+.page :global(.vd-nav__links a) {
+  color: var(--text-2);
+}
+
+.page :global(.vd-nav__links a:hover) {
+  color: var(--text-1);
+}
+
+.page :global(.vd-nav__links a[aria-current="page"]) {
+  color: var(--text-1);
+}
+
+/* File badges: quiet recessed dark chip with a neutral text label and a thin
+   accent icon — not a white pill, not a candy fill. */
+.page:global(.vd-home) :global(.vd-file-badge) {
+  border: 1px solid var(--line);
+  background: var(--ink-4);
+  color: var(--text-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.page:global(.vd-home) :global(.vd-file-badge__icon) {
+  color: var(--text-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Institution / logo marks: cool dimmed neutral chip, never a warm-paper or
+   pure-white disc. External light-art crests sit on a desaturated cool tone. */
+.page:global(.vd-home) :global(.vd-institution-mark) {
+  border: 1px solid var(--line);
+  background: var(--ink-4);
+}
+
+.page:global(.vd-home) :global(.vd-institution-mark--unsw),
+.page:global(.vd-home) :global(.vd-institution-mark--wqu),
+.page:global(.vd-home) :global(.vd-institution-mark--quantnet) {
+  border-color: var(--line);
+  background: #DADDE2;
+}
+
+.page:global(.vd-home) :global(.vd-institution-mark--about) {
+  border-color: var(--ink-5);
+  background: var(--ink-4);
+}
+
+.page:global(.vd-home) :global(.vd-institution-mark--claude) {
+  background: var(--ink-4);
+}
+
+/* Claude brand artwork sits contained on the neutral chip — never cropped to
+   fill (which would read as a saturated tile, off-palette). The About mark is
+   a portrait headshot, so it keeps its cover crop. */
+.page:global(.vd-home) :global(.vd-institution-mark--claude img) {
+  object-fit: contain;
 }
 
 .hero,
@@ -18,33 +132,35 @@
   grid-template-columns: minmax(0, 1fr) minmax(22rem, 31rem);
   gap: clamp(2rem, 5vw, 5rem);
   align-items: end;
-  padding-top: clamp(2rem, 5vw, 4.5rem);
-  padding-bottom: clamp(2rem, 4vw, 3.2rem);
+  padding-top: clamp(2.4rem, 5vw, 5rem);
+  padding-bottom: clamp(2rem, 4vw, 3.4rem);
 }
 
 .heroCopy {
   display: grid;
-  gap: 1rem;
+  gap: 1.1rem;
   min-width: 0;
 }
 
 .sectionLabel {
   margin: 0;
-  color: var(--vd-accent);
-  font-size: 0.78rem;
-  font-weight: 820;
-  letter-spacing: 0;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .hero h1,
 .sectionHeader h2 {
   margin: 0;
-  color: var(--vd-ink);
+  color: var(--text-1);
   font-family: var(--display);
   font-size: clamp(3.1rem, 5vw, 6.1rem);
-  font-weight: 560;
-  letter-spacing: 0;
+  font-weight: 500;
+  letter-spacing: -0.005em;
   line-height: 0.98;
 }
 
@@ -60,9 +176,9 @@
 .groupHeader p,
 .sourceBlock p {
   margin: 0;
-  color: var(--vd-muted);
+  color: var(--text-2);
   font-size: clamp(0.9rem, 1vw, 1rem);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .hero p {
@@ -74,33 +190,38 @@
 .metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid var(--vd-border);
-  border-left: 1px solid var(--vd-border);
+  gap: clamp(0.7rem, 1.2vw, 0.9rem);
 }
 
 .metrics div {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.4rem;
+  min-width: 0;
   min-height: 7rem;
-  padding: 1rem;
-  border-right: 1px solid var(--vd-border);
-  border-bottom: 1px solid var(--vd-border);
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow: var(--shelf-float);
 }
 
 .metrics span {
-  color: var(--vd-ink);
+  color: var(--text-1);
   font-family: var(--serif);
   font-size: clamp(1.2rem, 1.8vw, 1.7rem);
-  font-weight: 720;
-  line-height: 1.05;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.08;
 }
 
 .metrics strong {
   align-self: end;
-  color: var(--vd-muted);
-  font-size: 0.74rem;
-  font-weight: 760;
-  line-height: 1.25;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
 }
 
 .featuredSection,
@@ -109,22 +230,22 @@
   display: grid;
   grid-template-columns: minmax(17rem, 0.32fr) minmax(0, 1fr);
   gap: clamp(1.8rem, 4vw, 4rem);
-  padding-top: clamp(2rem, 4vw, 3.3rem);
-  padding-bottom: clamp(2rem, 4vw, 3.3rem);
-  border-top: 1px solid var(--vd-border);
+  padding-top: clamp(2.2rem, 4vw, 3.5rem);
+  padding-bottom: clamp(2.2rem, 4vw, 3.5rem);
+  border-top: 1px solid var(--line);
 }
 
 .sectionHeader {
   display: grid;
   align-content: start;
-  gap: 0.8rem;
+  gap: 0.85rem;
   min-width: 0;
 }
 
 .sectionHeader h2 {
-  max-width: 12ch;
+  max-width: 14ch;
   font-size: clamp(2rem, 3.2vw, 3.55rem);
-  line-height: 1;
+  line-height: 1.02;
 }
 
 .sectionHeader p:not(.sectionLabel) {
@@ -133,7 +254,7 @@
 
 .proofBoard {
   display: grid;
-  gap: 1rem;
+  gap: 1.05rem;
   min-width: 0;
 }
 
@@ -141,56 +262,58 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.documentGrid :global(.vd-document-preview--word) {
+/* Document previews without a thumbnail: lit-glass card, neutral kicker/title,
+   no navy/excel-green fill (off-palette). The cyan hairline marks the
+   source -> draft signal. */
+.documentGrid :global(.vd-document-preview--word),
+.documentGrid :global(.vd-document-preview--excel),
+.documentGrid :global(.vd-document-preview--ppt),
+.documentGrid :global(.vd-document-preview--pdf),
+.documentGrid :global(.vd-document-preview--markdown),
+.documentGrid :global(.vd-document-preview--html),
+.documentGrid :global(.vd-document-preview--text) {
   background:
-    linear-gradient(135deg, rgba(43, 87, 154, 0.94), rgba(30, 68, 130, 0.94)),
-    #2b579a;
-  color: #ffffff;
+    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  color: var(--text-2);
 }
 
-.documentGrid :global(.vd-document-preview--excel) {
-  background:
-    linear-gradient(135deg, rgba(33, 115, 70, 0.94), rgba(21, 91, 55, 0.94)),
-    #217346;
-  color: #ffffff;
+.documentGrid :global(.vd-document-preview__kicker),
+.documentGrid :global(.vd-document-preview__body span) {
+  color: var(--text-3);
 }
 
-.documentGrid :global(.vd-document-preview--word) :global(.vd-document-preview__kicker),
-.documentGrid :global(.vd-document-preview--word) :global(.vd-document-preview__title),
-.documentGrid :global(.vd-document-preview--word) :global(.vd-document-preview__body span),
-.documentGrid :global(.vd-document-preview--excel) :global(.vd-document-preview__kicker),
-.documentGrid :global(.vd-document-preview--excel) :global(.vd-document-preview__title),
-.documentGrid :global(.vd-document-preview--excel) :global(.vd-document-preview__body span) {
-  color: rgba(255, 255, 255, 0.86);
-}
-
-.documentGrid :global(.vd-document-preview--word) :global(.vd-document-preview__title),
-.documentGrid :global(.vd-document-preview--excel) :global(.vd-document-preview__title) {
-  color: #ffffff;
-  font-family: var(--sans);
+.documentGrid :global(.vd-document-preview__title) {
+  color: var(--text-1);
+  font-family: var(--serif);
 }
 
 .flowRows {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
+  gap: 0.75rem;
 }
 
 .flowRows article {
   display: grid;
   grid-template-columns: 2rem minmax(0, 1fr);
-  gap: 0.75rem;
+  gap: 0.8rem;
   min-width: 0;
-  padding: 0.9rem;
-  border: 1px solid var(--vd-border);
-  border-radius: 8px;
-  background: #fbfcfb;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow: var(--shelf-float);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .flowRows article > span {
-  color: var(--vd-accent);
-  font-size: 0.72rem;
-  font-weight: 850;
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
   line-height: 1.2;
 }
 
@@ -200,69 +323,87 @@
 .sourceLink strong,
 .sourceBlock h3 {
   margin: 0;
-  color: var(--vd-ink);
+  color: var(--text-1);
   font-family: var(--serif);
-  font-size: 1.06rem;
-  line-height: 1.2;
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.22;
 }
 
 .referenceRows,
 .groupRows {
   display: grid;
-  gap: 0;
+  gap: clamp(0.9rem, 1.6vw, 1.3rem);
   min-width: 0;
 }
 
 .referenceRow {
   display: grid;
   grid-template-columns: auto minmax(8rem, 0.65fr) minmax(15rem, 1.1fr) minmax(12rem, 0.95fr);
-  gap: 0.9rem;
-  align-items: start;
+  gap: clamp(0.9rem, 1.8vw, 1.4rem);
+  align-items: center;
   min-width: 0;
-  padding: 1rem 0;
-  border-top: 1px solid #e8ebe6;
+  padding: clamp(0.95rem, 1.6vw, 1.2rem);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow: var(--shelf-float);
   color: inherit;
   text-decoration: none;
-}
-
-.referenceRow:first-child {
-  padding-top: 0;
-  border-top: 0;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .referenceRow:hover {
-  color: var(--vd-accent-strong);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  border-color: var(--ink-5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 18px 44px rgba(0, 0, 0, 0.55);
+  transform: translateY(-1px);
+}
+
+.referenceRow:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 2px;
+}
+
+.referenceRow strong {
+  transition: color 0.18s ease;
+}
+
+.referenceRow:hover strong {
+  color: var(--gold-hi);
 }
 
 .referenceRow small {
   display: block;
-  margin-top: 0.22rem;
-  color: var(--vd-subtle);
-  font-size: 0.72rem;
-  font-weight: 720;
-  line-height: 1.25;
+  margin-top: 0.24rem;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
 }
 
 .fileStack {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.4rem;
   min-width: 0;
 }
 
 .library {
   display: grid;
-  gap: 0.8rem;
+  gap: 1rem;
   min-width: 0;
 }
 
 .error {
   padding: 0.75rem 0.9rem;
-  border: 1px solid rgba(217, 48, 37, 0.25);
-  border-radius: 8px;
-  background: rgba(217, 48, 37, 0.06);
-  color: #a12820;
+  border: 1px solid rgba(224, 106, 106, 0.4);
+  border-radius: 9px;
+  background: rgba(224, 106, 106, 0.08);
+  color: var(--down);
   font-size: 0.84rem;
 }
 
@@ -272,33 +413,45 @@
   justify-content: space-between;
   gap: 1rem;
   min-width: 0;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--vd-border);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
 }
 
+/* Restrained ghost buttons — luminance-led, watch-hand gold only as a faint
+   hairline accent on hover. Never a gold/green fill. */
 .libraryToolbar > button,
 .groupForm button,
 .groupActions button,
 .sourceTools button {
-  min-height: 2rem;
-  padding: 0.38rem 0.62rem;
-  border: 1px solid var(--vd-border);
-  border-radius: 7px;
-  background: var(--vd-surface);
-  color: var(--vd-accent);
+  min-height: 2.1rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink-3);
+  color: var(--text-2);
   font: inherit;
   font-size: 0.78rem;
-  font-weight: 740;
+  font-weight: 600;
   line-height: 1.15;
   cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
 
 .libraryToolbar > button:hover,
 .groupForm button:hover,
 .groupActions button:hover,
 .sourceTools button:hover {
-  border-color: var(--vd-border-strong);
-  color: var(--vd-accent-strong);
+  border-color: rgba(200, 162, 74, 0.5);
+  background: var(--ink-4);
+  color: var(--text-1);
+}
+
+.libraryToolbar > button:focus-visible,
+.groupForm button:focus-visible,
+.groupActions button:focus-visible,
+.sourceTools button:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 2px;
 }
 
 .groupForm {
@@ -310,31 +463,41 @@
 
 .groupForm input {
   min-width: min(100%, 15rem);
-  min-height: 2rem;
-  padding: 0.38rem 0.58rem;
-  border: 1px solid var(--vd-border);
-  border-radius: 7px;
-  background: #fbfcfb;
-  color: var(--vd-ink);
+  min-height: 2.1rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink-2);
+  color: var(--text-1);
   font: inherit;
   font-size: 0.82rem;
 }
 
-.groupRow {
-  display: grid;
-  gap: 0.8rem;
-  min-width: 0;
-  padding: 1rem 0;
-  border-top: 1px solid #e8ebe6;
+.groupForm input:focus-visible {
+  outline: none;
+  border-color: rgba(200, 162, 74, 0.55);
+  box-shadow: 0 0 0 1px rgba(200, 162, 74, 0.35);
 }
 
-.groupRow:first-child {
-  padding-top: 0;
-  border-top: 0;
+.groupRow {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: clamp(1.05rem, 1.8vw, 1.3rem);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--shelf-glass);
+  box-shadow: var(--shelf-float);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .groupRow[data-drop-active="true"] {
-  background: linear-gradient(90deg, rgba(34, 92, 72, 0.06), transparent);
+  border-color: rgba(75, 197, 222, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(75, 197, 222, 0.3),
+    0 18px 44px rgba(0, 0, 0, 0.55);
 }
 
 .groupHeader {
@@ -345,19 +508,22 @@
 }
 
 .groupHeader p {
-  font-size: 0.68rem;
-  font-weight: 820;
-  letter-spacing: 0;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .groupHeader h3 {
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
 }
 
 .groupHeader span {
   display: block;
-  margin-top: 0.3rem;
+  margin-top: 0.32rem;
+  color: var(--text-2);
   font-size: 0.78rem;
 }
 
@@ -370,16 +536,19 @@
 
 .groupActions strong {
   align-self: center;
-  color: var(--vd-muted);
-  font-size: 0.76rem;
-  font-weight: 760;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
   line-height: 1.2;
   white-space: nowrap;
 }
 
 .sourceRows {
   display: grid;
-  gap: 0.48rem;
+  gap: 0.55rem;
 }
 
 .sourceRow {
@@ -388,37 +557,65 @@
   gap: 0.8rem;
   align-items: center;
   min-width: 0;
-  padding: 0.55rem;
-  border: 1px solid var(--vd-border);
-  border-radius: 8px;
-  background: #ffffff;
+  padding: 0.62rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent 34%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.sourceRow:hover {
+  border-color: var(--ink-5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 10px 26px rgba(0, 0, 0, 0.45);
 }
 
 .sourceLink {
   display: grid;
   grid-template-columns: minmax(9rem, 0.85fr) minmax(0, 1fr) minmax(7rem, auto);
-  gap: 0.75rem;
+  gap: 0.8rem;
   align-items: center;
   min-width: 0;
   color: inherit;
   text-decoration: none;
 }
 
+.sourceLink:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
 .sourceLink > span {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.22rem;
   min-width: 0;
 }
 
 .sourceLink small {
-  font-size: 0.75rem;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .sourceRow em {
   justify-self: end;
-  font-size: 0.74rem;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.7rem;
   font-style: normal;
-  font-weight: 720;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .sourceTools,
@@ -432,36 +629,37 @@
 
 .sourceTools :global(.loom-source-sample__move) {
   max-width: 12rem;
-  min-height: 2rem;
-  padding: 0.35rem 0.45rem;
-  border: 1px solid var(--vd-border);
-  border-radius: 7px;
-  background: #fbfcfb;
-  color: var(--vd-muted);
+  min-height: 2.1rem;
+  padding: 0.38rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink-2);
+  color: var(--text-2);
   font: inherit;
   font-size: 0.76rem;
   pointer-events: auto;
 }
 
 .confirmTools span {
-  color: var(--vd-muted);
+  color: var(--text-2);
   font-size: 0.75rem;
 }
 
 .emptyGroup {
   display: grid;
-  gap: 0.24rem;
-  padding: 0.8rem;
-  border: 1px dashed var(--vd-border);
-  border-radius: 8px;
-  background: #fbfcfb;
+  gap: 0.26rem;
+  padding: 0.9rem;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--ink-2);
+  color: var(--text-3);
   font-size: 0.84rem;
 }
 
 .sourceBlock {
-  margin-top: 0.8rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--vd-border);
+  margin-top: 0.9rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
 }
 
 @media (max-width: 1180px) {

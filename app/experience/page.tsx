@@ -22,14 +22,20 @@ function ExperienceEntryCard({ entry }: { entry: VerifiedDossierExperienceEntry 
   return (
     <article aria-label={`${entry.organisation} — ${entry.role}`}>
       <strong>{entry.organisation}</strong>
-      <span>{entry.role}</span>
-      {meta ? <span>{meta}</span> : null}
-      <span>{entry.summary}</span>
-      {entry.highlights.map((highlight) => (
-        <span key={highlight}>{highlight}</span>
-      ))}
+      <span className="vd-entry-role">{entry.role}</span>
+      {meta ? <span className="vd-entry-meta">{meta}</span> : null}
+      <span className="vd-entry-summary">{entry.summary}</span>
+      {entry.highlights.length ? (
+        <span className="vd-entry-highlights">
+          {entry.highlights.map((highlight) => (
+            <span key={highlight} className="vd-entry-highlight">
+              {highlight}
+            </span>
+          ))}
+        </span>
+      ) : null}
       {entry.verification === 'pending-documentation' ? (
-        <span>Documentation pending — {entry.verificationNote}</span>
+        <span className="vd-entry-pending">Documentation pending — {entry.verificationNote}</span>
       ) : null}
       {proofArtifacts.map((artifact) => (
         <a key={artifact.id} href={artifact.href}>
@@ -68,16 +74,19 @@ export default function ExperiencePage() {
         <span>{category.summary}</span>
       </header>
       <section className="vd-section-page__list" aria-label="Work and trading-program experience">
+        <p className="vd-section-page__band-label">Work &amp; trading programs</p>
         {workEntries.map((entry) => (
           <ExperienceEntryCard key={entry.id} entry={entry} />
         ))}
       </section>
       <section className="vd-section-page__list" aria-label="Project experience">
+        <p className="vd-section-page__band-label">Projects</p>
         {projectEntries.map((entry) => (
           <ExperienceEntryCard key={entry.id} entry={entry} />
         ))}
       </section>
       <section className="vd-section-page__artifact-strip" aria-label="Experience evidence">
+        <p className="vd-section-page__band-label">Evidence files</p>
         {artifacts.map((artifact) => (
           <a key={artifact.id} href={artifact.href}>
             <FileBadge kind={artifact.kind} label={artifact.label} compact />

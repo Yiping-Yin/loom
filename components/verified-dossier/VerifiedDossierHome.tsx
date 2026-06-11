@@ -249,10 +249,7 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
         <div className="lcv-dm__srcs" aria-hidden="true">
           <span className="lcv-dm__src" />
           <span className="lcv-dm__src" />
-          <span className="lcv-dm__more">
-            +<br />
-            more
-          </span>
+          <span className="lcv-dm__more">+2 more</span>
         </div>
         <table className="lcv-dm__table">
           <tbody>
@@ -266,6 +263,13 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
               <td className="lcv-dm__f">f&apos;&apos;(x) ≤ 0</td>
               <td>
                 <svg className="lcv-dm__spark" viewBox="0 0 34 12" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="lcv-dm-spark-concavity" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stopColor="#4BC5DE" stopOpacity="0.28" />
+                      <stop offset="1" stopColor="#4BC5DE" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path className="lcv-dm__spark-area" d="M1 10C8 9 12 2 17 2s9 7 16 6 L33 12 L1 12 Z" fill="url(#lcv-dm-spark-concavity)" stroke="none" />
                   <path d="M1 10C8 9 12 2 17 2s9 7 16 6" fill="none" />
                 </svg>
               </td>
@@ -279,6 +283,13 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
               <td className="lcv-dm__f">f&apos;(x) = 0</td>
               <td>
                 <svg className="lcv-dm__spark" viewBox="0 0 34 12" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="lcv-dm-spark-foc" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stopColor="#4BC5DE" stopOpacity="0.28" />
+                      <stop offset="1" stopColor="#4BC5DE" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path className="lcv-dm__spark-area" d="M1 6h32 L33 12 L1 12 Z" fill="url(#lcv-dm-spark-foc)" stroke="none" />
                   <path d="M1 6h14M19 6h14" fill="none" />
                   <circle cx="17" cy="6" r="1.6" />
                 </svg>
@@ -294,7 +305,15 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
         <div className="lcv-dm__graph">
           <span className="lcv-dm__graphlbl">Concave f(x)</span>
           <svg viewBox="0 0 150 90" aria-hidden="true" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="lcv-dm-graph-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#4BC5DE" stopOpacity="0.28" />
+                <stop offset="1" stopColor="#4BC5DE" stopOpacity="0" />
+              </linearGradient>
+            </defs>
             <path className="lcv-dm__axes" d="M16 78 V8 M16 78 H140" fill="none" />
+            {/* cyan area fill: follows the concave curve, closed down to the baseline */}
+            <path className="lcv-dm__area" d="M20 70 Q72 6 132 60 L132 78 L20 78 Z" fill="url(#lcv-dm-graph-fill)" stroke="none" />
             <path className="lcv-dm__curve" d="M20 70 Q72 6 132 60" fill="none" />
             <circle className="lcv-dm__peak" cx="74" cy="22" r="3" />
             <path className="lcv-dm__drop" d="M74 22 V78" fill="none" strokeDasharray="3 3" />

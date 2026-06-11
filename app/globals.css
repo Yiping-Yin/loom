@@ -1548,6 +1548,9 @@ html {
   font-size: 0.72rem;
 }
 
+/* File-type marks render as neutral cool-black chips — an ink-4 surface with a
+   1px hairline border and a faint type-COLOURED TEXT label (no saturated
+   filled rectangle). Saturated colour is reserved for true data/signal. */
 .vd-file-badge__icon {
   display: inline-flex;
   align-items: center;
@@ -1556,11 +1559,13 @@ html {
   width: 1.45rem;
   height: 1.72rem;
   border-radius: 4px;
-  color: #ffffff;
+  border: 1px solid var(--line, #232A33);
+  background: var(--ink-4, #1E242D);
+  color: var(--text-2, #9BA3AE);
   font-size: 0.48rem;
-  font-weight: 850;
-  letter-spacing: 0;
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .vd-file-badge--compact .vd-file-badge__icon {
@@ -1576,16 +1581,15 @@ html {
   white-space: nowrap;
 }
 
-/* Muted document marks — desaturated/darkened toward the cool-black palette so
-   they read as quiet file-type chips, not bright candy, while staying
-   distinguishable. */
-.vd-file-badge--pdf .vd-file-badge__icon { background: #B24A45; }
-.vd-file-badge--word .vd-file-badge__icon { background: #3A5277; }
-.vd-file-badge--ppt .vd-file-badge__icon { background: #B25A40; }
-.vd-file-badge--excel .vd-file-badge__icon { background: #3C7A5C; }
-.vd-file-badge--html .vd-file-badge__icon { background: #B2563E; }
+/* type cue = a faint coloured TEXT label only (desaturated toward the
+   cool-black palette), never a filled rectangle */
+.vd-file-badge--pdf .vd-file-badge__icon { color: #C9817C; }
+.vd-file-badge--word .vd-file-badge__icon { color: #8FA6C7; }
+.vd-file-badge--ppt .vd-file-badge__icon { color: #C99A82; }
+.vd-file-badge--excel .vd-file-badge__icon { color: #82B89C; }
+.vd-file-badge--html .vd-file-badge__icon { color: #C9967C; }
 .vd-file-badge--markdown .vd-file-badge__icon,
-.vd-file-badge--text .vd-file-badge__icon { background: #5E6671; }
+.vd-file-badge--text .vd-file-badge__icon { color: #9BA3AE; }
 
 .vd-institution-mark {
   display: inline-flex;
@@ -1607,18 +1611,21 @@ html {
   background: #ffffff;
 }
 
-/* External brand artwork (UNSW crest, WQU, QuantNet) is drawn for light
-   backgrounds, so on the dark desk it sits on a muted paper chip rather than
-   a dark chip (where it would lose contrast). Still not pure white. */
+/* External brand artwork (UNSW crest, WQU, QuantNet, Claude) is drawn for
+   light backgrounds, so on the dark desk it sits on a cool desaturated chip
+   (~#DADDE2, not warm beige) rather than a dark chip where it would lose
+   contrast. All marks share one equal-footprint square-chip system. */
 .vd-institution-mark--unsw,
 .vd-institution-mark--wqu,
-.vd-institution-mark--quantnet {
-  background: #E9E6DE;
+.vd-institution-mark--quantnet,
+.vd-institution-mark--claude {
+  background: #DADDE2;
 }
 
 .vd-home .vd-institution-mark--unsw,
 .vd-home .vd-institution-mark--wqu,
-.vd-home .vd-institution-mark--quantnet {
+.vd-home .vd-institution-mark--quantnet,
+.vd-home .vd-institution-mark--claude {
   background: #ffffff;
 }
 
@@ -1627,6 +1634,8 @@ html {
   padding: 0;
 }
 
+/* one mark system: all logos contained at a common footprint with consistent
+   padding; only the about chip (a portrait) is cover-cropped */
 .vd-institution-mark img {
   display: block;
   width: 100%;
@@ -1646,25 +1655,19 @@ html {
 
 .vd-institution-mark--wqu,
 .vd-institution-mark--quantnet {
-  width: auto;
-  min-width: 3.55rem;
   border-radius: 6px;
   border-color: var(--vd-border-strong);
-  padding: 0.2rem 0.28rem;
-}
-
-.vd-institution-mark--quantnet {
-  min-width: 3.7rem;
+  padding: 0.2rem;
 }
 
 .vd-institution-mark--claude {
-  border-radius: 7px;
-  padding: 0;
-  background: #da7750;
+  border-radius: 6px;
+  border-color: var(--vd-border-strong);
+  padding: 0.18rem;
 }
 
 .vd-institution-mark--claude img {
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .vd-section-row {
@@ -2941,151 +2944,10 @@ html {
   line-height: 1.35;
 }
 
-.vd-file-badge {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  min-width: 0;
-  gap: 0.5rem;
-  padding: 0.4rem 0.5rem;
-  /* Evidence Desk default: quiet recessed dark chip (paired block) — NOT a
-     white pill. Light .vd-home restores the paper look below. */
-  border: 1px solid var(--line, #232A33);
-  border-radius: 7px;
-  background: var(--ink-3, #161B22);
-  color: var(--text-1, #E6E9EE);
-  font-size: 0.78rem;
-  line-height: 1.2;
-  box-shadow: var(--keylight, inset 0 1px 0 rgba(255, 255, 255, 0.05));
-}
-
-.vd-home .vd-file-badge {
-  border-color: var(--vd-border);
-  background: #ffffff;
-  color: #2a302d;
-  box-shadow: 0 1px 0 rgba(18, 22, 21, 0.03);
-}
-
-.vd-file-badge--compact {
-  gap: 0.36rem;
-  padding: 0.28rem 0.4rem;
-  font-size: 0.72rem;
-}
-
-.vd-file-badge__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 1.45rem;
-  height: 1.72rem;
-  border-radius: 4px;
-  color: #ffffff;
-  font-size: 0.48rem;
-  font-weight: 850;
-  letter-spacing: 0;
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-}
-
-.vd-file-badge--compact .vd-file-badge__icon {
-  width: 1.22rem;
-  height: 1.42rem;
-  font-size: 0.42rem;
-}
-
-.vd-file-badge__label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Muted document marks (see paired block above) — desaturated toward the
-   cool-black palette so they read as quiet file-type chips, not candy. */
-.vd-file-badge--pdf .vd-file-badge__icon { background: #B24A45; }
-.vd-file-badge--word .vd-file-badge__icon { background: #3A5277; }
-.vd-file-badge--ppt .vd-file-badge__icon { background: #B25A40; }
-.vd-file-badge--excel .vd-file-badge__icon { background: #3C7A5C; }
-.vd-file-badge--markdown .vd-file-badge__icon,
-.vd-file-badge--html .vd-file-badge__icon,
-.vd-file-badge--text .vd-file-badge__icon { background: #5E6671; }
-
-.vd-institution-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 2rem;
-  height: 2rem;
-  overflow: hidden;
-  /* Quiet dark chip on the cool-black desk (paired block) — light .vd-home
-     restores the paper disc below. */
-  border: 1px solid var(--line, #232A33);
-  border-radius: 8px;
-  background: var(--ink-4, #1E242D);
-}
-
-.vd-home .vd-institution-mark {
-  border-color: transparent;
-  background: #ffffff;
-}
-
-/* External brand artwork on the dark desk → muted paper chip (paired block). */
-.vd-institution-mark--unsw,
-.vd-institution-mark--wqu,
-.vd-institution-mark--quantnet {
-  background: #E9E6DE;
-}
-
-.vd-home .vd-institution-mark--unsw,
-.vd-home .vd-institution-mark--wqu,
-.vd-home .vd-institution-mark--quantnet {
-  background: #ffffff;
-}
-
-.vd-institution-mark--about {
-  border-radius: 999px;
-  border-color: var(--vd-border-strong);
-  padding: 0;
-}
-
-.vd-institution-mark img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.vd-institution-mark--about img {
-  object-fit: cover;
-}
-
-.vd-institution-mark--unsw {
-  border-color: var(--vd-border-strong);
-  padding: 0.18rem;
-}
-
-.vd-institution-mark--wqu,
-.vd-institution-mark--quantnet {
-  width: auto;
-  min-width: 3.9rem;
-  border-radius: 7px;
-  border-color: var(--vd-border-strong);
-  padding: 0.24rem 0.32rem;
-}
-
-.vd-institution-mark--quantnet {
-  min-width: 4.15rem;
-}
-
-.vd-institution-mark--claude {
-  padding: 0;
-  background: #da7750;
-}
-
-.vd-institution-mark--claude img {
-  object-fit: cover;
-}
+/* NOTE: .vd-file-badge and .vd-institution-mark base styles are defined ONCE,
+   canonically, above (~L1518). The duplicated second copy that used to live
+   here was removed to collapse the order-dependent winner into a single
+   reconciled value set (no class/string changes). */
 
 .vd-areas {
   display: grid;
@@ -18684,10 +18546,15 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   margin: 0 calc(clamp(28px, 4vw, 48px) * -1);
   padding: 0 max(clamp(28px, 4vw, 48px), calc((100% - var(--vd-section-shell)) / 2));
   border-bottom: 1px solid var(--vd-section-glass-border);
-  background: var(--vd-section-glass-nav);
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.04), transparent 46%),
+    var(--vd-section-glass-nav);
   -webkit-backdrop-filter: blur(28px) saturate(110%);
   backdrop-filter: blur(28px) saturate(110%);
-  box-shadow: var(--keylight), var(--float-1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
 }
 
 .vd-section-page__nav a {
@@ -18754,13 +18621,17 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__hero h1 {
-  max-width: 55rem;
+  max-width: 22ch;
   margin: 0;
   font-family: var(--vd-section-serif);
   font-size: clamp(2.55rem, 6vw, 5.35rem);
   font-weight: 600;
-  line-height: 0.96;
+  /* a touch more air between lines for the large multi-line serif (was 0.96
+     which crowded ascenders/descenders line-to-line); cap the measure so it
+     wraps to balanced lines */
+  line-height: 1.0;
   letter-spacing: 0;
+  text-wrap: balance;
   color: var(--vd-section-ink);
 }
 
@@ -18771,9 +18642,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   line-height: 1.55;
 }
 
-.vd-section-page__list,
-.vd-section-page__modes,
-.vd-section-page__grid {
+.vd-section-page__modes {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
@@ -18781,8 +18650,32 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border-bottom: 1px solid var(--vd-section-hairline);
 }
 
+/* Archive evidence shelves: real gap between lit-glass cards (not 0-gap
+   hairline cells). Known item-count sets use an explicit ramp so they stay
+   N-up until they cleanly stack — never an auto-fit that orphans a 2+1 row. */
+.vd-section-page__list,
+.vd-section-page__grid {
+  display: grid;
+  gap: clamp(0.9rem, 1.6vw, 1.3rem);
+  grid-auto-rows: 1fr;
+  padding: clamp(1.2rem, 3vw, 2.2rem) 0;
+  border-bottom: 1px solid var(--vd-section-hairline);
+}
+
+/* Experience: two 3-item record sets (work / projects) — stay 3-up */
 .vd-section-page__list {
-  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* deliberate gap between two adjacent evidence groups (work vs projects) so
+   the named bands read as clearly separated, not one continuous list */
+.vd-section-page__list + .vd-section-page__list {
+  padding-top: clamp(1.6rem, 3.5vw, 2.6rem);
+}
+
+/* Education: four institution shelves — stay 4-up */
+.vd-section-page__grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .vd-section-page__modes {
@@ -18840,40 +18733,132 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border-bottom: 0;
 }
 
+/* primary evidence as lit-glass cards (calm Archive float), not bare
+   hairline-divided cells — structure carried by the lit object, not dividers */
 .vd-section-page__list article,
 .vd-section-page__grid a {
   display: grid;
   align-content: start;
   gap: 0.45rem;
   min-height: 7rem;
-  padding: 0 1.2rem;
-  border-right: 1px solid var(--vd-section-border);
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.045), transparent 42%),
+    linear-gradient(180deg, rgba(30, 36, 45, 0.6), rgba(22, 27, 34, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-.vd-section-page__list article:first-child,
-.vd-section-page__grid a:first-child {
-  padding-left: 0;
+/* institution shelves are links — luminance-led hover lift + faint gold
+   hairline; full keyboard focus ring */
+.vd-section-page__grid a:hover {
+  border-color: var(--line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(200, 162, 74, 0.22),
+    0 18px 44px rgba(0, 0, 0, 0.55);
+  transform: translateY(-2px);
 }
 
-.vd-section-page__list article:last-child,
-.vd-section-page__grid a:last-child {
-  border-right: 0;
-  padding-right: 0;
+.vd-section-page__grid a:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 3px;
 }
 
+/* organisation / institution = primary luminance tier */
 .vd-section-page__list strong,
 .vd-section-page__grid strong {
   color: var(--vd-section-ink);
   font-size: 0.95rem;
-  font-weight: 760;
+  font-weight: 600;
   line-height: 1.25;
 }
 
-.vd-section-page__list span,
 .vd-section-page__grid small {
   color: var(--vd-section-muted);
   font-size: 0.86rem;
   line-height: 1.5;
+}
+
+/* experience-entry luminance ladder (structure carried by luminance, not a
+   flat grey block): role primary, meta mono faint tabular, summary secondary,
+   highlights smaller with a faint leading marker. */
+.vd-section-page__list .vd-entry-role {
+  color: var(--text-1);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.vd-section-page__list .vd-entry-meta {
+  margin-top: 0.05rem;
+  color: var(--text-3);
+  font-family: var(--vd-section-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-section-page__list .vd-entry-summary {
+  margin-top: 0.4rem;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.vd-section-page__list .vd-entry-highlights {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.vd-section-page__list .vd-entry-highlight {
+  position: relative;
+  margin-top: 0.45rem;
+  padding-left: 0.85rem;
+  color: var(--text-2);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.vd-section-page__list .vd-entry-highlight:first-child {
+  margin-top: 0;
+}
+
+/* faint leading marker — a thin neutral dash, not a coloured bullet */
+.vd-section-page__list .vd-entry-highlight::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 0.4rem;
+  height: 1px;
+  background: var(--text-3);
+}
+
+.vd-section-page__list .vd-entry-pending {
+  margin-top: 0.5rem;
+  color: var(--text-3);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+/* proof artifact chips sit at the foot of the card with a touch of separation */
+.vd-section-page__list article > a {
+  margin-top: 0.7rem;
+}
+
+.vd-section-page__list article > a:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 3px;
+  border-radius: 8px;
 }
 
 .vd-section-page__foundations {
@@ -19039,39 +19024,110 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.6rem;
 }
 
+/* course folders: real-gap lit-glass cards on one normalized baseline grid
+   (fixed grid-auto-rows so two-line metas don't make rows ragged) */
 .vd-section-page__course-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
+  gap: clamp(0.7rem, 1.3vw, 1rem);
+  grid-auto-rows: 5.5rem;
   padding: clamp(1.2rem, 3vw, 2rem) 0;
   border-bottom: 1px solid var(--vd-section-hairline);
 }
 
 .vd-section-page__course-strip a {
   display: grid;
-  gap: 0.2rem;
-  min-height: 4.4rem;
-  padding: 0.75rem 1rem;
-  border-right: 1px solid var(--vd-section-border);
+  align-content: start;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.045), transparent 42%),
+    linear-gradient(180deg, rgba(30, 36, 45, 0.6), rgba(22, 27, 34, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-.vd-section-page__course-strip a:nth-child(4n) {
-  border-right: 0;
+.vd-section-page__course-strip a:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(200, 162, 74, 0.22),
+    0 18px 44px rgba(0, 0, 0, 0.55);
+  transform: translateY(-2px);
+}
+
+.vd-section-page__course-strip a:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 3px;
 }
 
 .vd-section-page__course-strip strong {
   color: var(--vd-section-ink);
-  font-weight: 780;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .vd-section-page__course-strip span {
   color: var(--vd-section-muted);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .vd-section-page__artifact-strip {
   padding: clamp(1.2rem, 3vw, 2rem) 0;
   border-bottom: 1px solid var(--vd-section-hairline);
+}
+
+/* the final section closes on whitespace — no dangling divider into empty
+   space below the last band */
+.vd-section-page > section:last-of-type,
+.vd-section-page__artifact-strip:last-child {
+  border-bottom: 0;
+}
+
+/* evidence file chips are links: luminance-led hover lift of the nested badge
+   + a faint gold hairline, plus a keyboard focus ring on the bare block */
+.vd-section-page__artifact-strip > a {
+  display: inline-flex;
+  border-radius: 8px;
+  transition: transform 0.18s ease;
+}
+
+.vd-section-page__artifact-strip > a:hover .vd-file-badge {
+  border-color: var(--line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(200, 162, 74, 0.22);
+}
+
+.vd-section-page__artifact-strip > a:hover {
+  transform: translateY(-1px);
+}
+
+.vd-section-page__artifact-strip > a:focus-visible {
+  outline: 2px solid var(--gold-hi);
+  outline-offset: 3px;
+}
+
+/* named band eyebrow — same standard as the hero eyebrow (mono, 0.72rem,
+   .18em, --text-3). Spans the full row so it labels the band above its cards
+   in every layout (grid track / flex strip). */
+.vd-section-page__band-label {
+  grid-column: 1 / -1;
+  flex-basis: 100%;
+  margin: 0 0 0.4rem;
+  color: var(--text-3);
+  font-family: var(--vd-section-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .vd-section-page__loom-layer ol {
@@ -19099,33 +19155,47 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 /* Dark-canvas overrides for shared chips used by these section pages.
-   Scoped under .vd-section-page so other (still-light) pages are untouched. */
+   Scoped under .vd-section-page so other (still-light) pages are untouched.
+   The file-badge container material is set once below (lit-glass nested chip);
+   here we only carry the label colour + container ink. */
 .vd-section-page .vd-file-badge {
-  border-color: var(--vd-section-border);
-  background: var(--vd-section-soft);
   color: var(--vd-section-ink);
-  box-shadow: none;
 }
 
 .vd-section-page .vd-file-badge__label {
   color: var(--vd-section-muted);
 }
 
-/* institution logos keep a muted-paper chip (reduced from the old off-white):
-   the QuantNet/WQU navy wordmarks are unreadable on a dark --ink-4 chip. */
+/* One mark system on the Archive pages: every institution mark is a compact,
+   left-aligned, equal-footprint square chip on a cooler desaturated backing
+   (~#DADDE2, not warm beige). Inside the grid cards, justify-self:start +
+   max-width:max-content stop the wordmark chips (QuantNet/WQU) stretching to
+   the full column width (the broken ~291px-bar bug). */
 .vd-section-page .vd-institution-mark {
-  background: #E9E6DE;
+  justify-self: start;
+  width: 2.1rem;
+  height: 2.1rem;
+  min-width: 0;
+  max-width: max-content;
+  border-radius: 8px;
+  background: #DADDE2;
   border-color: var(--vd-section-border);
+  padding: 0.26rem;
+}
+
+/* logos render contained (one mark system); the about chip is a portrait, so
+   it stays cover-cropped inside its round chip */
+.vd-section-page .vd-institution-mark img {
+  object-fit: contain;
 }
 
 .vd-section-page .vd-institution-mark--about {
+  border-radius: 999px;
   border-color: var(--vd-section-border);
 }
 
-.vd-section-page .vd-institution-mark--unsw,
-.vd-section-page .vd-institution-mark--wqu,
-.vd-section-page .vd-institution-mark--quantnet {
-  border-color: var(--vd-section-border);
+.vd-section-page .vd-institution-mark--about img {
+  object-fit: cover;
 }
 
 .vd-section-page__grid a:hover strong,
@@ -19136,32 +19206,47 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   text-underline-offset: 0.2em;
 }
 
-/* Archive scene: material strength dialed DOWN. The bordered container/card
-   surfaces become quiet near-flat panels (one ink step up + the key-light
-   specular edge, no heavy glass or float) so the documents/evidence carried
-   inside them read first. Layout (grid, padding, radius) unchanged. */
+/* Archive scene: lit-glass material (validated recipe) at a CALM float so the
+   documents/evidence carried inside still read first. Each bordered
+   container/card gets the top-left specular sheen + ink-4→ink-3 surface
+   gradient, a 1px specular top edge, inner bottom thickness, and the softer
+   directional float (0 14px 36px) matching the Cover scene's restraint.
+   Layout (grid, padding, radius) unchanged. */
 .vd-section-page__modes > div:last-child,
 .vd-section-page__foundations > div,
 .vd-section-page__canvas article,
 .vd-section-page__loom-layer li {
-  border-color: var(--line-soft);
-  background: var(--ink-3);
+  border-color: var(--line);
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.045), transparent 42%),
+    linear-gradient(180deg, rgba(30, 36, 45, 0.6), rgba(22, 27, 34, 0.94));
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  box-shadow: var(--keylight);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
 }
 
-/* file-badge insets read as quiet nested chips on the lifted desk */
+/* file-badge insets read as quiet nested chips: same lit-glass surface but no
+   float (they sit recessed inside the cards above, not floating on the desk) */
 .vd-section-page .vd-file-badge {
-  border-color: var(--line-soft);
-  background: var(--ink-4);
+  border-color: var(--line);
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.04), transparent 46%),
+    linear-gradient(180deg, rgba(30, 36, 45, 0.55), rgba(22, 27, 34, 0.94));
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  box-shadow: var(--keylight);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
 
 @media (max-width: 980px) {
-  .vd-section-page__list,
+  /* __list (two 3-item record sets) is intentionally NOT collapsed to 2-col
+     here — 3-up→2-col would orphan the 3rd entry. It stays 3-up until the
+     760px breakpoint stacks it cleanly to 1-up. __grid (4 institutions) → 2+2
+     reflows cleanly, so it does collapse. */
   .vd-section-page__modes,
   .vd-section-page__grid,
   .vd-section-page__course-strip,
@@ -19222,19 +19307,15 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* stacked lit-glass cards keep their material on mobile (full-width, real
+     gap) — no reverting to flat hairline-divided cells */
   .vd-section-page__list article,
-  .vd-section-page__grid a,
-  .vd-section-page__course-strip a {
+  .vd-section-page__grid a {
     min-height: 0;
-    padding: 0.85rem 0;
-    border-right: 0;
-    border-bottom: 1px solid var(--vd-section-border);
   }
 
-  .vd-section-page__list article:last-child,
-  .vd-section-page__grid a:last-child,
-  .vd-section-page__course-strip a:last-child {
-    border-bottom: 0;
+  .vd-section-page__course-strip {
+    grid-auto-rows: auto;
   }
 
   .vd-section-page__canvas article {
@@ -22258,9 +22339,12 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    Base = deepest --ink-0, max whitespace, structure carried by
    the luminance ramp + one top-left key light. Gold budget on
    this screen = 2 touches ONLY (active nav underline + the
-   pull-quote mark); NO cyan on home; no colour fills anywhere.
-   Fully scoped under .lcv so none of the retired .vd-*cover*
-   sediment applies to this markup.
+   pull-quote mark). CYAN EXCEPTION: the Digital-Me preview's
+   Sources→Draft→Answer thread + its chart strokes/fills are the
+   one cyan-on-data signal allowed here (calm/desaturated for the
+   still Cover) — stroke matches its fill so the signal lights up.
+   No colour fills anywhere else. Fully scoped under .lcv so none
+   of the retired .vd-*cover* sediment applies to this markup.
    ============================================================ */
 .lcv{
   --lcv-bg:var(--ink-0); --lcv-panel:var(--ink-3); --lcv-gold:var(--gold); --lcv-gold2:var(--gold-hi);
@@ -22281,7 +22365,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   width:100%; min-height:100vh; padding:0; margin:0;
   font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
 }
-.lcv *{box-sizing:border-box}
+.lcv *{box-sizing:border-box;border-color:var(--lcv-line2)}
 .lcv .lcv-serif{font-family:var(--lcv-serif)}
 .lcv a{color:inherit;text-decoration:none}
 .lcv img{display:block}
@@ -22290,14 +22374,20 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-nav{display:flex;align-items:center;justify-content:space-between;
   padding:24px max(clamp(28px,4vw,48px),calc((100% - var(--lcv-shell-max)) / 2));
   border-bottom:1px solid var(--lcv-glass-border);
-  background:var(--lcv-glass-nav);
+  background:
+    linear-gradient(155deg,rgba(255,255,255,0.04),transparent 46%),
+    var(--lcv-glass-nav);
   -webkit-backdrop-filter:blur(28px) saturate(110%);
   backdrop-filter:blur(28px) saturate(110%);
-  box-shadow:var(--keylight),var(--float-1);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 14px 36px rgba(0,0,0,0.5);
   position:sticky;top:0;z-index:10}
 .lcv-wordmark{font-size:30px;font-weight:600;letter-spacing:.01em;line-height:1}
-.lcv-nav__links{display:flex;gap:clamp(24px,3.5vw,44px);font-size:15px;color:var(--lcv-ink3)}
-.lcv-nav__links a{padding-bottom:6px;color:var(--lcv-ink3);transition:color .15s}
+.lcv-nav__links{display:flex;gap:clamp(24px,3.5vw,44px);font-size:15px;color:var(--lcv-ink2)}
+/* inactive nav reads as available (--text-2), not the faint eyebrow tier */
+.lcv-nav__links a{padding-bottom:6px;color:var(--lcv-ink2);transition:color .15s}
 .lcv-nav__links a:hover{color:var(--lcv-ink)}
 /* gold touch 1 of 2 on this screen: the active-nav hairline underline */
 .lcv-nav__links a[aria-current="page"]{color:var(--lcv-ink);border-bottom:1px solid var(--lcv-gold)}
@@ -22310,7 +22400,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* Identity rail — sticky so it tracks the ledger scroll instead of leaving a
    hollow column below; separated from the ledger by whitespace alone (the old
    full-height border-right crossed every row hairline into ugly T-seams). */
-.lcv-rail{padding:40px clamp(28px,3vw,44px) 40px clamp(28px,4vw,48px);
+/* rail top padding matches the ledger's first-row top padding (28px) so the
+   portrait top and the first row number/asset share one y reference line */
+.lcv-rail{padding:28px clamp(28px,3vw,44px) 40px clamp(28px,4vw,48px);
   position:sticky;top:92px;align-self:start;height:fit-content}
 .lcv-ledger{padding:0 clamp(28px,4vw,48px) 0 0}
 
@@ -22320,8 +22412,16 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-members__dot{width:5px;height:5px;border-radius:999px;background:var(--lcv-ink3);flex:0 0 auto}
 
 /* rail */
+/* hero portrait staged as a lit-glass object for the still Cover scene: 1px
+   frame, specular top edge + inner bottom thickness, calm grounding float —
+   optical depth, not a flat screenshot in a void. */
 .lcv-photo{width:100%;max-width:344px;aspect-ratio:344/316;object-fit:cover;
-  object-position:center 22%;border-radius:4px}
+  object-position:center 22%;border-radius:8px;
+  border:1px solid var(--lcv-line2);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 14px 36px rgba(0,0,0,0.5)}
 .lcv-name{font-size:58px;font-weight:600;line-height:.94;letter-spacing:-0.005em;
   margin:24px 0 0;white-space:nowrap}
 .lcv-loc{display:flex;align-items:center;gap:10px;font-size:17px;margin:22px 0 0;color:var(--lcv-ink)}
@@ -22341,8 +22441,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   color:var(--lcv-ink3);margin:26px 0 0}
 
 /* ledger rows — entire row is one link; two columns (label block + asset). */
+/* align-items:start so every row's number + asset begin on one shared top
+   reference line (the dossier baseline grid); taller rows grow downward only */
 .lcv-row{display:grid;grid-template-columns:248px minmax(0,1fr);gap:32px;
-  align-items:center;padding:20px 0;border-bottom:1px solid var(--lcv-line);
+  align-items:start;padding:28px 0;border-bottom:1px solid var(--lcv-line);
   color:inherit;transition:border-color .15s}
 .lcv-row:last-child{border-bottom:0}
 .lcv-row:hover{border-color:var(--lcv-line2)}
@@ -22360,22 +22462,38 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-row:hover .lcv-row__open{gap:11px;color:var(--lcv-ink)}
 .lcv-row__open svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6}
 
-/* glass panel surface — real optics: blur + specular top edge + inner
-   bottom thickness + long float shadow (all via --lcv-glass-shadow) */
+/* glass panel surface — real optics, light from top-left (validated recipe):
+   top-left specular sheen + ink-4→ink-3 surface gradient over the blur,
+   1px specular top edge + inner bottom thickness + a calm directional float
+   (Cover scene stays still, so the float is the softer 0 14px 36px). */
 .lcv-panel{border:1px solid var(--lcv-glass-border);border-radius:10px;
-  background:var(--lcv-glass);
+  background:
+    linear-gradient(155deg,rgba(255,255,255,0.045),transparent 42%),
+    linear-gradient(180deg,rgba(30,36,45,0.6),rgba(22,27,34,0.94));
   -webkit-backdrop-filter:blur(28px) saturate(110%);
   backdrop-filter:blur(28px) saturate(110%);
-  box-shadow:var(--lcv-glass-shadow);overflow:hidden}
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 14px 36px rgba(0,0,0,0.5);
+  overflow:hidden}
 
 /* about: CV doc — a real paper sheet on the recessed desk: warm-neutral
    stock, slight top-tilt perspective, soft float shadow from the key light */
 .lcv-about{display:grid;grid-template-columns:minmax(0,1fr) 188px}
 .lcv-cv{position:relative;height:212px;background:var(--ink-2);display:flex;
   align-items:flex-start;justify-content:center;overflow:hidden;border-right:1px solid var(--lcv-line2)}
+/* paper stock knocked down a notch (cooler/darker top stop) so it reads as a
+   lit object receding on the desk, not the brightest surface on the cover; a
+   faint top-left specular glare + soft grounding float complete the staging */
 .lcv-cv__sheet{position:relative;width:74%;margin-top:26px;
-  background:linear-gradient(180deg,#f6f5f1,#e9e7e0);border-radius:3px 3px 0 0;
-  padding:22px 26px;box-shadow:var(--float-1);display:flex;flex-direction:column;gap:7px;
+  background:
+    linear-gradient(125deg,rgba(255,255,255,0.35) 0%,rgba(255,255,255,0.04) 22%,transparent 46%),
+    linear-gradient(180deg,#e9e6df,#dcd9d1);
+  border-radius:3px 3px 0 0;
+  padding:22px 26px;
+  box-shadow:0 14px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.4);
+  display:flex;flex-direction:column;gap:7px;
   transform:perspective(1200px) rotateX(3.5deg) rotateY(-1deg);transform-origin:50% 0}
 .lcv-cv__sheet::before{content:"";position:absolute;top:-12px;left:14px;right:-14px;height:30px;
   background:#cfccc3;border-radius:3px;z-index:-1;opacity:.5}
@@ -22397,13 +22515,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-edu__logos span{display:flex;align-items:center;justify-content:center;gap:11px;
   padding:24px 8px;border-right:1px solid var(--lcv-line2)}
 .lcv-edu__logos span:last-child{border-right:0}
-/* uniform muted-paper chip behind every logo, reduced size — tested against
-   neutral --ink-4 chips: the QuantNet/WQU navy wordmarks are unreadable on
-   dark, so the quiet paper chip stays (smaller, lower-key than the old
-   off-white) for consistent legibility across mixed source backgrounds */
-.lcv-edu__logos img{height:26px;width:auto;max-width:54px;object-fit:contain;
-  background:#E9E6DE;border-radius:6px;padding:5px 7px;box-sizing:content-box}
-.lcv-edu__logos .lcv-edu__wide{max-width:84px}
+/* uniform logo chip behind every mark — equal optical box, cooler/dimmer
+   desaturated backing (~#DADDE2, not warm beige) so the strip stops being a
+   row of bright white tiles; the navy QuantNet/WQU wordmarks still read. Each
+   chip is a fixed square footprint so the four cells carry equal visual mass. */
+.lcv-edu__logos img{height:24px;width:auto;max-width:46px;object-fit:contain;
+  background:#DADDE2;border-radius:6px;padding:6px 8px;box-sizing:content-box;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.5),0 1px 3px rgba(0,0,0,0.3)}
+.lcv-edu__logos .lcv-edu__wide{max-width:62px}
 .lcv-edu__logos b{font-size:15px;font-weight:600;line-height:1}
 .lcv-edu__logos b small{display:block;font-family:var(--lcv-serif);font-size:9px;
   letter-spacing:.2em;color:var(--lcv-ink2);font-weight:400}
@@ -22420,12 +22539,21 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    light + key-light float; never a flat colour block */
 .lcv-exp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .lcv-exp__card{border:1px solid var(--line);border-radius:10px;
-  background:linear-gradient(180deg,var(--ink-4),var(--ink-3));
-  box-shadow:var(--keylight),var(--float-1);
+  background:
+    linear-gradient(155deg,rgba(255,255,255,0.045),transparent 42%),
+    linear-gradient(180deg,rgba(30,36,45,0.6),rgba(22,27,34,0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 14px 36px rgba(0,0,0,0.5);
   padding:20px 22px;display:flex;flex-direction:column;gap:4px;min-height:150px}
-.lcv-exp__head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+/* fixed head height + centered lockups so both card bodies start on one
+   baseline regardless of wordmark vs crest cap-height */
+.lcv-exp__head{display:flex;align-items:center;gap:8px;margin-bottom:14px;min-height:32px}
 .lcv-exp__optiver{font-size:26px;font-weight:600;letter-spacing:.01em;line-height:1}
-.lcv-exp__tri{color:#C25E3F;font-size:16px}
+/* Optiver mark: neutral luminance grey (was stray saturated orange-red),
+   a faint mark that never competes with the gold quote-mark */
+.lcv-exp__tri{color:var(--lcv-ink2);font-size:14px;opacity:.7}
 .lcv-exp__crest{height:30px;width:auto}
 .lcv-exp__unsw{font-size:18px;font-weight:600;line-height:1}
 .lcv-exp__unsw small{display:block;font-family:var(--lcv-serif);font-size:8px;
@@ -22440,32 +22568,58 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* digital me */
 .lcv-dm{padding:18px 20px}
 .lcv-dm__q{font-size:14px;color:var(--lcv-ink);margin:0 0 16px}
+/* flow items: each flowitem is one row segment; the step label is intrinsic
+   width and the trailing arrow takes the slack, so both arrows render equal
+   length and the three nodes space evenly (was a 34px vs 341px lopsided thread) */
 .lcv-dm__flow{display:flex;align-items:center;gap:14px;margin-bottom:16px}
-.lcv-dm__flowitem{display:flex;align-items:center;gap:14px;flex:0 0 auto}
-.lcv-dm__flowitem:nth-child(2){flex:1}
-.lcv-dm__step{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--lcv-ink2)}
+.lcv-dm__flowitem{display:flex;align-items:center;gap:14px;flex:1 1 auto;min-width:0}
+.lcv-dm__flowitem:last-child{flex:0 0 auto}
+.lcv-dm__step{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--lcv-ink2);flex:0 0 auto}
 .lcv-dm__step svg{width:17px;height:17px;stroke:var(--lcv-ink2);fill:none;stroke-width:1.4}
-.lcv-dm__arrow{flex:1;min-width:34px;height:1px;background:linear-gradient(90deg,var(--lcv-ink3),transparent);position:relative}
+/* thread-of-light: the Sources→Draft→Answer connector reads as faint cyan
+   signal feeding the cyan data fills below (calm/desaturated for the Cover) */
+.lcv-dm__arrow{flex:1 1 auto;min-width:34px;height:1px;
+  background:linear-gradient(90deg,rgba(75,197,222,0.45),rgba(75,197,222,0.12));position:relative}
 .lcv-dm__arrow::after{content:"";position:absolute;right:0;top:-3px;
-  border-left:6px solid var(--lcv-ink3);border-top:3px solid transparent;border-bottom:3px solid transparent}
+  border-left:6px solid rgba(75,197,222,0.5);border-top:3px solid transparent;border-bottom:3px solid transparent}
 .lcv-dm__body{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:stretch}
-.lcv-dm__srcs{display:flex;align-items:center;gap:6px}
-.lcv-dm__src{width:46px;height:60px;background:linear-gradient(180deg,#f4f2ec,#dad8d0);border-radius:2px}
-.lcv-dm__more{font-size:11px;color:var(--lcv-ink3);width:30px;text-align:center}
+.lcv-dm__srcs{display:flex;align-items:center;gap:8px}
+/* source thumbnails as lit paper objects: cooler/darker stock + a faint
+   top-left glare + a soft grounding float, so they recede on the desk rather
+   than being the brightest surfaces on the cover */
+.lcv-dm__src{width:46px;height:60px;border-radius:3px;
+  background:
+    linear-gradient(125deg,rgba(255,255,255,0.32) 0%,rgba(255,255,255,0.03) 24%,transparent 48%),
+    linear-gradient(180deg,#e9e6df,#d4d1c9);
+  box-shadow:0 6px 16px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.35)}
+/* +N more: a single quiet count on one centered line, baseline-aligned to the
+   thumbnail stack (was a cramped 30px two-line afterthought) */
+.lcv-dm__more{font-size:11px;line-height:1.3;color:var(--lcv-ink3);
+  align-self:center;text-align:center;white-space:nowrap}
 .lcv-dm__table{border-collapse:collapse;font-size:10.5px;width:100%}
 .lcv-dm__table th{font-family:var(--lcv-mono);font-size:9px;letter-spacing:.06em;color:var(--lcv-ink3);
   text-align:left;padding:5px 8px;border:1px solid var(--lcv-line2);font-weight:400}
 .lcv-dm__table td{padding:6px 8px;border:1px solid var(--lcv-line2);color:var(--lcv-ink2);vertical-align:middle}
 .lcv-dm__f{font-family:var(--lcv-mono);color:var(--lcv-ink)!important}
 .lcv-dm__spark{width:34px;height:12px}
-.lcv-dm__spark path{stroke:var(--lcv-ink2);stroke-width:1.2}
-.lcv-dm__spark circle{fill:var(--lcv-ink2)}
+/* sparkline stroke is the same cyan as its fill (data/signal) — desaturated
+   for the calm Cover scene, so the signal actually lights up over its fill */
+.lcv-dm__spark path{stroke:rgba(75,197,222,0.78);stroke-width:1.2}
+/* cyan area fill under the sparkline — subtle on the calm Cover scene, but
+   present (the data richness the old Optibook charts had). No stroke. */
+.lcv-dm__spark-area{stroke:none}
+.lcv-dm__spark circle{fill:rgba(75,197,222,0.85)}
 .lcv-dm__graph{border:1px solid var(--lcv-line2);border-radius:4px;padding:8px;display:flex;flex-direction:column}
 .lcv-dm__graphlbl{font-family:var(--lcv-mono);font-size:9px;color:var(--lcv-ink3);margin-bottom:2px}
 .lcv-dm__graph svg{width:100%;height:100%}
 .lcv-dm__axes{stroke:var(--line);stroke-width:1}
-.lcv-dm__curve{stroke:var(--lcv-ink);stroke-width:1.6}
-.lcv-dm__peak{fill:var(--lcv-ink2)}
+/* the concave curve is stroked in cyan (same accent as its fill) with a soft
+   cyan glow so the data signal reads above the fill — calm/desaturated cyan
+   for the still Cover scene */
+.lcv-dm__curve{stroke:rgba(75,197,222,0.85);stroke-width:1.6;
+  filter:drop-shadow(0 0 2px rgba(75,197,222,0.4))}
+.lcv-dm__area{stroke:none}
+.lcv-dm__peak{fill:rgba(75,197,222,0.9)}
 .lcv-dm__drop{stroke:var(--lcv-ink3);stroke-width:.8}
 .lcv-dm__graph text{fill:var(--lcv-ink3);font-size:8px;font-family:var(--lcv-mono)}
 
@@ -22473,10 +22627,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-foot{display:flex;justify-content:space-between;align-items:center;
   padding:22px max(clamp(28px,4vw,48px),calc((100% - var(--lcv-shell-max)) / 2)) 28px;
   border-top:1px solid var(--lcv-glass-border);
-  background:var(--lcv-glass-nav);
+  background:
+    linear-gradient(155deg,rgba(255,255,255,0.04),transparent 46%),
+    var(--lcv-glass-nav);
   -webkit-backdrop-filter:blur(28px) saturate(110%);
   backdrop-filter:blur(28px) saturate(110%);
-  box-shadow:var(--keylight);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 -14px 36px rgba(0,0,0,0.5);
   font-family:var(--lcv-mono);font-size:11px;letter-spacing:.14em;color:var(--lcv-ink3)}
 .lcv-foot__all{display:flex;align-items:center;gap:8px}
 .lcv-foot__all svg{width:14px;height:14px;stroke:var(--lcv-ink3);fill:none;stroke-width:1.6}

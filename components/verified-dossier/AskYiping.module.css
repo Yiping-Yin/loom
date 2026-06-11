@@ -13,12 +13,29 @@
   --ask-signal: var(--role-signal, var(--cyan, #4BC5DE));
   --ask-border: var(--role-glass-border, var(--line, #232A33));
   --ask-border-strong: var(--role-border-strong, var(--line, #232A33));
-  --ask-glass: var(--role-glass, rgba(16, 20, 26, 0.55));
+  /* Full-strength lit-glass recipe — inherits the Digital Me scene glass, and
+     falls back to the same layered recipe when mounted standalone. */
+  --ask-glass: var(
+    --role-glass,
+    linear-gradient(155deg, rgba(255, 255, 255, 0.045), transparent 42%),
+    linear-gradient(180deg, rgba(30, 36, 45, 0.6), rgba(22, 27, 34, 0.94))
+  );
   --ask-glass-shadow: var(
     --role-glass-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 18px 44px rgba(0, 0, 0, 0.5)
+  );
+  /* Inset surface for the composer input, notes, and source rows. */
+  --ask-glass-inset: var(
+    --role-glass-inset,
+    linear-gradient(155deg, rgba(255, 255, 255, 0.035), transparent 46%),
+    linear-gradient(180deg, rgba(26, 31, 39, 0.66), rgba(18, 22, 28, 0.92))
+  );
+  --ask-glass-inset-shadow: var(
+    --role-glass-inset-shadow,
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 24px 60px rgba(0, 0, 0, 0.55),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35)
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4)
   );
   --ask-mono: var(--role-mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
 
@@ -84,7 +101,8 @@
   padding: 0.82rem 1rem;
   border: 1px solid var(--ask-border-strong);
   border-radius: 10px;
-  background: rgba(15, 19, 24, 0.55);
+  background: var(--ask-glass-inset);
+  box-shadow: var(--ask-glass-inset-shadow);
   color: var(--ask-ink);
   font: inherit;
   font-size: 0.96rem;
@@ -102,17 +120,21 @@
   border-color: var(--ask-signal);
 }
 
-/* Submit — raised material + a 1px gold hairline (the scene's single
-   active brand moment). NEVER a gold fill. */
+/* Submit — raised lit-glass material with a neutral hairline border and a
+   single gold hairline along the bottom edge (the scene's one watch-hand
+   brand mark). NEVER a full gold outline ring, NEVER a gold fill. */
 .submit {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.82rem 1.3rem;
-  border: 1px solid var(--ask-accent);
+  border: 1px solid var(--ask-border-strong);
   border-radius: 10px;
   background: linear-gradient(180deg, var(--ink-5, #2A323D), var(--ink-4, #1E242D));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 var(--ask-accent),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.4);
   color: var(--ask-ink);
   cursor: pointer;
   font: inherit;
@@ -120,14 +142,17 @@
   font-weight: 560;
   line-height: 1.2;
   white-space: nowrap;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
+/* Hover lifts via luminance + a faint gold glow off the hairline edge. */
 .submit:hover:not(:disabled) {
-  border-color: var(--ask-accent-strong);
+  border-color: color-mix(in srgb, var(--ask-accent) 40%, var(--ask-border-strong));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 20px rgba(200, 162, 74, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 var(--ask-accent-strong),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.4),
+    0 0 18px rgba(200, 162, 74, 0.12);
 }
 
 .submit:disabled {
@@ -161,12 +186,13 @@
   font-weight: 540;
   line-height: 1.25;
   text-align: left;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
 .chip:hover:not(:disabled) {
   color: var(--ask-ink);
   border-color: color-mix(in srgb, var(--ask-signal) 45%, var(--ask-border-strong));
+  background: color-mix(in srgb, var(--ink-5, #2A323D) 55%, transparent);
 }
 
 .chip:disabled {
@@ -203,13 +229,17 @@
   bottom: 0.2rem;
   left: 0;
   width: 1px;
+  /* The weft, at full Digital-Me strength: a brighter cyan thread that fades
+     at both ends and casts a soft glow — reads as light binding the question
+     to its cited sources, not a painted rule. */
   background: linear-gradient(
     180deg,
     rgba(75, 197, 222, 0) 0%,
-    rgba(75, 197, 222, 0.4) 16%,
-    rgba(75, 197, 222, 0.4) 84%,
+    rgba(75, 197, 222, 0.7) 16%,
+    rgba(75, 197, 222, 0.7) 84%,
     rgba(75, 197, 222, 0) 100%
   );
+  box-shadow: 0 0 9px rgba(75, 197, 222, 0.35);
   pointer-events: none;
 }
 
@@ -289,7 +319,8 @@
   border: 1px solid var(--ask-border-strong);
   border-left: 1px solid var(--ask-accent);
   border-radius: 8px;
-  background: rgba(15, 19, 24, 0.5);
+  background: var(--ask-glass-inset);
+  box-shadow: var(--ask-glass-inset-shadow);
 }
 
 .note strong {
@@ -347,15 +378,19 @@
   padding: 0.62rem 0.8rem;
   border: 1px solid var(--ask-border-strong);
   border-radius: 8px;
-  background: rgba(15, 19, 24, 0.5);
+  background: var(--ask-glass-inset);
+  box-shadow: var(--ask-glass-inset-shadow);
   color: inherit;
   text-decoration: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .sourceRow:hover {
-  /* Source attended to — the data-signal picks it up. */
+  /* Source attended to — luminance lift + the data-signal picks up its edge. */
   border-color: color-mix(in srgb, var(--ask-signal) 45%, var(--ask-border-strong));
+  box-shadow:
+    var(--ask-glass-inset-shadow),
+    0 0 18px rgba(75, 197, 222, 0.1);
 }
 
 .sourceRow:focus-visible {

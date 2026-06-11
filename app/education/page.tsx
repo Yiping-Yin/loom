@@ -36,6 +36,7 @@ export default function EducationPage() {
         <span>{category.summary}</span>
       </header>
       <section className="vd-section-page__grid" aria-label="Education shelves">
+        <p className="vd-section-page__band-label">Institutions</p>
         {sections.map((section) => (
           <a key={section.id} className="vd-section-page__card" href={section.href}>
             <InstitutionMark kind={section.id} />
@@ -45,6 +46,7 @@ export default function EducationPage() {
         ))}
       </section>
       <section className="vd-section-page__course-strip" aria-label="UNSW course folders">
+        <p className="vd-section-page__band-label">UNSW courses</p>
         {VERIFIED_DOSSIER_UNSW_COURSES.slice(0, 8).map((course) => (
           <a key={course.id} href={course.href} title={courseTitle(course)}>
             <strong>{course.code}</strong>
@@ -53,6 +55,7 @@ export default function EducationPage() {
         ))}
       </section>
       <section className="vd-section-page__artifact-strip" aria-label="Education evidence">
+        <p className="vd-section-page__band-label">Evidence files</p>
         {artifacts.map((artifact) => (
           <a key={artifact.id} href={artifact.href}>
             <FileBadge kind={artifact.kind} label={artifact.label} compact />

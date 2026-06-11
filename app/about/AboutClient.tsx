@@ -114,11 +114,10 @@ export default function AboutClient() {
             ))}
           </nav>
 
-          <div className={styles.profileMeta}>
-            {VERIFIED_DOSSIER_PROFILE.roles.map((role) => (
-              <span key={role}>{role}</span>
-            ))}
-          </div>
+          <p className={styles.profileTail}>
+            <span className={styles.profileTailDot} aria-hidden="true" />
+            Open to quant research and AI collaboration
+          </p>
         </aside>
 
         <section className={styles.resumePanel}>
