@@ -83,7 +83,7 @@ export default function AboutClient() {
         </div>
         <img
           className="vd-nav__avatar"
-          src={VERIFIED_DOSSIER_PROFILE.photoSrc}
+          src={VERIFIED_DOSSIER_PROFILE.aboutPhotoSrc}
           alt=""
           aria-hidden="true"
           draggable={false}
@@ -93,7 +93,7 @@ export default function AboutClient() {
       <div className={styles.shell}>
       <section className={styles.hero}>
         <aside className={styles.profileRail} aria-label="Public profile">
-          <img className={styles.profilePhoto} src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="Yiping Yin" draggable={false} />
+          <img className={styles.profilePhoto} src={VERIFIED_DOSSIER_PROFILE.aboutPhotoSrc} alt="Yiping Yin" draggable={false} />
 
           <div className={styles.identity}>
             <p className={styles.kicker}>Public profile</p>

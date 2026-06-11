@@ -85,7 +85,7 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.equal((html.match(/class="lcv-row__open"/g) ?? []).length, 4);
   // Identity rail: photo, three profile links (LinkedIn icon variant).
   assert.match(html, /class="lcv-photo"/);
-  assert.match(html, /\/profile\/yiping-profile-white-shirt\.png/);
+  assert.match(html, /\/profile\/yiping-profile-photo\.png/);
   assert.equal((html.match(/class="lcv-link-icon/g) ?? []).length, 3);
   assert.match(html, /class="lcv-link-icon lcv-link-icon--linkedin"/);
   assert.match(html, /class="lcv-member">MEMBER SINCE APRIL 2024/);

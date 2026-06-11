@@ -111,7 +111,7 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.doesNotMatch(html, /class="vd-avatar"/);
   assert.doesNotMatch(html, /vd-personal-stage/);
   assert.match(html, /class="lcv-photo"/);
-  assert.match(html, /\/profile\/yiping-profile-white-shirt\.png/);
+  assert.match(html, /\/profile\/yiping-profile-photo\.png/);
   assert.equal((html.match(/class="lcv-link-icon/g) ?? []).length, 3);
   assert.match(html, /class="lcv-link-icon lcv-link-icon--linkedin"/);
   assert.match(html, /\/brand\/unsw\/unsw-crest\.png/);
