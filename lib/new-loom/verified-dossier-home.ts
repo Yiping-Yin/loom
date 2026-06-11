@@ -465,7 +465,7 @@ export const VERIFIED_DOSSIER_PROFILE = {
   name: 'Yiping Yin',
   roles: ['Quant T/R', 'AI Founder'],
   location: '🇨🇳 Wuhan | 🇦🇺 Sydney',
-  photoSrc: '/profile/yiping-profile-photo.png',
+  photoSrc: '/profile/yiping-profile-white-shirt.png',
   links: [
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/yiping-yin/' },
     { label: 'GitHub', href: 'https://github.com/Yiping-Yin' },

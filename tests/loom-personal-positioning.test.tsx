@@ -80,7 +80,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(html, /<a class="lcv-row lcv-row--digital-me" href="\/digital-me"/);
   assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 6);
   assert.match(html, /class="lcv-photo"/);
-  assert.match(html, /\/profile\/yiping-profile-photo\.png/);
+  assert.match(html, /\/profile\/yiping-profile-white-shirt\.png/);
   assert.equal((html.match(/class="lcv-link-icon/g) ?? []).length, 3);
   assert.match(html, /class="lcv-link-icon lcv-link-icon--linkedin"/);
   assert.match(html, /class="lcv-panel lcv-about"/);
