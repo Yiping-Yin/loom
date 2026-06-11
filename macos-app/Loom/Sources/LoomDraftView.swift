@@ -2901,7 +2901,7 @@ struct LoomDraftView: View {
     private func preloadReferenceIndex() {
         guard referenceIndexDocs.isEmpty else { return }
         Task {
-            guard let docs = try? AskAIDocReferenceIndex.load() else { return }
+            guard let docs = try? await AskAIDocReferenceIndex.load() else { return }
             await MainActor.run {
                 if referenceIndexDocs.isEmpty {
                     referenceIndexDocs = docs

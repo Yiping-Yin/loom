@@ -819,11 +819,49 @@ enum AskAIWindow {
 /// lazily fetches the doc's body at submit time from the same cache path
 /// `LinkPreview` uses under native mode — stays fresh even if the user
 /// re-ingests content between picking and asking.
+/// Loads the full searchable doc corpus as `AskAIDocRef` entries for the
+/// Draft reference picker. Mirrors `AskAIDocPicker.loadIndex()` but as a
+/// reusable, awaitable loader so the Draft surface can preload the index
+/// off-screen. Returns an empty list (not an error) for an absent/empty
+/// index so callers degrade quietly.
+enum AskAIDocReferenceIndex {
+    static func load() async throws -> [AskAIDocRef] {
+        guard let url = URL(string: "loom://bundle/search-index.json") else { return [] }
+        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let index = root["index"] as? [String: Any],
+              let stored = index["storedFields"] as? [String: Any] else { return [] }
+        var out: [AskAIDocRef] = []
+        for (_, value) in stored {
+            guard let fields = value as? [String: Any],
+                  let title = fields["title"] as? String,
+                  let href = fields["href"] as? String,
+                  !title.isEmpty, !href.isEmpty else { continue }
+            out.append(
+                AskAIDocRef(
+                    id: href,
+                    title: title,
+                    href: href,
+                    category: (fields["category"] as? String) ?? "",
+                    sourcePath: (fields["sourcePath"] as? String).flatMap { $0.isEmpty ? nil : $0 },
+                    artifactState: AskAIDocRef.artifactState(from: fields)
+                )
+            )
+        }
+        out.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        return out
+    }
+}
+
 struct AskAIDocRef: Identifiable, Hashable {
     let id: String  // href — unique
     let title: String
     let href: String
     let category: String
+    /// Original source path (e.g. the file the doc was ingested from), when
+    /// the search-index entry carries one. Lets a Draft reference round-trip
+    /// the provenance back into `LoomDraftReference`. Nil for plain refs.
+    let sourcePath: String?
     /// Live artifact state distilled from the search-index entry — lets a
     /// referenced doc carry not just its body but its quiz/card/anchor
     /// state into the AI prompt, mirroring the whole-corpus grounding the
@@ -835,12 +873,14 @@ struct AskAIDocRef: Identifiable, Hashable {
         title: String,
         href: String,
         category: String,
+        sourcePath: String? = nil,
         artifactState: LoomDraftArtifactState? = nil
     ) {
         self.id = id
         self.title = title
         self.href = href
         self.category = category
+        self.sourcePath = sourcePath
         self.artifactState = artifactState
     }
 
@@ -998,6 +1038,7 @@ struct DocReferencePicker: View {
                         title: title,
                         href: href,
                         category: category,
+                        sourcePath: (fields["sourcePath"] as? String).flatMap { $0.isEmpty ? nil : $0 },
                         artifactState: AskAIDocRef.artifactState(from: fields)
                     )
                 )

@@ -17,6 +17,9 @@ struct SelectableTextEditor: NSViewRepresentable {
     @Binding var text: String
     @Binding var selectedRange: NSRange
     var onCommandK: (() -> Void)?
+    /// Optional override for the editor body font. Defaults to the system
+    /// 13pt face when nil (preserves existing call sites).
+    var font: NSFont? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text, selectedRange: $selectedRange, onCommandK: onCommandK)
@@ -53,11 +56,11 @@ struct SelectableTextEditor: NSViewRepresentable {
         // warm candle-white in dark mode. Matches Vellum's intent of
         // "earth ink, never neon" without hard-coding per mode.
         textView.textColor = .labelColor
-        textView.insertionPointColor = NSColor(red: 0x9E / 255.0,
-                                               green: 0x7C / 255.0,
-                                               blue: 0x3E / 255.0,
-                                               alpha: 1.0) // LoomTokens.thread — bronze caret
-        textView.font = .systemFont(ofSize: 13)
+        textView.insertionPointColor = NSColor(red: 0xC8 / 255.0,
+                                               green: 0xA2 / 255.0,
+                                               blue: 0x4A / 255.0,
+                                               alpha: 1.0) // LoomTokens.dsThread — watch-hand gold caret
+        textView.font = font ?? .systemFont(ofSize: 13)
         textView.textContainerInset = NSSize(width: 4, height: 6)
         textView.textContainer?.widthTracksTextView = true
         textView.string = text
