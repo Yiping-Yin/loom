@@ -60,7 +60,7 @@ final class LoomRuntimePathsTests: XCTestCase {
         )
         XCTAssertEqual(
             LibraryReloadFeedback.missingManifest.statusMessage,
-            "No source manifest yet. Run npm run ingest or use Ingestion."
+            "No source manifest yet. Add sources to build one."
         )
     }
 
@@ -73,13 +73,27 @@ final class LoomRuntimePathsTests: XCTestCase {
             SidebarThemeResolution.resolvedColorScheme(theme: "light", systemIsDark: true),
             .light
         )
+        // "auto" resolves by local time-of-day (night = before 6, from 21),
+        // not by system appearance — pin the clock so the test is stable.
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let noon = DateComponents(
+            calendar: calendar, year: 2026, month: 6, day: 12, hour: 12
+        ).date!
+        let lateNight = DateComponents(
+            calendar: calendar, year: 2026, month: 6, day: 12, hour: 23
+        ).date!
         XCTAssertEqual(
-            SidebarThemeResolution.resolvedColorScheme(theme: "auto", systemIsDark: true),
-            .dark
+            SidebarThemeResolution.resolvedColorScheme(
+                theme: "auto", systemIsDark: true, now: noon, calendar: calendar
+            ),
+            .light
         )
         XCTAssertEqual(
-            SidebarThemeResolution.resolvedColorScheme(theme: "auto", systemIsDark: false),
-            .light
+            SidebarThemeResolution.resolvedColorScheme(
+                theme: "auto", systemIsDark: false, now: lateNight, calendar: calendar
+            ),
+            .dark
         )
     }
 }

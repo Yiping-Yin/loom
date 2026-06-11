@@ -22,11 +22,13 @@ final class LoomCommandScriptsTests: XCTestCase {
         XCTAssertFalse(script.contains("loom:capture-prompt"))
     }
 
-    func testLearnSelectionScriptStillFallsBackToRehearsalOverlayWithoutSelection() {
+    func testLearnSelectionScriptReportsEmptySelectionToNativeShell() {
         let script = LoomCommandScripts.learnSelectionScript()
 
-        XCTAssertTrue(script.contains("loom:overlay:open"))
-        XCTAssertTrue(script.contains("id: 'rehearsal'"))
-        XCTAssertTrue(script.contains("loom:overlay:toggle"))
+        // No text in hand — the script reports back so the native shell
+        // decides what to do (Source practice). The old rehearsal-overlay
+        // fallback is gone.
+        XCTAssertTrue(script.contains("'empty-selection'"))
+        XCTAssertFalse(script.contains("loom:overlay:open"))
     }
 }
