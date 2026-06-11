@@ -2555,7 +2555,7 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
   assert.doesNotMatch(files['app/cover/page.tsx'], /CoverClient/);
   assert.match(files['app/frontispiece/page.tsx'], /redirect\('\/sources'\)/);
   assert.doesNotMatch(files['app/frontispiece/page.tsx'], /FrontispieceClient/);
-  assert.match(files['app/about/AboutClient.tsx'], /personal knowledge display platform/);
+  assert.match(files['app/about/AboutClient.tsx'], /personal knowledge identity platform/);
   assert.match(files['app/about/AboutClient.tsx'], /How Loom serves the archive/);
   assert.match(files['app/about/AboutClient.tsx'], /Product story/);
   assert.match(files['app/about/AboutClient.tsx'], /source-bound memory system/);
@@ -2563,7 +2563,7 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
   assert.match(files['app/product-history/page.tsx'], /Why Loom is called Loom/);
   assert.match(files['app/product-history/page.tsx'], /source-bound knowledge display platform/);
   assert.match(files['app/about/AboutClient.tsx'], /Publish the artifact/);
-  assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /personal knowledge display platform/);
+  assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /personal knowledge identity platform/);
   assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /History/);
   for (const pattern of [
     /RehearsalOverlay/,

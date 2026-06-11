@@ -59,8 +59,8 @@ struct AboutView: View {
                     .foregroundStyle(ink.opacity(0.88))
                     .padding(.top, 22)
 
-                // Product line — Loom as a personal knowledge display platform.
-                Text("A personal knowledge display platform.")
+                // Product line — Loom as a personal knowledge identity platform.
+                Text("A personal knowledge identity platform.")
                     .font(.custom("EB Garamond", size: 13))
                     .foregroundStyle(muted)
                     .padding(.top, 6)

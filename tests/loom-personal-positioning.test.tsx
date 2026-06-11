@@ -271,7 +271,7 @@ test('visible support surfaces use approved personal-identity and local-app posi
   const privacy = read('public/privacy.html');
   const support = read('public/support.html');
 
-  assert.match(about, /personal knowledge display platform/i);
+  assert.match(about, /personal knowledge identity platform/i);
   assert.match(about, /backed by sources/i);
   assert.match(about, /readable by people/i);
   assert.match(about, /usable by Digital Me/i);
@@ -344,7 +344,11 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(privacy, /local Mac app for personal reading and thinking/i);
   assert.match(privacy, /everything stays on your Mac/i);
   assert.match(support, /local Mac app for reading and thinking/i);
-  assert.doesNotMatch([help, productHistory, privacy, support].join('\n'), /personal knowledge display platform/i);
+  // The retired "personal knowledge display platform" line must not leak onto
+  // live support surfaces — but /product-history deliberately preserves it as
+  // sediment in the tagline lineage, so it is excluded from this guard.
+  assert.doesNotMatch([help, privacy, support].join('\n'), /personal knowledge display platform/i);
+  assert.match(productHistory, /personal knowledge display platform/i);
 });
 
 test('Loom product history evolution assets are curated under Loom folders', () => {

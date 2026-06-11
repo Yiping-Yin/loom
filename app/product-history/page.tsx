@@ -243,6 +243,11 @@ const TAGLINE_LINEAGE = [
     note: 'The Vellum era — calm, editorial, unhurried. Too passive in the end: it read the world but never spoke back for you.',
   },
   {
+    date: '2026-06-02',
+    line: 'A personal knowledge display platform.',
+    note: 'Knowledge, a person, and proof — inspectable at last. But "display" only shows; accumulated knowledge should also act, connect, and answer. One word changed: display became identity.',
+  },
+  {
     date: '2026-06-11',
     line: 'A living knowledge identity that can answer for you.',
     note: 'The line today: not a screen, a room, or a passive surface — a source-backed self that grows over time, shows its proof, and can represent your knowledge.',

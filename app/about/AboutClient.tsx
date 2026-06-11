@@ -54,7 +54,7 @@ export default function AboutClient() {
   return (
       <main className={styles.page} aria-labelledby="about-title">
         <p className={styles.srOnly}>
-          Loom is a personal knowledge display platform, readable by people and usable by Digital Me. Backed by sources, it connects UNSW, WQU, QuantNet, and Claude learning evidence into one inspectable profile.
+          Loom is a personal knowledge identity platform, readable by people and usable by Digital Me. Backed by sources, it connects UNSW, WQU, QuantNet, and Claude learning evidence into one inspectable profile.
         </p>
         <p className={styles.srOnly}>
           Proof and process are surfaced across home modules; see Product story at /product-history for full narrative.
