@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import {
   VERIFIED_DOSSIER_HISTORY,
   VERIFIED_DOSSIER_HOME_COPY,
@@ -11,7 +12,63 @@ import {
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import styles from './AboutClient.module.css';
 
+/**
+ * Restrained scroll-reveal. Adds the settled `isVisible` class once each
+ * tagged block scrolls into view (staggered by source order). Honors
+ * prefers-reduced-motion by revealing everything immediately, and never
+ * blocks content for non-JS/SSR readers because the observer settles on mount.
+ */
+function useScrollReveal() {
+  const rootRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const targets = Array.from(root.querySelectorAll<HTMLElement>(`.${styles.reveal}`));
+    if (targets.length === 0) return;
+
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduceMotion || typeof IntersectionObserver === 'undefined') {
+      targets.forEach((el) => el.classList.add(styles.isVisible));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.isVisible);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
+    );
+
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  return rootRef;
+}
+
 const PROFILE_SOURCES = ['about-doc', 'econ-slides', 'wqu-index', 'quantnet-python-foundations'] as const;
+
+/**
+ * A source href that points at a raw static asset (a .pdf/.html file or an
+ * external URL) must open in a new tab — exactly like the staged CV preview
+ * anchor (target="_blank" rel="noreferrer"). Same-tab links to a PDF silently
+ * navigate the current tab away or trigger a download, which reads as "clicked,
+ * nothing happened." In-app routes (/knowledge/…) stay same-tab. */
+function externalTargetProps(href: string): { target?: '_blank'; rel?: 'noreferrer' } {
+  const isStaticFile = /\.(pdf|html?)(\?|#|$)/i.test(href);
+  const isExternal = /^https?:\/\//i.test(href);
+  return isStaticFile || isExternal ? { target: '_blank', rel: 'noreferrer' } : {};
+}
 
 const SURFACE_SUMMARY: Record<string, string> = {
   about: 'CV, identity, and public direction.',
@@ -51,8 +108,10 @@ function LinkIcon({ label }: { label: VerifiedDossierProfileLink['label'] }) {
 }
 
 export default function AboutClient() {
+  const rootRef = useScrollReveal();
+
   return (
-      <main className={styles.page} aria-labelledby="about-title">
+      <main className={styles.page} aria-labelledby="about-title" ref={rootRef}>
         <p className={styles.srOnly}>
           Loom is a personal knowledge identity platform, readable by people and usable by Digital Me. Backed by sources, it connects UNSW, WQU, QuantNet, and Claude learning evidence into one inspectable profile.
         </p>
@@ -92,11 +151,11 @@ export default function AboutClient() {
 
       <div className={styles.shell}>
       <section className={styles.hero}>
-        <aside className={styles.profileRail} aria-label="Public profile">
+        <aside className={`${styles.profileRail} ${styles.reveal}`} aria-label="Public profile">
+          <p className={styles.kicker}>Public profile</p>
           <img className={styles.profilePhoto} src={VERIFIED_DOSSIER_PROFILE.aboutPhotoSrc} alt="Yiping Yin" draggable={false} />
 
           <div className={styles.identity}>
-            <p className={styles.kicker}>Public profile</p>
             <h1 id="about-title">{VERIFIED_DOSSIER_PROFILE.name}</h1>
             <p>{VERIFIED_DOSSIER_PROFILE.location}</p>
             <strong>{VERIFIED_DOSSIER_HOME_COPY.body}</strong>
@@ -120,12 +179,10 @@ export default function AboutClient() {
           </p>
         </aside>
 
-        <section className={styles.resumePanel}>
+        <section className={`${styles.resumePanel} ${styles.reveal}`} style={{ transitionDelay: '80ms' }}>
           <header className={styles.panelHeader}>
-            <div>
-              <p className={styles.kicker}>About — identity</p>
-              <h2>Curriculum Vitae</h2>
-            </div>
+            <p className={styles.kicker}>About — identity</p>
+            <h2>Curriculum Vitae</h2>
           </header>
           <a
             className={styles.resumeObject}
@@ -139,14 +196,21 @@ export default function AboutClient() {
           <p className={styles.statement}>{VERIFIED_DOSSIER_HOME_COPY.shortDefinition}</p>
         </section>
 
-        <aside className={styles.sourceRail} aria-label="Verified sources">
+        <aside className={`${styles.sourceRail} ${styles.reveal}`} style={{ transitionDelay: '160ms' }} aria-label="Verified sources">
           <p className={styles.kicker}>Evidence</p>
-          <h2>Source-backed claims</h2>
+          {/* non-breaking hyphen keeps the 'Source-backed' compound intact so the
+              heading wraps cleanly as 'Source-backed' / 'claims' in the narrow rail */}
+          <h2>Source{'‑'}backed claims</h2>
           <div className={styles.sourceList}>
             {PROFILE_SOURCES.map((artifactId) => {
               const artifact = resolveVerifiedDossierArtifact(artifactId);
               return (
-                <a key={artifact.id} href={artifact.href} className={styles.sourceItem}>
+                <a
+                  key={artifact.id}
+                  href={artifact.href}
+                  className={styles.sourceItem}
+                  {...externalTargetProps(artifact.href)}
+                >
                   <FileBadge kind={artifact.kind} label={artifact.label} compact />
                   <span>{artifact.role}</span>
                 </a>
@@ -156,7 +220,7 @@ export default function AboutClient() {
         </aside>
       </section>
 
-      <section className={styles.activitySection} aria-labelledby="surface-title">
+      <section className={`${styles.activitySection} ${styles.reveal}`} aria-labelledby="surface-title">
         <p className={styles.kicker}>Profile surfaces</p>
         <h2 id="surface-title">Learning and Work</h2>
         <div className={styles.activityGrid}>
@@ -169,7 +233,7 @@ export default function AboutClient() {
         </div>
       </section>
 
-      <section className={styles.historySection} aria-labelledby="history-title">
+      <section className={`${styles.historySection} ${styles.reveal}`} aria-labelledby="history-title">
         <p className={styles.kicker}>History notes</p>
         <h2 id="history-title">Product history anchors</h2>
         <ol className={styles.historyRows}>

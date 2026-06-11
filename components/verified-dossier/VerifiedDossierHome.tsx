@@ -132,23 +132,20 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
     const remaining = VERIFIED_DOSSIER_UNSW_COURSES.length - heroCourses.length;
     return (
       <div className="lcv-panel lcv-edu">
+        {/* one composition pattern across all four cells: a single centered
+            contained logo (no 3+1 wordmark split), equal optical footprint */}
         <div className="lcv-edu__logos">
           <span>
             <img src="/brand/unsw/unsw-crest.png" alt="" draggable={false} />
-            <b className="lcv-serif">
-              UNSW<small>SYDNEY</small>
-            </b>
           </span>
           <span>
             <img src="/brand/wqu/wqu-logo.svg" alt="" draggable={false} />
-            <b>WQU</b>
           </span>
           <span>
             <img className="lcv-edu__wide" src="/brand/quantnet/quantnet-logo.png" alt="" draggable={false} />
           </span>
           <span>
             <img src="/brand/claude/claude-icon.png" alt="" draggable={false} />
-            <b>Claude</b>
           </span>
         </div>
         <div className="lcv-edu__chips">
@@ -295,10 +292,8 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
                 </svg>
               </td>
             </tr>
-            <tr>
-              <td>…</td>
-              <td />
-              <td />
+            <tr className="lcv-dm__table-more">
+              <td colSpan={3}>+4 more concepts</td>
             </tr>
           </tbody>
         </table>
@@ -395,7 +390,11 @@ export function VerifiedDossierHome() {
 
           <nav className="lcv-links" aria-label="Profile links">
             {VERIFIED_DOSSIER_PROFILE.links.map((link) => (
-              <a key={link.label} href={link.href}>
+              <a
+                key={link.label}
+                href={link.href}
+                aria-current={link.href === '/' ? 'page' : undefined}
+              >
                 <ProfileLinkIcon label={link.label} />
                 {link.label}
               </a>

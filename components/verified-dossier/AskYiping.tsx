@@ -178,7 +178,7 @@ export function AskYiping() {
     (phase === 'error' && answer.length > 0);
 
   return (
-    <section className={styles.askYiping} aria-labelledby="ask-yiping-title">
+    <section className={styles.askYiping} aria-labelledby="ask-yiping-title" data-reveal="">
       <div className={styles.header}>
         <p className={styles.eyebrow}>Ask Yiping</p>
         <h2 id="ask-yiping-title" className={styles.title}>

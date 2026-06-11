@@ -81,6 +81,32 @@
   box-sizing: border-box;
 }
 
+/* Restrained scroll-reveal — a quiet fade + small rise as each section enters
+   the viewport, lightly staggered. The JS only toggles [data-revealed]; the
+   motion lives here and is fully disabled under reduced-motion. None of the
+   data-reveal targets carry their own transform, so translateY is safe. */
+.roleOsPage [data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+  will-change: opacity, transform;
+}
+
+.roleOsPage [data-reveal][data-revealed] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roleOsPage [data-reveal],
+  .roleOsPage [data-reveal][data-revealed] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+}
+
 .nav {
   position: sticky;
   top: 0;
@@ -162,10 +188,10 @@
 .roleLens {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 30rem);
-  gap: 1rem clamp(2rem, 4vw, 4.2rem);
+  gap: 1.2rem clamp(2.4rem, 4.5vw, 4.8rem);
   align-items: end;
-  margin-top: clamp(1.6rem, 3vw, 2.6rem);
-  padding: clamp(2.2rem, 4vw, 3.4rem) clamp(1.6rem, 3vw, 2.6rem) clamp(1.8rem, 3.5vw, 2.8rem);
+  margin-top: clamp(2.4rem, 4.5vw, 4rem);
+  padding: clamp(2.8rem, 5vw, 4.4rem) clamp(2rem, 3.5vw, 3.2rem) clamp(2.4rem, 4.5vw, 3.6rem);
   border: 1px solid var(--role-glass-border);
   border-radius: 14px;
   background: var(--role-glass);
@@ -174,10 +200,15 @@
   box-shadow: var(--role-glass-shadow);
 }
 
+/* Eyebrow / kicker — mono, uppercase, faint. Scoped to the FIRST direct <p>
+   only: every Artifact Runtime mode renders its eyebrow as the first child,
+   then h2, then body prose. Hitting all `.artifactOutput > p` here turned the
+   Interview/Portfolio body prose into tiny uppercase mono gray (illegible);
+   :first-child keeps the eyebrow treatment off body paragraphs. */
 .roleLens p,
 .claimRail > p,
 .stageHeader p,
-.artifactOutput > p,
+.artifactOutput > p:first-child,
 .evidencePanel > p {
   margin: 0;
   color: var(--role-subtle);
@@ -239,18 +270,40 @@
 }
 
 .proofPath {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(13.5rem, 18rem) minmax(26rem, 1fr) minmax(18rem, 24rem);
-  gap: clamp(0.9rem, 1.6vw, 1.4rem);
+  gap: clamp(1.3rem, 2.2vw, 2rem);
   align-items: start;
-  padding-top: clamp(1.6rem, 3vw, 2.4rem);
-  padding-bottom: clamp(1.9rem, 4vw, 3rem);
+  margin-top: clamp(2.6rem, 5vw, 4.4rem);
+  padding-top: clamp(2.4rem, 4vw, 3.6rem);
+  padding-bottom: clamp(2.6rem, 5vw, 4rem);
+  /* PERSPECTIVE stage — the proof-path reads as a physical terminal bank on
+     the desk: the central Artifact Runtime tilts back as the live screen. */
+  perspective: 2000px;
+  perspective-origin: 50% 30%;
+}
+
+/* ATMOSPHERE behind the proof-path terminal bank — a deep cyan room glow rises
+   behind the central runtime, with a vignette closing the band's edges so the
+   panels read as lit objects floating in space, not flat cards on black. */
+.proofPath::before {
+  content: "";
+  position: absolute;
+  inset: clamp(0.4rem, 1.2vw, 1.2rem) calc(var(--role-gutter) * -0.3) clamp(0.4rem, 1.2vw, 1.2rem);
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(46% 70% at 50% 22%, rgba(75, 197, 222, 0.09) 0%, rgba(75, 197, 222, 0) 64%),
+    radial-gradient(120% 110% at 50% 36%, transparent 56%, rgba(7, 9, 12, 0.55) 100%);
 }
 
 /* Glass chrome shared by the three proof-path panels */
 .claimRail,
 .artifactStage,
 .evidencePanel {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   border: 1px solid var(--role-glass-border);
   border-radius: 12px;
@@ -273,10 +326,40 @@
   padding: 1rem 1.1rem;
 }
 
+/* Artifact Runtime — the LIVE TERMINAL of the scene. Full-strength staging:
+   it tilts back + recedes on the proof-path perspective, with a deep grounding
+   float and a diagonal screen-glare across the top of its glass. */
 .artifactStage {
   display: grid;
-  gap: 1rem;
-  padding: 1rem clamp(1.1rem, 2vw, 1.6rem);
+  gap: 1.15rem;
+  padding: clamp(1.2rem, 2vw, 1.7rem) clamp(1.2rem, 2vw, 1.7rem) clamp(1.4rem, 2.2vw, 1.9rem);
+  transform: rotateX(5deg) rotateZ(-0.4deg);
+  transform-origin: 50% 84%;
+  transform-style: preserve-3d;
+  /* Grounding: a deeper directional float seats it on the desk under the tilt. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 36px 60px rgba(0, 0, 0, 0.55),
+    0 14px 26px rgba(0, 0, 0, 0.45);
+}
+
+/* SCREEN GLARE on the runtime glass — a diagonal specular sweep across the top,
+   blended to screen, following the tilt. pointer-events:none so it never eats
+   clicks on the controls beneath. */
+.artifactStage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.05) 16%,
+    transparent 44%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 .evidencePanel {
@@ -376,13 +459,26 @@
 }
 
 .stageHeader span,
-.artifactOutput p,
 .evidencePanel > span,
 .boundaryPanel p {
   margin: 0;
   color: var(--role-muted);
   font-size: 0.92rem;
   line-height: 1.55;
+}
+
+/* Artifact body prose — legible sentence-case sans. Explicitly resets the
+   eyebrow treatment (mono / uppercase / letter-spacing) so any body <p> that is
+   not the first child renders as readable copy, never the kicker style. */
+.artifactOutput p {
+  margin: 0;
+  color: var(--role-muted);
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.55;
+  text-transform: none;
 }
 
 /* Evidence Signal — the cyan thread-of-light + area fill that traces proof
@@ -677,10 +773,11 @@
 .foundationStrip {
   display: grid;
   grid-template-columns: minmax(13rem, 18rem) repeat(3, minmax(8rem, auto)) minmax(18rem, 1fr);
-  gap: 0.7rem 1rem;
+  gap: 0.85rem 1.2rem;
   align-items: center;
-  padding-top: 1rem;
-  padding-bottom: 2rem;
+  margin-top: clamp(3rem, 6vw, 5.2rem);
+  padding-top: clamp(1.8rem, 3vw, 2.6rem);
+  padding-bottom: clamp(2.6rem, 5vw, 3.8rem);
   border-top: 1px solid var(--role-border-strong);
   color: var(--role-muted);
 }
@@ -844,77 +941,104 @@
 }
 
 /* Live Market Room — the Beebook replica as a launchable Digital Me feature.
-   A real screen on the desk: the terminal screenshot recedes in slight
-   perspective with a faint glow, under a cool-black scrim. */
+   FULL-STRENGTH dimensional staging (Digital-Me is the lit scene): the copy
+   sits left in calm air; the live Beebook terminal stands right as a real lit
+   object on the desk — framed, tilted back, glaring, grounded, floating in a
+   deep cyan-lit atmosphere with a closing vignette. */
 .marketRoom {
   position: relative;
   max-width: var(--role-shell);
-  margin: 26px auto 0;
-  padding: 0;
+  margin: clamp(3.4rem, 7vw, 6rem) auto 0;
+  padding: clamp(2.4rem, 4vw, 3.6rem) clamp(2rem, 3.4vw, 3.2rem);
   border: 1px solid var(--role-glass-border);
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  min-height: 330px;
-  display: flex;
-  align-items: flex-end;
-  /* Perspective stage — the live screen sits as a real lit object receding
-     into the room, not a flat screenshot pasted on black. */
-  perspective: 1800px;
-  /* The live screen recedes calmly — softer directional float, plus a deep
-     radial atmospheric glow + vignette behind the object on the cool-black. */
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: center;
+  /* ATMOSPHERE — the device floats in lit space: a deep cyan room glow behind
+     the screen (right), a faint warm counter-glow, and a vignette closing the
+     edges over the cool-black desk. Not pure black. */
   background:
-    radial-gradient(70% 90% at 72% 22%, rgba(75, 197, 222, 0.08) 0%, rgba(75, 197, 222, 0) 60%),
-    radial-gradient(120% 120% at 50% 0%, transparent 55%, rgba(7, 9, 12, 0.55) 100%),
+    radial-gradient(58% 78% at 74% 42%, rgba(75, 197, 222, 0.12) 0%, rgba(75, 197, 222, 0) 62%),
+    radial-gradient(70% 90% at 18% 8%, rgba(200, 162, 74, 0.045) 0%, rgba(200, 162, 74, 0) 58%),
+    radial-gradient(135% 130% at 50% 30%, transparent 52%, rgba(7, 9, 12, 0.72) 100%),
     var(--role-page);
   box-shadow: var(--role-glass-shadow-soft);
 }
 
-.marketRoomShot {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  opacity: 0.88;
-  /* The screen recedes into the room — staged perspective tilt with a touch
-     of rotateZ, anchored near its base, with a grounding drop-shadow beneath
-     so the object reads as lit and seated, not floating in a void. */
-  transform: rotateX(7deg) rotateZ(-0.6deg) scale(1.06);
-  transform-origin: 50% 82%;
-  filter: drop-shadow(0 26px 46px rgba(0, 0, 0, 0.55));
+/* PERSPECTIVE stage — the parent that gives the screen its depth of room. */
+.marketRoomStage {
+  position: relative;
+  min-width: 0;
+  perspective: 1800px;
+  perspective-origin: 60% 35%;
 }
 
+/* The device itself — a framed lit screen that tilts back and recedes, seated
+   on the desk by a soft grounding shadow + a short specular top edge. */
+.marketRoomDevice {
+  position: relative;
+  border-radius: 12px;
+  /* GROUNDING + thickness: outer float anchors it to the desk; the 1px top
+     specular edge + bottom inner-shadow give the bezel real thickness. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 44px 64px rgba(0, 0, 0, 0.62),
+    0 12px 22px rgba(0, 0, 0, 0.5);
+  /* PERSPECTIVE tilt: the screen recedes back + drops a touch of rotateZ,
+     anchored near its base so it reads as a terminal standing on the desk. */
+  transform: rotateX(9deg) rotateZ(-0.7deg) translateY(-2px);
+  transform-origin: 50% 80%;
+  transform-style: preserve-3d;
+  border: 1px solid var(--role-glass-border);
+  overflow: hidden;
+}
+
+.marketRoomShot {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: center top;
+  opacity: 0.96;
+}
+
+/* Light scrim ON the screen only — a faint cool glow + a gentle base falloff
+   so the terminal seats into its own shadow; NOT the old full-width flattener. */
 .marketRoomScrim {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background:
-    /* faint cool glow off the live screen */
-    radial-gradient(80% 55% at 72% 30%, rgba(75, 197, 222, 0.06) 0%, rgba(75, 197, 222, 0) 65%),
-    linear-gradient(90deg, rgba(7, 9, 12, 0.88) 0%, rgba(7, 9, 12, 0.55) 42%, rgba(7, 9, 12, 0.12) 75%, rgba(7, 9, 12, 0.05) 100%),
-    linear-gradient(180deg, rgba(7, 9, 12, 0.25) 0%, rgba(7, 9, 12, 0.08) 38%, rgba(7, 9, 12, 0.7) 80%, rgba(7, 9, 12, 0.92) 100%);
+    radial-gradient(80% 60% at 70% 22%, rgba(75, 197, 222, 0.08) 0%, rgba(75, 197, 222, 0) 64%),
+    linear-gradient(180deg, rgba(7, 9, 12, 0) 56%, rgba(7, 9, 12, 0.34) 100%);
 }
 
-/* Diagonal screen-glare — a low-opacity white sweep across the top of the
-   glass screen, the optical tell of a real lit object. pointer-events:none. */
+/* SCREEN GLARE — a diagonal specular highlight sweeping the top of the glass,
+   blended to screen so it reads as light on the surface, following the tilt. */
 .marketRoomScrim::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.02) 22%,
+    118deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.06) 16%,
     transparent 46%
   );
+  mix-blend-mode: screen;
   pointer-events: none;
 }
 
 .marketRoomBody {
   position: relative;
   z-index: 1;
-  padding: 26px 30px 28px;
-  max-width: 46rem;
+  min-width: 0;
+  max-width: 34rem;
 }
 
 .marketRoomEyebrow {
@@ -1003,12 +1127,13 @@
 
 @media (max-width: 900px) {
   .marketRoom {
-    min-height: 260px;
+    grid-template-columns: 1fr;
+    gap: clamp(1.6rem, 5vw, 2.4rem);
   }
-  .marketRoomBody {
-    padding: 20px 18px 22px;
+  .marketRoomStage {
+    perspective-origin: 50% 35%;
   }
   .marketRoomTitle {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
 }

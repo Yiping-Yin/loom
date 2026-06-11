@@ -95,11 +95,13 @@
   background: var(--ink-4);
 }
 
+/* Logo/institution chips are recessed lit paper — a clear step dimmer/cooler
+   than the warm-paper focal doc, capped ~#B9BDC4. */
 .page:global(.vd-home) :global(.vd-institution-mark--unsw),
 .page:global(.vd-home) :global(.vd-institution-mark--wqu),
 .page:global(.vd-home) :global(.vd-institution-mark--quantnet) {
   border-color: var(--line);
-  background: #DADDE2;
+  background: #B9BDC4;
 }
 
 .page:global(.vd-home) :global(.vd-institution-mark--claude) {
@@ -223,7 +225,7 @@
 }
 
 .page :global(.vd-citation-card:focus-visible) {
-  outline: 2px solid var(--gold-hi);
+  outline: 1.5px solid var(--gold-hi);
   outline-offset: 2px;
 }
 
@@ -262,7 +264,10 @@
 .evidenceSection,
 .flowSection,
 .sourceIndex {
-  width: min(100%, 118rem);
+  /* Canonical Archive content frame (~1320px), matching the /education,
+     /experience section pages + the /sources shelf so content left edges
+     align site-wide. */
+  width: min(100%, 82.5rem);
   margin: 0 auto;
   padding-right: clamp(1.15rem, 2.8vw, 2.8rem);
   padding-left: clamp(1.15rem, 2.8vw, 2.8rem);
@@ -284,12 +289,17 @@
   gap: 1.05rem;
 }
 
+/* Eyebrow hugs its title (~8px); the wider grid gap then opens title -> copy. */
+.heroCopy .sectionLabel {
+  margin-bottom: -0.4rem;
+}
+
 .sectionLabel {
   margin: 0;
   color: var(--text-3);
   font-family: var(--mono);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.18em;
   line-height: 1.2;
   text-transform: uppercase;
@@ -303,7 +313,8 @@
   font-size: clamp(3rem, 5.3vw, 6.4rem);
   font-weight: 500;
   letter-spacing: -0.005em;
-  line-height: 0.98;
+  /* Multi-line display headline breathes at 1.05-1.08 (never 1.0). */
+  line-height: 1.06;
 }
 
 .heroLead,
@@ -379,7 +390,7 @@
 .buttonLink:focus-visible,
 .textLink:focus-visible,
 .outcomeList a:focus-visible {
-  outline: 2px solid var(--gold-hi);
+  outline: 1.5px solid var(--gold-hi);
   outline-offset: 2px;
 }
 
@@ -532,10 +543,17 @@
 .sectionHeader,
 .sourceIndexHeader {
   display: grid;
-  gap: 0.6rem;
+  /* title -> subparagraph rhythm; eyebrow hugs its title tighter (below). */
+  gap: 1rem;
   max-width: 58rem;
   min-width: 0;
   margin-bottom: 1.1rem;
+}
+
+/* Eyebrow hugs its title (~8px); the wider grid gap opens title -> copy. */
+.sectionHeader .sectionLabel,
+.sourceIndexHeader .sectionLabel {
+  margin-bottom: -0.5rem;
 }
 
 .sectionHeader h2,

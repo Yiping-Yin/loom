@@ -62,14 +62,20 @@ export default function ColophonClient() {
           gap: '1.75rem',
         }}
       >
-        {/* Eyebrow — serif small-caps per Vellum chrome rule */}
+        {/* Eyebrow — serif small-caps per Vellum chrome rule. Reads as a
+            proper tracked eyebrow (small-caps + letter-spacing) so it carries
+            the site-wide eyebrow structure while keeping the editorial serif
+            character of this chrome page. */}
         <div
           className="loom-smallcaps"
           style={{
             fontFamily: 'var(--serif)',
-            fontSize: '0.88rem',
+            fontVariant: 'small-caps',
+            textTransform: 'lowercase',
+            fontSize: '0.82rem',
             fontWeight: 500,
-            color: 'var(--muted)',
+            letterSpacing: '0.22em',
+            color: 'var(--fg-secondary)',
           }}
         >
           Colophon

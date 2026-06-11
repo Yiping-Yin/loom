@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { AskYiping } from '../../components/verified-dossier/AskYiping';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
@@ -245,11 +245,54 @@ function ArtifactOutput({
   );
 }
 
+/* Restrained scroll-reveal: elements marked data-reveal fade + rise into place
+   once, staggered, when they enter the viewport. Fully gated on
+   prefers-reduced-motion (no observer, no transform) and degrades to visible if
+   IntersectionObserver is unavailable. The CSS owns the actual transition. */
+function useScrollReveal() {
+  const rootRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const targets = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal]'));
+    if (targets.length === 0) return;
+
+    const reduce =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduce || typeof IntersectionObserver === 'undefined') {
+      targets.forEach((el) => el.setAttribute('data-revealed', ''));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        // Lightly stagger any group entering together, so the page assembles
+        // rather than snapping in all at once.
+        const arriving = entries.filter((entry) => entry.isIntersecting);
+        arriving.forEach((entry, i) => {
+          const el = entry.target as HTMLElement;
+          el.style.transitionDelay = `${Math.min(i * 0.07, 0.21)}s`;
+          el.setAttribute('data-revealed', '');
+          obs.unobserve(el);
+        });
+      },
+      { rootMargin: '0px 0px -12% 0px', threshold: 0.08 },
+    );
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+  return rootRef;
+}
+
 export default function DigitalMeRoleOSClient() {
   const [selectedClaimId, setSelectedClaimId] = useState<string>(DIGITAL_ME_PROOF_PATH.claims[0].id);
   const [activeArtifactMode, setActiveArtifactMode] = useState<DigitalMeArtifactModeId>(
     DIGITAL_ME_PROOF_PATH.activeArtifactMode,
   );
+  const revealRoot = useScrollReveal();
 
   const selectedClaim = getDigitalMeClaimById(selectedClaimId) ?? DIGITAL_ME_PROOF_PATH.claims[0];
   const selectedEvidence = getDigitalMeEvidenceForClaim(selectedClaim.id);
@@ -258,7 +301,7 @@ export default function DigitalMeRoleOSClient() {
     DIGITAL_ME_ARTIFACT_MODES[0];
 
   return (
-    <main className={styles.roleOsPage} aria-labelledby="digital-me-title">
+    <main className={styles.roleOsPage} aria-labelledby="digital-me-title" ref={revealRoot}>
       <nav className={styles.nav} aria-label="Digital Me navigation">
         <a href="/loom">Loom</a>
         {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
@@ -272,7 +315,7 @@ export default function DigitalMeRoleOSClient() {
         ))}
       </nav>
 
-      <header className={styles.roleLens}>
+      <header className={styles.roleLens} data-reveal="">
         <p>Role Lens</p>
         <h1 id="digital-me-title">{DIGITAL_ME_QUANT_ROLE_LENS.label}</h1>
         <span>{DIGITAL_ME_QUANT_ROLE_LENS.thesis}</span>
@@ -285,7 +328,7 @@ export default function DigitalMeRoleOSClient() {
 
       <AskYiping />
 
-      <section className={styles.proofPath} aria-label="Digital Me proof path">
+      <section className={styles.proofPath} aria-label="Digital Me proof path" data-reveal="">
         <aside className={styles.claimRail} aria-label="Claim Engine">
           <p>Claim Engine</p>
           {DIGITAL_ME_PROOF_PATH.claims.map((claim) => (
@@ -367,15 +410,7 @@ export default function DigitalMeRoleOSClient() {
         </aside>
       </section>
 
-      <section className={styles.marketRoom} aria-label="Live Market Room — Beebook">
-        <img
-          className={styles.marketRoomShot}
-          src="/verified-sources/digital-me/optibook-market-lens.png"
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-        />
-        <span className={styles.marketRoomScrim} aria-hidden="true" />
+      <section className={styles.marketRoom} aria-label="Live Market Room — Beebook" data-reveal="">
         <div className={styles.marketRoomBody}>
           <p className={styles.marketRoomEyebrow}>Live Market Room · Beebook</p>
           <h2 className={styles.marketRoomTitle}>A working exchange, not a screenshot</h2>
@@ -402,11 +437,27 @@ export default function DigitalMeRoleOSClient() {
             </svg>
           </a>
         </div>
+        {/* Staged device: the live screen recedes into the room as a real lit
+            object — perspective parent, a framed screen that tilts back with a
+            diagonal glare and a grounding shadow beneath. */}
+        <div className={styles.marketRoomStage} aria-hidden="true">
+          <div className={styles.marketRoomDevice}>
+            <img
+              className={styles.marketRoomShot}
+              src="/verified-sources/digital-me/optibook-market-lens.png"
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+            />
+            <span className={styles.marketRoomScrim} aria-hidden="true" />
+          </div>
+        </div>
       </section>
 
       <section
         className={styles.foundationStrip}
         aria-label="Built from About, Education, and Experience"
+        data-reveal=""
       >
         <strong>Built from About, Education, and Experience</strong>
         <a href="/about">About foundation</a>

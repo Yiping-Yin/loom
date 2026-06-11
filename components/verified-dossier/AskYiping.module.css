@@ -41,8 +41,8 @@
 
   width: 100%;
   max-width: var(--role-shell, 1320px);
-  margin: clamp(1.4rem, 2.6vw, 2.2rem) auto 0;
-  padding: clamp(1.4rem, 2.6vw, 2.2rem) clamp(1.4rem, 2.6vw, 2.4rem);
+  margin: clamp(2.4rem, 4.5vw, 4rem) auto 0;
+  padding: clamp(1.8rem, 3.2vw, 2.8rem) clamp(1.8rem, 3.2vw, 3rem);
   border: 1px solid var(--ask-border);
   border-radius: 14px;
   background: var(--ask-glass);
@@ -240,6 +240,27 @@
     rgba(75, 197, 222, 0) 100%
   );
   box-shadow: 0 0 9px rgba(75, 197, 222, 0.35);
+  pointer-events: none;
+}
+
+/* The thread's landing node — a soft cyan bead on the weft beside the cited
+   sources heading, the visual tell that the answer's light terminates at its
+   proof. Sits on the left edge where the thread meets the Sources block. */
+.answerArea:has(.sources) .sourcesHeading {
+  position: relative;
+}
+
+.answerArea:has(.sources) .sourcesHeading::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(-1.05rem - 2.5px);
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ask-signal);
+  box-shadow: 0 0 9px rgba(75, 197, 222, 0.6);
+  transform: translateY(-50%);
   pointer-events: none;
 }
 

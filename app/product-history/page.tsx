@@ -8,6 +8,17 @@ import styles from './HistoryDossier.module.css';
 
 export const metadata = { title: 'Product System · Loom' };
 
+/**
+ * Source hrefs that resolve to a raw static asset (.pdf/.html file) or an
+ * external URL open in a new tab. A same-tab link to a PDF silently navigates
+ * away or triggers a download — it reads as "clicked, nothing happened." In-app
+ * routes (/knowledge/…) stay same-tab. */
+function externalTargetProps(href: string): { target?: '_blank'; rel?: 'noreferrer' } {
+  const isStaticFile = /\.(pdf|html?)(\?|#|$)/i.test(href);
+  const isExternal = /^https?:\/\//i.test(href);
+  return isStaticFile || isExternal ? { target: '_blank', rel: 'noreferrer' } : {};
+}
+
 const FEATURED_SOURCE_IDS: readonly VerifiedDossierArtifactId[] = [
   'about-doc',
   'econ-slides',
@@ -341,7 +352,7 @@ export default function ProductHistoryPage() {
         </div>
         <div className={styles.sourcePlate}>
           {featuredSources.slice(0, 2).map((source) => (
-            <a key={source.id} href={source.href}>
+            <a key={source.id} href={source.href} {...externalTargetProps(source.href)}>
               <span>
                 {source.thumbnailSrc ? (
                   <img src={source.thumbnailSrc} alt="" />
@@ -504,7 +515,12 @@ export default function ProductHistoryPage() {
         </header>
         <div className={styles.sourceRows}>
           {featuredSources.map((source) => (
-            <a key={source.id} className={styles.sourceRow} href={source.href}>
+            <a
+              key={source.id}
+              className={styles.sourceRow}
+              href={source.href}
+              {...externalTargetProps(source.href)}
+            >
               <span className={styles.sourceThumb}>
                 {source.thumbnailSrc ? (
                   <img src={source.thumbnailSrc} alt={`${source.label} thumbnail`} />

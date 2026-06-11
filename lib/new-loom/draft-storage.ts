@@ -481,6 +481,19 @@ function cleanOptionalString(value: string | undefined) {
   return next ? next : undefined;
 }
 
+// Corpus/reference fields are free text (titles, excerpts, bodies) that often
+// contain a bare `%` (e.g. "100%", "95% pass"). Passing those to
+// decodeURIComponent throws URIError: URI malformed, which would crash any
+// component that scores or normalizes the corpus. Decode when it is a valid
+// percent-escaped value, otherwise fall back to the raw string.
+function safeDecodeURIComponent(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 function cleanArtifactState(value: NewLoomDraftArtifactState | undefined): NewLoomDraftArtifactState | undefined {
   if (!value) return undefined;
   const targetId = cleanOptionalString(value.targetId);
@@ -618,7 +631,7 @@ function draftHrefExtension(href: string) {
   } catch {
     pathname = raw.split(/[?#]/)[0] ?? raw;
   }
-  const decoded = decodeURIComponent(pathname).toLowerCase();
+  const decoded = safeDecodeURIComponent(pathname).toLowerCase();
   const match = decoded.match(/\.([a-z0-9]+)$/);
   return match?.[1] ?? '';
 }
@@ -703,7 +716,7 @@ function normalizeSearch(value: string) {
 }
 
 function normalizeCorpusKey(value: string | undefined) {
-  return decodeURIComponent(value ?? '').trim().toLowerCase();
+  return safeDecodeURIComponent(value ?? '').trim().toLowerCase();
 }
 
 function corpusTokens(value: string) {
@@ -1990,7 +2003,7 @@ function corpusAliasScore(
 }
 
 function normalizeReferenceKey(value: string | undefined) {
-  return decodeURIComponent(value ?? '').trim().toLowerCase();
+  return safeDecodeURIComponent(value ?? '').trim().toLowerCase();
 }
 
 function slugifyReferenceKey(value: string | undefined) {

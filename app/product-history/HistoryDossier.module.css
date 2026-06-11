@@ -26,7 +26,13 @@
   gap: 1rem;
   align-items: center;
   min-height: 4.2rem;
-  padding: 0.78rem clamp(1.1rem, 3vw, 2.8rem);
+  /* Full-bleed glass bar, but its inner content (wordmark + links) resolves
+     to the SAME 82.5rem frame + same left/right inset as the body column:
+     padding = max(body inset, half the gutter outside the frame). So the
+     wordmark left-edge aligns to the hero content edge and the right-most
+     link aligns to the panel right edge (zero misalignment). */
+  padding-block: 0.78rem;
+  padding-inline: max(clamp(1.2rem, 4vw, 4.2rem), calc((100% - 82.5rem) / 2));
   border-bottom: 1px solid var(--history-border);
   background:
     linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
@@ -109,7 +115,10 @@
 .productLayers,
 .functionReuse,
 .sources {
-  width: min(100%, 106rem);
+  /* Archive-scene frame: site-wide section-page content shell is 82.5rem
+     (~1320px) so the wordmark left-edge and right-most nav element resolve
+     to the same column as the body content (zero misalignment). */
+  width: min(100%, 82.5rem);
   margin: 0 auto;
   padding-right: clamp(1.2rem, 4vw, 4.2rem);
   padding-left: clamp(1.2rem, 4vw, 4.2rem);
@@ -131,13 +140,17 @@
   gap: 1rem;
 }
 
+/* Canonical site-wide eyebrow: 11px / 0.09em / uppercase / weight 500 /
+   --text-2. The eyebrow hugs its title (the section-header grids below use
+   a tight ~8px gap); title-to-subparagraph rhythm opens wider via the
+   subparagraph margin. */
 .label {
   margin: 0;
-  color: var(--history-subtle);
-  font-family: var(--mono);
-  font-size: 0.72rem;
+  color: var(--history-muted);
+  font-family: var(--sans);
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.09em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -161,7 +174,10 @@
 .hero h1 {
   max-width: 12ch;
   font-size: clamp(4.2rem, 8vw, 9.4rem);
-  line-height: 0.9;
+  /* Large multi-line serif/display headline: lh 1.05 so ascenders and
+     descenders breathe instead of colliding. */
+  line-height: 1.05;
+  letter-spacing: -0.01em;
 }
 
 .lead {
@@ -343,7 +359,7 @@
 .sourcePrinciple > div:first-child {
   display: grid;
   align-content: center;
-  gap: 0.8rem;
+  gap: 0.5rem;
 }
 
 .sourcePrinciple h2 {
@@ -354,7 +370,7 @@
   font-size: clamp(2.4rem, 5vw, 5.8rem);
   font-weight: 560;
   letter-spacing: 0;
-  line-height: 0.92;
+  line-height: 1.05;
 }
 
 .sourcePlate {
@@ -604,14 +620,23 @@
 .sectionHeader {
   display: grid;
   align-content: start;
-  gap: 0.72rem;
+  /* Eyebrow hugs its title (~8px). Section headers that carry a lead
+     subparagraph open the title-to-paragraph gap wider via margin below. */
+  gap: 0.5rem;
+}
+
+/* A lead/intro paragraph following a title inside a header opens the
+   rhythm wider than the eyebrow hug (title-to-subparagraph ~16-20px). */
+.sectionHeader .lead,
+.sourcePrinciple > div:first-child p {
+  margin-top: 0.55rem;
 }
 
 .origin h2,
 .sectionHeader h2 {
   max-width: 16ch;
   font-size: clamp(2.15rem, 3.8vw, 4.6rem);
-  line-height: 0.98;
+  line-height: 1.06;
 }
 
 .originThreads {
@@ -654,7 +679,7 @@
 
 .earlyHeader,
 .earlyGrid {
-  width: min(100%, 106rem);
+  width: min(100%, 82.5rem);
   margin: 0 auto;
   padding-right: clamp(1.2rem, 4vw, 4.2rem);
   padding-left: clamp(1.2rem, 4vw, 4.2rem);
@@ -681,7 +706,7 @@
   font-size: clamp(2.6rem, 5.4vw, 6.2rem);
   font-weight: 560;
   letter-spacing: 0;
-  line-height: 0.92;
+  line-height: 1.05;
 }
 
 .earlyHeader p:last-child {
@@ -772,7 +797,7 @@
 .evolutionIntro > div {
   display: grid;
   align-content: start;
-  gap: 0.72rem;
+  gap: 0.5rem;
 }
 
 .evolutionIntro h2 {
@@ -783,7 +808,7 @@
   font-size: clamp(2.6rem, 5.4vw, 6.4rem);
   font-weight: 560;
   letter-spacing: 0;
-  line-height: 0.92;
+  line-height: 1.05;
 }
 
 .evolutionIntro p:last-child {
@@ -920,6 +945,12 @@
   gap: clamp(1.5rem, 4vw, 4rem);
   padding-top: clamp(2.3rem, 4vw, 4rem);
   padding-bottom: clamp(2.3rem, 4vw, 4rem);
+}
+
+/* The page closes on whitespace, never terminating hard under the last
+   row of evidence cards (generous Archive page-end rhythm). */
+.sources:last-child {
+  padding-bottom: clamp(4rem, 8vw, 7rem);
 }
 
 .ledger,

@@ -94,11 +94,14 @@
   background: var(--ink-4);
 }
 
+/* Logo/institution chips are recessed lit paper — a clear step dimmer/cooler
+   than the warm-paper focal doc, capped ~#B9BDC4 so they never out-shine the
+   portrait or the cyan signal. */
 .page:global(.vd-home) :global(.vd-institution-mark--unsw),
 .page:global(.vd-home) :global(.vd-institution-mark--wqu),
 .page:global(.vd-home) :global(.vd-institution-mark--quantnet) {
   border-color: var(--line);
-  background: #DADDE2;
+  background: #B9BDC4;
 }
 
 .page:global(.vd-home) :global(.vd-institution-mark--about) {
@@ -121,7 +124,10 @@
 .featuredSection,
 .referenceSection,
 .librarySection {
-  width: min(100%, 118rem);
+  /* Canonical Archive content frame (~1320px), matching the /education,
+     /experience section pages so the wordmark + content left edges align
+     site-wide. */
+  width: min(100%, 82.5rem);
   margin: 0 auto;
   padding-right: clamp(1.25rem, 3vw, 3rem);
   padding-left: clamp(1.25rem, 3vw, 3rem);
@@ -138,8 +144,15 @@
 
 .heroCopy {
   display: grid;
+  /* title -> subparagraph rhythm; the eyebrow hugs its title tighter (below). */
   gap: 1.1rem;
   min-width: 0;
+}
+
+/* Eyebrow hugs its title (~8px); the wider grid gap then opens title -> copy. */
+.heroCopy .sectionLabel,
+.sectionHeader .sectionLabel {
+  margin-bottom: -0.42rem;
 }
 
 .sectionLabel {
@@ -147,7 +160,7 @@
   color: var(--text-3);
   font-family: var(--mono);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.18em;
   line-height: 1.2;
   text-transform: uppercase;
@@ -161,7 +174,8 @@
   font-size: clamp(3.1rem, 5vw, 6.1rem);
   font-weight: 500;
   letter-spacing: -0.005em;
-  line-height: 0.98;
+  /* Multi-line display headlines breathe at 1.05-1.08 (never 1.0). */
+  line-height: 1.06;
 }
 
 .hero p,
@@ -245,7 +259,7 @@
 .sectionHeader h2 {
   max-width: 14ch;
   font-size: clamp(2rem, 3.2vw, 3.55rem);
-  line-height: 1.02;
+  line-height: 1.06;
 }
 
 .sectionHeader p:not(.sectionLabel) {
@@ -284,7 +298,7 @@
 }
 
 .documentGrid :global(.vd-document-card:focus-visible) {
-  outline: 2px solid var(--gold-hi);
+  outline: 1.5px solid var(--gold-hi);
   outline-offset: 2px;
 }
 
@@ -437,7 +451,7 @@
 }
 
 .referenceRow:focus-visible {
-  outline: 2px solid var(--gold-hi);
+  outline: 1.5px solid var(--gold-hi);
   outline-offset: 2px;
 }
 
@@ -524,7 +538,7 @@
 .groupForm button:focus-visible,
 .groupActions button:focus-visible,
 .sourceTools button:focus-visible {
-  outline: 2px solid var(--gold-hi);
+  outline: 1.5px solid var(--gold-hi);
   outline-offset: 2px;
 }
 
@@ -585,7 +599,7 @@
   color: var(--text-3);
   font-family: var(--mono);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -664,7 +678,7 @@
 }
 
 .sourceLink:focus-visible {
-  outline: 2px solid var(--gold-hi);
+  outline: 1.5px solid var(--gold-hi);
   outline-offset: 3px;
   border-radius: 6px;
 }

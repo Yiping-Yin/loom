@@ -1583,11 +1583,13 @@ html {
 
 /* type cue = a faint coloured TEXT label only (desaturated toward the
    cool-black palette), never a filled rectangle */
-.vd-file-badge--pdf .vd-file-badge__icon { color: #C9817C; }
+/* type cues desaturated + cooled ~10-15% so PDF/HTML/PPT marks sit at the page
+   temperature against the cool-black ramp (still distinguishable, quieter) */
+.vd-file-badge--pdf .vd-file-badge__icon { color: #C28C88; }
 .vd-file-badge--word .vd-file-badge__icon { color: #8FA6C7; }
-.vd-file-badge--ppt .vd-file-badge__icon { color: #C99A82; }
+.vd-file-badge--ppt .vd-file-badge__icon { color: #BF9789; }
 .vd-file-badge--excel .vd-file-badge__icon { color: #82B89C; }
-.vd-file-badge--html .vd-file-badge__icon { color: #C9967C; }
+.vd-file-badge--html .vd-file-badge__icon { color: #BFA089; }
 .vd-file-badge--markdown .vd-file-badge__icon,
 .vd-file-badge--text .vd-file-badge__icon { color: #9BA3AE; }
 
@@ -18651,7 +18653,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-section-glass: rgba(16, 20, 26, 0.55);
   --vd-section-glass-nav: rgba(10, 13, 17, 0.6);
   --vd-section-glass-border: var(--line);
-  --vd-section-glass-shadow: var(--keylight), var(--float-2), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  /* (removed the unused --vd-section-glass-shadow token: it encoded the deeper
+     float-2 (0 24px 60px), but the Archive nav intentionally renders the calmer
+     0 14px 36px float hardcoded below. Dead token removed to avoid drift.) */
   --vd-section-shell: 82.5rem; /* ~1320px centered content shell */
   width: 100%;
   min-height: 100vh;
@@ -18706,8 +18710,13 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   padding-bottom: 0;
   color: var(--vd-section-ink);
   font-family: var(--vd-section-serif);
-  font-size: 2rem;
+  /* slightly smaller so the large-serif vs small-sans height delta shrinks, and
+     a small upward optical nudge so the serif visual midline matches the link
+     row midline (the serif baseline otherwise sits noticeably lower) */
+  font-size: 1.8rem;
   font-weight: 600;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .vd-section-page__nav a:hover {
@@ -18737,8 +18746,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__hero {
   display: grid;
-  gap: 0.8rem;
-  padding: clamp(2.4rem, 6vw, 5rem) 0 clamp(1.5rem, 4vw, 3rem);
+  /* split the rhythm per global law: the eyebrow hugs the h1 (tight 0.4rem) and
+     the descriptive line opens wider (1rem) so coupling reads correctly; a
+     single uniform gap flattened the hierarchy */
+  gap: 0;
+  padding: clamp(2.8rem, 6.5vw, 5.5rem) 0 clamp(1.5rem, 4vw, 3rem);
   border-bottom: 1px solid var(--vd-section-hairline);
 }
 
@@ -18755,14 +18767,15 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__hero h1 {
   max-width: 22ch;
-  margin: 0;
+  /* eyebrow hugs the title */
+  margin: 0.4rem 0 0;
   font-family: var(--vd-section-serif);
   font-size: clamp(2.55rem, 6vw, 5.35rem);
   font-weight: 600;
-  /* a touch more air between lines for the large multi-line serif (was 0.96
-     which crowded ascenders/descenders line-to-line); cap the measure so it
-     wraps to balanced lines */
-  line-height: 1.0;
+  /* more air between lines for the large multi-line serif (was 1.0 which let
+     line-1 descenders nearly touch line-2 caps); cap the measure so it wraps to
+     balanced lines */
+  line-height: 1.06;
   letter-spacing: 0;
   text-wrap: balance;
   color: var(--vd-section-ink);
@@ -18770,6 +18783,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__hero span {
   max-width: 52rem;
+  /* the descriptive line breathes wider than the eyebrow→title coupling */
+  margin-top: 1rem;
   color: var(--vd-section-muted);
   font-size: clamp(1rem, 1.5vw, 1.18rem);
   line-height: 1.55;
@@ -18790,14 +18805,25 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__grid {
   display: grid;
   gap: clamp(0.9rem, 1.6vw, 1.3rem);
+  /* row 1 is the content-height band-label row (so the eyebrow hugs its cards);
+     card rows fall to grid-auto-rows below */
+  grid-template-rows: max-content;
   grid-auto-rows: 1fr;
   padding: clamp(1.2rem, 3vw, 2.2rem) 0;
   border-bottom: 1px solid var(--vd-section-hairline);
 }
 
-/* Experience: two 3-item record sets (work / projects) — stay 3-up */
+/* Experience: two 3-item record sets (work / projects) — stay 3-up. Cards size
+   to their own content (honest ragged baseline for the quiet evidence-first
+   Archive); a short card no longer gets stretched to the tallest sibling with
+   large trailing dead space. */
 .vd-section-page__list {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: auto;
+  /* cards align to the top of their row and size to their own content (the
+     band-label keeps its own align-self:start), so a short card no longer
+     stretches to the tallest sibling and leaves a large trailing void */
+  align-items: start;
 }
 
 /* deliberate gap between two adjacent evidence groups (work vs projects) so
@@ -18899,9 +18925,12 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   transform: translateY(-2px);
 }
 
+/* calmed a11y focus ring per global law: a thin 1.5px gold-hi hairline with a
+   larger offset + a soft outer glow, not a hard 2px solid gold rectangle */
 .vd-section-page__grid a:focus-visible {
-  outline: 2px solid var(--gold-hi);
-  outline-offset: 3px;
+  outline: 1.5px solid var(--gold-hi);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.18);
 }
 
 /* organisation / institution = primary luminance tier */
@@ -18922,8 +18951,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* experience-entry luminance ladder (structure carried by luminance, not a
    flat grey block): role primary, meta mono faint tabular, summary secondary,
    highlights smaller with a faint leading marker. */
+/* role demoted to secondary luminance so the org(primary)→role(secondary)→
+   meta(faint)→summary ladder reads (both were at --text-1, flattening it) */
 .vd-section-page__list .vd-entry-role {
-  color: var(--text-1);
+  color: var(--text-2);
   font-size: 0.9rem;
   font-weight: 500;
   line-height: 1.3;
@@ -18989,9 +19020,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__list article > a:focus-visible {
-  outline: 2px solid var(--gold-hi);
-  outline-offset: 3px;
+  outline: 1.5px solid var(--gold-hi);
+  outline-offset: 4px;
   border-radius: 8px;
+  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.18);
 }
 
 .vd-section-page__foundations {
@@ -19163,7 +19195,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(0.7rem, 1.3vw, 1rem);
-  grid-auto-rows: 5.5rem;
+  /* row 1 = content-height band-label row; folder rows raised to 6rem so the
+     few two-line metas (e.g. COMM 3030) keep ~equal bottom padding to the
+     single-line cards instead of crowding the card edge */
+  grid-template-rows: max-content;
+  grid-auto-rows: 6rem;
   padding: clamp(1.2rem, 3vw, 2rem) 0;
   border-bottom: 1px solid var(--vd-section-hairline);
 }
@@ -19195,8 +19231,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__course-strip a:focus-visible {
-  outline: 2px solid var(--gold-hi);
-  outline-offset: 3px;
+  outline: 1.5px solid var(--gold-hi);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.18);
 }
 
 .vd-section-page__course-strip strong {
@@ -19244,8 +19281,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__artifact-strip > a:focus-visible {
-  outline: 2px solid var(--gold-hi);
-  outline-offset: 3px;
+  outline: 1.5px solid var(--gold-hi);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.18);
 }
 
 /* named band eyebrow — same standard as the hero eyebrow (mono, 0.72rem,
@@ -19253,6 +19291,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    in every layout (grid track / flex strip). */
 .vd-section-page__band-label {
   grid-column: 1 / -1;
+  /* the label must NOT inherit the card grid's 1fr / 5.5rem auto-row track,
+     which would stretch it into a huge dead void above the cards. Pin it to the
+     content-height header row (defined via grid-template-rows below) and top-
+     align it, so the gap from label to first card is ~12-16px, never a stretched
+     empty row. */
+  grid-row: 1;
+  align-self: start;
+  height: max-content;
   flex-basis: 100%;
   margin: 0 0 0.4rem;
   color: var(--text-3);
@@ -19310,16 +19356,25 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   height: 2.1rem;
   min-width: 0;
   max-width: max-content;
-  border-radius: 8px;
-  background: #DADDE2;
+  border-radius: 9px;
+  /* institution chips knocked a step dimmer/cooler per the paper-surface law
+     (~#B9BDC4, was near-white #DADDE2) so they read as recessed lit paper, never
+     the brightest object competing with the portrait/cyan signal */
+  background: #B9BDC4;
   border-color: var(--vd-section-border);
-  padding: 0.26rem;
+  padding: 0.22rem;
+  overflow: hidden;
 }
 
-/* logos render contained (one mark system); the about chip is a portrait, so
-   it stays cover-cropped inside its round chip */
+/* one coherent mark system: contained logos, and the saturated full-bleed
+   app-icon PNGs (QuantNet/Claude/WQU) are desaturated toward the cool palette +
+   round-clipped to the chip radius so they stop reading as a double-framed
+   "app icon in a frame". The about chip is a portrait, so it stays
+   cover-cropped inside its round chip. */
 .vd-section-page .vd-institution-mark img {
   object-fit: contain;
+  border-radius: 6px;
+  filter: saturate(0.78);
 }
 
 .vd-section-page .vd-institution-mark--about {
@@ -19327,8 +19382,12 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border-color: var(--vd-section-border);
 }
 
+/* the about chip is the portrait (evidence, not a brand icon): full-bleed
+   round, no desaturation/round-clip from the icon treatment above */
 .vd-section-page .vd-institution-mark--about img {
   object-fit: cover;
+  border-radius: 999px;
+  filter: none;
 }
 
 .vd-section-page__grid a:hover strong,
@@ -19373,6 +19432,88 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   ARCHIVE DIMENSIONAL STAGING + ATMOSPHERE (calm tilt+glow)
+   The Archive scene is the still register, so the staging is restrained:
+   the evidence shelves sit on a faint lit atmosphere (deep radial glow +
+   edge vignette) instead of flat black, each card recedes on a shared
+   perspective stage with a low-opacity screen-glare sweep + grounding
+   float, and the bands settle in with a quiet staggered reveal.
+   Additive only — no class renames, no layout restructuring.
+   ============================================================ */
+/* page atmosphere: a deep, barely-there radial glow under the shelves + a
+   vignette closing the page edges, so the objects float in lit space. Sits
+   behind everything (z-index:0) and never intercepts clicks. */
+.vd-section-page::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(80% 55% at 50% 28%,rgba(75,197,222,0.05),transparent 60%),
+    radial-gradient(70% 60% at 82% 96%,rgba(200,162,74,0.035),transparent 62%),
+    radial-gradient(140% 120% at 50% 42%,transparent 60%,rgba(0,0,0,0.4) 100%)}
+.vd-section-page > *{position:relative;z-index:1}
+
+/* each evidence-shelf row is a perspective stage; the cards within recede */
+.vd-section-page__grid,
+.vd-section-page__list,
+.vd-section-page__course-strip{perspective:2000px;perspective-origin:50% 0}
+
+/* the staged objects: a calm tilt back + recede, grounded by a deeper cast
+   float; transform-origin low so they pivot off the desk. The band-label is
+   excluded (it spans the full row as a flat eyebrow). */
+.vd-section-page__grid a,
+.vd-section-page__list article,
+.vd-section-page__course-strip a{position:relative;
+  transform:rotateX(4deg) translateY(-1px);transform-origin:50% 92%}
+/* grounding: deepen the cast float beneath the tilted cards */
+.vd-section-page__grid a,
+.vd-section-page__list article{box-shadow:
+  inset 0 1px 0 rgba(255,255,255,0.06),
+  inset 0 -1px 0 rgba(0,0,0,0.42),
+  0 26px 50px -16px rgba(0,0,0,0.62),
+  0 6px 14px rgba(0,0,0,0.4)}
+/* screen glare — a low-opacity diagonal specular sweep over the card glass,
+   following the tilt; screen blend lifts highlights only */
+.vd-section-page__grid a::after,
+.vd-section-page__list article::after,
+.vd-section-page__course-strip a::after{content:"";position:absolute;inset:0;
+  pointer-events:none;border-radius:inherit;mix-blend-mode:screen;
+  background:linear-gradient(118deg,rgba(255,255,255,0.12) 0%,rgba(255,255,255,0.045) 16%,transparent 46%)}
+/* hover composes with the tilt: flatten slightly + lift toward viewer */
+.vd-section-page__grid a:hover,
+.vd-section-page__course-strip a:hover{
+  transform:rotateX(2.5deg) translateY(-5px)}
+.vd-section-page__grid a:hover{box-shadow:
+  inset 0 1px 0 rgba(255,255,255,0.09),
+  inset 0 -1px 0 rgba(0,0,0,0.46),
+  inset 0 0 0 1px rgba(200,162,74,0.22),
+  0 34px 62px -16px rgba(0,0,0,0.68),
+  0 8px 18px rgba(0,0,0,0.46)}
+
+/* restrained entrance: hero eases in, then each evidence band rises in a
+   quiet stagger (supports, never spectacle) */
+@keyframes vd-section-rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.vd-section-page__hero{animation:vd-section-rise .55s cubic-bezier(.2,.7,.25,1) both}
+.vd-section-page__grid,
+.vd-section-page__list,
+.vd-section-page__course-strip,
+.vd-section-page__artifact-strip{animation:vd-section-rise .5s cubic-bezier(.2,.7,.25,1) both}
+.vd-section-page > section:nth-of-type(1){animation-delay:.1s}
+.vd-section-page > section:nth-of-type(2){animation-delay:.2s}
+.vd-section-page > section:nth-of-type(3){animation-delay:.3s}
+.vd-section-page > section:nth-of-type(4){animation-delay:.4s}
+
+@media (prefers-reduced-motion:reduce){
+  .vd-section-page__hero,
+  .vd-section-page__grid,
+  .vd-section-page__list,
+  .vd-section-page__course-strip,
+  .vd-section-page__artifact-strip{animation:none}
+  /* keep the dimensional staging static (no tilt animation) but flat so
+     reduced-motion users get a calm, un-transformed read */
+  .vd-section-page__grid a,
+  .vd-section-page__list article,
+  .vd-section-page__course-strip a{transform:none;transition:none}
 }
 
 @media (max-width: 980px) {
@@ -22492,6 +22633,13 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --lcv-glass-border:var(--line);
   --lcv-glass-shadow:var(--keylight),var(--float-2),inset 0 -1px 0 rgba(0,0,0,0.35);
   --lcv-shell-max:1440px;
+  /* the shared horizontal inset of the body content column: the rail's left
+     text-column padding and the ledger's right panel padding are this same
+     clamp, so nav/footer chrome must resolve to gutter + this inset to align
+     the wordmark-left to the portrait-left and the avatar-right to the
+     asset-panel-right (zero misalignment). */
+  --lcv-col-pad:clamp(28px,4vw,48px);
+  --lcv-edge:max(var(--lcv-col-pad),calc((100% - var(--lcv-shell-max)) / 2 + var(--lcv-col-pad)));
   display:block; color:var(--lcv-ink);
   /* deepest cool-black desk with a barely-there cool glow top-center (key-light spill) */
   background:radial-gradient(120% 80% at 50% -8%,var(--ink-2) 0%,var(--lcv-bg) 55%) var(--lcv-bg);
@@ -22505,7 +22653,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 /* nav — full-bleed glass chrome, inner content capped + centered */
 .lcv-nav{display:flex;align-items:center;justify-content:space-between;
-  padding:24px max(clamp(28px,4vw,48px),calc((100% - var(--lcv-shell-max)) / 2));
+  padding:24px var(--lcv-edge);
   border-bottom:1px solid var(--lcv-glass-border);
   background:
     linear-gradient(155deg,rgba(255,255,255,0.04),transparent 46%),
@@ -22535,9 +22683,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    full-height border-right crossed every row hairline into ugly T-seams). */
 /* rail top padding matches the ledger's first-row top padding (28px) so the
    portrait top and the first row number/asset share one y reference line */
-.lcv-rail{padding:28px clamp(28px,3vw,44px) 40px clamp(28px,4vw,48px);
+.lcv-rail{padding:44px clamp(28px,3vw,44px) 40px var(--lcv-col-pad);
   position:sticky;top:92px;align-self:start;height:fit-content}
-.lcv-ledger{padding:0 clamp(28px,4vw,48px) 0 0}
+.lcv-ledger{padding:44px var(--lcv-col-pad) 0 0}
 
 /* memberships — real affiliations fill the rail below the pull-quote */
 .lcv-members{list-style:none;display:flex;flex-direction:column;gap:13px;margin:0;padding:0}
@@ -22563,6 +22711,12 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-links{display:flex;flex-direction:column;gap:18px}
 .lcv-links a{display:flex;align-items:center;gap:14px;font-size:16px;color:var(--lcv-ink);transition:color .15s}
 .lcv-links a:hover{color:var(--lcv-ink);opacity:.82}
+/* the Website profile link resolves to this very site root; when it IS the
+   current page mark it as a deliberate "you are here" link (gold hairline,
+   matches .lcv-nav__links a[aria-current]) instead of a silent no-op click */
+.lcv-links a[aria-current="page"]{color:var(--lcv-ink2);cursor:default}
+.lcv-links a[aria-current="page"] .lcv-link-icon{fill:var(--lcv-gold)}
+.lcv-links a[aria-current="page"][fill="none"] .lcv-link-icon,.lcv-links a[aria-current="page"] .lcv-link-icon[fill="none"]{stroke:var(--lcv-gold)}
 .lcv-link-icon{width:20px;height:20px;flex:0 0 auto;fill:var(--lcv-ink);stroke:none}
 .lcv-link-icon[fill="none"]{stroke:var(--lcv-ink);stroke-width:1.6;fill:none}
 .lcv-link-icon--linkedin{fill:var(--lcv-ink)}
@@ -22576,11 +22730,21 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* ledger rows — entire row is one link; two columns (label block + asset). */
 /* align-items:start so every row's number + asset begin on one shared top
    reference line (the dossier baseline grid); taller rows grow downward only */
-.lcv-row{display:grid;grid-template-columns:248px minmax(0,1fr);gap:32px;
-  align-items:start;padding:28px 0;border-bottom:1px solid var(--lcv-line);
-  color:inherit;transition:border-color .15s}
+/* expansive Optiver-grade rhythm between evidence rows — whitespace is a
+   feature; the dossier breathes instead of stacking tight */
+.lcv-row{display:grid;grid-template-columns:248px minmax(0,1fr);gap:clamp(36px,4vw,64px);
+  align-items:start;padding:clamp(40px,4.4vw,68px) 0;border-bottom:1px solid var(--lcv-line);
+  color:inherit;scroll-margin-top:108px;transition:border-color .15s,background-color .2s ease}
 .lcv-row:last-child{border-bottom:0}
-.lcv-row:hover{border-color:var(--lcv-line2)}
+/* hover: a clear lit-surface response — a faint top-left specular wash lifts
+   the whole row a half-step out of the desk (luminance, never colour), plus the
+   hairline firms and the asset/open-affordance respond below. Negative-margin
+   inset padding keeps the content grid aligned while the wash bleeds to the
+   edges. */
+.lcv-row:hover{border-color:var(--lcv-line2);
+  background:
+    linear-gradient(118deg,rgba(255,255,255,0.028),transparent 38%),
+    linear-gradient(180deg,rgba(30,36,45,0.32),rgba(22,27,34,0))}
 .lcv-row__head{padding-top:0;display:flex;flex-direction:column;align-items:flex-start}
 /* row numbers: quiet mono ink, NOT gold (watch-hand discipline) */
 .lcv-row__num{font-family:var(--lcv-mono);font-size:13px;color:var(--lcv-ink2);display:block;margin-bottom:12px}
@@ -22611,6 +22775,84 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     0 14px 36px rgba(0,0,0,0.5);
   overflow:hidden}
 
+/* ============================================================
+   DIMENSIONAL STAGING — every product preview is a real lit object
+   standing on the desk, not a flat card in a void. The asset column is
+   the perspective stage; an atmospheric glow floats behind the object and
+   a diagonal specular glare sweeps the glass. Calm tilt for the still
+   Cover scene; the Digital-Me terminal gets a touch more depth.
+   ============================================================ */
+/* the asset cell is the stage: deep perspective so children recede; a
+   faint cyan+gold radial atmosphere sits behind the object so it floats in
+   lit space (not pasted on flat black), and a vignette closes the edges. */
+.lcv-row__asset{position:relative;perspective:1900px;perspective-origin:50% 22%}
+.lcv-row__asset::before{content:"";position:absolute;inset:-6% -4% -14%;z-index:0;
+  pointer-events:none;border-radius:22px;
+  background:
+    radial-gradient(120% 86% at 26% 18%,rgba(75,197,222,0.07),transparent 56%),
+    radial-gradient(96% 84% at 88% 96%,rgba(200,162,74,0.05),transparent 60%),
+    radial-gradient(150% 130% at 50% 46%,transparent 56%,rgba(0,0,0,0.42) 100%)}
+/* the panel itself is the staged object: tilt back + recede on the stage,
+   grounded by a long key-light float; transform-origin low so it pivots off
+   the desk. The glare ::after lives on .lcv-panel below. */
+.lcv-row__asset>.lcv-panel,
+.lcv-row__asset>.lcv-exp{position:relative;z-index:1;
+  transform:rotateX(7deg) rotateZ(-0.5deg) translateY(-2px);
+  transform-origin:50% 82%;
+  transition:transform .4s cubic-bezier(.2,.7,.25,1),box-shadow .4s ease}
+/* grounding: deepen the float beneath the tilted object so it casts onto the
+   desk (panels already carry edge-light; this is the cast shadow) */
+.lcv-row__asset>.lcv-panel{box-shadow:
+  inset 0 1px 0 rgba(255,255,255,0.07),
+  inset 0 -1px 0 rgba(0,0,0,0.45),
+  0 30px 60px -18px rgba(0,0,0,0.7),
+  0 8px 18px rgba(0,0,0,0.45)}
+/* screen glare — a low-opacity diagonal specular sweep over the glass,
+   following the tilt; screen blend so it only lifts highlights */
+.lcv-row__asset>.lcv-panel::after{content:"";position:absolute;inset:0;z-index:3;
+  pointer-events:none;border-radius:inherit;mix-blend-mode:screen;
+  background:linear-gradient(118deg,rgba(255,255,255,0.16) 0%,rgba(255,255,255,0.06) 16%,transparent 46%)}
+/* hover: the object lifts a hair toward the viewer (luminance + flatten the
+   tilt slightly), calm and quick */
+.lcv-row:hover .lcv-row__asset>.lcv-panel,
+.lcv-row:hover .lcv-row__asset>.lcv-exp{
+  transform:rotateX(5deg) rotateZ(-0.3deg) translateY(-6px)}
+.lcv-row:hover .lcv-row__asset>.lcv-panel{box-shadow:
+  inset 0 1px 0 rgba(255,255,255,0.09),
+  inset 0 -1px 0 rgba(0,0,0,0.5),
+  0 40px 74px -18px rgba(0,0,0,0.74),
+  0 10px 22px rgba(0,0,0,0.5)}
+/* home Experience cluster (.lcv-exp = a tilted pair of cards): match the staging
+   the .lcv-panel previews get — a single screen-blend glare sweep across the pair
+   (pointer-events:none so the card links/badges stay clickable) + a deepened cast
+   on each card so the cluster grounds onto the desk instead of reading flat */
+.lcv-row__asset>.lcv-exp::after{content:"";position:absolute;inset:0;z-index:3;
+  pointer-events:none;border-radius:10px;mix-blend-mode:screen;
+  background:linear-gradient(118deg,rgba(255,255,255,0.16) 0%,rgba(255,255,255,0.06) 16%,transparent 46%)}
+.lcv-row__asset>.lcv-exp>.lcv-exp__card{box-shadow:
+  inset 0 1px 0 rgba(255,255,255,0.07),
+  inset 0 -1px 0 rgba(0,0,0,0.45),
+  0 30px 60px -18px rgba(0,0,0,0.7),
+  0 8px 18px rgba(0,0,0,0.45)}
+.lcv-row:hover .lcv-row__asset>.lcv-exp>.lcv-exp__card{box-shadow:
+  inset 0 1px 0 rgba(255,255,255,0.09),
+  inset 0 -1px 0 rgba(0,0,0,0.5),
+  0 40px 74px -18px rgba(0,0,0,0.74),
+  0 10px 22px rgba(0,0,0,0.5)}
+
+/* Digital-Me terminal reads full-strength: a touch more tilt + a deeper
+   atmosphere so the multi-panel dashboard sits like a physical terminal */
+.lcv-row--digital-me .lcv-row__asset{perspective:1650px}
+.lcv-row--digital-me .lcv-row__asset::before{
+  background:
+    radial-gradient(120% 90% at 24% 16%,rgba(75,197,222,0.1),transparent 56%),
+    radial-gradient(96% 86% at 90% 98%,rgba(200,162,74,0.05),transparent 60%),
+    radial-gradient(150% 130% at 50% 46%,transparent 52%,rgba(0,0,0,0.46) 100%)}
+.lcv-row--digital-me .lcv-row__asset>.lcv-panel{
+  transform:rotateX(9deg) rotateZ(-0.6deg) translateY(-2px)}
+.lcv-row:hover.lcv-row--digital-me .lcv-row__asset>.lcv-panel{
+  transform:rotateX(6.5deg) rotateZ(-0.35deg) translateY(-6px)}
+
 /* about: CV doc — a real paper sheet on the recessed desk: warm-neutral
    stock, slight top-tilt perspective, soft float shadow from the key light */
 .lcv-about{display:grid;grid-template-columns:minmax(0,1fr) 188px}
@@ -22621,11 +22863,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    faint top-left specular glare + soft grounding float complete the staging */
 .lcv-cv__sheet{position:relative;width:74%;margin-top:26px;
   background:
-    linear-gradient(125deg,rgba(255,255,255,0.35) 0%,rgba(255,255,255,0.04) 22%,transparent 46%),
-    linear-gradient(180deg,#e9e6df,#dcd9d1);
+    linear-gradient(125deg,rgba(255,255,255,0.3) 0%,rgba(255,255,255,0.035) 22%,transparent 46%),
+    linear-gradient(180deg,#e3e0d8,#d4d1c9);
   border-radius:3px 3px 0 0;
   padding:22px 26px;
-  box-shadow:0 14px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.4);
+  box-shadow:0 14px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.28);
   display:flex;flex-direction:column;gap:7px;
   transform:perspective(1200px) rotateX(3.5deg) rotateY(-1deg);transform-origin:50% 0}
 .lcv-cv__sheet::before{content:"";position:absolute;top:-12px;left:14px;right:-14px;height:30px;
@@ -22643,22 +22885,26 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-about__meta b{font-size:13.5px;font-weight:500;line-height:1.35}
 .lcv-about__meta small{font-size:11.5px;color:var(--lcv-ink3);line-height:1.5;margin-top:6px}
 
-/* education */
+/* education — one composition pattern: every cell is a single centered logo on
+   one uniform chip (no 3+1 wordmark split). Equal optical footprint across all
+   four; the chip recedes as cool lit paper so it never out-shines the portrait
+   or the cyan signal. */
 .lcv-edu__logos{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--lcv-line2)}
-.lcv-edu__logos span{display:flex;align-items:center;justify-content:center;gap:11px;
-  padding:24px 8px;border-right:1px solid var(--lcv-line2)}
+.lcv-edu__logos span{display:flex;align-items:center;justify-content:center;
+  padding:26px 10px;border-right:1px solid var(--lcv-line2)}
 .lcv-edu__logos span:last-child{border-right:0}
-/* uniform logo chip behind every mark — equal optical box, cooler/dimmer
-   desaturated backing (~#DADDE2, not warm beige) so the strip stops being a
-   row of bright white tiles; the navy QuantNet/WQU wordmarks still read. Each
-   chip is a fixed square footprint so the four cells carry equal visual mass. */
-.lcv-edu__logos img{height:24px;width:auto;max-width:46px;object-fit:contain;
-  background:#DADDE2;border-radius:6px;padding:6px 8px;box-sizing:content-box;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.5),0 1px 3px rgba(0,0,0,0.3)}
-.lcv-edu__logos .lcv-edu__wide{max-width:62px}
-.lcv-edu__logos b{font-size:15px;font-weight:600;line-height:1}
-.lcv-edu__logos b small{display:block;font-family:var(--lcv-serif);font-size:9px;
-  letter-spacing:.2em;color:var(--lcv-ink2);font-weight:400}
+/* uniform logo chip: equal optical box, cooler/dimmer desaturated backing
+   (~#B9BDC4, was near-white #DADDE2) with a softened inset highlight so the
+   strip recedes as lit paper on the desk and never out-shines the portrait or
+   the cyan data signal. Fixed height = equal visual mass; the wide QuantNet
+   wordmark gets a wider cap so it stays legible at the same chip height. */
+.lcv-edu__logos img{height:26px;width:auto;max-width:50px;object-fit:contain;
+  background:#B9BDC4;border-radius:6px;padding:7px 10px;box-sizing:content-box;
+  /* slight desaturation so the full-bleed app-icon PNGs (e.g. Claude) don't
+     inject a saturated colour tile into the luminance-led cover */
+  filter:saturate(0.82);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),0 1px 3px rgba(0,0,0,0.32)}
+.lcv-edu__logos .lcv-edu__wide{height:18px;max-width:104px}
 .lcv-edu__chips{display:grid;grid-template-columns:repeat(4,1fr)}
 .lcv-edu__chips>div{padding:16px;border-right:1px solid var(--lcv-line2)}
 .lcv-edu__chips>div:last-child{border-right:0}
@@ -22722,17 +22968,21 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    than being the brightest surfaces on the cover */
 .lcv-dm__src{width:46px;height:60px;border-radius:3px;
   background:
-    linear-gradient(125deg,rgba(255,255,255,0.32) 0%,rgba(255,255,255,0.03) 24%,transparent 48%),
-    linear-gradient(180deg,#e9e6df,#d4d1c9);
-  box-shadow:0 6px 16px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.35)}
+    linear-gradient(125deg,rgba(255,255,255,0.2) 0%,rgba(255,255,255,0.02) 24%,transparent 48%),
+    linear-gradient(180deg,#cdcabf,#b9b6ad);
+  box-shadow:0 6px 16px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.2)}
 /* +N more: a single quiet count on one centered line, baseline-aligned to the
    thumbnail stack (was a cramped 30px two-line afterthought) */
 .lcv-dm__more{font-size:11px;line-height:1.3;color:var(--lcv-ink3);
   align-self:center;text-align:center;white-space:nowrap}
-.lcv-dm__table{border-collapse:collapse;font-size:10.5px;width:100%}
-.lcv-dm__table th{font-family:var(--lcv-mono);font-size:9px;letter-spacing:.06em;color:var(--lcv-ink3);
+.lcv-dm__table{border-collapse:collapse;font-size:11px;width:100%}
+.lcv-dm__table th{font-family:var(--lcv-mono);font-size:9.5px;letter-spacing:.06em;color:var(--lcv-ink3);
   text-align:left;padding:5px 8px;border:1px solid var(--lcv-line2);font-weight:400}
 .lcv-dm__table td{padding:6px 8px;border:1px solid var(--lcv-line2);color:var(--lcv-ink2);vertical-align:middle}
+/* intentional truncation cue — a faint mono continuation count spanning the
+   row, so the table reads as deliberately clipped (not an unfinished '…' cell) */
+.lcv-dm__table-more td{font-family:var(--lcv-mono);font-size:9.5px;letter-spacing:.08em;
+  color:var(--lcv-ink3);text-align:center;padding:5px 8px}
 .lcv-dm__f{font-family:var(--lcv-mono);color:var(--lcv-ink)!important}
 .lcv-dm__spark{width:34px;height:12px}
 /* sparkline stroke is the same cyan as its fill (data/signal) — desaturated
@@ -22743,7 +22993,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-dm__spark-area{stroke:none}
 .lcv-dm__spark circle{fill:rgba(75,197,222,0.85)}
 .lcv-dm__graph{border:1px solid var(--lcv-line2);border-radius:4px;padding:8px;display:flex;flex-direction:column}
-.lcv-dm__graphlbl{font-family:var(--lcv-mono);font-size:9px;color:var(--lcv-ink3);margin-bottom:2px}
+.lcv-dm__graphlbl{font-family:var(--lcv-mono);font-size:9.5px;color:var(--lcv-ink3);margin-bottom:2px}
 .lcv-dm__graph svg{width:100%;height:100%}
 .lcv-dm__axes{stroke:var(--line);stroke-width:1}
 /* the concave curve is stroked in cyan (same accent as its fill) with a soft
@@ -22754,11 +23004,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-dm__area{stroke:none}
 .lcv-dm__peak{fill:rgba(75,197,222,0.9)}
 .lcv-dm__drop{stroke:var(--lcv-ink3);stroke-width:.8}
-.lcv-dm__graph text{fill:var(--lcv-ink3);font-size:8px;font-family:var(--lcv-mono)}
+.lcv-dm__graph text{fill:var(--lcv-ink3);font-size:8.5px;font-family:var(--lcv-mono)}
 
 /* footer — full-bleed glass chrome, inner content capped + centered */
 .lcv-foot{display:flex;justify-content:space-between;align-items:center;
-  padding:22px max(clamp(28px,4vw,48px),calc((100% - var(--lcv-shell-max)) / 2)) 28px;
+  padding:22px var(--lcv-edge) 28px;
   border-top:1px solid var(--lcv-glass-border);
   background:
     linear-gradient(155deg,rgba(255,255,255,0.04),transparent 46%),
@@ -22775,10 +23025,42 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* hide the legacy capability nav that follows the cover on home */
 .lcv ~ .new-loom-home-capabilities{display:none}
 
+/* ============================================================
+   RESTRAINED ENTRANCE MOTION — the evidence rows settle in with a quiet
+   staggered fade + small rise (supports, never spectacle). The rail eases
+   in first, then each ledger row in sequence. Reduced-motion-safe below.
+   ============================================================ */
+@keyframes lcv-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.lcv-rail{animation:lcv-rise .55s cubic-bezier(.2,.7,.25,1) both}
+.lcv-ledger .lcv-row{animation:lcv-rise .5s cubic-bezier(.2,.7,.25,1) both}
+.lcv-ledger .lcv-row:nth-child(1){animation-delay:.06s}
+.lcv-ledger .lcv-row:nth-child(2){animation-delay:.14s}
+.lcv-ledger .lcv-row:nth-child(3){animation-delay:.22s}
+.lcv-ledger .lcv-row:nth-child(4){animation-delay:.3s}
+/* the row animation must not clobber the asset's perspective transform — the
+   keyframe targets the row element only; the asset/panel transforms are on
+   nested elements, so they compose cleanly. */
+@media (prefers-reduced-motion:reduce){
+  .lcv-rail,.lcv-ledger .lcv-row{animation:none}
+  .lcv-row__asset>.lcv-panel,.lcv-row__asset>.lcv-exp,
+  .lcv-row:hover .lcv-row__asset>.lcv-panel,
+  .lcv-row:hover .lcv-row__asset>.lcv-exp{transition:none}
+}
+
 @media (max-width:1080px){
   .lcv-shell{grid-template-columns:1fr}
   .lcv-rail{position:static;height:auto;border-bottom:1px solid var(--lcv-line)}
   .lcv-ledger{padding:0 clamp(20px,4vw,40px)}
   .lcv-name{white-space:normal}
   .lcv-row{grid-template-columns:1fr;gap:16px}
+}
+
+/* narrow chrome: at <=820px the five nav links + wordmark + avatar start
+   crowding; shrink the link type and tighten gaps so the chrome stays
+   uncramped (not a 1488 blocker, just narrow-width hygiene). */
+@media (max-width:820px){
+  .lcv-nav__links{gap:clamp(14px,2.6vw,22px);font-size:13.5px}
+  .lcv-nav__links a{padding-bottom:4px}
+  .lcv-wordmark{font-size:26px}
+  .lcv-nav__avatar{width:36px;height:36px}
 }
