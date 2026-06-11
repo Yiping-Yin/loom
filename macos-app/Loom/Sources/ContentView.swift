@@ -1647,17 +1647,17 @@ struct LoomWebView: NSViewRepresentable {
                   muted: '\(LoomTokens.dsMutedHexDark)',
                   accent: '\(LoomTokens.dsThreadHex)',
                   accentText: '\(LoomTokens.dsThreadTextHexDark)',
-                  paperDeep: '#1A1815',
-                  paper: '#221E18',
-                  paperUp: '#2B2620',
-                  paperCard: '#332E27',
-                  ink1: '#E8E0CE',
-                  ink2: '#B9AE93',
-                  ink3: '#8F8571',
-                  hair: 'rgba(232, 224, 206, 0.10)',
-                  hairFaint: 'rgba(232, 224, 206, 0.05)',
+                  paperDeep: '#07090C',
+                  paper: '#10141A',
+                  paperUp: '#161B22',
+                  paperCard: '#1E242D',
+                  ink1: '#E6E9EE',
+                  ink2: '#9BA3AE',
+                  ink3: '#5E6671',
+                  hair: 'rgba(230, 233, 238, 0.10)',
+                  hairFaint: 'rgba(230, 233, 238, 0.05)',
                   thread: '\(LoomTokens.dsThreadHex)',
-                  threadMuted: 'rgba(196, 164, 104, 0.55)'
+                  threadMuted: 'rgba(200, 162, 74, 0.55)'
                 }
               : {
                   bg: '\(LoomTokens.dsPaperDeepHexLight)',
@@ -1666,17 +1666,17 @@ struct LoomWebView: NSViewRepresentable {
                   muted: '\(LoomTokens.dsMutedHexLight)',
                   accent: '\(LoomTokens.dsThreadHex)',
                   accentText: '\(LoomTokens.dsThreadTextHexLight)',
-                  paperDeep: '#F4F0E4',
-                  paper: '#F4F0E4',
-                  paperUp: '#FAF7EC',
-                  paperCard: '#EADFC9',
-                  ink1: '#2A2520',
-                  ink2: '#4A4339',
-                  ink3: '#8A8373',
-                  hair: 'rgba(26, 23, 18, 0.08)',
-                  hairFaint: 'rgba(26, 23, 18, 0.04)',
+                  paperDeep: '#EEF1F4',
+                  paper: '#F6F8FA',
+                  paperUp: '#FBFCFD',
+                  paperCard: '#E6EAEF',
+                  ink1: '#1A1F26',
+                  ink2: '#46505B',
+                  ink3: '#8A929C',
+                  hair: 'rgba(26, 31, 38, 0.10)',
+                  hairFaint: 'rgba(26, 31, 38, 0.05)',
                   thread: '\(LoomTokens.dsThreadTextHexLight)',
-                  threadMuted: 'rgba(122, 94, 46, 0.55)'
+                  threadMuted: 'rgba(154, 122, 46, 0.55)'
                 };
             const apply = () => {
               try { localStorage.setItem('wiki:theme', mode); } catch (_) {}

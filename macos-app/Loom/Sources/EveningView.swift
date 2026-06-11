@@ -26,16 +26,15 @@ struct EveningView: View {
     // SwiftUI refuses the close for any reason.
     @Environment(\.dismissWindow) private var dismissWindow
 
-    // MARK: - Palette (Vellum "Evening" mode)
+    // MARK: - Palette (Evidence Desk "Evening" mode)
     //
-    // These mirror the CSS token values the web surface would use if we
-    // rendered Evening there; kept in Swift because this surface is
-    // entirely native. Keep in sync with any future LoomTokens "night"
-    // section.
-    private let night   = Color(.sRGB, red: 0x13/255.0, green: 0x11/255.0, blue: 0x0D/255.0, opacity: 1.0)
-    private let candle  = Color(.sRGB, red: 0xEC/255.0, green: 0xE2/255.0, blue: 0xC9/255.0, opacity: 1.0)
-    private let candle2 = Color(.sRGB, red: 0xB9/255.0, green: 0xAE/255.0, blue: 0x93/255.0, opacity: 1.0)
-    private let threadHi = Color(.sRGB, red: 0xC4/255.0, green: 0xA4/255.0, blue: 0x68/255.0, opacity: 1.0)
+    // Cool-black ink-wash mirroring the LoomTokens "night" section + the web
+    // Evidence Desk ramp. Kept in Swift because this surface is entirely
+    // native. Keep in sync with LoomTokens night/gold values.
+    private let night   = Color(.sRGB, red: 0x07/255.0, green: 0x09/255.0, blue: 0x0C/255.0, opacity: 1.0)
+    private let candle  = Color(.sRGB, red: 0xE6/255.0, green: 0xE9/255.0, blue: 0xEE/255.0, opacity: 1.0)
+    private let candle2 = Color(.sRGB, red: 0x9B/255.0, green: 0xA3/255.0, blue: 0xAE/255.0, opacity: 1.0)
+    private let threadHi = Color(.sRGB, red: 0xE3/255.0, green: 0xC5/255.0, blue: 0x6A/255.0, opacity: 1.0)
 
     // MARK: - Placeholder session narration (see TODO above)
     /// Weekday pulled from the live `Date()` so the Evening eyebrow

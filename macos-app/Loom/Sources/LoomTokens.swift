@@ -23,36 +23,36 @@ enum LoomTokens {
     // the shell level, then these dynamic colors resolve from the
     // NSWindow appearance.
 
-    /// Paper · root background, deepest layer.
-    static let dsPaperDeep   = Color.dynamic(light: 0xF4F0E4, dark: 0x1A1815)
+    /// Paper · root background, deepest layer.  Evidence Desk: --ink-0.
+    static let dsPaperDeep   = Color.dynamic(light: 0xEEF1F4, dark: 0x07090C)
     /// Paper · default surface (one layer up from root).
-    static let dsPaper       = Color.dynamic(light: 0xF4F0E4, dark: 0x221E18)
-    /// Paper · raised surface (two layers up).
-    static let dsPaperUp     = Color.dynamic(light: 0xFAF7EC, dark: 0x2B2620)
-    /// Paper · card surface (three layers up).
-    static let dsPaperCard   = Color.dynamic(light: 0xEADFC9, dark: 0x332E27)
+    static let dsPaper       = Color.dynamic(light: 0xF6F8FA, dark: 0x10141A)
+    /// Paper · raised surface (two layers up).  Evidence Desk: --ink-3.
+    static let dsPaperUp     = Color.dynamic(light: 0xFBFCFD, dark: 0x161B22)
+    /// Paper · card surface (three layers up).  Evidence Desk: --ink-4.
+    static let dsPaperCard   = Color.dynamic(light: 0xE6EAEF, dark: 0x1E242D)
 
-    /// Ink · primary body text + iconography.
-    static let dsInk1        = Color.dynamic(light: 0x2A2520, dark: 0xE8E0CE)
-    /// Ink · secondary / metadata.
-    static let dsInk2        = Color.dynamic(light: 0x4A4339, dark: 0xB9AE93)
-    /// Ink · muted / chrome.
-    static let dsInk3        = Color.dynamic(light: 0x8A8373, dark: 0x8F8571)
+    /// Ink · primary body text + iconography.  Evidence Desk: --text-1.
+    static let dsInk1        = Color.dynamic(light: 0x1A1F26, dark: 0xE6E9EE)
+    /// Ink · secondary / metadata.  Evidence Desk: --text-2.
+    static let dsInk2        = Color.dynamic(light: 0x46505B, dark: 0x9BA3AE)
+    /// Ink · muted / chrome.  Evidence Desk: --text-3.
+    static let dsInk3        = Color.dynamic(light: 0x8A929C, dark: 0x5E6671)
 
-    /// Hairline border · default 0.5px stroke.
-    static let dsHair        = Color.dynamicAlpha(light: 0x1A1712, lightAlpha: 0.08,
-                                                  dark: 0xE8E0CE, darkAlpha: 0.10)
+    /// Hairline border · default 0.5px stroke.  Evidence Desk: --line.
+    static let dsHair        = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.10,
+                                                  dark: 0xE6E9EE, darkAlpha: 0.10)
     /// Hairline border · faintest layer.
-    static let dsHairFaint   = Color.dynamicAlpha(light: 0x1A1712, lightAlpha: 0.04,
-                                                  dark: 0xE8E0CE, darkAlpha: 0.05)
+    static let dsHairFaint   = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.05,
+                                                  dark: 0xE6E9EE, darkAlpha: 0.05)
 
-    /// Bronze accent · single source of truth, no variations.
-    static let dsThread      = Color(hex: 0xC4A468)
-    /// Bronze accent · 55% alpha for de-emphasised states.
+    /// Watch-hand gold accent · single source of truth.  Evidence Desk: --gold.
+    static let dsThread      = Color(hex: 0xC8A24A)
+    /// Gold accent · 55% alpha for de-emphasised states.
     static let dsThreadMuted = Color(.sRGB,
-                                     red:   196/255,
-                                     green: 164/255,
-                                     blue:  104/255,
+                                     red:   200/255,
+                                     green: 162/255,
+                                     blue:   74/255,
                                      opacity: 0.55)
 
     // MARK: - Design System v1.0 · semantic state colors
@@ -62,39 +62,39 @@ enum LoomTokens {
     // Use these for destructive / success / info / caution surfaces —
     // never `Color.red` / ad-hoc hex / `LoomTokens.rose` for new code.
 
-    /// Destructive — red. Delete / cancel / error states.
-    static let dsAlert        = Color(hex: 0xC44743)
+    /// Destructive — market down red. Delete / cancel / error states.
+    static let dsAlert        = Color(hex: 0xE06A6A)
     /// Destructive · 55% alpha for de-emphasised state.
     static let dsAlertMuted   = Color(.sRGB,
-                                      red:   196/255,
-                                      green:  71/255,
-                                      blue:   67/255,
+                                      red:   224/255,
+                                      green: 106/255,
+                                      blue:  106/255,
                                       opacity: 0.55)
 
-    /// Positive — sage. Confirmations, complete states.
-    static let dsSuccess      = Color(hex: 0x6A8C5A)
+    /// Positive — market up green. Confirmations, complete states.
+    static let dsSuccess      = Color(hex: 0x3FB37A)
     /// Positive · 55% alpha for de-emphasised state.
     static let dsSuccessMuted = Color(.sRGB,
-                                      red:   106/255,
-                                      green: 140/255,
-                                      blue:   90/255,
+                                      red:    63/255,
+                                      green: 179/255,
+                                      blue:  122/255,
                                       opacity: 0.55)
 
-    /// Neutral informational tints — ink-blue.
-    static let dsInfo         = Color(hex: 0x5A7A9A)
+    /// Neutral informational tints — comet-cyan (the data/signal accent).
+    static let dsInfo         = Color(hex: 0x4BC5DE)
     /// Info · 55% alpha for de-emphasised state.
     static let dsInfoMuted    = Color(.sRGB,
-                                      red:    90/255,
-                                      green: 122/255,
-                                      blue:  154/255,
+                                      red:    75/255,
+                                      green: 197/255,
+                                      blue:  222/255,
                                       opacity: 0.55)
 
-    /// Caution — warm amber, distinct from bronze accent.
-    static let dsWarning      = Color(hex: 0xB98E3F)
+    /// Caution — restrained amber, distinct from the watch-hand gold accent.
+    static let dsWarning      = Color(hex: 0xCB9A3F)
     /// Caution · 55% alpha for de-emphasised state.
     static let dsWarningMuted = Color(.sRGB,
-                                      red:   185/255,
-                                      green: 142/255,
+                                      red:   203/255,
+                                      green: 154/255,
                                       blue:   63/255,
                                       opacity: 0.55)
 
@@ -114,29 +114,26 @@ enum LoomTokens {
     // refactor be strictly substitution-equivalent rather than a
     // visual change.
 
-    /// Dark-mode root background (`dsPaperDeep`).
-    static let dsPaperDeepHexDark   = "#1A1815"
-    /// Dark-mode primary ink (`dsInk1`).
-    static let dsInk1HexDark        = "#E8E0CE"
-    /// Dark-mode secondary ink (`dsInk2`).
-    static let dsInk2HexDark        = "#B9AE93"
-    /// Dark-mode chrome / muted (`dsInk3`-equivalent — historically
-    /// surfaced as `--muted` `#6F6756` in the JS palette).
-    static let dsMutedHexDark       = "#6F6756"
-    /// Bronze accent (single source of truth; same in both modes).
-    static let dsThreadHex          = "#C4A468"
-    /// Bronze accent · text-pair, slightly lifted for dark backgrounds.
-    static let dsThreadTextHexDark  = "#D4B478"
+    /// Dark-mode root background (`dsPaperDeep`).  Evidence Desk --ink-0.
+    static let dsPaperDeepHexDark   = "#07090C"
+    /// Dark-mode primary ink (`dsInk1`).  Evidence Desk --text-1.
+    static let dsInk1HexDark        = "#E6E9EE"
+    /// Dark-mode secondary ink (`dsInk2`).  Evidence Desk --text-2.
+    static let dsInk2HexDark        = "#9BA3AE"
+    /// Dark-mode chrome / muted (`dsInk3`).  Evidence Desk --text-3.
+    static let dsMutedHexDark       = "#5E6671"
+    /// Watch-hand gold accent (same in both modes).  Evidence Desk --gold.
+    static let dsThreadHex          = "#C8A24A"
+    /// Gold accent · text-pair, brighter highlight for dark backgrounds.
+    static let dsThreadTextHexDark  = "#E3C56A"
 
-    /// Light-mode equivalents — preserved from the legacy palette
-    /// values so the refactor doesn't change rendered output. When
-    /// light mode is officially derived (open question #1), these
-    /// move into a real `Color.dynamic` hex pair.
-    static let dsPaperDeepHexLight  = "#F4F0E4"
-    static let dsInk1HexLight       = "#2A2520"
-    static let dsInk2HexLight       = "#4A4339"
-    static let dsMutedHexLight      = "#8A8373"
-    static let dsThreadTextHexLight = "#7A5E2E"
+    /// Light-mode equivalents — cool-neutral counterparts of the Evidence
+    /// Desk ramp (no warm paper), so light mode shares the same temperature.
+    static let dsPaperDeepHexLight  = "#EEF1F4"
+    static let dsInk1HexLight       = "#1A1F26"
+    static let dsInk2HexLight       = "#46505B"
+    static let dsMutedHexLight      = "#8A929C"
+    static let dsThreadTextHexLight = "#9A7A2E"
 
     // MARK: - Legacy aliases (backward compat)
     //
@@ -156,35 +153,35 @@ enum LoomTokens {
     // surfaces will pick up automatically.
 
     /// @deprecated Use `dsPaper`.
-    static let paper      = Color.dynamic(light: 0xF4F0E4, dark: 0x221E18)
+    static let paper      = Color.dynamic(light: 0xF6F8FA, dark: 0x10141A)
     /// @deprecated Use `dsPaperDeep`.
-    static let paperDeep  = Color.dynamic(light: 0xEADFC9, dark: 0x1A1815)
+    static let paperDeep  = Color.dynamic(light: 0xEEF1F4, dark: 0x07090C)
     /// @deprecated Use `dsPaperUp`.
-    static let paperShade = Color.dynamic(light: 0xE3D8BE, dark: 0x2B2620)
+    static let paperShade = Color.dynamic(light: 0xE6EAEF, dark: 0x161B22)
     /// @deprecated Use `dsInk1`.
-    static let ink        = Color.dynamic(light: 0x2A2520, dark: 0xE8E0CE)
+    static let ink        = Color.dynamic(light: 0x1A1F26, dark: 0xE6E9EE)
     /// @deprecated Use `dsInk2`.
-    static let ink2       = Color.dynamic(light: 0x4A4339, dark: 0xB9AE93)
+    static let ink2       = Color.dynamic(light: 0x46505B, dark: 0x9BA3AE)
     /// @deprecated Use `dsInk3`.
-    static let ink3       = Color.dynamic(light: 0x6B6355, dark: 0x8F8571)
+    static let ink3       = Color.dynamic(light: 0x6B7480, dark: 0x5E6671)
     /// @deprecated Use `dsInk3`.
-    static let muted      = Color.dynamic(light: 0x8A8373, dark: 0x8F8571)
+    static let muted      = Color.dynamic(light: 0x8A929C, dark: 0x5E6671)
     /// @deprecated Use `dsHair`.
-    static let hair       = Color.dynamicAlpha(light: 0x1A1712, lightAlpha: 0.09,
-                                               dark: 0xE8E0CE, darkAlpha: 0.10)
+    static let hair       = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.10,
+                                               dark: 0xE6E9EE, darkAlpha: 0.10)
     /// @deprecated Use `dsHairFaint`.
-    static let hairFaint  = Color.dynamicAlpha(light: 0x1A1712, lightAlpha: 0.04,
-                                               dark: 0xE8E0CE, darkAlpha: 0.05)
+    static let hairFaint  = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.04,
+                                               dark: 0xE6E9EE, darkAlpha: 0.05)
 
     // MARK: - Night · ink-wash
 
-    static let night      = Color(hex: 0x13110D)
-    static let nightDeep  = Color(hex: 0x0A0907)
-    static let nightWarm  = Color(hex: 0x1A1712)
-    static let candle     = Color(hex: 0xECE2C9)
-    static let candle2    = Color(hex: 0xB9AE93)
-    static let mutedNight = Color(hex: 0x6F6756)
-    static let hairNight  = Color(hex: 0xECE2C9, opacity: 0.08)
+    static let night      = Color(hex: 0x07090C)
+    static let nightDeep  = Color(hex: 0x05060A)
+    static let nightWarm  = Color(hex: 0x0C0F13)
+    static let candle     = Color(hex: 0xE6E9EE)
+    static let candle2    = Color(hex: 0x9BA3AE)
+    static let mutedNight = Color(hex: 0x5E6671)
+    static let hairNight  = Color(hex: 0xE6E9EE, opacity: 0.08)
 
     // MARK: - Inks — earth only, never neon. `thread` is AI/selection/focus.
     //
@@ -200,16 +197,16 @@ enum LoomTokens {
     // single source of truth for bronze going forward.
 
     /// @deprecated Use `dsThread`.
-    static let thread   = Color(hex: 0xC4A468)
+    static let thread   = Color(hex: 0xC8A24A)
     /// @deprecated Use `dsThread`.
-    static let threadHi = Color(hex: 0xC4A468)
-    static let gold     = Color.dynamic(light: 0xB98E3F, dark: 0xD8AE60)
-    static let ochre    = Color.dynamic(light: 0xA8783E, dark: 0xD8A168)
-    static let rose     = Color.dynamic(light: 0x8F4646, dark: 0xC27070)
-    static let sage     = Color.dynamic(light: 0x5C6E4E, dark: 0x8CA07A)
-    static let indigo   = Color.dynamic(light: 0x3A477A, dark: 0x7E8CC7)
-    static let plum     = Color.dynamic(light: 0x5E3D5C, dark: 0xA77FA4)
-    static let umber    = Color(hex: 0x5C3F2A)
+    static let threadHi = Color(hex: 0xE3C56A)
+    static let gold     = Color.dynamic(light: 0xC8A24A, dark: 0xE3C56A)
+    static let ochre    = Color.dynamic(light: 0xB68A3C, dark: 0xDDBA6A)
+    static let rose     = Color.dynamic(light: 0xC0504E, dark: 0xE06A6A)
+    static let sage     = Color.dynamic(light: 0x3E9466, dark: 0x3FB37A)
+    static let indigo   = Color.dynamic(light: 0x2F8CA0, dark: 0x4BC5DE)
+    static let plum     = Color.dynamic(light: 0x55556E, dark: 0x9090B0)
+    static let umber    = Color(hex: 0x2A323D)
 
     // MARK: - Type stacks — same cascade as the web for cross-surface consistency.
 
@@ -281,29 +278,30 @@ enum LoomTokens {
           style.id = 'loom-tokens-css';
           style.textContent = `
             :root {
-              --loom-paper: #F4F0E4;
-              --loom-paper-deep: #EADFC9;
-              --loom-paper-shade: #E3D8BE;
-              --loom-ink: #2A2520;
-              --loom-ink-2: #4A4339;
-              --loom-ink-3: #6B6355;
-              --loom-muted: #8A8373;
-              --loom-hair: rgba(26,23,18,0.09);
-              --loom-hair-faint: rgba(26,23,18,0.04);
+              /* Evidence Desk — cool-black luminance ramp + watch-hand gold. */
+              --loom-paper: #10141A;
+              --loom-paper-deep: #07090C;
+              --loom-paper-shade: #161B22;
+              --loom-ink: #E6E9EE;
+              --loom-ink-2: #9BA3AE;
+              --loom-ink-3: #5E6671;
+              --loom-muted: #5E6671;
+              --loom-hair: rgba(230,233,238,0.10);
+              --loom-hair-faint: rgba(230,233,238,0.05);
 
-              --loom-night: #13110D;
-              --loom-candle: #ECE2C9;
-              --loom-candle-2: #B9AE93;
+              --loom-night: #07090C;
+              --loom-candle: #E6E9EE;
+              --loom-candle-2: #9BA3AE;
 
-              --loom-thread: #9E7C3E;
-              --loom-thread-hi: #C4A468;
-              --loom-gold: #B98E3F;
-              --loom-ochre: #A8783E;
-              --loom-rose: #8F4646;
-              --loom-sage: #5C6E4E;
-              --loom-indigo: #3A477A;
-              --loom-plum: #5E3D5C;
-              --loom-umber: #5C3F2A;
+              --loom-thread: #C8A24A;
+              --loom-thread-hi: #E3C56A;
+              --loom-gold: #C8A24A;
+              --loom-ochre: #DDBA6A;
+              --loom-rose: #E06A6A;
+              --loom-sage: #3FB37A;
+              --loom-indigo: #4BC5DE;
+              --loom-plum: #9090B0;
+              --loom-umber: #2A323D;
 
               --loom-serif: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
               --loom-display: "Cormorant Garamond", "EB Garamond", "Iowan Old Style", serif;
@@ -318,29 +316,12 @@ enum LoomTokens {
               font-variant: small-caps;
               letter-spacing: 0.08em;
             }
-            /* Vellum chrome sweep — any `.t-caption2` or `[style*="uppercase"]`
-               element gets promoted from sans-uppercase-tracked dashboard
-               typography to serif small-caps book typography. Does the job
-               of a mechanical per-site edit across ~20 components without
-               touching them individually. Injected at document-start so
-               PostCSS/Tailwind purge can't strip it.
-
-               The `[style*="uppercase"]` match is a reliable proxy because
-               React serializes inline styles to the `style=` DOM attribute
-               as a string; any component with inline `textTransform:
-               'uppercase'` becomes `style="…text-transform: uppercase…"`
-               in the DOM. `!important` is needed to beat the inline style. */
-            .t-caption2[style*="uppercase"],
-            .t-caption2[style*="UPPERCASE"],
-            [style*="text-transform: uppercase"],
-            [style*="text-transform:uppercase"] {
-              text-transform: none !important;
-              font-variant: small-caps !important;
-              font-family: var(--loom-serif) !important;
-              font-weight: 500 !important;
-              letter-spacing: 0.05em !important;
-              font-size: 0.84rem !important;
-            }
+            /* NOTE: the former "Vellum chrome sweep" (which forced every
+               uppercase element into serif small-caps book typography) was
+               removed for the Evidence Desk system. Evidence Desk eyebrow /
+               section labels ARE intentionally small uppercase mono with wide
+               letter-spacing; the old override fought that. The web app now
+               owns its own type ramp via globals.css — no native override. */
           `;
           document.head.appendChild(style);
         }

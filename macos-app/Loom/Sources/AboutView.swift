@@ -16,14 +16,14 @@ struct AboutView: View {
     // window could only be dismissed via the title-bar close button.
     @Environment(\.dismissWindow) private var dismissWindow
 
-    // MARK: Vellum palette — direct sRGB values so the window reads the
-    // same regardless of macOS appearance. About is identity chrome; it
-    // should not flip with light/dark mode.
-    private let paper       = Color(.sRGB, red: 0xF4/255.0, green: 0xF0/255.0, blue: 0xE4/255.0, opacity: 1.0)
-    private let ink         = Color(.sRGB, red: 0x2A/255.0, green: 0x25/255.0, blue: 0x20/255.0, opacity: 1.0)
-    private let muted       = Color(.sRGB, red: 0x8A/255.0, green: 0x83/255.0, blue: 0x73/255.0, opacity: 1.0)
-    private let bronze      = Color(.sRGB, red: 0x9E/255.0, green: 0x7C/255.0, blue: 0x3E/255.0, opacity: 1.0)
-    private let bronzeText  = Color(.sRGB, red: 0x7A/255.0, green: 0x5E/255.0, blue: 0x2E/255.0, opacity: 1.0)
+    // MARK: Evidence Desk palette — direct sRGB values so the window reads
+    // the same regardless of macOS appearance. About is identity chrome (the
+    // cool-black Cover scene); it should not flip with light/dark mode.
+    private let paper       = Color(.sRGB, red: 0x07/255.0, green: 0x09/255.0, blue: 0x0C/255.0, opacity: 1.0)
+    private let ink         = Color(.sRGB, red: 0xE6/255.0, green: 0xE9/255.0, blue: 0xEE/255.0, opacity: 1.0)
+    private let muted       = Color(.sRGB, red: 0x9B/255.0, green: 0xA3/255.0, blue: 0xAE/255.0, opacity: 1.0)
+    private let bronze      = Color(.sRGB, red: 0xC8/255.0, green: 0xA2/255.0, blue: 0x4A/255.0, opacity: 1.0)
+    private let bronzeText  = Color(.sRGB, red: 0xE3/255.0, green: 0xC5/255.0, blue: 0x6A/255.0, opacity: 1.0)
 
     var body: some View {
         ZStack {
