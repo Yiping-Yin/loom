@@ -1,9 +1,10 @@
 import SwiftUI
 
 /// Native "About Loom" window, replacing the default NSApp auto-generated
-/// one. Vellum-styled chrome surface: warm paper, bronze accent, ink text,
-/// Cormorant Garamond for display, EB Garamond for body copy. This is a
-/// chrome surface (not user content) so art fonts are allowed.
+/// one. Evidence Desk chrome surface: cool-black ground, watch-hand gold
+/// accent, light ink text, Cormorant Garamond for display, EB Garamond for
+/// body copy. This is a chrome surface (not user content) so art fonts are
+/// allowed.
 ///
 /// Opens via the App menu's "About Loom" item (standard macOS position).
 /// The menu item is registered via `CommandGroup(replacing: .appInfo)` in
@@ -50,8 +51,10 @@ struct AboutView: View {
                     .foregroundStyle(muted)
                     .padding(.top, 10)
 
-                // Tagline — Cormorant italic, slightly larger, ink.
-                Text("A small room for slow reading.")
+                // Tagline — Cormorant italic, slightly larger, ink. (The
+                // earlier "A small room for slow reading." now lives in the
+                // /product-history tagline lineage as sediment.)
+                Text("A living knowledge identity.")
                     .font(.custom("Cormorant Garamond", size: 18).italic())
                     .foregroundStyle(ink.opacity(0.88))
                     .padding(.top, 22)

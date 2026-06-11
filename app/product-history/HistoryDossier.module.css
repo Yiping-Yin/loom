@@ -466,6 +466,88 @@
   line-height: 1.12;
 }
 
+/* Tagline lineage — the product's own one-line statement as sediment. Past
+   lines read as faded italic serif; the line in use today is lit (ink + a
+   single gold date mark). */
+.taglineLineage {
+  border-top: 1px solid var(--history-border);
+  padding-top: clamp(2.8rem, 5vw, 5rem);
+  padding-bottom: clamp(2.8rem, 5vw, 5rem);
+  display: grid;
+  gap: clamp(1.4rem, 3vw, 2.4rem);
+}
+
+.taglineRail {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  border-top: 1px solid var(--history-border);
+}
+
+.taglineEntry {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 7.5rem) minmax(0, 1fr);
+  gap: clamp(0.9rem, 2.4vw, 2.4rem);
+  padding: clamp(1.05rem, 2vw, 1.55rem) 0;
+  border-bottom: 1px solid var(--history-border);
+}
+
+.taglineDate {
+  color: var(--history-subtle);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  padding-top: 0.6rem;
+}
+
+.taglineBody {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.taglineLine {
+  margin: 0;
+  color: var(--history-muted);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(1.35rem, 2.6vw, 2.25rem);
+  line-height: 1.16;
+  text-wrap: balance;
+}
+
+.taglineNote {
+  margin: 0;
+  color: var(--history-subtle);
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  line-height: 1.52;
+  max-width: 56ch;
+}
+
+/* The line in use today — lit, not faded sediment. */
+.taglineEntry[data-current='true'] .taglineLine {
+  color: var(--history-ink);
+  font-style: normal;
+}
+
+.taglineEntry[data-current='true'] .taglineDate {
+  color: var(--history-accent);
+}
+
+@media (max-width: 640px) {
+  .taglineEntry {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .taglineDate {
+    padding-top: 0;
+  }
+}
+
 .layerRows article,
 .functionRows article {
   display: grid;

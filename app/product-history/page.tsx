@@ -221,6 +221,35 @@ const EVOLUTION_STAGES = [
   },
 ] as const;
 
+// The product's own one-line statement, kept as sediment. Each tagline was
+// true when written, then outgrown for the same reason — knowledge should not
+// only be read or displayed, it should live and answer. Earlier lines still
+// surface verbatim in older surfaces (e.g. the App Store subtitle "A screen
+// that replaces paper"); preserved here so the lineage stays inspectable.
+const TAGLINE_LINEAGE = [
+  {
+    date: '2026-04-15',
+    line: 'A screen that replaces paper.',
+    note: 'The genesis line — the physical-to-digital intent. Outgrown because it framed Loom as a device to read on, not a knowledge system that grows.',
+  },
+  {
+    date: '2026-04-17',
+    line: 'A reading and thinking environment.',
+    note: 'Reading and thinking finally in one place. Still a room to sit inside, not a self that accumulates and represents you.',
+  },
+  {
+    date: '2026-04-24',
+    line: 'A small room for slow reading.',
+    note: 'The Vellum era — calm, editorial, unhurried. Too passive in the end: it read the world but never spoke back for you.',
+  },
+  {
+    date: '2026-06-11',
+    line: 'A living knowledge identity that can answer for you.',
+    note: 'The line today: not a screen, a room, or a passive surface — a source-backed self that grows over time, shows its proof, and can represent your knowledge.',
+    current: true,
+  },
+] as const;
+
 export default function ProductHistoryPage() {
   const featuredSources = FEATURED_SOURCE_IDS.map(resolveVerifiedDossierArtifact);
 
@@ -398,6 +427,35 @@ export default function ProductHistoryPage() {
                   <dd>{stage.changed}</dd>
                 </div>
               </dl>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className={styles.taglineLineage} aria-labelledby="tagline-title">
+        <header className={styles.sectionHeader}>
+          <p className={styles.label}>How the one line evolved</p>
+          <h2 id="tagline-title">Every tagline we outgrew, kept.</h2>
+          <p className={styles.lead}>
+            The product&rsquo;s own sentence is sediment too. Each line was true when it
+            was written, and each was outgrown for the same reason — knowledge should
+            not only be read or displayed, it should live and answer.
+          </p>
+        </header>
+        <ol className={styles.taglineRail}>
+          {TAGLINE_LINEAGE.map((entry) => (
+            <li
+              key={entry.date}
+              className={styles.taglineEntry}
+              data-current={'current' in entry && entry.current ? 'true' : undefined}
+            >
+              <time className={styles.taglineDate} dateTime={entry.date}>
+                {entry.date}
+              </time>
+              <div className={styles.taglineBody}>
+                <p className={styles.taglineLine}>&ldquo;{entry.line}&rdquo;</p>
+                <p className={styles.taglineNote}>{entry.note}</p>
+              </div>
             </li>
           ))}
         </ol>
