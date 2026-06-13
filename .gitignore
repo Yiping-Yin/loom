@@ -51,6 +51,10 @@ tsconfig*.tsbuildinfo
 *.swp
 *.swo
 
+# Local dev captures / screenshots / reference images — consolidated here so
+# they don't litter the parent folder, but never committed.
+captures/
+
 # Private local-only docs — never push to the public Wiki repo.
 # The canonical, intentionally-tracked copies live under docs/canon/.
 # These leading-slash entries only match stray copies at the repo root.

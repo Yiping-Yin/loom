@@ -1,7 +1,7 @@
 # First Contact — History hero interaction · Implementation Plan
 
 > Executed via superpowers:subagent-driven-development on branch `feat/first-contact`.
-> Design spec: `../../../../LOOM-first-contact-spec.md` (outside repo). Steps use `- [ ]`.
+> Design spec: `../specs/2026-06-14-first-contact-spec.md`. Steps use `- [ ]`.
 
 **Goal:** Turn the History hero into the cinematic "First Contact" interaction — cold-open "History" flicker → stylized astronaut helmet approaches from the dark → a comet ignites a monochrome→color climax + moon waxes full + the curved visor reveals the LOOM wordmark + explanation → settles to cool-black.
 
