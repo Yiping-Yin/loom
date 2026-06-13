@@ -279,6 +279,7 @@ export function ProductHistoryPage() {
           <div className={styles.helmet}>
             <Helmet />
             <div className={styles.heroStudy}>
+              <span className={styles.studyReflection} aria-hidden="true" />
               <span className={styles.studyScan} aria-hidden="true" />
               <VisorText />
             </div>

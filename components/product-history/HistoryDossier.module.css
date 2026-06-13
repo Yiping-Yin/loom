@@ -438,6 +438,33 @@
   z-index: 1;
 }
 
+/* Visor reflection: the night Earth (NASA Black Marble, public domain) curving
+   across the lower faceplate as a real "Earth at night" reflection — gold city
+   lights + a blue atmospheric limb. Grayscale + dim when the self is far (S0),
+   resolving to colour at the climax. Sits behind the LOOM wordmark ("under the
+   glass"), low enough not to fight legibility. */
+.studyReflection {
+  position: absolute;
+  inset: 0;
+  border-radius: 17px;
+  overflow: hidden;
+  pointer-events: none;
+  background-image: url("/loom/history/earth-night.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center 46%;
+  filter:
+    grayscale(calc(1 - 0.92 * var(--fc-p, 1)))
+    brightness(calc(0.46 + 0.5 * var(--fc-p, 1)))
+    contrast(1.12)
+    saturate(1.14);
+  opacity: calc(0.46 + 0.5 * var(--fc-p, 1));
+  /* fade the top edge so the black space blends into the visor behind LOOM */
+  -webkit-mask: linear-gradient(180deg, transparent 0%, #000 24%, #000 100%);
+  mask: linear-gradient(180deg, transparent 0%, #000 24%, #000 100%);
+  mix-blend-mode: screen;
+}
+
 /* First Contact pointer channel: the visor tilts gently toward the cursor.
    Gated to fine pointers + desktop widths so touch and the mobile layout
    (which resets .heroStudy transform) are unaffected. */
