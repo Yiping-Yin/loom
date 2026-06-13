@@ -6,6 +6,7 @@ import {
   resolveVerifiedDossierArtifact,
   type VerifiedDossierArtifactId,
 } from '../../lib/new-loom/verified-dossier-home';
+import { FirstContact } from './first-contact/FirstContact';
 import styles from './HistoryDossier.module.css';
 
 /**
@@ -257,6 +258,7 @@ export function ProductHistoryPage() {
       <LoomGlobalNav ariaLabel="Product system navigation" brandCurrent />
 
       <section className={styles.hero}>
+        <FirstContact />
         <span className={styles.heroLight} aria-hidden="true" />
         <span className={styles.heroDust} aria-hidden="true" />
         <div className={styles.heroCopy}>

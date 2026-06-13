@@ -1,0 +1,99 @@
+/* FirstContact — cinematic background layers for the History hero.
+ * ALL layers: position:absolute; inset:0; pointer-events:none; z-index below
+ * the pinned hero content (.hero > * is z-index:2).
+ *
+ * T1: static resting state only — no animation, no motion hooks.
+ * T2+ will add: god-rays, comet canvas, color/reflection, visor-text. */
+
+/* ── Backdrop ─────────────────────────────────────────────────────────── */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Cool-black radial atmosphere: very faint signature-cyan at the centre,
+     bleeding into deep ink. Opacity kept very low so the existing hero
+     background remains dominant. */
+  background:
+    radial-gradient(
+      ellipse 80% 60% at 50% 10%,
+      rgba(75, 197, 222, 0.045) 0%,
+      rgba(11, 12, 13, 0.08) 42%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 60% 80% at 20% 50%,
+      rgba(14, 22, 24, 0.14) 0%,
+      transparent 68%
+    );
+}
+
+/* ── Moon layer ───────────────────────────────────────────────────────── */
+.moon {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Moon image: positioned back-left, behind the visor/helmet area.
+     Cool-toned via hue-rotate + desaturate; dim so it reads as depth,
+     not a competing focal point. */
+  background-image: url('/brand/loom_lunar_orb.png');
+  background-repeat: no-repeat;
+  /* back-left: offset from top-left, sized to stay behind the visor column */
+  background-position: left clamp(-6rem, -6vw, -2rem) top clamp(2rem, 8vh, 6rem);
+  background-size: clamp(22rem, 36vw, 40rem) auto;
+  filter: grayscale(0.55) brightness(0.48) hue-rotate(185deg);
+  opacity: 0.72;
+  /* Vignette mask: fade the moon at top/bottom/right so it blends into
+     the cool-black backdrop without a hard edge */
+  -webkit-mask-image: radial-gradient(
+    ellipse 72% 82% at 18% 42%,
+    #000 0%,
+    #000 38%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 72% 82% at 18% 42%,
+    #000 0%,
+    #000 38%,
+    transparent 78%
+  );
+}
+
+/* ── Placeholder slots for T2+ layers (empty, resting) ───────────────── */
+
+/* God-rays: volumetric light cones from upper-left; inactive in T1 */
+.godRays {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* empty — will receive animated ray canvas in T2 */
+}
+
+/* Color/reflection: iridescent tint layer; inactive in T1 */
+.colorReflection {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* empty — will receive cyan/teal reflection sweep in T2 */
+}
+
+/* Comet canvas: animated comet trail; inactive in T1 */
+.cometCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* empty — <canvas> comet will be mounted here in T2 */
+}
+
+/* Visor text overlay: LOOM wordmark / eyebrow inside the visor; T2+ */
+.visorText {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* empty — will render VISOR_WORDMARK / EYEBROW / EXPLANATION in T2 */
+}

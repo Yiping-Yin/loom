@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { removeDuplicateArtifacts, withNextBuildLock } from './next-build-lock.mjs';
+import { removeDuplicateArtifacts, removePathWithRetry, withNextBuildLock } from './next-build-lock.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tscCli = path.join(root, 'node_modules', 'typescript', 'bin', 'tsc');
@@ -68,6 +68,7 @@ const requiredArtifacts = [
 ];
 
 await withNextBuildLock(root, async () => {
+  await removePathWithRetry(path.join(root, 'tsconfig.tsbuildinfo'), { recursive: false });
   await removeDuplicateArtifacts(path.join(root, '.next'));
   await removeDuplicateArtifacts(path.join(root, '.next-build'));
   await removeDuplicateArtifacts(path.join(root, '.next-app-dev'));
