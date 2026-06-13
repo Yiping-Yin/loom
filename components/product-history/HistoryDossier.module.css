@@ -117,9 +117,16 @@
   background-repeat: no-repeat;
   background-position: left calc(100% - clamp(0.5rem, 1.4vw, 1.15rem));
   background-size: clamp(58rem, 86vw, 88rem) auto;
-  filter: grayscale(1) contrast(1.24) brightness(0.66);
+  /* The Moon = memory. Driven by --fc-p as a rack-focus: clear + cooler when
+     the self is far (S0), then brighter + softening to a grand bokeh as the
+     helmet arrives and pulls focus (climax). Never shrinks. */
+  filter:
+    grayscale(1)
+    contrast(1.24)
+    brightness(calc(0.58 + 0.34 * var(--fc-p, 1)))
+    blur(calc(var(--fc-p, 1) * var(--fc-p, 1) * 1.6px));
   mix-blend-mode: normal;
-  opacity: 0.82;
+  opacity: calc(0.66 + 0.2 * var(--fc-p, 1));
 }
 
 .hero > * {
@@ -345,6 +352,30 @@
   pointer-events: none;
   transform: rotateX(5.2deg) rotateY(-1.1deg) rotateZ(-0.22deg) translateY(-4px);
   transform-origin: center 80%;
+}
+
+/* Astronaut helmet motion container. The actual shell is the static SVG
+   Helmet component; this wrapper only owns approach/turn motion. */
+.helmet {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10.4;
+  transform-style: preserve-3d;
+  transform:
+    perspective(2200px)
+    translateX(calc((1 - var(--fc-p, 1)) * 3%))
+    scale(calc(0.9 + 0.1 * var(--fc-p, 1)))
+    rotateY(calc((1 - var(--fc-p, 1)) * -13deg))
+    rotateX(calc((1 - var(--fc-p, 1)) * 3.5deg));
+  transform-origin: 62% 52%;
+}
+
+.hero[data-fc-climax] .helmet,
+.hero[data-fc-arrived] .helmet {
+  transform: perspective(2200px) translateX(0) scale(1) rotateY(0deg) rotateX(0deg);
+  transition: transform 0.9s ease;
 }
 
 .heroStudy {

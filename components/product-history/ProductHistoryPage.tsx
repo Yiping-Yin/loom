@@ -7,6 +7,7 @@ import {
   type VerifiedDossierArtifactId,
 } from '../../lib/new-loom/verified-dossier-home';
 import { FirstContact } from './first-contact/FirstContact';
+import { Helmet } from './first-contact/Helmet';
 import { VisorText } from './first-contact/VisorText';
 import { EYEBROW, EXPLANATION } from './first-contact/constants';
 import styles from './HistoryDossier.module.css';
@@ -271,9 +272,16 @@ export function ProductHistoryPage() {
           className={styles.heroMedia}
           aria-label={`Loom identity mark: ${EYEBROW}. ${EXPLANATION}.`}
         >
-          <div className={styles.heroStudy}>
-            <span className={styles.studyScan} aria-hidden="true" />
-            <VisorText />
+          {/* Digital Me as an astronaut helmet approaching from the dark. The
+              visor (heroStudy) is the faceplate nested inside the shell; the
+              shell + rim-light frame it. SVG/CSS structure for now — swappable
+              for a rendered helmet image later. */}
+          <div className={styles.helmet}>
+            <Helmet />
+            <div className={styles.heroStudy}>
+              <span className={styles.studyScan} aria-hidden="true" />
+              <VisorText />
+            </div>
           </div>
         </figure>
         <div className={styles.heroArchiveRow} aria-label="Original Loom record">

@@ -55,6 +55,20 @@
   letter-spacing: 0.015em;
 }
 
+/* M = Memory. At the climax (the comet's final frame) the M grows + warms —
+   the wordmark goes from ① uniform to ② M-enlarged. Driven purely by the
+   section's data-fc-climax latch; settles and holds. */
+.letterM {
+  transition:
+    font-size 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s,
+    fill 0.85s ease 0.12s;
+}
+
+[data-fc-climax] .letterM {
+  font-size: 116% !important;
+  fill: rgba(247, 239, 223, 0.99) !important;
+}
+
 /* ── Explanation ────────────────────────────────────────────────────────── */
 .explanation {
   margin: 0;

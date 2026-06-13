@@ -39,23 +39,11 @@ function FirstContactLayers() {
       {/* Cool-black radial atmosphere backdrop. */}
       <div className={styles.backdrop} aria-hidden="true" />
 
-      {/* Moon: waxes + sharpens + warms as the approach completes. */}
-      <div className={styles.moon} aria-hidden="true">
-        <span className={styles.moonTerminator} aria-hidden="true" />
-      </div>
-
       {/* Volumetric god-rays from upper-left. */}
       <div className={styles.godRays} aria-hidden="true" />
 
       {/* Grayscale → colour reflection sweep; blooms at the climax. */}
       <div className={styles.colorReflection} aria-hidden="true" />
-
-      {/* One-shot comet that ignites the colour at the climax. */}
-      <div className={styles.cometCanvas} aria-hidden="true">
-        <span className={styles.comet} aria-hidden="true">
-          <span className={styles.cometHead} aria-hidden="true" />
-        </span>
-      </div>
     </div>
   );
 }
@@ -72,6 +60,13 @@ export function FirstContact() {
   return (
     <>
       <FirstContactLayers />
+      {/* One-shot comet flying from the M to the moon — lifted above the
+          content (like the cold open) so it reads as crossing the scene. */}
+      <div className={styles.cometCanvas} aria-hidden="true">
+        <span className={styles.comet} aria-hidden="true">
+          <span className={styles.cometHead} aria-hidden="true" />
+        </span>
+      </div>
       {/* Cold-open "History" flicker (client-only, once per session). */}
       <ColdOpen />
     </>

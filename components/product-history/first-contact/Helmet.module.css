@@ -1,0 +1,47 @@
+/* Helmet SVG placement + --fc-p intensities.
+ *
+ * The SVG is sized so its visor window (viewBox [80,920] x [180,820]) aligns
+ * with the .helmet box; the dome rises ~28% above and the neck is cropped
+ * ~28% below. The DOM visor (heroStudy) sits on top of the window, so only the
+ * dome / sides / neck silhouette show around the faceplate. Strokes brighten
+ * with --fc-p so the rim-light grows as the helmet faces you. */
+.helmetSvg {
+  position: absolute;
+  left: -9.5%;
+  top: -28%;
+  width: 119%;
+  height: 156%;
+  z-index: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.shell {
+  opacity: calc(0.45 + 0.55 * var(--fc-p, 1));
+}
+
+.dome {
+  opacity: calc(0.28 + 0.72 * var(--fc-p, 1));
+}
+
+.silhouette {
+  stroke-opacity: calc(0.26 + 0.64 * var(--fc-p, 1));
+}
+
+.windowRim {
+  stroke-opacity: calc(0.18 + 0.5 * var(--fc-p, 1));
+}
+
+.neck {
+  stroke-opacity: calc(0.18 + 0.5 * var(--fc-p, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell,
+  .dome,
+  .silhouette,
+  .windowRim,
+  .neck {
+    opacity: 1;
+  }
+}
