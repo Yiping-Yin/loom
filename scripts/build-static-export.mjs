@@ -58,6 +58,9 @@ const SHELVED = [
   'app/draft',
   'app/loom-render/capture',
   'app/loom-render/snapshot',
+  // /sources reads `await searchParams` (capture handoff / filters), so it is
+  // dynamic and can't be prerendered by `output: 'export'`.
+  'app/sources',
 ];
 
 function shelvedPathFor(rel) {
