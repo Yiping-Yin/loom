@@ -1,62 +1,79 @@
 'use client';
 
 /**
- * FirstContact — cinematic background layers for the History hero.
+ * FirstContact — the cinematic background sequence for the History hero.
  *
- * T1: static resting state only.
- *   - Cool-black backdrop with a subtle radial atmosphere (faint cyan tint).
- *   - Moon layer using /brand/loom_lunar_orb.png, positioned back-left.
- *   - Empty placeholder divs for T2+ layers (god-rays, color/reflection,
- *     comet-canvas, visor-text) — resting/empty; no hooks, no motion.
+ * Layers (all position:absolute; inset:0; pointer-events:none; aria-hidden;
+ * z-index:0 — below the pinned hero content at z-index:2):
+ *   - backdrop        cool-black radial atmosphere, brightens with approach
+ *   - moon            waxes from a dim crescent-lit sphere to a full cool orb,
+ *                     parallaxing on pointer
+ *   - godRays         volumetric light cones that strengthen toward the climax
+ *   - colorReflection grayscale → photographic colour bloom, ignited at climax
+ *   - comet / cometHead a one-shot streak that sweeps across at the climax
  *
- * ALL new layers: position:absolute; inset:0; pointer-events:none; z-index:0
- * (below .hero > * which is z-index:2, and below .heroLight / .heroDust
- * which are z-index:1). The existing visor, text, and archive row sit on top.
+ * Motion is driven entirely from three CSS custom properties written by
+ * useFirstContact onto the enclosing hero <section> (--fc-p approach,
+ * --fc-px/--fc-py pointer). The static / no-JS / reduced-motion render is the
+ * clean "arrived" frame (default --fc-p:1), so the export bundle and SSR ship
+ * a complete picture with no motion.
  *
- * Static-export safe: no window/document access, no server APIs, no
- * next/image optimizer. The moon is a plain CSS background-image (<img> is
- * avoided so it doesn't disturb layout flow; it's a decorative backdrop).
+ * Static-export safe: useFirstContact only touches the DOM inside an effect,
+ * never during render; the moon is a CSS background-image (no next/image).
  */
+import { ColdOpen } from './ColdOpen';
+import { useFirstContact } from './useFirstContact';
 import styles from './FirstContact.module.css';
 
+function FirstContactLayers() {
+  const anchorRef = useFirstContact();
+
+  return (
+    // Single overlay root. It is the one direct child of the hero <section>,
+    // so the section's broad `.hero > * { position: relative; z-index: 2 }`
+    // reset lands HERE (neutralised with !important in .root) instead of on
+    // every layer. The layers then position against this root at z-index:0,
+    // below the pinned hero content. The ref resolves the section for the
+    // engine via .closest('section').
+    <div ref={anchorRef} className={styles.root} aria-hidden="true">
+      {/* Cool-black radial atmosphere backdrop. */}
+      <div className={styles.backdrop} aria-hidden="true" />
+
+      {/* Moon: waxes + sharpens + warms as the approach completes. */}
+      <div className={styles.moon} aria-hidden="true">
+        <span className={styles.moonTerminator} aria-hidden="true" />
+      </div>
+
+      {/* Volumetric god-rays from upper-left. */}
+      <div className={styles.godRays} aria-hidden="true" />
+
+      {/* Grayscale → colour reflection sweep; blooms at the climax. */}
+      <div className={styles.colorReflection} aria-hidden="true" />
+
+      {/* One-shot comet that ignites the colour at the climax. */}
+      <div className={styles.cometCanvas} aria-hidden="true">
+        <span className={styles.comet} aria-hidden="true">
+          <span className={styles.cometHead} aria-hidden="true" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * FirstContactRoot — the overlay layers PLUS the cold open as siblings.
+ *
+ * The cold open must paint ABOVE the pinned hero content (z-index:2), so it
+ * cannot live inside the z-0 overlay root (a stacking context). It is a second
+ * direct child of the hero <section> and lifts itself above the content with
+ * !important (the same reason .root needs it — to escape `.hero > *`).
+ */
 export function FirstContact() {
   return (
     <>
-      {/* Cool-black backdrop with very faint cyan/ink radial atmosphere */}
-      <div
-        className={styles.backdrop}
-        aria-hidden="true"
-      />
-
-      {/* Moon: /brand/loom_lunar_orb.png, cool-toned, back-left depth layer */}
-      <div
-        className={styles.moon}
-        aria-hidden="true"
-      />
-
-      {/* T2+ placeholder: god-ray volumetric light cones (inactive in T1) */}
-      <div
-        className={styles.godRays}
-        aria-hidden="true"
-      />
-
-      {/* T2+ placeholder: iridescent color/reflection sweep (inactive in T1) */}
-      <div
-        className={styles.colorReflection}
-        aria-hidden="true"
-      />
-
-      {/* T2+ placeholder: animated comet canvas (inactive in T1) */}
-      <div
-        className={styles.cometCanvas}
-        aria-hidden="true"
-      />
-
-      {/* T2+ placeholder: LOOM wordmark / eyebrow inside the visor (inactive in T1) */}
-      <div
-        className={styles.visorText}
-        aria-hidden="true"
-      />
+      <FirstContactLayers />
+      {/* Cold-open "History" flicker (client-only, once per session). */}
+      <ColdOpen />
     </>
   );
 }

@@ -63,6 +63,12 @@
 .hero {
   position: relative;
   isolation: isolate;
+  /* First Contact engine inputs. Default --fc-p:1 = the "arrived" frame, so
+     no-JS / SSR / reduced-motion render the complete picture; useFirstContact
+     overrides these live once it hydrates. */
+  --fc-p: 1;
+  --fc-px: 0.5;
+  --fc-py: 0.5;
   display: grid;
   grid-template-columns:
     clamp(2.3rem, 4.8vw, 5.8rem)
@@ -399,6 +405,20 @@
 .heroStudy > * {
   position: relative;
   z-index: 1;
+}
+
+/* First Contact pointer channel: the visor tilts gently toward the cursor.
+   Gated to fine pointers + desktop widths so touch and the mobile layout
+   (which resets .heroStudy transform) are unaffected. */
+@media (min-width: 981px) and (pointer: fine) {
+  .hero[data-fc-js] .heroStudy {
+    transform:
+      rotateX(calc(5.2deg + (var(--fc-py, 0.5) - 0.5) * -3deg))
+      rotateY(calc(-1.1deg + (var(--fc-px, 0.5) - 0.5) * 4.5deg))
+      rotateZ(-0.22deg)
+      translateY(-4px);
+    transition: transform 0.25s ease;
+  }
 }
 
 .heroArchiveRow {

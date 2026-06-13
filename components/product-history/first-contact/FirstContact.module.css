@@ -1,99 +1,360 @@
 /* FirstContact — cinematic background layers for the History hero.
- * ALL layers: position:absolute; inset:0; pointer-events:none; z-index below
- * the pinned hero content (.hero > * is z-index:2).
  *
- * T1: static resting state only — no animation, no motion hooks.
- * T2+ will add: god-rays, comet canvas, color/reflection, visor-text. */
+ * Every layer is position:absolute; inset:0; pointer-events:none and sits at
+ * z-index:0 — below the pinned hero content (.hero > * is z-index:2). Motion is
+ * driven entirely by three custom properties written by useFirstContact onto
+ * the hero <section>:
+ *
+ *   --fc-p    0 → 1   approach progress (scroll scrub)
+ *   --fc-px   0 → 1   pointer X within the hero (0.5 = centre)
+ *   --fc-py   0 → 1   pointer Y within the hero (0.5 = centre)
+ *
+ * Defaults live on .hero (HistoryDossier.module.css: --fc-p:1 = arrived); the
+ * calc() fallbacks below keep everything valid even before JS hydrates, so the
+ * static / no-JS / reduced-motion render IS the clean "arrived" frame. The
+ * one-shot climax (comet sweep + colour bloom) fires only once [data-fc-climax]
+ * latches on the section and then freezes the scene at arrived — scrolling back
+ * up never replays it. Base styles at --fc-p:1 equal what the climax settles
+ * to, so JS and no-JS converge on the same picture. */
 
-/* ── Backdrop ─────────────────────────────────────────────────────────── */
+/* ── Overlay root ───────────────────────────────────────────────────────
+ * The single direct child of the hero <section>. The hero applies a broad
+ * `.hero > * { position: relative; z-index: 2 }` content-lift reset; that rule
+ * has the same specificity as a module class, so source order would otherwise
+ * decide and (cross-module) win — collapsing every absolute layer into a
+ * zero-height grid item. !important on the structural props guarantees this
+ * root stays a full-bleed z-0 overlay regardless of bundle order. The child
+ * layers below position against THIS element, not the section, so they are
+ * never touched by `.hero > *`. */
+.root {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none;
+  overflow: clip;
+}
+
+/* ── Backdrop ───────────────────────────────────────────────────────────── */
 .backdrop {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Cool-black radial atmosphere: very faint signature-cyan at the centre,
-     bleeding into deep ink. Opacity kept very low so the existing hero
-     background remains dominant. */
   background:
     radial-gradient(
-      ellipse 80% 60% at 50% 10%,
-      rgba(75, 197, 222, 0.045) 0%,
-      rgba(11, 12, 13, 0.08) 42%,
-      transparent 72%
+      ellipse 86% 64% at 50% 8%,
+      rgba(75, 197, 222, calc(0.018 + 0.05 * var(--fc-p, 1))) 0%,
+      rgba(11, 12, 13, 0.08) 44%,
+      transparent 74%
     ),
     radial-gradient(
       ellipse 60% 80% at 20% 50%,
       rgba(14, 22, 24, 0.14) 0%,
       transparent 68%
     );
+  opacity: calc(0.7 + 0.3 * var(--fc-p, 1));
 }
 
-/* ── Moon layer ───────────────────────────────────────────────────────── */
+/* ── Moon: waxes, sharpens, warms, parallaxes ───────────────────────────── */
 .moon {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Moon image: positioned back-left, behind the visor/helmet area.
-     Cool-toned via hue-rotate + desaturate; dim so it reads as depth,
-     not a competing focal point. */
   background-image: url('/brand/loom_lunar_orb.png');
   background-repeat: no-repeat;
-  /* back-left: offset from top-left, sized to stay behind the visor column */
   background-position: left clamp(-6rem, -6vw, -2rem) top clamp(2rem, 8vh, 6rem);
   background-size: clamp(22rem, 36vw, 40rem) auto;
-  filter: grayscale(0.55) brightness(0.48) hue-rotate(185deg);
-  opacity: 0.72;
-  /* Vignette mask: fade the moon at top/bottom/right so it blends into
-     the cool-black backdrop without a hard edge */
-  -webkit-mask-image: radial-gradient(
-    ellipse 72% 82% at 18% 42%,
-    #000 0%,
-    #000 38%,
-    transparent 78%
-  );
-  mask-image: radial-gradient(
-    ellipse 72% 82% at 18% 42%,
-    #000 0%,
-    #000 38%,
-    transparent 78%
-  );
+  filter:
+    grayscale(calc(0.58 - 0.3 * var(--fc-p, 1)))
+    brightness(calc(0.44 + 0.4 * var(--fc-p, 1)))
+    contrast(calc(1 + 0.12 * var(--fc-p, 1)))
+    hue-rotate(calc(185deg - 12deg * var(--fc-p, 1)));
+  opacity: calc(0.46 + 0.36 * var(--fc-p, 1));
+  transform:
+    scale(calc(0.9 + 0.13 * var(--fc-p, 1)))
+    translate(
+      calc((var(--fc-px, 0.5) - 0.5) * 16px),
+      calc((var(--fc-py, 0.5) - 0.5) * 11px)
+    );
+  transform-origin: 18% 42%;
+  -webkit-mask-image: radial-gradient(ellipse 72% 82% at 18% 42%, #000 0%, #000 38%, transparent 78%);
+  mask-image: radial-gradient(ellipse 72% 82% at 18% 42%, #000 0%, #000 38%, transparent 78%);
 }
 
-/* ── Placeholder slots for T2+ layers (empty, resting) ───────────────── */
+/* Terminator: a soft shadow over the moon's right limb that recedes as it
+   waxes (more shadow at --fc-p:0, almost none at arrived). Clipped by the
+   parent moon mask. */
+.moonTerminator {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    96deg,
+    transparent 0%,
+    transparent calc(30% + 26% * var(--fc-p, 1)),
+    rgba(2, 4, 7, calc(0.5 - 0.46 * var(--fc-p, 1))) 70%,
+    rgba(2, 4, 7, calc(0.4 - 0.38 * var(--fc-p, 1))) 100%
+  );
+  mix-blend-mode: multiply;
+}
 
-/* God-rays: volumetric light cones from upper-left; inactive in T1 */
+/* ── God-rays: volumetric cones, strengthen toward the climax ───────────── */
 .godRays {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* empty — will receive animated ray canvas in T2 */
+  background:
+    linear-gradient(
+      118deg,
+      transparent 4%,
+      rgba(196, 220, 226, calc(0.012 + 0.055 * var(--fc-p, 1))) 13%,
+      transparent 27%
+    ),
+    linear-gradient(
+      125deg,
+      transparent 8%,
+      rgba(160, 202, 214, calc(0.008 + 0.045 * var(--fc-p, 1))) 21%,
+      transparent 34%
+    ),
+    radial-gradient(
+      62% 82% at 8% -10%,
+      rgba(120, 172, 188, calc(0.01 + 0.06 * var(--fc-p, 1))),
+      transparent 60%
+    );
+  opacity: calc(0.3 + 0.7 * var(--fc-p, 1));
+  mix-blend-mode: screen;
+  filter: blur(6px);
 }
 
-/* Color/reflection: iridescent tint layer; inactive in T1 */
+/* ── Colour reflection: grayscale → photographic colour, blooms at climax ── */
 .colorReflection {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* empty — will receive cyan/teal reflection sweep in T2 */
+  background:
+    radial-gradient(
+      72% 60% at 62% 30%,
+      rgba(76, 197, 222, calc(0.05 * var(--fc-p, 1))),
+      transparent 64%
+    ),
+    radial-gradient(
+      54% 52% at 30% 64%,
+      rgba(46, 110, 142, calc(0.045 * var(--fc-p, 1))),
+      transparent 60%
+    ),
+    radial-gradient(
+      40% 44% at 78% 78%,
+      rgba(224, 162, 74, calc(0.03 * var(--fc-p, 1))),
+      transparent 62%
+    );
+  opacity: var(--fc-p, 1);
+  mix-blend-mode: screen;
 }
 
-/* Comet canvas: animated comet trail; inactive in T1 */
+/* ── Comet: one-shot streak across the climax ───────────────────────────── */
 .cometCanvas {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* empty — <canvas> comet will be mounted here in T2 */
+  overflow: hidden;
 }
 
-/* Visor text overlay: LOOM wordmark / eyebrow inside the visor; T2+ */
-.visorText {
+.comet {
   position: absolute;
-  inset: 0;
-  z-index: 0;
+  top: -8%;
+  left: -12%;
+  width: 46%;
+  height: 2px;
+  opacity: 0;
+  transform: rotate(27deg) translateX(-40%) scaleX(0.6);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(200, 232, 238, 0) 32%,
+    rgba(200, 232, 238, 0.7) 80%,
+    rgba(255, 255, 255, 0.96) 100%
+  );
+  filter: blur(0.5px);
+}
+
+.cometHead {
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(140, 247, 230, 0.72) 42%, transparent 72%);
+  box-shadow:
+    0 0 14px 4px rgba(140, 247, 230, 0.55),
+    0 0 32px 11px rgba(76, 197, 222, 0.3);
+}
+
+/* ── Cold open: "History" flicker, then reveal (client-only, once/session) ── */
+.coldOpen {
+  /* Direct child of the hero <section>; !important escapes `.hero > *` (see
+     .root) and lifts the veil ABOVE the pinned hero content (z-index:2) so it
+     truly covers the scene during the cold open. */
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 8 !important;
   pointer-events: none;
-  /* empty — will render VISOR_WORDMARK / EYEBROW / EXPLANATION in T2 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  /* Near-opaque cool-black so the scene is hidden behind the cold open; it
+     fades out (fcColdVeil) to reveal the approach. A faint cyan core hints at
+     the signal before the wordmark resolves. */
+  background:
+    radial-gradient(58% 46% at 50% 50%, rgba(75, 197, 222, 0.05), transparent 60%),
+    radial-gradient(120% 120% at 50% 50%, rgba(4, 5, 7, 0.93), rgba(2, 3, 4, 0.99) 72%);
+  animation: fcColdVeil 2.6s ease forwards;
+}
+
+.coldOpenWord {
+  font-family: var(--font-wordmark);
+  font-size: clamp(2.4rem, 7vw, 5.4rem);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: rgba(231, 238, 240, 0.96);
+  text-shadow: 0 0 26px rgba(76, 197, 222, 0.22);
+  animation: fcColdFlicker 2.6s ease forwards;
+}
+
+.coldOpenTag {
+  font-family: var(--font-wordmark);
+  font-size: clamp(0.66rem, 1.4vw, 0.92rem);
+  letter-spacing: 0.52em;
+  text-indent: 0.52em;
+  color: rgba(140, 247, 230, 0.85);
+  animation: fcColdTag 2.6s ease forwards;
+}
+
+/* ── Climax / arrived freeze ────────────────────────────────────────────── */
+[data-fc-climax] .comet {
+  animation: fcCometSweep 1.15s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+[data-fc-climax] .colorReflection {
+  animation: fcColorBloom 1.7s ease forwards;
+}
+
+[data-fc-climax] .moon,
+[data-fc-arrived] .moon {
+  filter: grayscale(0.28) brightness(0.84) contrast(1.12) hue-rotate(173deg);
+  opacity: 0.82;
+  transition: filter 0.9s ease, opacity 0.9s ease;
+}
+
+[data-fc-climax] .moonTerminator,
+[data-fc-arrived] .moonTerminator {
+  background: linear-gradient(96deg, transparent 0%, transparent 58%, rgba(2, 4, 7, 0.045) 78%);
+  transition: background 0.9s ease;
+}
+
+[data-fc-climax] .godRays,
+[data-fc-arrived] .godRays,
+[data-fc-climax] .backdrop,
+[data-fc-arrived] .backdrop {
+  opacity: 1;
+  transition: opacity 0.9s ease;
+}
+
+[data-fc-climax] .colorReflection,
+[data-fc-arrived] .colorReflection {
+  opacity: 1;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes fcCometSweep {
+  0% {
+    opacity: 0;
+    transform: rotate(27deg) translateX(-40%) scaleX(0.6);
+  }
+  12% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+    transform: rotate(27deg) translateX(120%) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(27deg) translateX(150%) scaleX(1);
+  }
+}
+
+@keyframes fcColorBloom {
+  0% {
+    opacity: var(--fc-p, 1);
+    filter: saturate(0.7);
+  }
+  38% {
+    opacity: 1;
+    filter: saturate(1.5) brightness(1.12);
+  }
+  100% {
+    opacity: 1;
+    filter: saturate(1);
+  }
+}
+
+@keyframes fcColdVeil {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  72% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ≤3 low-contrast opacity dips (never a full black↔white strobe), ~1 Hz —
+   within WCAG 2.3.1 flash guidance. */
+@keyframes fcColdFlicker {
+  0% { opacity: 0; }
+  8% { opacity: 0.92; }
+  14% { opacity: 0.34; }
+  18% { opacity: 0.95; }
+  27% { opacity: 0.46; }
+  31% { opacity: 1; }
+  45% { opacity: 0.6; }
+  49% { opacity: 1; }
+  72% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes fcColdTag {
+  0% { opacity: 0; letter-spacing: 0.24em; }
+  42% { opacity: 0; }
+  62% { opacity: 0.85; letter-spacing: 0.52em; }
+  82% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+/* ── Reduced motion: no animation, land on arrived ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .coldOpen {
+    display: none;
+  }
+  .comet,
+  .colorReflection,
+  .coldOpenWord,
+  .coldOpenTag {
+    animation: none !important;
+  }
+  .moon {
+    filter: grayscale(0.28) brightness(0.84) contrast(1.12) hue-rotate(173deg);
+    opacity: 0.82;
+    transform: scale(1.02);
+  }
+  .colorReflection,
+  .godRays,
+  .backdrop {
+    opacity: 1;
+  }
 }
