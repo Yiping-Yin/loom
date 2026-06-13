@@ -4,20 +4,20 @@
 
 **Goal:** Rebuild the whole Loom visual system to the cool-black "Evidence Desk" design — luminance-layered structure, watch-hand gold, real optical glass, four scene light-environments — across every surface, keeping the contract suite green.
 
-**Architecture:** One shared foundation layer of CSS custom properties + glass/light mixins lives in `app/globals.css :root`. Each route's existing root class (`.lcv` home, `.vd-section-page` archive, `.roleOsPage` Digital Me, the support pages, the Beebook replica) becomes a *scene* that consumes the foundation and overrides only base-ink / accent-budget / ambient-glow / material-strength. No class renames; visual values only; theme/colour assertions updated in lockstep.
+**Architecture:** One shared foundation layer of CSS custom properties + glass/light mixins lives in `app/globals.css :root`. Each route's existing root class (`.lcv` home, `.vd-section-page` archive, `.roleOsPage` Digital Me, the support pages, the QBook replica) becomes a *scene* that consumes the foundation and overrides only base-ink / accent-budget / ambient-glow / material-strength. No class renames; visual values only; theme/colour assertions updated in lockstep.
 
-**Tech Stack:** Next.js + CSS (globals + CSS modules), the Vite Beebook replica, `sharp` for icons, `pptxgenjs` for the deck. Contract tests via `npm run test:contracts`; gate every task on `npm run typecheck` + the relevant test file.
+**Tech Stack:** Next.js + CSS (globals + CSS modules), the Vite QBook replica, `sharp` for icons, `pptxgenjs` for the deck. Contract tests via `npm run test:contracts`; gate every task on `npm run typecheck` + the relevant test file.
 
 **Spec:** `docs/superpowers/specs/2026-06-11-loom-visual-system-design.md` — read it; this plan implements it exactly. The banned anti-patterns (solid gold fills, saturated discs, fake glass) are hard constraints.
 
-**Sequencing:** Do NOT start until the in-flight Beebook round-2 workflow (wf_18e194b1) has fully finished — it edits the same files. Verify it is done first.
+**Sequencing:** Do NOT start until the in-flight QBook round-2 workflow (wf_18e194b1) has fully finished — it edits the same files. Verify it is done first.
 
 ---
 
 ### Task 0: Confirm clean starting state
 
 - [ ] **Step 1:** `cd "/Users/yinyiping/Desktop/Private Wiki/LOOM" && npm run test:contracts 2>&1 | grep -E "ℹ (tests|pass|fail)"` — record baseline (expect 0 fail). `npm run typecheck` — must be clean (round-2 fixed the ask-yiping regression; if not clean, fix per spec before proceeding).
-- [ ] **Step 2:** Confirm the Beebook round-2 workflow is finished (no agent editing globals.css / modules / replica).
+- [ ] **Step 2:** Confirm the QBook round-2 workflow is finished (no agent editing globals.css / modules / replica).
 
 ---
 
@@ -79,7 +79,7 @@
 **Files:** Modify `app/digital-me/DigitalMeRoleOS.module.css`, `components/verified-dossier/AskYiping.module.css`.
 
 - [ ] **Step 1:** Re-point `--role-*` to the foundation: base `--ink-1` + faint cool ambient glow; cyan `--cyan` for data-signal (active capability indicator, the Sources→Draft→Answer flow line as a thread-of-light, "thinking" state); gold ONLY on the active tab/row as a 1px left-border or underline + dark text — NOT a filled yellow tab. Kill the yellow-fill active states.
-- [ ] **Step 2:** Add the thread-of-light: a thin `--cyan` gradient line connecting question → cited sources on the Ask answer (CSS only, subtle). The Live Market Room (now Beebook) keeps its perspective screenshot.
+- [ ] **Step 2:** Add the thread-of-light: a thin `--cyan` gradient line connecting question → cited sources on the Ask answer (CSS only, subtle). The Live Market Room (now QBook) keeps its perspective screenshot.
 - [ ] **Step 3:** Screenshot `/digital-me` (1488); verify signal/alive, cyan-on-data, gold sparse. `npm run test:contracts` (digital-me-role-os) + typecheck; commit `style(loom): Digital Me scene — signal`.
 
 ---
@@ -93,14 +93,14 @@
 
 ---
 
-### Task 6: Beebook replica — cold, dense terminal
+### Task 6: QBook replica — cold, dense terminal
 
 **Files:** Modify `optibook-replica/src/styles.css` (+ `src/App.jsx`/`src/data.js` only for the leaderboard rank/avatar markup); then rebuild + reintegrate into `LOOM/public/optibook/`.
 
 - [ ] **Step 1:** Re-point the replica palette to cool-black foundation (bg `--ink-0`, panels `--ink-3`, hairlines `--line`). **KILL the yellow-fill leaderboard pills** (the rejected "1 · S"): rank = a quiet `.loom-num` numeral in `--text-2` (rank 1 may get a single tiny gold mark), team avatar = a neutral monogram on `--ink-4` (NOT a saturated green/coloured disc).
 - [ ] **Step 2:** Colour only on data: order book + PnL + ticker use `--up`/`--down` (small), price-graph sparklines + chart lines use `--cyan`; gold only on the active control. Structure stays achromatic.
-- [ ] **Step 3:** `cd optibook-replica && npm run build`; `rm -rf "../LOOM/public/optibook"/* && cp -R dist/. "../LOOM/public/optibook/"`. Confirm Beebook wordmark + new palette at `http://localhost:3000/optibook/index.html`.
-- [ ] **Step 4:** `cd LOOM && npm run test:contracts` (0 fail). Commit (replica repo) `style(beebook): cool-black terminal, kill yellow-fill pills`.
+- [ ] **Step 3:** `cd optibook-replica && npm run build`; `rm -rf "../LOOM/public/optibook"/* && cp -R dist/. "../LOOM/public/optibook/"`. Confirm QBook wordmark + new palette at `http://localhost:3000/optibook/index.html`.
+- [ ] **Step 4:** `cd LOOM && npm run test:contracts` (0 fail). Commit (replica repo) `style(qbook): cool-black terminal, kill yellow-fill pills`.
 
 ---
 
@@ -118,8 +118,8 @@
 
 **Files:** Re-capture `docs/images/product/*.png` from the new pages; regenerate `docs/deck/loom.pptx` (palette → cool-black/gold per `docs/deck/build-loom-deck.mjs`).
 
-- [ ] **Step 1:** Re-screenshot cover/digital-me/education/experience/optibook(Beebook) at 1488 deviceScaleFactor 2 into `docs/images/product/`.
-- [ ] **Step 2:** Update `docs/deck/build-loom-deck.mjs` palette to the foundation tokens (cool-black, champagne gold, cyan), rebuild `loom.pptx`. Update README copy where it says Optibook→Beebook.
+- [ ] **Step 1:** Re-screenshot cover/digital-me/education/experience/optibook(QBook) at 1488 deviceScaleFactor 2 into `docs/images/product/`.
+- [ ] **Step 2:** Update `docs/deck/build-loom-deck.mjs` palette to the foundation tokens (cool-black, champagne gold, cyan), rebuild `loom.pptx`. Update README copy where it says Optibook→QBook.
 - [ ] **Step 3:** Commit `docs(loom): refresh product screenshots + deck to v1 system`.
 
 ---
@@ -133,6 +133,6 @@
 ---
 
 ## Self-review notes
-- Spec coverage: foundation (Task 1) ✓; 4 scenes (Tasks 2–5) ✓; Beebook + yellow-fill ban (Task 6) ✓; icon (Task 7) ✓; README/deck (Task 8) ✓; anti-patterns enforced in Tasks 2/4/6; contract-test safety in every task.
+- Spec coverage: foundation (Task 1) ✓; 4 scenes (Tasks 2–5) ✓; QBook + yellow-fill ban (Task 6) ✓; icon (Task 7) ✓; README/deck (Task 8) ✓; anti-patterns enforced in Tasks 2/4/6; contract-test safety in every task.
 - Tokens are defined once in Task 1 and referenced by name everywhere — no divergent hexes.
 - No placeholders: foundation CSS is given in full; per-surface tasks specify exact files, the rule, and the verify step.

@@ -9,6 +9,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import styles from '../loom-support-page.module.css';
 import { useAllTraces } from '../../lib/trace';
 import { loadPursuitRecords, type LoomPursuitRecord } from '../../lib/loom-pursuit-records';
 import {
@@ -26,7 +27,15 @@ import {
   type NewLoomYearItem,
 } from '../../lib/new-loom/year-surface';
 
+function canReadNativeCaptureBridge() {
+  if (typeof window === 'undefined') return false;
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') return false;
+  return true;
+}
+
 async function loadNativeCaptureItems(): Promise<NewLoomYearItem[]> {
+  if (!canReadNativeCaptureBridge()) return [];
+
   try {
     const response = await fetch('loom://native/captures-list.json');
     if (!response.ok) return [];
@@ -77,8 +86,8 @@ export function YearClient() {
   const maxWeight = Math.max(1, ...overview.months.map((column) => column.weight));
 
   return (
-    <div style={{ display: 'grid', gap: '2.2rem' }}>
-      <section aria-label="The Year material by month">
+    <div className={styles.sectionGrid}>
+      <section className={styles.sectionCard} aria-label="The Year material by month">
         <div
           style={{
             display: 'grid',
@@ -117,18 +126,9 @@ export function YearClient() {
         </p>
       </section>
 
-      <section aria-label="The Year wintering buckets">
-        <h2
-          style={{
-            fontFamily: 'var(--serif)',
-            fontSize: '1.15rem',
-            fontWeight: 600,
-            marginBottom: '0.7rem',
-          }}
-        >
-          The wintering ribbon
-        </h2>
-        <div style={{ display: 'grid', gap: '0.9rem' }}>
+      <section className={styles.sectionCard} aria-label="The Year wintering buckets">
+        <h2 className={styles.sectionHeading}>The wintering ribbon</h2>
+        <div className={styles.sectionGrid}>
           {(
             [
               { key: 'active', label: 'Active', note: 'touched recently' },
@@ -138,38 +138,24 @@ export function YearClient() {
           ).map((bucket) => {
             const items = overview.ribbon[bucket.key];
             return (
-              <div key={bucket.key}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+              <div key={bucket.key} className={styles.thinCard}>
+                <div className={styles.row}>
                   <strong style={{ fontSize: '0.92rem' }}>{bucket.label}</strong>
-                  <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>
+                  <span className={styles.supportNote}>
                     {items.length} · {bucket.note}
                   </span>
                 </div>
-                <ul
-                  style={{
-                    listStyle: 'none',
-                    margin: '0.4rem 0 0',
-                    padding: 0,
-                    display: 'grid',
-                    gap: '0.3rem',
-                  }}
-                >
+                <ul className={styles.plainList} style={{ marginTop: '0.45rem' }}>
                   {items.slice(0, 5).map((item) => (
                     <li
                       key={item.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'baseline',
-                        gap: 10,
-                        fontSize: '0.88rem',
-                        flexWrap: 'wrap',
-                      }}
+                      className={styles.row}
                     >
                       <span style={{ color: 'var(--fg-secondary)' }}>{item.title}</span>
                       {!publicWorkingMode && (
                         <Link
                           href={yearItemDraftHref(item)}
-                          style={{ color: 'var(--accent)', textDecoration: 'none' }}
+                          className={styles.textLink}
                         >
                           Draft this item
                         </Link>
@@ -183,36 +169,19 @@ export function YearClient() {
         </div>
       </section>
 
-      <section aria-label="The Year question containers">
-        <h2
-          style={{
-            fontFamily: 'var(--serif)',
-            fontSize: '1.15rem',
-            fontWeight: 600,
-            marginBottom: '0.7rem',
-          }}
-        >
-          Question containers
-        </h2>
+      <section className={styles.sectionCard} aria-label="The Year question containers">
+        <h2 className={styles.sectionHeading}>Question containers</h2>
         {overview.questionContainers.length === 0 ? (
-          <p style={{ color: 'var(--muted)', fontSize: '0.88rem', margin: 0 }}>
+          <p className={styles.muted} style={{ margin: 0 }}>
             No open questions gathered material this year. Hold a question while reading in
             Sources and it will appear here.
           </p>
         ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.6rem' }}>
+          <ul className={styles.plainList}>
             {overview.questionContainers.map((container) => (
-              <li
-                key={container.id}
-                style={{
-                  border: 'var(--hairline)',
-                  borderRadius: 8,
-                  padding: '0.7rem 1rem',
-                  background: 'color-mix(in srgb, var(--fg) 2%, var(--bg))',
-                }}
-              >
+              <li key={container.id} className={styles.thinCard}>
                 <div style={{ fontSize: '0.92rem', marginBottom: 2 }}>{container.question}</div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
+                <div className={styles.supportNote}>
                   {container.items.length} linked item{container.items.length === 1 ? '' : 's'}
                 </div>
               </li>

@@ -31,6 +31,7 @@ test('typecheck script falls back to npm when npm_execpath is unavailable', () =
 test('typecheck script resolves repo root from the script path and serializes builds', () => {
   const source = fs.readFileSync(path.join(repoRoot, 'scripts/typecheck.mjs'), 'utf8');
   const buildSource = fs.readFileSync(path.join(repoRoot, 'scripts/build.mjs'), 'utf8');
+  const devSource = fs.readFileSync(path.join(repoRoot, 'scripts/dev.mjs'), 'utf8');
   const exportSource = fs.readFileSync(path.join(repoRoot, 'scripts/build-static-export.mjs'), 'utf8');
 
   assert.match(source, /fileURLToPath\(import\.meta\.url\)/);
@@ -46,6 +47,11 @@ test('typecheck script resolves repo root from the script path and serializes bu
   assert.match(buildSource, /await run\(process\.execPath, \[pagefindScript, '\.next-build\/server\/app', 'public\/pagefind'\],[\s\S]*\);\s*await removeDuplicateArtifacts\(path\.join\(root, '\.next'\)\);\s*await removeDuplicateArtifacts\(path\.join\(root, '\.next-build'\)\);/);
   assert.match(buildSource, /removePathWithRetry\(path\.join\(root, '\.next-build', 'types'\)\);/);
   assert.match(buildSource, /removePathWithRetry\(path\.join\(root, 'public', 'pagefind'\)\);/);
+  assert.match(devSource, /const appBuildManifestPath = path\.join\(nextDir, 'app-build-manifest\.json'\);/);
+  assert.match(devSource, /function findMissingAppManifestAssets\(\) \{/);
+  assert.match(devSource, /asset\.startsWith\('static\/'\)/);
+  assert.match(devSource, /rmSync\(nextDir,\s*\{[\s\S]*recursive: true,[\s\S]*force: true,[\s\S]*\}\);/);
+  assert.match(devSource, /removeCorruptNextDirIfNeeded\(\);[\s\S]*ensureRoutesManifest\(\);[\s\S]*const child = spawn/);
   assert.match(exportSource, /import \{ removeDuplicateArtifacts, withNextBuildLock \} from '\.\/next-build-lock\.mjs';/);
   assert.match(exportSource, /await removeDuplicateArtifacts\(path\.join\(repoRoot, '\.next'\)\);/);
   assert.match(exportSource, /await removeDuplicateArtifacts\(path\.join\(repoRoot, '\.next-export'\)\);/);

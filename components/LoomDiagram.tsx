@@ -17,14 +17,14 @@ import type { CSSProperties } from 'react';
  * Dynamic inputs:
  *   - `warpCount`  — one vertical line per held source; defaults to 9
  *   - `weftTones`  — one stroke colour per weft row; defaults to
- *                    [bronze, ochre, sage], matching the mockup's
- *                    thread/ochre/sage inks. Supply fewer for a
- *                    quieter diagram (a single thread reads as "one
- *                    weave in progress"), or more for a denser map.
+ *                    signature cyan, lunar silver, and oxidized silver.
+ *                    Supply fewer for a quieter diagram (a single thread
+ *                    reads as "one weave in progress"), or more for a
+ *                    denser map.
  */
 export default function LoomDiagram({
   warpCount = 9,
-  weftTones = ['var(--accent)', 'var(--tint-orange, #A8783E)', 'var(--tint-green, #5C6E4E)'],
+  weftTones = ['var(--accent)', 'var(--tint-orange, #A8B0B6)', 'var(--tint-green, #8FA3A6)'],
   height = 140,
   warpLabels,
   activeWarps,

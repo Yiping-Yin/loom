@@ -1,5 +1,7 @@
-import ProductHistoryPage from '../product-history/page';
+import ProductHistoryPage from '../../components/product-history/ProductHistoryPage';
 
 export const metadata = { title: 'Loom · Product System' };
 
-export default ProductHistoryPage;
+export default function LoomPage() {
+  return <ProductHistoryPage />;
+}

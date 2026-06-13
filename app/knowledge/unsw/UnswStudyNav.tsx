@@ -5,14 +5,12 @@ type UnswStudyNavActive = 'unsw' | 'econ3202' | string;
 
 export function UnswStudyNav({ active }: { active: UnswStudyNavActive }) {
   return (
-    <nav aria-label="UNSW study navigation" className={styles.topNav}>
-      <a href="/" className={styles.brand}>
-        Loom
+    <nav aria-label="UNSW course navigation" className={styles.courseRail}>
+      <a href="/knowledge/unsw" className={styles.brand} aria-current={active === 'unsw' ? 'page' : undefined}>
+        UNSW
       </a>
       <div className={styles.navGroup}>
-        <NavLink href="/about" label="About" active={active === 'about'} />
         <NavLink href="/sources" label="Sources" active={active === 'sources'} />
-        <NavLink href="/knowledge/unsw" label="UNSW" active={active === 'unsw'} />
         <NavLink href="/knowledge/unsw/econ3202" label="ECON3202" active={active === 'econ3202'} />
       </div>
       <div aria-label="Problem-set navigation" className={styles.problemGroup}>

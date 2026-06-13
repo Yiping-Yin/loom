@@ -2,7 +2,6 @@ import {
   VERIFIED_DOSSIER_EXPERIENCE_ENTRIES,
   VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
   VERIFIED_DOSSIER_PROFILE,
-  VERIFIED_DOSSIER_TOP_NAV,
   VERIFIED_DOSSIER_UNSW_COURSES,
   VERIFIED_DOSSIER_WORKBENCH,
 } from '../../lib/new-loom/verified-dossier-home';
@@ -10,6 +9,7 @@ import type {
   VerifiedDossierPresentationCategory,
   VerifiedDossierProfileLink,
 } from '../../lib/new-loom/verified-dossier-home';
+import { LoomGlobalNav } from './LoomGlobalNav';
 
 // Home v12: ledger cover. Two-column dossier — identity rail + numbered
 // evidence ledger. All styles are namespaced under `.lcv` in globals.css so
@@ -357,19 +357,7 @@ export function VerifiedDossierHome() {
 
   return (
     <main className="vd-home lcv" aria-labelledby="verified-dossier-title">
-      <nav className="lcv-nav" aria-label="Verified dossier navigation">
-        <a className="lcv-wordmark lcv-serif" href="/loom" aria-label="Open Loom product">
-          Loom
-        </a>
-        <div className="lcv-nav__links">
-          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-            <a key={item.label} href={item.href} aria-current={item.href === '/' ? 'page' : undefined}>
-              {item.label}
-            </a>
-          ))}
-        </div>
-        <img className="lcv-nav__avatar" src={VERIFIED_DOSSIER_PROFILE.photoSrc} alt="" aria-hidden="true" draggable={false} />
-      </nav>
+      <LoomGlobalNav activeHref="/" ariaLabel="Verified dossier navigation" />
 
       <div className="lcv-shell">
         <aside className="lcv-rail" aria-label="Personal identity">

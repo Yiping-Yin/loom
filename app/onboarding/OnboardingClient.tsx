@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, CSSProperties } from 'react';
+import { useState, useEffect, type CSSProperties, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowRight } from 'lucide-react';
 import { ScanScopePicker } from '../../components/ScanScopePicker';
 import { TextInput } from '../../components/TextInput';
 import { WeftShuttle } from '../../components/DocViewer';
@@ -226,16 +227,18 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Cormorant-italic paper-bordered button, mirroring the mockup's
- * "Open the first book →" affordance. Primary action on first-run.
+ * Cormorant-italic paper-bordered button. Primary actions use a real SVG
+ * arrow, keeping navigation glyphs aligned with the global Loom chrome.
  */
 function VellumButton({
   label,
+  icon,
   onClick,
   disabled,
   tone = 'primary',
 }: {
-  label: React.ReactNode;
+  label: ReactNode;
+  icon?: ReactNode;
   onClick: () => void;
   disabled?: boolean;
   tone?: 'primary' | 'ghost';
@@ -244,6 +247,10 @@ function VellumButton({
   const baseStyle: CSSProperties =
     tone === 'primary'
       ? {
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.46rem',
           padding: '0.75rem 1.5rem',
           fontFamily: 'var(--display)',
           fontStyle: 'italic',
@@ -258,6 +265,10 @@ function VellumButton({
           transition: 'background 160ms var(--ease, ease), color 160ms var(--ease, ease)',
         }
       : {
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.38rem',
           padding: '0.4rem 0',
           marginLeft: '0.25rem',
           fontFamily: 'var(--serif)',
@@ -284,6 +295,7 @@ function VellumButton({
       style={baseStyle}
     >
       {label}
+      {icon}
     </button>
   );
 }
@@ -308,7 +320,11 @@ function PickPhase({
   return (
     <div style={{ marginTop: '3rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-        <VellumButton label={<>Open the first book&nbsp;&nbsp;→</>} onClick={onPick} />
+        <VellumButton
+          label="Open the first book"
+          icon={<ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />}
+          onClick={onPick}
+        />
         <button
           type="button"
           onClick={() => setShowManualPath(!showManualPath)}
@@ -455,7 +471,11 @@ function ScopePhase({
           flexWrap: 'wrap',
         }}
       >
-        <VellumButton label={<>Choose shelves&nbsp;&nbsp;→</>} onClick={onOpenModal} />
+        <VellumButton
+          label="Choose shelves"
+          icon={<ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />}
+          onClick={onOpenModal}
+        />
         <VellumButton tone="ghost" label="scan everything" onClick={onSkip} />
       </div>
 
@@ -546,4 +566,3 @@ function ErrorPhase({ message, onRetry }: { message: string; onRetry: () => void
     </div>
   );
 }
-

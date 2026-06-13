@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { DocViewer } from '../components/DocViewer';
 import { DocBodyProvider } from '../components/DocBodyProvider';
 import { DocOutline } from '../components/DocOutline';
@@ -255,7 +256,8 @@ export default function DocClient() {
             No readable source is attached to this route.
           </p>
           <Link href="/sources" className="loom-empty-state-action">
-            Open Sources →
+            Open Sources
+            <ArrowRight className="loom-empty-state-action-icon" aria-hidden="true" size={14} strokeWidth={1.8} />
           </Link>
         </div>
       </main>

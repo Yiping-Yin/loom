@@ -1,5 +1,10 @@
 import { DraftClient } from './DraftClient';
 
+export const metadata = {
+  title: 'Draft · Loom',
+  description: 'Write source-grounded drafts from verified Loom evidence.',
+};
+
 type DraftPageSearchParams = {
   draftType?: string | string[];
 };

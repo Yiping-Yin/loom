@@ -403,7 +403,19 @@ test('installed app smoke is sandbox-compatible and does not call CLI AI', () =>
   assert.match(source, /PrivacyInfo\.xcprivacy/);
   assert.match(source, /com\.apple\.security\.app-sandbox/);
   assert.match(source, /codesign/);
+  assert.match(source, /pathToFileURL\(process\.argv\[1\]\)\.href/);
   assert.doesNotMatch(source, /CODEX_BIN|\/api\/chat|server\.js/);
+});
+
+test('CLI script entry guards survive workspace paths with spaces', () => {
+  const repoRoot = path.resolve(__dirname, '..');
+  const smokeSource = fs.readFileSync(path.join(repoRoot, 'scripts', 'installed-app-smoke.mjs'), 'utf8');
+  const ingestSource = fs.readFileSync(path.join(repoRoot, 'scripts', 'ingest-knowledge.ts'), 'utf8');
+
+  assert.match(smokeSource, /pathToFileURL\(process\.argv\[1\]\)\.href/);
+  assert.match(ingestSource, /pathToFileURL\(process\.argv\[1\]\)\.href/);
+  assert.doesNotMatch(smokeSource, /`file:\/\/\$\{process\.argv\[1\]\}`/);
+  assert.doesNotMatch(ingestSource, /`file:\/\/\$\{process\.argv\[1\]\}`/);
 });
 
 test('web smoke samples the same derived knowledge fixture that the server reads', () => {
@@ -425,4 +437,58 @@ test('Release Xcode bundle staging fails when the static export is missing', () 
   assert.match(spec, /Release/);
   assert.match(spec, /exit 1/);
   assert.match(spec, /build-static-export\.mjs/);
+});
+
+test('new Loom product gates are executable and approval-safe', () => {
+  const repoRoot = path.resolve(__dirname, '..');
+  const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8')) as {
+    scripts?: Record<string, string>;
+  };
+  const approvalVerifier = fs.readFileSync(
+    path.join(repoRoot, 'scripts', 'verify-approval-gates-ready.mjs'),
+    'utf8',
+  );
+  const completionVerifier = fs.readFileSync(
+    path.join(repoRoot, 'scripts', 'verify-new-loom-completion-audit.mjs'),
+    'utf8',
+  );
+  const activeReadme = fs.readFileSync(
+    path.join(repoRoot, 'docs', 'projects', 'active', 'README.md'),
+    'utf8',
+  );
+
+  assert.equal(
+    pkg.scripts?.['verify:new-loom-audit'],
+    'node scripts/verify-new-loom-completion-audit.mjs',
+  );
+  assert.equal(
+    pkg.scripts?.['verify:approval-gates-ready'],
+    'node scripts/verify-approval-gates-ready.mjs',
+  );
+  assert.match(pkg.scripts?.['verify:product'] ?? '', /verify:new-loom-audit/);
+  assert.match(pkg.scripts?.['verify:product'] ?? '', /verify:approval-gates-ready/);
+  assert.match(pkg.scripts?.['verify:product'] ?? '', /typecheck/);
+  assert.match(pkg.scripts?.['verify:product'] ?? '', /test:contracts/);
+  assert.match(pkg.scripts?.['verify:product'] ?? '', /app:user/);
+  assert.match(pkg.scripts?.['verify:product'] ?? '', /app:smoke/);
+  assert.doesNotMatch(pkg.scripts?.['verify:product'] ?? '', /verify:real-files-importer/);
+  assert.doesNotMatch(pkg.scripts?.['verify:product'] ?? '', /LOOM_REAL_FILE_ROOT/);
+
+  assert.match(approvalVerifier, /approval_required/);
+  assert.match(approvalVerifier, /--json/);
+  assert.match(approvalVerifier, /Real user-file installed-app importer acceptance/);
+  assert.match(approvalVerifier, /Live provider-output Compile\/Draft acceptance/);
+  assert.match(approvalVerifier, /Do not send a real provider request/);
+  assert.match(approvalVerifier, /Do not import real files through the installed UI/);
+
+  assert.match(completionVerifier, /new Loom completion audit ok/);
+  assert.match(completionVerifier, /verify:product must run only safe non-approval gates/);
+  assert.match(completionVerifier, /Finder-numbered duplicate artifacts/);
+
+  assert.match(activeReadme, /Current new Loom continuation reading order/);
+  assert.match(activeReadme, /2026-05-15-new-loom-acceptance-status\.md/);
+  assert.match(activeReadme, /Sources \/ Draft/);
+  assert.match(activeReadme, /historical reference only/);
+  assert.match(activeReadme, /Real user-file installed-app importer acceptance/);
+  assert.match(activeReadme, /Live provider-output Compile\/Draft acceptance/);
 });

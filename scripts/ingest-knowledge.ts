@@ -22,6 +22,7 @@
 import { promises as fs } from 'node:fs';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { CONTENT_ROOT, KNOWLEDGE_ROOT } from '../lib/server-config';
 import { resolveContentRoot } from '../lib/runtime-roots';
 import { knowledgeDocRuntimeDir, knowledgeDocRuntimePath } from '../lib/knowledge-doc-cache';
@@ -746,10 +747,9 @@ async function main() {
 
 export { categorizePath, main as runIngest };
 
-// CLI entry. Under `tsx scripts/ingest-knowledge.ts` import.meta.url matches
-// the invoked argv[1]; when imported as a module, it won't, so the main()
-// call is skipped.
-const isCli = import.meta.url === `file://${process.argv[1]}`;
+// CLI entry. Use pathToFileURL so workspace paths containing spaces still
+// match import.meta.url when invoked through tsx/node.
+const isCli = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isCli) {
   main().catch((e) => { console.error(e); process.exit(1); });
 }

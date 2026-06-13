@@ -196,7 +196,14 @@ test('KnowledgeHomeStatic renders the verified dossier Sources surface and sourc
   const { sourceText } = loadTsx('app/knowledge/KnowledgeHomeStatic.tsx');
 
   assert.match(sourceText, /className=\{`vd-home \$\{styles\.page\}`\}/);
-  assert.match(sourceText, /VERIFIED_DOSSIER_TOP_NAV/);
+  assert.match(sourceText, /LoomGlobalNav/);
+  assert.match(sourceText, /initialSearchQuery/);
+  assert.match(sourceText, /setSourceSearchQuery\(initialSearchQuery\)/);
+  assert.match(sourceText, /Search shelves and sources/);
+  assert.match(sourceText, /Active source search/);
+  assert.match(sourceText, /Review matching shelves/);
+  assert.match(sourceText, /Clear search/);
+  assert.match(sourceText, /normalizeSourceSearch/);
   assert.match(sourceText, /DocumentPreviewCard/);
   assert.match(sourceText, /FileBadge/);
   assert.match(sourceText, /InstitutionMark/);
@@ -226,10 +233,16 @@ test('Sources page includes manifest-backed reference shelves through the source
   const { sourceText } = loadTsx('app/sources/page.tsx');
   const registryText = readText('lib/new-loom/reference-source-registry.ts');
 
+  assert.match(sourceText, /type SourcesPageSearchParams = \{/);
+  assert.match(sourceText, /search\?: string \| string\[\]/);
+  assert.match(sourceText, /q\?: string \| string\[\]/);
+  assert.match(sourceText, /const params = \(await searchParams\) \?\? \{\}/);
+  assert.match(sourceText, /const initialSearchQuery = cleanSearchParam\(params\.search\) \|\| cleanSearchParam\(params\.q\)/);
   assert.match(sourceText, /mergeReferenceCategories/);
   assert.match(sourceText, /appendReferenceCategoriesToSourceGroups/);
   assert.match(sourceText, /const categories = mergeReferenceCategories\(rawCategories\)/);
   assert.match(sourceText, /const groups = appendReferenceCategoriesToSourceGroups\(rawGroups\)\.map/);
+  assert.match(sourceText, /initialSearchQuery=\{initialSearchQuery\}/);
   assert.match(registryText, /Reference shelves/);
   assert.match(registryText, /listReferenceSourceCategories/);
 });

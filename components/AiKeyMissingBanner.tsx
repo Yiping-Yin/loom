@@ -1,8 +1,8 @@
 'use client';
 /**
- * First-run soft prompt: shown at the top of user-work surfaces (Home, Today,
- * Browse, Knowledge) when no Anthropic API key is configured. Hidden once the
- * user sets a key in Settings, or dismisses the banner.
+ * First-run soft prompt: shown as low-priority glass toast on user-work
+ * surfaces when no Anthropic API key is configured. Hidden once the user sets
+ * a key in Settings, or dismisses the banner.
  *
  * Per the "Learn, Don't Organize" north star and Focus Discipline memory, this
  * is a soft prompt, not a hard gate — the reading loop works without AI, so
@@ -27,8 +27,15 @@ function isReadingPath(pathname: string) {
 function isPresentationPath(pathname: string) {
   return (
     pathname === '/' ||
+    pathname === '/sources' ||
     pathname === '/loom' ||
     pathname === '/product-history' ||
+    pathname === '/system' ||
+    pathname === '/discipline' ||
+    pathname === '/year' ||
+    pathname === '/hour' ||
+    pathname === '/connections' ||
+    pathname === '/colophon' ||
     pathname === '/about' ||
     pathname === '/education' ||
     pathname === '/experience' ||
@@ -62,9 +69,11 @@ export function AiKeyMissingBanner() {
     return () => { cancelled = true; };
   }, []);
 
-  // Don't show on pure reading surfaces or presentation pages. Those
-  // surfaces should open cleanly before provider setup becomes relevant.
-  if (!visible || isPresentationPath(pathname) || isReadingPath(pathname)) return null;
+  const shouldShow = visible && !isPresentationPath(pathname) && !isReadingPath(pathname);
+
+  // Don't show on pure reading, source-library landing, or presentation pages.
+  // Those surfaces should open cleanly before provider setup becomes relevant.
+  if (!shouldShow) return null;
 
   const dismiss = () => {
     try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch {}
@@ -74,39 +83,52 @@ export function AiKeyMissingBanner() {
   return (
     <div
       role="status"
+      aria-live="polite"
+      data-ai-key-banner="true"
       style={{
-        borderBottom: '0.5px solid color-mix(in srgb, var(--accent) 18%, var(--mat-border))',
-        background: 'color-mix(in srgb, var(--accent-soft) 12%, var(--mat-thin-bg))',
+        position: 'fixed',
+        right: 'max(1rem, env(safe-area-inset-right))',
+        bottom: 'max(0.75rem, env(safe-area-inset-bottom))',
+        zIndex: 920,
+        width: 'fit-content',
+        maxWidth: 'min(25rem, calc(100vw - 2rem))',
+        border: '0.5px solid color-mix(in srgb, var(--accent) 16%, var(--mat-border))',
+        borderRadius: '999px',
+        background:
+          'linear-gradient(135deg, color-mix(in srgb, var(--mat-thin-bg) 90%, transparent), color-mix(in srgb, var(--accent-soft) 8%, var(--mat-bg)))',
+        boxShadow:
+          'inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 30px rgba(0,0,0,0.26)',
+        WebkitBackdropFilter: 'blur(22px) saturate(118%)',
+        backdropFilter: 'blur(22px) saturate(118%)',
       }}
     >
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.7rem',
-          maxWidth: '76rem',
-          margin: '0 auto',
-          padding: '0.52rem clamp(1.1rem, 4vw, 4rem)',
-          fontSize: 'var(--fs-small)',
+          gap: '0.55rem',
+          padding: '0.54rem 0.62rem',
+          fontSize: 'clamp(0.72rem, 2.6vw, var(--fs-small))',
           color: 'var(--fg-secondary)',
+          lineHeight: 1.28,
         }}
       >
         <span aria-hidden style={statusDotStyle} />
         <span style={{ flex: 1, minWidth: 0 }}>
-          AI features are off. Add an Anthropic API key in Settings (<kbd style={kbdStyle}>⌘</kbd><kbd style={kbdStyle}>,</kbd>). Sources and reading still work.
+          AI off. Add a key in Settings; Sources and Draft still work.
         </span>
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Dismiss"
+          aria-label="Dismiss AI key notice"
           style={{
             border: 0,
             background: 'transparent',
             color: 'var(--muted)',
             cursor: 'pointer',
-            padding: '2px 6px',
-            fontSize: 'var(--fs-small)',
-            borderRadius: 'var(--r-1)',
+            padding: '2px 5px',
+            fontSize: 'clamp(0.72rem, 2.6vw, var(--fs-small))',
+            borderRadius: '999px',
           }}
         >
           Dismiss
@@ -118,20 +140,9 @@ export function AiKeyMissingBanner() {
 
 const statusDotStyle: React.CSSProperties = {
   display: 'inline-block',
-  width: 7,
-  height: 7,
+  width: 6,
+  height: 6,
   borderRadius: 999,
   background: 'var(--fg-secondary)',
   flex: '0 0 auto',
-};
-
-const kbdStyle: React.CSSProperties = {
-  display: 'inline-block',
-  padding: '1px 5px',
-  margin: '0 1px',
-  fontFamily: 'var(--mono)',
-  fontSize: 'var(--fs-caption)',
-  border: '0.5px solid var(--mat-border)',
-  borderRadius: 4,
-  background: 'var(--mat-thin-bg)',
 };

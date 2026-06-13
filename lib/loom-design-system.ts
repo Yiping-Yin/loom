@@ -51,10 +51,10 @@ export const color = {
   /** Even fainter hairline (e.g. inner divisions) */
   hairFaint: 'rgba(232, 224, 206, 0.05)',
 
-  /** Single bronze accent — no variations */
-  thread: '#C4A468',
-  /** Muted bronze for secondary accents */
-  threadMuted: 'rgba(196, 164, 104, 0.55)',
+  /** Signature cyan accent — no broad fills. */
+  thread: '#4BC5DE',
+  /** Muted signature cyan for secondary accents. */
+  threadMuted: 'rgba(75, 197, 222, 0.55)',
 
   // Categorical tint family — added 2026-04-30.
   // These are NOT state colors. They are categorical / palette colors
@@ -66,31 +66,31 @@ export const color = {
   // §1 "Tint family (categorical, only allowed via Loom palette)" maps
   // existing improvised hexes to these canonical values.
 
-  /** Categorical · sage (cool green). */
-  tintSage: '#5C6E4E',
-  /** Categorical · sage · 55% alpha. */
-  tintSageMuted: 'rgba(92, 110, 78, 0.55)',
+  /** Categorical · oxidized silver. */
+  tintSage: '#8FA3A6',
+  /** Categorical · oxidized silver · 55% alpha. */
+  tintSageMuted: 'rgba(143, 163, 166, 0.55)',
 
-  /** Categorical · plum (muted purple). */
-  tintPlum: '#5E3D5C',
-  /** Categorical · plum · 55% alpha. */
-  tintPlumMuted: 'rgba(94, 61, 92, 0.55)',
+  /** Categorical · purple graphite. */
+  tintPlum: '#8B728F',
+  /** Categorical · purple graphite · 55% alpha. */
+  tintPlumMuted: 'rgba(139, 114, 143, 0.55)',
 
-  /** Categorical · indigo (deep blue). */
-  tintIndigo: '#3A477A',
-  /** Categorical · indigo · 55% alpha. */
-  tintIndigoMuted: 'rgba(58, 71, 122, 0.55)',
+  /** Categorical · graphite steel. */
+  tintIndigo: '#738895',
+  /** Categorical · graphite steel · 55% alpha. */
+  tintIndigoMuted: 'rgba(115, 136, 149, 0.55)',
 
-  /** Categorical · umber (warm brown). */
-  tintUmber: '#5C3F2A',
-  /** Categorical · umber · 55% alpha. */
-  tintUmberMuted: 'rgba(92, 63, 42, 0.55)',
+  /** Categorical · neutral graphite. */
+  tintUmber: '#5E666C',
+  /** Categorical · neutral graphite · 55% alpha. */
+  tintUmberMuted: 'rgba(94, 102, 108, 0.55)',
 
-  /** Categorical · rose (warm red). Distinct from `alert`: rose is
+  /** Categorical · rose. Distinct from `alert`: rose is
    *  identity-coloring, alert is destructive-state communication. */
-  tintRose: '#8F4646',
+  tintRose: '#A35F73',
   /** Categorical · rose · 55% alpha. */
-  tintRoseMuted: 'rgba(143, 70, 70, 0.55)',
+  tintRoseMuted: 'rgba(163, 95, 115, 0.55)',
 
   // Semantic state colors — added 2026-04-27.
   // These cover destructive / success / info / caution states. The
@@ -104,20 +104,20 @@ export const color = {
   /** Destructive · 55% alpha for de-emphasised state. */
   alertMuted: 'rgba(196, 71, 67, 0.55)',
 
-  /** Positive — sage. Confirmations, complete states. */
-  success: '#6A8C5A',
+  /** Positive — restrained teal-silver. Confirmations, complete states. */
+  success: '#8FA3A6',
   /** Positive · 55% alpha for de-emphasised state. */
-  successMuted: 'rgba(106, 140, 90, 0.55)',
+  successMuted: 'rgba(143, 163, 166, 0.55)',
 
-  /** Neutral informational tints — ink-blue. */
-  info: '#5A7A9A',
+  /** Neutral informational tints — graphite steel. */
+  info: '#738895',
   /** Info · 55% alpha for de-emphasised state. */
-  infoMuted: 'rgba(90, 122, 154, 0.55)',
+  infoMuted: 'rgba(115, 136, 149, 0.55)',
 
-  /** Caution — warm amber, distinct from bronze accent. */
-  warning: '#B98E3F',
+  /** Caution — lunar silver signal, distinct from destructive red. */
+  warning: '#A8B0B6',
   /** Caution · 55% alpha for de-emphasised state. */
-  warningMuted: 'rgba(185, 142, 63, 0.55)',
+  warningMuted: 'rgba(168, 176, 182, 0.55)',
 } as const;
 
 // ---------------------------------------------------------------------------

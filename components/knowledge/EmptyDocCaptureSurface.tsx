@@ -45,9 +45,9 @@ export function EmptyDocCaptureSurface({
   const progressMessage = progressPhase === 'organizing'
     ? 'Preparing the first note with AI…'
     : progressPhase === 'saving'
-      ? 'Saving the organized page to this topic…'
+      ? 'Saving the first source page to this topic…'
       : progressPhase === 'opening'
-        ? 'Opening the first organized page…'
+        ? 'Opening the first source page…'
         : null;
 
   async function attachFile(file: File) {
@@ -117,7 +117,7 @@ export function EmptyDocCaptureSurface({
       setProgressPhase('opening');
       window.location.assign(json.href);
     } catch (e: any) {
-      setError(e.message ?? 'Organize failed');
+      setError(e.message ?? 'Create note failed');
       setProgressPhase('idle');
     } finally {
       setBusy(false);
@@ -127,7 +127,7 @@ export function EmptyDocCaptureSurface({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: '0.75rem' }}>
       <div style={{ color: 'var(--fg-secondary)', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: 720 }}>
-        This topic is still empty. Start writing, paste rough notes, or attach one source, then let Loom organize the first source page.
+        This topic is still empty. Start writing, paste rough notes, or attach one source, then let Loom create the first source page.
       </div>
 
       <TextArea
@@ -230,7 +230,7 @@ export function EmptyDocCaptureSurface({
               <div>
                 <div style={{ fontWeight: 600 }}>{source.name}</div>
                 <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginTop: 2 }}>
-                  {source.textExtractable ? 'Will be included in AI organization' : 'Attached to topic only; not included in first-pass organization'}
+                  {source.textExtractable ? 'Will be included in the first AI note' : 'Attached to topic only; not included in the first AI note'}
                 </div>
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>
@@ -284,8 +284,8 @@ export function EmptyDocCaptureSurface({
             : progressPhase === 'opening'
               ? 'Opening…'
               : busy
-                ? 'Organizing…'
-                : 'Organize into note'}
+                ? 'Creating…'
+                : 'Create first note'}
         </button>
       </div>
     </div>

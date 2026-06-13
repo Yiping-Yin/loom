@@ -3,11 +3,9 @@
 /**
  * AtlasClient — habitat/library surface.
  *
- * Renders the user's library as colored book spines standing on a wooden
- * shelf. Each spine has a gold top band, a small glyph, the vertical
- * title, and a footer band + category label. The currently-reading doc
- * (first entry in the sidebar's recent-records list) is lifted with a
- * gold "reading ribbon" hanging from the top.
+ * Renders the user's library as colored book spines standing in a dark
+ * evidence shelf. Each spine uses a restrained cyan/silver identity band,
+ * a small glyph, the vertical title, and a footer band + category label.
  *
  * Design reference:
  *   /Users/yinyiping/Downloads/Wiki Logo/loom-habitat.jsx → AtlasSurface
@@ -20,6 +18,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { subscribeLoomMirror } from '../lib/loom-mirror-store';
 import {
   RECENT_RECORDS_KEY,
@@ -35,10 +34,10 @@ type AtlasDoc = {
   body?: string;
 };
 
-// Earth-tone palette mirror of the V.* tokens in loom-tokens.jsx. Kept inline
-// (not pulled from CSS vars) because each spine needs its own deterministic
-// color and we mix light/dark stops per spine via color-mix() in CSS.
-const INK_PALETTE = ['#9E7C3E', '#A8783E', '#8F4646', '#5C6E4E', '#3A477A', '#5E3D5C', '#5C3F2A'];
+// Cold identity palette mirror of the current Loom token family. Kept inline
+// because each spine needs its own deterministic color and we mix light/dark
+// stops per spine via color-mix() in CSS.
+const INK_PALETTE = ['#4BC5DE', '#8AF7E6', '#6CE7F2', '#A8B0B6', '#738895', '#8B728F', '#A35F73'];
 const GLYPHS = ['✦', '◆', '·', '◇', '✧'];
 
 function hashSpineColor(href: string): string {
@@ -215,8 +214,8 @@ export default function AtlasClient() {
           </Link>
         </div>
         {/* Shelf legend — mockup loom-habitat.jsx:52. Tells the reader
-            what the three spine states mean: gold halo = reading now,
-            bronze dot = thread returning, muted dim = cooling off. */}
+            what the three spine states mean: cyan halo = reading now,
+            silver dot = thread returning, muted dim = cooling off. */}
         <div className="loom-atlas-legend" aria-hidden="true">
           <span className="loom-atlas-legend-dot loom-atlas-legend-dot--reading-now">reading now</span>
           <span className="loom-atlas-legend-dot loom-atlas-legend-dot--returning">thread returning</span>
@@ -249,7 +248,8 @@ export default function AtlasClient() {
             (⌘,) to build your working shelf.
           </p>
           <Link href="/sources" className="loom-empty-state-action">
-            Open sources →
+            Open sources
+            <ArrowRight className="loom-empty-state-action-icon" aria-hidden="true" size={14} strokeWidth={1.8} />
           </Link>
         </div>
       ) : null}

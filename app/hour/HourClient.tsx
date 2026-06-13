@@ -35,7 +35,15 @@ function currentDate() {
   return new Date();
 }
 
+function canReadNativeCaptureBridge() {
+  if (typeof window === 'undefined') return false;
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') return false;
+  return true;
+}
+
 async function loadNativeCaptureItems(): Promise<NewLoomYearItem[]> {
+  if (!canReadNativeCaptureBridge()) return [];
+
   try {
     const response = await fetch('loom://native/captures-list.json');
     if (!response.ok) return [];
@@ -99,121 +107,82 @@ export default function HourClient() {
     <div className={styles.surface}>
       <LoomSupportNav active="/hour" />
       <main
-        style={{
-          background: 'var(--bg)',
-          color: 'var(--fg)',
-          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
+        className={styles.main}
+        style={{ padding: 'var(--support-main-padding)' }}
       >
-        <article style={{ width: '100%', maxWidth: '40rem' }}>
-        <header style={{ marginBottom: '2.2rem' }}>
-          <div
-            style={{
-              fontFamily: 'var(--sans)',
-              fontSize: '0.72rem',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--muted)',
-              marginBottom: '0.6rem',
-            }}
-          >
-            The Hour
+        <article className={styles.shell}>
+        <header className={styles.hero}>
+          <div className={styles.heroText}>
+            <div className={styles.eyebrow}>The Hour</div>
+            <h1 className={styles.title}>Current hour, ticking.</h1>
+            <p className={styles.lead}>
+              A live thinking window: time stays visible, the minute breathes, and recent
+              material gathers without demanding attention.
+            </p>
           </div>
-          <h1
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            Current hour, ticking.
-          </h1>
+          <section className={styles.heroPanel} aria-label="Live watch">
+            <div className={styles.instrument}>
+              <div className={styles.instrumentKicker}>Live watch</div>
+              <div className={styles.instrumentValue}>
+                {now
+                  ? now.toLocaleTimeString(undefined, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    })
+                  : '--:--:--'}
+              </div>
+              <div
+                role="progressbar"
+                aria-label="Breath bar — minute progress"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(minuteProgress)}
+                style={{
+                  marginTop: '1rem',
+                  height: 4,
+                  borderRadius: 999,
+                  background: 'color-mix(in srgb, var(--fg) 8%, var(--bg))',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    width: `${minuteProgress.toFixed(1)}%`,
+                    height: '100%',
+                    background:
+                      'linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-info, var(--accent)) 82%, white 6%), transparent)',
+                    transition: 'width 1s linear',
+                  }}
+                />
+              </div>
+              <div className={styles.instrumentMeta}>
+                {minuteProgress.toFixed(1)}% of this minute is gone. No alerts, no badges; the
+                page just breathes with the clock.
+              </div>
+            </div>
+          </section>
         </header>
 
-        <section aria-label="Live watch" style={{ marginBottom: '2.2rem' }}>
-          <div
-            style={{
-              fontFamily: 'var(--mono)',
-              fontSize: 'clamp(2.2rem, 6vw, 3rem)',
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
-            {now
-              ? now.toLocaleTimeString(undefined, {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                })
-              : '--:--:--'}
-          </div>
-          <div
-            role="progressbar"
-            aria-label="Breath bar — minute progress"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(minuteProgress)}
-            style={{
-              marginTop: '0.9rem',
-              height: 4,
-              borderRadius: 2,
-              background: 'color-mix(in srgb, var(--fg) 8%, var(--bg))',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                width: `${minuteProgress.toFixed(1)}%`,
-                height: '100%',
-                background: 'color-mix(in srgb, var(--accent-info, var(--accent)) 70%, var(--bg))',
-                transition: 'width 1s linear',
-              }}
-            />
-          </div>
-          <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: '0.6rem' }}>
-            The breath bar fills once a minute — {minuteProgress.toFixed(1)}% of this minute is
-            gone. No alerts, no badges; the page just breathes with the clock.
-          </p>
-        </section>
-
-        <section aria-label="Material in the current hour" style={{ marginBottom: '2.2rem' }}>
-          <h2
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: '1.15rem',
-              fontWeight: 600,
-              marginBottom: '0.7rem',
-            }}
-          >
-            What this hour holds
-          </h2>
+        <section className={styles.sectionCard} aria-label="Material in the current hour">
+          <h2 className={styles.sectionHeading}>What this hour holds</h2>
           {currentItems.length === 0 ? (
-            <p style={{ color: 'var(--muted)', fontSize: '0.88rem', margin: 0 }}>
+            <p className={styles.muted} style={{ margin: 0 }}>
               Nothing touched yet. Read something in Sources or write in Draft and it will
               appear here.
             </p>
           ) : (
-            <ul
-              style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.5rem' }}
-            >
+            <ul className={styles.plainList}>
               {currentItems.map((item) => (
                 <li
                   key={item.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: 10,
-                    fontSize: '0.9rem',
-                    flexWrap: 'wrap',
-                  }}
+                  className={styles.row}
                 >
                   <span style={{ color: 'var(--fg-secondary)' }}>{item.title}</span>
                   {!publicWorkingMode && (
                     <Link
                       href={hourItemDraftHref(item)}
-                      style={{ color: 'var(--accent)', textDecoration: 'none' }}
+                      className={styles.textLink}
                     >
                       Draft this current item
                     </Link>
@@ -226,23 +195,13 @@ export default function HourClient() {
 
         <nav
           aria-label="The Hour related surfaces"
-          style={{ display: 'flex', gap: 16, fontSize: '0.88rem', flexWrap: 'wrap' }}
+          className={styles.linkRail}
         >
-          <Link href="/sources" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            Sources
-          </Link>
-          <Link href="/draft" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            Draft
-          </Link>
-          <Link href="/year" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            The Year
-          </Link>
-          <Link href="/connections" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            Connections
-          </Link>
-          <Link href="/discipline" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            Discipline
-          </Link>
+          <Link href="/sources">Sources</Link>
+          <Link href="/draft">Draft</Link>
+          <Link href="/year">The Year</Link>
+          <Link href="/connections">Connections</Link>
+          <Link href="/discipline">Discipline</Link>
         </nav>
         </article>
       </main>

@@ -72,6 +72,7 @@ import {
   browserPublicWorkingStorage,
   isNewLoomPublicWorkingMode,
 } from '../../lib/new-loom/public-working-mode';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import DraftBoardClient from './DraftBoardClient';
 import draftDeskStyles from './draft-evidence-desk.module.css';
 
@@ -1040,11 +1041,10 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
   }
 
   return (
-    <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
+    <>
+      <LoomGlobalNav activeHref="/draft" ariaLabel="Draft navigation" />
+      <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
       <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
-        <a className="new-loom-draft__wordmark" href="/loom" aria-label="Open Loom product">
-          Loom
-        </a>
         <section className="new-loom-draft__profile-card" aria-label="Profile">
           <img src="/profile/yiping-profile-white-shirt.png" alt="Yiping Yin" />
           <h2>Yiping Yin</h2>
@@ -1078,6 +1078,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
         className="new-loom-draft__main"
         aria-labelledby="new-loom-draft-title"
       >
+        <h1 className="new-loom-draft__sr-title">Draft evidence desk</h1>
         <section className="new-loom-draft__document-header new-loom-draft__workspace" aria-label="Draft document">
           <p className="new-loom-draft__eyebrow">Evidence desk · Draft</p>
           <div className="new-loom-draft__document-meta">
@@ -1763,6 +1764,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
           </section>
         ) : null}
       </aside>
-    </main>
+      </main>
+    </>
   );
 }

@@ -28,7 +28,7 @@ function read(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-test('reference shelf dossiers cover Quantnet, WQU, and Claude with real artifacts', () => {
+test('reference shelf dossiers cover QuantNet, WQU, and Claude with real artifacts', () => {
   for (const shelfId of ['quantnet', 'wqu', 'claude'] as const) {
     const verifiedSection = VERIFIED_DOSSIER_SECTIONS.find((section) => section.id === shelfId);
     const dossier = referenceShelfDossierFor(verifiedSection);

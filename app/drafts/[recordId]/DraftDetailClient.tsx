@@ -6,7 +6,7 @@ import {
   NEW_LOOM_DRAFT_RECORDS_KEY,
   type NewLoomDraftRecord,
 } from '../../../lib/new-loom/draft-records';
-import { VERIFIED_DOSSIER_TOP_NAV } from '../../../lib/new-loom/verified-dossier-home';
+import { LoomGlobalNav } from '../../../components/verified-dossier/LoomGlobalNav';
 
 function ArrowIcon() {
   return (
@@ -46,18 +46,7 @@ export function DraftDetailClient({ recordId }: { recordId: string }) {
 
   return (
     <main className="vd-home vd-draft-detail-page" aria-labelledby="draft-detail-title">
-      <nav className="vd-nav vd-nav--simple" aria-label="Draft artifact navigation">
-        <a className="vd-wordmark" href="/loom" aria-label="Open Loom product">
-          Loom
-        </a>
-        <div className="vd-nav__links">
-          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-            <a key={item.label} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </div>
-      </nav>
+      <LoomGlobalNav ariaLabel="Draft artifact navigation" />
 
       {record ? (
         <article className="vd-draft-artifact" aria-label="Published Draft artifact">

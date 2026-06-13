@@ -7,7 +7,23 @@ import { KnowledgeHomeClient } from '../knowledge/KnowledgeHomeClient';
 
 export const metadata = { title: 'Sources · Loom' };
 
-export default async function SourcesPage() {
+type SourcesPageSearchParams = {
+  search?: string | string[];
+  q?: string | string[];
+};
+
+type SourcesPageProps = {
+  searchParams?: Promise<SourcesPageSearchParams>;
+};
+
+function cleanSearchParam(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return typeof raw === 'string' ? raw.trim() : '';
+}
+
+export default async function SourcesPage({ searchParams }: SourcesPageProps) {
+  const params = (await searchParams) ?? {};
+  const initialSearchQuery = cleanSearchParam(params.search) || cleanSearchParam(params.q);
   const [rawCategories, rawGroups] = await Promise.all([
     getSourceLibraryCategories(),
     getSourceLibraryGroups(),
@@ -32,6 +48,7 @@ export default async function SourcesPage() {
       sourceLibraryGroups={groups}
       totalCollections={categories.length}
       totalDocs={totalDocs}
+      initialSearchQuery={initialSearchQuery}
     />
   );
 }

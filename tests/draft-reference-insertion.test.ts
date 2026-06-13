@@ -95,7 +95,7 @@ test('Draft reference insertion returns a citation token, reference list, and so
     doc: {
       title: 'Python Foundations.pdf',
       href: '/knowledge/quantnet/python-foundations',
-      category: 'Quantnet',
+      category: 'QuantNet',
       sourcePath: 'Quant/Python Foundations.pdf',
       excerpt: 'Python foundations for quant work',
     },
@@ -109,7 +109,7 @@ test('Draft reference insertion returns a citation token, reference list, and so
       href: '/knowledge/quantnet/python-foundations',
       kind: 'source',
       sourceTitle: 'Python Foundations.pdf',
-      category: 'Quantnet',
+      category: 'QuantNet',
       sourcePath: 'Quant/Python Foundations.pdf',
       excerpt: 'Python foundations for quant work',
     },

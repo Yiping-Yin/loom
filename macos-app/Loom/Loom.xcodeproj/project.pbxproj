@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		01184E33CD6679345175F778 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6BEBD4BB8D9C5730C215127 /* AboutView.swift */; };
+		022649047CA2ABC4B458E7D8 /* CaptureURLRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAC8911B39C40A490D19DE83 /* CaptureURLRouterTests.swift */; };
 		02C2B3A4C02B66E7B7F76245 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B6CE70855F78F1B5B70D23 /* ContentView.swift */; };
 		02EC41AE8D104B4D2F7FF029 /* LoomTraceWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87FAF953904D7676C1AEDF9 /* LoomTraceWriterTests.swift */; };
 		03F5AA3F44277B035954E3FD /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = 3A65D803D6F65B91B3870D27 /* CoreXLSX */; };
@@ -114,6 +115,7 @@
 		6C8D0093C9BA4FF328AA3605 /* OverlayDataFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13B5941E45CEDF2AFAFB493 /* OverlayDataFlowTests.swift */; };
 		70C4132698A2994307B1EED5 /* IngestExtractorResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A392091975BFAD78550F703C /* IngestExtractorResultView.swift */; };
 		70CB370592F2AA33745BD3F9 /* OllamaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19B1CAD81EF9A7257E0A312 /* OllamaClient.swift */; };
+		724B99ACCE75318C6AA96BE0 /* CaptureURLRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 858D84FD25C4A557ADCA1D4F /* CaptureURLRouter.swift */; };
 		72DFEDD02D325EBAA571412D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B7F8CCD03C55D5771F90EF30 /* Assets.xcassets */; };
 		739047121A8D50159C868A36 /* LoomDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97DE2B93B288F79DCC24C6E0 /* LoomDraftStore.swift */; };
 		73CB7FC5A01BBAE29816A792 /* AskAIWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2394997C8F0A3A3728DB182F /* AskAIWindow.swift */; };
@@ -127,7 +129,7 @@
 		7DA043AFA3F7D4D720FA7F3F /* CapturesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDAB1D64CB1C96D15004FD6 /* CapturesView.swift */; };
 		8069DADB5832AC567AC29F5C /* OpenAIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25231BBD91A2A3C053329A27 /* OpenAIClientTests.swift */; };
 		82562C6FE2A35AF6C15092A2 /* fins-3666-assessment.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = A1327F732C3F327427F40F27 /* fins-3666-assessment.meta.json */; };
-		825756E355334BF27477DDE9 /* CapturesIndexDeleteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD031FF67290A6EA1C70B6FE /* CapturesIndexDeleteTests.swift */; };
+		825756E355334BF27477DDE9 /* CapturePlacementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD031FF67290A6EA1C70B6FE /* CapturePlacementTests.swift */; };
 		82BCFF65C8AB3F7D92C6212D /* PursuitSpawner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C4498AC00FE562CD298A59B /* PursuitSpawner.swift */; };
 		82F7AACC26E1D2C3FB3D77A9 /* SlideDeckExtractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE418827C54DEDDD474CCA0 /* SlideDeckExtractorTests.swift */; };
 		83AB623EF3AA7ADF337FB48A /* PageRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDF33B20F181C69BFA9BD6A0 /* PageRange.swift */; };
@@ -162,6 +164,7 @@
 		A9F1F83F562C3C570816EEDE /* infs-3822.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 185A77413B79C1A53A1C4E46 /* infs-3822.meta.json */; };
 		ABC579B7C90D4CEFB8DE5BF4 /* minimal.xlsx in Resources */ = {isa = PBXBuildFile; fileRef = 0F5103652C09A725C807DE50 /* minimal.xlsx */; };
 		AC29FBD9D1E0BEBDA882D040 /* FragmentExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9571B387270DFF008EB34EB3 /* FragmentExtractor.swift */; };
+		AD9617E83A83912EEE6F2330 /* CapturesIndexDeleteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B88D06B0A8609F4723EA178 /* CapturesIndexDeleteTests.swift */; };
 		AE6F0A722A9686EB45C7DC89 /* SecurityScopedFolderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4534DD512710116134F47530 /* SecurityScopedFolderStore.swift */; };
 		AEB6D829A144BE8D8580A76D /* body.pages in Resources */ = {isa = PBXBuildFile; fileRef = A1BC3D567D5063AA0810BDC9 /* body.pages */; };
 		AEFB4BA1186923D05DAB812B /* fins-3666-group-project.expected.json in Resources */ = {isa = PBXBuildFile; fileRef = 6DEB4639A072780235090D3F /* fins-3666-group-project.expected.json */; };
@@ -355,6 +358,7 @@
 		836EFEC359F06F01E235EA2B /* DataSettingsRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsRows.swift; sourceTree = "<group>"; };
 		850A8F5F80827EF8C7B6A8FF /* DraftBridgeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftBridgeHandler.swift; sourceTree = "<group>"; };
 		851FFDE99CAC84D87F11ABA8 /* CustomEndpointClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomEndpointClient.swift; sourceTree = "<group>"; };
+		858D84FD25C4A557ADCA1D4F /* CaptureURLRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureURLRouter.swift; sourceTree = "<group>"; };
 		86249B04CF088CB0AA74F360 /* MigrationBridgeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationBridgeHandler.swift; sourceTree = "<group>"; };
 		8B14144491889AD11D0CD4AA /* LoomFolderHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomFolderHomeView.swift; sourceTree = "<group>"; };
 		8B870E4CA1CF38E1DF4D1EA6 /* fins-3666-activity-1.input.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fins-3666-activity-1.input.txt"; sourceTree = "<group>"; };
@@ -380,6 +384,7 @@
 		9902715B7EE5A8B25248F051 /* LoomMigrationImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomMigrationImporterTests.swift; sourceTree = "<group>"; };
 		9991A8B46F80260F1654A940 /* CLIRuntimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRuntimeClient.swift; sourceTree = "<group>"; };
 		9B31374C524298382B25CAE5 /* DataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsView.swift; sourceTree = "<group>"; };
+		9B88D06B0A8609F4723EA178 /* CapturesIndexDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturesIndexDeleteTests.swift; sourceTree = "<group>"; };
 		9C465A55EF6D020019EF74BB /* IngestExtractorLocateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngestExtractorLocateTests.swift; sourceTree = "<group>"; };
 		9C7150E29C609C574638AA92 /* CLIRuntimeClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRuntimeClientTests.swift; sourceTree = "<group>"; };
 		9E0F729BE58D11C9E5304A01 /* LoomLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomLibraryView.swift; sourceTree = "<group>"; };
@@ -406,7 +411,7 @@
 		BA48A33DCF80E2D3C11D243B /* CleanText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanText.swift; sourceTree = "<group>"; };
 		BAB4344A9D5FEA3F99BBE23D /* IngestExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngestExtractor.swift; sourceTree = "<group>"; };
 		BAFF48411BC42953B54DD68D /* textbook-filename-leak.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "textbook-filename-leak.schema.json"; sourceTree = "<group>"; };
-		BD031FF67290A6EA1C70B6FE /* CapturesIndexDeleteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturesIndexDeleteTests.swift; sourceTree = "<group>"; };
+		BD031FF67290A6EA1C70B6FE /* CapturePlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturePlacementTests.swift; sourceTree = "<group>"; };
 		BDD6A4E975D77E9223BB3AED /* malformed-slide.pptx */ = {isa = PBXFileReference; path = "malformed-slide.pptx"; sourceTree = "<group>"; };
 		BE451F85BA12431F9979562A /* infs-3822-rubrics.expected.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "infs-3822-rubrics.expected.json"; sourceTree = "<group>"; };
 		BEAC34CC567106620EC2BCCC /* semicolon-stitch-duedate.expected-verdict.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "semicolon-stitch-duedate.expected-verdict.json"; sourceTree = "<group>"; };
@@ -416,6 +421,7 @@
 		C2928F31D36A233EA3BC450B /* textbook-filename-leak.expected-verdict.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "textbook-filename-leak.expected-verdict.json"; sourceTree = "<group>"; };
 		C5286875E5EE4BF7151F726E /* TranscriptExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptExtractor.swift; sourceTree = "<group>"; };
 		CA3A0D3EE88A48EAE2BC930F /* FragmentSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentSchema.swift; sourceTree = "<group>"; };
+		CAC8911B39C40A490D19DE83 /* CaptureURLRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureURLRouterTests.swift; sourceTree = "<group>"; };
 		CFB0FB42BDCFD78AC68A01BF /* Loom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Loom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3080D41F3CA22A6933AC963 /* SecurityScopedFolderStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityScopedFolderStoreTests.swift; sourceTree = "<group>"; };
 		D3A4538024656F16221D02A9 /* CleanTextParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanTextParityTests.swift; sourceTree = "<group>"; };
@@ -561,6 +567,7 @@
 				F801044292C26EE2D6B7AADF /* CaptureSettingsView.swift */,
 				8234D9206138808EBC9AC554 /* CaptureSheet.swift */,
 				2CDAB1D64CB1C96D15004FD6 /* CapturesView.swift */,
+				858D84FD25C4A557ADCA1D4F /* CaptureURLRouter.swift */,
 				085FEAE4602A5839E938D237 /* CaptureWebView.swift */,
 				9991A8B46F80260F1654A940 /* CLIRuntimeClient.swift */,
 				4463F1C018C7F6F6077985C2 /* ContentRootStore.swift */,
@@ -731,7 +738,9 @@
 			children = (
 				00599DFB275B7B8000591296 /* AnthropicClientTests.swift */,
 				940707A3D2714DC2DB60358D /* AskAIRunnerTests.swift */,
-				BD031FF67290A6EA1C70B6FE /* CapturesIndexDeleteTests.swift */,
+				BD031FF67290A6EA1C70B6FE /* CapturePlacementTests.swift */,
+				9B88D06B0A8609F4723EA178 /* CapturesIndexDeleteTests.swift */,
+				CAC8911B39C40A490D19DE83 /* CaptureURLRouterTests.swift */,
 				D3A4538024656F16221D02A9 /* CleanTextParityTests.swift */,
 				9C7150E29C609C574638AA92 /* CLIRuntimeClientTests.swift */,
 				DE18F301846375F2AA33FFC3 /* CustomEndpointClientTests.swift */,
@@ -836,6 +845,7 @@
 				11E15E109E1D18FEFC194441 /* Sources */,
 				8BB123B3A0B5C3FB4CF01850 /* Resources */,
 				AFD89F6CCAADCCDB40EC765D /* Frameworks */,
+				0B09BFE18F025E5CF36B38B2 /* Strip signing-blocking xattrs from app bundle */,
 			);
 			buildRules = (
 			);
@@ -1000,6 +1010,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		0B09BFE18F025E5CF36B38B2 /* Strip signing-blocking xattrs from app bundle */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Strip signing-blocking xattrs from app bundle";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\nAPP=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}\"\nif [ ! -d \"$APP\" ]; then\n  echo \"Loom: app bundle not present yet; skipping xattr cleanup.\"\n  exit 0\nfi\nif [ \"${CODE_SIGNING_ALLOWED:-YES}\" = \"NO\" ]; then\n  echo \"Loom: CODE_SIGNING_ALLOWED=NO — skipping signing xattr preflight.\"\n  exit 0\nfi\nif ! command -v xattr >/dev/null 2>&1; then\n  echo \"Loom: xattr unavailable; cannot strip signing detritus.\"\n  exit 1\nfi\nxattr -cr \"$APP\"\nif xattr -lr \"$APP\" 2>/dev/null | grep -E 'com\\.apple\\.(ResourceFork|FinderInfo)' >/dev/null; then\n  echo \"Loom: signing-blocking xattrs remain after xattr -cr.\"\n  echo \"      Grant Full Disk Access to the build host (Terminal, Xcode, or Codex) and rebuild.\"\n  xattr -lr \"$APP\" 2>/dev/null | grep -E 'com\\.apple\\.(ResourceFork|FinderInfo)' | head -40\n  exit 1\nfi\nPROVENANCE_COUNT=\"$(xattr -lr \"$APP\" 2>/dev/null | grep -c 'com\\.apple\\.provenance' || true)\"\nif [ \"$PROVENANCE_COUNT\" != \"0\" ]; then\n  echo \"Loom: com.apple.provenance remains on ${PROVENANCE_COUNT} bundle paths; leaving final judgment to codesign.\"\nfi\necho \"Loom: stripped signing-blocking extended attributes from app bundle.\"\n";
+		};
 		EAA24BAD64D422687FA9EDE8 /* Stage Next.js static export into bundle Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -1038,6 +1067,7 @@
 				EB70B55C62D3C9FBABA11F34 /* CaptureHelpView.swift in Sources */,
 				2D1292696721CDBB55C7C0C3 /* CaptureSettingsView.swift in Sources */,
 				3EECABA79A64B9A46CF65579 /* CaptureSheet.swift in Sources */,
+				724B99ACCE75318C6AA96BE0 /* CaptureURLRouter.swift in Sources */,
 				C792C93824334400BA27B647 /* CaptureWebView.swift in Sources */,
 				7DA043AFA3F7D4D720FA7F3F /* CapturesView.swift in Sources */,
 				98B62DA0D0DA912A39BBCE04 /* CleanText.swift in Sources */,
@@ -1145,7 +1175,9 @@
 				34EDC9CDD79A48A8FB22EDE7 /* AnthropicClientTests.swift in Sources */,
 				34ADAD0AE80A2254DBDDD625 /* AskAIRunnerTests.swift in Sources */,
 				1A721B8D7F00C56477EFA186 /* CLIRuntimeClientTests.swift in Sources */,
-				825756E355334BF27477DDE9 /* CapturesIndexDeleteTests.swift in Sources */,
+				825756E355334BF27477DDE9 /* CapturePlacementTests.swift in Sources */,
+				022649047CA2ABC4B458E7D8 /* CaptureURLRouterTests.swift in Sources */,
+				AD9617E83A83912EEE6F2330 /* CapturesIndexDeleteTests.swift in Sources */,
 				31E6A00D47757464BFB23637 /* CleanTextParityTests.swift in Sources */,
 				274FC90F9C45C13A5DAE0582 /* CustomEndpointClientTests.swift in Sources */,
 				4A07C211A0D26822457C750D /* DevServerPreflightTests.swift in Sources */,

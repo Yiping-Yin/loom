@@ -45,7 +45,7 @@ test('search index grafts manifest-backed reference sources into stored fields',
         {
           id: 'ref-quantnet-python-foundations',
           categorySlug: 'quantnet',
-          categoryLabel: 'Quantnet',
+          categoryLabel: 'QuantNet',
           title: 'Python Foundations.pdf',
           fileSlug: 'python-foundations',
           sourcePath: 'Quant/Python Foundations.pdf',
@@ -111,7 +111,7 @@ test('search index grafts manifest-backed reference sources into stored fields',
   assert.ok(storedFields.some((field) =>
     field.title === 'Python Foundations.pdf' &&
     field.href === '/knowledge/quantnet/python-foundations' &&
-    field.category === 'Quantnet' &&
+    field.category === 'QuantNet' &&
     field.kind === 'reference-source' &&
     field.sourcePath === 'Quant/Python Foundations.pdf'
   ));

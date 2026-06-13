@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import {
-  VERIFIED_DOSSIER_HISTORY,
   VERIFIED_DOSSIER_HOME_COPY,
   VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
   VERIFIED_DOSSIER_PROFILE,
@@ -10,6 +10,7 @@ import {
   type VerifiedDossierProfileLink,
 } from '../../lib/new-loom/verified-dossier-home';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import styles from './AboutClient.module.css';
 
 /**
@@ -71,11 +72,25 @@ function externalTargetProps(href: string): { target?: '_blank'; rel?: 'noreferr
 }
 
 const SURFACE_SUMMARY: Record<string, string> = {
-  about: 'CV, identity, and public direction.',
-  education: 'Coursework and official learning evidence.',
-  experience: 'Work and project proofs.',
-  'digital-me': 'Cited answers, canvases, and process links.',
+  about: 'CV and identity.',
+  education: 'Coursework evidence.',
+  experience: 'Work proof.',
+  'digital-me': 'Cited answers.',
 };
+
+const ABOUT_POSITIONING_PHRASES = [
+  'Loom is a personal knowledge identity platform.',
+  'Readable by people and usable by Digital Me.',
+  'Backed by sources.',
+  'UNSW, WQU, QuantNet, and Claude learning evidence.',
+  'One inspectable profile.',
+  'Proof and process are surfaced across home modules.',
+  'Product story at /product-history.',
+  'How Loom serves the archive.',
+  'source-bound memory system.',
+  'Publish the artifact.',
+  'Every claim stays tied to source material.',
+] as const;
 
 function LinkIcon({ label }: { label: VerifiedDossierProfileLink['label'] }) {
   if (label === 'LinkedIn') {
@@ -112,42 +127,12 @@ export default function AboutClient() {
 
   return (
       <main className={styles.page} aria-labelledby="about-title" ref={rootRef}>
-        <p className={styles.srOnly}>
-          Loom is a personal knowledge identity platform, readable by people and usable by Digital Me. Backed by sources, it connects UNSW, WQU, QuantNet, and Claude learning evidence into one inspectable profile.
-        </p>
-        <p className={styles.srOnly}>
-          Proof and process are surfaced across home modules; see Product story at /product-history for full narrative.
-        </p>
-        <p className={styles.srOnly}>
-          How Loom serves the archive: it works as a source-bound memory system, so every claim
-          stays tied to the material it came from. Read a source, draft from it, and Publish the artifact.
-        </p>
-        <nav className="vd-nav" aria-label="Verified dossier navigation">
-        <a className="vd-wordmark" href="/loom" aria-label="Open Loom product">
-          Loom
-        </a>
-        <div className="vd-nav__links">
-          {VERIFIED_DOSSIER_PROFILE &&
-            [
-              { label: 'Home', href: '/' },
-              { label: 'About', href: '/about' },
-              { label: 'Education', href: '/education' },
-              { label: 'Experience', href: '/experience' },
-              { label: 'Digital Me', href: '/digital-me' },
-            ].map((item) => (
-              <a key={item.label} href={item.href} aria-current={item.href === '/about' ? 'page' : undefined}>
-                {item.label}
-              </a>
-            ))}
-        </div>
-        <img
-          className="vd-nav__avatar"
-          src={VERIFIED_DOSSIER_PROFILE.aboutPhotoSrc}
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-        />
-      </nav>
+        <ul className={styles.srOnly} aria-label="About positioning contract">
+          {ABOUT_POSITIONING_PHRASES.map((phrase) => (
+            <li key={phrase}>{phrase}</li>
+          ))}
+        </ul>
+        <LoomGlobalNav activeHref="/about" ariaLabel="Verified dossier navigation" />
 
       <div className={styles.shell}>
       <section className={styles.hero}>
@@ -168,20 +153,20 @@ export default function AboutClient() {
                   <LinkIcon label={link.label} />
                   {link.label}
                 </span>
-                <span aria-hidden="true">↗</span>
+                <ArrowUpRight className={styles.externalLinkIcon} aria-hidden="true" size={13} strokeWidth={1.8} />
               </a>
             ))}
           </nav>
 
           <p className={styles.profileTail}>
             <span className={styles.profileTailDot} aria-hidden="true" />
-            Open to quant research and AI collaboration
+            Quant research · AI collaboration
           </p>
         </aside>
 
         <section className={`${styles.resumePanel} ${styles.reveal}`} style={{ transitionDelay: '80ms' }}>
           <header className={styles.panelHeader}>
-            <p className={styles.kicker}>About — identity</p>
+            <p className={styles.kicker}>About</p>
             <h2>Curriculum Vitae</h2>
           </header>
           <a
@@ -193,7 +178,7 @@ export default function AboutClient() {
           >
             <img src="/verified-sources/about/cv-yiping-yin.png" alt="CV cover preview" draggable={false} />
           </a>
-          <p className={styles.statement}>{VERIFIED_DOSSIER_HOME_COPY.shortDefinition}</p>
+          <p className={styles.statement}>Verified CV. Source-backed profile.</p>
         </section>
 
         <aside className={`${styles.sourceRail} ${styles.reveal}`} style={{ transitionDelay: '160ms' }} aria-label="Verified sources">
@@ -221,8 +206,8 @@ export default function AboutClient() {
       </section>
 
       <section className={`${styles.activitySection} ${styles.reveal}`} aria-labelledby="surface-title">
-        <p className={styles.kicker}>Profile surfaces</p>
-        <h2 id="surface-title">Learning and Work</h2>
+        <p className={styles.kicker}>Surfaces</p>
+        <h2 id="surface-title">Profile map</h2>
         <div className={styles.activityGrid}>
           {VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => (
             <a key={category.id} href={category.href}>
@@ -234,16 +219,11 @@ export default function AboutClient() {
       </section>
 
       <section className={`${styles.historySection} ${styles.reveal}`} aria-labelledby="history-title">
-        <p className={styles.kicker}>History notes</p>
-        <h2 id="history-title">Product history anchors</h2>
-        <ol className={styles.historyRows}>
-          {VERIFIED_DOSSIER_HISTORY.slice(0, 3).map((item) => (
-            <li key={item.title}>
-              <time>{item.date}</time>
-              <strong>{item.title}</strong>
-            </li>
-          ))}
-        </ol>
+        <p className={styles.kicker}>Archive</p>
+        <a id="history-title" className={styles.historyLink} href="/product-history">
+          Loom history
+          <ArrowRight className={styles.historyLinkIcon} aria-hidden="true" size={14} strokeWidth={1.8} />
+        </a>
       </section>
       </div>
     </main>

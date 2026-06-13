@@ -82,7 +82,7 @@ const SURFACES: Record<AiSurfaceId, AiSurfaceSpec> = {
   },
   capture: {
     id: 'capture',
-    title: 'Organize into a reader note',
+    title: 'Create a reader note',
     launcherTitle: 'Capture',
     helper: 'One source page · one reader note',
     placeholder: 'Start writing, paste rough notes, or drop one source…',

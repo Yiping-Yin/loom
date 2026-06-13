@@ -49,11 +49,13 @@ export function KnowledgeHomeClient({
   groups,
   totalCollections,
   totalDocs,
+  initialSearchQuery = '',
 }: {
   sourceLibraryGroups?: KnowledgeHomeGroup[];
   groups?: KnowledgeHomeGroup[];
   totalCollections: number;
   totalDocs: number;
+  initialSearchQuery?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -61,6 +63,7 @@ export function KnowledgeHomeClient({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAddingGroup, setIsAddingGroup] = useState(false);
   const [newGroupLabel, setNewGroupLabel] = useState('');
+  const [locationSearchQuery, setLocationSearchQuery] = useState(initialSearchQuery);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupLabel, setEditingGroupLabel] = useState('');
   const [confirmingDeleteGroupId, setConfirmingDeleteGroupId] = useState<string | null>(null);
@@ -93,6 +96,11 @@ export function KnowledgeHomeClient({
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setLocationSearchQuery((params.get('search') ?? params.get('q') ?? initialSearchQuery).trim());
+  }, [initialSearchQuery]);
 
   useEffect(() => {
     if (editingGroupId && !currentGroups.some((group) => group.id === editingGroupId)) {
@@ -263,6 +271,7 @@ export function KnowledgeHomeClient({
       sourceLibraryGroups={currentGroups}
       totalCollections={totalCollections}
       totalDocs={totalDocs}
+      initialSearchQuery={locationSearchQuery}
       isAddingGroup={isAddingGroup}
       newGroupLabel={newGroupLabel}
       onStartAddGroup={onStartAddGroup}

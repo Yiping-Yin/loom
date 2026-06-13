@@ -31,7 +31,7 @@ Loom is not a site of cards. It is a **lit desk of real, dimensional artifacts**
 
 ### Accents — precious, sparse, information-only
 - **Champagne gold `--gold #C8A24A`** (bright highlight `#E3C56A`). The brand mark. **Watch-hand discipline:** total gold area on any screen < 5%. NEVER a fill of a container / pill / badge / card. Gold appears ONLY as: (a) a 1–2px hairline or active underline; (b) one small mark/dot; (c) a single thin numeral or word at a key moment; (d) a faint glow. The rejected "1 · S" solid-yellow pill is the canonical anti-pattern — banned.
-- **Comet-cyan `--cyan #4BC5DE`** — signal/data only (Digital Me, Beebook charts, the thread-of-light, "thinking" states). Never a fill.
+- **Comet-cyan `--cyan #4BC5DE`** — signal/data only (Digital Me, QBook charts, the thread-of-light, "thinking" states). Never a fill.
 - **Market `--up #3FB37A` / `--down #E06A6A`** — desaturated; ONLY on price/PnL numerals and mini-sparklines, tiny area.
 - No saturated primaries anywhere. Avatars/marks = neutral monograms on `--ink-4`, not coloured discs.
 
@@ -46,7 +46,7 @@ Cormorant Garamond for display **only**, large, tight tracking, weight 500 — u
 
 ### Realism rules (the concept in practice)
 - Documents → real paper: soft drop shadow, slight perspective, warm-neutral sheet on the cool-black desk.
-- Screens (Beebook terminal) → shown in receding 3D perspective with reflection + faint glow.
+- Screens (QBook terminal) → shown in receding 3D perspective with reflection + faint glow.
 - Cards → real material: a near-flat cool gradient sheen + edge light, never a flat colour block.
 - Thread-of-light → a thin cyan/gold light line connects an artifact to its source on focus/hover.
 
@@ -57,14 +57,14 @@ Cormorant Garamond for display **only**, large, tight tracking, weight 500 — u
 | **Cover / Home** | still, luxe, first impression | deepest `--ink-0`, max whitespace | gold ~2 touches, no cyan | hero artifacts (CV, terminal) with real shadow + perspective; soft single key light |
 | **Digital Me** | alive, intelligent, signal | `--ink-1` + faint cool ambient glow | cyan data-signal + the thread-of-light; gold on active only | glass panels feel "live"; subtle shimmer; the ask flow lights up |
 | **Archive (About/Education/Experience)** | restrained, credible, document-forward | lifted `--ink-2`, neutral | gold only on verified marks; minimal | material dialed DOWN so documents/evidence read clearly |
-| **Beebook (terminal)** | cold, dense, professional | darkest, highest density | market up/down + cyan chart lines on data only; gold on active control | terminal-grade; hairline dividers; small precise type; zero decoration |
+| **QBook (terminal)** | cold, dense, professional | darkest, highest density | market up/down + cyan chart lines on data only; gold on active control | terminal-grade; hairline dividers; small precise type; zero decoration |
 
 ## 4. Application & sequencing
 
 - Implement as CSS custom-property layers: one `:root` foundation (the ramp + accents + light + glass mixins), then per-scene overrides (a `data-scene` attribute or per-route class) adjusting base ink, accent budget, ambient glow, material strength.
-- Replace every champagne-gold and pure-#FCD535 value across globals.css (.lcv, .vd-section-page), AboutClient.module.css, DigitalMeRoleOS.module.css, AskYiping.module.css, the support pages, the Beebook replica (kill the yellow-fill leaderboard pills → quiet mono rank + neutral monogram avatars), the README screenshots, the deck, and the app icon (the icon's flat-yellow L is also a toy — re-cut to the watch-hand discipline: a thinner gold mark, more luminance, less fill).
+- Replace every champagne-gold and pure-#FCD535 value across globals.css (.lcv, .vd-section-page), AboutClient.module.css, DigitalMeRoleOS.module.css, AskYiping.module.css, the support pages, the QBook replica (kill the yellow-fill leaderboard pills → quiet mono rank + neutral monogram avatars), the README screenshots, the deck, and the app icon (the icon's flat-yellow L is also a toy — re-cut to the watch-hand discipline: a thinner gold mark, more luminance, less fill).
 - **Contract-test safety:** many tests pin class names, hex tokens, and theme assertions (night-chrome-theme, quiet-horizon-layout, globals-compatibility, the home/section tests). Change visual values only; keep class names/structure; update pinned colour/theme assertions in lockstep; keep `npm run test:contracts` + typecheck + build green.
-- **Process:** lock this spec → writing-plans → implement ONCE (after the in-flight Beebook round finishes, to avoid concurrent edits) → verify by screenshotting every surface at 1488/1920 and judging against this spec → refresh README/deck/icon → push.
+- **Process:** lock this spec → writing-plans → implement ONCE (after the in-flight QBook round finishes, to avoid concurrent edits) → verify by screenshotting every surface at 1488/1920 and judging against this spec → refresh README/deck/icon → push.
 
 ## 5. Anti-patterns (banned)
 Solid-colour filled pills/badges/cards (esp. yellow). Saturated primary discs. Bold-everything type. `backdrop-filter` blur with no specular/thickness/shadow (fake glass). Colour used as decoration in structure areas. Accent-line under titles. More than ~5% gold area.

@@ -265,11 +265,11 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
   },
   {
     id: 'optibook-market-lens',
-    label: 'Open Beebook',
+    label: 'Open QBook',
     kind: 'html',
     shelf: 'unsw',
     role: 'Live market project evidence',
-    // Beebook is Yiping's own market-making simulator (inspired by the
+    // QBook is Yiping's own market-making simulator (inspired by the
     // Optiver & UNSW trading academy); the build is copied into
     // public/optibook/ by a later integration step, so the href is canonical.
     href: '/optibook/index.html',
@@ -277,12 +277,12 @@ export const VERIFIED_DOSSIER_ARTIFACTS = [
     modifiedAt: '06 Jun 2026',
     thumbnailSrc: '/verified-sources/digital-me/optibook-market-lens.png',
     preview: {
-      title: 'Beebook Market Lens',
+      title: 'QBook Market Lens',
       kicker: 'Inspired by the Optiver & UNSW trading academy',
       metadata: 'PNG screenshot - 1.4 MB - modified 06 Jun 2026',
       tag: 'Trading Academy',
       lines: [
-        'Beebook trading interface capture',
+        'QBook trading interface capture',
         'Pair trading and order-book statistics practice',
         'Self-built simulator ships at /optibook/',
       ],
@@ -501,7 +501,7 @@ export const VERIFIED_DOSSIER_SECTIONS: VerifiedDossierSection[] = [
   },
   {
     id: 'quantnet',
-    label: 'Quantnet',
+    label: 'QuantNet',
     href: '/knowledge/quantnet',
     summary: 'QuantNet course material, Python practice, and market reasoning.',
     status: 'Skill proof',
@@ -554,33 +554,14 @@ export const VERIFIED_DOSSIER_EXPERIENCE_ENTRIES = [
     category: 'trading-program',
     period: 'May 2026 – August 2026',
     location: 'Sydney, Australia',
-    summary:
-      'Trading academy run with UNSW Data and Algorithms in Trading — a training program, not an employment role.',
+    summary: 'UNSW trading program with market-making practice and QBook output.',
     highlights: [
-      'Completing training in Python trading algorithms, order books, VWAP and market making.',
-      'Implemented trading strategies using pair trading and order-book statistics, later rebuilt as Beebook, a self-contained market-making simulator.',
+      'Python trading algorithms, order books, VWAP and market making.',
+      'Pair-trading and order-book statistics rebuilt into QBook.',
     ],
     proofArtifactIds: ['optibook-market-lens', 'about-doc'],
     verification: 'cv-pdf',
     verificationNote: 'Listed in the CV PDF under Relevant Projects as a trading academy program.',
-  },
-  {
-    id: 'oak-financial-group',
-    organisation: 'Oak Financial Group',
-    role: 'Property Portfolio Assistant',
-    category: 'work',
-    period: 'January 2024 – May 2026',
-    location: 'Sydney, Australia',
-    summary:
-      'Portfolio administration for a private Sydney rental portfolio held by the founder and managing directors.',
-    highlights: [
-      'Provided trusted portfolio administration support for a managing director’s Sydney rental assets.',
-      'Managed property associated with A$10,250 weekly income.',
-      'Tracked tenant, lease, rental-income and maintenance records for portfolio oversight.',
-    ],
-    proofArtifactIds: ['about-doc'],
-    verification: 'cv-pdf',
-    verificationNote: 'Listed in the CV PDF under Work Experience.',
   },
   {
     id: 'gumtree-smart-listing-assistant',
@@ -589,11 +570,10 @@ export const VERIFIED_DOSSIER_EXPERIENCE_ENTRIES = [
     category: 'project',
     period: 'February 2026 – April 2026',
     location: 'Sydney, Australia',
-    summary:
-      'Built a Smart Listing Assistant proof of concept with ML price guidance, Gemini rewriting and agentic recommendations.',
+    summary: 'ML price guidance, Gemini rewriting and seller recommendations.',
     highlights: [
-      'Engineered vehicle-age and text-quality signals from titles and descriptions.',
-      'Converted Gradient Boosting outputs into seller-facing price ranges and recommendations.',
+      'Vehicle-age and text-quality signals from listing data.',
+      'Gradient Boosting ranges converted into seller guidance.',
     ],
     proofArtifactIds: ['about-doc'],
     verification: 'cv-pdf',
@@ -606,10 +586,10 @@ export const VERIFIED_DOSSIER_EXPERIENCE_ENTRIES = [
     category: 'project',
     period: 'February 2026 – May 2026',
     location: 'Sydney, Australia',
-    summary: 'Completed Python finance projects on market-data processing and portfolio analytics.',
+    summary: 'Market-data processing and portfolio analytics in Python.',
     highlights: [
-      'Processed price data, corporate actions, earnings-surprise signals and portfolio holdings.',
-      'Achieved 96.25/100 individual and 92.71/100 group project results.',
+      'Price data, corporate actions, earnings signals and holdings.',
+      '96.25/100 individual and 92.71/100 group results.',
     ],
     proofArtifactIds: ['about-doc'],
     verification: 'cv-pdf',
@@ -621,10 +601,9 @@ export const VERIFIED_DOSSIER_EXPERIENCE_ENTRIES = [
     role: 'Project Contributor',
     category: 'project',
     location: 'Remote, Australia',
-    summary:
-      'Contributed to a React/TypeScript travel-planning app with maps, chatbot and itinerary management.',
+    summary: 'React/TypeScript travel app with maps, chatbot and itinerary flow.',
     highlights: [
-      'Worked with Supabase, Playwright and Storybook across a 17-contributor GitHub project.',
+      'Supabase, Playwright and Storybook across a 17-contributor project.',
     ],
     proofArtifactIds: ['about-doc'],
     verification: 'cv-pdf',
@@ -635,13 +614,12 @@ export const VERIFIED_DOSSIER_EXPERIENCE_ENTRIES = [
     organisation: 'UNSW',
     role: 'Research Assistant',
     category: 'work',
-    summary:
-      'Quantitative finance research assistance, advertised on the profile cover.',
+    summary: 'Quantitative finance research assistance.',
     highlights: [],
     proofArtifactIds: [],
     verification: 'pending-documentation',
     verificationNote:
-      'This cover claim is not yet documented in the CV PDF; dates and records stay hidden until evidence is attached.',
+      'CV documentation not attached yet; dates stay hidden.',
   },
 ] as const satisfies readonly VerifiedDossierExperienceEntry[];
 
@@ -650,7 +628,7 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     id: 'about',
     label: 'About',
     href: '/about',
-    summary: 'Self-introduction, direction, public links, and source-backed identity.',
+    summary: 'CV and identity.',
     proof: 'Profile record',
     visualAsset: {
       kind: 'document-preview',
@@ -667,7 +645,7 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     id: 'education',
     label: 'Education',
     href: '/education',
-    summary: 'Courses, coursework, certificates, and learning outputs backed by real files.',
+    summary: 'Coursework and credentials.',
     proof: 'Education evidence',
     visualAsset: {
       kind: 'logo-strip',
@@ -701,7 +679,7 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     id: 'experience',
     label: 'Experience',
     href: '/experience',
-    summary: 'Projects, work, competitions, and built systems shown with process evidence.',
+    summary: 'Work and project proof.',
     proof: 'Project and build records',
     visualAsset: {
       kind: 'source-thumbnails',
@@ -721,8 +699,7 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     id: 'digital-me',
     label: 'Digital Me',
     href: '/digital-me',
-    summary:
-      'A living personal interface that can answer, present, explain, prove, and produce from verified knowledge, education, experience, portfolio, and process history.',
+    summary: 'Answers with citations.',
     proof: 'About + Education + Experience',
     visualAsset: {
       kind: 'ui-preview',
@@ -1079,7 +1056,7 @@ export function resolveVerifiedDossierCourseHandbookHref(course: VerifiedDossier
 export const VERIFIED_DOSSIER_AI_PROMPT = {
   question: 'How does concavity connect to optimisation in ECON3202?',
   answer:
-    'Concavity shapes how a function behaves. In optimisation, it helps show when first-order conditions identify a maximum and when an economic choice problem has a stable interpretation rather than only a derivative calculation.',
+    'In an economic choice problem, concavity lets first-order conditions solve optimisation as a maximum.',
   citations: ['econ-ps2', 'econ-slides', 'econ-tutorial'],
 } satisfies VerifiedDossierAiPrompt;
 

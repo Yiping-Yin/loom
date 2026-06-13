@@ -27,7 +27,7 @@ async function buildCitationFixture() {
         {
           id: 'ref-quantnet-python-foundations',
           categorySlug: 'quantnet',
-          categoryLabel: 'Quantnet',
+          categoryLabel: 'QuantNet',
           title: 'Python Foundations.pdf',
           fileSlug: 'python-foundations',
           sourcePath: 'Quant/Python Foundations.pdf',
@@ -92,7 +92,7 @@ test('reference registry exposes AI citation candidates from the same manifest s
   assert.ok(quantnet);
   assert.equal(quantnet.title, 'Python Foundations.pdf');
   assert.equal(quantnet.href, '/knowledge/quantnet/python-foundations');
-  assert.equal(quantnet.category, 'Quantnet');
+  assert.equal(quantnet.category, 'QuantNet');
   assert.equal(quantnet.sourcePath, 'Quant/Python Foundations.pdf');
   assert.equal(quantnet.kind, 'reference-citation');
   assert.match(quantnet.preview, /Python foundations for quant work/);
@@ -102,7 +102,7 @@ test('reference registry exposes AI citation candidates from the same manifest s
   assert.deepEqual(quantnet.draftCorpusDoc, {
     title: 'Python Foundations.pdf',
     href: '/knowledge/quantnet/python-foundations',
-    category: 'Quantnet',
+    category: 'QuantNet',
     sourcePath: 'Quant/Python Foundations.pdf',
     excerpt: 'Python foundations for quant work Direct source behind the programming artifact',
     body: quantnet.promptLine,

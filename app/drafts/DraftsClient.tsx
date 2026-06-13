@@ -7,7 +7,7 @@ import {
   NEW_LOOM_DRAFT_RECORDS_KEY,
   type NewLoomDraftRecord,
 } from '../../lib/new-loom/draft-records';
-import { VERIFIED_DOSSIER_TOP_NAV } from '../../lib/new-loom/verified-dossier-home';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 
 function ArrowIcon() {
   return (
@@ -49,18 +49,7 @@ export function DraftsClient() {
 
   return (
     <main className="vd-home vd-drafts-page" aria-labelledby="draft-library-title">
-      <nav className="vd-nav vd-nav--simple" aria-label="Draft Library navigation">
-        <a className="vd-wordmark" href="/loom" aria-label="Open Loom product">
-          Loom
-        </a>
-        <div className="vd-nav__links">
-          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-            <a key={item.label} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </div>
-      </nav>
+      <LoomGlobalNav ariaLabel="Draft Library navigation" />
 
       <section className="vd-draft-library" aria-label="Draft records">
         <header className="vd-draft-library__hero">

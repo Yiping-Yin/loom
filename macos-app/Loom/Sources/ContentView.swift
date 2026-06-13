@@ -1659,7 +1659,7 @@ struct LoomWebView: NSViewRepresentable {
                   hair: 'rgba(230, 233, 238, 0.10)',
                   hairFaint: 'rgba(230, 233, 238, 0.05)',
                   thread: '\(LoomTokens.dsThreadHex)',
-                  threadMuted: 'rgba(200, 162, 74, 0.55)'
+                  threadMuted: 'rgba(75, 197, 222, 0.55)'
                 }
               : {
                   bg: '\(LoomTokens.dsPaperDeepHexLight)',
@@ -1678,7 +1678,7 @@ struct LoomWebView: NSViewRepresentable {
                   hair: 'rgba(26, 31, 38, 0.10)',
                   hairFaint: 'rgba(26, 31, 38, 0.05)',
                   thread: '\(LoomTokens.dsThreadTextHexLight)',
-                  threadMuted: 'rgba(154, 122, 46, 0.55)'
+                  threadMuted: 'rgba(47, 115, 132, 0.55)'
                 };
             const apply = () => {
               try { localStorage.setItem('wiki:theme', mode); } catch (_) {}

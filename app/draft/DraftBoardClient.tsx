@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { browserLocalStorage, safeStorageGetItem, safeStorageSetItem } from '../../lib/browser-storage';
 import { subscribeLoomMirror } from '../../lib/loom-mirror-store';
 import { loadSoanPayload, SOAN_RECORDS_KEY } from '../../lib/loom-soan-records';
@@ -191,13 +192,13 @@ async function loadSoanStore(): Promise<SoanStore> {
  *  rail group label echoes each card's accent without duplicating the
  *  palette in JS. */
 const KIND_META: Record<Card['kind'], { label: string; color: string }> = {
-  thesis: { label: 'Thesis', color: '#9E7C3E' },
-  instance: { label: 'Instance', color: '#5C6E4E' },
-  counter: { label: 'Counter', color: '#8F4646' },
-  question: { label: 'Question', color: '#3A477A' },
-  fog: { label: 'Unclear', color: '#8A8373' },
-  weft: { label: 'Connection', color: '#9E7C3E' },
-  sketch: { label: 'Sketch', color: '#4A4339' },
+  thesis: { label: 'Thesis', color: '#4BC5DE' },
+  instance: { label: 'Instance', color: '#8FA3A6' },
+  counter: { label: 'Counter', color: '#A35F73' },
+  question: { label: 'Question', color: '#6CE7F2' },
+  fog: { label: 'Unclear', color: '#A4A9AD' },
+  weft: { label: 'Connection', color: '#8AF7E6' },
+  sketch: { label: 'Sketch', color: '#666D72' },
 };
 
 const KIND_ORDER: Card['kind'][] = [
@@ -727,7 +728,8 @@ export default function DraftBoardClient() {
                 a passage and adding a thesis.
               </p>
               <Link href="/sources" className="loom-empty-state-action">
-                Open Sources →
+                Open Sources
+                <ArrowRight className="loom-empty-state-action-icon" aria-hidden="true" size={14} strokeWidth={1.8} />
               </Link>
             </div>
           </div>
@@ -754,7 +756,7 @@ export default function DraftBoardClient() {
                 if (!from || !to) return null;
                 const { d, tx, ty } = edgePath(from, to);
                 const isSupport = e.kind === 'support';
-                const stroke = isSupport ? '#9E7C3E' : '#8A8373';
+                const stroke = isSupport ? '#4BC5DE' : '#A4A9AD';
                 const dash = isSupport ? undefined : '2 4';
                 const opacity = isSupport ? 0.55 : 0.45;
                 return (

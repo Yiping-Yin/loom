@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import React from 'react';
 
-import { HomeClient } from '../app/HomeClient';
 import {
   PERSONAL_PLATFORM_MODEL,
   PERSONAL_PLATFORM_HISTORY,
@@ -16,6 +15,16 @@ import {
 } from '../lib/new-loom/personal-platform';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+const cssModuleClassMap = new Proxy(
+  {},
+  { get: (_target, className) => (typeof className === 'string' ? className : '') },
+) as Record<string, string>;
+const cssModuleExports = { __esModule: true, default: cssModuleClassMap };
+
+require.extensions['.css'] = (module: { exports: typeof cssModuleExports }) => {
+  module.exports = cssModuleExports;
+};
 
 function readRepo(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
@@ -50,10 +59,24 @@ function cssBlock(css: string, selector: string, requiredContent?: string) {
   assert.fail(`${selector} block should include ${requiredContent}`);
 }
 
+function renderHomeClientHtml() {
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
+  const { HomeClient } = require('../app/HomeClient') as typeof import('../app/HomeClient');
+
+  return renderToStaticMarkup(<HomeClient />);
+}
+
+function globalNavHtml(html: string, ariaLabel = 'Verified dossier navigation') {
+  return html.match(new RegExp(`<nav[^>]+aria-label="${ariaLabel}"[\\s\\S]*?<\\/nav>`))?.[0] ?? '';
+}
+
 test('personal platform data keeps five sections and the mature section model', () => {
   assert.deepEqual(
     PERSONAL_PLATFORM_SECTIONS.map((section) => section.label),
-    ['About', 'UNSW', 'Quantnet', 'WQU', 'Claude'],
+    ['About', 'UNSW', 'QuantNet', 'WQU', 'Claude'],
   );
   assert.deepEqual(PERSONAL_PLATFORM_MODEL, ['Overview', 'Path', 'Sources', 'Process', 'Outputs']);
 
@@ -80,13 +103,8 @@ test('personal platform data keeps five sections and the mature section model', 
 });
 
 test('HomeClient renders mature platform modules on first paint', () => {
-  Object.assign(globalThis, { React });
-  const { renderToStaticMarkup } = require('react-dom/server') as {
-    renderToStaticMarkup: (node: React.ReactElement) => string;
-  };
-
-  const html = renderToStaticMarkup(<HomeClient />);
-  const primaryNavHtml = html.match(/<div class="lcv-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
+  const html = renderHomeClientHtml();
+  const primaryNavHtml = globalNavHtml(html);
 
   assert.match(html, /Yiping Yin/);
   assert.match(html, /🇨🇳 Wuhan/);
@@ -191,7 +209,7 @@ test('HomeClient renders mature platform modules on first paint', () => {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
 
-  for (const retiredPrimaryNav of ['UNSW', 'Quantnet', 'WQU', 'Claude']) {
+  for (const retiredPrimaryNav of ['UNSW', 'QuantNet', 'WQU', 'Claude']) {
     assert.doesNotMatch(primaryNavHtml, new RegExp(`>${retiredPrimaryNav}<`));
   }
 
@@ -273,13 +291,8 @@ test('homepage CSS protects balanced evidence portal layout', () => {
 });
 
 test('repo homepage exposes the personal knowledge identity evidence model', () => {
-  Object.assign(globalThis, { React });
-  const { renderToStaticMarkup } = require('react-dom/server') as {
-    renderToStaticMarkup: (node: React.ReactElement) => string;
-  };
-
-  const html = renderToStaticMarkup(<HomeClient />);
-  const primaryNavHtml = html.match(/<div class="lcv-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
+  const html = renderHomeClientHtml();
+  const primaryNavHtml = globalNavHtml(html);
 
   assert.match(html, /Yiping Yin/);
   assert.match(html, /Quant T\/R/);
@@ -324,7 +337,7 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
-  for (const retiredPrimaryNav of ['UNSW', 'Quantnet', 'WQU', 'Claude']) {
+  for (const retiredPrimaryNav of ['UNSW', 'QuantNet', 'WQU', 'Claude']) {
     assert.doesNotMatch(primaryNavHtml, new RegExp(`>${retiredPrimaryNav}<`));
   }
   for (const model of ['Overview', 'Path', 'Sources', 'Process', 'Outputs']) {

@@ -23,6 +23,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { subscribeLoomMirror } from '../lib/loom-mirror-store';
 import { loadPanelRecords, PANEL_RECORDS_KEY, type LoomPanelRecord } from '../lib/loom-panel-records';
 
@@ -46,18 +47,17 @@ type SeedPanel = {
 
 type StoredPanel = Pick<LoomPanelRecord, 'id' | 'docId' | 'title' | 'sub' | 'subtitle' | 'color' | 'big' | 'glyph'>;
 
-// Earth-tone palette (matches V.* in loom-tokens.jsx). Kept inline — each
-// tile needs a deterministic band color, and inline styles let us set
-// `--tile-color` per tile without bloating globals.css with one rule per
-// category.
+// Cold cyan/silver palette. Kept inline — each tile needs a deterministic
+// band color, and inline styles let us set `--tile-color` per tile without
+// bloating globals.css with one rule per category.
 const PALETTE: Record<PaletteKey, string> = {
-  thread: '#9E7C3E',
-  rose:   '#8F4646',
-  sage:   '#5C6E4E',
-  indigo: '#3A477A',
-  umber:  '#5C3F2A',
-  plum:   '#5E3D5C',
-  ochre:  '#A8783E',
+  thread: '#4BC5DE',
+  rose:   '#A35F73',
+  sage:   '#8FA3A6',
+  indigo: '#738895',
+  umber:  '#5E666C',
+  plum:   '#8B728F',
+  ochre:  '#A8B0B6',
 };
 
 function isPaletteKey(value: unknown): value is PaletteKey {
@@ -67,7 +67,7 @@ function isPaletteKey(value: unknown): value is PaletteKey {
 /**
  * Normalize a `color` field into a hex string. Three shapes ship today:
  *   - palette key ("thread", "rose", …) — resolved via PALETTE
- *   - literal hex ("#9E7C3E") — passed through
+ *   - literal hex ("#4BC5DE") — passed through
  *   - anything else — fallback to PALETTE.thread for parity with legacy
  */
 function resolvePanelColor(raw: unknown): string {
@@ -171,7 +171,8 @@ export default function PatternsClient() {
             pattern is ready, Crystallize settles it here.
           </p>
           <Link href="/sources" className="loom-empty-state-action">
-            Open Sources →
+            Open Sources
+            <ArrowRight className="loom-empty-state-action-icon" aria-hidden="true" size={14} strokeWidth={1.8} />
           </Link>
         </div>
       ) : (

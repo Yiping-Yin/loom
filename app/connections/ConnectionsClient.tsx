@@ -73,75 +73,53 @@ export default function ConnectionsClient() {
     <div className={styles.surface}>
       <LoomSupportNav active="/connections" />
       <main
-        style={{
-          background: 'var(--bg)',
-          color: 'var(--fg)',
-          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
+        className={styles.main}
+        style={{ padding: 'var(--support-main-padding)' }}
       >
-        <article style={{ width: '100%', maxWidth: '44rem' }}>
-        <header style={{ marginBottom: '2.2rem' }}>
-          <div
-            style={{
-              fontFamily: 'var(--sans)',
-              fontSize: '0.72rem',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--muted)',
-              marginBottom: '0.6rem',
-            }}
-          >
-            Connections / Correspondents
+        <article className={styles.shell}>
+        <header className={styles.hero}>
+          <div className={styles.heroText}>
+            <div className={styles.eyebrow}>Connections / Correspondents</div>
+            <h1 className={styles.title}>Where sources meet.</h1>
+            <p className={styles.lead}>
+              Every source came from someone or somewhere. Two sources that share a
+              correspondent are connected; cross-origin links — a web capture meeting a local
+              file — are shown first. Material comes in through{' '}
+              <Link href="/sources" className={styles.textLink}>Sources</Link> and a
+              connection worth keeping continues in{' '}
+              <Link href="/draft" className={styles.textLink}>Draft</Link>.
+            </p>
           </div>
-          <h1
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            Where sources meet.
-          </h1>
-          <p style={{ color: 'var(--fg-secondary)', lineHeight: 1.65, marginTop: '0.8rem' }}>
-            Every source came from someone or somewhere. Two sources that share a
-            correspondent are connected; cross-origin links — a web capture meeting a local
-            file — are shown first. Material comes in through{' '}
-            <Link href="/sources" style={{ color: 'var(--accent)' }}>Sources</Link> and a
-            connection worth keeping continues in{' '}
-            <Link href="/draft" style={{ color: 'var(--accent)' }}>Draft</Link>.
-          </p>
+          <div className={styles.heroPanel} aria-hidden="true">
+            <div className={styles.instrument}>
+              <div className={styles.instrumentKicker}>Source relation map</div>
+              <div className={styles.instrumentValue}>
+                {connectionMap.connections.length.toString().padStart(2, '0')}
+              </div>
+              <div className={styles.instrumentMeta}>
+                Shared correspondents and cross-origin pairs stay visible as quiet relation
+                lines, not a social feed.
+              </div>
+            </div>
+          </div>
         </header>
 
-        <section aria-label="Correspondents" style={{ marginBottom: '2.2rem' }}>
-          <h2
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: '1.15rem',
-              fontWeight: 600,
-              marginBottom: '0.7rem',
-            }}
-          >
-            Correspondents
-          </h2>
+        <section className={styles.sectionCard} aria-label="Correspondents">
+          <h2 className={styles.sectionHeading}>Correspondents</h2>
           {connectionMap.correspondents.length === 0 ? (
-            <p style={{ color: 'var(--muted)', fontSize: '0.88rem', margin: 0 }}>
+            <p className={styles.muted} style={{ margin: 0 }}>
               No correspondents yet. As sources accumulate, the people and places they came
               from appear here.
             </p>
           ) : (
-            <ul
-              style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.5rem' }}
-            >
+            <ul className={styles.plainList}>
               {connectionMap.correspondents.map((correspondent) => (
                 <li
                   key={correspondent.name}
-                  style={{ display: 'flex', alignItems: 'baseline', gap: 10, fontSize: '0.9rem' }}
+                  className={styles.row}
                 >
                   <strong>{correspondent.name}</strong>
-                  <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>
+                  <span className={styles.supportNote}>
                     {correspondent.sources.length} source
                     {correspondent.sources.length === 1 ? '' : 's'}
                   </span>
@@ -151,51 +129,26 @@ export default function ConnectionsClient() {
           )}
         </section>
 
-        <section aria-label="Cross-origin connections">
-          <h2
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: '1.15rem',
-              fontWeight: 600,
-              marginBottom: '0.7rem',
-            }}
-          >
-            Connections, cross-origin first
-          </h2>
+        <section className={styles.sectionCard} aria-label="Cross-origin connections" style={{ marginTop: '1.2rem' }}>
+          <h2 className={styles.sectionHeading}>Connections, cross-origin first</h2>
           {connectionMap.connections.length === 0 ? (
-            <p style={{ color: 'var(--muted)', fontSize: '0.88rem', margin: 0 }}>
+            <p className={styles.muted} style={{ margin: 0 }}>
               No connections yet. When two sources share a correspondent, the link shows up
               here — cross-origin pairs first.
             </p>
           ) : (
-            <ul
-              style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.6rem' }}
-            >
+            <ul className={styles.plainList}>
               {[
                 ...connectionMap.crossOriginConnections,
                 ...connectionMap.connections.filter((link) => !link.crossOrigin),
               ].map((link) => (
-                <li
-                  key={link.id}
-                  style={{
-                    border: 'var(--hairline)',
-                    borderRadius: 8,
-                    padding: '0.7rem 1rem',
-                    background: 'color-mix(in srgb, var(--fg) 2%, var(--bg))',
-                  }}
-                >
+                <li key={link.id} className={styles.thinCard}>
                   <div style={{ fontSize: '0.92rem', marginBottom: 2 }}>
                     {link.from.title} ↔ {link.to.title}
                   </div>
                   <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'baseline',
-                      gap: 10,
-                      color: 'var(--muted)',
-                      fontSize: '0.8rem',
-                      flexWrap: 'wrap',
-                    }}
+                    className={styles.row}
+                    style={{ color: 'var(--muted)', fontSize: '0.8rem' }}
                   >
                     <span>
                       via {link.via} · {link.from.origin} ↔ {link.to.origin}
@@ -204,7 +157,7 @@ export default function ConnectionsClient() {
                     {!publicWorkingMode && (
                       <Link
                         href={sourceConnectionDraftHref(link)}
-                        style={{ color: 'var(--accent)', textDecoration: 'none' }}
+                        className={styles.textLink}
                       >
                         Draft this connection
                       </Link>

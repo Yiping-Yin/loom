@@ -5,7 +5,7 @@ export default function NotFound() {
   const router = useRouter();
   // Using a button, not <a>. WebKit's `:visited` link color is special-cased
   // for history-privacy and overrides our inline/stylesheet color even with
-  // `!important`. A button sidesteps that entirely and renders bronze.
+  // `!important`. A button sidesteps that entirely and keeps signature cyan.
   return (
     <div className="article-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
       <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>404</h1>

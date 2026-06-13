@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   DIGITAL_ME_ARTIFACT_MODES,
@@ -10,6 +13,8 @@ import {
   getDigitalMeEvidenceForClaim,
 } from '../lib/new-loom/digital-me-role-os';
 import { VERIFIED_DOSSIER_ARTIFACTS } from '../lib/new-loom/verified-dossier-home';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 test('Digital Me defaults to the Quant Researcher / Trader role lens', () => {
   assert.equal(DIGITAL_ME_QUANT_ROLE_LENS.id, 'quant-researcher-trader');
@@ -85,5 +90,88 @@ test('Digital Me artifact runtime exposes distinct role-specific outputs', () =>
   }
   assert.ok(
     Object.values(DIGITAL_ME_PROOF_PATH.nextGrowthActions).some((action) => /project/i.test(action)),
+  );
+});
+
+test('Digital Me reveal animation cannot blank SSR or slow-hydration first paint', () => {
+  const css = fs.readFileSync(
+    path.join(repoRoot, 'app', 'digital-me', 'DigitalMeRoleOS.module.css'),
+    'utf8',
+  );
+  const client = fs.readFileSync(
+    path.join(repoRoot, 'app', 'digital-me', 'DigitalMeRoleOSClient.tsx'),
+    'utf8',
+  );
+
+  assert.doesNotMatch(
+    css,
+    /\.roleOsPage\s+\[data-reveal\]\s*\{[^}]*opacity:\s*0/s,
+    'bare [data-reveal] must not hide server-rendered content',
+  );
+  assert.match(css, /\.roleOsPage\[data-reveal-ready="true"\]\s+\[data-reveal\]\s*\{[^}]*opacity:\s*0/s);
+  assert.match(client, /getBoundingClientRect\(\)/);
+  assert.match(client, /window\.innerHeight \* 0\.96/);
+  assert.match(client, /root\.setAttribute\('data-reveal-ready', 'true'\)/);
+  assert.match(client, /const revealVisibleTargets = \(\) => \{/);
+  assert.match(client, /window\.addEventListener\('scroll', revealVisibleTargets, \{ passive: true \}\)/);
+  assert.match(client, /window\.addEventListener\('resize', revealVisibleTargets\)/);
+  assert.match(client, /window\.removeEventListener\('scroll', revealVisibleTargets\)/);
+  assert.match(client, /window\.removeEventListener\('resize', revealVisibleTargets\)/);
+});
+
+test('Digital Me keeps the role lens and Ask console compact enough for early proof flow', () => {
+  const roleCss = fs.readFileSync(
+    path.join(repoRoot, 'app', 'digital-me', 'DigitalMeRoleOS.module.css'),
+    'utf8',
+  );
+  const askCss = fs.readFileSync(
+    path.join(repoRoot, 'components', 'verified-dossier', 'AskYiping.module.css'),
+    'utf8',
+  );
+
+  assert.match(
+    roleCss,
+    /--role-nav-clearance:\s*clamp\(5\.85rem,\s*7vw,\s*6\.4rem\)/,
+    'Digital Me needs an explicit route-level nav clearance so the global floating nav does not sit on the role lens glass',
+  );
+  assert.match(
+    roleCss,
+    /\.roleLens\s*\{[^}]*margin-top:\s*var\(--role-nav-clearance\)/s,
+    'Digital Me hero should reserve only the global nav clearance instead of ad hoc top spacing',
+  );
+  assert.match(
+    roleCss,
+    /\.roleOsPage :global\(\.loom-global-nav-slot\)\s*\{[^}]*min-height:\s*0/s,
+    'Digital Me should not stack the mobile nav slot spacer on top of its route-level nav clearance',
+  );
+  assert.match(
+    roleCss,
+    /@media\s*\(max-width:\s*520px\)\s*\{[\s\S]*\.roleLens\s*\{[^}]*margin-top:\s*clamp\(5\.1rem,\s*18vw,\s*5\.8rem\)/s,
+    'Digital Me mobile hero should also clear the compact floating nav without creating a large empty masthead',
+  );
+  assert.match(
+    roleCss,
+    /\.roleLens h1\s*\{[^}]*font-size:\s*clamp\(2\.45rem,\s*4\.35vw,\s*4\.7rem\)/s,
+    'Digital Me hero title should stay below the old oversized card scale',
+  );
+  assert.match(
+    askCss,
+    /\.askYiping\s*\{[^}]*grid-template-columns:\s*minmax\(20rem,\s*0\.88fr\)\s*minmax\(0,\s*1\.12fr\)/s,
+    'Ask Yiping should render as a two-column knowledge console on desktop',
+  );
+  assert.match(
+    askCss,
+    /\.answerArea\s*\{[^}]*max-height:\s*clamp\(23rem,\s*45vw,\s*32rem\)/s,
+    'Ask answer transcript should be height-bounded so the proof path appears earlier',
+  );
+  assert.match(
+    askCss,
+    /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.askYiping\s*\{[^}]*grid-template-columns:\s*1fr/s,
+    'Ask Yiping should collapse cleanly to one mobile column',
+  );
+  assert.match(
+    askCss,
+    /@media\s*\(max-width:\s*720px\)\s*\{[\s\S]*\.answerArea\s*\{[^}]*max-height:\s*min\(22rem,\s*48vh\)/s,
+    'Ask answer transcript should remain bounded on mobile',
   );
 });

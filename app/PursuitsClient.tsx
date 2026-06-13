@@ -28,6 +28,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { subscribeLoomMirror } from '../lib/loom-mirror-store';
 import { loadPursuitRecords, PURSUIT_RECORDS_KEY, type LoomPursuitRecord } from '../lib/loom-pursuit-records';
 import { hidePursuit, restorePursuit } from '../lib/pursuit-hide-client';
@@ -196,7 +197,8 @@ export default function PursuitsClient() {
             source, read, and the questions that surface will gather here.
           </p>
           <Link href="/sources" className="loom-empty-state-action">
-            Open Sources →
+            Open Sources
+            <ArrowRight className="loom-empty-state-action-icon" aria-hidden="true" size={14} strokeWidth={1.8} />
           </Link>
         </div>
       ) : (

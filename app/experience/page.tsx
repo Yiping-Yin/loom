@@ -3,13 +3,22 @@ import React from 'react';
 import {
   VERIFIED_DOSSIER_EXPERIENCE_ENTRIES,
   VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
-  VERIFIED_DOSSIER_TOP_NAV,
   resolveVerifiedDossierArtifact,
   type VerifiedDossierExperienceEntry,
 } from '../../lib/new-loom/verified-dossier-home';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import styles from './ExperiencePage.module.css';
 
 export const metadata = { title: 'Experience · Loom' };
+
+const EXPERIENCE_ENTRY_LABELS: Record<string, string> = {
+  'optiver-unsw-trading-academy': 'Trading academy + QBook.',
+  'gumtree-smart-listing-assistant': 'ML pricing guidance.',
+  'python-financial-data-portfolio-analytics': 'Python market analytics.',
+  'jiangren-lets-go-travel-app': 'Travel app prototype.',
+  'unsw-research-assistant': 'Quant finance support.',
+};
 
 function formatEntryMeta(entry: VerifiedDossierExperienceEntry) {
   return [entry.period, entry.location].filter(Boolean).join(' · ');
@@ -24,18 +33,26 @@ function ExperienceEntryCard({ entry }: { entry: VerifiedDossierExperienceEntry 
       <strong>{entry.organisation}</strong>
       <span className="vd-entry-role">{entry.role}</span>
       {meta ? <span className="vd-entry-meta">{meta}</span> : null}
-      <span className="vd-entry-summary">{entry.summary}</span>
+      <span className="vd-entry-summary">{EXPERIENCE_ENTRY_LABELS[entry.id] ?? entry.summary}</span>
       {entry.highlights.length ? (
-        <span className="vd-entry-highlights">
-          {entry.highlights.map((highlight) => (
-            <span key={highlight} className="vd-entry-highlight">
-              {highlight}
-            </span>
-          ))}
-        </span>
+        <details className="vd-entry-notes">
+          <summary>Evidence notes</summary>
+          <span className="vd-entry-highlights">
+            {entry.highlights.map((highlight) => (
+              <span key={highlight} className="vd-entry-highlight">
+                {highlight}
+              </span>
+            ))}
+          </span>
+        </details>
       ) : null}
       {entry.verification === 'pending-documentation' ? (
-        <span className="vd-entry-pending">Documentation pending — {entry.verificationNote}</span>
+        <details className="vd-entry-notes vd-entry-notes--pending">
+          <summary>Documentation pending</summary>
+          <span className="vd-entry-pending">
+            {entry.verificationNote}
+          </span>
+        </details>
       ) : null}
       {proofArtifacts.map((artifact) => (
         <a key={artifact.id} href={artifact.href}>
@@ -59,34 +76,50 @@ export default function ExperiencePage() {
   );
 
   return (
-    <main className="vd-section-page" aria-labelledby="experience-title">
-      <nav className="vd-section-page__nav" aria-label="Experience navigation">
-        <a href="/loom">Loom</a>
-        {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-          <a key={item.label} href={item.href} aria-current={item.href === '/experience' ? 'page' : undefined}>
-            {item.label}
-          </a>
-        ))}
-      </nav>
+    <main className="vd-section-page vd-section-page--experience" aria-labelledby="experience-title">
+      <LoomGlobalNav activeHref="/experience" ariaLabel="Experience navigation" />
+      <span className={styles.routeCssAnchor} aria-hidden="true" />
       <header className="vd-section-page__hero">
-        <p>Experience</p>
-        <h1 id="experience-title">Work, trading programs, and project evidence from the CV.</h1>
-        <span>{category.summary}</span>
+        <div className="vd-section-page__hero-copy">
+          <p>Experience</p>
+          <h1 id="experience-title">Experience evidence.</h1>
+          <span>{category.summary}</span>
+        </div>
+        <dl className="vd-section-page__hero-proof" aria-label="Experience evidence summary">
+          <div>
+            <dt>Work</dt>
+            <dd>{workEntries.length}</dd>
+          </div>
+          <div>
+            <dt>Projects</dt>
+            <dd>{projectEntries.length}</dd>
+          </div>
+          <div>
+            <dt>Files</dt>
+            <dd>{artifacts.length}</dd>
+          </div>
+        </dl>
       </header>
-      <section className="vd-section-page__list" aria-label="Work and trading-program experience">
-        <p className="vd-section-page__band-label">Work &amp; trading programs</p>
+      <section
+        className="vd-section-page__list vd-section-page__list--work"
+        aria-label="Work and trading-program experience"
+      >
+        <p className="vd-section-page__band-label">Work / Programs</p>
         {workEntries.map((entry) => (
           <ExperienceEntryCard key={entry.id} entry={entry} />
         ))}
       </section>
-      <section className="vd-section-page__list" aria-label="Project experience">
+      <section
+        className="vd-section-page__list vd-section-page__list--projects"
+        aria-label="Project experience"
+      >
         <p className="vd-section-page__band-label">Projects</p>
         {projectEntries.map((entry) => (
           <ExperienceEntryCard key={entry.id} entry={entry} />
         ))}
       </section>
       <section className="vd-section-page__artifact-strip" aria-label="Experience evidence">
-        <p className="vd-section-page__band-label">Evidence files</p>
+        <p className="vd-section-page__band-label">Evidence</p>
         {artifacts.map((artifact) => (
           <a key={artifact.id} href={artifact.href}>
             <FileBadge kind={artifact.kind} label={artifact.label} compact />

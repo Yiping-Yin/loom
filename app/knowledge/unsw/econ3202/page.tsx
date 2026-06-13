@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { LoomGlobalNav } from '../../../../components/verified-dossier/LoomGlobalNav';
 import { FileBadge } from '../../../../components/verified-dossier/FileBadge';
 import {
   UNSW_ECON3202_FACTS,
@@ -19,6 +20,7 @@ export const metadata = { title: 'ECON3202 · Loom' };
 export default function Econ3202Page() {
   return (
     <main className={styles.page} aria-labelledby="econ3202-title">
+      <LoomGlobalNav ariaLabel="ECON3202 knowledge navigation" />
       <UnswStudyNav active="econ3202" />
 
       <section className={styles.hero}>

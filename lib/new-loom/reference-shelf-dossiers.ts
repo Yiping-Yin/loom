@@ -36,7 +36,7 @@ export const REFERENCE_SHELF_DOSSIERS: Record<ReferenceShelfDossierId, Reference
     eyebrow: 'Market skills shelf',
     headline: 'Quant learning becomes visible skill proof.',
     lead:
-      'Quantnet organizes trading concepts, programming practice, interview preparation, and market reasoning into a traceable path from source material to practiced capability.',
+      'QuantNet organizes trading concepts, programming practice, interview preparation, and market reasoning into a traceable path from source material to practiced capability.',
     proofLine:
       'The shelf is designed to show how study inputs become examples, notes, interview answers, and portfolio-ready market reasoning.',
     metrics: [

@@ -293,7 +293,7 @@ function RetrievalDot({
           width: 6,
           height: 6,
           borderRadius: '50%',
-          background: 'var(--tint-blue, #3A477A)',
+          background: 'var(--tint-blue, #738895)',
           opacity: hovered || smallScreen ? 0.9 : 0.45,
           cursor: 'pointer',
           transition: 'opacity 0.15s ease, transform 0.15s ease',
@@ -342,7 +342,7 @@ function RetrievalDot({
                 className="loom-smallcaps"
                 style={{
                   marginTop: 2,
-                  color: 'var(--tint-blue, #3A477A)',
+                  color: 'var(--tint-blue, #738895)',
                   fontFamily: 'var(--serif)',
                   fontSize: '0.82rem',
                   fontWeight: 500,
@@ -361,7 +361,7 @@ function RetrievalDot({
                     appearance: 'none',
                     border: 0,
                     background: 'transparent',
-                    color: 'var(--tint-blue, #3A477A)',
+                    color: 'var(--tint-blue, #738895)',
                     fontSize: '0.68rem',
                     fontWeight: 700,
                     letterSpacing: '0.04em',

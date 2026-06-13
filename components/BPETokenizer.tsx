@@ -27,7 +27,7 @@ function trainBPE(text: string, numMerges: number) {
   return { ids, merges };
 }
 
-const PALETTE = ['#8F4646', '#A8783E', '#B98E3F', '#5C6E4E', '#3A477A', '#5E3D5C', '#5C3F2A', '#9E7C3E'];
+const PALETTE = ['#4BC5DE', '#8AF7E6', '#6CE7F2', '#A8B0B6', '#738895', '#8B728F', '#A35F73', '#5E666C'];
 
 export function BPETokenizer({ initial = 'the cat sat on the mat. the cat sat.' }: { initial?: string }) {
   const [text, setText] = useState(initial);

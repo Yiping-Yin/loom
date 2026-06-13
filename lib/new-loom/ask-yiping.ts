@@ -71,7 +71,7 @@ const SYNONYM_GROUPS: readonly (readonly string[])[] = [
   ['programming', 'program', 'coding', 'code', 'implementation', 'developer'],
   ['python', 'py'],
   ['cpp', 'c++'],
-  ['trading', 'trader', 'trade', 'market', 'markets', 'beebook', 'optibook', 'orderbook'],
+  ['trading', 'trader', 'trade', 'market', 'markets', 'qbook', 'optibook', 'orderbook'],
   ['economics', 'economic', 'econ', 'econ3202'],
   ['mathematical', 'mathematics', 'maths', 'math'],
 ];
@@ -451,8 +451,8 @@ function findLastIndex<T>(items: T[], predicate: (item: T) => boolean): number {
 
 /** Starter questions grounded in the real dossier. */
 export const ASK_YIPING_SUGGESTED_QUESTIONS: string[] = [
-  'How does concavity connect to optimisation in ECON3202?',
-  'What is Beebook, and how does it grow out of the Optiver & UNSW trading academy?',
-  'What are Yiping’s C++ and Python programming foundations?',
-  'What verified evidence backs the Quant Researcher / Trader role?',
+  'Concavity in ECON3202 optimisation?',
+  'QBook market-making proof?',
+  'Python and C++ foundations?',
+  'Quant role evidence?',
 ];

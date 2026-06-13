@@ -13,7 +13,8 @@
  * quiet questions — what was read today, and what is pinned for later —
  * set in Vellum literary type. A day is not a to-do list.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { subscribeLoomMirror } from '../../lib/loom-mirror-store';
 import {
   RECENT_RECORDS_KEY,
@@ -133,11 +134,23 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
           pinned material to warrant the other actions. */}
       <div className="loom-today-actions">
         {isQuiet ? (
-          <LiteraryAction label="Open your first source →" onClick={() => go('/sources')} />
+          <LiteraryAction
+            label="Open your first source"
+            icon={<ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />}
+            onClick={() => go('/sources')}
+          />
         ) : (
           <>
-            <LiteraryAction label="Return to the warp thread →" onClick={() => go('/')} />
-            <LiteraryAction label="Open a new book →" onClick={() => go('/sources')} />
+            <LiteraryAction
+              label="Return to the warp thread"
+              icon={<ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />}
+              onClick={() => go('/')}
+            />
+            <LiteraryAction
+              label="Open a new book"
+              icon={<ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />}
+              onClick={() => go('/sources')}
+            />
             <LiteraryAction label="Set it down for today" onClick={() => go('/')} />
           </>
         )}
@@ -167,7 +180,15 @@ function Section({ label, rows, emptyLabel, onGo }: { label: string; rows: Row[]
   );
 }
 
-function LiteraryAction({ label, onClick }: { label: string; onClick: () => void }) {
+function LiteraryAction({
+  label,
+  icon,
+  onClick,
+}: {
+  label: string;
+  icon?: ReactNode;
+  onClick: () => void;
+}) {
   const [hover, setHover] = useState(false);
   return (
     <button
@@ -178,6 +199,10 @@ function LiteraryAction({ label, onClick }: { label: string; onClick: () => void
       onFocus={() => setHover(true)}
       onBlur={() => setHover(false)}
       style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.38rem',
         background: 'transparent',
         border: 'none',
         borderBottom: '1px solid',
@@ -194,6 +219,7 @@ function LiteraryAction({ label, onClick }: { label: string; onClick: () => void
       }}
     >
       {label}
+      {icon}
     </button>
   );
 }

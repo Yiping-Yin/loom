@@ -17,7 +17,7 @@ export const NEW_LOOM_CAPABILITIES: NewLoomCapability[] = [
     label: 'Sources',
     shortLabel: 'Source archive',
     href: '/sources',
-    description: 'Collect learning paths. Add, capture, and review source material for Overview, Path, Sources, Process, and Outputs: resources, course material, certificate evidence, and portfolio process records.',
+    description: 'Add learning paths. Capture and review source material for Overview, Path, Sources, Process, and Outputs: resources, course material, certificate evidence, and portfolio process records.',
     primaryAction: 'Open sources',
   },
   {

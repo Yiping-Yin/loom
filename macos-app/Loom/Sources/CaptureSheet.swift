@@ -9,10 +9,30 @@ import os.log
 ///      every Apple log-filtering layer; user can `cat` it directly
 ///      to diagnose without permission, subsystem, or level filters)
 private let captureLog = OSLog(subsystem: "com.yinyiping.loom", category: "capture")
+
+private var isRunningUnderXCTest: Bool {
+    ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        || NSClassFromString("XCTestCase") != nil
+}
+
+/// Internal entry to the capture diagnostic log for the other files on
+/// the capture path (URL routing, root-view presentation) — same sink,
+/// same `cat`-able file.
+func loomCaptureLog(_ message: String) {
+    os_log_debug(message)
+}
+
 private func os_log_debug(_ message: String) {
     // Use error level so default `log show` filtering doesn't drop it.
     os_log("%{public}@", log: captureLog, type: .error, message)
     NSLog("[LoomCapture] %@", message)
+
+    // Host-app XCTest can hang opening the container-backed diagnostic
+    // file while the test bundle is injected into the app process. The
+    // console/unified-log sinks above are enough for tests; production
+    // keeps the cat-able file for user diagnostics.
+    guard !isRunningUnderXCTest else { return }
+
     let formatter = DateFormatter()
     formatter.dateFormat = "HH:mm:ss.SSS"
     let line = "\(formatter.string(from: Date())) [LoomCapture] \(message)\n"
@@ -1756,6 +1776,7 @@ struct CaptureSheet: View {
             content(for: payload)
                 .frame(minWidth: 560, idealWidth: 680, minHeight: 480, idealHeight: 580, maxHeight: 720)
                 .onAppear {
+                    loomCaptureLog("CaptureSheet appeared on screen")
                     saveError = nil
                     duplicateWarning = nil
                     showRawPaste = false

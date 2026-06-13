@@ -3,7 +3,7 @@
     {
       "id": "ref-quantnet-cpp-course",
       "categorySlug": "quantnet",
-      "categoryLabel": "Quantnet",
+      "categoryLabel": "QuantNet",
       "title": "QuantNet Online C++ Course.pdf",
       "fileSlug": "quantnet-online-cpp-course",
       "sourcePath": "Quant/C++/00_Course_Info/QuantNet_Online_C++_Course.pdf",
@@ -12,13 +12,13 @@
       "previewLines": [
         "Financial engineering course source",
         "C++ learning path and preparation",
-        "Anchors the Quantnet shelf with a real PDF"
+        "Anchors the QuantNet shelf with a real PDF"
       ]
     },
     {
       "id": "ref-quantnet-python-foundations",
       "categorySlug": "quantnet",
-      "categoryLabel": "Quantnet",
+      "categoryLabel": "QuantNet",
       "title": "Python Foundations.pdf",
       "fileSlug": "python-foundations",
       "sourcePath": "Quant/Python for Quant/Python Foundations/Section 1 Orientation/Python Foundations.pdf",
@@ -33,7 +33,7 @@
     {
       "id": "ref-quantnet-options-python",
       "categorySlug": "quantnet",
-      "categoryLabel": "Quantnet",
+      "categoryLabel": "QuantNet",
       "title": "Options Pricing with Python.pdf",
       "fileSlug": "options-pricing-with-python",
       "sourcePath": "Quant/Python for Quant/The 46-Page Ultimate Guide to Pricing Options and Implied Volatility With Python/The 46-Page Ultimate Guide to Pricing Options and Implied Volatility With Python (PDF + code).pdf",

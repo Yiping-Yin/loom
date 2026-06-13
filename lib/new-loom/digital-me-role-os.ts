@@ -145,7 +145,7 @@ const DIGITAL_ME_EVIDENCE = [
     artifactId: 'optibook-market-lens',
     supportedCapability: 'live market implementation practice',
     roleUse:
-      'Beebook, Yiping\'s own market-making simulator, shows pair-trading and order-book strategy practice inspired by the Optiver & UNSW trading academy.',
+      'QBook, Yiping\'s own market-making simulator, shows pair-trading and order-book strategy practice inspired by the Optiver & UNSW trading academy.',
   },
 ] as const satisfies readonly DigitalMeEvidenceNode[];
 
@@ -184,11 +184,11 @@ const DIGITAL_ME_CLAIMS = [
   },
   {
     id: 'live-market-project-proof',
-    text: 'Yiping is assembling live market proof, starting from Beebook — his own market-making simulator inspired by the Optiver & UNSW trading academy.',
+    text: 'Yiping is assembling live market proof, starting from QBook — his own market-making simulator inspired by the Optiver & UNSW trading academy.',
     roleRelevance: 'Hiring proof for this role is strongest when analysis, implementation, evaluation, and reflection are visible.',
     evidenceStatus: 'partial',
     evidenceIds: ['optibook-live-market-practice'],
-    artifactActions: ['Open Beebook', 'Define source inputs', 'Track implementation output'],
+    artifactActions: ['Open QBook', 'Define source inputs', 'Track implementation output'],
   },
 ] as const satisfies readonly DigitalMeClaimNode[];
 
@@ -211,7 +211,7 @@ export const DIGITAL_ME_PROOF_PATH = {
     'finance-learning-context':
       'Connect WQU and UNSW finance learning to one dated market-structure analysis artifact.',
     'live-market-project-proof':
-      'Grow Beebook and the trading-academy practice behind it into one end-to-end project with data, model notes, code, and evaluation.',
+      'Grow QBook and the trading-academy practice behind it into one end-to-end project with data, model notes, code, and evaluation.',
   },
 } as const satisfies DigitalMeProofPath;
 

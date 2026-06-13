@@ -12,7 +12,7 @@ import { LoomSupportNav } from './LoomSupportNav';
  *   COLOPHON
  *
  *   Loom
- *   Vellum II
+ *   Graphite canon
  *
  *   <prose about the type>
  *   <prose about the palette>
@@ -27,7 +27,7 @@ import { LoomSupportNav } from './LoomSupportNav';
  * Typography:
  *   - Eyebrow "COLOPHON" — small-caps, muted
  *   - Title "Loom" — 64pt italic Cormorant Garamond, ink
- *   - Subtitle "Vellum II" — 24pt italic serif, muted
+ *   - Subtitle "Graphite canon" — 24pt italic serif, muted
  *   - Body — 0.95rem EB Garamond, lh 1.7
  *   - Ornament breaks between blocks
  *   - Footer — muted italic, tiny
@@ -41,17 +41,16 @@ export default function ColophonClient() {
     <div className={styles.surface}>
       <LoomSupportNav active="/colophon" />
       <main
+        className={styles.main}
         style={{
-          background: 'var(--bg)',
-          color: 'var(--fg)',
-          display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          padding: 'clamp(3rem, 6vh, 6rem) clamp(1.5rem, 5vw, 4rem)',
+          padding:
+            'clamp(7.2rem, 12vh, 9rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 6vh, 6rem)',
           fontFamily: 'var(--serif)',
         }}
       >
         <article
+        className={styles.sectionCard}
         style={{
           width: '100%',
           maxWidth: '34rem',
@@ -97,7 +96,7 @@ export default function ColophonClient() {
           Loom
         </h1>
 
-        {/* Subtitle — Vellum II */}
+        {/* Subtitle — current visual canon */}
         <div
           style={{
             fontFamily: 'Cormorant Garamond, var(--display)',
@@ -109,7 +108,7 @@ export default function ColophonClient() {
             marginTop: '-0.5rem',
           }}
         >
-          Vellum II
+          Graphite canon
         </div>
 
         <Ornament />
@@ -123,20 +122,20 @@ export default function ColophonClient() {
 
         {/* Palette paragraph */}
         <p style={bodyStyle}>
-          Palette is set in cool-black <Swatch value="#07090C" label="#07090C" />{' '}
-          with raised surfaces in <Swatch value="#161B22" label="#161B22" />. Champagne
-          gold <Swatch value="#C8A24A" label="#C8A24A" /> is the brand voice, held to
-          hairlines and single words;
-          comet-cyan <Swatch value="#4BC5DE" label="#4BC5DE" /> is kept for
-          informational and data accents only. Gain green and loss red carry
-          the market tones.
+          Palette is set in graphite-black <Swatch value="#070809" label="#070809" />{' '}
+          with raised silver surfaces in <Swatch value="#181B1E" label="#181B1E" /> and{' '}
+          <Swatch value="#30353A" label="#30353A" />. Comet ice{' '}
+          <Swatch value="#4BC5DE" label="#4BC5DE" /> is the brand voice, held to
+          hairlines, single words, and data accents. Pale ion{' '}
+          <Swatch value="#8AF7E6" label="#8AF7E6" /> is reserved for active
+          focus. Gain green and loss red carry the market tones.
         </p>
 
         <Ornament />
 
         {/* Hand paragraph */}
         <p style={bodyStyle}>
-          Built by one hand.
+          Built by one hand.{' '}
           <br />
           With thanks to anyone who waited.
         </p>

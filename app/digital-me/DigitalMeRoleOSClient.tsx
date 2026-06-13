@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { AskYiping } from '../../components/verified-dossier/AskYiping';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import {
   DIGITAL_ME_ARTIFACT_MODES,
   DIGITAL_ME_PROOF_PATH,
@@ -15,7 +16,6 @@ import {
   type DigitalMeClaimNode,
   type DigitalMeEvidenceStatus,
 } from '../../lib/new-loom/digital-me-role-os';
-import { VERIFIED_DOSSIER_TOP_NAV } from '../../lib/new-loom/verified-dossier-home';
 import styles from './DigitalMeRoleOS.module.css';
 
 const STATUS_LABELS: Record<DigitalMeEvidenceStatus, string> = {
@@ -34,16 +34,37 @@ const CLAIM_TITLES: Record<string, string> = {
 };
 
 const CLAIM_BOUNDARIES: Record<string, string> = {
-  'mathematical-reasoning':
-    'The current proof is coursework and private answer work; it should not be overstated as market research performance.',
-  'optimisation-thinking':
-    'The optimisation source is real, but the role path still needs a project that applies it to portfolio or strategy decisions.',
+  'mathematical-reasoning': 'Coursework proof, not market performance.',
+  'optimisation-thinking': 'Real source; applied portfolio proof still needed.',
   'programming-foundations':
-    'Python and C++ sources prove direction and preparation, not yet a complete research or trading system.',
-  'finance-learning-context':
-    'Finance learning context is visible, but live market structure analysis still needs a dated output artifact.',
+    'Python and C++ direction, not yet a complete trading system.',
+  'finance-learning-context': 'Finance context visible; dated market output still needed.',
   'live-market-project-proof':
-    'Beebook is first partial proof; analysis, implementation, evaluation, and reflection still need to be inspectable end to end.',
+    'QBook is partial proof; evaluation still needs to be visible.',
+};
+
+const CLAIM_SUMMARIES: Record<string, string> = {
+  'mathematical-reasoning': 'Formal math to checked work.',
+  'optimisation-thinking': 'Concavity, optimisation, limits.',
+  'programming-foundations': 'Python and C++ foundations.',
+  'finance-learning-context': 'Finance learning context.',
+  'live-market-project-proof': 'QBook as partial live-market proof.',
+};
+
+const CLAIM_NEXT_STEPS: Record<string, string> = {
+  'mathematical-reasoning': 'Small research project.',
+  'optimisation-thinking': 'Portfolio case.',
+  'programming-foundations': 'Implementation proof.',
+  'finance-learning-context': 'Market-structure note.',
+  'live-market-project-proof': 'QBook evaluation.',
+};
+
+const MODE_SUMMARIES: Record<DigitalMeArtifactModeId, string> = {
+  'capability-map': 'Claims by capability.',
+  'interview-answer': 'Short answer with sources.',
+  'gap-roadmap': 'Proof and gaps.',
+  'source-graph': 'Claims to artifacts.',
+  'portfolio-case': 'One claim as case.',
 };
 
 function getClaimTitle(claim: DigitalMeClaimNode) {
@@ -146,12 +167,9 @@ function ArtifactOutput({
     return (
       <article className={`${styles.artifactOutput} ${styles.answerArtifact}`}>
         <p>Interview Answer</p>
-        <h2>How does your evidence support Quant Researcher / Trader readiness?</h2>
+        <h2>Role readiness</h2>
         <p>
-          My strongest current proof is {getClaimTitle(selectedClaim).toLowerCase()}. The
-          evidence comes from inspectable About, Education, and Experience sources rather than a
-          generic profile claim, so I can explain what is proven, what is partial, and what is still
-          missing.
+          Strongest current proof: {getClaimTitle(selectedClaim).toLowerCase()}.
         </p>
         <ul>
           {selectedEvidence.map((node) => {
@@ -161,7 +179,7 @@ function ArtifactOutput({
                 <a href={artifact.href}>
                   <FileBadge kind={artifact.kind} label={artifact.label} compact />
                 </a>
-                <span>{node.roleUse}</span>
+                <span>{node.supportedCapability}</span>
               </li>
             );
           })}
@@ -174,11 +192,12 @@ function ArtifactOutput({
     return (
       <article className={`${styles.artifactOutput} ${styles.roadmapArtifact}`}>
         <p>Gap Roadmap</p>
-        <h2>From current proof to role-ready output</h2>
+        <h2>Next proof</h2>
         <ol>
           {DIGITAL_ME_PROOF_PATH.claims.map((claim) => (
             <li key={claim.id}>
-              <strong>{getClaimTitle(claim)}.</strong> {getClaimGrowthAction(claim.id)}
+              <strong>{getClaimTitle(claim)}</strong>
+              <span>{CLAIM_BOUNDARIES[claim.id]}</span>
             </li>
           ))}
         </ol>
@@ -214,8 +233,6 @@ function ArtifactOutput({
       <article className={`${styles.artifactOutput} ${styles.caseArtifact}`}>
         <p>Portfolio Case</p>
         <h2>{getClaimTitle(selectedClaim)}</h2>
-        <p>{selectedClaim.text}</p>
-        <p>{selectedClaim.roleRelevance}</p>
         <ul>
           {selectedClaim.artifactActions.map((action) => (
             <li key={action}>{action}</li>
@@ -228,7 +245,7 @@ function ArtifactOutput({
   return (
     <article className={`${styles.artifactOutput} ${styles.capabilityArtifact}`}>
       <p>Capability Map</p>
-      <h2>Quant Researcher / Trader capability map</h2>
+      <h2>Capability map</h2>
       {DIGITAL_ME_PROOF_PATH.claims.map((claim) => (
         <button
           key={claim.id}
@@ -238,7 +255,7 @@ function ArtifactOutput({
         >
           <strong>{getClaimTitle(claim)}</strong>
           <span>{STATUS_LABELS[claim.evidenceStatus]}</span>
-          <small>{claim.roleRelevance}</small>
+          <small>{CLAIM_SUMMARIES[claim.id]}</small>
         </button>
       ))}
     </article>
@@ -257,6 +274,19 @@ function useScrollReveal() {
     const targets = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal]'));
     if (targets.length === 0) return;
 
+    const revealVisibleTargets = () => {
+      targets.forEach((el) => {
+        if (el.hasAttribute('data-revealed')) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.96 && rect.bottom > 0) {
+          el.setAttribute('data-revealed', '');
+        }
+      });
+    };
+
+    revealVisibleTargets();
+    root.setAttribute('data-reveal-ready', 'true');
+
     const reduce =
       typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
@@ -266,6 +296,9 @@ function useScrollReveal() {
       targets.forEach((el) => el.setAttribute('data-revealed', ''));
       return;
     }
+
+    window.addEventListener('scroll', revealVisibleTargets, { passive: true });
+    window.addEventListener('resize', revealVisibleTargets);
 
     const observer = new IntersectionObserver(
       (entries, obs) => {
@@ -282,7 +315,12 @@ function useScrollReveal() {
       { rootMargin: '0px 0px -12% 0px', threshold: 0.08 },
     );
     targets.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', revealVisibleTargets);
+      window.removeEventListener('resize', revealVisibleTargets);
+      root.removeAttribute('data-reveal-ready');
+    };
   }, []);
   return rootRef;
 }
@@ -302,23 +340,12 @@ export default function DigitalMeRoleOSClient() {
 
   return (
     <main className={styles.roleOsPage} aria-labelledby="digital-me-title" ref={revealRoot}>
-      <nav className={styles.nav} aria-label="Digital Me navigation">
-        <a href="/loom">Loom</a>
-        {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            aria-current={item.href === '/digital-me' ? 'page' : undefined}
-          >
-            {item.label}
-          </a>
-        ))}
-      </nav>
+      <LoomGlobalNav activeHref="/digital-me" ariaLabel="Digital Me navigation" />
 
       <header className={styles.roleLens} data-reveal="">
         <p>Role Lens</p>
         <h1 id="digital-me-title">{DIGITAL_ME_QUANT_ROLE_LENS.label}</h1>
-        <span>{DIGITAL_ME_QUANT_ROLE_LENS.thesis}</span>
+        <span>Math. Sources. Implementation.</span>
         <ul className={styles.roleLensCriteria} aria-label="Quant role criteria">
           {DIGITAL_ME_QUANT_ROLE_LENS.criteria.map((criterion) => (
             <li key={criterion}>{criterion}</li>
@@ -353,14 +380,14 @@ export default function DigitalMeRoleOSClient() {
           <div className={styles.stageHeader}>
             <p>Artifact Runtime</p>
             <h2>{activeMode.label}</h2>
-            <span>{activeMode.summary}</span>
+            <span>{MODE_SUMMARIES[activeMode.id]}</span>
             <div className={styles.evidenceSignalRow}>
               <EvidenceSignal
                 claims={DIGITAL_ME_PROOF_PATH.claims}
                 selectedClaimId={selectedClaim.id}
                 onSelectClaim={setSelectedClaimId}
               />
-              <span className={styles.evidenceSignalCaption}>Evidence signal · proof depth across the role</span>
+              <span className={styles.evidenceSignalCaption}>Proof depth</span>
             </div>
           </div>
           <div className={styles.artifactActions}>
@@ -385,7 +412,7 @@ export default function DigitalMeRoleOSClient() {
         <aside className={styles.evidencePanel} aria-label="Evidence Graph">
           <p>Evidence Graph</p>
           <h2>{getClaimTitle(selectedClaim)}</h2>
-          <span>{selectedClaim.text}</span>
+          <span>{CLAIM_SUMMARIES[selectedClaim.id]}</span>
           <div className={styles.evidenceList}>
             {selectedEvidence.length ? (
               selectedEvidence.map((node) => {
@@ -393,7 +420,7 @@ export default function DigitalMeRoleOSClient() {
                 return (
                   <a key={node.id} href={artifact.href}>
                     <FileBadge kind={artifact.kind} label={artifact.label} compact />
-                    <small>{node.roleUse}</small>
+                    <small>{node.supportedCapability}</small>
                   </a>
                 );
               })
@@ -401,23 +428,26 @@ export default function DigitalMeRoleOSClient() {
               <div className={styles.emptyEvidence}>No files attached yet for this proof gap.</div>
             )}
           </div>
-          <section className={styles.boundaryPanel} aria-label="Boundary and Next Growth Action">
+          <details
+            className={styles.boundaryPanel}
+            aria-label="Boundary and Next Growth Action"
+            data-growth-action={getClaimGrowthAction(selectedClaim.id)}
+          >
+            <summary>Boundary / next</summary>
             <strong>Boundary</strong>
             <p>{CLAIM_BOUNDARIES[selectedClaim.id]}</p>
             <strong>Next Growth Action</strong>
-            <p>{getClaimGrowthAction(selectedClaim.id)}</p>
-          </section>
+            <p>{CLAIM_NEXT_STEPS[selectedClaim.id] ?? getClaimGrowthAction(selectedClaim.id)}</p>
+          </details>
         </aside>
       </section>
 
-      <section className={styles.marketRoom} aria-label="Live Market Room — Beebook" data-reveal="">
+      <section className={styles.marketRoom} aria-label="Live Market Room — QBook" data-reveal="">
         <div className={styles.marketRoomBody}>
-          <p className={styles.marketRoomEyebrow}>Live Market Room · Beebook</p>
-          <h2 className={styles.marketRoomTitle}>A working exchange, not a screenshot</h2>
+          <p className={styles.marketRoomEyebrow}>Live Market Room · QBook</p>
+          <h2 className={styles.marketRoomTitle}>QBook live.</h2>
           <p className={styles.marketRoomLede}>
-            Beebook is Yiping&apos;s own market-making simulator, inspired by the Optiver &amp; UNSW
-            trading academy — order book, leaderboard, trade ticker, and market-making practice
-            that keeps running offline, on its own.
+            Market-making simulator. Order book, leaderboard, ticker, local runtime.
           </p>
           <div className={styles.marketRoomMeta}>
             <span>44 teams</span>
@@ -431,7 +461,7 @@ export default function DigitalMeRoleOSClient() {
             target="_blank"
             rel="noreferrer"
           >
-            Launch Beebook
+            Launch QBook
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
@@ -463,7 +493,7 @@ export default function DigitalMeRoleOSClient() {
         <a href="/about">About foundation</a>
         <a href="/education">Education foundation</a>
         <a href="/experience">Experience foundation</a>
-        <span>Sources stay inspectable; Draft turns selected evidence into role-specific proof.</span>
+        <span>Inspectable sources. Role proof.</span>
       </section>
     </main>
   );

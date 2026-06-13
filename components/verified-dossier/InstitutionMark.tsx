@@ -1,3 +1,5 @@
+import React from 'react';
+
 export type InstitutionMarkKind = 'about' | 'unsw' | 'quantnet' | 'wqu' | 'claude';
 
 const INSTITUTION_MARKS: Record<InstitutionMarkKind, { label: string; imageSrc: string }> = {

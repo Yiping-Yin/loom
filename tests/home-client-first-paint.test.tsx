@@ -4,23 +4,40 @@ import path from 'node:path';
 import test from 'node:test';
 import React from 'react';
 
-import { HomeClient } from '../app/HomeClient';
-
 const repoRoot = path.resolve(__dirname, '..');
+
+const cssModuleClassMap = new Proxy(
+  {},
+  { get: (_target, className) => (typeof className === 'string' ? className : '') },
+) as Record<string, string>;
+const cssModuleExports = { __esModule: true, default: cssModuleClassMap };
+
+require.extensions['.css'] = (module: { exports: typeof cssModuleExports }) => {
+  module.exports = cssModuleExports;
+};
 
 function visibleText(html: string) {
   return html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
 }
 
-test('HomeClient first paint is a balanced evidence portal with source-backed destinations', () => {
+function renderHomeClientHtml() {
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = require('react-dom/server') as {
     renderToStaticMarkup: (node: React.ReactElement) => string;
   };
+  const { HomeClient } = require('../app/HomeClient') as typeof import('../app/HomeClient');
 
-  const html = renderToStaticMarkup(<HomeClient />);
+  return renderToStaticMarkup(<HomeClient />);
+}
+
+function globalNavHtml(html: string, ariaLabel = 'Verified dossier navigation') {
+  return html.match(new RegExp(`<nav[^>]+aria-label="${ariaLabel}"[\\s\\S]*?<\\/nav>`))?.[0] ?? '';
+}
+
+test('HomeClient first paint is a balanced evidence portal with source-backed destinations', () => {
+  const html = renderHomeClientHtml();
   const text = visibleText(html);
-  const primaryNavHtml = html.match(/<div class="lcv-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
+  const primaryNavHtml = globalNavHtml(html);
 
   for (const label of [
     'Yiping Yin',
@@ -50,17 +67,136 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
 
-  for (const retiredPrimaryNav of ['Quantnet', 'WQU', 'Claude', 'History', 'Draft']) {
+  for (const retiredPrimaryNav of ['Quantnet', 'QuantNet', 'WQU', 'Claude', 'History']) {
     assert.doesNotMatch(
       primaryNavHtml,
       new RegExp(`>${retiredPrimaryNav.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}<`),
     );
   }
 
+  for (const menuLabel of ['Identity', 'Workspaces', 'Sources', 'Draft']) {
+    assert.match(primaryNavHtml, new RegExp(`>${menuLabel}<`));
+  }
+  assert.match(primaryNavHtml, /href="\/sources"/);
+  assert.match(primaryNavHtml, /href="\/draft"/);
+  assert.doesNotMatch(primaryNavHtml, /href="\/drafts"/);
+
   // New "ledger cover" (Home v12): identity rail + numbered evidence ledger.
   assert.match(html, /<main class="vd-home lcv" aria-labelledby="verified-dossier-title">/);
   assert.match(html, /href="\/loom" aria-label="Open Loom product"/);
-  assert.match(html, /<a class="lcv-wordmark lcv-serif" href="\/loom"/);
+  assert.match(html, /role="search" aria-label="Search Loom knowledge"/);
+  assert.match(html, /action="\/sources" method="get"/);
+  assert.match(html, /name="search"/);
+  assert.match(html, /placeholder="Search sources"/);
+  assert.match(html, /type="button" aria-label="Open Loom search"/);
+  assert.match(html, /aria-label="Open Loom search"/);
+  assert.match(html, /aria-controls="loom-global-search-input"/);
+  assert.match(html, /aria-expanded="false"/);
+  assert.match(html, /id="loom-global-search-input"/);
+  assert.match(html, /aria-label="Open Loom menu"/);
+  assert.match(html, /\/brand\/loom_lunar_orb\.png/);
+  assert.match(html, /class="new-loom-home-capabilities"/);
+  assert.match(html, /data-capability="sources"/);
+  assert.match(html, /data-capability="draft"/);
+  assert.doesNotMatch(html, /<nav class="new-loom-home-capabilities"/);
+  assert.doesNotMatch(html, /aria-label="Loom workspaces"/);
+
+  const globalNavSource = fs.readFileSync(
+    path.join(repoRoot, 'components/verified-dossier/LoomGlobalNav.tsx'),
+    'utf8',
+  );
+  assert.match(globalNavSource, /elements\.namedItem\('search'\)/);
+  assert.match(globalNavSource, /import \{ flushSync \} from 'react-dom'/);
+  assert.match(globalNavSource, /const searchOpenRef = useRef\(false\)/);
+  assert.match(globalNavSource, /function focusSearchInput\(\)/);
+  assert.match(globalNavSource, /window\.requestAnimationFrame\(focusInput\)/);
+  assert.match(globalNavSource, /window\.setTimeout\(focusInput, 0\)/);
+  assert.match(globalNavSource, /function openSearch\(\)/);
+  assert.match(globalNavSource, /flushSync\(\(\) => \{\s*setSearchOpen\(true\);\s*\}\)/);
+  assert.match(globalNavSource, /function onSearchFormPointerDown\(/);
+  assert.match(globalNavSource, /onPointerDown=\{onSearchFormPointerDown\}/);
+  assert.match(globalNavSource, /function onSearchButtonPointerDown\(/);
+  assert.match(globalNavSource, /onPointerDown=\{onSearchButtonPointerDown\}/);
+  assert.match(globalNavSource, /function onSearchButtonPointerDown\(event: React\.PointerEvent<HTMLButtonElement>\)/);
+  assert.match(globalNavSource, /event\.preventDefault\(\);\s*openSearch\(\);/);
+  assert.doesNotMatch(globalNavSource, /onMouseDown=\{\(event\) => event\.preventDefault\(\)\}/);
+  assert.doesNotMatch(globalNavSource, /event\.preventDefault\(\);\s*if \(!searchOpenRef\.current\)/);
+  assert.match(globalNavSource, /inputMode="search"/);
+  assert.match(globalNavSource, /enterKeyHint="search"/);
+  assert.match(globalNavSource, /window\.location\.assign\(`\/sources\?\$\{params\.toString\(\)\}`\)/);
+  assert.match(globalNavSource, /window\.addEventListener\('wheel', queueScrollUpdate, \{ passive: true \}\)/);
+  assert.match(globalNavSource, /document\.addEventListener\('wheel', queueScrollUpdate, \{ capture: true, passive: true \}\)/);
+  assert.match(globalNavSource, /pointerEvents: 'none'/);
+  assert.match(globalNavSource, /transform: 'translate\(-50%, calc\(-100% - 1\.6rem\)\)'/);
+  assert.doesNotMatch(globalNavSource, /if \(!searchQuery\.trim\(\)\)/);
+  assert.match(globalNavSource, /const LOOM_WORKSPACE_NAV = \[/);
+  assert.match(globalNavSource, /\{ label: 'Sources', href: '\/sources' \}/);
+  assert.match(globalNavSource, /\{ label: 'Draft', href: '\/draft' \}/);
+  assert.match(globalNavSource, />\s*Identity\s*</);
+  assert.match(globalNavSource, />\s*Workspaces\s*</);
+
+  const globalNavCss = fs.readFileSync(
+    path.join(repoRoot, 'components/verified-dossier/LoomGlobalNav.module.css'),
+    'utf8',
+  );
+  const aiKeyBannerSource = fs.readFileSync(
+    path.join(repoRoot, 'components/AiKeyMissingBanner.tsx'),
+    'utf8',
+  );
+  const homeClientSource = fs.readFileSync(path.join(repoRoot, 'app/HomeClient.tsx'), 'utf8');
+  const rootLayoutSource = fs.readFileSync(path.join(repoRoot, 'app/layout.tsx'), 'utf8');
+  assert.match(homeClientSource, /NEW_LOOM_CAPABILITIES/);
+  assert.match(homeClientSource, /data-capability=\{capability\.id\}/);
+  assert.doesNotMatch(homeClientSource, /Loom workspaces/);
+  assert.doesNotMatch(homeClientSource, /<nav className="new-loom-home-capabilities"/);
+  assert.match(
+    rootLayoutSource,
+    /import '\.\.\/components\/verified-dossier\/LoomGlobalNav\.module\.css'/,
+    'Root layout must load the global navigation CSS so / keeps searchable nav styling even when the page CSS chunk is absent.',
+  );
+  assert.match(aiKeyBannerSource, /position: 'fixed'/);
+  assert.match(aiKeyBannerSource, /data-ai-key-banner="true"/);
+  assert.match(aiKeyBannerSource, /pathname === ['"]\/sources['"]/);
+  assert.match(aiKeyBannerSource, /pathname === ['"]\/hour['"]/);
+  assert.match(aiKeyBannerSource, /pathname === ['"]\/connections['"]/);
+  assert.match(aiKeyBannerSource, /bottom: 'max\(0\.75rem, env\(safe-area-inset-bottom\)\)'/);
+  assert.match(aiKeyBannerSource, /maxWidth: 'min\(25rem, calc\(100vw - 2rem\)\)'/);
+  assert.doesNotMatch(aiKeyBannerSource, /--loom-ai-key-banner-offset/);
+  assert.doesNotMatch(globalNavCss, /html\[data-loom-ai-key-banner='visible'\]/);
+  assert.doesNotMatch(globalNavCss, /--loom-nav-banner-offset/);
+  assert.match(globalNavCss, /top: var\(--loom-nav-base-top\);/);
+  assert.match(globalNavCss, /\.nav\.navHidden\s*{[^}]*opacity: 0;[^}]*transform: translate\(-50%, calc\(-100% - 1\.6rem\)\);/s);
+  assert.match(globalNavCss, /\.slot\s*{[^}]*--loom-nav-clearance: clamp\(5\.05rem, 6vw, 5\.85rem\);/s);
+  assert.match(globalNavCss, /\.slot\s*{[^}]*z-index: 1000;[^}]*min-height: var\(--loom-nav-clearance\);[^}]*pointer-events: none;/s);
+  assert.match(globalNavCss, /\.nav\s*{[^}]*z-index: 1000;[^}]*width: min\(calc\(100vw - clamp\(1\.25rem, 20vw, 21rem\)\), 23\.25rem\);/s);
+  assert.match(globalNavCss, /rgba\(13, 15, 16, 0\.5\)/);
+  assert.match(globalNavCss, /backdrop-filter: blur\(38px\) saturate\(112%\) brightness\(1\.04\);/);
+  assert.match(globalNavCss, /\.searchInput\s*{[^}]*opacity: 0;[^}]*pointer-events: none;/s);
+  assert.match(globalNavCss, /\.searchInput\s*{[^}]*caret-color: var\(--signature-cyan-hi, #8AF7E6\);/s);
+  assert.match(globalNavCss, /\.searchInput::placeholder\s*{[^}]*rgba\(232, 236, 238, 0\.68\);/s);
+  assert.match(globalNavCss, /width: 12\.25rem;/);
+  assert.match(globalNavCss, /max-width: calc\(100vw - 2\.4rem\);/);
+  assert.match(
+    globalNavCss,
+    /\.navSearching \.searchForm,[\s\S]*\.nav:has\(\.searchInput:focus\) \.searchForm:focus-within\s*{[^}]*grid-column: 1 \/ -1;[^}]*width: 100%;[^}]*background: transparent;[^}]*box-shadow: none;[^}]*transition: none;/s,
+  );
+  assert.match(globalNavCss, /\.navSearching,\s*\.nav:has\(\.searchInput:focus\)\s*{[^}]*rgba\(18, 20, 22, 0\.48\);/s);
+  assert.match(globalNavCss, /\.navSearching::before,\s*\.nav:has\(\.searchInput:focus\)::before\s*{[^}]*opacity: 0\.42;/s);
+  assert.match(globalNavCss, /\.navSearching \.searchForm:focus-within,\s*\.nav:has\(\.searchInput:focus\) \.searchForm:focus-within\s*{[^}]*box-shadow: none;/s);
+  assert.match(globalNavCss, /\.navSearching \.searchInput,\s*\.nav:has\(\.searchInput:focus\) \.searchInput\s*{[^}]*opacity: 1 !important;/s);
+  assert.match(globalNavCss, /\.navSearching \.searchInput,\s*\.nav:has\(\.searchInput:focus\) \.searchInput\s*{[^}]*transition:[^}]*color 0\.16s ease,[^}]*text-shadow 0\.16s ease;/s);
+  assert.doesNotMatch(globalNavCss, /\.navSearching \.searchInput,[\s\S]*?\.nav:has\(\.searchInput:focus\) \.searchInput\s*{[^}]*opacity 0\.16s ease/s);
+  assert.match(globalNavCss, /\.searchInput:focus,\s*\.searchInput:focus-visible\s*{[^}]*outline: none !important;[^}]*box-shadow: none !important;/s);
+  assert.match(globalNavCss, /\.navSearching \.brand,\s*\.navSearching \.menu,[\s\S]*\.nav:has\(\.searchInput:focus\) \.brand,[\s\S]*\.nav:has\(\.searchInput:focus\) \.menu\s*{[^}]*opacity: 0;/s);
+  assert.match(
+    globalNavCss,
+    /\.menuPanel\s*{[^}]*position: fixed;[^}]*z-index: 1003;[^}]*width: min\(18\.65rem, calc\(100vw - 2rem\)\);[^}]*grid-template-columns: 1fr;[^}]*rgba\(7, 8, 9, 0\.86\);/s,
+  );
+  assert.match(globalNavCss, /\.nav\s*\{[\s\S]*pointer-events:\s*auto/);
+  assert.match(globalNavCss, /\.menuGroupLabel\s*\{/);
+  assert.match(globalNavCss, /\.menuGroupLinks\s*{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/s);
+  assert.match(globalNavCss, /@media \(max-width: 680px\)[\s\S]*\.menuPanel\s*{[^}]*width: min\(calc\(100vw - 2rem\), 18\.65rem\);[^}]*grid-template-columns: 1fr;/s);
+
   assert.match(html, /class="lcv-shell"/);
   assert.match(html, /class="lcv-rail"/);
   assert.match(html, /class="lcv-ledger"/);
@@ -175,7 +311,7 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.doesNotMatch(text, /W8 A Concave-Functions\.pdf/);
   assert.doesNotMatch(text, /Profile notes and public context/);
   assert.doesNotMatch(text, /Cited answers, process replay/);
-  assert.doesNotMatch(primaryNavHtml, /href="\/drafts?"/);
+  assert.doesNotMatch(primaryNavHtml, /href="\/drafts"/);
   assert.doesNotMatch(text, /Yiping's Loom/);
   assert.doesNotMatch(text, /[\u3400-\u9fff]/);
   assert.doesNotMatch(text, /\b(?:panel|panels|pursuit|pursuits|weave|weaves)\b/i);
@@ -217,6 +353,10 @@ test('white dashboard homepage is retired into the hybrid evidence cover design'
     'utf8',
   );
   const cssSource = fs.readFileSync(path.join(repoRoot, 'app/globals.css'), 'utf8');
+  const navCssSource = fs.readFileSync(
+    path.join(repoRoot, 'components/verified-dossier/LoomGlobalNav.module.css'),
+    'utf8',
+  );
 
   assert.equal(
     fs.existsSync(path.join(repoRoot, 'components/verified-dossier/VerifiedDossierAssetHome.tsx')),
@@ -232,6 +372,7 @@ test('white dashboard homepage is retired into the hybrid evidence cover design'
   assert.match(homeSource, /CoverAsset/);
   assert.match(homeSource, /VERIFIED_DOSSIER_PRESENTATION_CATEGORIES/);
   assert.match(homeSource, /VERIFIED_DOSSIER_UNSW_COURSES/);
+  assert.match(homeSource, /LoomGlobalNav/);
   // Digital Me preview now reuses the canonical Sources → Draft → Answer
   // workbench provenance steps, so the import is expected (was forbidden in v11).
   assert.match(homeSource, /VERIFIED_DOSSIER_WORKBENCH/);
@@ -266,8 +407,13 @@ test('white dashboard homepage is retired into the hybrid evidence cover design'
   assert.match(cssSource, /\.lcv-shell/);
   assert.match(cssSource, /\.lcv-rail/);
   assert.match(cssSource, /\.lcv-row\b/);
-  assert.match(cssSource, /\.lcv-nav\b/);
   assert.match(cssSource, /\.lcv-link-icon--linkedin/);
+  assert.match(navCssSource, /\.nav\b/);
+  assert.match(navCssSource, /23\.25rem/);
+  assert.match(navCssSource, /position:\s*fixed/);
+  assert.match(navCssSource, /\.navHidden/);
+  assert.match(navCssSource, /backdrop-filter:\s*blur\(38px\) saturate\(112%\) brightness\(1\.04\)/);
+  assert.match(navCssSource, /radial-gradient/);
   assert.doesNotMatch(cssSource, /vd-home-asset-grid/);
   assert.doesNotMatch(cssSource, /vd-profile-asset/);
   assert.doesNotMatch(cssSource, /vd-document-preview-asset/);

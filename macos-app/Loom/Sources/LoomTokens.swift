@@ -46,13 +46,13 @@ enum LoomTokens {
     static let dsHairFaint   = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.05,
                                                   dark: 0xE6E9EE, darkAlpha: 0.05)
 
-    /// Watch-hand gold accent · single source of truth.  Evidence Desk: --gold.
-    static let dsThread      = Color(hex: 0xC8A24A)
-    /// Gold accent · 55% alpha for de-emphasised states.
+    /// Comet-ice accent · single source of truth.  Evidence Desk: --gold alias.
+    static let dsThread      = Color(hex: 0x4BC5DE)
+    /// Comet-ice accent · 55% alpha for de-emphasised states.
     static let dsThreadMuted = Color(.sRGB,
-                                     red:   200/255,
-                                     green: 162/255,
-                                     blue:   74/255,
+                                     red:    75/255,
+                                     green: 197/255,
+                                     blue:  222/255,
                                      opacity: 0.55)
 
     // MARK: - Design System v1.0 · semantic state colors
@@ -89,7 +89,7 @@ enum LoomTokens {
                                       blue:  222/255,
                                       opacity: 0.55)
 
-    /// Caution — restrained amber, distinct from the watch-hand gold accent.
+    /// Caution — restrained amber, distinct from the comet accent.
     static let dsWarning      = Color(hex: 0xCB9A3F)
     /// Caution · 55% alpha for de-emphasised state.
     static let dsWarningMuted = Color(.sRGB,
@@ -122,10 +122,10 @@ enum LoomTokens {
     static let dsInk2HexDark        = "#9BA3AE"
     /// Dark-mode chrome / muted (`dsInk3`).  Evidence Desk --text-3.
     static let dsMutedHexDark       = "#5E6671"
-    /// Watch-hand gold accent (same in both modes).  Evidence Desk --gold.
-    static let dsThreadHex          = "#C8A24A"
-    /// Gold accent · text-pair, brighter highlight for dark backgrounds.
-    static let dsThreadTextHexDark  = "#E3C56A"
+    /// Comet-ice accent (same in both modes).  Evidence Desk --gold alias.
+    static let dsThreadHex          = "#4BC5DE"
+    /// Comet accent · text-pair, brighter highlight for dark backgrounds.
+    static let dsThreadTextHexDark  = "#8AF7E6"
 
     /// Light-mode equivalents — cool-neutral counterparts of the Evidence
     /// Desk ramp (no warm paper), so light mode shares the same temperature.
@@ -133,7 +133,7 @@ enum LoomTokens {
     static let dsInk1HexLight       = "#1A1F26"
     static let dsInk2HexLight       = "#46505B"
     static let dsMutedHexLight      = "#8A929C"
-    static let dsThreadTextHexLight = "#9A7A2E"
+    static let dsThreadTextHexLight = "#2F7384"
 
     // MARK: - Legacy aliases (backward compat)
     //
@@ -183,24 +183,24 @@ enum LoomTokens {
     static let mutedNight = Color(hex: 0x5E6671)
     static let hairNight  = Color(hex: 0xE6E9EE, opacity: 0.08)
 
-    // MARK: - Inks — earth only, never neon. `thread` is AI/selection/focus.
+    // MARK: - Inks — cool-black base; `thread` is AI/selection/focus.
     //
-    // Bronzes (thread/threadHi) stay static — they're the accent in both
-    // modes and read fine on both paper and night. The darker earth tones
+    // Comet accents (thread/threadHi) stay static — they're the accent in both
+    // modes and read fine on both paper and night. The state tones
     // (rose/sage/ochre/gold/indigo/plum) need lift in dark mode or status
     // text collapses to ~2-3:1 contrast against 0x1A1815. Dark values align
     // with `globals.css` `--tint-*` dark overrides so native badges + web
     // chrome share the same palette.
     //
     // Design System v1.0: `thread` and `threadHi` both alias canonical
-    // `dsThread` (#C4A468). The legacy darker `thread` (#9E7C3E) is gone;
-    // single source of truth for bronze going forward.
+    // `dsThread` (#4BC5DE). The old gold value is gone; single source of
+    // truth for comet accent going forward.
 
     /// @deprecated Use `dsThread`.
-    static let thread   = Color(hex: 0xC8A24A)
+    static let thread   = Color(hex: 0x4BC5DE)
     /// @deprecated Use `dsThread`.
-    static let threadHi = Color(hex: 0xE3C56A)
-    static let gold     = Color.dynamic(light: 0xC8A24A, dark: 0xE3C56A)
+    static let threadHi = Color(hex: 0x8AF7E6)
+    static let gold     = Color.dynamic(light: 0x2F7384, dark: 0x8AF7E6)
     static let ochre    = Color.dynamic(light: 0xB68A3C, dark: 0xDDBA6A)
     static let rose     = Color.dynamic(light: 0xC0504E, dark: 0xE06A6A)
     static let sage     = Color.dynamic(light: 0x3E9466, dark: 0x3FB37A)
@@ -278,7 +278,7 @@ enum LoomTokens {
           style.id = 'loom-tokens-css';
           style.textContent = `
             :root {
-              /* Evidence Desk — cool-black luminance ramp + watch-hand gold. */
+              /* Evidence Desk — cool-black luminance ramp + comet ice. */
               --loom-paper: #10141A;
               --loom-paper-deep: #07090C;
               --loom-paper-shade: #161B22;
@@ -293,9 +293,9 @@ enum LoomTokens {
               --loom-candle: #E6E9EE;
               --loom-candle-2: #9BA3AE;
 
-              --loom-thread: #C8A24A;
-              --loom-thread-hi: #E3C56A;
-              --loom-gold: #C8A24A;
+              --loom-thread: #4BC5DE;
+              --loom-thread-hi: #8AF7E6;
+              --loom-gold: #4BC5DE;
               --loom-ochre: #DDBA6A;
               --loom-rose: #E06A6A;
               --loom-sage: #3FB37A;

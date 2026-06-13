@@ -18,10 +18,10 @@ import { loadWeaveRecords, WEAVE_RECORDS_KEY, type LoomWeaveRecord } from '../li
 //
 // Edges come from TWO sources, overlaid:
 //   a) Implicit citation edges — panels that share a `docId`, drawn as
-//      faint bronze hairlines (always on; the layer that was here
+//      faint cyan/silver hairlines (always on; the layer that was here
 //      before explicit weaves existed).
 //   b) Explicit weaves — learner-minted `LoomWeave` rows, drawn as a
-//      SOLID heavier bronze line with a small italic label showing the
+//      heavier cyan/silver line with a small italic label showing the
 //      relation kind ("supports", "contradicts", "elaborates",
 //      "echoes"). Takes visual priority: asserted relations matter
 //      more than merely-cited ones.
@@ -57,13 +57,13 @@ type ExplicitWeave = {
 type PaletteKey = 'thread' | 'rose' | 'sage' | 'indigo' | 'umber' | 'plum' | 'ochre';
 
 const PALETTE: Record<PaletteKey, string> = {
-  thread: '#9E7C3E',
-  rose:   '#8F4646',
-  sage:   '#5C6E4E',
-  indigo: '#3A477A',
-  umber:  '#5C3F2A',
-  plum:   '#5E3D5C',
-  ochre:  '#A8783E',
+  thread: '#4BC5DE',
+  rose:   '#A35F73',
+  sage:   '#8FA3A6',
+  indigo: '#738895',
+  umber:  '#5E666C',
+  plum:   '#8B728F',
+  ochre:  '#A8B0B6',
 };
 
 function isPaletteKey(value: unknown): value is PaletteKey {
@@ -189,7 +189,7 @@ function layoutPanels(
 
 type CitationEdge = { a: PositionedPanel; b: PositionedPanel };
 
-// Solid-but-faint bronze edges between any two panels sharing a docId.
+// Solid-but-faint cyan/silver edges between any two panels sharing a docId.
 // These are "implicit" relations — the data says the panels cited the
 // same source, but the learner hasn't asserted anything explicit about
 // how they relate. Explicit weaves override this layer where they exist.
@@ -364,23 +364,22 @@ export function WeavesClient() {
         aria-label={`Constellation of ${panels.length} held panels`}
       >
         <defs>
-          {/* Hot basin — bronze glow around the focus panel. The
-              thesis gathering mass, in mockup language. */}
+          {/* Hot basin — signature cyan glow around the focus panel. */}
           <radialGradient id="loom-weaves-halo" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#C4A468" stopOpacity="0.28" />
-            <stop offset="55%" stopColor="#C4A468" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#C4A468" stopOpacity="0" />
+            <stop offset="0%" stopColor="#4BC5DE" stopOpacity="0.28" />
+            <stop offset="55%" stopColor="#4BC5DE" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#4BC5DE" stopOpacity="0" />
           </radialGradient>
-          {/* Warm basin — ochre, for a secondary cluster that's still
-              engaged but not the hot center. Mockup loom-constellation.jsx:66. */}
+          {/* Silver basin for a secondary cluster that's still engaged but not
+              the hot center. */}
           <radialGradient id="loom-weaves-basin-warm" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#D8A168" stopOpacity="0.14" />
-            <stop offset="100%" stopColor="#D8A168" stopOpacity="0" />
+            <stop offset="0%" stopColor="#A8B0B6" stopOpacity="0.14" />
+            <stop offset="100%" stopColor="#A8B0B6" stopOpacity="0" />
           </radialGradient>
-          {/* Cool basin — indigo, a held-but-cooling thought. */}
+          {/* Steel basin — a held-but-cooling thought. */}
           <radialGradient id="loom-weaves-basin-cool" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#7E8CC7" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#7E8CC7" stopOpacity="0" />
+            <stop offset="0%" stopColor="#738895" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#738895" stopOpacity="0" />
           </radialGradient>
         </defs>
 
@@ -415,14 +414,14 @@ export function WeavesClient() {
             expanding radii make the focus read as a basin of
             thermodynamic gravity, not just a labeled node. The
             outermost ring is dashed to suggest "weakly attached". */}
-        <g fill="none" stroke="#C4A468" strokeWidth={0.4} opacity={0.32}>
+        <g fill="none" stroke="#4BC5DE" strokeWidth={0.4} opacity={0.32}>
           <ellipse cx={focus.cx} cy={focus.cy} rx={70} ry={48} />
           <ellipse cx={focus.cx} cy={focus.cy} rx={120} ry={82} />
           <ellipse cx={focus.cx} cy={focus.cy} rx={180} ry={124} />
           <ellipse cx={focus.cx} cy={focus.cy} rx={240} ry={166} strokeDasharray="1 4" />
         </g>
 
-        {/* Citation edges — faint bronze hairlines, shared docId.
+        {/* Citation edges — faint cyan/silver hairlines, shared docId.
             Long edges (dx² + dy² > 90 000 ≈ 300 units) get an italic
             "shared" midpoint label — mirrors mockup's cross-basin
             "cousins?" bridge annotation (loom-constellation.jsx:99)
@@ -441,7 +440,7 @@ export function WeavesClient() {
                 y1={edge.a.cy}
                 x2={edge.b.cx}
                 y2={edge.b.cy}
-                stroke="#C4A468"
+                stroke="#4BC5DE"
                 strokeWidth={0.75}
                 strokeOpacity={0.55}
               />
@@ -463,7 +462,7 @@ export function WeavesClient() {
           );
         })}
 
-        {/* Explicit weaves — solid bronze, heavier stroke, labeled with kind.
+        {/* Explicit weaves — solid cyan, heavier stroke, labeled with kind.
             Rendered AFTER the implicit layer so they paint on top of any
             overlapping hairlines. Label lives at the midpoint in tiny
             italic serif so the learner can read the relation at a glance. */}
@@ -477,7 +476,7 @@ export function WeavesClient() {
                 y1={edge.a.cy}
                 x2={edge.b.cx}
                 y2={edge.b.cy}
-                stroke="#C4A468"
+                stroke="#8AF7E6"
                 strokeWidth={1.2}
                 strokeOpacity={0.92}
               />
@@ -527,8 +526,8 @@ export function WeavesClient() {
 
       {/* Temperature gradient legend — matches
           loom-constellation.jsx:34 "temperature · hot → cool" scale.
-          Ambient orientation, not interactive. Rose (alive now) → thread →
-          ochre → sage → muted (archived). Uses the tint vars so both
+          Ambient orientation, not interactive. Rose (alive now) → cyan →
+          silver → steel → muted (archived). Uses the tint vars so both
           modes render with adequate contrast. */}
       <div className="loom-weaves-temp-legend" aria-hidden="true">
         <div className="loom-weaves-temp-label">temperature · hot → cool</div>

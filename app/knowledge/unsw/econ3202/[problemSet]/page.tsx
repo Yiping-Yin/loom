@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { LoomGlobalNav } from '../../../../../components/verified-dossier/LoomGlobalNav';
 import { FileBadge } from '../../../../../components/verified-dossier/FileBadge';
 import {
   getUnswEcon3202ProblemSet,
@@ -42,6 +43,7 @@ export default async function Econ3202ProblemSetPage({
 
   return (
     <main className={styles.page} aria-labelledby="problem-set-title">
+      <LoomGlobalNav ariaLabel={`${set.label} knowledge navigation`} />
       <UnswStudyNav active={set.slug} />
 
       <section className={styles.hero}>

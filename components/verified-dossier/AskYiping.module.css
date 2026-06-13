@@ -2,14 +2,14 @@
    Evidence Desk scene tokens: inherits the foundation via the surrounding
    roleOsPage's --role-* vars; falls back to the :root foundation tokens so
    the panel still reads cool-black when mounted outside that page.
-   Cyan = the ask flow's data-signal (thinking caret, thread-of-light,
-   source hover); gold = 1px hairlines only, never a fill. */
+   Comet-cyan = the ask flow's data-signal (thinking caret, thread-of-light,
+   source hover) and sparse 1px hairlines; never a fill. */
 .askYiping {
   --ask-ink: var(--role-ink, var(--text-1, #E6E9EE));
   --ask-muted: var(--role-muted, var(--text-2, #9BA3AE));
   --ask-subtle: var(--role-subtle, var(--text-3, #5E6671));
-  --ask-accent: var(--role-accent, var(--gold, #C8A24A));
-  --ask-accent-strong: var(--role-accent-strong, var(--gold-hi, #E3C56A));
+  --ask-accent: var(--role-accent, var(--gold, #4BC5DE));
+  --ask-accent-strong: var(--role-accent-strong, var(--gold-hi, #8AF7E6));
   --ask-signal: var(--role-signal, var(--cyan, #4BC5DE));
   --ask-border: var(--role-glass-border, var(--line, #232A33));
   --ask-border-strong: var(--role-border-strong, var(--line, #232A33));
@@ -17,8 +17,8 @@
      falls back to the same layered recipe when mounted standalone. */
   --ask-glass: var(
     --role-glass,
-    linear-gradient(155deg, rgba(255, 255, 255, 0.045), transparent 42%),
-    linear-gradient(180deg, rgba(30, 36, 45, 0.6), rgba(22, 27, 34, 0.94))
+    linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94))
   );
   --ask-glass-shadow: var(
     --role-glass-shadow,
@@ -29,8 +29,8 @@
   /* Inset surface for the composer input, notes, and source rows. */
   --ask-glass-inset: var(
     --role-glass-inset,
-    linear-gradient(155deg, rgba(255, 255, 255, 0.035), transparent 46%),
-    linear-gradient(180deg, rgba(26, 31, 39, 0.66), rgba(18, 22, 28, 0.92))
+    linear-gradient(135deg, rgba(238, 241, 242, 0.046), rgba(176, 184, 188, 0.016) 38%, transparent 66%),
+    linear-gradient(180deg, rgba(24, 27, 30, 0.68), rgba(14, 16, 18, 0.92))
   );
   --ask-glass-inset-shadow: var(
     --role-glass-inset-shadow,
@@ -39,22 +39,65 @@
   );
   --ask-mono: var(--role-mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
 
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(20rem, 0.88fr) minmax(0, 1.12fr);
+  gap: clamp(1.2rem, 2.5vw, 2.4rem);
+  align-items: start;
   width: 100%;
   max-width: var(--role-shell, 1320px);
-  margin: clamp(2.4rem, 4.5vw, 4rem) auto 0;
-  padding: clamp(1.8rem, 3.2vw, 2.8rem) clamp(1.8rem, 3.2vw, 3rem);
+  margin: clamp(1.9rem, 3.7vw, 3.1rem) auto 0;
+  padding: clamp(1.45rem, 2.6vw, 2.2rem) clamp(1.6rem, 3vw, 2.6rem);
   border: 1px solid var(--ask-border);
   border-radius: 14px;
-  background: var(--ask-glass);
+  background:
+    radial-gradient(54% 90% at 82% 12%, rgba(75, 197, 222, 0.075) 0%, rgba(75, 197, 222, 0) 62%),
+    radial-gradient(84% 110% at 10% 0%, rgba(230, 233, 234, 0.045) 0%, rgba(230, 233, 234, 0) 55%),
+    var(--ask-glass);
   -webkit-backdrop-filter: blur(28px) saturate(110%);
   backdrop-filter: blur(28px) saturate(110%);
   box-shadow: var(--ask-glass-shadow);
+  overflow: hidden;
+}
+
+.askYiping::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.025) 19%,
+    transparent 46%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.header,
+.form,
+.chips,
+.answerArea {
+  position: relative;
+  z-index: 1;
+}
+
+.header,
+.form,
+.chips {
+  grid-column: 1;
+}
+
+.answerArea {
+  grid-column: 2;
+  grid-row: 1 / span 3;
 }
 
 .header {
   display: grid;
   gap: 0.4rem;
-  margin-bottom: clamp(1rem, 2vw, 1.4rem);
+  margin-bottom: clamp(0.85rem, 1.6vw, 1.2rem);
 }
 
 .eyebrow {
@@ -72,7 +115,7 @@
   margin: 0;
   color: var(--ask-ink);
   font-family: var(--display);
-  font-size: clamp(1.9rem, 3.2vw, 3rem);
+  font-size: clamp(1.8rem, 2.8vw, 2.55rem);
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1;
@@ -80,11 +123,11 @@
 
 .lede {
   margin: 0;
-  max-width: 60ch;
+  max-width: 46ch;
   color: var(--ask-muted);
   font-family: var(--serif);
-  font-size: clamp(1rem, 1.4vw, 1.18rem);
-  line-height: 1.5;
+  font-size: clamp(0.95rem, 1.12vw, 1.05rem);
+  line-height: 1.48;
 }
 
 /* Question composer */
@@ -114,15 +157,15 @@
 }
 
 .input:focus-visible {
-  /* The ask flow lights up — cyan signal, not gold. */
+  /* The ask flow lights up as a comet signal. */
   outline: 1px solid var(--ask-signal);
   outline-offset: 0;
   border-color: var(--ask-signal);
 }
 
 /* Submit — raised lit-glass material with a neutral hairline border and a
-   single gold hairline along the bottom edge (the scene's one watch-hand
-   brand mark). NEVER a full gold outline ring, NEVER a gold fill. */
+   single comet hairline along the bottom edge. NEVER a full color outline
+   ring, NEVER a fill. */
 .submit {
   display: inline-flex;
   align-items: center;
@@ -145,14 +188,14 @@
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-/* Hover lifts via luminance + a faint gold glow off the hairline edge. */
+/* Hover lifts via luminance + a faint comet glow off the hairline edge. */
 .submit:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--ask-accent) 40%, var(--ask-border-strong));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 var(--ask-accent-strong),
     inset 0 -2px 0 rgba(0, 0, 0, 0.4),
-    0 0 18px rgba(200, 162, 74, 0.12);
+    0 0 18px rgba(75, 197, 222, 0.12);
 }
 
 .submit:disabled {
@@ -210,24 +253,30 @@
   position: relative;
   display: grid;
   gap: 0.85rem;
-  margin-top: clamp(1.2rem, 2.4vw, 1.8rem);
-  padding-top: clamp(1.1rem, 2.2vw, 1.6rem);
-  border-top: 1px solid var(--ask-border-strong);
+  max-height: clamp(23rem, 45vw, 32rem);
+  margin-top: 0;
+  padding: clamp(1rem, 1.8vw, 1.35rem);
+  border: 1px solid var(--ask-border-strong);
+  border-radius: 12px;
+  background: var(--ask-glass-inset);
+  box-shadow: var(--ask-glass-inset-shadow);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 /* Thread-of-light — the weft. When an answer cites its sources, a thin
    cyan line runs down the left edge, binding the asked question to the
    cited-sources block. 1px, fading at both ends, light not paint. */
 .answerArea:has(.sources) {
-  padding-left: 1.05rem;
+  padding-left: calc(clamp(1rem, 1.8vw, 1.35rem) + 1.05rem);
 }
 
 .answerArea:has(.sources)::before {
   content: '';
   position: absolute;
-  top: clamp(1.1rem, 2.2vw, 1.6rem);
-  bottom: 0.2rem;
-  left: 0;
+  top: clamp(1rem, 1.8vw, 1.35rem);
+  bottom: clamp(1rem, 1.8vw, 1.35rem);
+  left: clamp(1rem, 1.8vw, 1.35rem);
   width: 1px;
   /* The weft, at full Digital-Me strength: a brighter cyan thread that fades
      at both ends and casts a soft glow — reads as light binding the question
@@ -306,7 +355,7 @@
   white-space: pre-wrap;
 }
 
-/* Thinking state — the caret is the cyan data-signal, not gold. */
+/* Thinking state — the caret is the comet data-signal. */
 .answerBody.streaming::after {
   content: '';
   display: inline-block;
@@ -332,7 +381,7 @@
   line-height: 1.55;
 }
 
-/* Calm inline notes (no-key state + errors) — gold only as a 1px hairline. */
+/* Calm inline notes (no-key state + errors) — comet only as a 1px hairline. */
 .note {
   display: grid;
   gap: 0.3rem;
@@ -432,8 +481,56 @@
 }
 
 @media (max-width: 720px) {
+  .askYiping {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: clamp(1.6rem, 7vw, 2.3rem);
+    padding: clamp(1.2rem, 6vw, 1.55rem) clamp(0.95rem, 5vw, 1.2rem);
+  }
+
+  .header,
+  .form,
+  .chips,
+  .answerArea {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .title {
+    font-size: clamp(1.6rem, 8.2vw, 2.1rem);
+  }
+
+  .lede {
+    font-size: 0.92rem;
+  }
+
   .form {
     grid-template-columns: 1fr;
+  }
+
+  .chips {
+    gap: 0.42rem;
+    margin-top: 0;
+  }
+
+  .chip {
+    padding: 0.42rem 0.7rem;
+    font-size: 0.76rem;
+  }
+
+  .answerArea {
+    max-height: min(22rem, 48vh);
+    padding: 0.92rem;
+  }
+
+  .answerArea:has(.sources) {
+    padding-left: calc(0.92rem + 0.86rem);
+  }
+
+  .answerArea:has(.sources)::before {
+    top: 0.92rem;
+    bottom: 0.92rem;
+    left: 0.92rem;
   }
 
   .sourceRow {

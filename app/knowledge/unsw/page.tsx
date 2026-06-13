@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { LoomGlobalNav } from '../../../components/verified-dossier/LoomGlobalNav';
 import { DocumentPreviewCard } from '../../../components/verified-dossier/DocumentPreviewCard';
 import {
   VERIFIED_DOSSIER_UNSW_COURSES,
@@ -86,6 +87,7 @@ const LEARNING_PHASES = [
 export default function UnswShelfPage() {
   return (
     <main className={styles.page} aria-labelledby="unsw-title">
+      <LoomGlobalNav ariaLabel="UNSW knowledge navigation" />
       <UnswStudyNav active="unsw" />
 
       <section className={styles.hero}>

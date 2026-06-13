@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { isStaleBuildArtifactName } from './next-build-lock.mjs';
 
 const expectedBundleId = 'com.yinyiping.loom';
@@ -174,7 +175,7 @@ export async function runInstalledAppSmoke(options = {}) {
   };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   runInstalledAppSmoke()
     .then((result) => {
       console.log(`installed app smoke ok: ${result.appPath}`);

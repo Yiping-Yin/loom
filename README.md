@@ -56,11 +56,11 @@ runnable proof.
 
 ### Proof you can run — not a screenshot
 
-Capability is shown, not asserted: *Beebook* — a fully self-contained trading terminal inspired by
+Capability is shown, not asserted: *QBook* — a fully self-contained trading terminal inspired by
 the Optiver × UNSW trading academy — order book, leaderboard, trade ticker, and market-making
 practice — that keeps running **offline, after the source site retires.**
 
-![Beebook live-market terminal](docs/images/product/optibook-landing.png)
+![QBook live-market terminal](docs/images/product/optibook-landing.png)
 
 ---
 

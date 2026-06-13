@@ -18,55 +18,35 @@ export default function YearPage() {
     <div className={styles.surface}>
       <LoomSupportNav active="/year" />
       <main
-        style={{
-          background: 'var(--bg)',
-          color: 'var(--fg)',
-          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
+        className={styles.main}
+        style={{ padding: 'var(--support-main-padding)' }}
       >
-        <div style={{ width: '100%', maxWidth: '52rem' }}>
-        <header style={{ marginBottom: '2.2rem' }}>
-          <div
-            style={{
-              fontFamily: 'var(--sans)',
-              fontSize: '0.72rem',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--muted)',
-              marginBottom: '0.6rem',
-            }}
-          >
-            The Year
+        <div className={styles.shell}>
+        <header className={styles.hero}>
+          <div className={styles.heroText}>
+            <div className={styles.eyebrow}>The Year</div>
+            <h1 className={styles.title}>Twelve columns, one ribbon.</h1>
+            <p className={styles.lead}>
+              Twelve months of material, weighed rather than counted. The wintering ribbon
+              shows what cooled; Question containers hold what is still open. Everything here
+              arrived through <Link href="/sources" className={styles.textLink}>Sources</Link>{' '}
+              and can continue in <Link href="/draft" className={styles.textLink}>Draft</Link>.
+            </p>
+            <nav aria-label="The Year related surfaces" className={styles.linkRail}>
+              <Link href="/hour">The Hour</Link>
+              <Link href="/discipline">Discipline</Link>
+            </nav>
           </div>
-          <h1
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            Twelve columns, one ribbon.
-          </h1>
-          <p style={{ color: 'var(--fg-secondary)', lineHeight: 1.65, marginTop: '0.8rem' }}>
-            Twelve months of material, weighed rather than counted. The wintering ribbon
-            shows what cooled; Question containers hold what is still open. Everything here
-            arrived through <Link href="/sources" style={{ color: 'var(--accent)' }}>Sources</Link>{' '}
-            and can continue in <Link href="/draft" style={{ color: 'var(--accent)' }}>Draft</Link>.
-          </p>
-          <nav
-            aria-label="The Year related surfaces"
-            style={{ display: 'flex', gap: 16, marginTop: '0.9rem', fontSize: '0.88rem' }}
-          >
-            <Link href="/hour" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-              The Hour
-            </Link>
-            <Link href="/discipline" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-              Discipline
-            </Link>
-          </nav>
+          <div className={styles.heroPanel} aria-hidden="true">
+            <div className={styles.instrument}>
+              <div className={styles.instrumentKicker}>Annual material</div>
+              <div className={styles.instrumentValue}>12</div>
+              <div className={styles.instrumentMeta}>
+                Months are weighted by material and attention, then cooled into active,
+                wintering, or archived bands.
+              </div>
+            </div>
+          </div>
         </header>
 
           <YearClient />

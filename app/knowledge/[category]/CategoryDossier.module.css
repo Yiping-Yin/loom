@@ -10,8 +10,8 @@
   --shelf-border-strong: var(--ink-5);
   --shelf-surface: var(--ink-3);
   --shelf-soft: var(--ink-2);
-  --shelf-accent: var(--gold);
-  --shelf-accent-strong: var(--gold-hi);
+  --shelf-accent: var(--signature-cyan);
+  --shelf-accent-strong: var(--signature-cyan-hi);
   --shelf-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
 
   /* Re-skin the globally-styled vd-home chrome to the dark desk. */
@@ -25,56 +25,31 @@
   --vd-page: var(--ink-0);
   --vd-paper: var(--ink-3);
   --vd-paper-strong: var(--ink-4);
-  --vd-accent: var(--gold);
-  --vd-accent-strong: var(--gold-hi);
-  --vd-accent-soft: rgba(200, 162, 74, 0.12);
+  --vd-accent: var(--signature-cyan);
+  --vd-accent-strong: var(--signature-cyan-hi);
+  --vd-accent-soft: rgba(224, 229, 232, 0.1);
   --vd-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
 
   --shelf-glass:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
-    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+    linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
   --shelf-float:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),
     0 14px 36px rgba(0, 0, 0, 0.5);
 
   min-height: 100vh;
-  background:
-    radial-gradient(120% 78% at 50% -8%, #10141A 0%, var(--ink-0) 56%);
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
   background-color: var(--ink-0);
   color: var(--text-1);
 }
 
 /* ----- vd-home chrome overrides (same element as .page) ----- */
 .page:global(.vd-home) {
-  background:
-    radial-gradient(120% 78% at 50% -8%, #10141A 0%, var(--ink-0) 56%);
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
   background-color: var(--ink-0);
-  color: var(--text-1);
-}
-
-.page :global(.vd-nav) {
-  border-bottom: 1px solid var(--line);
-  background: rgba(13, 17, 22, 0.62);
-  -webkit-backdrop-filter: blur(28px) saturate(110%);
-  backdrop-filter: blur(28px) saturate(110%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 12px 30px rgba(0, 0, 0, 0.45);
-}
-
-.page :global(.vd-wordmark) {
-  color: var(--text-1);
-  font-family: var(--display);
-  font-weight: 600;
-}
-
-.page :global(.vd-nav__links a) {
-  color: var(--text-2);
-}
-
-.page :global(.vd-nav__links a:hover),
-.page :global(.vd-nav__links a[aria-current="page"]) {
   color: var(--text-1);
 }
 
@@ -216,7 +191,7 @@
 }
 
 .page :global(.vd-citation-card:hover) {
-  border-color: rgba(200, 162, 74, 0.4);
+  border-color: rgba(224, 229, 232, 0.34);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),
@@ -225,7 +200,7 @@
 }
 
 .page :global(.vd-citation-card:focus-visible) {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 2px;
 }
 
@@ -252,8 +227,8 @@
 }
 
 .page :global(.vd-followup:focus-within) {
-  border-color: rgba(200, 162, 74, 0.55);
-  box-shadow: 0 0 0 1px rgba(200, 162, 74, 0.35);
+  border-color: rgba(224, 229, 232, 0.4);
+  box-shadow: 0 0 0 1px rgba(224, 229, 232, 0.2);
 }
 
 .page :global(.vd-followup input:focus-visible) {
@@ -358,12 +333,12 @@
   text-decoration: none;
 }
 
-/* Restrained ghost button — luminance-led with a faint gold hairline; never a
-   filled gold/green pill. */
+/* Restrained ghost button — luminance-led with a faint silver hairline; never a
+   filled colour pill. */
 .buttonLink {
   justify-content: center;
   padding: 0 1.05rem;
-  border: 1px solid rgba(200, 162, 74, 0.45);
+  border: 1px solid rgba(224, 229, 232, 0.24);
   border-radius: 8px;
   background:
     linear-gradient(180deg, var(--ink-4), var(--ink-3));
@@ -378,7 +353,7 @@
 }
 
 .buttonLink:hover {
-  border-color: rgba(227, 197, 106, 0.6);
+  border-color: rgba(224, 229, 232, 0.42);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),
@@ -390,7 +365,7 @@
 .buttonLink:focus-visible,
 .textLink:focus-visible,
 .outcomeList a:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 2px;
 }
 
@@ -401,7 +376,7 @@
 .textLink:hover {
   color: var(--text-1);
   text-decoration: underline;
-  text-decoration-color: rgba(200, 162, 74, 0.6);
+  text-decoration-color: rgba(224, 229, 232, 0.5);
   text-underline-offset: 3px;
 }
 
@@ -598,7 +573,7 @@
 }
 
 .flowCard > span {
-  color: var(--gold);
+  color: var(--signature-cyan);
   font-family: var(--mono);
   font-size: 0.7rem;
   font-weight: 600;
@@ -649,7 +624,7 @@
 }
 
 .outcomeList a:hover {
-  border-color: rgba(200, 162, 74, 0.4);
+  border-color: rgba(224, 229, 232, 0.34);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),

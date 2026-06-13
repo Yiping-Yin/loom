@@ -5,10 +5,19 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import React from 'react';
 
-import { HomeClient } from '../app/HomeClient';
 import { VERIFIED_DOSSIER_HOME_COPY } from '../lib/new-loom/verified-dossier-home';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+const cssModuleClassMap = new Proxy(
+  {},
+  { get: (_target, className) => (typeof className === 'string' ? className : '') },
+) as Record<string, string>;
+const cssModuleExports = { __esModule: true, default: cssModuleClassMap };
+
+require.extensions['.css'] = (module: { exports: typeof cssModuleExports }) => {
+  module.exports = cssModuleExports;
+};
 
 function read(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
@@ -43,14 +52,33 @@ function cssBlock(css: string, selector: string, requiredContent?: string) {
   assert.fail(`${selector} block should include ${requiredContent}`);
 }
 
-test('home first paint frames Loom as an inspectable personal knowledge identity', () => {
+function renderHomeClientHtml() {
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = require('react-dom/server') as {
     renderToStaticMarkup: (node: React.ReactElement) => string;
   };
+  const { HomeClient } = require('../app/HomeClient') as typeof import('../app/HomeClient');
 
-  const html = renderToStaticMarkup(<HomeClient />);
-  const primaryNavHtml = html.match(/<div class="lcv-nav__links">[\s\S]*?<\/div>/)?.[0] ?? '';
+  return renderToStaticMarkup(<HomeClient />);
+}
+
+function renderColophonClientHtml() {
+  Object.assign(globalThis, { React });
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
+  const ColophonClient = require('../app/ColophonClient').default as React.ComponentType;
+
+  return renderToStaticMarkup(<ColophonClient />);
+}
+
+function globalNavHtml(html: string, ariaLabel = 'Verified dossier navigation') {
+  return html.match(new RegExp(`<nav[^>]+aria-label="${ariaLabel}"[\\s\\S]*?<\\/nav>`))?.[0] ?? '';
+}
+
+test('home first paint frames Loom as an inspectable personal knowledge identity', () => {
+  const html = renderHomeClientHtml();
+  const primaryNavHtml = globalNavHtml(html);
 
   assert.match(html, /Yiping Yin/);
   assert.match(html, /🇨🇳 Wuhan/);
@@ -136,8 +164,12 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
-  assert.doesNotMatch(primaryNavHtml, />Draft</);
-  assert.doesNotMatch(primaryNavHtml, /href="\/drafts?"/);
+  for (const menuLabel of ['Identity', 'Workspaces', 'Sources', 'Draft']) {
+    assert.match(primaryNavHtml, new RegExp(`>${menuLabel}<`));
+  }
+  assert.match(primaryNavHtml, /href="\/sources"/);
+  assert.match(primaryNavHtml, /href="\/draft"/);
+  assert.doesNotMatch(primaryNavHtml, /href="\/drafts"/);
 
   for (const label of [
     'About',
@@ -264,10 +296,29 @@ test('Sources and Draft descriptions serve personal learning paths, resources, p
 
 test('visible support surfaces use approved personal-identity and local-app positioning', () => {
   const about = read('app/about/AboutClient.tsx');
+  const aboutCss = read('app/about/AboutClient.module.css');
   const verifiedDossierData = read('lib/new-loom/verified-dossier-home.ts');
   const help = read('app/help/page.tsx');
   const loomRoute = read('app/loom/page.tsx');
-  const productHistory = read('app/product-history/page.tsx');
+  const productHistory = [
+    read('app/product-history/page.tsx'),
+    read('components/product-history/ProductHistoryPage.tsx'),
+  ].join('\n');
+  const productHistoryCss = read('components/product-history/HistoryDossier.module.css');
+  const globalsCss = read('app/globals.css');
+  const globalNav = read('components/verified-dossier/LoomGlobalNav.tsx');
+  const globalNavCss = read('components/verified-dossier/LoomGlobalNav.module.css');
+  const supportCss = read('app/loom-support-page.module.css');
+  const systemClient = read('app/SystemClient.tsx');
+  const designCanon = read('docs/design/CURRENT_DESIGN_CANON.md');
+  const visualSpec = read('docs/superpowers/specs/2026-06-11-loom-visual-system-design.md');
+  const supportClients = [
+    read('app/hour/HourClient.tsx'),
+    read('app/connections/ConnectionsClient.tsx'),
+    read('app/SystemClient.tsx'),
+    read('app/discipline/page.tsx'),
+    read('app/year/page.tsx'),
+  ].join('\n');
   const privacy = read('public/privacy.html');
   const support = read('public/support.html');
 
@@ -283,6 +334,31 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(about, /usable by Digital Me/);
   assert.match(about, /Product story/i);
   assert.match(about, /\/product-history/);
+  assert.match(about, /import \{ ArrowRight, ArrowUpRight \} from 'lucide-react'/);
+  assert.match(about, /className=\{styles\.externalLinkIcon\}/);
+  assert.match(about, /className=\{styles\.historyLinkIcon\}/);
+  assert.doesNotMatch(about, />↗<\/span>/);
+  assert.match(aboutCss, /--about-signature:\s*var\(--signature-cyan\)/);
+  assert.match(aboutCss, /--about-signature-hi:\s*var\(--signature-cyan-hi\)/);
+  assert.match(cssBlock(aboutCss, '.externalLinkIcon', 'width'), /width:\s*0\.82rem/);
+  assert.match(cssBlock(aboutCss, '.profileLinks a:hover .externalLinkIcon'), /translate\(1px,\s*-1px\)/);
+  assert.match(cssBlock(aboutCss, '.historyLinkIcon'), /width:\s*0\.88rem/);
+  assert.match(cssBlock(aboutCss, '.historyLink:hover .historyLinkIcon'), /translateX\(1px\)/);
+  assert.doesNotMatch(aboutCss, /\.historyLink::after[\s\S]*content:\s*"→"/);
+  assert.doesNotMatch(aboutCss, /--about-gold:/);
+  assert.doesNotMatch(aboutCss, /--about-gold2:/);
+  assert.match(
+    aboutCss,
+    /@media\s*\(max-width:\s*640px\)\s*\{[\s\S]*\.profileRail\s*\{[^}]*grid-template-columns:\s*minmax\(6\.4rem,\s*0\.44fr\)\s*minmax\(0,\s*1fr\)/,
+  );
+  assert.match(
+    aboutCss,
+    /@media\s*\(max-width:\s*640px\)\s*\{[\s\S]*\.resumeObject\s*\{[^}]*width:\s*min\(100%,\s*14\.5rem\)/,
+  );
+  assert.match(
+    aboutCss,
+    /@media\s*\(max-width:\s*640px\)\s*\{[\s\S]*\.sourceList\s*\{[^}]*align-content:\s*start/,
+  );
   assert.doesNotMatch(about, /Yiping's Loom/);
   assert.doesNotMatch(about, /[\u3400-\u9fff]/);
 
@@ -293,16 +369,26 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(loomRoute, /Loom · Product System/);
   assert.doesNotMatch(loomRoute, /Loom · History/);
 
-  assert.match(productHistory, /Loom is a cognitive growth system/i);
-  assert.match(productHistory, /source-backed thinking into personal growth/i);
+  assert.match(productHistory, /<h1 id="history-title">History<\/h1>/);
+  assert.doesNotMatch(productHistory, /History\./);
+  assert.doesNotMatch(productHistory, /Loom archive/);
+  assert.doesNotMatch(productHistory, /Early studies, original language/);
+  assert.match(productHistory, /Source-backed self\. Living archive\./i);
+  assert.match(productHistory, /<p className=\{styles\.heroLead\}>\{HERO_STATEMENT\}<\/p>/);
   assert.match(productHistory, /Library \/ Eyes \/ Memory/i);
-  assert.match(productHistory, /past material reaches the present/i);
-  assert.match(productHistory, /present attention becomes judgment/i);
-  assert.match(productHistory, /judged understanding reaches the future/i);
+  assert.match(productHistory, /Touch or focus to read the Loom mark/i);
+  assert.match(productHistory, /Source atlas/i);
+  assert.match(productHistory, /Weaver gaze/i);
+  assert.match(productHistory, /Woven pattern/i);
+  assert.match(productHistory, /ArrowUpRight/);
+  assert.doesNotMatch(productHistory, /-&gt;|View archive\s*<span aria-hidden="true">/);
+  assert.doesNotMatch(productHistory, /Past material\./i);
+  assert.doesNotMatch(productHistory, /Present judgment\./i);
+  assert.doesNotMatch(productHistory, /Future self\./i);
   assert.match(productHistory, /Human \/ System \/ AI/i);
-  assert.match(productHistory, /attention, questions, judgment, and relation choices/i);
-  assert.match(productHistory, /anchoring, organization, connection, and preservation/i);
-  assert.match(productHistory, /AI accelerates inference/i);
+  assert.match(productHistory, /Sees\. Compares\. Chooses\./i);
+  assert.match(productHistory, /Anchors\. Orders\. Preserves\./i);
+  assert.match(productHistory, /Infers\. Drafts\. Cites\./i);
   assert.match(productHistory, /Source is sacred/i);
   assert.match(productHistory, /Personal growth loop/i);
   assert.match(productHistory, /Source/);
@@ -314,6 +400,11 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(productHistory, /Output/);
   assert.match(productHistory, /Identity/);
   assert.match(productHistory, /Next source/);
+  assert.match(productHistory, /text:\s*'Add files\.'/);
+  assert.match(productHistory, /text:\s*'Mark passages\.'/);
+  assert.match(productHistory, /text:\s*'Write with references\.'/);
+  assert.match(productHistory, /<p>\{step\.text\}<\/p>/);
+  assert.doesNotMatch(productHistory, /Collect files\./);
   assert.match(productHistory, /Five product layers/i);
   assert.match(productHistory, /Public identity surface/);
   assert.match(productHistory, /Evidence and source layer/);
@@ -325,8 +416,18 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(productHistory, /citation-backed Digital Me answers/i);
   assert.match(productHistory, /process replay and output production/i);
   assert.match(productHistory, /Product evolution/i);
-  assert.match(productHistory, /what was learned/i);
+  assert.match(productHistory, /Source material, not skin/i);
   assert.match(productHistory, /Real evidence assets/i);
+  assert.match(productHistoryCss, /--history-accent:\s*var\(--signature-cyan\)/);
+  assert.match(productHistoryCss, /--history-accent-dim:\s*var\(--signature-cyan-hi\)/);
+  assert.doesNotMatch(productHistoryCss, /--history-accent:\s*var\(--gold\)/);
+  assert.doesNotMatch(productHistoryCss, /var\(--gold-hi\)/);
+  assert.match(productHistoryCss, /\.page :global\(\.loom-global-nav-slot\)\s*\{[^}]*min-height:\s*0 !important/s);
+  assert.doesNotMatch(productHistoryCss, /:global\(\.loom-global-nav\)\s*\{[^}]*29rem/s);
+  assert.doesNotMatch(productHistoryCss, /:global\(\.loom-global-nav__brand\)\s*\{/);
+  assert.doesNotMatch(productHistoryCss, /:global\(\.loom-global-nav__icon(?:-orb)?\)\s*\{/);
+  assert.doesNotMatch(productHistoryCss, /:global\(\.loom-global-nav__menu summary\)\s*\{/);
+  assert.match(productHistoryCss, /\.hero h1\s*\{[^}]*font-size:\s*clamp\(6rem,\s*8\.8vw,\s*8\.85rem\)/s);
   assert.match(productHistory, /\/loom\/history\/early-version\/01-reading-thinking-environment\.jpg/);
   assert.match(productHistory, /\/loom\/history\/early-version\/02-name-mark-library-eyes-memory\.jpg/);
   assert.match(productHistory, /\/loom\/history\/early-version\/05-weaver-vocabulary\.jpg/);
@@ -337,6 +438,82 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(productHistory, /\/loom\/history\/evolution\/2026-06-03-source-dossier\.png/);
   assert.match(productHistory, /\/loom\/history\/evolution\/2026-06-04-evidence-workbench\.png/);
   assert.match(productHistory, /\/loom\/history\/evolution\/2026-06-04-current-home\.png/);
+  assert.match(productHistory, /LoomGlobalNav/);
+  assert.match(productHistory, /brandCurrent/);
+  assert.match(globalNav, /import \{ Search \} from 'lucide-react'/);
+  assert.match(globalNav, /Search Loom knowledge/);
+  assert.match(globalNav, /action="\/sources"/);
+  assert.match(globalNav, /name="search"/);
+  assert.match(globalNav, /placeholder="Search sources"/);
+  assert.match(globalNav, /setSearchOpen/);
+  assert.match(globalNav, /flushSync/);
+  assert.match(globalNav, /searchOpenRef/);
+  assert.match(globalNav, /function onSearchFormPointerDown\(/);
+  assert.match(globalNav, /onPointerDown=\{onSearchFormPointerDown\}/);
+  assert.match(globalNav, /onPointerDown=\{onSearchButtonPointerDown\}/);
+  assert.doesNotMatch(globalNav, /onMouseDown=\{\(event\) => event\.preventDefault\(\)\}/);
+  assert.doesNotMatch(globalNav, /event\.preventDefault\(\);\s*if \(!searchOpenRef\.current\)/);
+  assert.match(globalNav, /onSearchSubmit/);
+  assert.match(globalNav, /inputMode="search"/);
+  assert.match(globalNav, /enterKeyHint="search"/);
+  assert.match(globalNav, /Open Loom menu/);
+  assert.match(globalNav, /\/brand\/loom_lunar_orb\.png/);
+  assert.match(globalNav, /requestAnimationFrame/);
+  assert.match(globalNav, /const LOOM_WORKSPACE_NAV = \[/);
+  assert.match(globalNav, /\{ label: 'Sources', href: '\/sources' \}/);
+  assert.match(globalNav, /\{ label: 'Draft', href: '\/draft' \}/);
+  assert.match(globalNav, />\s*Identity\s*</);
+  assert.match(globalNav, />\s*Workspaces\s*</);
+  assert.match(globalNavCss, /position:\s*fixed/);
+  assert.match(globalNavCss, /23\.25rem/);
+  assert.match(cssBlock(globalNavCss, '.slot', '--loom-nav-clearance'), /z-index:\s*1000/);
+  assert.match(cssBlock(globalNavCss, '.slot', '--loom-nav-clearance'), /min-height:\s*var\(--loom-nav-clearance\)/);
+  assert.match(cssBlock(globalNavCss, '.nav', 'border-radius: 999px'), /grid-template-columns:\s*minmax\(2\.45rem,\s*1fr\)\s*auto\s*minmax\(2\.45rem,\s*1fr\)/);
+  assert.match(
+    globalNavCss,
+    /\.nav \.brand,\s*\.nav \.brand:visited\s*\{[^}]*color:\s*rgba\(240,\s*243,\s*244,\s*0\.9\)/s,
+  );
+  assert.match(
+    globalsCss,
+    /\.loom-global-nav \.loom-global-nav__brand,\s*\.loom-global-nav \.loom-global-nav__brand:visited\s*\{[^}]*color:\s*rgba\(240,\s*243,\s*244,\s*0\.9\)/s,
+  );
+  assert.match(cssBlock(globalNavCss, '.navHidden'), /translate\(-50%,\s*calc\(-100% - 1\.6rem\)\)/);
+  assert.match(cssBlock(globalNavCss, '.searchInput'), /caret-color:\s*var\(--signature-cyan-hi,\s*#8AF7E6\)/);
+  assert.match(cssBlock(globalNavCss, '.searchInput::placeholder'), /rgba\(232,\s*236,\s*238,\s*0\.68\)/);
+  assert.match(cssBlock(globalNavCss, '.icon'), /object-fit:\s*cover/);
+  assert.match(cssBlock(globalNavCss, '.icon', 'object-position'), /animation:\s*loomLunarSurfaceDrift 88s/);
+  assert.match(cssBlock(globalNavCss, '.iconOrb', 'perspective'), /transform-style:\s*preserve-3d/);
+  assert.match(globalNavCss, /@keyframes loomLunarTerminatorBreath/);
+  assert.match(globalNavCss, /@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.icon,[\s\S]*animation:\s*none/);
+  assert.match(cssBlock(globalNavCss, '.menuPanel'), /z-index:\s*1003/);
+  assert.match(cssBlock(globalNavCss, '.menuPanel'), /width:\s*min\(18\.65rem,\s*calc\(100vw - 2rem\)\)/);
+  assert.match(cssBlock(globalNavCss, '.menuPanel'), /grid-template-columns:\s*1fr/);
+  assert.match(cssBlock(globalNavCss, '.menuGroupLabel'), /letter-spacing:\s*0\.16em/);
+  assert.match(cssBlock(globalNavCss, '.menuGroupLinks'), /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(globalNavCss, /@media \(max-width: 680px\)[\s\S]*\.menuPanel\s*{[^}]*width:\s*min\(calc\(100vw - 2rem\),\s*18\.65rem\);[^}]*grid-template-columns:\s*1fr;/s);
+  assert.match(systemClient, /This page moved into Loom history/);
+  assert.match(systemClient, /<details className=\{styles\.archiveDetails\}>/);
+  assert.doesNotMatch(systemClient, /<details className=\{styles\.archiveDetails\} open/);
+  assert.match(globalsCss, /--signature-cyan:\s*#4BC5DE/);
+  assert.match(globalsCss, /--signature-cyan-hi:\s*#8AF7E6/);
+  assert.match(supportCss, /--support-main-padding:/);
+  assert.match(supportCss, /--signature:\s*var\(--signature-cyan\)/);
+  assert.match(supportCss, /--signature-hi:\s*var\(--signature-cyan-hi\)/);
+  assert.match(supportCss, /--accent:\s*var\(--text-2\)/);
+  assert.match(supportCss, /--accent-info:\s*var\(--cyan\)/);
+  assert.match(supportCss, /background:\s*var\(--signature\)/);
+  assert.doesNotMatch(supportCss, /rgba\(75,\s*197,\s*222,\s*0\.14\)/);
+  assert.match(designCanon, /Signature cyan `#4BC5DE`/);
+  assert.match(designCanon, /Data cyan `#6CE7F2`/);
+  assert.match(visualSpec, /Signature cyan `--accent #4BC5DE`/);
+  assert.match(visualSpec, /Data cyan `--cyan #6CE7F2`/);
+  assert.doesNotMatch(visualSpec, /Champagne gold `--gold #C8A24A`/);
+  assert.match(supportClients, /padding:\s*'var\(--support-main-padding\)'/);
+  assert.doesNotMatch(productHistory, /styles\.navSearch/);
+  assert.doesNotMatch(productHistory, /styles\.brandLockup/);
+  assert.doesNotMatch(productHistory, /styles\.brandIcon/);
+  assert.doesNotMatch(productHistory, /styles\.navLinks/);
+  assert.doesNotMatch(productHistory, /styles\.navAvatar/);
   assert.doesNotMatch(productHistory, /VERIFIED_DOSSIER_PROFILE/);
   assert.doesNotMatch(productHistory, /generic SaaS landing page/i);
   assert.doesNotMatch(productHistory, /always-visible AI assistant/i);
@@ -349,6 +526,19 @@ test('visible support surfaces use approved personal-identity and local-app posi
   // sediment in the tagline lineage, so it is excluded from this guard.
   assert.doesNotMatch([help, privacy, support].join('\n'), /personal knowledge display platform/i);
   assert.match(productHistory, /personal knowledge display platform/i);
+});
+
+test('colophon keeps line-broken closing sentences readable as text', () => {
+  const html = renderColophonClientHtml();
+  const text = html
+    .replace(/<br\s*\/?>/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ');
+
+  assert.match(text, /Graphite canon/);
+  assert.doesNotMatch(text, /Vellum II/);
+  assert.match(text, /Built by one hand\. With thanks to anyone who waited\./);
+  assert.doesNotMatch(text, /hand\.With/);
 });
 
 test('Loom product history evolution assets are curated under Loom folders', () => {

@@ -22,6 +22,15 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function cssRulesContaining(css: string, selector: string) {
+  const rules = css.match(/[^{}]+{[^{}]*}/g) ?? [];
+  const matchingRules = rules.filter((rule) => rule.slice(0, rule.indexOf('{')).includes(selector));
+
+  assert.ok(matchingRules.length > 0, `${selector} should have at least one CSS rule`);
+
+  return matchingRules.join('\n');
+}
+
 function listPageRoutes(dir: string = path.join(repoRoot, 'app')): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const routes: string[] = [];
@@ -118,6 +127,29 @@ test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
       `${artifact} should not remain in the product tree; keep the canonical file and remove Finder-numbered copies`,
     );
   }
+
+  const numberedDynamicRouteCopies: string[] = [];
+  const visit = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (!entry.isDirectory()) continue;
+
+      if (/\[[^\]]+\] \d+$/.test(entry.name)) {
+        numberedDynamicRouteCopies.push(path.relative(repoRoot, fullPath));
+      }
+
+      visit(fullPath);
+    }
+  };
+
+  visit(path.join(repoRoot, 'app'));
+
+  assert.deepEqual(
+    numberedDynamicRouteCopies,
+    [],
+    'dynamic app routes should not keep Finder-numbered copies such as [problemSet] 2',
+  );
 });
 
 test('retired cover and frontispiece clients are removed after routes redirect to Sources', () => {
@@ -1440,7 +1472,7 @@ test('hosted XCTest runs do not materialize a second visible Loom room', () => {
   );
 });
 
-test('main-window fallback replaces off-active scene windows and hidden windows', () => {
+test('main-window fallback promotes off-active scene windows and hidden windows', () => {
   const loomApp = read('macos-app/Loom/Sources/LoomApp.swift');
   const materializeStart = loomApp.indexOf('private func materializeFallbackMainWindow(');
   const createStart = loomApp.indexOf('private func createFallbackMainWindow()', materializeStart);
@@ -1465,13 +1497,13 @@ test('main-window fallback replaces off-active scene windows and hidden windows'
   );
   assert.match(
     materialize,
-    /materializeFallbackMainWindow replacing off-active window=[\s\S]{0,120}closeMainWindow\(window\)[\s\S]{0,120}createFallbackMainWindow\(\)/,
-    'off-active scene windows should be replaced with a fallback host on the current desktop',
+    /if let window = existingMainWindow\(includeHidden: false\) \{[\s\S]{0,180}materializeFallbackMainWindow: promoting off-active window[\s\S]{0,180}presentWindowOnActiveSpace\(window\)[\s\S]{0,80}return/,
+    'off-active scene windows should be moved forward instead of destroyed during launch Space transitions',
   );
   assert.match(
     materialize,
-    /if !ignoreHiddenWindow, let window = existingMainWindow\(includeHidden: true\) \{[\s\S]{0,160}closeMainWindow\(window\)[\s\S]{0,160}createFallbackMainWindow\(\)/,
-    'hidden scene windows should be closed before the fallback host is created',
+    /if !ignoreHiddenWindow, let window = existingMainWindow\(includeHidden: true\) \{[\s\S]{0,180}materializeFallbackMainWindow: promoting hidden window[\s\S]{0,180}presentWindowOnActiveSpace\(window\)[\s\S]{0,80}return/,
+    'hidden scene windows should be promoted before a fallback host is created',
   );
   const ensureStart = loomApp.indexOf('private func ensureMainWindowVisible()');
   const presentStart = loomApp.indexOf('@MainActor\n    private func presentWindowOnActiveSpace', ensureStart);
@@ -1484,20 +1516,26 @@ test('main-window fallback replaces off-active scene windows and hidden windows'
   );
   assert.match(
     ensureBlock,
-    /replacing off-active window=[\s\S]*closeMainWindow\(window\)[\s\S]*materializeFallbackMainWindow\(ignoreHiddenWindow: true\)/,
-    'off-active visible windows should be closed before fallback materialization',
+    /if let window = existingMainWindow\(includeHidden: false\) \{[\s\S]*ensureMainWindowVisible: promoting off-active window[\s\S]*presentWindowOnActiveSpace\(window\)[\s\S]*return/,
+    'off-active visible windows should be promoted without closing them',
   );
   assert.match(
     ensureBlock,
-    /replacing hidden window=[\s\S]*closeMainWindow\(window\)[\s\S]*materializeFallbackMainWindow\(ignoreHiddenWindow: true\)/,
-    'hidden scene windows should be closed immediately before materialization',
+    /if let window = existingMainWindow\(includeHidden: true\) \{[\s\S]*ensureMainWindowVisible: promoting hidden window[\s\S]*presentWindowOnActiveSpace\(window\)[\s\S]*return/,
+    'hidden scene windows should be promoted without closing them',
   );
   assert.match(loomApp, /requireActiveSpace: Bool = false/);
   assert.match(loomApp, /requireActiveSpace && !window\.isOnActiveSpace/);
   assert.doesNotMatch(loomApp, /closeOffActiveSpaceMainWindows/);
-  assert.match(loomApp, /replacing off-active window/);
-  assert.match(loomApp, /currentSpaceBehavior\.remove\(\.canJoinAllSpaces\)/);
-  assert.match(loomApp, /currentSpaceBehavior\.insert\(\.moveToActiveSpace\)/);
+  assert.match(loomApp, /promoting off-active window/);
+  assert.doesNotMatch(
+    ensureBlock,
+    /closeMainWindow\(window\)/,
+    'main-window launch repair must not close windows while AppKit is still settling Spaces',
+  );
+  assert.match(loomApp, /presentationBehavior\.insert\(\.canJoinAllSpaces\)/);
+  const presentBlock = loomApp.slice(presentStart, loomApp.indexOf('/// Materialize a fallback main window', presentStart));
+  assert.doesNotMatch(presentBlock, /\.insert\(\.moveToActiveSpace\)/);
   assert.doesNotMatch(loomApp, /mainPresentationRestore/);
 });
 
@@ -1746,7 +1784,12 @@ test('AppDelegate reasserts main-window hidden chrome when presenting existing w
   );
   assert.match(
     appDelegate,
-    /DispatchQueue\.main\.asyncAfter\(deadline: \.now\(\) \+ 1\.0\) \{ \[weak window\] in[\s\S]{0,220}configureMainWindowChrome\(window\)/,
+    /presentationBehavior\.remove\(\.moveToActiveSpace\)[\s\S]{0,120}presentationBehavior\.insert\(\.canJoinAllSpaces\)[\s\S]{0,120}window\.collectionBehavior = presentationBehavior/,
+    'reopen/URL-routing presentation should keep restored windows visible on the current Space',
+  );
+  assert.match(
+    appDelegate,
+    /DispatchQueue\.main\.asyncAfter\(deadline: \.now\(\) \+ 1\.0\) \{ \[weak self, weak window\] in[\s\S]{0,220}configureMainWindowChrome\(window\)/,
     'space transitions need a delayed repair after AppKit finishes moving the window',
   );
 });
@@ -2236,7 +2279,8 @@ test('source document fallback uses Sources instead of Desk-era breadcrumbs', ()
   const docClient = read('app/DocClient.tsx');
   const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
 
-  assert.match(docClient, /Open Sources →/);
+  assert.match(docClient, /import \{ ArrowRight \} from 'lucide-react'/);
+  assert.match(docClient, /Open Sources\s*<ArrowRight className="loom-empty-state-action-icon"/);
   assert.match(docClient, /<Link href="\/sources" className="loom-empty-state-action">/);
   assert.match(docClient, /<Link href="\/sources">Sources<\/Link>/);
   assert.doesNotMatch(docClient, />\s*Organize\s*<\/Link>|>\s*Collect\s*<\/Link>/);
@@ -2346,7 +2390,12 @@ test('first-run and native shortcuts land on new Loom product capabilities', () 
 
   assert.match(onboarding, /const ONBOARDING_DONE_ROUTE = '\/sources'/);
   assert.match(onboarding, /router\.push\(ONBOARDING_DONE_ROUTE\)/);
+  assert.match(onboarding, /import \{ ArrowRight \} from 'lucide-react'/);
+  assert.match(onboarding, /label="Open the first book"/);
+  assert.match(onboarding, /label="Choose shelves"/);
+  assert.match(onboarding, /icon=\{<ArrowRight aria-hidden="true" size=\{14\} strokeWidth=\{1\.8\} \/>/);
   assert.doesNotMatch(onboarding, /router\.push\('\/desk'\)|opening Desk/);
+  assert.doesNotMatch(onboarding, /Open the first book[\s\S]{0,80}→|Choose shelves[\s\S]{0,80}→/);
 
   for (const label of ['Sources', 'Draft']) {
     assert.match(app, new RegExp(`Button\\("${label}"\\)`));
@@ -2468,7 +2517,10 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
     'public/support.html': read('public/support.html'),
     'public/privacy.html': read('public/privacy.html'),
     'app/onboarding/OnboardingClient.tsx': read('app/onboarding/OnboardingClient.tsx'),
-    'app/product-history/page.tsx': read('app/product-history/page.tsx'),
+    'app/product-history/page.tsx': [
+      read('app/product-history/page.tsx'),
+      read('components/product-history/ProductHistoryPage.tsx'),
+    ].join('\n'),
     'app/cover/page.tsx': read('app/cover/page.tsx'),
     'app/frontispiece/page.tsx': read('app/frontispiece/page.tsx'),
     'app/draft/DraftClient.tsx': read('app/draft/DraftClient.tsx'),
@@ -2563,8 +2615,8 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
   assert.match(files['app/about/AboutClient.tsx'], /Product story/);
   assert.match(files['app/about/AboutClient.tsx'], /source-bound memory system/);
   assert.match(files['app/about/AboutClient.tsx'], /\/product-history/);
-  assert.match(files['app/product-history/page.tsx'], /Why Loom is called Loom/);
-  assert.match(files['app/product-history/page.tsx'], /source-bound knowledge display platform/);
+  assert.match(files['app/product-history/page.tsx'], /Source-backed self\. Living archive\./);
+  assert.match(files['app/product-history/page.tsx'], /Proof changed the line/);
   assert.match(files['app/about/AboutClient.tsx'], /Publish the artifact/);
   assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /personal knowledge identity platform/);
   assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /History/);
@@ -2590,7 +2642,8 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
   assert.match(files['lib/ai/stage-model.ts'], /title: 'Add one source'/);
   assert.match(files['lib/ai/stage-model.ts'], /launcherTitle: 'Add source'/);
   assert.match(files['lib/ai/stage-model.ts'], /One source page · one reader note/);
-  assert.match(files['lib/new-loom/product-shell.ts'], /Collect learning paths/);
+  assert.match(files['lib/new-loom/product-shell.ts'], /Add learning paths/);
+  assert.doesNotMatch(files['lib/new-loom/product-shell.ts'], /Collect learning paths/);
   assert.match(files['public/support.html'], /source questions, drafting help, or rewrite suggestions/);
   assert.match(files['public/privacy.html'], /reader notes, source connections, drafts/);
   assert.match(files['components/KeyboardShortcuts.tsx'], /\['⌘ \/', 'Open reader notes'\]/);
@@ -2903,7 +2956,7 @@ test('web Draft collapses legacy panels into a segmented inspector beside one wr
     'Draft should not style editor, references, and board as three sibling cards',
   );
   assert.doesNotMatch(
-    globals,
+    cssRulesContaining(globals, '.new-loom-draft__source-tiles'),
     /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
     'Draft source inspector should be a scannable list, not a two-column tile grid',
   );
@@ -3335,7 +3388,10 @@ test('Draft owns Atelier multi-source tiling beside the writing surface', () => 
   assert.match(draftClient, /onClick=\{\(\) => removeDraftReference\(realReference\)\}/);
   assert.match(draftClient, /aria-label=\{`Remove reference: \$\{reference\.label\}`\}/);
   assert.match(globals, /\.new-loom-draft__source-tiles/);
-  assert.doesNotMatch(globals, /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.doesNotMatch(
+    cssRulesContaining(globals, '.new-loom-draft__source-tiles'),
+    /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
+  );
   assert.match(globals, /\.new-loom-draft__source-list\b/);
   assert.match(nativeDraftView, /struct LoomDraftSourceTile: Equatable, Identifiable/);
   assert.match(nativeDraftView, /enum LoomDraftSourceTiles/);

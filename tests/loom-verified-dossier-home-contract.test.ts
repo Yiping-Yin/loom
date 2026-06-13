@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, extname, join, relative } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import React from 'react';
@@ -34,6 +34,25 @@ import {
 } from '../lib/new-loom/verified-dossier-home';
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+const TEXT_ASSET_EXTENSIONS = new Set(['.css', '.html', '.js', '.json', '.svg', '.txt', '.xml']);
+
+function collectFiles(root: string): string[] {
+  const entries = readdirSync(root);
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const path = join(root, entry);
+    const stat = statSync(path);
+
+    if (stat.isDirectory()) {
+      files.push(...collectFiles(path));
+    } else {
+      files.push(path);
+    }
+  }
+
+  return files;
+}
 
 const SAFE_INTERNAL_HREFS = new Set([
   '/',
@@ -335,6 +354,32 @@ test('Digital Me renders the Quant proof path with evidence statuses and gaps', 
   assert.match(html, /Create a small quant research project/);
 });
 
+test('education and experience section heroes expose compact evidence summaries', async () => {
+  const { default: EducationPage } = await import('../app/education/page');
+  const { default: ExperiencePage } = await import('../app/experience/page');
+  const { renderToStaticMarkup } = require('react-dom/server') as {
+    renderToStaticMarkup: (node: React.ReactElement) => string;
+  };
+
+  const educationHtml = renderToStaticMarkup(React.createElement(EducationPage));
+  const experienceHtml = renderToStaticMarkup(React.createElement(ExperiencePage));
+
+  assert.match(educationHtml, /class="vd-section-page__hero-copy"/);
+  assert.match(educationHtml, /class="vd-section-page__hero-proof"/);
+  assert.match(educationHtml, /aria-label="Education evidence summary"/);
+  assert.match(educationHtml, /Source shelves/);
+  assert.match(educationHtml, /Visible courses/);
+  assert.match(educationHtml, /Evidence files/);
+
+  assert.match(experienceHtml, /class="vd-section-page__hero-copy"/);
+  assert.match(experienceHtml, /class="vd-section-page__hero-proof"/);
+  assert.match(experienceHtml, /aria-label="Experience evidence summary"/);
+  assert.match(experienceHtml, /Experience evidence\./);
+  assert.match(experienceHtml, /Work/);
+  assert.match(experienceHtml, /Projects/);
+  assert.match(experienceHtml, /Files/);
+});
+
 test('experience surface ships CV-backed entries with resolving proof artifacts', async () => {
   const entries: readonly VerifiedDossierExperienceEntry[] = VERIFIED_DOSSIER_EXPERIENCE_ENTRIES;
 
@@ -378,10 +423,11 @@ test('experience surface ships CV-backed entries with resolving proof artifacts'
   assert.equal(optiver.period, 'May 2026 – August 2026');
   assert.ok(optiver.proofArtifactIds.includes('optibook-market-lens'));
 
-  const oak = entries.find((entry) => entry.id === 'oak-financial-group');
-  assert.ok(oak, 'Oak Financial Group entry should exist');
-  assert.equal(oak.role, 'Property Portfolio Assistant');
-  assert.equal(oak.period, 'January 2024 – May 2026');
+  assert.equal(
+    entries.find((entry) => entry.id === 'oak-financial-group'),
+    undefined,
+    'Oak Financial Group entry should stay removed from the public Experience surface',
+  );
 
   const { default: ExperiencePage } = await import('../app/experience/page');
   const { renderToStaticMarkup } = require('react-dom/server') as {
@@ -391,8 +437,8 @@ test('experience surface ships CV-backed entries with resolving proof artifacts'
 
   assert.match(html, /Optiver &(amp;)? UNSW/);
   assert.match(html, /Trading Academy Participant/);
-  assert.match(html, /Oak Financial Group/);
-  assert.match(html, /Property Portfolio Assistant/);
+  assert.doesNotMatch(html, /Oak Financial Group/);
+  assert.doesNotMatch(html, /Property Portfolio Assistant/);
   assert.doesNotMatch(html, /Backed by source records and process artifacts\./);
 });
 
@@ -405,7 +451,7 @@ test('CV and Optibook artifacts open real evidence targets', () => {
   );
 
   const optibook = resolveVerifiedDossierArtifact('optibook-market-lens');
-  assert.match(optibook.label, /Beebook/);
+  assert.match(optibook.label, /QBook/);
   // The replica build is copied into public/optibook/ by a later
   // integration step, so pin the href without asserting file existence.
   assert.equal(optibook.href, '/optibook/index.html');
@@ -415,6 +461,54 @@ test('CV and Optibook artifacts open real evidence targets', () => {
     existsSync(join(repoRoot, 'public', optibook.thumbnailSrc!)),
     'the Optibook screenshot should exist under public/',
   );
+});
+
+test('Optibook static replica is rebadged as QBook in the shipped public bundle', () => {
+  const optibookRoot = join(repoRoot, 'public/optibook');
+  assert.ok(existsSync(join(optibookRoot, 'index.html')), 'Optibook public bundle should exist');
+
+  const files = collectFiles(optibookRoot);
+  assert.ok(
+    files.some((file) => file.endsWith('/QBook_Logo-Light-RGB.svg')),
+    'public Optibook bundle should ship the QBook wordmark',
+  );
+
+  for (const file of files) {
+    assert.doesNotMatch(
+      relative(optibookRoot, file),
+      /beebook/i,
+      'public Optibook bundle filenames must not keep the old Beebook brand',
+    );
+  }
+
+  const textAssets = files.filter((file) => TEXT_ASSET_EXTENSIONS.has(extname(file)));
+  assert.ok(textAssets.length > 0, 'public Optibook bundle should include inspectable text assets');
+
+  let sawQBook = false;
+  for (const file of textAssets) {
+    const text = readFileSync(file, 'utf8');
+    const label = relative(optibookRoot, file);
+
+    sawQBook ||= text.includes('QBook');
+    assert.doesNotMatch(text, /BeeBook|Beebook|beebook/, `${label} must not keep old Beebook copy`);
+    assert.doesNotMatch(
+      text,
+      /#(?:C8A24A|E3C56A)(?:[0-9A-F]{2})?/i,
+      `${label} must not keep the deprecated gold wordmark`,
+    );
+    assert.doesNotMatch(
+      text,
+      /rgba?\(\s*(?:200\s*,\s*162\s*,\s*74|227\s*,\s*197\s*,\s*106)/i,
+      `${label} must not keep deprecated gold channel values`,
+    );
+    assert.doesNotMatch(
+      text,
+      /--participant-hue|participant-hue|hsl\(/i,
+      `${label} must not reintroduce saturated generated participant colors`,
+    );
+  }
+
+  assert.equal(sawQBook, true, 'public Optibook bundle should visibly say QBook');
 });
 
 test('Digital Me page ships professional section-page layout styles', () => {
@@ -427,6 +521,8 @@ test('Digital Me page ships professional section-page layout styles', () => {
     '.vd-section-page',
     '.vd-section-page__nav',
     '.vd-section-page__hero',
+    '.vd-section-page__hero-copy',
+    '.vd-section-page__hero-proof',
     '.vd-section-page__list',
     '.vd-section-page__modes',
     '.vd-section-page__foundations',
@@ -456,6 +552,11 @@ test('Digital Me page ships professional section-page layout styles', () => {
 
   assert.match(css, /\.vd-section-page__canvas[\s\S]*grid-template-columns/);
   assert.match(css, /\.vd-section-page__foundations[\s\S]*grid-template-columns/);
+  assert.match(css, /\.vd-section-page__hero\s*{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(15rem, 21rem\)/);
+  assert.match(css, /\.vd-section-page__hero h1\s*{[\s\S]*font-size:\s*clamp\(2\.45rem, 4\.55vw, 4\.35rem\)/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page__hero\s*{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page__hero\s*{[\s\S]*padding:\s*clamp\(2\.4rem, 9vw, 3\.5rem\) 0 clamp\(1rem, 5vw, 1\.4rem\)/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page__hero h1\s*{[\s\S]*font-size:\s*clamp\(2\.25rem, 10\.5vw, 2\.9rem\)/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page/);
 });
 
@@ -493,7 +594,7 @@ test('verified dossier home includes ECON3202 artifacts and file kinds', () => {
 test('verified dossier home keeps five sections and Loom history', () => {
   assert.deepEqual(
     VERIFIED_DOSSIER_SECTIONS.map((section) => section.label),
-    ['About', 'UNSW', 'Quantnet', 'WQU', 'Claude'],
+    ['About', 'UNSW', 'QuantNet', 'WQU', 'Claude'],
   );
   assert.deepEqual(
     VERIFIED_DOSSIER_HISTORY.map((item) => item.title),

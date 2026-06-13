@@ -1,31 +1,32 @@
 .roleOsPage {
   /* Digital Me scene — "alive, intelligent, signal" on the Evidence Desk
-     foundation. Base --ink-1 + a faint cool ambient glow; cyan is the
-     data-signal; gold appears ONLY on active states as a 1px hairline.
+     foundation. Base --ink-1 + a faint cool ambient glow; comet ice is the
+     data-signal and active-state hairline.
      Spec: docs/archive/ai-build-log/specs/2026-06-11-loom-visual-system-design.md */
-  --role-page: var(--ink-0, #07090C);
-  --role-surface: var(--ink-3, #161B22);
-  --role-surface-soft: var(--ink-4, #1E242D);
-  --role-ink: var(--text-1, #E6E9EE);
-  --role-muted: var(--text-2, #9BA3AE);
-  --role-subtle: var(--text-3, #5E6671);
-  --role-border: var(--line-soft, #1A1F27);
-  --role-border-strong: var(--line, #232A33);
-  --role-accent: var(--gold, #C8A24A);
-  --role-accent-strong: var(--gold-hi, #E3C56A);
+  --role-page: var(--ink-0, #070809);
+  --role-surface: var(--ink-3, #181B1E);
+  --role-surface-soft: var(--ink-4, #22262A);
+  --role-ink: var(--text-1, #E7E9EA);
+  --role-muted: var(--text-2, #A4A9AD);
+  --role-subtle: var(--text-3, #666D72);
+  --role-border: var(--line-soft, #202428);
+  --role-border-strong: var(--line, #2A2F34);
+  --role-accent: var(--accent, #4BC5DE);
+  --role-accent-strong: var(--accent-info, #8AF7E6);
   --role-signal: var(--cyan, #4BC5DE);
-  --role-row-active: var(--ink-5, #2A323D);
+  --role-row-active: var(--ink-5, #30353A);
   --role-ok: var(--up, #3FB37A);
   --role-mono: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
-  --role-shell: 1320px;
+  --role-shell: 1344px;
   --role-gutter: clamp(28px, 4vw, 48px);
+  --role-nav-clearance: clamp(5.85rem, 7vw, 6.4rem);
   /* Glass material — the locked site-wide recipe at full strength (Digital Me
      is the lit scene): a top-left specular sheen (150deg, white .05 → transparent
      32%) layered over a cool-black surface gradient (ink-4 → ink-3). Single key
      light from the top-left. */
   --role-glass:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
-    linear-gradient(180deg, rgba(30, 36, 45, 0.62), rgba(22, 27, 34, 0.94));
+    linear-gradient(135deg, rgba(238, 241, 242, 0.075), rgba(176, 184, 188, 0.028) 34%, transparent 62%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
   --role-glass-border: var(--line, #232A33);
   /* Real optics: 1px specular top edge (key light) + inner bottom thickness
      + a soft directional float so the panel reads as lifted lit glass. */
@@ -41,22 +42,25 @@
   /* Inset surface (nested panels: artifact output, inputs, source rows) — the
      same optics one layer down, lighter sheen, no outer float. */
   --role-glass-inset:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent 36%),
-    linear-gradient(180deg, rgba(26, 31, 39, 0.66), rgba(18, 22, 28, 0.92));
+    linear-gradient(135deg, rgba(238, 241, 242, 0.046), rgba(176, 184, 188, 0.016) 38%, transparent 66%),
+    linear-gradient(180deg, rgba(24, 27, 30, 0.68), rgba(14, 16, 18, 0.92));
   --role-glass-inset-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4);
   --role-chrome:
-    linear-gradient(180deg, rgba(14, 18, 24, 0.72), rgba(10, 13, 17, 0.62));
+    linear-gradient(135deg, rgba(44, 49, 54, 0.64), rgba(11, 13, 15, 0.72));
   position: relative;
   width: 100%;
   min-height: 100vh;
-  overflow-x: hidden;
-  /* Faint cool ambient glow, top-center — the live room's "powered-on" air —
-     fading into the cool-black desk. */
-  background:
-    radial-gradient(120% 80% at 50% -8%, rgba(96, 148, 178, 0.07) 0%, rgba(96, 148, 178, 0) 55%),
-    var(--role-page);
+  /* clip, not hidden: overflow-x hidden makes this wrapper a scroll container,
+     which silently breaks the nav's position:sticky against the viewport.
+     clip prevents horizontal leak without creating a scroll container. */
+  overflow-x: clip;
+  /* Deep-space live room: mostly cold black, with low-contrast silver breath
+     and a small cyan signal trace reserved for Digital Me. */
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
+  background-color: var(--ink-0);
   color: var(--role-ink);
   font-family: var(--sans);
 }
@@ -69,9 +73,9 @@
   position: fixed;
   inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(120% 80% at 50% -8%, rgba(96, 148, 178, 0.07) 0%, rgba(96, 148, 178, 0) 55%),
-    var(--role-page);
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
+  background-color: var(--ink-0);
   pointer-events: none;
 }
 
@@ -81,20 +85,30 @@
   box-sizing: border-box;
 }
 
+.roleOsPage :global(.loom-global-nav-slot) {
+  min-height: 0;
+}
+
 /* Restrained scroll-reveal — a quiet fade + small rise as each section enters
-   the viewport, lightly staggered. The JS only toggles [data-revealed]; the
-   motion lives here and is fully disabled under reduced-motion. None of the
-   data-reveal targets carry their own transform, so translateY is safe. */
+   the viewport, lightly staggered. SSR/no-JS stays visible; the client hook
+   opts into animation by setting data-reveal-ready on the page root. */
 .roleOsPage [data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+  will-change: auto;
+}
+
+.roleOsPage[data-reveal-ready="true"] [data-reveal] {
   opacity: 0;
   transform: translateY(16px);
-  transition: opacity 0.55s ease-out, transform 0.55s ease-out;
   will-change: opacity, transform;
 }
 
-.roleOsPage [data-reveal][data-revealed] {
+.roleOsPage[data-reveal-ready="true"] [data-reveal][data-revealed] {
   opacity: 1;
   transform: none;
+  will-change: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -105,74 +119,10 @@
     transition: none;
     will-change: auto;
   }
-}
 
-.nav {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.55rem 1.35rem;
-  min-height: 4rem;
-  padding-block: 0.7rem;
-  padding-inline: max(var(--role-gutter), calc((100% - var(--role-shell)) / 2));
-  border-bottom: 1px solid var(--role-glass-border);
-  background: var(--role-chrome);
-  -webkit-backdrop-filter: blur(24px) saturate(115%);
-  backdrop-filter: blur(24px) saturate(115%);
-  /* Real glass optics — 1px top specular key light + inner bottom thickness +
-     a soft float so the bar reads as lifted lit glass, not a flat blurred
-     film. Matches the panel recipe strength. */
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 14px 36px rgba(0, 0, 0, 0.5);
-}
-
-.nav a {
-  position: relative;
-  color: var(--role-muted);
-  font-size: 0.84rem;
-  font-weight: 560;
-  line-height: 1.1;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color 0.18s ease;
-}
-
-.nav a:focus-visible {
-  outline: 1px solid var(--role-accent-strong);
-  outline-offset: 4px;
-  border-radius: 3px;
-}
-
-.nav a:first-child {
-  margin-right: auto;
-  color: var(--role-ink);
-  font-family: var(--display);
-  font-size: 1.72rem;
-  font-weight: 560;
-  line-height: 0.95;
-}
-
-.nav a:hover {
-  color: var(--role-ink);
-}
-
-.nav a[aria-current="page"] {
-  color: var(--role-ink);
-}
-
-.nav a[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -5px;
-  left: 0;
-  height: 1px;
-  background: var(--role-accent);
+  .nav a {
+    transition: none;
+  }
 }
 
 .roleLens,
@@ -188,10 +138,10 @@
 .roleLens {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 30rem);
-  gap: 1.2rem clamp(2.4rem, 4.5vw, 4.8rem);
-  align-items: end;
-  margin-top: clamp(2.4rem, 4.5vw, 4rem);
-  padding: clamp(2.8rem, 5vw, 4.4rem) clamp(2rem, 3.5vw, 3.2rem) clamp(2.4rem, 4.5vw, 3.6rem);
+  gap: 1rem clamp(2.4rem, 4vw, 4.2rem);
+  align-items: center;
+  margin-top: var(--role-nav-clearance);
+  padding: clamp(2.2rem, 4vw, 3.35rem) clamp(2rem, 3.5vw, 3.2rem) clamp(2rem, 3.6vw, 2.8rem);
   border: 1px solid var(--role-glass-border);
   border-radius: 14px;
   background: var(--role-glass);
@@ -225,19 +175,19 @@
   margin: 0;
   color: var(--role-ink);
   font-family: var(--display);
-  font-size: clamp(2.55rem, 4.8vw, 5.2rem);
+  font-size: clamp(2.45rem, 4.35vw, 4.7rem);
   font-weight: 600;
   letter-spacing: 0;
-  line-height: 0.95;
+  line-height: 0.94;
 }
 
 .roleLens > span {
-  max-width: 58rem;
+  max-width: 50rem;
   margin: 0;
   color: var(--role-muted);
   font-family: var(--serif);
-  font-size: clamp(1.05rem, 1.5vw, 1.34rem);
-  line-height: 1.48;
+  font-size: clamp(1rem, 1.28vw, 1.18rem);
+  line-height: 1.45;
 }
 
 .roleLensCriteria {
@@ -245,7 +195,7 @@
   grid-row: 1 / span 3;
   align-self: stretch;
   display: grid;
-  align-content: end;
+  align-content: center;
   gap: 0;
   min-width: 0;
   margin: 0;
@@ -569,8 +519,7 @@
   border-right: 0;
 }
 
-/* Active tab — NO fill. Raised --ink-5 surface + a 1px gold underline
-   (watch-hand discipline: gold as hairline only). */
+/* Active tab — NO fill. Raised --ink-5 surface + a 1px comet underline. */
 .artifactActions button[aria-pressed="true"] {
   background: var(--role-row-active);
   color: var(--role-ink);
@@ -756,7 +705,37 @@
   border-top: 2px solid var(--role-border-strong);
 }
 
+.boundaryPanel summary {
+  width: fit-content;
+  color: var(--role-ink);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 560;
+  line-height: 1.2;
+  list-style: none;
+}
+
+.boundaryPanel summary::-webkit-details-marker {
+  display: none;
+}
+
+.boundaryPanel summary::after {
+  content: " +";
+  color: var(--role-signal);
+  font-weight: 500;
+}
+
+.boundaryPanel[open] summary::after {
+  content: " −";
+}
+
+.boundaryPanel summary:focus-visible {
+  outline: 2px solid var(--role-signal);
+  outline-offset: 4px;
+}
+
 .boundaryPanel strong {
+  margin-top: 0.58rem;
   color: var(--role-subtle);
   font-family: var(--role-mono);
   font-size: 0.72rem;
@@ -868,22 +847,8 @@
 }
 
 @media (max-width: 720px) {
-  .nav {
-    align-content: center;
-    gap: 0.7rem 0.95rem;
-  }
-
-  .nav a:first-child {
-    flex-basis: 100%;
-    margin-right: 0;
-  }
-
-  .nav a[aria-current="page"]::after {
-    bottom: -5px;
-  }
-
   .roleLens h1 {
-    font-size: clamp(2.35rem, 11vw, 3.55rem);
+    font-size: clamp(2.15rem, 9.6vw, 3rem);
   }
 
   .claimRail {
@@ -921,6 +886,12 @@
     padding-left: 0.9rem;
   }
 
+  .roleLens {
+    margin-top: clamp(5.1rem, 18vw, 5.8rem);
+    padding-top: clamp(1.45rem, 7vw, 2rem);
+    padding-bottom: clamp(1.35rem, 6vw, 1.8rem);
+  }
+
   .roleLensCriteria li,
   .artifactOutput li,
   .stageHeader span,
@@ -940,9 +911,9 @@
   }
 }
 
-/* Live Market Room — the Beebook replica as a launchable Digital Me feature.
+/* Live Market Room — the QBook replica as a launchable Digital Me feature.
    FULL-STRENGTH dimensional staging (Digital-Me is the lit scene): the copy
-   sits left in calm air; the live Beebook terminal stands right as a real lit
+   sits left in calm air; the live QBook terminal stands right as a real lit
    object on the desk — framed, tilted back, glaring, grounded, floating in a
    deep cyan-lit atmosphere with a closing vignette. */
 .marketRoom {
@@ -958,11 +929,11 @@
   gap: clamp(2rem, 4vw, 4rem);
   align-items: center;
   /* ATMOSPHERE — the device floats in lit space: a deep cyan room glow behind
-     the screen (right), a faint warm counter-glow, and a vignette closing the
+     the screen (right), a faint ion-tail counter-glow, and a vignette closing the
      edges over the cool-black desk. Not pure black. */
   background:
     radial-gradient(58% 78% at 74% 42%, rgba(75, 197, 222, 0.12) 0%, rgba(75, 197, 222, 0) 62%),
-    radial-gradient(70% 90% at 18% 8%, rgba(200, 162, 74, 0.045) 0%, rgba(200, 162, 74, 0) 58%),
+    radial-gradient(70% 90% at 18% 8%, rgba(138, 247, 230, 0.045) 0%, rgba(138, 247, 230, 0) 58%),
     radial-gradient(135% 130% at 50% 30%, transparent 52%, rgba(7, 9, 12, 0.72) 100%),
     var(--role-page);
   box-shadow: var(--role-glass-shadow-soft);
@@ -1089,7 +1060,7 @@
   vertical-align: 2px;
 }
 
-/* Launch affordance — glass, never a gold fill. Gold lives only in the
+/* Launch affordance — glass, never a color fill. Comet ice lives only in the
    1px hairline border (the active brand moment of this scene). */
 .marketRoomLaunch {
   display: inline-flex;
@@ -1114,7 +1085,7 @@
   border-color: var(--role-accent-strong);
   box-shadow:
     var(--role-glass-inset-shadow),
-    0 0 24px rgba(200, 162, 74, 0.14);
+    0 0 24px rgba(75, 197, 222, 0.14);
   gap: 14px;
 }
 

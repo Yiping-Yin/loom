@@ -1,15 +1,25 @@
+import React from 'react';
+
 import {
   VERIFIED_DOSSIER_PRESENTATION_CATEGORIES,
   VERIFIED_DOSSIER_SECTIONS,
-  VERIFIED_DOSSIER_TOP_NAV,
   VERIFIED_DOSSIER_UNSW_COURSES,
   formatVerifiedDossierCourseMeta,
   resolveVerifiedDossierArtifact,
 } from '../../lib/new-loom/verified-dossier-home';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import { InstitutionMark } from '../../components/verified-dossier/InstitutionMark';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import styles from './EducationPage.module.css';
 
 export const metadata = { title: 'Education · Loom' };
+
+const EDUCATION_SHELF_LABELS: Record<string, string> = {
+  unsw: 'Course evidence.',
+  quantnet: 'QuantNet practice.',
+  wqu: 'Finance credentials.',
+  claude: 'AI learning proof.',
+};
 
 export default function EducationPage() {
   const category = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((item) => item.id === 'education');
@@ -22,18 +32,28 @@ export default function EducationPage() {
 
   return (
     <main className="vd-section-page" aria-labelledby="education-title">
-      <nav className="vd-section-page__nav" aria-label="Education navigation">
-        <a href="/loom">Loom</a>
-        {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-          <a key={item.label} href={item.href} aria-current={item.href === '/education' ? 'page' : undefined}>
-            {item.label}
-          </a>
-        ))}
-      </nav>
+      <LoomGlobalNav activeHref="/education" ariaLabel="Education navigation" />
+      <span className={styles.routeCssAnchor} aria-hidden="true" />
       <header className="vd-section-page__hero">
-        <p>Education</p>
-        <h1 id="education-title">Coursework, credentials, and learning evidence.</h1>
-        <span>{category.summary}</span>
+        <div className="vd-section-page__hero-copy">
+          <p>Education</p>
+          <h1 id="education-title">Education evidence.</h1>
+          <span>{category.summary}</span>
+        </div>
+        <dl className="vd-section-page__hero-proof" aria-label="Education evidence summary">
+          <div>
+            <dt>Source shelves</dt>
+            <dd>{sections.length}</dd>
+          </div>
+          <div>
+            <dt>Visible courses</dt>
+            <dd>{VERIFIED_DOSSIER_UNSW_COURSES.slice(0, 8).length}</dd>
+          </div>
+          <div>
+            <dt>Evidence files</dt>
+            <dd>{artifacts.length}</dd>
+          </div>
+        </dl>
       </header>
       <section className="vd-section-page__grid" aria-label="Education shelves">
         <p className="vd-section-page__band-label">Institutions</p>
@@ -41,7 +61,7 @@ export default function EducationPage() {
           <a key={section.id} className="vd-section-page__card" href={section.href}>
             <InstitutionMark kind={section.id} />
             <strong>{section.label}</strong>
-            <small>{section.summary}</small>
+            <small>{EDUCATION_SHELF_LABELS[section.id] ?? section.summary}</small>
           </a>
         ))}
       </section>

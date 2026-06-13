@@ -21,7 +21,6 @@ import { PERSONAL_PLATFORM_SECTIONS } from '../../../lib/new-loom/personal-platf
 import {
   VERIFIED_DOSSIER_PROFILE,
   VERIFIED_DOSSIER_SECTIONS,
-  VERIFIED_DOSSIER_TOP_NAV,
   resolveVerifiedDossierArtifact,
   type VerifiedDossierArtifact,
 } from '../../../lib/new-loom/verified-dossier-home';
@@ -29,6 +28,7 @@ import { referenceShelfDossierFor } from '../../../lib/new-loom/reference-shelf-
 import { ArtifactCitationCard, DocumentPreviewCard } from '../../../components/verified-dossier/DocumentPreviewCard';
 import { FileBadge } from '../../../components/verified-dossier/FileBadge';
 import { InstitutionMark } from '../../../components/verified-dossier/InstitutionMark';
+import { LoomGlobalNav } from '../../../components/verified-dossier/LoomGlobalNav';
 import styles from './CategoryDossier.module.css';
 
 export type CategoryDocCard = {
@@ -1379,18 +1379,7 @@ export function CategoryLandingClient({
 
   return (
     <main className={`vd-home ${styles.page}`} aria-labelledby={`${dossier.id}-shelf-title`}>
-      <nav className="vd-nav vd-nav--simple" aria-label="Verified dossier navigation">
-        <a className="vd-wordmark" href="/loom" aria-label="Open Loom product">
-          Loom
-        </a>
-        <div className="vd-nav__links">
-          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-            <a key={item.label} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </div>
-      </nav>
+      <LoomGlobalNav ariaLabel="Verified dossier navigation" />
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>

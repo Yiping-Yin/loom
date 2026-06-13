@@ -72,6 +72,10 @@ struct LoomMinimalRootView: View {
     /// Last successfully-saved capture URL — used by the toast's
     /// "Reveal" affordance.
     @State private var lastCaptureURL: URL? = nil
+    /// Token of the last `.loomCaptureFromURL` delivery this instance
+    /// handled — gates the relay/notification double-delivery (see
+    /// `LoomCaptureURLRelay`).
+    @State private var lastHandledCaptureToken: UUID? = nil
     /// Bumped after a capture save or manual refresh. CapturesView uses
     /// this as a URL token so an already-mounted capture detail webview
     /// is forced back to the landing list and refetches native data.
@@ -195,6 +199,13 @@ struct LoomMinimalRootView: View {
         .onAppear {
             reload()
             consumePendingBundleRoute()
+            // Cold launch: the AppleEvent handler ran before this view
+            // subscribed and parked the capture URL in the relay.
+            if let pending = LoomCaptureURLRelay.pending(),
+               pending.token != lastHandledCaptureToken {
+                lastHandledCaptureToken = pending.token
+                handleCaptureRoute(CaptureURLRouter.route(url: pending.url))
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomContentRootsChanged)) { _ in
             reload()
@@ -211,18 +222,10 @@ struct LoomMinimalRootView: View {
             // Phase A3 — bookmarklet -> `loom://capture?payload=…` ->
             // AppDelegate -> here. Decode, resolve a `web` anchor,
             // open the sheet with the extracted markdown.
-            guard let url = note.userInfo?["url"] as? URL,
-                  let payload = CaptureWebPayload.from(url: url) else {
-                captureToast = "Couldn't decode capture payload."
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { captureToast = nil }
-                return
-            }
-            guard payload.hasSubstantiveCaptureContent else {
-                captureToast = "Capture payload was empty. Re-capture from the page."
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { captureToast = nil }
-                return
-            }
-            startWebCapture(payload)
+            let token = note.userInfo?["token"] as? UUID
+            if let token, token == lastHandledCaptureToken { return }
+            lastHandledCaptureToken = token
+            handleCaptureRoute(CaptureURLRouter.route(userInfo: note.userInfo))
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomShowLibrary)) { _ in
             navigate(.sources)
@@ -452,6 +455,16 @@ struct LoomMinimalRootView: View {
             return
         }
         capturePayload = CapturePayload.makeQuickCapture(anchor: primary, available: anchors)
+    }
+
+    private func handleCaptureRoute(_ outcome: CaptureURLRouteOutcome) {
+        switch outcome {
+        case .openCapture(let payload):
+            startWebCapture(payload)
+        case .decodeFailed, .emptyPayload:
+            captureToast = outcome.failureToast
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { captureToast = nil }
+        }
     }
 
     private func startWebCapture(_ payload: CaptureWebPayload) {

@@ -184,11 +184,7 @@ export function AskYiping() {
         <h2 id="ask-yiping-title" className={styles.title}>
           Ask Yiping’s verified knowledge
         </h2>
-        <p className={styles.lede}>
-          A grounded conversation with Yiping’s verified dossier. Every answer is drawn only
-          from inspectable About, Education, and Experience sources — and cites the exact
-          artifacts it used.
-        </p>
+        <p className={styles.lede}>Verified answers. Cited sources.</p>
       </div>
 
       <form className={styles.form} onSubmit={onSubmit}>
@@ -198,7 +194,7 @@ export function AskYiping() {
           name="question"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="Ask about Yiping’s maths, optimisation, programming, or trading practice…"
+          placeholder="Ask about maths, optimisation, programming, or QBook..."
           aria-label="Ask Yiping a question"
           autoComplete="off"
           disabled={isBusy}

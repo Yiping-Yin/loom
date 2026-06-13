@@ -16,7 +16,6 @@ a[class*="loom-"] {
   text-decoration: none;
 }
 
-
 /* ============================================================
    Loom Design Tokens — Vellum (Phase 7)
    ============================================================ */
@@ -138,55 +137,52 @@ a[class*="loom-"] {
   --fg-secondary: #4A4339;      /* ink2 */
   --muted: #8A8373;             /* muted earth */
 
-  /* Accent — refined champagne gold (Loom Visual System v1). `--accent`
-     drives UI chips, selection bg, focus rings, scrollbar, and global
-     links — always as a tint/hairline, never a solid fill. `--accent-text`
-     is the deeper gold used for body-text links so they stay legible on
-     the paper/dark surfaces. `--accent-info` is the restrained comet-cyan
-     used ONLY for informational/data affordances (link hover, secondary
-     focus, chart/flow accents) — never replacing the gold brand role. */
-  --accent: #C8A24A;            /* refined gold (light) — hairlines, marks, tints */
-  --accent-soft: rgba(200, 162, 74, 0.18);
-  --accent-text: #8A6E32;       /* deeper gold — body-text links */
-  --accent-secondary: #C8A24A;  /* gold */
-  --accent-info: #4BC5DE;       /* comet-cyan — informational/data accent only */
+  /* Accent — cool black / silver-gray / comet cyan. `--accent` drives
+     hairlines, focus rings, scrollbar, global links, and verified marks.
+     It should read like ionized light on glass: sparse, precise, never a
+     broad solid fill. */
+  --accent: #4BC5DE;            /* comet cyan — hairlines, marks, tints */
+  --signature-cyan: #4BC5DE;    /* identity signature — stable even inside local accent scopes */
+  --signature-cyan-hi: #8AF7E6; /* identity highlight */
+  --accent-soft: rgba(75, 197, 222, 0.18);
+  --accent-text: #2F7384;       /* deeper comet teal — body-text links */
+  --accent-secondary: #8AF7E6;  /* pale ion highlight */
+  --accent-info: #8AF7E6;       /* comet tail highlight */
 
   /* Borders — hairline ink */
   --border: rgba(26, 23, 18, 0.06);
   --mat-border: rgba(26, 23, 18, 0.08);
   
-  /* Vellum Glass — Apple Liquid Glass lineage (macOS Tahoe / iOS 26)
-     tinted with paper warmth. Chrome/popovers/shuttle float over paper
-     using these materials; the paper layer itself stays opaque. The
-     blur + saturate combo is what makes the glass feel like it picks
-     up the color behind it — same technique Apple uses natively. */
-  --mat-thin-bg:    rgba(245, 241, 228, 0.42);   /* thin vellum film */
-  --mat-reg-bg:     rgba(245, 241, 228, 0.72);   /* standard glass */
-  --mat-thick-bg:   rgba(245, 241, 228, 0.94);   /* near-opaque pane */
+  /* Liquid Glass — neutral silver translucency. Chrome/popovers/shuttle
+     float over the deep-space field without paper warmth or bronze cast.
+     The blur + saturate combo lets glass pick up the color behind it. */
+  --mat-thin-bg:    rgba(232, 236, 238, 0.36);   /* thin silver film */
+  --mat-reg-bg:     rgba(232, 236, 238, 0.62);   /* standard glass */
+  --mat-thick-bg:   rgba(232, 236, 238, 0.9);    /* near-opaque pane */
   --mat-blur:       saturate(180%) blur(25px);
   --mat-blur-thick: saturate(200%) blur(45px);
 
-  /* Specular highlight — bronze-warm on the top edge of glass panels,
-     imitating the Liquid Glass sheen. Replaces the old cyan/indigo
-     nucleus fringe so floating chrome feels consistent with Vellum. */
+  /* Specular highlight — cool silver on the top edge of glass panels,
+     with graphite thickness below. */
   --mat-hi:
-    inset 0 0.5px 0 rgba(255, 245, 220, 0.62),
-    0 0 0 0.5px rgba(26, 23, 18, 0.05),
-    inset 0 -0.5px 0 rgba(158, 124, 62, 0.08);
+    inset 0 0.5px 0 rgba(246, 249, 250, 0.56),
+    0 0 0 0.5px rgba(29, 32, 35, 0.06),
+    inset 0 -0.5px 0 rgba(70, 76, 82, 0.1);
 
-  /* Highlights — earth tints only. Never neon. Mirror of the inks in
-     loom-tokens.jsx so web highlight badges match native color chips. */
-  --tint-yellow: #B98E3F; /* gold */
-  --tint-pink:   #8F4646; /* rose */
-  --tint-green:  #5C6E4E; /* sage */
-  --tint-blue:   #3A477A; /* indigo */
-  --tint-indigo: #3A477A;
-  --tint-purple: #5E3D5C; /* plum */
-  --tint-red:    #8F4646;
-  --tint-orange: #A8783E; /* ochre */
-  --tint-mint:   #5C6E4E;
-  --tint-teal:   #5C6E4E;
-  --tint-cyan:   #3A477A;
+  /* Categorical highlights — cool, low-area identity tints. Question,
+     source, and relation chips now live in the same cyan/silver field as
+     the global Loom chrome; no gold/sage/indigo legacy palette. */
+  --tint-yellow: #4BC5DE; /* question / signal */
+  --tint-pink:   #A35F73; /* muted rose */
+  --tint-green:  #8FA3A6; /* oxidized silver */
+  --tint-blue:   #738895; /* graphite steel */
+  --tint-indigo: #7C819A; /* violet steel */
+  --tint-purple: #8B728F; /* purple graphite */
+  --tint-red:    #B46D76;
+  --tint-orange: #A8B0B6; /* lunar silver */
+  --tint-mint:   #8AF7E6;
+  --tint-teal:   #6CE7F2;
+  --tint-cyan:   #6CE7F2;
 
   /* Layout — canonical content widths. Pick one per surface; do not
      invent new max-widths inline. */
@@ -215,77 +211,69 @@ a[class*="loom-"] {
 
 @media (prefers-color-scheme: dark) {
   html:not(.light):not(.dark) {
-    /* Night — warm-neutral, Apple Tahoe dark aesthetic. Not the
-       "deep brown cave" of the print mockup; instead a modern neutral
-       that still carries Vellum's warmth in the candle text. */
-    --bg: #1A1815;                /* night (warm-neutral) */
-    --bg-elevated: #242018;       /* night-warm */
-    --bg-translucent: rgba(26, 24, 21, 0.88);
+    /* System dark follows the explicit Loom dark ramp: graphite-black
+       surfaces, cool silver text, cyan signatures, no Vellum candle cast. */
+    --bg: #070809;
+    --bg-elevated: #181B1E;
+    --bg-translucent: rgba(7, 8, 9, 0.88);
 
-    --fg: #E8E0CE;                /* candle — slightly less saturated
-                                     than print so True Tone's evening
-                                     warm-shift doesn't over-push */
-    --fg-secondary: #B9AE93;      /* candle2 */
-    --muted: #6F6756;             /* muted-night */
+    --fg: #E7E9EA;
+    --fg-secondary: #A4A9AD;
+    --muted: #666D72;
 
-    --accent: #C8A24A;            /* refined gold (dark) */
-    --accent-soft: rgba(200, 162, 74, 0.18);
-    --accent-text: #C8A24A;       /* gold for dark-mode body links */
-    --accent-info: #4BC5DE;       /* comet-cyan — informational/data accent only */
+    --accent: #4BC5DE;            /* comet cyan (dark) */
+    --accent-soft: rgba(75, 197, 222, 0.2);
+    --accent-text: #8AF7E6;       /* pale ion text accent on dark surfaces */
+    --accent-info: #8AF7E6;       /* comet tail highlight */
 
-    --mat-border: rgba(232, 224, 206, 0.08);
-    --mat-thin-bg: rgba(26, 24, 21, 0.45);
-    --mat-reg-bg:  rgba(26, 24, 21, 0.75);
-    --mat-thick-bg: rgba(26, 24, 21, 0.94);
-    --quiet-horizon-top: rgba(232, 224, 206, 0.04);
-    --quiet-horizon-band: rgba(232, 224, 206, 0.03);
-    --quiet-horizon-glow: rgba(232, 224, 206, 0.08);
+    --mat-border: rgba(231, 233, 234, 0.08);
+    --mat-thin-bg: rgba(18, 20, 22, 0.45);
+    --mat-reg-bg:  rgba(18, 20, 22, 0.75);
+    --mat-thick-bg: rgba(18, 20, 22, 0.94);
+    --quiet-horizon-top: rgba(231, 233, 234, 0.04);
+    --quiet-horizon-band: rgba(231, 233, 234, 0.03);
+    --quiet-horizon-glow: rgba(231, 233, 234, 0.08);
     --quiet-horizon-floor: rgba(0, 0, 0, 0.2);
 
     --shadow-3: 0 1.5rem 5rem rgba(0, 0, 0, 0.72);
     --shadow-panel-left: -12px 0 32px rgba(0, 0, 0, 0.45);
 
-    /* Section tints — brightened ~30% so chapter accents stay legible
-       against the ink-wash night. The light values above are tuned for
-       9:1 on cream, which collapses to ~3:1 on dark. Keeping the same
-       hue families (gold/rose/sage/indigo/plum/ochre) so a doc that
-       carries tint-orange in the day still reads as ochre at night —
-       just warmer and a step brighter. */
-    --tint-yellow: #D8AE60;
-    --tint-pink:   #C27070;
-    --tint-green:  #8CA07A;
-    --tint-blue:   #7E8CC7;
-    --tint-indigo: #7E8CC7;
-    --tint-purple: #A77FA4;
-    --tint-red:    #C27070;
-    --tint-orange: #D8A168;
-    --tint-mint:   #8CA07A;
-    --tint-teal:   #8CA07A;
-    --tint-cyan:   #7E8CC7;
+    /* Section tints — brightened for the graphite night while preserving
+       the current cyan/silver identity. */
+    --tint-yellow: #6CE7F2;
+    --tint-pink:   #C28193;
+    --tint-green:  #A4B6B8;
+    --tint-blue:   #8FA3B0;
+    --tint-indigo: #9AA0BC;
+    --tint-purple: #A88BAE;
+    --tint-red:    #D0848C;
+    --tint-orange: #C0C8CE;
+    --tint-mint:   #8AF7E6;
+    --tint-teal:   #6CE7F2;
+    --tint-cyan:   #6CE7F2;
   }
 }
 
 /* MBP Retina XDR is 100% Display P3 — use P3 as baseline, not as a
-   progressive enhancement. Bronze reaches sRGB-out saturation here so
-   selection and focus feel alive rather than dull. Non-P3 displays
-   fall back to the sRGB values above automatically. */
+   progressive enhancement. Cyan/silver accents gain display-p3 luminance
+   here; non-P3 displays fall back to the sRGB values above automatically. */
 @supports (color: color(display-p3 1 1 1)) {
   :root {
     --bg: color(display-p3 0.955 0.941 0.894);
     --fg: color(display-p3 0.165 0.145 0.125);
     --fg-secondary: color(display-p3 0.290 0.263 0.225);
-    --accent: color(display-p3 0.773 0.643 0.318);       /* refined gold #C8A24A in P3 */
-    --accent-soft: color(display-p3 0.773 0.643 0.318 / 0.20);
-    --accent-text: color(display-p3 0.524 0.435 0.234);  /* deeper gold #8A6E32 in P3 */
-    --accent-info: color(display-p3 0.433 0.763 0.858);  /* comet-cyan #4BC5DE in P3 */
+    --accent: color(display-p3 0.433 0.763 0.858);       /* comet cyan #4BC5DE in P3 */
+    --accent-soft: color(display-p3 0.433 0.763 0.858 / 0.20);
+    --accent-text: color(display-p3 0.197 0.446 0.514);  /* deeper comet teal #2F7384 in P3 */
+    --accent-info: color(display-p3 0.541 0.969 0.902);  /* pale ion #8AF7E6 in P3 */
   }
   @media (prefers-color-scheme: dark) {
     html:not(.light):not(.dark) {
       --bg: color(display-p3 0.102 0.094 0.082);
       --fg: color(display-p3 0.910 0.875 0.808);
-      --accent: color(display-p3 0.773 0.643 0.318);     /* refined gold #C8A24A in P3 */
-      --accent-text: color(display-p3 0.773 0.643 0.318);
-      --accent-info: color(display-p3 0.433 0.763 0.858); /* comet-cyan #4BC5DE in P3 */
+      --accent: color(display-p3 0.433 0.763 0.858);     /* comet cyan #4BC5DE in P3 */
+      --accent-text: color(display-p3 0.541 0.969 0.902);
+      --accent-info: color(display-p3 0.541 0.969 0.902); /* pale ion #8AF7E6 in P3 */
     }
   }
 }
@@ -294,30 +282,31 @@ a[class*="loom-"] {
    === Loom Visual System v1 — Evidence Desk foundation ===
    Cool-black, luminance-layered. Structure is carried by the
    --ink ramp + one global key light (top-left), NEVER by colour.
-   Colour is information only: gold = brand moments (watch-hand
-   discipline — hairlines/marks/numerals/glow, <5% area, never a
-   fill), cyan = data/signal, up/down = market numerals.
+   Colour is information only: comet cyan = brand/evidence light
+   (hairlines/marks/numerals/glow, <5% area, never a fill),
+   silver-gray carries hierarchy, up/down = market numerals.
    Spec: docs/archive/ai-build-log/specs/2026-06-11-loom-visual-system-design.md
    ============================================================ */
 :root {
-  /* Canvas & ink ramp — cool-black, a hair of blue undertone
-     (NOT neutral black, NOT navy). */
-  --ink-0: #07090C;     /* page base (deepest) */
-  --ink-1: #0A0D11;     /* page / ambient */
-  --ink-2: #0F1318;     /* recessed */
-  --ink-3: #161B22;     /* surface / panel */
-  --ink-4: #1E242D;     /* elevated surface */
-  --ink-5: #2A323D;     /* raised / hover */
-  --line: #232A33;      /* hairline (1px, cool grey) */
-  --line-soft: #1A1F27; /* inner divider */
-  --text-1: #E6E9EE;    /* primary */
-  --text-2: #9BA3AE;    /* secondary */
-  --text-3: #5E6671;    /* tertiary / eyebrows / captions */
+  /* Canvas & ink ramp — cold graphite-black with a restrained silver lift.
+     Deep-space, not flat black; neutral graphite, not a colored night-blue. */
+  --ink-0: #070809;     /* page base (deepest graphite void) */
+  --ink-1: #0B0C0D;     /* page / ambient */
+  --ink-2: #111315;     /* recessed graphite */
+  --ink-3: #181B1E;     /* surface / panel */
+  --ink-4: #22262A;     /* elevated graphite-silver */
+  --ink-5: #30353A;     /* raised / hover silver edge */
+  --line: #2A2F34;      /* hairline (1px, silver graphite) */
+  --line-soft: #202428; /* inner divider */
+  --text-1: #E7E9EA;    /* primary */
+  --text-2: #A4A9AD;    /* secondary */
+  --text-3: #666D72;    /* tertiary / eyebrows / captions */
 
-  /* Accents — precious, sparse, information-only. */
-  --gold: #C8A24A;      /* champagne gold — hairline/mark/numeral/glow ONLY, never a fill */
-  --gold-hi: #E3C56A;   /* bright gold highlight */
-  --cyan: #4BC5DE;      /* comet-cyan — signal/data only */
+  /* Accents — precious, sparse, information-only. Legacy --gold token names
+     are retained for compatibility; visually they resolve to comet cyan. */
+  --gold: #4BC5DE;      /* comet cyan — hairline/mark/numeral/glow ONLY, never a fill */
+  --gold-hi: #8AF7E6;   /* pale ion highlight */
+  --cyan: #6CE7F2;      /* bright comet signal/data only */
   --up: #3FB37A;        /* market up — price/PnL numerals + sparklines only */
   --down: #E06A6A;      /* market down */
 
@@ -329,32 +318,51 @@ a[class*="loom-"] {
      Cormorant: display serif on body prose is an anti-pattern. */
 
   /* Light — one global key light, top-left, on every raised surface. */
-  --keylight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --keylight: inset 0 1px 0 rgba(255, 255, 255, 0.07);
   --float-1: 0 12px 30px rgba(0, 0, 0, 0.45);
   --float-2: 0 24px 60px rgba(0, 0, 0, 0.55);
+
+  /* Deep-space field — the site-wide photographic lighting law:
+     silver lunar reflection enters from the upper-left, rolls through
+     restrained graphite midtones, and decays into cold black at the
+     lower-right. This is luminance, not color: no blue-black wash, no
+     full-page silver veil. */
+  --deep-space-field:
+    radial-gradient(84% 74% at -6% -8%, rgba(238, 241, 242, 0.16) 0%, rgba(186, 193, 197, 0.095) 27%, rgba(122, 130, 136, 0.045) 48%, transparent 68%),
+    linear-gradient(135deg, rgba(210, 216, 219, 0.075) 0%, rgba(101, 108, 113, 0.044) 36%, rgba(12, 14, 15, 0.68) 70%, rgba(4, 5, 6, 0.96) 100%),
+    radial-gradient(58% 64% at 52% 36%, rgba(232, 236, 238, 0.035) 0%, transparent 66%),
+    radial-gradient(92% 86% at 100% 100%, rgba(0, 0, 0, 0.54) 0%, transparent 70%);
 }
 
 /* Glass — REAL optics, not a bare blur: backdrop blur+saturate, a 1px
    specular top edge (the bevel catching the key light), an inner bottom
    shadow (pane thickness), and the long float shadow. */
 .loom-glass {
-  background: rgba(16, 20, 26, 0.55);
-  -webkit-backdrop-filter: blur(28px) saturate(110%);
-  backdrop-filter: blur(28px) saturate(110%);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.018) 38%, transparent 72%),
+    rgba(18, 20, 22, 0.58);
+  -webkit-backdrop-filter: blur(30px) saturate(118%) brightness(1.05);
+  backdrop-filter: blur(30px) saturate(118%) brightness(1.05);
   border: 1px solid var(--line);
   border-radius: 14px;
-  box-shadow: var(--keylight), var(--float-2), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  box-shadow:
+    var(--keylight),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.38),
+    var(--float-2);
 }
 
 /* Material card — a near-flat cool gradient sheen + edge light.
    Never a flat colour block. */
 .loom-material {
-  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.055), transparent 30%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-3));
   border: 1px solid var(--line);
   box-shadow: var(--keylight), var(--float-1);
 }
 
-/* Gold mark — text/stroke only. NEVER a fill. */
+/* Signature mark — text/stroke only. NEVER a fill.
+   The class name is legacy; the resolved color is comet cyan. */
 .loom-gold-mark {
   color: var(--gold);
 }
@@ -366,17 +374,14 @@ a[class*="loom-"] {
   color: var(--text-1);
 }
 
-/* Ambient canvas — the lit desk. Cool-black base with a single very
-   faint top-center cool glow (the key light's spill). Route scenes
-   paint their own surface over this; no warm/champagne canvas remains
-   at the body level. */
+/* Ambient canvas — the quiet deep-space desk. Cold black carries most of
+   the page, while silver-gray spill gives it breath without turning the
+   UI into colored night-blue or pale gray. Route scenes paint their own surface over
+   this; no warm canvas remains at the body level. */
 body {
-  background-color: var(--ink-1);
-  background-image: radial-gradient(
-    120% 64% at 50% -12%,
-    rgba(108, 148, 180, 0.05) 0%,
-    transparent 62%
-  );
+  background-color: var(--ink-0);
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
   background-repeat: no-repeat;
 }
 
@@ -385,7 +390,756 @@ body {
   background: transparent;
 }
 
-/* Selection as warm glow, not rectangle. Works because MBP uses
+/* Global Loom navigation — stable, critical CSS. The component also imports
+   a CSS module, but these global classes guarantee a correctly sized floating
+   capsule on cold SSR loads where module CSS may arrive after the first paint. */
+.loom-global-nav-slot {
+  --loom-nav-clearance: clamp(5.05rem, 6vw, 5.85rem);
+  position: relative;
+  z-index: 1000;
+  min-height: var(--loom-nav-clearance);
+  pointer-events: none;
+}
+
+.loom-global-nav {
+  --loom-nav-base-top: clamp(0.62rem, 1.5vw, 1.05rem);
+  --nav-glint-x: 18%;
+  --nav-glint-y: 0%;
+  --nav-glint-shift: 0rem;
+  --nav-tilt-x: 0deg;
+  --nav-tilt-y: 0deg;
+  --nav-lift: 0px;
+  position: fixed;
+  top: var(--loom-nav-base-top);
+  left: 50%;
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: minmax(2.45rem, 1fr) auto minmax(2.45rem, 1fr);
+  align-items: center;
+  gap: clamp(0.38rem, 0.85vw, 0.72rem);
+  width: min(calc(100vw - clamp(1.25rem, 20vw, 21rem)), 23.25rem);
+  min-height: 3.72rem;
+  padding: 0.36rem clamp(0.58rem, 1.05vw, 0.9rem);
+  border: 1px solid rgba(232, 236, 238, 0.15);
+  border-radius: 999px;
+  background:
+    radial-gradient(72% 130% at var(--nav-glint-x) var(--nav-glint-y), rgba(255, 255, 255, 0.16), transparent 44%),
+    radial-gradient(92% 150% at 15% -44%, rgba(235, 240, 241, 0.11), transparent 47%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.022) 47%, rgba(0, 0, 0, 0.12) 100%),
+    rgba(13, 15, 16, 0.5);
+  -webkit-backdrop-filter: blur(38px) saturate(112%) brightness(1.04);
+  backdrop-filter: blur(38px) saturate(112%) brightness(1.04);
+  isolation: isolate;
+  overflow: visible;
+  pointer-events: auto;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.026),
+    inset 0 -19px 34px rgba(0, 0, 0, 0.25),
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1.05rem 2.6rem rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.018);
+  transform: translateX(-50%) perspective(900px) rotateX(var(--nav-tilt-x)) rotateY(var(--nav-tilt-y)) translateY(var(--nav-lift));
+  transform-origin: 50% 45%;
+  transition:
+    transform 0.28s var(--ease),
+    opacity 0.2s ease,
+    border-color 0.18s ease,
+    background 0.24s ease,
+    box-shadow 0.24s ease;
+  will-change: transform, opacity;
+}
+
+.loom-global-nav::before {
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(80% 120% at 16% -22%, rgba(255, 255, 255, 0.28), transparent 44%),
+    radial-gradient(70% 112% at 82% 118%, rgba(210, 216, 219, 0.08), transparent 58%),
+    linear-gradient(90deg, rgba(232, 236, 238, 0.052), transparent 33%, rgba(224, 229, 232, 0.04) 54%, transparent 72%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.045),
+    inset 0 1.1rem 1.8rem rgba(255, 255, 255, 0.035),
+    inset 0 -1.2rem 1.9rem rgba(0, 0, 0, 0.24);
+  content: '';
+  pointer-events: none;
+}
+
+.loom-global-nav::after {
+  position: absolute;
+  inset: 0.18rem 1.2rem auto 1.2rem;
+  z-index: 0;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  content: '';
+  opacity: 0.32;
+  pointer-events: none;
+  transform: translateX(var(--nav-glint-shift));
+  animation: loomNavSpecularBreath 7.5s ease-in-out infinite;
+  transition: opacity 0.22s ease;
+}
+
+.loom-global-nav > * {
+  position: relative;
+  z-index: 1;
+}
+
+.loom-global-nav:hover,
+.loom-global-nav:focus-within,
+.loom-global-nav:has(.loom-global-nav__menu[open]) {
+  --nav-lift: -1px;
+  border-color: rgba(245, 248, 249, 0.19);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.29),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.038),
+    inset 0 -21px 36px rgba(0, 0, 0, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.075),
+    0 1.3rem 3.1rem rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.024);
+}
+
+.loom-global-nav:hover::after,
+.loom-global-nav:focus-within::after,
+.loom-global-nav:has(.loom-global-nav__menu[open])::after {
+  animation: none;
+  opacity: 0.56;
+}
+
+.loom-global-nav--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 1.6rem));
+}
+
+.loom-global-nav__search,
+.loom-global-nav__search-button,
+.loom-global-nav__brand,
+.loom-global-nav__menu summary,
+.loom-global-nav__menu-panel a {
+  color: rgba(240, 243, 244, 0.9);
+  text-decoration: none;
+}
+
+.loom-global-nav__search {
+  display: flex;
+  justify-self: start;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  color: rgba(232, 236, 238, 0.82);
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    width 0.22s var(--ease),
+    grid-template-columns 0.22s var(--ease);
+}
+
+.loom-global-nav__search[data-open='true'],
+.loom-global-nav--searching .loom-global-nav__search,
+.loom-global-nav__search:focus-within {
+  width: 12.25rem;
+  max-width: calc(100vw - 2.4rem);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(232, 236, 238, 0.08);
+}
+
+.loom-global-nav__search-button {
+  display: grid;
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s var(--ease);
+}
+
+.loom-global-nav__search-button svg {
+  width: 1.44rem;
+  height: 1.44rem;
+  stroke-width: 1.72;
+}
+
+.loom-global-nav__search-input {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  caret-color: var(--signature-cyan-hi, #8AF7E6);
+  color: rgba(250, 253, 253, 0.98);
+  font: inherit;
+  font-size: 0.94rem;
+  font-weight: 640;
+  letter-spacing: 0;
+  line-height: 1;
+  opacity: 0;
+  outline: none;
+  padding: 0;
+  pointer-events: none;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.12);
+  transition:
+    color 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.loom-global-nav__search-input:focus,
+.loom-global-nav__search-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.loom-global-nav__search-input::placeholder {
+  color: rgba(232, 236, 238, 0.68);
+}
+
+.loom-global-nav__search[data-open='true'] .loom-global-nav__search-input,
+.loom-global-nav--searching .loom-global-nav__search-input,
+.loom-global-nav__search:focus-within .loom-global-nav__search-input {
+  color: rgba(255, 255, 255, 0.98);
+  opacity: 1;
+  padding-right: 0.9rem;
+  pointer-events: auto;
+  text-shadow: 0 0 14px rgba(138, 247, 230, 0.14);
+  transition:
+    color 0.16s ease,
+    text-shadow 0.16s ease;
+}
+
+.loom-global-nav__brand {
+  display: inline-flex;
+  justify-self: center;
+  align-items: center;
+  gap: 0.56rem;
+  font-family: var(--display);
+  font-size: clamp(1.52rem, 1.72vw, 1.76rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 1.35rem rgba(255, 255, 255, 0.08);
+  transition:
+    color 0.18s ease,
+    transform 0.22s var(--ease);
+}
+
+.loom-global-nav .loom-global-nav__brand,
+.loom-global-nav .loom-global-nav__brand:visited {
+  color: rgba(240, 243, 244, 0.9);
+  text-decoration: none;
+}
+
+.loom-global-nav__icon-orb {
+  position: relative;
+  display: inline-grid;
+  width: clamp(2.16rem, 2.5vw, 2.42rem);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 28% 19%, rgba(246, 249, 250, 0.26), transparent 26%),
+    radial-gradient(circle at 48% 46%, rgba(140, 150, 157, 0.14), transparent 54%),
+    radial-gradient(circle at 70% 76%, rgba(0, 0, 0, 0.68), transparent 62%);
+  box-shadow:
+    inset 0.16rem 0.18rem 0.42rem rgba(255, 255, 255, 0.12),
+    inset -0.46rem -0.55rem 0.9rem rgba(0, 0, 0, 0.64),
+    0 0.72rem 1.2rem rgba(0, 0, 0, 0.52);
+  filter: drop-shadow(0 0 0.55rem rgba(75, 197, 222, 0.06));
+  isolation: isolate;
+  transform: translateZ(18px);
+  transition:
+    box-shadow 0.24s ease,
+    filter 0.24s ease,
+    transform 0.24s var(--ease);
+  will-change: transform;
+}
+
+.loom-global-nav__icon-orb::before,
+.loom-global-nav__icon-orb::after {
+  position: absolute;
+  inset: -6%;
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+}
+
+.loom-global-nav__icon-orb::before {
+  z-index: 1;
+  background:
+    radial-gradient(circle at 26% 16%, rgba(255, 255, 255, 0.34), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 38%, rgba(0, 0, 0, 0.42) 84%);
+  mix-blend-mode: screen;
+  opacity: 0.44;
+}
+
+.loom-global-nav__icon-orb::after {
+  z-index: -1;
+  background:
+    radial-gradient(circle at 34% 18%, rgba(238, 241, 242, 0.26), transparent 32%),
+    radial-gradient(circle at 66% 72%, rgba(75, 197, 222, 0.2), transparent 44%);
+  filter: blur(8px);
+  opacity: 0.66;
+  animation: loomLunarAuraBreath 6.4s ease-in-out infinite;
+}
+
+.loom-global-nav__icon {
+  width: clamp(2.02rem, 2.32vw, 2.24rem);
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  overflow: hidden;
+  transform: translateZ(0);
+  filter: contrast(1.08) saturate(0.9) brightness(0.94);
+  transition:
+    filter 0.24s ease,
+    transform 0.24s var(--ease);
+}
+
+.loom-global-nav__menu {
+  position: relative;
+  z-index: 2;
+  justify-self: end;
+}
+
+.loom-global-nav__menu[open] {
+  z-index: 1002;
+}
+
+.loom-global-nav__menu summary {
+  display: inline-flex;
+  position: relative;
+  min-height: 2.28rem;
+  align-items: center;
+  padding: 0 0.58rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 670;
+  letter-spacing: 0;
+  list-style: none;
+  overflow: hidden;
+  user-select: none;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s var(--ease);
+}
+
+.loom-global-nav__menu summary::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(86% 120% at 26% 0%, rgba(255, 255, 255, 0.13), transparent 46%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 58%);
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.loom-global-nav__menu summary span {
+  position: relative;
+  z-index: 1;
+}
+
+.loom-global-nav__menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.loom-global-nav__menu-panel {
+  position: fixed;
+  top: calc(var(--loom-nav-base-top) + 4.02rem);
+  left: 50%;
+  z-index: 1003;
+  display: grid;
+  width: min(18.65rem, calc(100vw - 2rem));
+  grid-template-columns: 1fr;
+  gap: 0.34rem;
+  padding: 0.42rem;
+  border: 1px solid rgba(232, 236, 238, 0.16);
+  border-radius: 1.12rem;
+  background:
+    radial-gradient(88% 130% at 18% -18%, rgba(240, 244, 245, 0.15), transparent 46%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(12, 14, 15, 0.82) 42%, rgba(5, 6, 7, 0.92)),
+    rgba(7, 8, 9, 0.86);
+  -webkit-backdrop-filter: blur(44px) saturate(116%) brightness(0.82);
+  backdrop-filter: blur(44px) saturate(116%) brightness(0.82);
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    0 1rem 2.2rem rgba(0, 0, 0, 0.5);
+  animation: loomMenuMaterialize 0.18s var(--ease) both;
+  transform-origin: 50% -0.8rem;
+}
+
+.loom-global-nav__menu-panel::before {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: min(9rem, 54%);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.56), transparent);
+  content: '';
+  opacity: 0.58;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.loom-global-nav__menu:not([open]) .loom-global-nav__menu-panel {
+  display: none;
+}
+
+.loom-global-nav__menu-group {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.loom-global-nav__menu-group + .loom-global-nav__menu-group {
+  padding-top: 0.34rem;
+  border-top: 1px solid rgba(232, 236, 238, 0.07);
+}
+
+.loom-global-nav__menu-group-label {
+  padding: 0 0.5rem;
+  color: rgba(232, 236, 238, 0.42);
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.loom-global-nav__menu-group-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.loom-global-nav__menu-panel a {
+  display: flex;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  min-height: 1.78rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  color: rgba(232, 236, 238, 0.72);
+  font-size: 0.69rem;
+  font-weight: 680;
+  letter-spacing: 0;
+  line-height: 1;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s var(--ease);
+}
+
+.loom-global-nav__menu-panel a::before {
+  position: absolute;
+  left: 50%;
+  bottom: 0.27rem;
+  width: 0.86rem;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(138, 247, 230, 0.78), transparent);
+  box-shadow: 0 0 0 rgba(75, 197, 222, 0);
+  content: '';
+  opacity: 0;
+  transform: translateX(-50%) scaleX(0.55);
+  transition:
+    opacity 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s var(--ease);
+}
+
+.loom-global-nav__menu-panel a + a {
+  box-shadow: none;
+}
+
+.loom-global-nav__search:hover,
+.loom-global-nav__menu summary:hover,
+.loom-global-nav__menu[open] summary,
+.loom-global-nav__menu-panel a:hover,
+.loom-global-nav__menu-panel a[aria-current='page'] {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.014)),
+    rgba(232, 236, 238, 0.046);
+  color: rgba(250, 252, 252, 0.96);
+}
+
+.loom-global-nav__menu summary:hover,
+.loom-global-nav__menu[open] summary {
+  border-color: rgba(232, 236, 238, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.16);
+}
+
+.loom-global-nav__menu summary:hover::before,
+.loom-global-nav__menu[open] summary::before {
+  opacity: 1;
+}
+
+.loom-global-nav__menu-panel a:hover,
+.loom-global-nav__menu-panel a[aria-current='page'] {
+  transform: translateY(-0.5px);
+}
+
+.loom-global-nav__menu-panel a:hover::before,
+.loom-global-nav__menu-panel a[aria-current='page']::before {
+  opacity: 1;
+  box-shadow: 0 0 0.65rem rgba(75, 197, 222, 0.24);
+  transform: translateX(-50%) scaleX(1);
+}
+
+.loom-global-nav__search-button:hover,
+.loom-global-nav__menu summary:hover {
+  transform: translateY(-0.5px);
+}
+
+.loom-global-nav__search-button:active,
+.loom-global-nav__menu summary:active {
+  transform: translateY(0.5px) scale(0.985);
+}
+
+.loom-global-nav__brand:hover {
+  transform: translateY(-0.5px);
+}
+
+.loom-global-nav__brand:hover .loom-global-nav__icon-orb {
+  transform: translateY(-1px) translateZ(24px) scale(1.035);
+  filter:
+    drop-shadow(0 0.9rem 1.45rem rgba(0, 0, 0, 0.56))
+    drop-shadow(0 0 0.84rem rgba(75, 197, 222, 0.18));
+}
+
+.loom-global-nav__brand:hover .loom-global-nav__icon {
+  filter: contrast(1.12) saturate(0.95) brightness(1);
+  transform: translateZ(0) scale(1.018);
+}
+
+.loom-global-nav--searching,
+.loom-global-nav:has(.loom-global-nav__search-input:focus) {
+  grid-template-columns: minmax(0, 1fr);
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.024) 40%, rgba(0, 0, 0, 0.08)),
+    rgba(18, 20, 22, 0.48);
+}
+
+@keyframes loomNavSpecularBreath {
+  0%,
+  100% {
+    opacity: 0.26;
+  }
+
+  45% {
+    opacity: 0.4;
+  }
+
+  62% {
+    opacity: 0.31;
+  }
+}
+
+@keyframes loomLunarAuraBreath {
+  0%,
+  100% {
+    opacity: 0.58;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
+}
+
+@keyframes loomMenuMaterialize {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -0.18rem) scale(0.988);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.loom-global-nav--searching::before,
+.loom-global-nav:has(.loom-global-nav__search-input:focus)::before {
+  opacity: 0.42;
+}
+
+.loom-global-nav--searching .loom-global-nav__search,
+.loom-global-nav--searching .loom-global-nav__search[data-open='true'],
+.loom-global-nav--searching .loom-global-nav__search:focus-within,
+.loom-global-nav:has(.loom-global-nav__search-input:focus) .loom-global-nav__search,
+.loom-global-nav:has(.loom-global-nav__search-input:focus) .loom-global-nav__search[data-open='true'],
+.loom-global-nav:has(.loom-global-nav__search-input:focus) .loom-global-nav__search:focus-within {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: none;
+}
+
+.loom-global-nav--searching .loom-global-nav__search-input,
+.loom-global-nav:has(.loom-global-nav__search-input:focus) .loom-global-nav__search-input {
+  opacity: 1 !important;
+  pointer-events: auto;
+  transition:
+    color 0.16s ease,
+    text-shadow 0.16s ease;
+}
+
+.loom-global-nav--searching .loom-global-nav__brand,
+.loom-global-nav--searching .loom-global-nav__menu,
+.loom-global-nav:has(.loom-global-nav__search-input:focus) .loom-global-nav__brand,
+.loom-global-nav:has(.loom-global-nav__search-input:focus) .loom-global-nav__menu {
+  display: none;
+  width: 0;
+  min-width: 0;
+  height: 0;
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loom-global-nav__search:focus-within,
+.loom-global-nav__search-button:focus-visible,
+.loom-global-nav__brand:focus-visible,
+.loom-global-nav__menu summary:focus-visible,
+.loom-global-nav__menu-panel a:focus-visible {
+  outline: none;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(232, 236, 238, 0.42);
+}
+
+.loom-global-nav--searching .loom-global-nav__search:focus-within,
+.loom-global-nav:has(.loom-global-nav__search-input:focus) .loom-global-nav__search:focus-within {
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loom-global-nav {
+    transform: translateX(-50%);
+    transition: none;
+  }
+
+  .loom-global-nav,
+  .loom-global-nav::after,
+  .loom-global-nav__brand,
+  .loom-global-nav__icon-orb,
+  .loom-global-nav__icon-orb::after,
+  .loom-global-nav__icon,
+  .loom-global-nav__search-button,
+  .loom-global-nav__menu summary,
+  .loom-global-nav__menu-panel {
+    animation: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .loom-global-nav-slot {
+    --loom-nav-clearance: 4.72rem;
+  }
+
+  .loom-global-nav {
+    --loom-nav-base-top: 0.55rem;
+    grid-template-columns: minmax(2.35rem, 1fr) auto minmax(2.35rem, 1fr);
+    width: min(calc(100vw - 2rem), 23.25rem);
+    min-height: 3.62rem;
+    padding: 0.48rem 0.66rem;
+  }
+
+  .loom-global-nav__brand {
+    gap: 0.44rem;
+    font-size: clamp(1.42rem, 6.4vw, 1.58rem);
+  }
+
+  .loom-global-nav__icon-orb {
+    width: 2.02rem;
+  }
+
+  .loom-global-nav__icon {
+    width: 1.9rem;
+  }
+
+  .loom-global-nav__menu summary {
+    min-height: 2.28rem;
+    padding-right: 0.56rem;
+    padding-left: 0.56rem;
+    font-size: 0.88rem;
+  }
+
+  .loom-global-nav__menu-panel {
+    top: calc(var(--loom-nav-base-top) + 4.26rem);
+    width: min(calc(100vw - 2rem), 18.65rem);
+    grid-template-columns: 1fr;
+    gap: 0.16rem;
+    border-radius: 1.08rem;
+    min-width: min(11rem, calc(100vw - 2rem));
+  }
+
+  .loom-global-nav__menu-group-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .loom-global-nav__menu-panel a {
+    min-height: 2.02rem;
+    font-size: 0.78rem;
+  }
+
+  .loom-global-nav__menu-panel a + a {
+    box-shadow: none;
+  }
+
+  .loom-global-nav__search[data-open='true'],
+  .loom-global-nav__search:focus-within {
+    width: min(12.25rem, calc(100vw - 2.4rem));
+  }
+}
+
+/* Selection as a soft ion glow, not rectangle. Works because MBP uses
    subpixel-AA where a gradient selection reads as a "lit" region. */
 ::selection {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
@@ -393,7 +1147,7 @@ body {
   text-shadow: 0 0 0.0625rem color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
-/* Scrollbars — thin, bronze, quiet. macOS webview's default scrollbar
+/* Scrollbars — thin, signature-cyan, quiet. macOS webview's default scrollbar
    is chunky "OS chrome"; on a paper surface that reads as intrusive.
    Firefox/Gecko: use the standards `scrollbar-width` + `scrollbar-color`.
    WebKit: style `::-webkit-scrollbar` directly. Both paths degrade to
@@ -423,7 +1177,7 @@ html {
   background: transparent;
 }
 
-/* Keyboard focus ring — bronze, not browser blue. Offset so it
+/* Keyboard focus ring — signature cyan, not browser blue. Offset so it
    doesn't crowd text; rem-scaled so it grows with zoom. */
 :focus-visible {
   outline: 0.125rem solid var(--accent);
@@ -461,12 +1215,11 @@ html {
   .loom-vignette { display: none; }
 }
 
-/* Dark mode — tint the noise cool (a hair of blue, matching the
-   Evidence-Desk cool-black ambient) and use screen blend so the fibers
-   read as key-light scattering on the desk, not muddy specks. */
+/* Dark mode — tint the noise as silver graphite and use screen blend so
+   the fibers read as key-light scattering on the desk, not muddy specks. */
 @media (prefers-color-scheme: dark) {
   .loom-grain {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.80  0 0 0 0 0.85  0 0 0 0 0.92  0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86  0 0 0 0 0.88  0 0 0 0 0.89  0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     mix-blend-mode: screen;
     opacity: 0.7;
   }
@@ -596,9 +1349,8 @@ html {
 }
 @media (prefers-color-scheme: dark) {
   .loom-ribbon-silk {
-    /* `thread-hi` (#C4A468) reads better on night paper than base
-       `thread` (#9E7C3E). The accent var already flips — this just
-       nudges the opacity up so it doesn't vanish. */
+    /* The signature accent already flips to a higher-luminance cyan on
+       night paper; this nudges the opacity up so it doesn't vanish. */
     opacity: 0.96;
   }
 }
@@ -737,29 +1489,46 @@ html {
   justify-content: center;
 }
 
-/* New Loom home capability shortcuts — the two primary workspaces
-   (Sources, Draft) stay reachable from the profile cover without
-   competing with the dossier nav. */
+/* Home capability bridge — real Sources/Draft links for the native WebView
+   bridge, presented as quiet footer actions instead of a second nav bar. */
 .new-loom-home-capabilities {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.65rem;
   justify-content: center;
-  padding: 0.85rem 1rem 1.4rem;
+  padding: 0.95rem 1rem 1.55rem;
+  background: var(--ink-0);
 }
 
 .new-loom-home-capabilities__link {
-  font-family: var(--serif);
-  font-size: 0.86rem;
+  min-width: 6.4rem;
+  border: 1px solid rgba(232, 236, 238, 0.14);
+  border-radius: 999px;
+  padding: 0.62rem 0.9rem;
+  background:
+    linear-gradient(140deg, rgba(255,255,255,0.07), rgba(255,255,255,0.018)),
+    rgba(255,255,255,0.025);
+  color: rgba(232, 236, 238, 0.76);
+  font-family: var(--mono);
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-align: center;
   text-decoration: none;
-  border-bottom: 1px solid transparent;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.09);
+  transition:
+    border-color 0.18s var(--ease),
+    color 0.18s var(--ease),
+    background 0.18s var(--ease);
 }
 
-.new-loom-home-capabilities__link:hover {
-  color: var(--fg);
-  border-bottom-color: currentColor;
+.new-loom-home-capabilities__link:hover,
+.new-loom-home-capabilities__link:focus-visible {
+  border-color: rgba(75, 197, 222, 0.42);
+  color: var(--cyan);
+  background:
+    linear-gradient(140deg, rgba(255,255,255,0.09), rgba(75,197,222,0.045)),
+    rgba(255,255,255,0.03);
 }
 
 @media (max-width: 640px) {
@@ -911,8 +1680,8 @@ html {
   --vd-border-strong: #ccd3cc;
   --vd-surface: #ffffff;
   --vd-surface-soft: #f7f9f6;
-  --vd-accent: #225c48;
-  --vd-accent-strong: #174534;
+  --vd-accent: var(--gold);
+  --vd-accent-strong: var(--gold-hi);
   --vd-shadow: 0 18px 48px rgba(18, 22, 21, 0.08);
   min-height: 100vh;
   overflow-x: clip;
@@ -1062,7 +1831,7 @@ html {
 .vd-search:focus-within {
   border-color: var(--vd-accent);
   background: var(--vd-surface);
-  box-shadow: 0 0 0 3px rgba(34, 92, 72, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--vd-accent) 22%, transparent);
 }
 
 .vd-avatar,
@@ -1351,8 +2120,8 @@ html {
 
 .vd-document-preview--ppt {
   background:
-    linear-gradient(135deg, rgba(10, 74, 55, 0.92), rgba(7, 52, 42, 0.92)),
-    #0c4636;
+    radial-gradient(circle at 78% 12%, rgba(75, 197, 222, 0.16), transparent 34%),
+    linear-gradient(135deg, var(--ink-4), var(--ink-2));
   color: #ffffff;
 }
 
@@ -1527,8 +2296,8 @@ html {
      restores the paper look below. */
   border: 1px solid var(--line, #232A33);
   border-radius: 7px;
-  background: var(--ink-3, #161B22);
-  color: var(--text-1, #E6E9EE);
+  background: var(--ink-3, #181B1E);
+  color: var(--text-1, #E7E9EA);
   font-size: 0.78rem;
   line-height: 1.2;
   box-shadow: var(--keylight, inset 0 1px 0 rgba(255, 255, 255, 0.05));
@@ -1722,7 +2491,7 @@ html {
 
 .vd-inspector-card__header span {
   padding: 0.22rem 0.42rem;
-  border: 1px solid rgba(34, 92, 72, 0.24);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 30%, transparent);
   border-radius: 999px;
   color: var(--vd-accent);
   font-size: 0.62rem;
@@ -1841,7 +2610,9 @@ html {
 }
 
 .vd-citation-card__thumb--ppt {
-  background: #0c4636;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(75, 197, 222, 0.16), transparent 34%),
+    linear-gradient(135deg, var(--ink-4), var(--ink-2));
   color: #ffffff;
 }
 
@@ -2044,14 +2815,14 @@ html {
   --vd-page: #ffffff;
   --vd-paper: #fbfcfa;
   --vd-paper-strong: #f5f7f2;
-  --vd-accent: #15513f;
-  --vd-accent-strong: #0e3c2e;
-  --vd-accent-soft: rgba(21, 81, 63, 0.1);
+  --vd-accent: var(--gold);
+  --vd-accent-strong: var(--gold-hi);
+  --vd-accent-soft: color-mix(in srgb, var(--vd-accent) 12%, transparent);
   --vd-shadow: 0 18px 42px rgba(22, 28, 24, 0.08);
   min-height: 100vh;
   overflow-x: clip;
   background:
-    linear-gradient(90deg, rgba(21, 81, 63, 0.025) 0, transparent 22rem),
+    linear-gradient(90deg, color-mix(in srgb, var(--vd-accent) 4%, transparent) 0, transparent 22rem),
     linear-gradient(180deg, #ffffff 0%, #fbfcfa 42%, #f8faf6 100%);
   color: var(--vd-ink);
   font-family: var(--sans);
@@ -2167,9 +2938,9 @@ html {
 }
 
 .vd-search:focus-within {
-  border-color: rgba(21, 81, 63, 0.52);
+  border-color: color-mix(in srgb, var(--vd-accent) 52%, transparent);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(21, 81, 63, 0.12);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--vd-accent) 18%, transparent);
 }
 
 .vd-avatar,
@@ -2395,10 +3166,12 @@ html {
 }
 
 .vd-action-button--primary {
-  border-color: rgba(21, 81, 63, 0.22);
-  background: linear-gradient(180deg, #15513f, #0f3f31);
+  border-color: color-mix(in srgb, var(--vd-accent) 28%, transparent);
+  background:
+    radial-gradient(circle at 78% 10%, rgba(75, 197, 222, 0.18), transparent 34%),
+    linear-gradient(180deg, var(--ink-4), var(--ink-2));
   color: #ffffff;
-  box-shadow: 0 10px 22px rgba(21, 81, 63, 0.18);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
 }
 
 .vd-action-button:hover {
@@ -2407,7 +3180,7 @@ html {
 }
 
 .vd-action-button--primary:hover {
-  border-color: rgba(21, 81, 63, 0.45);
+  border-color: color-mix(in srgb, var(--vd-accent) 48%, transparent);
 }
 
 .vd-status-dot {
@@ -2417,7 +3190,7 @@ html {
   margin-right: 0.46rem;
   border-radius: 999px;
   background: var(--vd-accent);
-  box-shadow: 0 0 0 3px rgba(21, 81, 63, 0.1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--vd-accent) 16%, transparent);
   vertical-align: 0.05em;
 }
 
@@ -2694,7 +3467,7 @@ html {
   border-radius: 5px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 249, 245, 0.84)),
-    repeating-linear-gradient(180deg, transparent 0 1.6rem, rgba(21, 81, 63, 0.06) 1.62rem 1.66rem);
+    repeating-linear-gradient(180deg, transparent 0 1.6rem, color-mix(in srgb, var(--vd-accent) 8%, transparent) 1.62rem 1.66rem);
   color: var(--vd-ink);
   box-shadow: 0 1px 0 rgba(22, 28, 24, 0.04);
 }
@@ -2766,10 +3539,10 @@ html {
 }
 
 .vd-document-preview--econ-slides {
-  border-color: rgba(5, 59, 43, 0.42);
+  border-color: color-mix(in srgb, var(--vd-accent) 42%, var(--line));
   background:
-    radial-gradient(circle at 78% 12%, rgba(220, 234, 217, 0.18), transparent 32%),
-    linear-gradient(145deg, #0d3f31, #073125);
+    radial-gradient(circle at 78% 12%, rgba(75, 197, 222, 0.18), transparent 32%),
+    linear-gradient(145deg, var(--ink-4), var(--ink-2));
   color: #ffffff;
 }
 
@@ -2787,7 +3560,7 @@ html {
 .vd-document-preview--econ-notes {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(249, 250, 247, 0.88)),
-    repeating-linear-gradient(170deg, transparent 0 1.8rem, rgba(21, 81, 63, 0.08) 1.82rem 1.88rem);
+    repeating-linear-gradient(170deg, transparent 0 1.8rem, color-mix(in srgb, var(--vd-accent) 10%, transparent) 1.82rem 1.88rem);
 }
 
 .vd-document-card__footer {
@@ -3098,7 +3871,7 @@ html {
 
 .vd-inspector-card__header span {
   padding: 0.22rem 0.46rem;
-  border: 1px solid rgba(21, 81, 63, 0.24);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 30%, transparent);
   border-radius: 6px;
   background: var(--vd-accent-soft);
   color: var(--vd-accent);
@@ -3199,7 +3972,9 @@ html {
 }
 
 .vd-citation-card__thumb--econ-slides {
-  background: #0d3f31;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(75, 197, 222, 0.16), transparent 34%),
+    linear-gradient(145deg, var(--ink-4), var(--ink-2));
   color: #ffffff;
 }
 
@@ -3230,7 +4005,7 @@ html {
   display: grid;
   gap: 0.32rem;
   padding: 0.78rem 0.86rem;
-  border: 1px solid rgba(21, 81, 63, 0.18);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 24%, transparent);
   border-radius: 8px;
   background: var(--vd-accent-soft);
 }
@@ -3526,9 +4301,11 @@ html {
   min-height: 100vh;
 }
 
-.layout main {
-  flex: 1;
+.layout > #main {
+  flex: 1 1 auto;
   min-width: 0;
+  width: 100%;
+  align-self: stretch;
   /* Page-enter motion — gentle opacity-only fade on navigation.
      Previously included a 2px translateY settle, but on pages with
      saturated hero color (Atlas book spines, Patterns tiles) the
@@ -3545,7 +4322,7 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .layout main {
+  .layout > #main {
     animation: none;
   }
 }
@@ -3753,11 +4530,11 @@ article.prose-notion {
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-/* Reading/writing selection + caret — warm gold glow on the desk,
+/* Reading/writing selection + caret — cool signature-cyan glow on the desk,
    per the reading-comfort law. */
 .prose-notion ::selection,
 .prose-notion::selection {
-  background: rgba(200, 162, 74, 0.28);
+  background: rgba(75, 197, 222, 0.28);
   color: var(--text-1);
 }
 .prose-notion {
@@ -4455,35 +5232,35 @@ kbd:not(pre kbd):not(code kbd) {
    explicit-dark carries the same warm-neutral palette; iOS tint values
    deleted 2026-04-22. */
 .dark {
-  /* Evidence Desk cool-black (de-warmed from the legacy Vellum dark palette
-     so every surface still on --bg/--fg/--mat-* reads cool, not warm). */
-  --bg: #07090C;
-  --bg-elevated: #161B22;
-  --bg-translucent: rgba(7, 9, 12, 0.88);
+  /* Evidence Desk graphite-black (de-warmed from the legacy Vellum dark
+     palette without introducing a colored blue cast). */
+  --bg: #070809;
+  --bg-elevated: #181B1E;
+  --bg-translucent: rgba(7, 8, 9, 0.88);
 
-  --fg: #E6E9EE;
-  --fg-secondary: #9BA3AE;
-  --muted: #5E6671;
+  --fg: #E7E9EA;
+  --fg-secondary: #A4A9AD;
+  --muted: #666D72;
 
-  --accent: #C8A24A;            /* refined gold (explicit dark) */
-  --accent-soft: rgba(200, 162, 74, 0.18);
-  --accent-text: #C8A24A;
-  --accent-info: #4BC5DE;       /* comet-cyan — informational/data accent only */
+  --accent: #4BC5DE;            /* comet cyan (explicit dark) */
+  --accent-soft: rgba(75, 197, 222, 0.2);
+  --accent-text: #8AF7E6;
+  --accent-info: #8AF7E6;       /* pale ion highlight */
 
-  --mat-border: rgba(230, 233, 238, 0.08);
-  --mat-thin-bg: rgba(14, 18, 24, 0.45);
-  --mat-reg-bg:  rgba(14, 18, 24, 0.75);
-  --mat-thick-bg: rgba(14, 18, 24, 0.94);
-  --quiet-horizon-top: rgba(230, 233, 238, 0.04);
-  --quiet-horizon-band: rgba(230, 233, 238, 0.03);
-  --quiet-horizon-glow: rgba(230, 233, 238, 0.08);
+  --mat-border: rgba(231, 233, 234, 0.08);
+  --mat-thin-bg: rgba(18, 20, 22, 0.45);
+  --mat-reg-bg:  rgba(18, 20, 22, 0.75);
+  --mat-thick-bg: rgba(18, 20, 22, 0.94);
+  --quiet-horizon-top: rgba(231, 233, 234, 0.04);
+  --quiet-horizon-band: rgba(231, 233, 234, 0.03);
+  --quiet-horizon-glow: rgba(231, 233, 234, 0.08);
   --quiet-horizon-floor: rgba(0, 0, 0, 0.2);
 
   --shadow-3: 0 1.5rem 5rem rgba(0, 0, 0, 0.72);
 
   /* Code chips: cool dark-ink recess. The :root --code-bg is a light
      grey wash tuned for cream paper; on the ink ramp it reads warm. */
-  --code-bg: rgba(14, 18, 24, 0.6);
+  --code-bg: rgba(18, 20, 22, 0.6);
 }
 
 /* Legacy verified-dossier (vd-*) chrome — explicit-dark remap onto the
@@ -4509,7 +5286,7 @@ kbd:not(pre kbd):not(code kbd) {
   --vd-paper-strong: var(--ink-4);
   --vd-accent: var(--gold);
   --vd-accent-strong: var(--gold-hi);
-  --vd-accent-soft: rgba(200, 162, 74, 0.12);
+  --vd-accent-soft: rgba(75, 197, 222, 0.12);
   --vd-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
 }
 
@@ -4518,17 +5295,17 @@ kbd:not(pre kbd):not(code kbd) {
    specificity so the later-loaded module re-skins (knowledge .page,
    about .page) still win their ties; .lcv home keeps its own desk. */
 .dark .vd-home:where(:not(.lcv)) {
-  background:
-    radial-gradient(120% 78% at 50% -8%, #10141A 0%, var(--ink-0) 56%);
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
   background-color: var(--ink-0);
   color: var(--text-1);
 }
 
 .dark .vd-nav {
   border-bottom: 1px solid var(--line);
-  background: rgba(13, 17, 22, 0.62);
-  -webkit-backdrop-filter: blur(28px) saturate(110%);
-  backdrop-filter: blur(28px) saturate(110%);
+  background: rgba(18, 20, 22, 0.62);
+  -webkit-backdrop-filter: blur(30px) saturate(112%) brightness(1.04);
+  backdrop-filter: blur(30px) saturate(112%) brightness(1.04);
 }
 
 .dark .vd-nav__links a {
@@ -4542,11 +5319,11 @@ kbd:not(pre kbd):not(code kbd) {
 }
 
 .dark .vd-draft-record-link {
-  border-color: rgba(200, 162, 74, 0.18);
+  border-color: rgba(75, 197, 222, 0.18);
 }
 
 .dark .vd-draft-record-link:hover {
-  border-color: rgba(200, 162, 74, 0.38);
+  border-color: rgba(75, 197, 222, 0.38);
 }
 
 .dark [data-theme='light'] {
@@ -5372,7 +6149,7 @@ select:focus-visible,
 .note-rendered blockquote {
   border-left: 3px solid color-mix(in srgb, var(--gold) 70%, transparent);
   padding: 0.4rem 0.8rem;
-  background: rgba(200, 162, 74, 0.08);
+  background: rgba(75, 197, 222, 0.08);
   color: var(--text-2);
   margin: 0.5rem 0;
   border-radius: 0 var(--r-1) var(--r-1) 0;
@@ -5381,7 +6158,7 @@ select:focus-visible,
 .note-rendered a.wikilink {
   color: var(--gold);
   text-decoration: none;
-  background: rgba(200, 162, 74, 0.12);
+  background: rgba(75, 197, 222, 0.12);
   padding: 0 6px;
   border-radius: 4px;
   font-weight: 500;
@@ -5389,7 +6166,7 @@ select:focus-visible,
 }
 
 .note-rendered a.wikilink:hover {
-  background: rgba(200, 162, 74, 0.22);
+  background: rgba(75, 197, 222, 0.22);
   color: var(--gold-hi);
 }
 
@@ -6966,7 +7743,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    Vellum empty states — honest first-use blocks for surfaces
    that used to show seed data. See feedback_learn_not_organize
    and the per-surface empty-copy spec. Shared visual grammar:
-   centered italic serif paragraph, bronze ornament row, one
+   centered italic serif paragraph, signature-cyan ornament row, one
    literal action link. No fake content.
    ============================================================ */
 .loom-empty-state {
@@ -6980,8 +7757,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .loom-empty-state-ornament {
   font-size: 1rem;
   letter-spacing: 0.8em;
-  color: var(--gold);
+  color: var(--signature-cyan);
   margin: 1.75rem 0 1.25rem;
+  text-shadow: 0 0 14px color-mix(in srgb, var(--signature-cyan) 46%, transparent);
   /* `letter-spacing: 0.8em` on a 3-char ornament pushes the last char's
      trailing space to the right — pad-right with an equivalent negative
      indent so the glyphs still read as centered. */
@@ -6997,18 +7775,34 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   max-width: 28rem;
 }
 .loom-empty-state-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
   font-family: var(--serif);
   font-style: italic;
   font-size: 1rem;
-  color: var(--gold);
+  color: var(--signature-cyan);
   text-decoration: none;
-  border-bottom: 0.5px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  border-bottom: 0.5px solid color-mix(in srgb, var(--signature-cyan) 40%, transparent);
   padding: 0.1rem 0;
   transition: border-color 160ms ease-out, color 160ms ease-out;
 }
+
+.loom-empty-state-action-icon {
+  flex: 0 0 auto;
+  width: 0.88rem;
+  height: 0.88rem;
+  transition: transform 160ms ease-out;
+}
+
 .loom-empty-state-action:hover {
-  color: var(--gold-hi);
-  border-bottom-color: var(--gold-hi);
+  color: var(--signature-cyan-hi);
+  border-bottom-color: var(--signature-cyan-hi);
+}
+
+.loom-empty-state-action:hover .loom-empty-state-action-icon {
+  transform: translateX(1px);
 }
 
 /* Small "Example" eyebrow — sits above static mockup surfaces
@@ -7154,9 +7948,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --draft-paper: #fbfcfa;
   --draft-panel: #f5f7f3;
   --draft-panel-strong: #edf2eb;
-  --draft-accent: #215b47;
-  --draft-accent-strong: #123f30;
-  --draft-accent-soft: rgba(33, 91, 71, 0.09);
+  --draft-accent: var(--gold);
+  --draft-accent-strong: var(--gold-hi);
+  --draft-accent-soft: color-mix(in srgb, var(--gold) 12%, transparent);
   display: grid;
   grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr) minmax(21rem, 27rem);
   gap: 1px;
@@ -7194,15 +7988,6 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   background: linear-gradient(180deg, #f9faf7 0%, #eef2eb 100%);
 }
 
-.new-loom-draft__wordmark {
-  justify-self: start;
-  color: var(--draft-ink);
-  font-family: var(--display);
-  font-size: 1.7rem;
-  font-weight: 640;
-  line-height: 1;
-}
-
 .new-loom-draft__profile-card {
   display: grid;
   gap: 0.45rem;
@@ -7213,10 +7998,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .new-loom-draft__profile-card img {
   width: 4.6rem;
   height: 4.6rem;
-  border: 1px solid rgba(18, 63, 48, 0.18);
+  border: 1px solid color-mix(in srgb, var(--draft-accent) 22%, transparent);
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 14px 34px rgba(18, 63, 48, 0.13);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--draft-accent) 18%, transparent);
 }
 
 .new-loom-draft__profile-card h2,
@@ -7478,7 +8263,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .new-loom-draft__type-button[aria-pressed="true"] {
   border-color: var(--draft-accent);
   background: var(--draft-accent-soft);
-  box-shadow: inset 0 0 0 1px rgba(33, 91, 71, 0.1);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--draft-accent) 20%, transparent);
 }
 
 .new-loom-draft__type-button[aria-pressed="true"] span {
@@ -7545,7 +8330,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .new-loom-draft__body:focus {
-  box-shadow: inset 0 0 0 3px rgba(33, 91, 71, 0.11);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--draft-accent) 18%, transparent);
 }
 
 .new-loom-draft__reference-toolbar,
@@ -7671,7 +8456,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .new-loom-draft__reference-search:focus {
   border-color: var(--draft-accent);
   background: var(--draft-surface);
-  box-shadow: 0 0 0 3px rgba(33, 91, 71, 0.13);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--draft-accent) 20%, transparent);
 }
 
 .new-loom-draft__reference-results {
@@ -7853,7 +8638,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   display: grid;
   gap: 0.58rem;
   padding: 0.72rem;
-  border: 1px solid rgba(33, 91, 71, 0.18);
+  border: 1px solid color-mix(in srgb, var(--draft-accent) 24%, transparent);
   border-radius: 8px;
   background: var(--draft-accent-soft);
 }
@@ -7878,7 +8663,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .new-loom-draft__answer-flow li[data-state="complete"] {
-  border-color: rgba(33, 91, 71, 0.34);
+  border-color: color-mix(in srgb, var(--draft-accent) 40%, transparent);
   background: #ffffff;
 }
 
@@ -7930,7 +8715,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .new-loom-draft__answer-preview-status {
   padding: 0.68rem 0.75rem;
-  border: 1px solid rgba(33, 91, 71, 0.22);
+  border: 1px solid color-mix(in srgb, var(--draft-accent) 30%, transparent);
   border-radius: 8px;
   background: var(--draft-accent-soft);
   color: var(--draft-accent-strong);
@@ -8202,7 +8987,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .new-loom-draft__block-operation textarea:focus {
   border-color: var(--draft-accent);
-  box-shadow: 0 0 0 3px rgba(33, 91, 71, 0.13);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--draft-accent) 20%, transparent);
 }
 
 .new-loom-draft__block-operation [role="alert"] {
@@ -8492,13 +9277,13 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border-color: var(--draft-accent);
 }
 
-.draft-board-card--thesis { border-top-color: #9e7c3e; }
-.draft-board-card--instance { border-top-color: #5c6e4e; }
-.draft-board-card--counter { border-top-color: #8f4646; }
-.draft-board-card--question { border-top-color: #3a477a; }
-.draft-board-card--fog { border-top-color: #8a8373; }
-.draft-board-card--weft { border-top-color: #9e7c3e; }
-.draft-board-card--sketch { border-top-color: #4a4339; }
+.draft-board-card--thesis { border-top-color: #4bc5de; }
+.draft-board-card--instance { border-top-color: #8fa3a6; }
+.draft-board-card--counter { border-top-color: #a35f73; }
+.draft-board-card--question { border-top-color: #6ce7f2; }
+.draft-board-card--fog { border-top-color: #a4a9ad; }
+.draft-board-card--weft { border-top-color: #8af7e6; }
+.draft-board-card--sketch { border-top-color: #666d72; }
 
 .draft-board-card-title {
   color: var(--draft-ink);
@@ -8520,7 +9305,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .draft-board-card-qmark {
-  color: #3a477a;
+  color: #6ce7f2;
   font-weight: 720;
 }
 
@@ -9065,7 +9850,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-source-graph__node--source {
-  border-color: rgba(21, 81, 63, 0.34);
+  border-color: color-mix(in srgb, var(--vd-accent) 40%, transparent);
   background: linear-gradient(180deg, #ffffff, #f5f8f2);
 }
 
@@ -9225,7 +10010,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   display: grid;
   gap: 0.32rem;
   padding: 0.78rem 0.86rem;
-  border: 1px solid rgba(21, 81, 63, 0.18);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 24%, transparent);
   border-radius: 8px;
   background: var(--vd-accent-soft);
 }
@@ -9380,7 +10165,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   align-self: center;
   height: 5.4rem;
   min-width: 0;
-  border: 1px solid rgba(31, 58, 47, 0.14);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 18%, transparent);
   border-radius: 7px;
   background: #f8faf7;
 }
@@ -9469,7 +10254,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.18rem;
   min-width: 0;
   padding: 0.62rem 0.7rem;
-  border: 1px solid rgba(21, 81, 63, 0.18);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 24%, transparent);
   border-radius: 7px;
   background: var(--vd-accent-soft);
   color: inherit;
@@ -9477,7 +10262,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-draft-record-link:hover {
-  border-color: rgba(21, 81, 63, 0.38);
+  border-color: color-mix(in srgb, var(--vd-accent) 44%, transparent);
 }
 
 .vd-draft-record-link span {
@@ -9557,7 +10342,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.18rem;
   min-width: 0;
   padding: 0.58rem 0.62rem;
-  border: 1px solid rgba(21, 81, 63, 0.16);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 22%, transparent);
   border-radius: 7px;
   background: var(--vd-accent-soft);
 }
@@ -9749,7 +10534,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.76rem;
   min-width: 0;
   padding: 0.72rem;
-  border: 1px solid rgba(21, 81, 63, 0.13);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 18%, transparent);
   border-radius: 8px;
   background: linear-gradient(180deg, #ffffff, #f8faf7);
 }
@@ -9767,7 +10552,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   min-width: 0;
   min-height: 4rem;
   padding: 0.62rem;
-  border: 1px solid rgba(31, 58, 47, 0.14);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 18%, transparent);
   border-radius: 7px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 247, 0.98));
   color: inherit;
@@ -9776,10 +10561,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-course-folder-card:hover {
-  border-color: rgba(21, 81, 63, 0.42);
+  border-color: color-mix(in srgb, var(--vd-accent) 48%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 0.45rem 1.2rem rgba(30, 43, 37, 0.07);
+    0 0.45rem 1.2rem color-mix(in srgb, var(--vd-accent) 9%, transparent);
 }
 
 .vd-course-folder-card__icon {
@@ -9792,7 +10577,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   background: linear-gradient(180deg, #f7fbf8 0%, #e8f0ec 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.96),
-    0 1px 0 rgba(18, 63, 49, 0.08);
+    0 1px 0 color-mix(in srgb, var(--vd-accent) 10%, transparent);
 }
 
 .vd-course-folder-card__icon::before {
@@ -9891,7 +10676,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.44rem;
   min-width: 0;
   padding: 0.5rem 0.56rem;
-  border: 1px solid rgba(21, 81, 63, 0.16);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 22%, transparent);
   border-radius: 7px;
   background: #ffffff;
   color: inherit;
@@ -9899,7 +10684,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-active-story__draft-records a:hover {
-  border-color: rgba(21, 81, 63, 0.36);
+  border-color: color-mix(in srgb, var(--vd-accent) 42%, transparent);
 }
 
 .vd-active-story__draft-records a span {
@@ -9930,7 +10715,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-active-story__shelf-footer span {
   padding: 0.24rem 0.42rem;
-  border: 1px solid rgba(31, 58, 47, 0.11);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 16%, transparent);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.58);
 }
@@ -9972,7 +10757,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.56rem;
   min-height: 0;
   padding: 0.5rem;
-  border-color: rgba(31, 58, 47, 0.12);
+  border-color: color-mix(in srgb, var(--vd-accent) 16%, transparent);
   background: rgba(255, 255, 255, 0.72);
 }
 
@@ -9981,7 +10766,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-source-graph--proof .vd-source-graph__node--answer {
-  background: rgba(21, 81, 63, 0.08);
+  background: color-mix(in srgb, var(--vd-accent) 10%, transparent);
 }
 
 .vd-source-graph--proof .vd-source-graph__asset {
@@ -10015,7 +10800,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-answer-inspector--proof .vd-answer-inspector__header span {
   padding: 0.2rem 0.44rem;
-  border: 1px solid rgba(21, 81, 63, 0.18);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 24%, transparent);
   border-radius: 999px;
   color: var(--vd-accent);
   font-size: 0.62rem;
@@ -10028,7 +10813,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.42rem;
   min-width: 0;
   padding: 0.86rem;
-  border: 1px solid rgba(31, 58, 47, 0.15);
+  border: 1px solid color-mix(in srgb, var(--vd-accent) 20%, transparent);
   border-radius: 8px;
   background: #ffffff;
 }
@@ -10078,13 +10863,13 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   display: block;
   overflow: hidden;
   min-height: 3.25rem;
-  border: 1px solid var(--line, #232A33);
+  border: 1px solid var(--line, #2A2F34);
   border-radius: 6px;
   background: var(--ink-4, #1E242D);
 }
 
 .vd-home .vd-citation-row__thumb {
-  border-color: rgba(31, 58, 47, 0.12);
+  border-color: color-mix(in srgb, var(--vd-accent) 16%, transparent);
   background: #f8faf7;
 }
 
@@ -10109,7 +10894,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-answer-inspector--proof .vd-citation-registry {
   gap: 0.2rem;
   padding: 0.58rem 0.66rem;
-  background: rgba(21, 81, 63, 0.06);
+  background: color-mix(in srgb, var(--vd-accent) 8%, transparent);
 }
 
 .vd-answer-inspector--proof .vd-citation-registry strong {
@@ -10123,7 +10908,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-provenance-section--rail {
   gap: 0.58rem;
   padding-top: 0.82rem;
-  border-top: 1px solid rgba(31, 58, 47, 0.11);
+  border-top: 1px solid color-mix(in srgb, var(--vd-accent) 16%, transparent);
 }
 
 .vd-provenance-section--rail h2 {
@@ -10198,7 +10983,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   /* Quiet recessed row on the dark desk, not a bright white pill. */
   border: 1px solid var(--line, #232A33);
   border-radius: 7px;
-  background: var(--ink-3, #161B22);
+  background: var(--ink-3, #181B1E);
   box-shadow: var(--keylight, inset 0 1px 0 rgba(255, 255, 255, 0.05));
   color: inherit;
   text-decoration: none;
@@ -10278,7 +11063,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-home--cover .vd-nav__links a:hover,
 .vd-home--cover .vd-nav__links a[aria-current="page"] {
-  color: #8db9a7;
+  color: var(--signature-cyan);
 }
 
 .vd-home--cover > .vd-nav .vd-nav__links {
@@ -10395,7 +11180,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-personal-stage__role {
   max-width: 21rem;
   margin: 0;
-  color: #8db9a7;
+  color: var(--signature-cyan);
   font-size: clamp(0.86rem, 0.9vw, 0.96rem);
   font-weight: 720;
   line-height: 1.2;
@@ -10552,7 +11337,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   padding: 0 0.65rem;
   border: 1px solid rgba(199, 218, 207, 0.18);
   border-radius: 999px;
-  color: #8db9a7;
+  color: var(--signature-cyan);
   background: rgba(255, 255, 255, 0.025);
   font-size: clamp(0.78rem, 0.88vw, 0.9rem);
   font-weight: 680;
@@ -10644,7 +11429,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-profile-card__meta p:last-child {
-  color: #91c2aa;
+  color: var(--signature-cyan);
   font-weight: 780;
 }
 
@@ -10677,7 +11462,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-profile-card .vd-profile-link:hover {
   background: transparent;
-  color: #9bd0b5;
+  color: var(--signature-cyan-hi);
 }
 
 .vd-profile-card__quote {
@@ -10693,7 +11478,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-profile-card__quote::before {
   content: "“";
   display: block;
-  color: #91c2aa;
+  color: var(--signature-cyan);
   font-family: var(--display);
   font-size: 2.2rem;
   line-height: 0.75;
@@ -10752,11 +11537,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-resume-card__actions a:hover {
-  color: #9bd0b5;
+  color: var(--signature-cyan-hi);
 }
 
 .vd-resume-card__actions span {
-  color: #9bd0b5;
+  color: var(--signature-cyan-hi);
 }
 
 .vd-resume-card__preview {
@@ -10930,7 +11715,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-market-snapshot__grid em {
-  color: #91c2aa;
+  color: var(--signature-cyan);
   font-style: normal;
   font-weight: 760;
 }
@@ -10967,18 +11752,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.42rem;
   min-width: 7.1rem;
   min-height: 2.3rem;
-  border: 1px solid rgba(187, 206, 197, 0.2);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 24%, transparent);
   border-radius: 999px;
-  color: #91c2aa;
+  color: var(--signature-cyan);
   font-size: 0.8rem;
   font-weight: 760;
-}
-
-.vd-evidence-row__action::after {
-  content: "→";
-  margin-left: 0.55rem;
 }
 
 @media (max-width: 1320px) {
@@ -11126,7 +11907,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-profile-card__meta p + p {
-  color: #8db9a7;
+  color: var(--signature-cyan);
   font-weight: 740;
   white-space: pre-wrap;
 }
@@ -11170,7 +11951,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home--cover .vd-evidence-row__action,
 .vd-home--cover .vd-resume-card__actions a,
 .vd-home--cover .vd-resume-card__actions span {
-  color: #a9d6c1;
+  color: var(--signature-cyan);
 }
 
 .vd-dossier {
@@ -11231,7 +12012,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   padding: 0 0.72rem;
   border: 1px solid rgba(199, 218, 207, 0.18);
   border-radius: 999px;
-  color: #8db9a7;
+  color: var(--signature-cyan);
   font-size: 0.72rem;
   font-weight: 740;
   letter-spacing: 0.02em;
@@ -11515,7 +12296,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-evidence-row__copy p:first-of-type {
-  color: #8db9a7;
+  color: var(--signature-cyan);
 }
 
 .vd-evidence-row__stats {
@@ -11547,7 +12328,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   grid-area: action;
   align-self: start;
   margin-right: clamp(0.85rem, 1.2vw, 1rem);
-  color: #8db9a7;
+  color: var(--signature-cyan);
 }
 
 .vd-home-evidence-visual {
@@ -11688,13 +12469,13 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-quant-artifact__area {
-  fill: rgba(141, 185, 167, 0.14);
+  fill: color-mix(in srgb, var(--signature-cyan) 14%, transparent);
   stroke: none;
 }
 
 .vd-quant-artifact__line {
   fill: none;
-  stroke: #8db9a7;
+  stroke: var(--signature-cyan);
   stroke-linecap: round;
   stroke-width: 4;
 }
@@ -11874,14 +12655,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-home--cover .vd-nav__links a[aria-current="page"] {
-  color: #9fcbb6;
+  color: var(--signature-cyan);
 }
 
 .vd-home--cover .vd-nav__links a[aria-current="page"]::after {
   bottom: -1.78rem;
   height: 3px;
   border-radius: 999px;
-  background: #9fcbb6;
+  background: var(--signature-cyan);
 }
 
 .vd-nav__avatar {
@@ -11998,7 +12779,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-portrait-cover__meta p:last-child {
-  color: #9fcbb6;
+  color: var(--signature-cyan);
   font-weight: 760;
 }
 
@@ -12031,7 +12812,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-cover-link:hover {
-  color: #a8d5bf;
+  color: var(--signature-cyan-hi);
   text-decoration: none;
 }
 
@@ -12126,7 +12907,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-proof-cover__title span {
   flex: 0 0 auto;
-  color: #a8d5bf;
+  color: var(--signature-cyan-hi);
   font-size: 0.78rem;
   font-weight: 780;
   opacity: 0.9;
@@ -12255,7 +13036,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: clamp(0.65rem, 1.2vw, 0.95rem);
   padding: clamp(1rem, 1.7vw, 1.4rem);
   background:
-    linear-gradient(90deg, rgba(159, 203, 182, 0.08) 1px, transparent 1px) 0 0 / 16.666% 100%,
+    linear-gradient(90deg, rgba(75, 197, 222, 0.08) 1px, transparent 1px) 0 0 / 16.666% 100%,
     linear-gradient(180deg, rgba(15, 23, 19, 0.96), rgba(3, 7, 5, 0.98));
 }
 
@@ -12291,7 +13072,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-quant-bars span {
   display: block;
   border-radius: 999px 999px 0 0;
-  background: linear-gradient(180deg, #bfe4d0, rgba(96, 144, 120, 0.35));
+  background: linear-gradient(180deg, var(--signature-cyan-hi), rgba(75, 197, 222, 0.26));
 }
 
 .vd-quant-bars span:nth-child(1) { height: 38%; }
@@ -12328,7 +13109,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-market-table em {
-  color: #a8d5bf;
+  color: var(--signature-cyan-hi);
 }
 
 @media (max-width: 1120px) {
@@ -12683,7 +13464,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-home-soft: #f6f8f5;
   --vd-home-green: #064f3f;
   --vd-home-green-soft: #e8f2ed;
-  --vd-home-gold: #f0c400;
+  --vd-home-gold: #4BC5DE;
   min-height: 100vh;
   background: #fbfcfa;
   color: var(--vd-home-ink);
@@ -13468,7 +14249,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-hybrid-line: rgba(248, 244, 232, 0.14);
   --vd-hybrid-green: #8fc6ad;
   --vd-hybrid-deep-green: #063f34;
-  --vd-hybrid-gold: #eac332;
+  --vd-hybrid-gold: #4BC5DE;
   min-height: 100vh;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px) 0 0 / 25vw 100%,
@@ -14542,7 +15323,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-hybrid-subtle: rgba(251, 248, 238, 0.44);
   --vd-hybrid-line: rgba(251, 248, 238, 0.13);
   --vd-hybrid-green: #9ac9af;
-  --vd-hybrid-gold: #efb529;
+  --vd-hybrid-gold: #4BC5DE;
   min-height: 100vh;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px) 0 0 / 25vw 100%,
@@ -17248,7 +18029,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     --vd-home-line-soft: rgba(246, 239, 223, 0.09);
     --vd-home-cream: #fbf7ea;
     --vd-home-muted: rgba(246, 239, 223, 0.62);
-    --vd-home-gold: #f0b52b;
+    --vd-home-gold: #4BC5DE;
     --vd-home-green: #9fcdae;
     background:
       linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px) 0 0 / 25vw 100%,
@@ -17681,7 +18462,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     --vd-home-dim: rgba(255, 250, 240, 0.44);
     --vd-home-line: rgba(255, 250, 240, 0.15);
     --vd-home-line-soft: rgba(255, 250, 240, 0.08);
-    --vd-home-gold: #f0b72f;
+    --vd-home-gold: #4BC5DE;
     --vd-home-green: #9fcfae;
     width: 100% !important;
     height: 100vh !important;
@@ -17689,7 +18470,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     overflow: hidden !important;
     background:
       linear-gradient(90deg, rgba(255, 250, 240, 0.032) 1px, transparent 1px) 0 0 / 25vw 100%,
-      radial-gradient(circle at 74% 28%, rgba(214, 183, 76, 0.035), transparent 35rem),
+      radial-gradient(circle at 74% 28%, rgba(75, 197, 222, 0.035), transparent 35rem),
       var(--vd-home-black) !important;
     color: var(--vd-home-cream) !important;
   }
@@ -18650,18 +19431,22 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-section-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --vd-section-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
   /* glass material tokens (chrome/nav layer only) — real optics */
-  --vd-section-glass: rgba(16, 20, 26, 0.55);
-  --vd-section-glass-nav: rgba(10, 13, 17, 0.6);
+  --vd-section-glass: rgba(18, 20, 22, 0.58);
+  /* unified nav glass — identical to home's --lcv-glass-nav */
+  --vd-section-glass-nav: rgba(7, 8, 9, 0.72);
   --vd-section-glass-border: var(--line);
   /* (removed the unused --vd-section-glass-shadow token: it encoded the deeper
      float-2 (0 24px 60px), but the Archive nav intentionally renders the calmer
      0 14px 36px float hardcoded below. Dead token removed to avoid drift.) */
-  --vd-section-shell: 82.5rem; /* ~1320px centered content shell */
+  --vd-section-shell: 84rem; /* 1344px centered content shell = home's 1440 − 2×48 inner frame */
   width: 100%;
   min-height: 100vh;
   padding: 0 clamp(28px, 4vw, 48px) clamp(2.5rem, 5vw, 5rem);
-  /* lifted neutral canvas with a barely-there cool glow top-center */
-  background: radial-gradient(120% 80% at 50% -8%, var(--ink-3) 0%, var(--ink-2) 55%) var(--ink-2);
+  /* Deep-space field: cool black owns the page; cold silver only breathes as
+     distant environmental light, so the surface stays quiet and mysterious. */
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
+  background-color: var(--ink-0);
   color: var(--vd-section-ink);
   font-family: var(--sans);
 }
@@ -18677,11 +19462,15 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   z-index: var(--z-sticky);
   display: flex;
   align-items: center;
-  gap: clamp(1rem, 2vw, 1.8rem);
-  min-height: 4.25rem;
-  /* full-bleed glass chrome; inner content capped + centered at the shell width */
+  gap: clamp(24px, 3.5vw, 44px);
+  /* full-bleed glass chrome; inner content capped + centered at the shell width.
+     NOTE: this nav's % resolves against main's CONTENT box (vw − 2×gutter), not
+     the viewport (the nav full-bleeds via the negative margin), so the formula
+     adds 2×gutter back to reproduce home's --lcv-edge at every viewport width:
+     max(gutter, (vw − 1440px)/2 + gutter). 24px vertical = home's bar rhythm
+     (24 + 42 avatar row + 24 + 1px border = 91px). */
   margin: 0 calc(clamp(28px, 4vw, 48px) * -1);
-  padding: 0 max(clamp(28px, 4vw, 48px), calc((100% - var(--vd-section-shell)) / 2));
+  padding: 24px max(clamp(28px, 4vw, 48px), calc((100% + clamp(28px, 4vw, 48px) * 2 - 1440px) / 2 + clamp(28px, 4vw, 48px)));
   border-bottom: 1px solid var(--vd-section-glass-border);
   background:
     linear-gradient(155deg, rgba(255, 255, 255, 0.04), transparent 46%),
@@ -18696,13 +19485,22 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__nav a {
   position: relative;
-  color: var(--vd-section-subtle);
-  font-size: 0.88rem;
-  font-weight: 500;
-  line-height: 1;
+  /* inactive nav reads as available (--text-2 tier), matching home exactly */
+  color: var(--vd-section-muted);
+  font-size: 15px;
+  font-weight: 400;
+  /* home's links inherit 1.5 (22.5px line box) — match it so the link text and
+     gold underline land on the same y as home's bar */
+  line-height: 1.5;
   white-space: nowrap;
   padding-bottom: 6px;
   transition: color 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vd-section-page__nav a {
+    transition: none;
+  }
 }
 
 .vd-section-page__nav a:first-child {
@@ -18710,21 +19508,34 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   padding-bottom: 0;
   color: var(--vd-section-ink);
   font-family: var(--vd-section-serif);
-  /* slightly smaller so the large-serif vs small-sans height delta shrinks, and
-     a small upward optical nudge so the serif visual midline matches the link
-     row midline (the serif baseline otherwise sits noticeably lower) */
-  font-size: 1.8rem;
+  /* identical to home's .lcv-wordmark: 30px / 600 / .01em, no optical nudge */
+  font-size: 30px;
   font-weight: 600;
+  letter-spacing: 0.01em;
   line-height: 1;
-  transform: translateY(-1px);
 }
 
 .vd-section-page__nav a:hover {
   color: var(--vd-section-ink);
 }
 
-/* active link — IDENTICAL to .lcv-nav: ink text + single 1px gold hairline
-   underline spanning only the link text (the unified nav's one gold touch). */
+/* avatar — identical to home's .lcv-nav__avatar; margin-left:auto mirrors the
+   wordmark's margin-right:auto so the link row centers exactly as home's
+   space-between geometry does */
+.vd-section-page__nav img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  object-fit: cover;
+  object-position: center 20%;
+  box-shadow: none;
+}
+
+/* active link — IDENTICAL to .lcv-nav: ink text + single 1px comet hairline
+   underline spanning only the link text (the unified nav's one cyan touch). */
 .vd-section-page__nav a[aria-current="page"] {
   color: var(--vd-section-ink);
   border-bottom: 1px solid var(--vd-section-accent);
@@ -18746,12 +19557,20 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__hero {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 21rem);
+  align-items: end;
+  gap: clamp(1.35rem, 4vw, 3.5rem);
   /* split the rhythm per global law: the eyebrow hugs the h1 (tight 0.4rem) and
      the descriptive line opens wider (1rem) so coupling reads correctly; a
      single uniform gap flattened the hierarchy */
-  gap: 0;
-  padding: clamp(2.8rem, 6.5vw, 5.5rem) 0 clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(5.7rem, 7vw, 6.7rem) 0 clamp(1.15rem, 2.6vw, 2rem);
   border-bottom: 1px solid var(--vd-section-hairline);
+}
+
+.vd-section-page__hero-copy {
+  display: grid;
+  gap: 0;
+  min-width: 0;
 }
 
 .vd-section-page__hero p,
@@ -18766,11 +19585,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__hero h1 {
-  max-width: 22ch;
+  max-width: 18ch;
   /* eyebrow hugs the title */
   margin: 0.4rem 0 0;
   font-family: var(--vd-section-serif);
-  font-size: clamp(2.55rem, 6vw, 5.35rem);
+  font-size: clamp(2.45rem, 4.55vw, 4.35rem);
   font-weight: 600;
   /* more air between lines for the large multi-line serif (was 1.0 which let
      line-1 descenders nearly touch line-2 caps); cap the measure so it wraps to
@@ -18782,12 +19601,110 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__hero span {
+  display: block;
   max-width: 52rem;
   /* the descriptive line breathes wider than the eyebrow→title coupling */
   margin-top: 1rem;
   color: var(--vd-section-muted);
   font-size: clamp(1rem, 1.5vw, 1.18rem);
   line-height: 1.55;
+}
+
+.vd-section-page__hero-proof {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    radial-gradient(92% 118% at 12% -20%, rgba(238, 241, 242, 0.12), transparent 48%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.012) 42%, rgba(0, 0, 0, 0.18)),
+    rgba(18, 20, 22, 0.58);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.42),
+    0 24px 54px -24px rgba(0, 0, 0, 0.72);
+  overflow: hidden;
+}
+
+.vd-section-page__hero-proof div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1rem;
+  min-height: 3.1rem;
+  padding: 0.82rem 1rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.vd-section-page__hero-proof div:first-child {
+  border-top: 0;
+}
+
+.vd-section-page__hero-proof dt,
+.vd-section-page__hero-proof dd {
+  margin: 0;
+}
+
+.vd-section-page__hero-proof dt {
+  color: var(--text-2);
+  font-size: 0.78rem;
+  font-weight: 560;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.vd-section-page__hero-proof dd {
+  color: var(--text-1);
+  font-family: var(--vd-section-mono);
+  font-size: 1.1rem;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 18px rgba(75, 197, 222, 0.12);
+}
+
+.vd-section-page--experience .vd-section-page__hero {
+  grid-template-columns: minmax(0, 0.82fr) minmax(13rem, 18rem);
+  align-items: end;
+  padding-top: clamp(6rem, 7.5vw, 7.15rem);
+  padding-bottom: clamp(1.35rem, 2.4vw, 1.85rem);
+}
+
+.vd-section-page--experience .vd-section-page__hero h1 {
+  max-width: 11ch;
+  font-size: clamp(3.1rem, 5.8vw, 5.35rem);
+  line-height: 0.98;
+}
+
+.vd-section-page--experience .vd-section-page__hero span {
+  max-width: 30rem;
+  margin-top: 0.82rem;
+  font-size: clamp(0.96rem, 1.18vw, 1.04rem);
+  line-height: 1.46;
+}
+
+.vd-section-page--experience .vd-section-page__hero-proof {
+  justify-self: end;
+  width: min(100%, 18rem);
+  border-radius: 16px;
+}
+
+.vd-section-page--experience .vd-section-page__hero-proof div {
+  min-height: 2.85rem;
+  padding: 0.74rem 0.92rem;
+}
+
+.vd-section-page--experience .vd-section-page__hero-proof dt {
+  color: var(--text-3);
+  font-family: var(--vd-section-mono);
+  font-size: 0.67rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.vd-section-page--experience .vd-section-page__hero-proof dd {
+  font-size: 1rem;
 }
 
 .vd-section-page__modes {
@@ -18813,10 +19730,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border-bottom: 1px solid var(--vd-section-hairline);
 }
 
-/* Experience: two 3-item record sets (work / projects) — stay 3-up. Cards size
-   to their own content (honest ragged baseline for the quiet evidence-first
-   Archive); a short card no longer gets stretched to the tallest sibling with
-   large trailing dead space. */
+/* Experience records size to their own content (honest ragged baseline for the
+   quiet evidence-first Archive); a short card no longer gets stretched to the
+   tallest sibling with large trailing dead space. */
 .vd-section-page__list {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-rows: auto;
@@ -18824,6 +19740,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
      band-label keeps its own align-self:start), so a short card no longer
      stretches to the tallest sibling and leaves a large trailing void */
   align-items: start;
+}
+
+.vd-section-page__list--work {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vd-section-page__list--projects {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 /* deliberate gap between two adjacent evidence groups (work vs projects) so
@@ -18904,8 +19828,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border: 1px solid var(--line);
   border-radius: 12px;
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.045), transparent 42%),
-    linear-gradient(180deg, rgba(30, 36, 45, 0.6), rgba(22, 27, 34, 0.94));
+    linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),
@@ -18920,7 +19844,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(200, 162, 74, 0.22),
+    inset 0 0 0 1px rgba(75, 197, 222, 0.22),
     0 18px 44px rgba(0, 0, 0, 0.55);
   transform: translateY(-2px);
 }
@@ -18930,7 +19854,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__grid a:focus-visible {
   outline: 1.5px solid var(--gold-hi);
   outline-offset: 4px;
-  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.18);
+  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
 }
 
 /* organisation / institution = primary luminance tier */
@@ -18982,6 +19906,35 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   margin-top: 0.6rem;
 }
 
+.vd-section-page__list .vd-entry-notes {
+  margin-top: 0.55rem;
+}
+
+.vd-section-page__list .vd-entry-notes summary {
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+  color: rgba(232, 238, 244, 0.64);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.vd-section-page__list .vd-entry-notes summary::-webkit-details-marker {
+  display: none;
+}
+
+.vd-section-page__list .vd-entry-notes summary::after {
+  content: " +";
+  color: var(--loom-signature-cyan);
+}
+
+.vd-section-page__list .vd-entry-notes[open] summary::after {
+  content: " -";
+}
+
 .vd-section-page__list .vd-entry-highlight {
   position: relative;
   margin-top: 0.45rem;
@@ -19007,6 +19960,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__list .vd-entry-pending {
+  display: block;
   margin-top: 0.5rem;
   color: var(--text-3);
   font-size: 0.8rem;
@@ -19023,7 +19977,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   outline: 1.5px solid var(--gold-hi);
   outline-offset: 4px;
   border-radius: 8px;
-  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.18);
+  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
 }
 
 .vd-section-page__foundations {
@@ -19212,8 +20166,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border: 1px solid var(--line);
   border-radius: 12px;
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.045), transparent 42%),
-    linear-gradient(180deg, rgba(30, 36, 45, 0.6), rgba(22, 27, 34, 0.94));
+    linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),
@@ -19225,7 +20179,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(200, 162, 74, 0.22),
+    inset 0 0 0 1px rgba(75, 197, 222, 0.22),
     0 18px 44px rgba(0, 0, 0, 0.55);
   transform: translateY(-2px);
 }
@@ -19233,7 +20187,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__course-strip a:focus-visible {
   outline: 1.5px solid var(--gold-hi);
   outline-offset: 4px;
-  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.18);
+  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
 }
 
 .vd-section-page__course-strip strong {
@@ -19261,7 +20215,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 /* evidence file chips are links: luminance-led hover lift of the nested badge
-   + a faint gold hairline, plus a keyboard focus ring on the bare block */
+   + a faint cyan hairline, plus a keyboard focus ring on the bare block */
 .vd-section-page__artifact-strip > a {
   display: inline-flex;
   border-radius: 8px;
@@ -19273,7 +20227,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(200, 162, 74, 0.22);
+    inset 0 0 0 1px rgba(75, 197, 222, 0.22);
 }
 
 .vd-section-page__artifact-strip > a:hover {
@@ -19283,7 +20237,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__artifact-strip > a:focus-visible {
   outline: 1.5px solid var(--gold-hi);
   outline-offset: 4px;
-  box-shadow: 0 0 0 3px rgba(200, 162, 74, 0.18);
+  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
 }
 
 /* named band eyebrow — same standard as the hero eyebrow (mono, 0.72rem,
@@ -19410,8 +20364,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__loom-layer li {
   border-color: var(--line);
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.045), transparent 42%),
-    linear-gradient(180deg, rgba(30, 36, 45, 0.6), rgba(22, 27, 34, 0.94));
+    linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   box-shadow:
@@ -19425,8 +20379,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page .vd-file-badge {
   border-color: var(--line);
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.04), transparent 46%),
-    linear-gradient(180deg, rgba(30, 36, 45, 0.55), rgba(22, 27, 34, 0.94));
+    linear-gradient(135deg, rgba(238, 241, 242, 0.052), rgba(176, 184, 188, 0.018) 38%, transparent 66%),
+    linear-gradient(180deg, rgba(24, 27, 30, 0.62), rgba(14, 16, 18, 0.94));
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   box-shadow:
@@ -19448,10 +20402,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    behind everything (z-index:0) and never intercepts clicks. */
 .vd-section-page::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(80% 55% at 50% 28%,rgba(75,197,222,0.05),transparent 60%),
-    radial-gradient(70% 60% at 82% 96%,rgba(200,162,74,0.035),transparent 62%),
+    radial-gradient(80% 55% at 50% 28%,rgba(232,236,238,0.035),transparent 60%),
+    radial-gradient(70% 60% at 82% 96%,rgba(170,176,180,0.024),transparent 62%),
     radial-gradient(140% 120% at 50% 42%,transparent 60%,rgba(0,0,0,0.4) 100%)}
 .vd-section-page > *{position:relative;z-index:1}
+/* the universal staging rule above ties specificity with .vd-section-page__nav
+   and won (source order), demoting the nav to position:relative so it scrolled
+   away. Higher-specificity re-assert: the nav chrome stays sticky like home. */
+.vd-section-page > .vd-section-page__nav{position:sticky;top:0;z-index:var(--z-sticky)}
 
 /* each evidence-shelf row is a perspective stage; the cards within recede */
 .vd-section-page__grid,
@@ -19486,7 +20444,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__grid a:hover{box-shadow:
   inset 0 1px 0 rgba(255,255,255,0.09),
   inset 0 -1px 0 rgba(0,0,0,0.46),
-  inset 0 0 0 1px rgba(200,162,74,0.22),
+  inset 0 0 0 1px rgba(75,197,222,0.22),
   0 34px 62px -16px rgba(0,0,0,0.68),
   0 8px 18px rgba(0,0,0,0.46)}
 
@@ -19517,10 +20475,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 @media (max-width: 980px) {
-  /* __list (two 3-item record sets) is intentionally NOT collapsed to 2-col
-     here — 3-up→2-col would orphan the 3rd entry. It stays 3-up until the
-     760px breakpoint stacks it cleanly to 1-up. __grid (4 institutions) → 2+2
-     reflows cleanly, so it does collapse. */
+  /* __list projects stay 3-up until the 760px breakpoint so the third entry
+     does not orphan into a 2+1 row. __grid (4 institutions) → 2+2 reflows
+     cleanly, so it does collapse. */
   .vd-section-page__modes,
   .vd-section-page__grid,
   .vd-section-page__course-strip,
@@ -19548,6 +20505,29 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   }
 }
 
+/* narrow chrome parity with home's .lcv-nav ≤820px rules (links 13.5px,
+   tighter gap, pb 4px, avatar 36px, wordmark 26px) */
+@media (max-width: 820px) {
+  .vd-section-page__nav {
+    gap: clamp(14px, 2.6vw, 22px);
+  }
+
+  .vd-section-page__nav a {
+    font-size: 13.5px;
+    padding-bottom: 4px;
+  }
+
+  .vd-section-page__nav a:first-child {
+    font-size: 26px;
+    padding-bottom: 0;
+  }
+
+  .vd-section-page__nav img {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 @media (max-width: 760px) {
   .vd-section-page {
     padding-right: 1rem;
@@ -19555,21 +20535,51 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   }
 
   .vd-section-page__nav {
-    gap: 0.85rem;
     margin-right: -1rem;
     margin-left: -1rem;
     overflow-x: auto;
-    padding-right: 1rem;
-    padding-left: 1rem;
+    /* same edge inset home's nav resolves to at this width */
+    padding-right: clamp(28px, 4vw, 48px);
+    padding-left: clamp(28px, 4vw, 48px);
   }
 
   .vd-section-page__nav a:first-child {
-    margin-right: 0.5rem;
-    font-size: 1.55rem;
+    margin-right: auto;
+    font-size: 26px;
+  }
+
+  .vd-section-page__hero {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 1.15rem;
+    padding: clamp(2.4rem, 9vw, 3.5rem) 0 clamp(1rem, 5vw, 1.4rem);
   }
 
   .vd-section-page__hero h1 {
-    font-size: clamp(2.1rem, 12vw, 3rem);
+    font-size: clamp(2.25rem, 10.5vw, 2.9rem);
+  }
+
+  .vd-section-page__hero span {
+    font-size: 1rem;
+  }
+
+  .vd-section-page__hero-proof div {
+    min-height: 2.72rem;
+    padding: 0.68rem 0.9rem;
+  }
+
+  .vd-section-page__hero-proof dd {
+    font-size: 1rem;
+  }
+
+  .vd-section-page--experience .vd-section-page__hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.05rem;
+  }
+
+  .vd-section-page--experience .vd-section-page__hero-proof {
+    justify-self: stretch;
+    width: 100%;
   }
 
   .vd-section-page__list,
@@ -19595,6 +20605,23 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   .vd-section-page__canvas article {
     min-height: 0;
   }
+}
+
+@media (max-width:640px){
+  .vd-section-page__nav{
+    justify-content:flex-start;
+    gap:10px;
+    max-width:100vw;
+    overflow-x:auto;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .vd-section-page__nav::-webkit-scrollbar{display:none}
+  .vd-section-page__nav a,
+  .vd-section-page__nav img{flex:0 0 auto}
+  .vd-section-page__nav a{font-size:12.2px}
+  .vd-section-page__nav a:first-child{margin-right:0;font-size:23px}
+  .vd-section-page__nav img{display:none}
 }
 
 /* Home v27: keep the profile photograph faithful to the source image. The
@@ -19856,7 +20883,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     --vd-home-line: rgba(255, 250, 240, 0.145);
     --vd-home-line-soft: rgba(255, 250, 240, 0.095);
     --vd-home-green: #9fcfb3;
-    --vd-home-gold: #f2b52d;
+    --vd-home-gold: #4BC5DE;
     max-height: 100vh !important;
     padding: 0 !important;
     overflow: hidden !important;
@@ -22418,7 +23445,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    it is the single source of truth for the cover home. Structure
    (portrait-cover + proof-covers grid + cover-art assets) is pinned by
    contract tests; only material + proportion are restyled here.
-   Bronze (#c9a86a) = sole brand accent; green stays verified-only.
+   Signature cyan = sole brand accent; retired bronze/sage literals stay out.
    ===================================================================== */
 .vd-home.vd-home--cover {
   background:
@@ -22442,7 +23469,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home.vd-home--cover .vd-wordmark::after { display: none !important; }
 .vd-home.vd-home--cover .vd-nav__links a { color: rgba(239,233,218,0.6) !important; font-size: 0.95rem !important; font-weight: 500 !important; }
 .vd-home.vd-home--cover .vd-nav__links a:hover { color: #efe9da !important; }
-.vd-home.vd-home--cover .vd-nav__links a[aria-current="page"] { color: #efe9da !important; box-shadow: inset 0 -2px 0 #c9a86a !important; }
+.vd-home.vd-home--cover .vd-nav__links a[aria-current="page"] { color: #efe9da !important; box-shadow: inset 0 -2px 0 var(--signature-cyan) !important; }
 .vd-home.vd-home--cover .vd-nav__links a[aria-current="page"]::after { display: none !important; }
 
 /* --- Composition: balanced two columns, equal height --- */
@@ -22465,7 +23492,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border: 1px solid rgba(239, 233, 218, 0.1) !important;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,250,238,0.07) !important;
 }
-.vd-home.vd-home--cover .vd-portrait-cover:hover { transform: none !important; border-color: rgba(201,168,106,0.32) !important; }
+.vd-home.vd-home--cover .vd-portrait-cover:hover { transform: none !important; border-color: rgba(75,197,222,0.28) !important; }
 .vd-home.vd-home--cover .vd-portrait-cover__photo,
 .vd-home.vd-home--cover .vd-portrait-cover__veil { display: none !important; }
 .vd-home.vd-home--cover .vd-portrait-cover__headshot {
@@ -22483,16 +23510,16 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 .vd-home.vd-home--cover .vd-portrait-cover__meta { display: grid !important; gap: 0.3rem !important; }
 .vd-home.vd-home--cover .vd-portrait-cover__meta p { margin: 0 !important; color: rgba(239,233,218,0.66) !important; font-size: 0.95rem !important; font-weight: 500 !important; line-height: 1.3 !important; white-space: normal !important; }
-.vd-home.vd-home--cover .vd-portrait-cover__meta p:last-child { color: #c9a86a !important; font-weight: 600 !important; letter-spacing: 0.02em !important; }
+.vd-home.vd-home--cover .vd-portrait-cover__meta p:last-child { color: var(--signature-cyan) !important; font-weight: 600 !important; letter-spacing: 0.02em !important; }
 .vd-home.vd-home--cover .vd-cover-links { position: relative !important; z-index: 2 !important; display: grid !important; grid-template-columns: 1fr !important; gap: 0 !important; margin-top: 0.3rem !important; max-width: none !important; border-top: 1px solid rgba(239,233,218,0.1) !important; }
 .vd-home.vd-home--cover .vd-cover-link { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 0.6rem !important; padding: 0.72rem 0 !important; border-right: 0 !important; border-bottom: 1px solid rgba(239,233,218,0.08) !important; color: rgba(239,233,218,0.74) !important; font-size: 0.92rem !important; font-weight: 500 !important; }
 .vd-home.vd-home--cover .vd-cover-link:last-child { border-bottom: 0 !important; }
 .vd-home.vd-home--cover .vd-cover-link > span:first-child { display: inline-flex !important; align-items: center !important; gap: 0.55rem !important; }
 .vd-home.vd-home--cover .vd-cover-link > span:last-child { margin-left: auto !important; color: rgba(239,233,218,0.34) !important; }
-.vd-home.vd-home--cover .vd-cover-link:hover { color: #c9a86a !important; }
-.vd-home.vd-home--cover .vd-cover-link:hover > span:last-child { color: #c9a86a !important; }
-.vd-home.vd-home--cover .vd-cover-link__icon { width: 1rem !important; height: 1rem !important; color: #c9a86a !important; }
-.vd-home.vd-home--cover .vd-cover-link__icon--linkedin { display: inline-grid !important; place-items: center !important; background: #c9a86a !important; color: #16140f !important; border-radius: 3px !important; font-size: 0.62rem !important; font-weight: 800 !important; }
+.vd-home.vd-home--cover .vd-cover-link:hover { color: var(--signature-cyan) !important; }
+.vd-home.vd-home--cover .vd-cover-link:hover > span:last-child { color: var(--signature-cyan) !important; }
+.vd-home.vd-home--cover .vd-cover-link__icon { width: 1rem !important; height: 1rem !important; color: var(--signature-cyan) !important; }
+.vd-home.vd-home--cover .vd-cover-link__icon--linkedin { display: inline-grid !important; place-items: center !important; background: var(--signature-cyan) !important; color: #071011 !important; border-radius: 3px !important; font-size: 0.62rem !important; font-weight: 800 !important; }
 
 /* --- Evidence column: top row of 3 + featured --- */
 .vd-home.vd-home--cover .vd-proof-covers.vd-hybrid-covers { display: flex !important; flex-direction: column !important; gap: clamp(0.9rem, 1.5vw, 1.3rem) !important; min-width: 0 !important; }
@@ -22507,7 +23534,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,250,238,0.06) !important;
   transition: border-color 180ms var(--ease), transform 180ms var(--ease) !important;
 }
-.vd-home.vd-home--cover .vd-proof-covers .vd-proof-cover:hover { transform: translateY(-3px) !important; border-color: rgba(201,168,106,0.32) !important; }
+.vd-home.vd-home--cover .vd-proof-covers .vd-proof-cover:hover { transform: translateY(-3px) !important; border-color: rgba(75,197,222,0.28) !important; }
 .vd-home.vd-home--cover .vd-proof-covers .vd-proof-cover--featured { min-height: clamp(16rem, 21vw, 19rem) !important; }
 .vd-home.vd-home--cover .vd-proof-covers .vd-proof-cover__asset,
 .vd-home.vd-home--cover .vd-proof-covers .vd-cover-art,
@@ -22525,7 +23552,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   inset: auto clamp(1rem,1.5vw,1.4rem) clamp(0.95rem,1.4vw,1.25rem) clamp(1rem,1.5vw,1.4rem) !important;
   display: grid !important; gap: 0.28rem !important; grid-column: auto !important; grid-row: auto !important;
 }
-.vd-home.vd-home--cover .vd-proof-covers .vd-proof-cover__title small { font-family: var(--mono) !important; color: #c9a86a !important; font-size: 0.7rem !important; font-weight: 600 !important; letter-spacing: 0.2em !important; }
+.vd-home.vd-home--cover .vd-proof-covers .vd-proof-cover__title small { font-family: var(--mono) !important; color: var(--signature-cyan) !important; font-size: 0.7rem !important; font-weight: 600 !important; letter-spacing: 0.2em !important; }
 .vd-home.vd-home--cover .vd-proof-covers .vd-proof-cover__title h2 { margin: 0 !important; color: #fbf8ef !important; font-family: var(--display) !important; font-size: clamp(1.7rem, 2.1vw, 2.4rem) !important; font-weight: 600 !important; line-height: 0.98 !important; letter-spacing: -0.005em !important; text-shadow: 0 0.6rem 1.6rem rgba(0,0,0,0.55) !important; }
 
 /* About — CV document fills as a cover */
@@ -22541,7 +23568,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home.vd-home--cover .vd-proof-covers .vd-cover-art--education-hybrid {
   display: grid !important; grid-template-rows: 1fr auto !important; align-items: center !important;
   gap: 0.8rem !important; padding: clamp(1.3rem,2vw,1.8rem) clamp(1.3rem,2vw,1.8rem) clamp(5rem,6.5vw,6rem) !important;
-  background: radial-gradient(130% 100% at 80% 0%, rgba(201,168,106,0.07), transparent 55%), linear-gradient(160deg, rgba(30,27,20,0.7), rgba(12,11,7,0.85)) !important;
+  background: radial-gradient(130% 100% at 80% 0%, rgba(75,197,222,0.06), transparent 55%), linear-gradient(160deg, rgba(30,27,20,0.7), rgba(12,11,7,0.85)) !important;
 }
 .vd-home.vd-home--cover .vd-proof-covers .vd-home-education-logos {
   display: grid !important; grid-template-columns: repeat(2, auto) !important; justify-content: start !important; align-content: center !important;
@@ -22570,7 +23597,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home.vd-home--cover .vd-proof-covers .vd-experience-mark > span { display: grid !important; place-items: center !important; gap: 0.4rem !important; }
 .vd-home.vd-home--cover .vd-proof-covers .vd-experience-mark img { width: clamp(2rem,2.8vw,2.5rem) !important; height: clamp(2rem,2.8vw,2.5rem) !important; object-fit: contain !important; border-radius: 7px !important; background: rgba(255,255,255,0.95) !important; padding: 0.32rem !important; }
 .vd-home.vd-home--cover .vd-proof-covers .vd-experience-mark strong { color: #f4efe3 !important; font-size: clamp(0.95rem,1.2vw,1.1rem) !important; font-weight: 600 !important; text-align: center !important; white-space: nowrap !important; }
-.vd-home.vd-home--cover .vd-proof-covers .vd-experience-mark em { color: #c9a86a !important; font-style: normal !important; font-size: 0.78rem !important; font-weight: 500 !important; text-align: center !important; }
+.vd-home.vd-home--cover .vd-proof-covers .vd-experience-mark em { color: var(--signature-cyan) !important; font-style: normal !important; font-size: 0.78rem !important; font-weight: 500 !important; text-align: center !important; }
 .vd-home.vd-home--cover .vd-proof-covers .vd-experience-mark small { color: rgba(239,233,218,0.42) !important; font-family: var(--mono) !important; font-size: 0.62rem !important; letter-spacing: 0.04em !important; text-align: center !important; line-height: 1.3 !important; }
 
 /* Digital Me featured — optibook visualizer fills */
@@ -22611,7 +23638,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    Identity rail + numbered evidence ledger.
    Loom Visual System v1 — Cover/Home scene: still, luxe.
    Base = deepest --ink-0, max whitespace, structure carried by
-   the luminance ramp + one top-left key light. Gold budget on
+   the luminance ramp + one top-left key light. Signature-cyan budget on
    this screen = 2 touches ONLY (active nav underline + the
    pull-quote mark). CYAN EXCEPTION: the Digital-Me preview's
    Sources→Draft→Answer thread + its chart strokes/fills are the
@@ -22628,8 +23655,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --lcv-mono:ui-monospace,'JetBrains Mono','SF Mono',Menlo,monospace;
   /* glass material tokens (chrome layers only) — real optics:
      specular top edge + inner bottom thickness + long float shadow */
-  --lcv-glass:rgba(16,20,26,0.55);
-  --lcv-glass-nav:rgba(7,9,12,0.72);
+  --lcv-glass:rgba(18,20,22,0.58);
+  --lcv-glass-nav:rgba(7,8,9,0.72);
   --lcv-glass-border:var(--line);
   --lcv-glass-shadow:var(--keylight),var(--float-2),inset 0 -1px 0 rgba(0,0,0,0.35);
   --lcv-shell-max:1440px;
@@ -22640,11 +23667,26 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
      asset-panel-right (zero misalignment). */
   --lcv-col-pad:clamp(28px,4vw,48px);
   --lcv-edge:max(var(--lcv-col-pad),calc((100% - var(--lcv-shell-max)) / 2 + var(--lcv-col-pad)));
-  display:block; color:var(--lcv-ink);
-  /* deepest cool-black desk with a barely-there cool glow top-center (key-light spill) */
-  background:radial-gradient(120% 80% at 50% -8%,var(--ink-2) 0%,var(--lcv-bg) 55%) var(--lcv-bg);
+  position:relative; isolation:isolate; display:block; color:var(--lcv-ink);
+  /* Home cover inherits the global photographic law but tuned for a content-
+     dense first screen: upper-left silver reflection, graphite transition,
+     lower-right cold black. The previous centered haze read like a gray veil;
+     this keeps the page mostly black while giving it lunar depth. */
+  background-color:var(--lcv-bg);
+  background:
+    radial-gradient(86% 76% at -8% -10%, rgba(238,241,242,0.18) 0%, rgba(186,193,197,0.105) 26%, rgba(122,130,136,0.048) 48%, transparent 68%),
+    linear-gradient(135deg, rgba(214,220,223,0.082) 0%, rgba(98,105,110,0.044) 36%, rgba(11,13,14,0.76) 72%, rgba(3,4,5,0.98) 100%),
+    radial-gradient(54% 60% at 56% 38%, rgba(232,236,238,0.032) 0%, transparent 66%),
+    radial-gradient(92% 86% at 100% 100%, rgba(0,0,0,0.62) 0%, transparent 70%),
+    var(--lcv-bg);
   width:100%; min-height:100vh; padding:0; margin:0;
   font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+}
+.lcv::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+	  background:
+	    linear-gradient(135deg, rgba(232,236,238,0.032) 0%, transparent 38%, rgba(3,4,5,0.38) 100%),
+	    linear-gradient(90deg, rgba(7,8,9,0.42) 0%, transparent 20%, transparent 74%, rgba(3,4,5,0.62) 100%),
+	    radial-gradient(142% 118% at 50% 48%, transparent 34%, rgba(3,4,5,0.68) 100%);
 }
 .lcv *{box-sizing:border-box;border-color:var(--lcv-line2)}
 .lcv .lcv-serif{font-family:var(--lcv-serif)}
@@ -22664,13 +23706,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     inset 0 1px 0 rgba(255,255,255,0.06),
     inset 0 -1px 0 rgba(0,0,0,0.4),
     0 14px 36px rgba(0,0,0,0.5);
-  position:sticky;top:0;z-index:10}
+  position:sticky;top:0;z-index:var(--z-sticky)}
 .lcv-wordmark{font-size:30px;font-weight:600;letter-spacing:.01em;line-height:1}
 .lcv-nav__links{display:flex;gap:clamp(24px,3.5vw,44px);font-size:15px;color:var(--lcv-ink2)}
 /* inactive nav reads as available (--text-2), not the faint eyebrow tier */
 .lcv-nav__links a{padding-bottom:6px;color:var(--lcv-ink2);transition:color .15s}
+@media (prefers-reduced-motion:reduce){.lcv-nav__links a{transition:none}}
 .lcv-nav__links a:hover{color:var(--lcv-ink)}
-/* gold touch 1 of 2 on this screen: the active-nav hairline underline */
+/* comet touch 1 of 2 on this screen: the active-nav hairline underline */
 .lcv-nav__links a[aria-current="page"]{color:var(--lcv-ink);border-bottom:1px solid var(--lcv-gold)}
 .lcv-nav__avatar{width:42px;height:42px;border-radius:999px;object-fit:cover;
   object-position:center 20%;border:1px solid var(--lcv-line2)}
@@ -22684,7 +23727,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* rail top padding matches the ledger's first-row top padding (28px) so the
    portrait top and the first row number/asset share one y reference line */
 .lcv-rail{padding:44px clamp(28px,3vw,44px) 40px var(--lcv-col-pad);
-  position:sticky;top:92px;align-self:start;height:fit-content}
+  position:sticky;top:clamp(5rem,7vw,6rem);align-self:start;height:fit-content}
 .lcv-ledger{padding:44px var(--lcv-col-pad) 0 0}
 
 /* memberships — real affiliations fill the rail below the pull-quote */
@@ -22712,7 +23755,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-links a{display:flex;align-items:center;gap:14px;font-size:16px;color:var(--lcv-ink);transition:color .15s}
 .lcv-links a:hover{color:var(--lcv-ink);opacity:.82}
 /* the Website profile link resolves to this very site root; when it IS the
-   current page mark it as a deliberate "you are here" link (gold hairline,
+   current page mark it as a deliberate "you are here" link (cyan hairline,
    matches .lcv-nav__links a[aria-current]) instead of a silent no-op click */
 .lcv-links a[aria-current="page"]{color:var(--lcv-ink2);cursor:default}
 .lcv-links a[aria-current="page"] .lcv-link-icon{fill:var(--lcv-gold)}
@@ -22721,7 +23764,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-link-icon[fill="none"]{stroke:var(--lcv-ink);stroke-width:1.6;fill:none}
 .lcv-link-icon--linkedin{fill:var(--lcv-ink)}
 .lcv-quote{display:flex;gap:12px;margin:0}
-/* gold touch 2 of 2 on this screen: the single thin serif quote mark */
+/* comet touch 2 of 2 on this screen: the single thin serif quote mark */
 .lcv-quote__mark{font-size:44px;color:var(--lcv-gold);line-height:.7}
 .lcv-quote p{font-size:16px;line-height:1.5;color:var(--lcv-ink);max-width:21rem;margin:0}
 .lcv-member{font-family:var(--lcv-mono);font-size:11px;letter-spacing:.18em;
@@ -22744,7 +23787,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-row:hover{border-color:var(--lcv-line2);
   background:
     linear-gradient(118deg,rgba(255,255,255,0.028),transparent 38%),
-    linear-gradient(180deg,rgba(30,36,45,0.32),rgba(22,27,34,0))}
+    linear-gradient(180deg,rgba(34,38,42,0.26),rgba(24,27,30,0))}
 .lcv-row__head{padding-top:0;display:flex;flex-direction:column;align-items:flex-start}
 /* row numbers: quiet mono ink, NOT gold (watch-hand discipline) */
 .lcv-row__num{font-family:var(--lcv-mono);font-size:13px;color:var(--lcv-ink2);display:block;margin-bottom:12px}
@@ -22765,8 +23808,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    (Cover scene stays still, so the float is the softer 0 14px 36px). */
 .lcv-panel{border:1px solid var(--lcv-glass-border);border-radius:10px;
   background:
-    linear-gradient(155deg,rgba(255,255,255,0.045),transparent 42%),
-    linear-gradient(180deg,rgba(30,36,45,0.6),rgba(22,27,34,0.94));
+    linear-gradient(135deg,rgba(238,241,242,0.075),rgba(180,187,191,0.028) 32%,transparent 58%),
+    linear-gradient(180deg,rgba(34,38,42,0.48),rgba(20,23,26,0.94));
   -webkit-backdrop-filter:blur(28px) saturate(110%);
   backdrop-filter:blur(28px) saturate(110%);
   box-shadow:
@@ -22783,14 +23826,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    Cover scene; the Digital-Me terminal gets a touch more depth.
    ============================================================ */
 /* the asset cell is the stage: deep perspective so children recede; a
-   faint cyan+gold radial atmosphere sits behind the object so it floats in
+   faint cyan radial atmosphere sits behind the object so it floats in
    lit space (not pasted on flat black), and a vignette closes the edges. */
 .lcv-row__asset{position:relative;perspective:1900px;perspective-origin:50% 22%}
 .lcv-row__asset::before{content:"";position:absolute;inset:-6% -4% -14%;z-index:0;
   pointer-events:none;border-radius:22px;
   background:
-    radial-gradient(120% 86% at 26% 18%,rgba(75,197,222,0.07),transparent 56%),
-    radial-gradient(96% 84% at 88% 96%,rgba(200,162,74,0.05),transparent 60%),
+    radial-gradient(106% 78% at 8% 0%,rgba(238,241,242,0.07),rgba(160,168,174,0.035) 42%,transparent 66%),
+    radial-gradient(82% 68% at 88% 96%,rgba(138,247,230,0.022),transparent 60%),
     radial-gradient(150% 130% at 50% 46%,transparent 56%,rgba(0,0,0,0.42) 100%)}
 /* the panel itself is the staged object: tilt back + recede on the stage,
    grounded by a long key-light float; transform-origin low so it pivots off
@@ -22845,8 +23888,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-row--digital-me .lcv-row__asset{perspective:1650px}
 .lcv-row--digital-me .lcv-row__asset::before{
   background:
-    radial-gradient(120% 90% at 24% 16%,rgba(75,197,222,0.1),transparent 56%),
-    radial-gradient(96% 86% at 90% 98%,rgba(200,162,74,0.05),transparent 60%),
+    radial-gradient(108% 82% at 8% 0%,rgba(238,241,242,0.08),rgba(160,168,174,0.038) 42%,transparent 66%),
+    radial-gradient(82% 70% at 90% 98%,rgba(138,247,230,0.026),transparent 60%),
     radial-gradient(150% 130% at 50% 46%,transparent 52%,rgba(0,0,0,0.46) 100%)}
 .lcv-row--digital-me .lcv-row__asset>.lcv-panel{
   transform:rotateX(9deg) rotateZ(-0.6deg) translateY(-2px)}
@@ -22919,8 +23962,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-exp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .lcv-exp__card{border:1px solid var(--line);border-radius:10px;
   background:
-    linear-gradient(155deg,rgba(255,255,255,0.045),transparent 42%),
-    linear-gradient(180deg,rgba(30,36,45,0.6),rgba(22,27,34,0.94));
+    linear-gradient(135deg,rgba(238,241,242,0.075),rgba(180,187,191,0.028) 32%,transparent 58%),
+    linear-gradient(180deg,rgba(34,38,42,0.48),rgba(20,23,26,0.94));
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.06),
     inset 0 -1px 0 rgba(0,0,0,0.4),
@@ -22931,7 +23974,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-exp__head{display:flex;align-items:center;gap:8px;margin-bottom:14px;min-height:32px}
 .lcv-exp__optiver{font-size:26px;font-weight:600;letter-spacing:.01em;line-height:1}
 /* Optiver mark: neutral luminance grey (was stray saturated orange-red),
-   a faint mark that never competes with the gold quote-mark */
+   a faint mark that never competes with the signature-cyan quote mark */
 .lcv-exp__tri{color:var(--lcv-ink2);font-size:14px;opacity:.7}
 .lcv-exp__crest{height:30px;width:auto}
 .lcv-exp__unsw{font-size:18px;font-weight:600;line-height:1}
@@ -23022,9 +24065,6 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-foot__all{display:flex;align-items:center;gap:8px}
 .lcv-foot__all svg{width:14px;height:14px;stroke:var(--lcv-ink3);fill:none;stroke-width:1.6}
 
-/* hide the legacy capability nav that follows the cover on home */
-.lcv ~ .new-loom-home-capabilities{display:none}
-
 /* ============================================================
    RESTRAINED ENTRANCE MOTION — the evidence rows settle in with a quiet
    staggered fade + small rise (supports, never spectacle). The rail eases
@@ -23063,4 +24103,103 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   .lcv-nav__links a{padding-bottom:4px}
   .lcv-wordmark{font-size:26px}
   .lcv-nav__avatar{width:36px;height:36px}
+}
+
+@media (max-width:640px){
+  .lcv-nav{
+    gap:10px;
+    max-width:100vw;
+    overflow-x:hidden;
+    padding:22px clamp(16px,4vw,24px);
+  }
+  .lcv-wordmark,
+  .lcv-nav__avatar{flex:0 0 auto}
+  .lcv-nav__links{
+    flex:1 1 auto;
+    min-width:0;
+    overflow-x:auto;
+    scrollbar-width:none;
+    gap:10px;
+    font-size:12.2px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .lcv-nav__links::-webkit-scrollbar{display:none}
+  .lcv-nav__links a{flex:0 0 auto}
+  .lcv-wordmark{font-size:23px}
+  .lcv-nav__avatar{display:none}
+}
+
+/* Mobile nav hardening: keep the five primary public links visible without
+   letting late Home/section visual-version blocks reintroduce horizontal page
+   overflow. The avatar is decorative here; the wordmark remains the identity
+   anchor and every route label stays visible. */
+@media (max-width:640px){
+  body .lcv,
+  body .lcv .lcv-shell,
+  body .lcv .lcv-rail,
+  body .lcv .lcv-ledger,
+  body .lcv .lcv-row,
+  body .lcv .lcv-row__head,
+  body .lcv .lcv-row__asset,
+  body .lcv .lcv-panel,
+  body .lcv .lcv-exp{
+    min-width:0!important;
+    max-width:100vw!important;
+  }
+
+  body .lcv .lcv-shell,
+  body .lcv .lcv-rail,
+  body .lcv .lcv-ledger{
+    width:100%!important;
+    overflow-x:clip!important;
+  }
+
+  body .lcv .lcv-rail{
+    padding-right:clamp(20px,7vw,28px)!important;
+    padding-left:clamp(20px,7vw,28px)!important;
+  }
+
+  body .lcv .lcv-ledger{
+    padding-right:clamp(16px,4vw,20px)!important;
+    padding-left:clamp(16px,4vw,20px)!important;
+  }
+
+  body .lcv .lcv-nav,
+  body .vd-section-page > .vd-section-page__nav,
+  body .vd-nav{
+    gap:10px!important;
+    max-width:100vw!important;
+    overflow-x:hidden!important;
+    padding-right:clamp(16px,4vw,24px)!important;
+    padding-left:clamp(16px,4vw,24px)!important;
+  }
+
+  body .lcv .lcv-wordmark,
+  body .vd-section-page__nav a:first-child,
+  body .vd-wordmark{
+    flex:0 0 auto!important;
+    font-size:23px!important;
+  }
+
+  body .lcv .lcv-nav__links,
+  body .vd-nav__links{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    gap:10px!important;
+    overflow-x:visible!important;
+    scrollbar-width:none;
+  }
+
+  body .lcv .lcv-nav__links a,
+  body .vd-section-page__nav a,
+  body .vd-nav__links a{
+    flex:0 0 auto!important;
+    font-size:12.2px!important;
+  }
+
+  body .lcv .lcv-nav__avatar,
+  body .vd-section-page__nav img,
+  body .vd-nav__avatar{
+    display:none!important;
+  }
 }

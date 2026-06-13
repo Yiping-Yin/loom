@@ -48,105 +48,54 @@ export default function DisciplinePage() {
     <div className={styles.surface}>
       <LoomSupportNav active="/discipline" />
       <main
-        style={{
-          background: 'var(--bg)',
-          color: 'var(--fg)',
-          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
+        className={styles.main}
+        style={{ padding: 'var(--support-main-padding)' }}
       >
-        <article style={{ width: '100%', maxWidth: '40rem' }}>
-        <header style={{ marginBottom: '2.4rem' }}>
-          <div
-            style={{
-              fontFamily: 'var(--sans)',
-              fontSize: '0.72rem',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--muted)',
-              marginBottom: '0.6rem',
-            }}
-          >
-            Discipline
+        <article className={styles.shell}>
+        <header className={styles.hero}>
+          <div className={styles.heroText}>
+            <div className={styles.eyebrow}>Discipline</div>
+            <h1 className={styles.title}>The six product refusals.</h1>
+            <p className={styles.lead}>
+              Loom is defined as much by what it refuses to do as by what it does. These six
+              refusals are commitments, not settings — none of them can be toggled off.
+            </p>
           </div>
-          <h1
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            The six product refusals.
-          </h1>
-          <p style={{ color: 'var(--fg-secondary)', lineHeight: 1.65, marginTop: '0.8rem' }}>
-            Loom is defined as much by what it refuses to do as by what it does. These six
-            refusals are commitments, not settings — none of them can be toggled off.
-          </p>
+          <div className={styles.heroPanel} aria-hidden="true">
+            <div className={styles.instrument}>
+              <div className={styles.instrumentKicker}>Negative space</div>
+              <div className={styles.instrumentValue}>06</div>
+              <div className={styles.instrumentMeta}>
+                No telemetry, no interruptions, no feed, no unsolicited AI, no false urgency,
+                no automatic full-file upload.
+              </div>
+            </div>
+          </div>
         </header>
 
-        <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '1.1rem' }}>
+        <ol className={styles.sectionGrid} style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {REFUSALS.map((item, index) => (
             <li
               key={item.practice}
-              style={{
-                border: 'var(--hairline)',
-                borderRadius: 8,
-                padding: '1rem 1.2rem',
-                background: 'color-mix(in srgb, var(--fg) 2%, var(--bg))',
-              }}
+              className={styles.thinCard}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: 10,
-                  marginBottom: '0.35rem',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <span
-                  style={{ fontFamily: 'var(--mono)', fontSize: '0.75rem', color: 'var(--muted)' }}
-                >
-                  {index + 1}
-                </span>
+              <div className={styles.row} style={{ marginBottom: '0.35rem' }}>
+                <span className={styles.stepNumber}>{index + 1}</span>
                 <strong style={{ fontFamily: 'var(--serif)', fontSize: '1.05rem' }}>
                   {item.refusal}
                 </strong>
-                <span style={{ color: 'var(--accent)', fontSize: '0.88rem' }}>
+                <span className={styles.supportNote}>
                   {item.practice}
                 </span>
               </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '0.92rem',
-                  lineHeight: 1.6,
-                  color: 'var(--fg-secondary)',
-                }}
-              >
-                {item.body}
-              </p>
+              <p className={styles.muted} style={{ margin: 0 }}>{item.body}</p>
             </li>
           ))}
         </ol>
 
-        <footer
-          style={{
-            marginTop: '2.4rem',
-            display: 'flex',
-            gap: 16,
-            color: 'var(--muted)',
-            fontSize: '0.88rem',
-          }}
-        >
-          <Link href="/system" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            How Loom works
-          </Link>
-          <Link href="/sources" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            Back to Sources
-          </Link>
+        <footer className={styles.linkRail}>
+          <Link href="/system">How Loom works</Link>
+          <Link href="/sources">Back to Sources</Link>
         </footer>
         </article>
       </main>

@@ -6,6 +6,16 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+function pngSize(relativePath: string): { width: number; height: number } {
+  const buffer = fs.readFileSync(path.join(repoRoot, relativePath));
+
+  assert.equal(buffer.toString('ascii', 1, 4), 'PNG');
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20),
+  };
+}
+
 test('app store copy stays aligned with Phase 6 bundle and subtitle constraints', () => {
   const source = fs.readFileSync(path.join(repoRoot, 'docs', 'app-store-copy.md'), 'utf8');
 
@@ -155,6 +165,37 @@ test('mac app Info.plist carries the category that archive validation expects', 
   assert.match(infoPlist, /<key>LSApplicationCategoryType<\/key>\s*<string>public\.app-category\.education<\/string>/);
 });
 
+test('mac signing strips provenance xattrs before codesign', () => {
+  const project = fs.readFileSync(path.join(repoRoot, 'macos-app', 'Loom', 'project.yml'), 'utf8');
+  const xcodeProject = fs.readFileSync(
+    path.join(repoRoot, 'macos-app', 'Loom', 'Loom.xcodeproj', 'project.pbxproj'),
+    'utf8',
+  );
+
+  assert.match(project, /postBuildScripts:[\s\S]*Strip signing-blocking xattrs from app bundle/);
+  assert.match(project, /CODE_SIGNING_ALLOWED=NO/);
+  assert.match(project, /xattr -cr "\$APP"/);
+  assert.match(project, /com\\\.apple\\\.\(ResourceFork\|FinderInfo\)/);
+  assert.match(project, /PROVENANCE_COUNT=/);
+  assert.match(project, /leaving final judgment to codesign/);
+  assert.match(project, /Full Disk Access/);
+  assert.match(xcodeProject, /Strip signing-blocking xattrs from app bundle/);
+  assert.match(
+    xcodeProject,
+    /Stage Next\.js static export into bundle Resources[\s\S]*Sources[\s\S]*Resources[\s\S]*Frameworks[\s\S]*Strip signing-blocking xattrs from app bundle/,
+  );
+});
+
+test('mac app registers the loom URL scheme used by browser capture', () => {
+  const infoPlist = fs.readFileSync(path.join(repoRoot, 'macos-app', 'Loom', 'Info.plist'), 'utf8');
+  const project = fs.readFileSync(path.join(repoRoot, 'macos-app', 'Loom', 'project.yml'), 'utf8');
+
+  assert.match(infoPlist, /<key>CFBundleURLTypes<\/key>/);
+  assert.match(infoPlist, /<key>CFBundleURLName<\/key>\s*<string>com\.yinyiping\.loom<\/string>/);
+  assert.match(infoPlist, /<key>CFBundleURLSchemes<\/key>\s*<array>\s*<string>loom<\/string>\s*<\/array>/);
+  assert.match(project, /CFBundleURLTypes:[\s\S]*CFBundleURLName: com\.yinyiping\.loom[\s\S]*CFBundleURLSchemes:[\s\S]*- loom/);
+});
+
 test('mac app launch scene presents the main window by default', () => {
   const source = fs.readFileSync(
     path.join(repoRoot, 'macos-app', 'Loom', 'Sources', 'LoomApp.swift'),
@@ -179,6 +220,40 @@ test('mac app launch scene presents the main window by default', () => {
   assert.match(source, /@Environment\(\\\.openWindow\) private var openWindow/);
   assert.match(source, /openWindow\(id:\s*MainWindow\.id\)/);
   assert.doesNotMatch(source, /WindowGroup\("Loom",\s*id:\s*MainWindow\.id\)/);
+});
+
+test('Moon Ledger icon pipeline keeps web and macOS assets aligned', () => {
+  const script = fs.readFileSync(path.join(repoRoot, 'scripts', 'generate-icons.mjs'), 'utf8');
+  const publicSvg = fs.readFileSync(path.join(repoRoot, 'public', 'icon.svg'), 'utf8');
+  const sourceSvg = fs.readFileSync(path.join(repoRoot, 'public', 'brand', 'loom_lunar_comet_icon.svg'), 'utf8');
+  const sourcePng = fs.readFileSync(path.join(repoRoot, 'public', 'brand', 'loom_lunar_comet_icon.png'));
+
+  assert.match(script, /loom_lunar_comet_icon\.png/);
+  assert.match(script, /loom_lunar_comet_icon\.svg/);
+  assert.match(script, /Generated Loom Moon Ledger icons/);
+  assert.match(sourceSvg, /Moon Ledger icon/);
+  assert.match(sourceSvg, /signature-cyan meridian line/);
+  assert.match(sourceSvg, /#4BC5DE/);
+  assert.equal(publicSvg, sourceSvg);
+  assert.deepEqual(pngSize('public/brand/loom_lunar_comet_icon.png'), { width: 1024, height: 1024 });
+  assert.deepEqual(pngSize('public/icon.png'), { width: 512, height: 512 });
+  assert.deepEqual(pngSize('public/apple-touch-icon.png'), { width: 180, height: 180 });
+  assert.deepEqual(pngSize('public/favicon-64.png'), { width: 64, height: 64 });
+  assert.deepEqual(pngSize('macos-app/Loom/Assets.xcassets/AppIcon.appiconset/icon_1024.png'), {
+    width: 1024,
+    height: 1024,
+  });
+
+  for (const alias of ['public/brand/loom_icon_var6.png', 'public/brand/loom_app_icon_macos.png']) {
+    assert.deepEqual(fs.readFileSync(path.join(repoRoot, alias)), sourcePng);
+  }
+
+  for (const size of [16, 32, 64, 128, 256, 512, 1024]) {
+    assert.deepEqual(pngSize(`macos-app/Loom/Assets.xcassets/AppIcon.appiconset/icon_${size}.png`), {
+      width: size,
+      height: size,
+    });
+  }
 });
 
 test('first-run sheet is refreshed from current defaults instead of restored state', () => {

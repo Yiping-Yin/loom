@@ -130,14 +130,14 @@ export const PERSONAL_PLATFORM_SECTIONS: PersonalPlatformSection[] = [
   },
   {
     id: 'quantnet',
-    label: 'Quantnet',
+    label: 'QuantNet',
     href: '/knowledge/quantnet',
     summary: 'The market-skills shelf where trading, math, and programming practice are organized into visible capability.',
     status: 'Reference shelf tracks finance and quantitative learning as inspectable practice.',
     nextAction: 'Tie practice outputs to source material and career-facing evidence.',
     pathSteps: ['Skill map', 'Practice loop', 'Career proof'],
     sourceGroups: [
-      { title: 'Learning sources', items: ['Quantnet modules', 'Trading notes', 'Python practice'] },
+      { title: 'Learning sources', items: ['QuantNet modules', 'Trading notes', 'Python practice'] },
       { title: 'Market context', items: ['Order book examples', 'Execution concepts', 'Research prompts'] },
     ],
     processItems: [
@@ -205,7 +205,7 @@ export const PERSONAL_PLATFORM_SECTIONS: PersonalPlatformSection[] = [
 export const PERSONAL_PLATFORM_PROGRESS: PersonalPlatformProgressItem[] = [
   {
     title: 'Five reference shelves',
-    text: 'About, UNSW, Quantnet, WQU, and Claude show the first complete personal platform shape.',
+    text: 'About, UNSW, QuantNet, WQU, and Claude show the first complete personal platform shape.',
     status: 'Active',
   },
   {
@@ -257,7 +257,7 @@ export const PERSONAL_PLATFORM_PRODUCT_THESIS =
 
 export const PERSONAL_PLATFORM_REFERENCE_INSTANCE: PersonalPlatformReferenceInstance = {
   title: 'Yiping is the first reference instance',
-  text: 'About, UNSW, Quantnet, WQU, and Claude are the first real shelves in one user\'s Loom. They prove the product model, but they are not the product boundary.',
+  text: 'About, UNSW, QuantNet, WQU, and Claude are the first real shelves in one user\'s Loom. They prove the product model, but they are not the product boundary.',
 };
 
 export const PERSONAL_PLATFORM_NARRATIVE_LAYERS: PersonalPlatformNarrativeLayer[] = [

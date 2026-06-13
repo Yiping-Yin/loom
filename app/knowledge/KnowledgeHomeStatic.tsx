@@ -1,16 +1,17 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import {
   VERIFIED_DOSSIER_ARTIFACTS,
   VERIFIED_DOSSIER_SECTIONS,
-  VERIFIED_DOSSIER_TOP_NAV,
   resolveVerifiedDossierArtifact,
   type VerifiedDossierArtifactId,
 } from '../../lib/new-loom/verified-dossier-home';
 import { DocumentPreviewCard } from '../../components/verified-dossier/DocumentPreviewCard';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import { InstitutionMark } from '../../components/verified-dossier/InstitutionMark';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import styles from './KnowledgeHomeStatic.module.css';
 
 type SourceLibraryItem = {
@@ -83,6 +84,7 @@ export function KnowledgeHomeStatic({
   busyKey = null,
   isPending = false,
   errorMessage = null,
+  initialSearchQuery = '',
 }: {
   sourceLibraryGroups?: SourceLibraryGroup[];
   groups?: SourceLibraryGroup[];
@@ -112,7 +114,13 @@ export function KnowledgeHomeStatic({
   busyKey?: string | null;
   isPending?: boolean;
   errorMessage?: string | null;
+  initialSearchQuery?: string;
 }) {
+  const [sourceSearchQuery, setSourceSearchQuery] = useState(initialSearchQuery);
+  useEffect(() => {
+    setSourceSearchQuery(initialSearchQuery);
+  }, [initialSearchQuery]);
+
   const resolvedGroups: ResolvedSourceLibraryGroup[] = (sourceLibraryGroups ?? groups ?? []).map(
     (group) => {
       const id =
@@ -137,21 +145,30 @@ export function KnowledgeHomeStatic({
   const topGroup = resolvedGroups
     .flatMap((group) => group.items.map((item) => ({ group, item })))
     .sort((a, b) => b.item.count - a.item.count)[0];
+  const normalizedSearchQuery = normalizeSourceSearch(sourceSearchQuery);
+  const visibleGroups = useMemo(() => {
+    if (!normalizedSearchQuery) return resolvedGroups;
+
+    return resolvedGroups
+      .map((group) => {
+        const groupMatches = normalizeSourceSearch(group.label).includes(normalizedSearchQuery);
+        const items = groupMatches
+          ? group.items
+          : group.items.filter((item) =>
+              normalizeSourceSearch(`${item.label} ${item.slug} ${sourceCategorySignal(item)}`).includes(
+                normalizedSearchQuery,
+              ),
+            );
+
+        return { ...group, items };
+      })
+      .filter((group) => group.items.length > 0);
+  }, [normalizedSearchQuery, resolvedGroups]);
+  const visibleItemCount = visibleGroups.reduce((sum, group) => sum + group.items.length, 0);
 
   return (
     <main className={`vd-home ${styles.page}`} aria-labelledby="sources-title">
-      <nav className="vd-nav vd-nav--simple" aria-label="Verified dossier navigation">
-        <a className="vd-wordmark" href="/loom" aria-label="Open Loom product">
-          Loom
-        </a>
-        <div className="vd-nav__links">
-          {VERIFIED_DOSSIER_TOP_NAV.map((item) => (
-            <a key={item.label} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </div>
-      </nav>
+      <LoomGlobalNav ariaLabel="Verified dossier navigation" />
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
@@ -161,6 +178,22 @@ export function KnowledgeHomeStatic({
             Sources hold the files, categories, and provenance behind the profile. Re-shelving
             changes Loom provenance only; original source files stay unchanged.
           </p>
+          {normalizedSearchQuery ? (
+            <div className={styles.searchCallout} role="status" aria-label="Active source search">
+              <span>Active search</span>
+              <strong>{sourceSearchQuery.trim()}</strong>
+              <p>
+                {formatCount(visibleItemCount, 'matching source')} across{' '}
+                {formatCount(visibleGroups.length, 'shelf')}
+              </p>
+              <div>
+                <a href="#source-library-title">Review matching shelves</a>
+                <button type="button" onClick={() => setSourceSearchQuery('')}>
+                  Clear search
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
         <aside className={styles.metrics} aria-label="Sources summary">
           <div>
@@ -262,8 +295,27 @@ export function KnowledgeHomeStatic({
 
           <div className={styles.libraryToolbar}>
             <span>
-              {formatCount(totalCollections, 'shelf')} / {formatCount(totalDocs, 'indexed source')}
+              {normalizedSearchQuery
+                ? `${formatCount(visibleItemCount, 'matching source')} for ${sourceSearchQuery.trim()}`
+                : `${formatCount(totalCollections, 'shelf')} / ${formatCount(totalDocs, 'indexed source')}`}
             </span>
+            <form
+              className={styles.librarySearch}
+              role="search"
+              onSubmit={(event) => event.preventDefault()}
+            >
+              <input
+                value={sourceSearchQuery}
+                onChange={(event) => setSourceSearchQuery(event.target.value)}
+                placeholder="Search shelves and sources"
+                aria-label="Search shelves and sources"
+              />
+              {sourceSearchQuery ? (
+                <button type="button" onClick={() => setSourceSearchQuery('')}>
+                  Clear
+                </button>
+              ) : null}
+            </form>
             {isAddingGroup ? (
               <form
                 className={styles.groupForm}
@@ -299,7 +351,12 @@ export function KnowledgeHomeStatic({
           </div>
 
           <div className={styles.groupRows}>
-            {resolvedGroups.map((group, index) => {
+            {visibleGroups.length === 0 && normalizedSearchQuery ? (
+              <div className={styles.emptySearch} role="status">
+                No shelves match this search.
+              </div>
+            ) : null}
+            {visibleGroups.map((group, index) => {
               const empty = group.items.length === 0;
               const isEditing = editingGroupId === group.id;
               const isDeleting = confirmingDeleteGroupId === group.id;
@@ -574,6 +631,10 @@ function sourceCategorySignal(item: SourceLibraryItem) {
   return 'Source group';
 }
 
+function normalizeSourceSearch(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
 function stableHash(value: string) {
   let hash = 0;
   for (let index = 0; index < value.length; index += 1) {
@@ -587,5 +648,6 @@ function formatOrdinal(value: number) {
 }
 
 function formatCount(count: number, noun: string) {
+  if (noun === 'shelf') return `${count} ${count === 1 ? 'shelf' : 'shelves'}`;
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }

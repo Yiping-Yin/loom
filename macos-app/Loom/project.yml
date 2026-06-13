@@ -74,6 +74,10 @@ targets:
         CFBundleDisplayName: Loom
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleURLTypes:
+          - CFBundleURLName: com.yinyiping.loom
+            CFBundleURLSchemes:
+              - loom
         LSApplicationCategoryType: "public.app-category.education"
     preBuildScripts:
       - name: Stage Next.js static export into bundle Resources
@@ -116,6 +120,46 @@ targets:
             cp -R "$EXPORT"/. "$DEST"/
           fi
           echo "Loom: staged $(find "$DEST" -type f | wc -l | tr -d ' ') files to Resources/web"
+    postBuildScripts:
+      - name: Strip signing-blocking xattrs from app bundle
+        # Xcode signs the bundle after target build phases. The staged
+        # static export can inherit macOS resource-fork/Finder metadata from
+        # the repo, and codesign rejects bundles that still contain those
+        # attributes. Strip them from the assembled app immediately before
+        # signing, then fail with a concrete permission hint if TCC prevents
+        # that cleanup from taking effect. com.apple.provenance can be
+        # reattached by macOS/Xcode and may be undeletable even when xattr
+        # exits successfully, so we report it without making this phase
+        # stricter than codesign itself.
+        runOnlyWhenInstalling: false
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          APP="${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}"
+          if [ ! -d "$APP" ]; then
+            echo "Loom: app bundle not present yet; skipping xattr cleanup."
+            exit 0
+          fi
+          if [ "${CODE_SIGNING_ALLOWED:-YES}" = "NO" ]; then
+            echo "Loom: CODE_SIGNING_ALLOWED=NO — skipping signing xattr preflight."
+            exit 0
+          fi
+          if ! command -v xattr >/dev/null 2>&1; then
+            echo "Loom: xattr unavailable; cannot strip signing detritus."
+            exit 1
+          fi
+          xattr -cr "$APP"
+          if xattr -lr "$APP" 2>/dev/null | grep -E 'com\.apple\.(ResourceFork|FinderInfo)' >/dev/null; then
+            echo "Loom: signing-blocking xattrs remain after xattr -cr."
+            echo "      Grant Full Disk Access to the build host (Terminal, Xcode, or Codex) and rebuild."
+            xattr -lr "$APP" 2>/dev/null | grep -E 'com\.apple\.(ResourceFork|FinderInfo)' | head -40
+            exit 1
+          fi
+          PROVENANCE_COUNT="$(xattr -lr "$APP" 2>/dev/null | grep -c 'com\.apple\.provenance' || true)"
+          if [ "$PROVENANCE_COUNT" != "0" ]; then
+            echo "Loom: com.apple.provenance remains on ${PROVENANCE_COUNT} bundle paths; leaving final judgment to codesign."
+          fi
+          echo "Loom: stripped signing-blocking extended attributes from app bundle."
     entitlements:
       path: Loom.entitlements
       properties:

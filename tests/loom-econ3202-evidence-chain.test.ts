@@ -129,22 +129,36 @@ test('ECON3202 problem-set detail route is static and evidence-oriented', () => 
   assert.doesNotMatch(detailPage, /card/i);
 });
 
-test('UNSW study pages share a course navigation rail', () => {
+test('UNSW study pages use the global Loom nav plus a local course rail', () => {
   const nav = readText('app/knowledge/unsw/UnswStudyNav.tsx');
   const shelfPage = readText('app/knowledge/unsw/page.tsx');
   const econPage = readText('app/knowledge/unsw/econ3202/page.tsx');
   const detailPage = readText('app/knowledge/unsw/econ3202/[problemSet]/page.tsx');
+  const styles = readText('app/knowledge/unsw/UnswDossier.module.css');
+  const courseRailBlock = styles.match(/\.courseRail\s*{[\s\S]*?}\n/)?.[0] ?? '';
 
-  for (const label of ['Loom', 'About', 'Sources', 'UNSW', 'ECON3202']) {
+  for (const page of [shelfPage, econPage, detailPage]) {
+    assert.match(page, /LoomGlobalNav/);
+  }
+
+  for (const label of ['Sources', 'UNSW', 'ECON3202']) {
     assert.match(nav, new RegExp(label));
   }
+  assert.doesNotMatch(nav, /href="\/"\s+className=\{styles\.brand\}/);
+  assert.doesNotMatch(nav, />\s*Loom\s*</);
+  assert.match(nav, /aria-label="UNSW course navigation"/);
   for (const slug of UNSW_ECON3202_PROBLEM_SET_SLUGS) {
     assert.match(nav, new RegExp(`/knowledge/unsw/econ3202/\\$\\{set\\.slug\\}`));
     assert.ok(getUnswEcon3202ProblemSet(slug), `${slug} should resolve for nav links`);
   }
 
-  assert.match(nav, /styles\.topNav/);
+  assert.match(nav, /styles\.courseRail/);
   assert.match(nav, /aria-current=\{active \? 'page' : undefined\}/);
+  assert.match(courseRailBlock, /position: relative/);
+  assert.match(courseRailBlock, /width:\s*min\(calc\(100% - clamp\(1\.4rem, 7vw, 8rem\)\), 52rem\)/);
+  assert.match(courseRailBlock, /margin:\s*clamp\(5\.8rem, 8vw, 7\.2rem\) auto 0/);
+  assert.doesNotMatch(courseRailBlock, /position: sticky/);
+  assert.doesNotMatch(styles, /\.topNav\s*{/);
   assert.match(shelfPage, /<UnswStudyNav active="unsw" \/>/);
   assert.match(econPage, /<UnswStudyNav active="econ3202" \/>/);
   assert.match(detailPage, /<UnswStudyNav active=\{set\.slug\} \/>/);

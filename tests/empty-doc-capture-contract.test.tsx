@@ -5,11 +5,8 @@ import test from 'node:test';
 
 const repoRoot = path.resolve(__dirname, '..');
 
-test('knowledge doc page routes empty docs into the capture surface', () => {
-  const source = fs.readFileSync(
-    path.join(repoRoot, 'app/knowledge/[category]/[slug]/page.tsx'),
-    'utf8',
-  );
+test('document client routes empty docs into the capture surface', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'app/DocClient.tsx'), 'utf8');
 
   assert.match(source, /EmptyDocCaptureSurface/);
   assert.match(source, /isEligibleCaptureDoc/);
@@ -24,7 +21,8 @@ test('capture surface does not reuse Today free-input semantics', () => {
 
   assert.doesNotMatch(source, /free-recompile/);
   assert.match(source, /capture-organize/);
-  assert.match(source, /Organize into note/);
+  assert.match(source, /Create first note/);
+  assert.doesNotMatch(source, /Organize into note|AI organization|first-pass organization/);
 });
 
 test('capture surface gates organize on AI availability instead of blindly firing the runtime', () => {
@@ -50,6 +48,6 @@ test('capture surface shows staged progress feedback while organizing the first 
   assert.match(source, /setProgressPhase\('saving'\)/);
   assert.match(source, /setProgressPhase\('opening'\)/);
   assert.match(source, /Preparing the first note with AI/);
-  assert.match(source, /Saving the organized page to this topic/);
-  assert.match(source, /Opening the first organized page/);
+  assert.match(source, /Saving the first source page to this topic/);
+  assert.match(source, /Opening the first source page/);
 });

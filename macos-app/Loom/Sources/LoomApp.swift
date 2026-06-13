@@ -281,6 +281,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // The `loom://` AppleEvent handler MUST be registered
+        // synchronously before launch finishes: macOS queues a
+        // launch-delivered `kAEGetURL` event (extension/bookmarklet
+        // click while Loom isn't running) and dispatches it as soon as
+        // the run loop starts — if the handler isn't registered yet the
+        // event is silently dropped. The deferred
+        // `configureLaunchIfNeeded` hops (DispatchQueue/Task) lose that
+        // race nondeterministically.
+        guard !isRunningInXCTestHost else { return }
+        registerURLSchemeHandler()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         Task { @MainActor in
             guard !isRunningInXCTestHost else { return }
@@ -304,6 +317,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Phase A3 — register the `loom://` URL handler. Bookmarklet
+    /// navigates the browser to `loom://capture?payload=…` which
+    /// bounces back to the app via this AppleEvent. We re-post as
+    /// a Notification so the active root view can mount the
+    /// CaptureSheet without the AppDelegate knowing SwiftUI state.
+    /// Called synchronously from `applicationWillFinishLaunching` —
+    /// see the comment there for why it must not be deferred.
+    private var urlHandlerRegistered = false
+    private func registerURLSchemeHandler() {
+        guard !urlHandlerRegistered else { return }
+        urlHandlerRegistered = true
+        NSAppleEventManager.shared().setEventHandler(
+            self,
+            andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
+            forEventClass: AEEventClass(kInternetEventClass),
+            andEventID: AEEventID(kAEGetURL)
+        )
+    }
+
     @MainActor
     private func configureLaunchIfNeeded() {
         guard !launchConfigured else { return }
@@ -311,17 +343,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSWindow.allowsAutomaticWindowTabbing = false
         NSApp.setActivationPolicy(.regular)
         UserDefaults.standard.set(false, forKey: showDebugHUDDefaultsKey)
-        // Phase A3 — register the `loom://` URL handler. Bookmarklet
-        // navigates the browser to `loom://capture?payload=…` which
-        // bounces back to the app via this AppleEvent. We re-post as
-        // a Notification so the active root view can mount the
-        // CaptureSheet without the AppDelegate knowing SwiftUI state.
-        NSAppleEventManager.shared().setEventHandler(
-            self,
-            andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
-            forEventClass: AEEventClass(kInternetEventClass),
-            andEventID: AEEventID(kAEGetURL)
-        )
+        // URL handler registration normally already happened in
+        // applicationWillFinishLaunching; this is a belt-and-braces
+        // repeat for exotic activation paths (idempotent).
+        registerURLSchemeHandler()
         // Restore the security-scoped bookmark for the user's content
         // folder (if any) before ContentView's URL scheme handler
         // initializes — otherwise under sandbox it can't read user files.
@@ -375,15 +400,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         if let window = existingMainWindow(includeHidden: false) {
-            NSLog("[Loom] ensureMainWindowVisible replacing off-active window=%d", window.windowNumber)
-            closeMainWindow(window)
-            materializeFallbackMainWindow(ignoreHiddenWindow: true)
+            // A window mid-Space-transition can transiently fail the
+            // active-space check during launch. Repair by presenting and
+            // moving it, never by closing a user-visible window.
+            loomCaptureLog("ensureMainWindowVisible: promoting off-active window #\(window.windowNumber)")
+            presentWindowOnActiveSpace(window)
             return
         }
         if let window = existingMainWindow(includeHidden: true) {
-            NSLog("[Loom] ensureMainWindowVisible replacing hidden window=%d", window.windowNumber)
-            closeMainWindow(window)
-            materializeFallbackMainWindow(ignoreHiddenWindow: true)
+            loomCaptureLog("ensureMainWindowVisible: promoting hidden window #\(window.windowNumber)")
+            presentWindowOnActiveSpace(window)
             return
         }
         materializeFallbackMainWindow()
@@ -392,19 +418,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func presentWindowOnActiveSpace(_ window: NSWindow) {
         configureMainWindowChrome(window)
-        var currentSpaceBehavior = window.collectionBehavior
-        currentSpaceBehavior.remove(.canJoinAllSpaces)
-        currentSpaceBehavior.insert(.moveToActiveSpace)
-        window.collectionBehavior = currentSpaceBehavior
+        let originalSpaceBehavior = window.collectionBehavior
+        var presentationBehavior = originalSpaceBehavior
+        presentationBehavior.remove(.moveToActiveSpace)
+        presentationBehavior.insert(.canJoinAllSpaces)
+        window.collectionBehavior = presentationBehavior
+        window.deminiaturize(nil)
+        NSApp.unhide(nil)
         window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
         NSApp.activate(ignoringOtherApps: true)
+        // Installed builds can otherwise restore the main SwiftUI scene
+        // onto a different Space where AX/Computer Use cannot see it.
+        // Keep the primary room joined to Spaces; a visible main window
+        // is a stricter product invariant than desktop-local behavior.
         // Space transitions need a delayed repair after AppKit finishes
         // moving the window.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak window] in
-            guard let window else { return }
-            Task { @MainActor in
-                self.configureMainWindowChrome(window)
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self, weak window] in
+            guard let self, let window else { return }
+            self.configureMainWindowChrome(window)
         }
     }
 
@@ -421,15 +454,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         if let window = existingMainWindow(includeHidden: false) {
-            NSLog("[Loom] materializeFallbackMainWindow replacing off-active window=%d", window.windowNumber)
-            closeMainWindow(window)
-            createFallbackMainWindow()
+            loomCaptureLog("materializeFallbackMainWindow: promoting off-active window #\(window.windowNumber)")
+            presentWindowOnActiveSpace(window)
             return
         }
         if !ignoreHiddenWindow, let window = existingMainWindow(includeHidden: true) {
-            NSLog("[Loom] materializeFallbackMainWindow replacing hidden window=%d", window.windowNumber)
-            closeMainWindow(window)
-            createFallbackMainWindow()
+            loomCaptureLog("materializeFallbackMainWindow: promoting hidden window #\(window.windowNumber)")
+            presentWindowOnActiveSpace(window)
             return
         }
         createFallbackMainWindow()
@@ -496,6 +527,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // inside the webview; `loom://capture` and `loom://bundle`
         // arrive here from outside the app.
         if url.host == "capture" {
+            loomCaptureLog("AppleEvent kAEGetURL: capture URL arrived (length \(urlString.count))")
             Task { @MainActor in
                 handleCaptureURL(url)
             }
@@ -554,6 +586,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func handleCaptureURL(_ url: URL) {
+        // Park the URL before any window work: on a cold launch this
+        // handler runs before any root view has subscribed to
+        // `.loomCaptureFromURL`, so the notification below would land on
+        // zero listeners — and the window dance below can mount several
+        // root-view instances over the next second. Each one picks the
+        // parked URL up on appear (see `LoomCaptureURLRelay`); the entry
+        // expires once the windows have settled so a much later mount
+        // can't resurrect a stale capture.
+        let captureToken = UUID()
+        LoomCaptureURLRelay.savePending(url, token: captureToken)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            Task { @MainActor in
+                LoomCaptureURLRelay.clear(ifToken: captureToken)
+            }
+        }
         // URL-scheme handler activation is user-initiated (they
         // clicked L in the browser), so cross-space + cross-app
         // activation is legitimate. Use the deprecated
@@ -594,7 +641,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.post(
             name: .loomCaptureFromURL,
             object: nil,
-            userInfo: ["url": url]
+            userInfo: ["url": url, "token": captureToken]
         )
     }
 
@@ -611,6 +658,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func closeMainWindow(_ window: NSWindow) {
+        loomCaptureLog("closeMainWindow: #\(window.windowNumber) (sheet: \(window.attachedSheet != nil))")
         if window === fallbackMainWindow {
             fallbackMainWindow = nil
         }

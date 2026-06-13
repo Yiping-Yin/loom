@@ -10,9 +10,19 @@ function read(relativePath: string) {
 }
 
 test('Draft page is composed as a professional source-grounded workspace', () => {
+  const draftPage = read('app/draft/page.tsx');
   const draftClient = read('app/draft/DraftClient.tsx');
   const globals = read('app/globals.css');
+  const draftDeskCss = read('app/draft/draft-evidence-desk.module.css');
 
+  assert.match(draftPage, /title: 'Draft · Loom'/);
+  assert.match(draftPage, /description: 'Write source-grounded drafts from verified Loom evidence\.'/);
+  assert.match(draftClient, /LoomGlobalNav/);
+  assert.match(draftClient, /activeHref="\/draft"/);
+  assert.match(draftClient, /ariaLabel="Draft navigation"/);
+  assert.match(draftClient, /<h1 className="new-loom-draft__sr-title">Draft evidence desk<\/h1>/);
+  assert.doesNotMatch(draftClient, /new-loom-draft__wordmark/);
+  assert.doesNotMatch(globals, /new-loom-draft__wordmark/);
   assert.match(draftClient, /new-loom-draft__identity-rail/);
   assert.match(draftClient, /new-loom-draft__workspace/);
   assert.match(draftClient, /new-loom-draft__document-header/);
@@ -31,4 +41,20 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.match(globals, /\.new-loom-draft__document-header\s*\{/);
   assert.match(globals, /\.new-loom-draft__editor-shell\s*\{/);
   assert.match(globals, /\.new-loom-draft__proof-strip\s*\{/);
+  assert.match(draftDeskCss, /\.surface :global\(\.new-loom-draft__sr-title\)/);
+  assert.match(
+    draftDeskCss,
+    /--draft-nav-clearance:\s*clamp\(5\.75rem,\s*7vw,\s*6\.5rem\)/,
+    'Draft needs a route-level nav clearance token so the floating global nav does not cover document chrome',
+  );
+  assert.match(
+    draftDeskCss,
+    /new-loom-draft__main\)[\s\S]*padding-block-start:\s*var\(--draft-nav-clearance\)/,
+    'Draft main column should reserve vertical space for the global floating navigation',
+  );
+  assert.match(
+    draftDeskCss,
+    /new-loom-draft__rail-section\[aria-label="Workspace status"\]\s+ol\)[\s\S]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/,
+  );
+  assert.match(draftDeskCss, /new-loom-draft__rail-section\[aria-label="Workspace status"\]\s+li\)[\s\S]*min-height:\s*4\.6rem/);
 });

@@ -1,15 +1,13 @@
 'use client';
 
 /**
- * SystemClient — how Loom works, on one quiet sheet.
+ * SystemClient — archived system note.
  *
- * Replaces the retired product map. Instead of bands of legacy engine
- * names, /system now explains the one loop the product actually runs:
+ * The visible product story now lives in /product-history. This route stays as
+ * a quiet compatibility note for old links and keeps the loop record folded
+ * away unless someone explicitly opens it:
  *
  *   Source workspace → Reader notes → Draft references
- *
- * Sources and Draft are the two primary workspaces; everything else on
- * this page is a support surface reachable from the loop.
  */
 
 import Link from 'next/link';
@@ -20,174 +18,94 @@ const LOOP_STEPS = [
   {
     label: 'Source workspace',
     href: '/sources',
-    body: 'Add, capture, and review source material in Sources. Web captures and local files sit on the same shelf. Original files stay read-only — Loom never edits what you brought in.',
+    body: 'Sources hold files. Original files stay read-only.',
   },
   {
     label: 'Reader notes',
     href: '/sources',
-    body: 'While reading, mark passages and hold questions in place. Notes stay anchored to the exact passage they came from, so every thought keeps its source.',
+    body: 'Mark passages. Keep the anchor.',
   },
   {
     label: 'Draft references',
     href: '/draft',
-    body: 'Writing happens in Draft, with the sources you marked attached as references beside the text. Citations point back to the passage, never to a paraphrase.',
+    body: 'Write with references beside the text.',
   },
 ] as const;
-
-const supportLinkStyle = {
-  color: 'var(--accent)',
-  textDecoration: 'none',
-  minWidth: '7.5rem',
-} as const;
-
-const supportNoteStyle = { color: 'var(--muted)', fontSize: '0.88rem' } as const;
-
-const supportRowStyle = { display: 'flex', alignItems: 'baseline', gap: 10 } as const;
 
 export default function SystemClient() {
   return (
     <div className={styles.surface}>
       <LoomSupportNav active="/system" />
       <main
-        style={{
-          background: 'var(--bg)',
-          color: 'var(--fg)',
-          padding: 'clamp(3rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4rem)',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
+        className={styles.main}
+        style={{ padding: 'var(--support-main-padding)' }}
       >
-        <article style={{ width: '100%', maxWidth: '44rem' }}>
-        <header style={{ marginBottom: '2.5rem' }}>
-          <div
-            style={{
-              fontFamily: 'var(--sans)',
-              fontSize: '0.72rem',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--muted)',
-              marginBottom: '0.6rem',
-            }}
-          >
-            System
-          </div>
-          <h1
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
-              fontWeight: 500,
-              margin: 0,
-            }}
-          >
-            One loop, two workspaces.
-          </h1>
-          <p style={{ color: 'var(--fg-secondary)', lineHeight: 1.65, marginTop: '0.8rem' }}>
-            Loom runs a single loop between its two primary workspaces, Sources and Draft.
-            Material comes in as sources, becomes notes while you read, and leaves as
-            referenced writing.
-          </p>
-        </header>
+        <article className={`${styles.shellNarrow} ${styles.noteShell}`}>
+          <header className={styles.noteHeader}>
+            <div className={styles.eyebrow}>Archived system note</div>
+            <h1 className={styles.noteTitle}>This page moved into Loom history.</h1>
+            <p className={styles.noteLead}>
+              Archived. The record now lives inside Loom history.
+            </p>
+            <div className={styles.linkRail}>
+              <Link href="/product-history#system-loop">Open in Loom history</Link>
+              <Link href="/loom">Back to Loom</Link>
+            </div>
+          </header>
 
-        <section aria-label="How material moves through Loom">
-          <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '1.1rem' }}>
-            {LOOP_STEPS.map((step, index) => (
-              <li
-                key={step.label}
-                style={{
-                  border: 'var(--hairline)',
-                  borderRadius: 8,
-                  padding: '1rem 1.2rem',
-                  background: 'color-mix(in srgb, var(--fg) 2%, var(--bg))',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: 10,
-                    marginBottom: '0.35rem',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: 'var(--mono)',
-                      fontSize: '0.75rem',
-                      color: 'var(--muted)',
-                    }}
-                  >
-                    {index + 1}
-                  </span>
-                  <Link
-                    href={step.href}
-                    style={{
-                      fontFamily: 'var(--serif)',
-                      fontSize: '1.05rem',
-                      fontWeight: 600,
-                      color: 'var(--fg)',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    {step.label}
+          <details className={styles.archiveDetails}>
+            <summary>Show archived Source / Reader notes / Draft note</summary>
+
+            <section aria-label="How material moved through the old system note">
+              <ol className={styles.orderedList}>
+                {LOOP_STEPS.map((step, index) => (
+                  <li key={step.label} className={styles.thinCard}>
+                    <div className={styles.row}>
+                      <span className={styles.stepNumber}>{index + 1}</span>
+                      <Link
+                        href={step.href}
+                        className={styles.textLink}
+                        style={{ fontFamily: 'var(--serif)', fontSize: '1.05rem', fontWeight: 600 }}
+                      >
+                        {step.label}
+                      </Link>
+                    </div>
+                    <p className={styles.muted} style={{ margin: '0.4rem 0 0' }}>{step.body}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            <section aria-label="Support surfaces" style={{ marginTop: '1.2rem' }}>
+              <h2 className={styles.sectionHeading}>Around the loop</h2>
+              <ul className={styles.plainList}>
+                <li className={styles.row}>
+                  <Link href="/discipline" className={styles.supportLink}>
+                    Discipline
                   </Link>
-                </div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '0.92rem',
-                    lineHeight: 1.6,
-                    color: 'var(--fg-secondary)',
-                  }}
-                >
-                  {step.body}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section aria-label="Support surfaces" style={{ marginTop: '2.6rem' }}>
-          <h2
-            style={{
-              fontFamily: 'var(--serif)',
-              fontSize: '1.15rem',
-              fontWeight: 600,
-              marginBottom: '0.8rem',
-            }}
-          >
-            Around the loop
-          </h2>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.5rem' }}>
-            <li style={supportRowStyle}>
-              <Link href="/discipline" style={supportLinkStyle}>
-                Discipline
-              </Link>
-              <span style={supportNoteStyle}>the six product refusals, written down</span>
-            </li>
-            <li style={supportRowStyle}>
-              <Link href="/year" style={supportLinkStyle}>
-                The Year
-              </Link>
-              <span style={supportNoteStyle}>twelve months of material, weight over count</span>
-            </li>
-            <li style={supportRowStyle}>
-              <Link href="/hour" style={supportLinkStyle}>
-                The Hour
-              </Link>
-              <span style={supportNoteStyle}>the current thinking window, ticking</span>
-            </li>
-            <li style={supportRowStyle}>
-              <Link href="/connections" style={supportLinkStyle}>
-                Connections
-              </Link>
-              <span style={supportNoteStyle}>correspondents and cross-origin links</span>
-            </li>
-          </ul>
-        </section>
-
-        <footer style={{ marginTop: '2.6rem', color: 'var(--muted)', fontSize: '0.85rem' }}>
-          Nothing here speaks unless you ask. Sources hold what came in; Draft holds what
-          goes out; the loop is yours to walk.
-        </footer>
+                  <span className={styles.supportNote}>six refusals</span>
+                </li>
+                <li className={styles.row}>
+                  <Link href="/year" className={styles.supportLink}>
+                    The Year
+                  </Link>
+                  <span className={styles.supportNote}>twelve months</span>
+                </li>
+                <li className={styles.row}>
+                  <Link href="/hour" className={styles.supportLink}>
+                    The Hour
+                  </Link>
+                  <span className={styles.supportNote}>current window</span>
+                </li>
+                <li className={styles.row}>
+                  <Link href="/connections" className={styles.supportLink}>
+                    Connections
+                  </Link>
+                  <span className={styles.supportNote}>source links</span>
+                </li>
+              </ul>
+            </section>
+          </details>
         </article>
       </main>
     </div>

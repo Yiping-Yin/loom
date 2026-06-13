@@ -10,9 +10,8 @@
   --unsw-border-strong: var(--ink-5);
   --unsw-surface: var(--ink-3);
   --unsw-soft: var(--ink-2);
-  --unsw-accent: var(--gold);
-  --unsw-accent-strong: var(--gold-hi);
-  --unsw-gold: var(--gold);
+  --unsw-accent: var(--accent);
+  --unsw-accent-strong: var(--accent-info);
 
   /* DocumentPreviewCard chrome (vd-*) on this non-vd-home page. */
   --vd-ink: var(--text-1);
@@ -22,13 +21,13 @@
   --vd-border-strong: var(--ink-5);
   --vd-surface: var(--ink-3);
   --vd-surface-soft: var(--ink-2);
-  --vd-accent: var(--gold);
-  --vd-accent-strong: var(--gold-hi);
+  --vd-accent: var(--accent);
+  --vd-accent-strong: var(--accent-info);
   --vd-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
 
   --shelf-glass:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.05), transparent 32%),
-    linear-gradient(180deg, var(--ink-4), var(--ink-3));
+    linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
   --shelf-float:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(0, 0, 0, 0.4),
@@ -36,8 +35,8 @@
 
   min-height: 100vh;
   overflow-x: clip;
-  background:
-    radial-gradient(120% 78% at 50% -8%, #10141A 0%, var(--ink-0) 56%);
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
   background-color: var(--ink-0);
   color: var(--text-1);
   font-family: var(--sans);
@@ -91,34 +90,39 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.topNav {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.65rem 1.35rem;
+.courseRail {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.48rem 0.7rem;
   align-items: center;
-  /* Full-bleed sticky bar, but its inner content (brand + links) is centered
-     to the SAME ~1320px content frame + edge inset as the body sections, so
-     the wordmark left-edge aligns to the hero content left-edge. */
-  padding: 0.72rem max(clamp(1.2rem, 3vw, 3rem), calc((100% - 82.5rem) / 2 + clamp(1.2rem, 3vw, 3rem)));
-  border-bottom: 1px solid var(--line);
-  background: rgba(13, 17, 22, 0.62);
-  -webkit-backdrop-filter: saturate(140%) blur(18px);
-  backdrop-filter: saturate(140%) blur(18px);
+  justify-content: center;
+  width: min(calc(100% - clamp(1.4rem, 7vw, 8rem)), 52rem);
+  margin: clamp(5.8rem, 8vw, 7.2rem) auto 0;
+  padding: 0.48rem clamp(0.6rem, 1.3vw, 0.9rem);
+  border: 1px solid rgba(224, 229, 232, 0.12);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(238, 241, 242, 0.058), rgba(20, 23, 26, 0.54)),
+    rgba(7, 8, 9, 0.58);
+  -webkit-backdrop-filter: saturate(112%) blur(16px);
+  backdrop-filter: saturate(112%) blur(16px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 12px 30px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.34),
+    0 12px 28px rgba(0, 0, 0, 0.3);
 }
 
 .brand {
-  color: var(--text-1);
-  font-family: var(--display);
-  font-size: 1.62rem;
-  font-weight: 600;
-  line-height: 1;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  line-height: 1.15;
   text-decoration: none;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -133,10 +137,7 @@
 }
 
 .problemGroup {
-  grid-column: 1 / -1;
-  justify-content: flex-start;
-  padding-top: 0.62rem;
-  border-top: 1px solid var(--line-soft);
+  justify-content: center;
 }
 
 .navLink,
@@ -152,19 +153,19 @@
 
 .navLink {
   color: var(--text-2);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   white-space: nowrap;
   transition: color 0.18s ease;
 }
 
 .problemLink {
-  min-height: 1.95rem;
-  padding: 0.4rem 0.6rem;
+  min-height: 1.68rem;
+  padding: 0.32rem 0.54rem;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 999px;
   background: var(--ink-3);
   color: var(--text-2);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   white-space: nowrap;
   transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
@@ -173,13 +174,13 @@
 .textLink:hover {
   color: var(--text-1);
   text-decoration: underline;
-  text-decoration-color: rgba(200, 162, 74, 0.6);
+  text-decoration-color: rgba(224, 229, 232, 0.5);
   text-underline-offset: 3px;
 }
 
 .problemLink:hover,
 .buttonLink:hover {
-  border-color: rgba(200, 162, 74, 0.5);
+  border-color: rgba(224, 229, 232, 0.38);
   background: var(--ink-4);
   color: var(--text-1);
   text-decoration: none;
@@ -189,16 +190,19 @@
 .problemLink:focus-visible,
 .textLink:focus-visible,
 .buttonLink:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--unsw-accent-strong);
   outline-offset: 2px;
 }
 
 .activeLink {
   color: var(--text-1);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--unsw-accent) 72%, transparent);
+  text-underline-offset: 3px;
 }
 
 .activeProblem {
-  border-color: rgba(200, 162, 74, 0.5);
+  border-color: rgba(224, 229, 232, 0.38);
   background: var(--ink-4);
   color: var(--text-1);
 }
@@ -299,19 +303,19 @@
 }
 
 .courseFolderCard:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--unsw-accent-strong);
   outline-offset: 2px;
 }
 
-/* Folder mark — thin gold hairline glyph, not a filled green chip. */
+/* Folder mark — thin silver hairline glyph, not a filled colour chip. */
 .courseFolderIcon {
   position: relative;
   width: 1.45rem;
   height: 1.08rem;
   margin-top: 0.08rem;
-  border: 1.2px solid var(--gold);
+  border: 1.2px solid rgba(224, 229, 232, 0.58);
   border-radius: 4px;
-  background: rgba(200, 162, 74, 0.06);
+  background: rgba(224, 229, 232, 0.045);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -321,7 +325,7 @@
   left: 0.1rem;
   width: 0.76rem;
   height: 0.34rem;
-  border: 1.2px solid var(--gold);
+  border: 1.2px solid var(--unsw-accent);
   border-bottom: 0;
   border-radius: 4px 4px 0 0;
   background: var(--ink-3);
@@ -350,7 +354,7 @@
 }
 
 .courseFolderCard small {
-  color: var(--gold);
+  color: var(--unsw-accent);
   font-family: var(--mono);
   font-size: 0.62rem;
   font-weight: 500;
@@ -387,13 +391,13 @@
 }
 
 .courseFolderMore:hover {
-  border-color: rgba(200, 162, 74, 0.5);
+  border-color: rgba(224, 229, 232, 0.38);
   background: var(--ink-4);
   color: var(--text-1);
 }
 
 .courseFolderMore:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--unsw-accent-strong);
   outline-offset: 2px;
 }
 
@@ -524,14 +528,14 @@
   margin-top: 0.25rem;
 }
 
-/* Restrained ghost button — faint gold hairline, luminance hover. */
+/* Restrained ghost button — faint silver hairline, luminance hover. */
 .buttonLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 2.4rem;
   padding: 0 1.05rem;
-  border: 1px solid rgba(200, 162, 74, 0.45);
+  border: 1px solid rgba(224, 229, 232, 0.24);
   border-radius: 8px;
   background:
     linear-gradient(180deg, var(--ink-4), var(--ink-3));
@@ -545,7 +549,7 @@
 }
 
 .buttonLink:hover {
-  border-color: rgba(227, 197, 106, 0.6);
+  border-color: rgba(224, 229, 232, 0.42);
   background:
     linear-gradient(180deg, var(--ink-4), var(--ink-3));
   color: var(--text-1);
@@ -766,7 +770,7 @@
 
 .problemIndex,
 .weekMarker {
-  color: var(--gold);
+  color: var(--unsw-accent);
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 600;
@@ -837,7 +841,7 @@
 }
 
 .sourcePanel:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--unsw-accent-strong);
   outline-offset: 2px;
 }
 
@@ -960,8 +964,10 @@
 }
 
 @media (max-width: 640px) {
-  .topNav {
-    grid-template-columns: 1fr;
+  .courseRail {
+    width: min(calc(100% - 1rem), 52rem);
+    margin-top: 5.4rem;
+    border-radius: 20px;
   }
 
   .hero,

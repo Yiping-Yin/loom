@@ -144,7 +144,7 @@ test('AnswerInspector is citation-first and no longer titled as a chatbot', () =
     <AnswerInspector
       prompt={VERIFIED_DOSSIER_AI_PROMPT}
       citationRegistryCount={12}
-      citationRegistryLabels={['UNSW', 'Quantnet', 'Claude']}
+      citationRegistryLabels={['UNSW', 'QuantNet', 'Claude']}
     />,
   );
 
