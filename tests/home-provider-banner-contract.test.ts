@@ -19,6 +19,9 @@ test('AI key missing banner does not render on public presentation pages', () =>
   assert.match(source, /data-ai-key-banner="true"/);
   assert.match(source, /bottom: 'max\(0\.75rem, env\(safe-area-inset-bottom\)\)'/);
   assert.match(source, /maxWidth: 'min\(25rem, calc\(100vw - 2rem\)\)'/);
+  assert.match(source, /boxSizing: 'border-box'/);
+  assert.match(source, /whiteSpace: 'nowrap'/);
+  assert.match(source, /textOverflow: 'ellipsis'/);
   assert.match(source, /backdropFilter: 'blur\(22px\) saturate\(118%\)'/);
   assert.match(source, /AI off\. Add a key in Settings; Sources and Draft still work\./);
   assert.doesNotMatch(source, /loomAiKeyBanner/);

@@ -1,0 +1,94 @@
+/* VisorText — locked Loom identity inside the History visor shell.
+ *
+ * Rendered at a resting *lit* state (static / no-JS fallback). Cool-black +
+ * signature-cyan only. The wordmark face is the offline --font-wordmark stack;
+ * no fallback sans so it degrades to a system serif, never a sans. */
+
+.visorText {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(82%, 40rem);
+  justify-items: center;
+  gap: clamp(0.5rem, 0.95vw, 0.9rem);
+  text-align: center;
+}
+
+/* ── Eyebrow — LIBRARY · EYES · MEMORY ──────────────────────────────────── */
+.eyebrow {
+  margin: 0;
+  color: rgba(108, 231, 242, 0.82);
+  font-family: var(--mono);
+  font-size: clamp(0.52rem, 0.66vw, 0.68rem);
+  font-weight: 650;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em; /* balance trailing letter-spacing so it reads centred */
+  text-transform: uppercase;
+  text-shadow: 0 0 1.1rem rgba(108, 231, 242, 0.22);
+}
+
+/* ── Wordmark stage — perspective container for the convex lit mark ─────── */
+.wordmarkStage {
+  width: min(88%, 27rem);
+  perspective: 900px;
+}
+
+.wordmarkSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  /* A gentle forward tip so the convex mark catches the visor light as a real
+     lit object rather than a flat decal. */
+  transform: rotateX(7deg);
+  transform-origin: center 70%;
+  filter:
+    drop-shadow(0 0 0.05rem rgba(255, 255, 255, 0.5))
+    drop-shadow(0 0 1.5rem rgba(255, 255, 255, 0.1))
+    drop-shadow(0 0.5rem 1.1rem rgba(0, 0, 0, 0.5));
+}
+
+.wordmarkText {
+  font-family: var(--font-wordmark);
+  font-size: 80px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+}
+
+/* ── Explanation ────────────────────────────────────────────────────────── */
+.explanation {
+  margin: 0;
+  max-width: 30rem;
+  color: rgba(231, 233, 234, 0.78);
+  font-family: var(--sans);
+  font-size: clamp(0.82rem, 1.02vw, 0.98rem);
+  font-weight: 480;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+@media (min-width: 1600px) {
+  .wordmarkText {
+    font-size: 84px;
+  }
+}
+
+@media (max-width: 680px) {
+  .visorText {
+    width: 86%;
+    gap: 0.42rem;
+  }
+
+  .eyebrow {
+    font-size: 0.5rem;
+    letter-spacing: 0.26em;
+  }
+
+  .wordmarkStage {
+    width: 100%;
+  }
+
+  .explanation {
+    font-size: 0.8rem;
+  }
+}

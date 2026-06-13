@@ -90,6 +90,7 @@ export function AiKeyMissingBanner() {
         right: 'max(1rem, env(safe-area-inset-right))',
         bottom: 'max(0.75rem, env(safe-area-inset-bottom))',
         zIndex: 920,
+        boxSizing: 'border-box',
         width: 'fit-content',
         maxWidth: 'min(25rem, calc(100vw - 2rem))',
         border: '0.5px solid color-mix(in srgb, var(--accent) 16%, var(--mat-border))',
@@ -107,14 +108,24 @@ export function AiKeyMissingBanner() {
           display: 'flex',
           alignItems: 'center',
           gap: '0.55rem',
-          padding: '0.54rem 0.62rem',
+          minWidth: 0,
+          padding: '0.44rem 0.62rem',
           fontSize: 'clamp(0.72rem, 2.6vw, var(--fs-small))',
           color: 'var(--fg-secondary)',
-          lineHeight: 1.28,
+          lineHeight: 1.2,
         }}
       >
         <span aria-hidden style={statusDotStyle} />
-        <span style={{ flex: 1, minWidth: 0 }}>
+        <span
+          title="AI off. Add a key in Settings; Sources and Draft still work."
+          style={{
+            flex: '1 1 auto',
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
           AI off. Add a key in Settings; Sources and Draft still work.
         </span>
         <button
@@ -126,6 +137,7 @@ export function AiKeyMissingBanner() {
             background: 'transparent',
             color: 'var(--muted)',
             cursor: 'pointer',
+            flex: '0 0 auto',
             padding: '2px 5px',
             fontSize: 'clamp(0.72rem, 2.6vw, var(--fs-small))',
             borderRadius: '999px',

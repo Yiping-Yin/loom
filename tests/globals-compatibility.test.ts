@@ -29,10 +29,15 @@ const coldInterfacePaletteSource = [
   'app/knowledge/[category]/CategoryDossier.module.css',
 ].map((relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8')).join('\n');
 
-test('root typography is offline-safe for production builds', () => {
+test('root typography is offline-safe and scopes the wordmark serif stack', () => {
+  // Body/chrome typography stays offline-safe: display faces resolve through
+  // CSS stacks instead of next/font network fetches. The locked Loom wordmark
+  // gets its own CSS variable so it can be applied only to the History visor.
   assert.doesNotMatch(rootLayoutSource, /next\/font\/google/);
   assert.doesNotMatch(rootLayoutSource, /Cormorant_Garamond/);
   assert.match(globalsCss, /--font-cormorant:\s*"Cormorant Garamond"/);
+  assert.match(globalsCss, /--font-wordmark:\s*"Fraunces",\s*"Cormorant Garamond"/);
+  assert.doesNotMatch(rootLayoutSource, /className=\{fraunces\.variable\}/);
 });
 
 test('root route container fills the native webview viewport', () => {

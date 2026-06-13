@@ -304,6 +304,10 @@ test('visible support surfaces use approved personal-identity and local-app posi
     read('app/product-history/page.tsx'),
     read('components/product-history/ProductHistoryPage.tsx'),
   ].join('\n');
+  const visorText = read('components/product-history/first-contact/VisorText.tsx');
+  const visorConstants = read('components/product-history/first-contact/constants.ts');
+  const visorTextCss = read('components/product-history/first-contact/VisorText.module.css');
+  const layout = read('app/layout.tsx');
   const productHistoryCss = read('components/product-history/HistoryDossier.module.css');
   const globalsCss = read('app/globals.css');
   const globalNav = read('components/verified-dossier/LoomGlobalNav.tsx');
@@ -376,10 +380,50 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(productHistory, /Source-backed self\. Living archive\./i);
   assert.match(productHistory, /<p className=\{styles\.heroLead\}>\{HERO_STATEMENT\}<\/p>/);
   assert.match(productHistory, /Library \/ Eyes \/ Memory/i);
-  assert.match(productHistory, /Touch or focus to read the Loom mark/i);
-  assert.match(productHistory, /Source atlas/i);
-  assert.match(productHistory, /Weaver gaze/i);
-  assert.match(productHistory, /Woven pattern/i);
+  // The History visor now carries the LOCKED Loom identity (Fraunces "LOOM"
+  // wordmark + eyebrow + explanation) instead of the retired L-eyes-M
+  // monogram. The eyes moved to the app icon; the wordmark is clean Fraunces.
+  assert.match(productHistory, /aria-label=\{`Loom identity mark: \$\{EYEBROW\}\. \$\{EXPLANATION\}\.`\}/);
+  assert.match(productHistory, /<VisorText \/>/);
+  assert.match(productHistory, /import \{ EYEBROW, EXPLANATION \} from '\.\/first-contact\/constants'/);
+  assert.match(productHistory, /import \{ FirstContact \} from '\.\/first-contact\/FirstContact'/);
+  // The retired monogram markup, its annotation labels, and the "touch to
+  // read the mark" caption must be gone from the History surface and CSS.
+  assert.doesNotMatch(productHistory, /Touch or focus to read the Loom mark/i);
+  assert.doesNotMatch(productHistory, /Source atlas/i);
+  assert.doesNotMatch(productHistory, /Weaver gaze/i);
+  assert.doesNotMatch(productHistory, /Woven pattern/i);
+  assert.doesNotMatch(productHistory, /studyMark|markAnnotations|studyEyes|studyLetter|studyBlueprint/);
+  assert.doesNotMatch(productHistoryCss, /\.studyMark|\.markAnnotations|\.studyEyes|\.studyLetter|\.studyBlueprint/);
+  // The glass visor SHELL is preserved (only its inner content was swapped):
+  // the heroStudy shell and its scan element survive.
+  assert.match(productHistory, /styles\.heroStudy/);
+  assert.match(productHistory, /styles\.studyScan/);
+  assert.match(productHistoryCss, /\.heroStudy\s*\{/);
+  // The wordmark face is offline-safe and exposed ONLY as --font-wordmark.
+  assert.doesNotMatch(layout, /next\/font\/google/);
+  assert.doesNotMatch(layout, /Fraunces\(/);
+  assert.match(globalsCss, /--font-wordmark:\s*"Fraunces",\s*"Cormorant Garamond"/);
+  // The visor wordmark uses the Fraunces variable (a serif, not a fallback
+  // sans), renders as a resting LIT static fallback (no window/document), and
+  // is a client piece behind 'use client'.
+  assert.match(visorTextCss, /\.wordmarkText\s*\{[^}]*font-family:\s*var\(--font-wordmark\)/s);
+  assert.match(visorText, /'use client'/);
+  // Static-export safe: no window/document ACCESS in render (the words may
+  // appear in the doc comment, so pin on property/global access patterns).
+  assert.doesNotMatch(visorText, /window\.|document\.|useEffect|useState|useRef\(/);
+  // Locked identity copy: the Fraunces LOOM wordmark, the LIBRARY · EYES ·
+  // MEMORY eyebrow, and the source-backed explanation are all present and
+  // wired into the visor.
+  assert.match(visorConstants, /VISOR_WORDMARK = 'LOOM'/);
+  assert.match(visorConstants, /EYEBROW = 'LIBRARY · EYES · MEMORY'/);
+  assert.match(
+    visorConstants,
+    /EXPLANATION = 'A living, source-backed identity that can answer for you'/,
+  );
+  assert.match(visorText, /VISOR_WORDMARK/);
+  assert.match(visorText, /EYEBROW/);
+  assert.match(visorText, /EXPLANATION/);
   assert.match(productHistory, /ArrowUpRight/);
   assert.doesNotMatch(productHistory, /-&gt;|View archive\s*<span aria-hidden="true">/);
   assert.doesNotMatch(productHistory, /Past material\./i);
@@ -451,8 +495,10 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(globalNav, /function onSearchFormPointerDown\(/);
   assert.match(globalNav, /onPointerDown=\{onSearchFormPointerDown\}/);
   assert.match(globalNav, /onPointerDown=\{onSearchButtonPointerDown\}/);
+  assert.match(globalNav, /function onSearchButtonClick\(event: React\.MouseEvent<HTMLButtonElement>\)/);
+  assert.match(globalNav, /event\.preventDefault\(\);\s*if \(!searchOpenRef\.current\)/);
   assert.doesNotMatch(globalNav, /onMouseDown=\{\(event\) => event\.preventDefault\(\)\}/);
-  assert.doesNotMatch(globalNav, /event\.preventDefault\(\);\s*if \(!searchOpenRef\.current\)/);
+  assert.doesNotMatch(globalNav, /function onSearchButtonPointerDown\(event: React\.PointerEvent<HTMLButtonElement>\)[\s\S]*?event\.preventDefault\(\)/);
   assert.match(globalNav, /onSearchSubmit/);
   assert.match(globalNav, /inputMode="search"/);
   assert.match(globalNav, /enterKeyHint="search"/);

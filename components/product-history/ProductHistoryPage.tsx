@@ -7,6 +7,8 @@ import {
   type VerifiedDossierArtifactId,
 } from '../../lib/new-loom/verified-dossier-home';
 import { FirstContact } from './first-contact/FirstContact';
+import { VisorText } from './first-contact/VisorText';
+import { EYEBROW, EXPLANATION } from './first-contact/constants';
 import styles from './HistoryDossier.module.css';
 
 /**
@@ -267,41 +269,11 @@ export function ProductHistoryPage() {
         </div>
         <figure
           className={styles.heroMedia}
-          aria-label="Early Loom mark study showing Library, Eyes, and Memory"
+          aria-label={`Loom identity mark: ${EYEBROW}. ${EXPLANATION}.`}
         >
-          <div
-            className={styles.heroStudy}
-            aria-label="Touch or focus to read the Loom mark: L is Library, OO is Eyes, and M is Memory."
-            tabIndex={0}
-          >
+          <div className={styles.heroStudy}>
             <span className={styles.studyScan} aria-hidden="true" />
-            <div className={styles.studyBlueprint}>
-              <div className={styles.studyMark}>
-                <span className={styles.studyLetter}>L</span>
-                <span className={styles.studyEyes}>
-                  <span />
-                  <span />
-                </span>
-                <span className={styles.studyLetter}>M</span>
-              </div>
-            </div>
-            <div className={styles.markAnnotations} aria-hidden="true">
-              <span>
-                <strong>L</strong>
-                <em>Library</em>
-                <small>Source atlas</small>
-              </span>
-              <span>
-                <strong>OO</strong>
-                <em>Eyes</em>
-                <small>Weaver gaze</small>
-              </span>
-              <span>
-                <strong>M</strong>
-                <em>Memory</em>
-                <small>Woven pattern</small>
-              </span>
-            </div>
+            <VisorText />
           </div>
         </figure>
         <div className={styles.heroArchiveRow} aria-label="Original Loom record">

@@ -401,101 +401,6 @@
   z-index: 1;
 }
 
-.studyBlueprint {
-  position: relative;
-  display: grid;
-  align-content: center;
-  min-height: clamp(13rem, 18vw, 22rem);
-  padding: clamp(1.15rem, 1.8vw, 1.8rem);
-  border: 1px solid rgba(232, 236, 238, 0.104);
-  border-radius: 10px;
-  background:
-    linear-gradient(rgba(232, 236, 238, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(232, 236, 238, 0.035) 1px, transparent 1px),
-    radial-gradient(80% 92% at 50% 40%, rgba(255, 255, 255, 0.026), transparent 70%),
-    rgba(0, 0, 0, 0.42);
-  background-size: 100% 50%, 33.333% 100%, auto, auto;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.048),
-    inset 0 0 2rem rgba(0, 0, 0, 0.44);
-}
-
-.studyBlueprint::before,
-.studyBlueprint::after {
-  position: absolute;
-  width: clamp(0.68rem, 0.84vw, 0.86rem);
-  height: clamp(0.68rem, 0.84vw, 0.86rem);
-  content: "";
-  pointer-events: none;
-}
-
-.studyBlueprint::before {
-  top: clamp(0.72rem, 1vw, 0.95rem);
-  left: clamp(0.72rem, 1vw, 0.95rem);
-  border-top: 1px solid rgba(232, 236, 238, 0.38);
-  border-left: 1px solid rgba(232, 236, 238, 0.38);
-  box-shadow:
-    calc(clamp(0.68rem, 0.84vw, 0.86rem) * -1) 0 0 transparent,
-    calc(100% - 1px) 0 0 transparent;
-}
-
-.studyBlueprint::after {
-  right: clamp(0.72rem, 1vw, 0.95rem);
-  bottom: clamp(0.72rem, 1vw, 0.95rem);
-  border-right: 1px solid rgba(232, 236, 238, 0.38);
-  border-bottom: 1px solid rgba(232, 236, 238, 0.38);
-}
-
-.studyMark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(1rem, 2.4vw, 2rem);
-  color: rgba(244, 247, 248, 0.9);
-  font-family: var(--sans);
-  font-size: clamp(4.4rem, 5.7vw, 6.8rem);
-  font-weight: 220;
-  letter-spacing: 0;
-  line-height: 0.9;
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.34),
-    0 0 1.7rem rgba(255, 255, 255, 0.075);
-}
-
-.studyLetter {
-  display: inline-block;
-  min-width: 1.24ch;
-  text-align: center;
-}
-
-.studyEyes {
-  display: inline-flex;
-  gap: clamp(0.72rem, 1.2vw, 1.08rem);
-  align-items: center;
-}
-
-.studyEyes span {
-  position: relative;
-  display: inline-grid;
-  width: 0.78em;
-  aspect-ratio: 1;
-  place-items: center;
-  border: 0.052em solid rgba(244, 247, 248, 0.84);
-  border-radius: 50%;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 0 1.1rem rgba(255, 255, 255, 0.04);
-}
-
-.studyEyes span::after {
-  width: 0.095em;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: rgba(244, 247, 248, 0.94);
-  box-shadow: 0 0 0.54rem rgba(244, 247, 248, 0.22);
-  content: "";
-}
-
 .heroArchiveRow {
   position: relative;
   display: grid;
@@ -1721,10 +1626,6 @@
     transform: none;
   }
 
-  .studyBlueprint {
-    min-height: clamp(11.2rem, 34vw, 15rem);
-  }
-
   .heroArchiveRow {
     grid-template-columns: 1fr;
     gap: clamp(1.2rem, 3vw, 1.8rem);
@@ -1822,16 +1723,6 @@
     gap: 0.68rem;
     padding: 0.72rem;
     border-radius: 12px;
-  }
-
-  .studyBlueprint {
-    min-height: clamp(9.4rem, 42vw, 12rem);
-    padding: 0.9rem;
-  }
-
-  .studyMark {
-    gap: 0.52rem;
-    font-size: clamp(2.65rem, 14vw, 4.1rem);
   }
 
   .heroArchiveRow {
@@ -2024,79 +1915,6 @@
     transform 0.42s ease;
 }
 
-.studyBlueprint {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  width: min(74%, 39rem);
-  aspect-ratio: 16 / 3.85;
-  min-height: auto;
-  align-content: center;
-  padding: 0 clamp(0.62rem, 1.18vw, 1.1rem);
-  border: 0;
-  border-radius: clamp(0.72rem, 1.18vw, 1.14rem);
-  clip-path: none;
-  background:
-    linear-gradient(rgba(232, 236, 238, 0.05), rgba(232, 236, 238, 0.05)) 0 50% / 100% 1px no-repeat,
-    linear-gradient(90deg, transparent 0 33%, rgba(232, 236, 238, 0.036) 33.1%, transparent 33.25% 65.8%, rgba(232, 236, 238, 0.036) 66%, transparent 66.18% 100%),
-    radial-gradient(80% 152% at 11% -22%, rgba(255, 255, 255, 0.052), transparent 56%),
-    radial-gradient(70% 112% at 42% 52%, rgba(255, 255, 255, 0.026), transparent 74%),
-    rgba(0, 0, 0, 0.04);
-  box-shadow: none;
-  transition:
-    border-color 0.34s ease,
-    box-shadow 0.34s ease,
-    transform 0.34s ease;
-}
-
-.studyBlueprint::before {
-  top: 19%;
-  left: 0.62rem;
-  border-top-color: rgba(232, 236, 238, 0.28);
-  border-left-color: rgba(232, 236, 238, 0.28);
-  opacity: 0.72;
-}
-
-.studyBlueprint::after {
-  right: 0.62rem;
-  bottom: 19%;
-  border-right-color: rgba(232, 236, 238, 0.24);
-  border-bottom-color: rgba(232, 236, 238, 0.24);
-  opacity: 0.58;
-}
-
-.studyMark {
-  gap: clamp(0.66rem, 1.48vw, 1.34rem);
-  color: rgba(244, 247, 248, 0.9);
-  font-size: clamp(4.3rem, 5.45vw, 6.8rem);
-  font-weight: 210;
-  line-height: 0.88;
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.44),
-    0 0 1.55rem rgba(255, 255, 255, 0.105),
-    -0.72rem -0.48rem 1.55rem rgba(232, 239, 241, 0.052);
-}
-
-.studyEyes {
-  gap: clamp(0.38rem, 0.72vw, 0.66rem);
-}
-
-.studyEyes span {
-  border-color: rgba(244, 247, 248, 0.84);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.13),
-    0 0 1.05rem rgba(255, 255, 255, 0.052);
-}
-
-.studyLetter,
-.studyEyes span {
-  transition:
-    border-color 0.3s ease,
-    box-shadow 0.3s ease,
-    text-shadow 0.3s ease,
-    transform 0.3s ease;
-}
-
 .studyScan {
   position: absolute;
   inset: clamp(0.7rem, 1vw, 0.95rem) auto clamp(0.7rem, 1vw, 0.95rem) 9%;
@@ -2111,74 +1929,6 @@
   opacity: 0;
   pointer-events: none;
   transform: translateX(0);
-}
-
-.markAnnotations {
-  position: absolute;
-  right: clamp(4.2rem, 12vw, 9.5rem);
-  bottom: clamp(2.45rem, 4.35vw, 4.85rem);
-  left: clamp(4.2rem, 12vw, 9.5rem);
-  z-index: 4;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(0.55rem, 1.05vw, 0.98rem);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(0.46rem);
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
-}
-
-.markAnnotations span {
-  position: relative;
-  display: grid;
-  min-width: 0;
-  gap: 0.08rem;
-  padding-top: 0.55rem;
-  color: rgba(223, 226, 227, 0.74);
-  font-family: var(--sans);
-  line-height: 1.08;
-  opacity: 0;
-  transform: translateY(0.34rem);
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
-}
-
-.markAnnotations span::before {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: min(3.5rem, 60%);
-  height: 1px;
-  background: linear-gradient(90deg, rgba(108, 231, 242, 0.58), rgba(244, 247, 248, 0.12), transparent);
-  content: "";
-  opacity: 0.76;
-}
-
-.markAnnotations strong {
-  color: rgba(108, 231, 242, 0.86);
-  font-family: var(--mono);
-  font-size: clamp(0.52rem, 0.64vw, 0.66rem);
-  font-weight: 650;
-  letter-spacing: 0.14em;
-}
-
-.markAnnotations em {
-  color: rgba(244, 247, 248, 0.86);
-  font-size: clamp(0.72rem, 0.82vw, 0.84rem);
-  font-style: normal;
-  font-weight: 620;
-}
-
-.markAnnotations small {
-  overflow: hidden;
-  color: rgba(223, 226, 227, 0.5);
-  font-size: clamp(0.55rem, 0.66vw, 0.67rem);
-  font-weight: 520;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .heroStudy:is(:hover, :focus) {
@@ -2196,59 +1946,9 @@
   animation: visorContactSweep 1.55s cubic-bezier(0.2, 0.8, 0.24, 1) both;
 }
 
-.heroStudy:is(:hover, :focus) .studyBlueprint {
-  box-shadow:
-    0 0 0 1px rgba(108, 231, 242, 0.035),
-    0 0 2.4rem rgba(108, 231, 242, 0.048);
-  transform: translateY(-0.18rem);
-}
-
 .heroStudy:is(:hover, :focus) .studyScan {
   opacity: 1;
   animation: studyScanRead 1.9s cubic-bezier(0.2, 0.8, 0.24, 1) both;
-}
-
-.heroStudy:is(:hover, :focus) .studyMark {
-  transform: translateY(clamp(-0.24rem, -0.42vw, -0.12rem)) scale(0.92);
-}
-
-.heroStudy:is(:hover, :focus) .studyLetter {
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.58),
-    0 0 1.55rem rgba(108, 231, 242, 0.13);
-}
-
-.heroStudy:is(:hover, :focus) .studyEyes span {
-  border-color: rgba(108, 231, 242, 0.62);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
-    0 0 0.9rem rgba(108, 231, 242, 0.16),
-    0 0 1.8rem rgba(244, 247, 248, 0.06);
-  transform: scale(1.03);
-}
-
-.heroStudy:is(:hover, :focus) .markAnnotations {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.heroStudy:is(:hover, :focus) .markAnnotations span {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.heroStudy:is(:hover, :focus) .markAnnotations span:nth-child(2) {
-  transition-delay: 0.05s;
-}
-
-.heroStudy:is(:hover, :focus) .markAnnotations span:nth-child(3) {
-  transition-delay: 0.1s;
-}
-
-.studyMark {
-  transition:
-    transform 0.32s ease,
-    text-shadow 0.32s ease;
 }
 
 .heroArchiveRow {
@@ -2315,15 +2015,6 @@
   .heroStudy {
     aspect-ratio: 16 / 8.4;
   }
-
-  .studyBlueprint {
-    width: min(74%, 41rem);
-    aspect-ratio: 16 / 3.78;
-  }
-
-  .studyMark {
-    font-size: clamp(5rem, 4.65vw, 7.15rem);
-  }
 }
 
 @media (min-width: 1900px) {
@@ -2374,39 +2065,5 @@
     padding: 0.78rem 0.7rem;
     border-radius: 44% 44% 40% 40% / 23% 23% 55% 55%;
     clip-path: polygon(15% 3%, 85% 3%, 97% 18%, 99% 60%, 91% 86%, 72% 97%, 28% 97%, 9% 86%, 1% 60%, 3% 18%);
-  }
-
-  .studyBlueprint {
-    width: 82%;
-    padding: 0 0.78rem;
-    clip-path: none;
-  }
-
-  .studyMark {
-    gap: 0.42rem;
-    font-size: clamp(2.62rem, 12.2vw, 3.82rem);
-  }
-
-  .markAnnotations {
-    right: 1.28rem;
-    bottom: 1.82rem;
-    left: 1.28rem;
-    gap: 0.48rem;
-  }
-
-  .markAnnotations span {
-    padding-top: 0.38rem;
-  }
-
-  .markAnnotations strong {
-    font-size: 0.48rem;
-  }
-
-  .markAnnotations em {
-    font-size: clamp(0.58rem, 3vw, 0.68rem);
-  }
-
-  .markAnnotations small {
-    display: none;
   }
 }

@@ -37,6 +37,7 @@ a[class*="loom-"] {
      beautiful for "Persuasion before structure" panel titles but wrong
      for the body paragraph the user will later paste into an email. */
   --font-cormorant: "Cormorant Garamond";
+  --font-wordmark: "Fraunces", "Cormorant Garamond", "New York", "Iowan Old Style", Georgia, "Times New Roman", "Songti SC", serif;
   --display: var(--font-cormorant), "Cormorant Garamond", "EB Garamond", "New York", "Iowan Old Style", "Songti SC", serif;
   --script: "Caveat", "Homemade Apple", "Segoe Print", "Kaiti SC", "STKaiti", cursive;
 
@@ -24162,6 +24163,48 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   body .lcv .lcv-ledger{
     padding-right:clamp(16px,4vw,20px)!important;
     padding-left:clamp(16px,4vw,20px)!important;
+  }
+
+  body .lcv .lcv-dm{
+    overflow:clip!important;
+  }
+
+  body .lcv .lcv-dm__body{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:10px!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  body .lcv .lcv-dm__body>*,
+  body .lcv .lcv-dm__table,
+  body .lcv .lcv-dm__graph{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+
+  body .lcv .lcv-dm__srcs{
+    grid-column:1 / -1!important;
+    justify-content:flex-start!important;
+    overflow:hidden!important;
+  }
+
+  body .lcv .lcv-dm__table{
+    table-layout:fixed!important;
+    width:100%!important;
+    font-size:10px!important;
+  }
+
+  body .lcv .lcv-dm__table th,
+  body .lcv .lcv-dm__table td{
+    padding-right:6px!important;
+    padding-left:6px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  body .lcv .lcv-dm__spark{
+    max-width:100%!important;
   }
 
   body .lcv .lcv-nav,

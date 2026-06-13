@@ -285,7 +285,9 @@ export function LoomGlobalNav({
   }
 
   function onSearchButtonClick(event: React.MouseEvent<HTMLButtonElement>) {
-    if (!searchOpen) {
+    event.preventDefault();
+
+    if (!searchOpenRef.current) {
       openSearch();
       return;
     }
@@ -300,8 +302,7 @@ export function LoomGlobalNav({
     submitSearch(submittedQuery);
   }
 
-  function onSearchButtonPointerDown(event: React.PointerEvent<HTMLButtonElement>) {
-    event.preventDefault();
+  function onSearchButtonPointerDown() {
     openSearch();
   }
 
