@@ -24,7 +24,10 @@
   letter-spacing: 0.34em;
   text-indent: 0.34em; /* balance trailing letter-spacing so it reads centred */
   text-transform: uppercase;
-  text-shadow: 0 0 1.1rem rgba(108, 231, 242, 0.22);
+  text-shadow:
+    0 0 0.5rem rgba(0, 0, 0, 0.85),
+    0 1px 0.4rem rgba(0, 0, 0, 0.8),
+    0 0 1.1rem rgba(108, 231, 242, 0.32);
 }
 
 /* ── Wordmark stage — perspective container for the convex lit mark ─────── */
@@ -42,17 +45,25 @@
      lit object rather than a flat decal. */
   transform: rotateX(7deg);
   transform-origin: center 70%;
+  /* Dark halo first so the light mark pops over the bright visor reflection,
+     then a cyan lit-glow + a grounding shadow. */
   filter:
-    drop-shadow(0 0 0.05rem rgba(255, 255, 255, 0.5))
-    drop-shadow(0 0 1.5rem rgba(255, 255, 255, 0.1))
-    drop-shadow(0 0.5rem 1.1rem rgba(0, 0, 0, 0.5));
+    drop-shadow(0 0 0.06rem rgba(0, 0, 0, 0.92))
+    drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.82))
+    drop-shadow(0 0 1.7rem rgba(120, 230, 240, 0.3))
+    drop-shadow(0 0.45rem 1rem rgba(0, 0, 0, 0.6));
 }
 
 .wordmarkText {
   font-family: var(--font-wordmark);
   font-size: 80px;
-  font-weight: 500;
+  font-weight: 540;
   letter-spacing: 0.015em;
+  /* Set fill via CSS, not the SVG presentation attribute: Chromium does not
+     reliably paint a fill attribute on text riding a <textPath> here, so the
+     mark rendered invisible. CSS fill inherits to the tspans and paints; the
+     .letterM climax rule still overrides the M. */
+  fill: rgba(247, 251, 252, 0.99);
 }
 
 /* M = Memory. At the climax (the comet's final frame) the M grows + warms —
@@ -66,19 +77,24 @@
 
 [data-fc-climax] .letterM {
   font-size: 116% !important;
-  fill: rgba(247, 239, 223, 0.99) !important;
+  /* M = Memory ignites in signature cyan at the climax (cool-black + cyan only —
+     no warm/gold), tying the grown letter to the Loom identity colour. */
+  fill: rgba(138, 247, 230, 0.99) !important;
 }
 
 /* ── Explanation ────────────────────────────────────────────────────────── */
 .explanation {
   margin: 0;
   max-width: 30rem;
-  color: rgba(231, 233, 234, 0.78);
+  color: rgba(236, 238, 239, 0.92);
   font-family: var(--sans);
   font-size: clamp(0.82rem, 1.02vw, 0.98rem);
   font-weight: 480;
   line-height: 1.4;
   text-wrap: balance;
+  text-shadow:
+    0 1px 0.5rem rgba(0, 0, 0, 0.9),
+    0 0 0.35rem rgba(0, 0, 0, 0.8);
 }
 
 @media (min-width: 1600px) {

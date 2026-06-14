@@ -313,18 +313,16 @@
   100% { opacity: 0; }
 }
 
-/* ≤3 low-contrast opacity dips (never a full black↔white strobe), ~1 Hz —
-   within WCAG 2.3.1 flash guidance. */
+/* Two shallow, well-spaced opacity dips over 2.6s (never below 0.62, never a
+   full black↔white strobe) — ≈0.8 Hz, comfortably within WCAG 2.3.1 flash
+   guidance for the "History" word stabilising before it resolves. */
 @keyframes fcColdFlicker {
   0% { opacity: 0; }
-  8% { opacity: 0.92; }
-  14% { opacity: 0.34; }
-  18% { opacity: 0.95; }
-  27% { opacity: 0.46; }
-  31% { opacity: 1; }
-  45% { opacity: 0.6; }
-  49% { opacity: 1; }
-  72% { opacity: 1; }
+  12% { opacity: 0.9; }
+  30% { opacity: 0.62; }
+  48% { opacity: 0.95; }
+  68% { opacity: 0.74; }
+  84% { opacity: 0.96; }
   100% { opacity: 0; }
 }
 

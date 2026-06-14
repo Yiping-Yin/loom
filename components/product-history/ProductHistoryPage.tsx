@@ -272,14 +272,14 @@ export function ProductHistoryPage() {
           className={styles.heroMedia}
           aria-label={`Loom identity mark: ${EYEBROW}. ${EXPLANATION}.`}
         >
-          {/* Digital Me as an astronaut helmet approaching from the dark. The
-              visor (heroStudy) is the faceplate nested inside the shell; the
-              shell + rim-light frame it. SVG/CSS structure for now — swappable
-              for a rendered helmet image later. */}
+          {/* Digital Me as a real astronaut helmet (Helmet = the photo, whose
+              dark visor already carries an Earth-at-night reflection) approaching
+              from the dark. heroStudy is a transparent overlay pinned over the
+              photo's faceplate; it carries only the LOOM mark, revealed as the
+              self arrives. */}
           <div className={styles.helmet}>
             <Helmet />
             <div className={styles.heroStudy}>
-              <span className={styles.studyReflection} aria-hidden="true" />
               <span className={styles.studyScan} aria-hidden="true" />
               <VisorText />
             </div>

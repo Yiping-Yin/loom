@@ -337,6 +337,9 @@
 }
 
 .heroMedia::after {
+  /* retired: rounded-rect sheen for the old pod visor; the helmet is now an
+     oval NASA photo, so this rectangular overlay is disabled. */
+  display: none;
   position: absolute;
   inset: 0 auto auto 0;
   z-index: 2;
@@ -354,22 +357,28 @@
   transform-origin: center 80%;
 }
 
-/* Astronaut helmet motion container. The actual shell is the static SVG
-   Helmet component; this wrapper only owns approach/turn motion. */
+/* Astronaut helmet motion container. The shell is the photographic Helmet
+   component (Helmet.module.css fills this box with the helmet image); this
+   wrapper owns the portrait box + the approach/turn motion as the self crosses
+   the cold dark toward you. transform-origin sits on the visor. */
 .helmet {
   position: relative;
   z-index: 1;
   display: block;
-  width: 100%;
-  aspect-ratio: 16 / 10.4;
-  transform-style: preserve-3d;
+  width: min(100%, clamp(27rem, 36vw, 40rem));
+  margin-inline: auto;
+  aspect-ratio: 1440 / 1770;
+  /* No preserve-3d: the photo + visor overlay must flatten onto one plane and
+     stack by z-index (photo z0 behind, heroStudy z1 in front). With preserve-3d
+     the children sort by 3D-Z and the overlay renders behind the opaque photo.
+     The approach rotation still works via the perspective() transform function. */
   transform:
-    perspective(2200px)
-    translateX(calc((1 - var(--fc-p, 1)) * 3%))
-    scale(calc(0.9 + 0.1 * var(--fc-p, 1)))
-    rotateY(calc((1 - var(--fc-p, 1)) * -13deg))
-    rotateX(calc((1 - var(--fc-p, 1)) * 3.5deg));
-  transform-origin: 62% 52%;
+    perspective(2400px)
+    translateX(calc((1 - var(--fc-p, 1)) * 4.5%))
+    scale(calc(0.84 + 0.16 * var(--fc-p, 1)))
+    rotateY(calc((1 - var(--fc-p, 1)) * -15deg))
+    rotateX(calc((1 - var(--fc-p, 1)) * 4deg));
+  transform-origin: 52% 44%;
 }
 
 .hero[data-fc-climax] .helmet,
@@ -378,103 +387,27 @@
   transition: transform 0.9s ease;
 }
 
-.heroStudy {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: clamp(0.86rem, 1.12vw, 1.18rem);
-  width: 100%;
-  aspect-ratio: 16 / 10.4;
-  overflow: hidden;
-  padding: clamp(1rem, 1.35vw, 1.42rem);
-  border: 1px solid rgba(226, 230, 231, 0.128);
-  border-radius: 17px;
-  background:
-    radial-gradient(92% 130% at 2% -10%, rgba(239, 244, 245, 0.145), rgba(104, 114, 116, 0.046) 28%, transparent 52%),
-    radial-gradient(68% 96% at 88% 112%, rgba(255, 255, 255, 0.034), transparent 58%),
-    linear-gradient(137deg, rgba(238, 241, 242, 0.08), rgba(69, 77, 80, 0.03) 28%, rgba(0, 0, 0, 0.22) 68%),
-    linear-gradient(180deg, rgba(18, 21, 22, 0.68), rgba(3, 4, 5, 0.98));
-  transform: rotateX(5.2deg) rotateY(-1.1deg) rotateZ(-0.22deg) translateY(-4px);
-  transform-origin: center 80%;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 1px 0 0 rgba(255, 255, 255, 0.05),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.44),
-    -1.2rem -1rem 3rem rgba(232, 239, 241, 0.035),
-    0 1.8rem 3.8rem rgba(0, 0, 0, 0.7),
-    0 5rem 8rem rgba(0, 0, 0, 0.36);
-}
-
-.heroStudy::before,
-.heroStudy::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  pointer-events: none;
-}
-
-.heroStudy::before {
-  z-index: 0;
-  background:
-    linear-gradient(rgba(232, 236, 238, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(232, 236, 238, 0.035) 1px, transparent 1px);
-  background-size: 25% 33.333%;
-  mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%);
-  opacity: 0.24;
-}
-
-.heroStudy::after {
-  z-index: 0;
-  background:
-    linear-gradient(110deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.032) 18%, transparent 46%),
-    radial-gradient(52% 68% at 7% 2%, rgba(255, 255, 255, 0.1), transparent 58%),
-    linear-gradient(180deg, transparent 72%, rgba(0, 0, 0, 0.28));
-  opacity: 0.52;
-  mix-blend-mode: screen;
-}
-
+/* (The active .heroStudy rules — the transparent visor overlay over the photo —
+   live further below. The earlier synthetic rectangular-glass .heroStudy block
+   was removed; only the child-lift rule is kept here.) */
 .heroStudy > * {
   position: relative;
   z-index: 1;
 }
 
-/* Visor reflection: the night Earth (NASA Black Marble, public domain) curving
-   across the lower faceplate as a real "Earth at night" reflection — gold city
-   lights + a blue atmospheric limb. Grayscale + dim when the self is far (S0),
-   resolving to colour at the climax. Sits behind the LOOM wordmark ("under the
-   glass"), low enough not to fight legibility. */
-.studyReflection {
-  position: absolute;
-  inset: 0;
-  border-radius: 17px;
-  overflow: hidden;
-  pointer-events: none;
-  background-image: url("/loom/history/earth-night.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center 46%;
-  filter:
-    grayscale(calc(1 - 0.92 * var(--fc-p, 1)))
-    brightness(calc(0.46 + 0.5 * var(--fc-p, 1)))
-    contrast(1.12)
-    saturate(1.14);
-  opacity: calc(0.46 + 0.5 * var(--fc-p, 1));
-  /* fade the top edge so the black space blends into the visor behind LOOM */
-  -webkit-mask: linear-gradient(180deg, transparent 0%, #000 24%, #000 100%);
-  mask: linear-gradient(180deg, transparent 0%, #000 24%, #000 100%);
-  mix-blend-mode: screen;
-}
+/* (Visor reflection retired: the photographic helmet carries its own
+   Earth-at-night reflection baked into the visor — gold city lights + the blue
+   atmospheric limb — so a separate reflection layer is no longer needed.) */
 
-/* First Contact pointer channel: the visor tilts gently toward the cursor.
-   Gated to fine pointers + desktop widths so touch and the mobile layout
-   (which resets .heroStudy transform) are unaffected. */
+/* First Contact pointer channel: the LOOM mark under the glass parallaxes
+   gently toward the cursor. Gated to fine pointers + desktop widths so touch
+   and the mobile layout are unaffected. */
 @media (min-width: 981px) and (pointer: fine) {
   .hero[data-fc-js] .heroStudy {
     transform:
-      rotateX(calc(5.2deg + (var(--fc-py, 0.5) - 0.5) * -3deg))
-      rotateY(calc(-1.1deg + (var(--fc-px, 0.5) - 0.5) * 4.5deg))
-      rotateZ(-0.22deg)
-      translateY(-4px);
+      perspective(1400px)
+      rotateX(calc(2deg + (var(--fc-py, 0.5) - 0.5) * -4deg))
+      rotateY(calc((var(--fc-px, 0.5) - 0.5) * 6deg));
     transition: transform 0.25s ease;
   }
 }
@@ -1890,50 +1823,42 @@
   transform: rotate(-7deg);
 }
 
+/* The visor overlay: a transparent region pinned over the photo's faceplate.
+   The photo's own glass + Earth reflection IS the visor; this layer carries
+   only the LOOM mark, revealed (opacity driven by --fc-p) as the self arrives.
+   Lit at rest (--fc-p:1) so no-JS / SSR / reduced-motion show the complete
+   "arrived" frame. width/aspect/border/background are reset to neutral so the
+   earlier dead synthetic-glass .heroStudy block cannot leak through. */
 .heroStudy {
-  position: relative;
+  position: absolute;
+  inset: 17% 15% 47% 15%;
   z-index: 1;
   display: grid;
-  width: 100%;
-  aspect-ratio: 16 / 8.55;
+  width: auto;
+  aspect-ratio: auto;
   place-items: center;
-  overflow: hidden;
-  padding: clamp(1.1rem, 1.72vw, 1.75rem) clamp(1.05rem, 1.86vw, 1.82rem);
-  border: 1px solid rgba(232, 236, 238, 0.155);
-  border-radius:
-    48% 48% 46% 46% /
-    24% 24% 62% 62%;
-  background:
-    radial-gradient(86% 96% at 50% 96%, rgba(50, 60, 63, 0.18), transparent 64%),
-    radial-gradient(72% 92% at 50% 4%, rgba(255, 255, 255, 0.1), rgba(38, 45, 47, 0.12) 28%, transparent 66%),
-    radial-gradient(22% 78% at 10% 52%, rgba(255, 255, 255, 0.18), rgba(218, 228, 231, 0.052) 38%, transparent 64%),
-    radial-gradient(18% 72% at 91% 54%, rgba(255, 255, 255, 0.13), rgba(218, 228, 231, 0.04) 36%, transparent 62%),
-    radial-gradient(82% 128% at 52% 52%, rgba(24, 29, 30, 0.16), rgba(0, 0, 0, 0.62) 54%, rgba(0, 0, 0, 0.98) 100%),
-    linear-gradient(114deg, rgba(255, 255, 255, 0.1), rgba(15, 18, 19, 0.44) 17%, rgba(1, 2, 3, 0.92) 60%, rgba(0, 0, 0, 0.99)),
-    rgba(1, 2, 3, 0.92);
-  -webkit-backdrop-filter: blur(32px) saturate(78%);
-  backdrop-filter: blur(32px) saturate(78%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.32),
-    inset 1px 0 0 rgba(255, 255, 255, 0.075),
-    inset -1px 0 0 rgba(255, 255, 255, 0.04),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.64),
-    inset 0 -2.6rem 4.9rem rgba(0, 0, 0, 0.62),
-    inset 0 0 6.4rem rgba(0, 0, 0, 0.4),
-    inset 0 2.4rem 3.2rem rgba(255, 255, 255, 0.025),
-    -1.35rem -1rem 3.6rem rgba(229, 236, 238, 0.078),
-    0 1.3rem 2.8rem rgba(0, 0, 0, 0.7),
-    0 4.6rem 7.6rem rgba(0, 0, 0, 0.44);
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  /* A soft dark "lens" behind the mark: the visor glass reads darkest where the
+     identity is etched, guaranteeing the light wordmark stays legible over the
+     bright Earth reflection while the reflection still shows around it. */
+  background: radial-gradient(72% 104% at 50% 46%, rgba(1, 3, 6, 0.93), rgba(1, 3, 6, 0.6) 44%, rgba(1, 3, 6, 0.16) 70%, transparent 85%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
   filter: none;
-  clip-path: polygon(19% 2%, 81% 2%, 94% 14%, 99% 42%, 97% 66%, 88% 86%, 70% 97%, 30% 97%, 12% 86%, 3% 66%, 1% 42%, 6% 14%);
-  transform: rotateX(4.6deg) rotateY(-4.2deg) rotateZ(-0.12deg);
-  transform-origin: center 70%;
+  clip-path: none;
+  pointer-events: none;
+  /* Reveal: near-invisible while the self sleeps far in the dark (S0), lifting
+     to fully lit as it arrives. Lit at rest (--fc-p:1) so no-JS shows arrived. */
+  opacity: calc(0.02 + 0.98 * var(--fc-p, 1) * var(--fc-p, 1));
+  transform: perspective(1400px) rotateX(2deg);
+  transform-origin: center 60%;
+  transition: opacity 0.55s ease;
+  cursor: default;
   animation: none;
-  cursor: pointer;
-  transition:
-    border-color 0.34s ease,
-    box-shadow 0.34s ease,
-    filter 0.34s ease;
 }
 
 .heroStudy:focus {
@@ -1953,44 +1878,14 @@
     0 0 0 1px rgba(108, 231, 242, 0.16);
 }
 
+/* (Synthetic-visor rim-lights + sheen retired — the photographic helmet's own
+   visor glass provides the optics, so these decorative pseudos are disabled.) */
 .heroStudy::before {
-  z-index: 0;
-  inset: 0;
-  border: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse 8% 70% at 11% 51%, transparent 47%, rgba(250, 253, 253, 0.68) 53%, rgba(226, 234, 237, 0.22) 58%, transparent 66%),
-    radial-gradient(ellipse 8% 70% at 89% 52%, transparent 47%, rgba(250, 253, 253, 0.45) 53%, rgba(226, 234, 237, 0.13) 58%, transparent 66%),
-    radial-gradient(ellipse 84% 26% at 50% 8%, rgba(255, 255, 255, 0.15), transparent 69%),
-    radial-gradient(ellipse 78% 24% at 51% 92%, rgba(255, 255, 255, 0.04), transparent 66%),
-    linear-gradient(rgba(232, 236, 238, 0.03), rgba(232, 236, 238, 0.03)) 16% 50% / 68% 1px no-repeat,
-    linear-gradient(90deg, transparent 0 36%, rgba(232, 236, 238, 0.03) 36.2%, transparent 36.36% 63.5%, rgba(232, 236, 238, 0.026) 63.7%, transparent 63.86% 100%),
-    radial-gradient(circle at 28% 30%, rgba(238, 243, 244, 0.16) 0 0.04rem, transparent 0.075rem),
-    radial-gradient(circle at 76% 28%, rgba(238, 243, 244, 0.11) 0 0.032rem, transparent 0.064rem),
-    radial-gradient(circle at 52% 72%, rgba(238, 243, 244, 0.09) 0 0.03rem, transparent 0.062rem),
-    radial-gradient(ellipse 82% 156% at 52% 52%, transparent 58%, rgba(255, 255, 255, 0.044) 69%, transparent 78%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  opacity: 0.84;
-  transition:
-    opacity 0.34s ease,
-    transform 0.34s ease;
+  display: none;
 }
 
 .heroStudy::after {
-  z-index: 2;
-  inset: -18% -8% auto -8%;
-  height: 66%;
-  border-radius: 52% 52% 44% 44% / 36% 36% 64% 64%;
-  background:
-    radial-gradient(48% 88% at 18% 28%, rgba(255, 255, 255, 0.29), rgba(232, 240, 242, 0.082) 30%, transparent 62%),
-    linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.24) 19%, rgba(232, 240, 242, 0.06) 41%, transparent 70%);
-  filter: blur(9px);
-  opacity: 0.56;
-  mix-blend-mode: screen;
-  transform: translate3d(0, 0, 0) rotate(-4deg);
-  transition:
-    opacity 0.34s ease,
-    transform 0.42s ease;
+  display: none;
 }
 
 .studyScan {
@@ -2009,25 +1904,9 @@
   transform: translateX(0);
 }
 
-.heroStudy:is(:hover, :focus) {
-  border-color: rgba(232, 236, 238, 0.22);
-  filter: brightness(1.07);
-}
-
-.heroStudy:is(:hover, :focus)::before {
-  opacity: 1;
-  transform: scaleX(1.012);
-}
-
-.heroStudy:is(:hover, :focus)::after {
-  opacity: 0.78;
-  animation: visorContactSweep 1.55s cubic-bezier(0.2, 0.8, 0.24, 1) both;
-}
-
-.heroStudy:is(:hover, :focus) .studyScan {
-  opacity: 1;
-  animation: studyScanRead 1.9s cubic-bezier(0.2, 0.8, 0.24, 1) both;
-}
+/* (The synthetic-visor hover/focus interactions were removed: the visor overlay
+   is now pointer-events:none — the scene is driven by the scroll-in auto-play,
+   not by hovering the mark.) */
 
 .heroArchiveRow {
   padding-bottom: clamp(0.55rem, 1.6vh, 1.1rem);
@@ -2139,9 +2018,7 @@
 
 @media (max-width: 680px) {
   .heroStudy {
-    aspect-ratio: 16 / 8.9;
-    padding: 0.78rem 0.7rem;
-    border-radius: 44% 44% 40% 40% / 23% 23% 55% 55%;
-    clip-path: polygon(15% 3%, 85% 3%, 97% 18%, 99% 60%, 91% 86%, 72% 97%, 28% 97%, 9% 86%, 1% 60%, 3% 18%);
+    /* A touch more vertical room for the mark in the smaller phone visor. */
+    inset: 15% 11% 42% 11%;
   }
 }

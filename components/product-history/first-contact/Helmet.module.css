@@ -1,47 +1,33 @@
-/* Helmet SVG placement + --fc-p intensities.
+/* Helmet — photographic astronaut helmet, placed to fill the .helmet box.
  *
- * The SVG is sized so its visor window (viewBox [80,920] x [180,820]) aligns
- * with the .helmet box; the dome rises ~28% above and the neck is cropped
- * ~28% below. The DOM visor (heroStudy) sits on top of the window, so only the
- * dome / sides / neck silhouette show around the faceplate. Strokes brighten
- * with --fc-p so the rim-light grows as the helmet faces you. */
-.helmetSvg {
+ * The .helmet parent owns the portrait aspect-ratio + approach transform; this
+ * layer is the image itself, its emerge-from-dark filter, and an edge vignette
+ * that melts the near-black photo borders into the cool-black scene so the
+ * helmet reads as a real object lit out of the dark, not a pasted rectangle. */
+.helmetPhoto {
   position: absolute;
-  left: -9.5%;
-  top: -28%;
-  width: 119%;
-  height: 156%;
+  inset: 0;
   z-index: 0;
-  overflow: visible;
+  background-image: url('/loom/history/helmet.jpg');
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  /* Cold, dim, desaturated when the self is far (S0); brightens and floods to
+     full colour as it approaches the climax — the one precious colour moment.
+     At rest (--fc-p:1, no-JS / arrived) it sits at full brightness + colour. */
+  filter:
+    brightness(calc(0.42 + 0.46 * var(--fc-p, 1)))
+    contrast(calc(1.02 + 0.05 * var(--fc-p, 1)))
+    saturate(calc(0.14 + 0.86 * var(--fc-p, 1)));
+  /* Vignette the photo's own dark edges (dome crown, shoulders, suit) into the
+     scene; the visor core (50% 44%) stays fully lit. */
+  -webkit-mask-image: radial-gradient(118% 114% at 50% 43%, #000 53%, rgba(0, 0, 0, 0.5) 75%, transparent 94%);
+  mask-image: radial-gradient(118% 114% at 50% 43%, #000 53%, rgba(0, 0, 0, 0.5) 75%, transparent 94%);
   pointer-events: none;
 }
 
-.shell {
-  opacity: calc(0.45 + 0.55 * var(--fc-p, 1));
-}
-
-.dome {
-  opacity: calc(0.28 + 0.72 * var(--fc-p, 1));
-}
-
-.silhouette {
-  stroke-opacity: calc(0.26 + 0.64 * var(--fc-p, 1));
-}
-
-.windowRim {
-  stroke-opacity: calc(0.18 + 0.5 * var(--fc-p, 1));
-}
-
-.neck {
-  stroke-opacity: calc(0.18 + 0.5 * var(--fc-p, 1));
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .shell,
-  .dome,
-  .silhouette,
-  .windowRim,
-  .neck {
-    opacity: 1;
+  .helmetPhoto {
+    filter: brightness(0.88) contrast(1.06) saturate(1);
   }
 }

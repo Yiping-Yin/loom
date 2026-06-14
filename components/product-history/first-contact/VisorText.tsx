@@ -30,8 +30,8 @@ function letterFalloff(index: number, count: number) {
   const mid = (count - 1) / 2;
   const distance = mid === 0 ? 0 : Math.abs(index - mid) / mid; // 0 centre → 1 edge
   return {
-    opacity: 1 - distance * 0.34,
-    scale: 1 - distance * 0.07,
+    opacity: 1 - distance * 0.12,
+    scale: 1 - distance * 0.04,
   };
 }
 
@@ -52,17 +52,11 @@ export function VisorText() {
             {/* Convex / outward-bulging baseline: the text rides over the top
                 of this arc, so the middle letters sit higher than the edges. */}
             <path id="visor-wordmark-arc" d="M 48 100 Q 160 36 272 100" fill="none" />
-            <linearGradient id="visor-wordmark-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(244, 248, 249, 0.98)" />
-              <stop offset="62%" stopColor="rgba(231, 238, 240, 0.92)" />
-              <stop offset="100%" stopColor="rgba(176, 214, 222, 0.86)" />
-            </linearGradient>
           </defs>
-          <text
-            className={styles.wordmarkText}
-            textAnchor="middle"
-            fill="url(#visor-wordmark-fill)"
-          >
+          {/* Fill is set in CSS (.wordmarkText), not as a presentation attribute:
+              Chromium does not reliably paint a fill attribute on text riding a
+              <textPath>. CSS fill inherits to the tspans and paints. */}
+          <text className={styles.wordmarkText} textAnchor="middle">
             <textPath href="#visor-wordmark-arc" startOffset="50%">
               {LETTERS.map((letter, index) => {
                 const { opacity, scale } = letterFalloff(index, LETTERS.length);
