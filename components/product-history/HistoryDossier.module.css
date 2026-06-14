@@ -3,7 +3,7 @@
   --history-page-pad: clamp(1.2rem, 4vw, 4.2rem);
   --history-ink: var(--text-1);
   --history-muted: var(--text-2);
-  --history-subtle: var(--text-3);
+  --history-subtle: #9aa0a4; /* page-scoped: lift caption/date ink to WCAG AA on the near-black page (was --text-3 ~3:1) */
   --history-border: var(--line);
   --history-hairline: var(--line-soft);
   --history-surface: var(--ink-3);
@@ -16,7 +16,9 @@
   background-color: #020303;
   background:
     radial-gradient(62rem 42rem at -18rem -18rem, rgba(229, 233, 233, 0.034), rgba(96, 103, 105, 0.012) 42%, transparent 76%),
-    linear-gradient(118deg, #0d1010 0%, #060808 46%, #010202 100%);
+    /* The descent floor: the page darkens top -> bottom so "Proof attached" at
+       the very bottom is the deepest black — the journey has somewhere to land. */
+    linear-gradient(180deg, #060808 0%, #040606 38%, #020303 72%, #010101 100%);
   color: var(--history-ink);
   font-family: var(--sans);
 }
@@ -29,7 +31,7 @@
     radial-gradient(44rem 28rem at -16rem -14rem, rgba(240, 243, 243, 0.022), transparent 78%),
     radial-gradient(80rem 70rem at 92% 88%, rgba(0, 0, 0, 0.62), transparent 70%);
   content: "";
-  opacity: 0.78;
+  opacity: 0.6;
   pointer-events: none;
 }
 
@@ -40,6 +42,34 @@
 
 .page :global(.loom-global-nav-slot) {
   min-height: 0 !important;
+}
+
+/* Refined nav glass on this page only — soften the heavy beveled "3D button"
+   gloss into a cleaner, flatter glass that fits the cinematic hero. Scoped via
+   :global so the shared nav component (Codex-owned .tsx) is untouched. */
+.page :global(.loom-global-nav) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.014) 50%, rgba(0, 0, 0, 0.12) 100%),
+    rgba(11, 13, 14, 0.44);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0.9rem 2.3rem rgba(0, 0, 0, 0.32);
+}
+
+.page :global(.loom-global-nav):hover,
+.page :global(.loom-global-nav):focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 1.1rem 2.8rem rgba(0, 0, 0, 0.38);
+}
+
+.page :global(.loom-global-nav)::before {
+  background: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.page :global(.loom-global-nav)::after {
+  opacity: 0.14;
 }
 
 .timeStructure,
@@ -113,20 +143,26 @@
 }
 
 .hero::after {
-  background-image: url("/loom/history/lunar-surface-cutout.png");
+  /* The Moon = memory: a real round gibbous ORB (NASA ISS iss071e092177, public
+     domain) rising BEHIND the astronaut. Moon-on-black, so `lighten` drops the
+     black into the premium scene and the orb survives; the helmet (in front,
+     z-index 2) occludes its lower part where they overlap. Dim so it recedes as
+     the background the self is built upon. */
+  /* Transparent moon PNG (black keyed out) → composites with a normal blend, so
+     there is NO square/box from the image background. Dim = recessive memory. */
+  background-image: url("/loom/history/moon-orb.png");
   background-repeat: no-repeat;
-  background-position: left calc(100% - clamp(0.5rem, 1.4vw, 1.15rem));
-  background-size: clamp(58rem, 86vw, 88rem) auto;
-  /* The Moon = memory. Driven by --fc-p as a rack-focus: clear + cooler when
-     the self is far (S0), then brighter + softening to a grand bokeh as the
-     helmet arrives and pulls focus (climax). Never shrinks. */
+  /* Vast moon, but floating in real void — sized so black gutters open on the
+     right + bottom, so the orb reads as a distant body (memory receding), not a
+     textured wall filling the frame. */
+  background-position: 54% 30%;
+  background-size: clamp(30rem, 44vw, 58rem) auto;
   filter:
     grayscale(1)
-    contrast(1.24)
-    brightness(calc(0.58 + 0.34 * var(--fc-p, 1)))
-    blur(calc(var(--fc-p, 1) * var(--fc-p, 1) * 1.6px));
+    contrast(1.12)
+    brightness(calc(0.46 + 0.12 * var(--fc-p, 1)));
   mix-blend-mode: normal;
-  opacity: calc(0.66 + 0.2 * var(--fc-p, 1));
+  opacity: calc(0.72 + 0.13 * var(--fc-p, 1));
 }
 
 .hero > * {
@@ -236,6 +272,12 @@
   text-wrap: pretty;
 }
 
+/* Minimal hero: only the "History" mark (the <p> stays for the contract pin but
+   is hidden — the integration keeps text light). */
+.heroCopy .heroLead {
+  display: none;
+}
+
 /* Canonical site-wide eyebrow: 11px / 0.09em / uppercase / weight 500 /
    --text-2. The eyebrow hugs its title (the section-header grids below use
    a tight ~8px gap); title-to-subparagraph rhythm opens wider via the
@@ -263,17 +305,30 @@
   margin: 0;
   color: var(--history-ink);
   font-family: var(--display);
-  font-weight: 560;
-  letter-spacing: 0;
+  /* Lighter weight + slight negative tracking so every archive title reads as a
+     descendant of the italic masthead, not a blunt semibold serif. */
+  font-weight: 500;
+  letter-spacing: -0.012em;
 }
 
 .hero h1 {
-  max-width: 5.6ch;
+  max-width: none;
+  /* Designed masthead: italic display serif — LOOM's identity-title voice (cf.
+     the Colophon + Patterns titles) — at a lighter weight so the high-contrast
+     strokes read elegant, not blunt, at display size. */
+  font-style: italic;
+  font-weight: 500;
   font-size: clamp(6rem, 8.8vw, 8.85rem);
-  /* Large multi-line serif/display headline: lh 1.05 so ascenders and
-     descenders breathe instead of colliding. */
-  line-height: 0.98;
-  letter-spacing: -0.01em;
+  line-height: 1.02;
+  letter-spacing: -0.018em;
+  /* Optical: pull the italic H stem onto the content column (the italic side-
+     bearing otherwise floats "History" right of the 2024 timeline below it). */
+  text-indent: -0.06em;
+  /* Two-stop depth: a tight contact shadow to separate the strokes from the
+     moon + a soft far halo for atmosphere (not one smudgy glow). */
+  text-shadow:
+    0 0.02em 0.18em rgba(2, 4, 6, 0.7),
+    0 0.05em 1.1em rgba(2, 4, 6, 0.5);
 }
 
 .heroLead {
@@ -374,16 +429,17 @@
      The approach rotation still works via the perspective() transform function. */
   transform:
     perspective(2400px)
-    translateX(calc((1 - var(--fc-p, 1)) * 4.5%))
-    scale(calc(0.84 + 0.16 * var(--fc-p, 1)))
-    rotateY(calc((1 - var(--fc-p, 1)) * -15deg))
-    rotateX(calc((1 - var(--fc-p, 1)) * 4deg));
+    translateX(calc((1 - var(--fc-p, 1)) * 13%))
+    translateY(calc((1 - var(--fc-p, 1)) * -9%))
+    scale(calc(0.44 + 0.56 * var(--fc-p, 1)))
+    rotateY(calc((1 - var(--fc-p, 1)) * -32deg))
+    rotateX(calc((1 - var(--fc-p, 1)) * 7deg));
   transform-origin: 52% 44%;
 }
 
 .hero[data-fc-climax] .helmet,
 .hero[data-fc-arrived] .helmet {
-  transform: perspective(2200px) translateX(0) scale(1) rotateY(0deg) rotateX(0deg);
+  transform: perspective(2200px) translateX(0) translateY(0) scale(1) rotateY(0deg) rotateX(0deg);
   transition: transform 0.9s ease;
 }
 
@@ -432,7 +488,7 @@
   right: 0;
   left: 0;
   height: 1px;
-  background: linear-gradient(90deg, rgba(225, 229, 230, 0.18), rgba(225, 229, 230, 0.36) 28%, rgba(225, 229, 230, 0.28) 68%, transparent 100%);
+  background: linear-gradient(90deg, rgba(225, 229, 230, 0.06), rgba(225, 229, 230, 0.16) 28%, rgba(225, 229, 230, 0.1) 68%, transparent 100%);
   content: "";
 }
 
@@ -471,12 +527,12 @@
   left: 0;
   width: 1.08rem;
   height: 1.08rem;
-  border: 1px solid rgba(225, 229, 230, 0.56);
+  border: 1px solid rgba(108, 231, 242, 0.62);
   border-radius: 999px;
   background:
-    radial-gradient(circle at center, rgba(238, 241, 242, 0.96) 0 0.18rem, rgba(238, 241, 242, 0.18) 0.19rem 0.36rem, transparent 0.37rem),
+    radial-gradient(circle at center, rgba(154, 241, 248, 0.98) 0 0.18rem, rgba(108, 231, 242, 0.22) 0.19rem 0.36rem, transparent 0.37rem),
     rgba(14, 16, 17, 0.86);
-  box-shadow: 0 0 22px rgba(238, 241, 242, 0.12);
+  box-shadow: 0 0 22px rgba(108, 231, 242, 0.22);
   content: "";
 }
 
@@ -538,7 +594,10 @@
 .productLayers,
 .functionReuse,
 .sources {
-  border-top: 1px solid var(--history-border);
+  /* Faded editorial divider: the hairline is brightest in the middle and fades
+     to transparent at both ends, instead of a hard full-width rule. */
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(to right, transparent 2%, var(--history-border) 26%, var(--history-border) 74%, transparent 98%) 1;
 }
 
 .timeStructure,
@@ -548,24 +607,28 @@
 .productLayers,
 .functionReuse,
 .sources {
+  /* Stacked: header above content, full-width — so the unified 5.8rem titles
+     never collide with the content columns, and every section reads the same way
+     as the already-stacked Dark manifesto / Archive sections. (foldedArchive
+     overrides to block below, so the folded sections keep their own layout.) */
   display: grid;
-  grid-template-columns: minmax(17rem, 0.35fr) minmax(0, 1fr);
-  gap: clamp(1.5rem, 4vw, 4rem);
-  padding-top: clamp(2.3rem, 4vw, 4rem);
-  padding-bottom: clamp(2.3rem, 4vw, 4rem);
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 3vw, 2.6rem);
+  padding-top: clamp(2.8rem, 5vw, 4.8rem);
+  padding-bottom: clamp(2.8rem, 5vw, 4.8rem);
 }
 
 .foldedArchive {
   display: block;
-  padding-top: clamp(1.2rem, 2.4vw, 2rem);
-  padding-bottom: clamp(1.2rem, 2.4vw, 2rem);
+  padding-top: clamp(2rem, 3.4vw, 3.4rem);
+  padding-bottom: clamp(2rem, 3.4vw, 3.4rem);
 }
 
 .foldedArchive summary {
   display: grid;
-  grid-template-columns: minmax(13rem, 0.35fr) minmax(0, 1fr);
-  gap: clamp(1.5rem, 4vw, 4rem);
-  align-items: baseline;
+  grid-template-columns: 1fr;
+  justify-items: start;
+  gap: 0.5rem; /* label stacked above the title, both at the section's left edge (matches .sectionHeader) */
   cursor: pointer;
   list-style: none;
 }
@@ -577,15 +640,17 @@
 .foldedArchive summary strong {
   color: var(--history-ink);
   font-family: var(--display);
-  font-size: clamp(1.5rem, 2.2vw, 2.15rem);
-  font-weight: 560;
-  letter-spacing: 0;
+  font-size: clamp(1.9rem, 3.2vw, 3.4rem);
+  font-weight: 500;
+  letter-spacing: -0.012em;
   line-height: 1.05;
 }
 
 .foldedArchive summary strong::after {
   content: " +";
-  color: var(--history-accent);
+  /* Ink, not cyan — a disclosure glyph carries no signal; cyan is reserved for
+     real "now/live" marks. (Focus-visible still gets cyan — focus is active.) */
+  color: rgba(223, 226, 227, 0.5);
   font-family: var(--sans);
   font-size: 0.86rem;
   font-weight: 500;
@@ -614,7 +679,9 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--history-border);
+  /* Same faded hairline as the section dividers. */
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(to right, transparent 2%, var(--history-border) 26%, var(--history-border) 74%, transparent 98%) 1;
 }
 
 .timeGrid {
@@ -658,41 +725,28 @@
 }
 
 .sourcePrinciple {
+  /* Stacked + shell-width like every other section so "Source first" aligns to
+     the same left column (the 4-col band that justified the old offset is gone). */
   display: grid;
-  grid-template-columns:
-    minmax(var(--history-page-pad), 1fr)
-    minmax(17rem, 25rem)
-    minmax(0, 51rem)
-    minmax(var(--history-page-pad), 1fr);
-  gap: clamp(1.5rem, 4vw, 4rem);
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding-top: clamp(2.8rem, 5vw, 5rem);
-  padding-right: 0;
-  padding-bottom: clamp(2.8rem, 5vw, 5rem);
-  padding-left: 0;
-  background:
-    radial-gradient(88% 86% at 0% 0%, rgba(238, 241, 242, 0.105), transparent 58%),
-    linear-gradient(120deg, rgba(255, 255, 255, 0.046), rgba(18, 20, 22, 0.76) 48%, rgba(4, 5, 6, 0.92)),
-    var(--history-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.024);
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 3vw, 2.6rem);
+  width: min(100%, var(--history-shell));
+  margin: 0 auto;
+  padding: clamp(2.8rem, 5vw, 4.8rem) var(--history-page-pad);
+  background: transparent;
 }
 
 .sourcePrinciple > div:first-child {
   display: grid;
-  grid-column: 2;
   align-content: center;
   gap: 0.5rem;
 }
 
 .sourcePlate {
   display: grid;
-  grid-column: 3;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(0.9rem, 2vw, 1.35rem);
+  max-width: 46rem;
 }
 
 .sourcePrinciple h2 {
@@ -700,9 +754,9 @@
   margin: 0;
   color: var(--history-ink);
   font-family: var(--display);
-  font-size: clamp(2.4rem, 5vw, 5.8rem);
-  font-weight: 560;
-  letter-spacing: 0;
+  font-size: clamp(2.5rem, 5vw, 5.8rem);
+  font-weight: 500;
+  letter-spacing: -0.012em;
   line-height: 1.05;
 }
 
@@ -830,6 +884,12 @@
   line-height: 1.12;
 }
 
+/* Cyan "now" mark: the loop-closing step (09 Next source) — the live edge of
+   the practice loop. One tick only, matching the current-tagline model. */
+.growthRail li[data-loopclose] span {
+  color: var(--signature-cyan);
+}
+
 .systemLoop {
   width: 100%;
   max-width: none;
@@ -837,14 +897,8 @@
   scroll-margin-top: clamp(6.5rem, 12vh, 8rem);
   padding-right: 0;
   padding-left: 0;
-  background:
-    radial-gradient(92% 92% at 0% 0%, rgba(238, 241, 242, 0.11), rgba(162, 170, 176, 0.048) 38%, transparent 64%),
-    radial-gradient(72% 84% at 92% 92%, rgba(0, 0, 0, 0.46), transparent 72%),
-    linear-gradient(124deg, rgba(255, 255, 255, 0.042), rgba(18, 20, 22, 0.78) 50%, rgba(4, 5, 6, 0.94)),
-    var(--history-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.038),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.026);
+  /* No band — follows the continuous page floor. */
+  background: transparent;
 }
 
 .systemLoop summary,
@@ -902,7 +956,9 @@
    lines read as faded italic serif; the line in use today is lit (ink + a
    single signature-cyan date mark). */
 .taglineLineage {
-  border-top: 1px solid var(--history-border);
+  /* Faded section divider, matching every other section. */
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(to right, transparent 2%, var(--history-border) 26%, var(--history-border) 74%, transparent 98%) 1;
   padding-top: clamp(2.8rem, 5vw, 5rem);
   padding-bottom: clamp(2.8rem, 5vw, 5rem);
   display: grid;
@@ -918,11 +974,11 @@
 }
 
 .taglineRail {
-  margin: 0;
-  padding: 0;
+  /* No margin/padding reset here — inherit the shell width + centering + page
+     padding from `.taglineLineage > *`, so the dates align to the 299 column
+     (matching the section title and the hero timeline), not the page edge. */
   list-style: none;
   display: grid;
-  border-top: 1px solid var(--history-border);
 }
 
 .taglineEntry {
@@ -930,7 +986,9 @@
   grid-template-columns: minmax(5.5rem, 7.5rem) minmax(0, 1fr);
   gap: clamp(0.9rem, 2.4vw, 2.4rem);
   padding: clamp(1.05rem, 2vw, 1.55rem) 0;
-  border-bottom: 1px solid var(--history-border);
+  /* Faded row divider to match the section dividers. */
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(to right, transparent 2%, var(--history-border) 26%, var(--history-border) 74%, transparent 98%) 1;
 }
 
 .taglineDate {
@@ -1064,7 +1122,7 @@
 .origin h2,
 .sectionHeader h2 {
   max-width: 16ch;
-  font-size: clamp(2.15rem, 3.8vw, 4.6rem);
+  font-size: clamp(2.5rem, 5vw, 5.8rem);
   line-height: 1.06;
 }
 
@@ -1102,7 +1160,8 @@
 }
 
 .earlyArchive {
-  background: var(--history-surface);
+  /* No surface band — follows the continuous page floor. */
+  background: transparent;
   color: var(--history-ink);
 }
 
@@ -1116,9 +1175,9 @@
 
 .earlyHeader {
   display: grid;
-  grid-template-columns: minmax(17rem, 0.32fr) minmax(0, 1fr);
-  gap: clamp(1.5rem, 4vw, 4rem);
-  align-items: end;
+  grid-template-columns: 1fr;
+  justify-items: start;
+  gap: 0.5rem; /* eyebrow hugs the title; both anchor to the section's left edge (matches .sectionHeader) */
   padding-top: clamp(3rem, 5vw, 5.2rem);
   padding-bottom: clamp(1.8rem, 3vw, 2.6rem);
 }
@@ -1132,9 +1191,9 @@
   margin: 0;
   color: var(--history-ink);
   font-family: var(--display);
-  font-size: clamp(2.6rem, 5.4vw, 6.2rem);
-  font-weight: 560;
-  letter-spacing: 0;
+  font-size: clamp(2.5rem, 5vw, 5.8rem);
+  font-weight: 500;
+  letter-spacing: -0.012em;
   line-height: 1.05;
 }
 
@@ -1164,7 +1223,9 @@
   display: block;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  padding: 0.5rem;
+  /* Canonical card material (matches .evolutionImage) so every image grid reads
+     as the same object — one mat, one sheen, one frame. */
+  padding: 0.45rem;
   border: 1px solid var(--line);
   border-radius: 12px;
   background:
@@ -1189,7 +1250,8 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: top center;
 }
 
 .earlyFrame figcaption {
@@ -1216,14 +1278,8 @@
   margin: 0;
   padding-right: 0;
   padding-left: 0;
-  background:
-    radial-gradient(88% 70% at 0% 0%, rgba(238, 241, 242, 0.095), transparent 62%),
-    radial-gradient(72% 70% at 100% 100%, rgba(0, 0, 0, 0.42), transparent 72%),
-    linear-gradient(126deg, rgba(255, 255, 255, 0.03), rgba(14, 16, 17, 0.74) 52%, rgba(4, 5, 6, 0.94)),
-    var(--history-surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.024);
+  /* No band — follows the continuous page floor. */
+  background: transparent;
 }
 
 .evolutionIntro {
@@ -1251,9 +1307,9 @@
   margin: 0;
   color: var(--history-ink);
   font-family: var(--display);
-  font-size: clamp(2.6rem, 5.4vw, 6.4rem);
-  font-weight: 560;
-  letter-spacing: 0;
+  font-size: clamp(2.5rem, 5vw, 5.8rem);
+  font-weight: 500;
+  letter-spacing: -0.012em;
   line-height: 1.05;
 }
 
@@ -1283,6 +1339,12 @@
   min-width: 0;
   padding-top: 0.9rem;
   border-top: 1px solid var(--history-border);
+}
+
+/* A lone trailing tile (7 stages = 3 + 3 + 1) centres in the 12-col rail
+   instead of clinging to the left edge as an orphan. */
+.evolutionStage:last-child:nth-child(3n + 1) {
+  grid-column: 5 / span 4;
 }
 
 .evolutionStage figure {
@@ -1354,6 +1416,11 @@
   font-family: var(--serif);
   font-size: clamp(1.06rem, 1.3vw, 1.22rem);
   line-height: 1.12;
+}
+
+/* Cyan "now" mark: the newest evolution date — the present the page descends to. */
+.evolutionStage[data-current] time {
+  color: var(--history-accent);
 }
 
 .evolutionNote {
@@ -1446,7 +1513,7 @@
 }
 
 .sourceRow {
-  grid-template-columns: clamp(4.5rem, 9vw, 7rem) minmax(0, 1fr);
+  grid-template-columns: clamp(4.5rem, 9vw, 7rem) minmax(0, 1fr) auto;
   gap: clamp(0.9rem, 2vw, 1.25rem);
   align-items: center;
   padding: clamp(0.9rem, 1.5vw, 1.15rem);
@@ -1516,6 +1583,24 @@
   object-position: top center;
 }
 
+/* The grounded archive shows real, living COLOUR — the hero's space stays B&W,
+   and the descent lands from monochrome space onto colour evidence. A touch of
+   richness so the screenshots feel alive on the dark page; lift on hover. */
+.sourcePlate img,
+.earlyImage img,
+.evolutionImage img,
+.sourceThumb img {
+  filter: saturate(1.06) contrast(1.02);
+  transition: filter 0.2s ease;
+}
+
+.sourcePlate a:hover img,
+.earlyFrame:hover .earlyImage img,
+.evolutionStage:hover .evolutionImage img,
+.sourceRow:hover .sourceThumb img {
+  filter: saturate(1.16) contrast(1.03) brightness(1.04);
+}
+
 .sourceCopy {
   display: grid;
   min-width: 0;
@@ -1529,6 +1614,19 @@
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Right-aligned open affordance so each evidence card reads label-left /
+   action-right and the right half no longer sits empty. */
+.sourceArrow {
+  align-self: center;
+  color: var(--history-subtle);
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.sourceRow:hover .sourceArrow {
+  color: var(--history-accent);
+  transform: translate(2px, -2px);
 }
 
 .narrativeRows {
@@ -1707,9 +1805,10 @@
   }
 
   .hero::after {
-    background-position: -3.8rem calc(100% + 0.8rem);
-    background-size: clamp(33rem, 158vw, 49rem) auto;
-    opacity: 0.38;
+    background-position: 50% 18%;
+    background-size: clamp(28rem, 120vw, 40rem) auto;
+    opacity: 0.5;
+    filter: grayscale(1) contrast(1.1) brightness(0.5) blur(1px);
   }
 
   .hero h1 {
@@ -1782,14 +1881,16 @@
 .heroCopy {
   justify-self: end;
   width: min(100%, 32.5rem);
-  transform: translateY(clamp(-2.45rem, -3.2vh, -1.8rem));
+  /* Nudge "History" off the far-left toward the centre of the stage. */
+  transform: translate(clamp(2rem, 12vw, 15rem), clamp(-2.45rem, -3.2vh, -1.8rem));
 }
 
 .heroMedia {
-  justify-self: start;
+  justify-self: end;
   width: min(100%, var(--history-hero-media));
   perspective: 2600px;
-  transform: translate3d(clamp(-2.6rem, -2.6vw, -1.1rem), clamp(-1.55rem, -1.9vh, -0.8rem), 0);
+  /* Hug the right — the self approaches from deep space on the right. */
+  transform: translate3d(clamp(0.5rem, 2.5vw, 3rem), clamp(-1.55rem, -1.9vh, -0.8rem), 0);
 }
 
 .heroMedia::before {
@@ -1831,7 +1932,7 @@
    earlier dead synthetic-glass .heroStudy block cannot leak through. */
 .heroStudy {
   position: absolute;
-  inset: 17% 15% 47% 15%;
+  inset: 20% 16% 44% 16%;
   z-index: 1;
   display: grid;
   width: auto;
@@ -1841,16 +1942,18 @@
   padding: 0;
   border: 0;
   border-radius: 0;
-  /* A soft dark "lens" behind the mark: the visor glass reads darkest where the
-     identity is etched, guaranteeing the light wordmark stays legible over the
-     bright Earth reflection while the reflection still shows around it. */
-  background: radial-gradient(72% 104% at 50% 46%, rgba(1, 3, 6, 0.93), rgba(1, 3, 6, 0.6) 44%, rgba(1, 3, 6, 0.16) 70%, transparent 85%);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   box-shadow: none;
   filter: none;
   clip-path: none;
   pointer-events: none;
+  /* The mark reads as light caught IN the visor glass, not a label pasted on it:
+     a very soft, large, off-centre darkening (like the natural top tint of a
+     sun-visor) gives just enough contrast, and the text screens over the
+     reflection so the city-lights show through the strokes. No hard "lens". */
+  background: radial-gradient(46% 50% at 50% 43%, rgba(3, 6, 10, 0.32), rgba(3, 6, 10, 0.1) 52%, transparent 86%);
+  mix-blend-mode: normal;
   /* Reveal: near-invisible while the self sleeps far in the dark (S0), lifting
      to fully lit as it arrives. Lit at rest (--fc-p:1) so no-JS shows arrived. */
   opacity: calc(0.02 + 0.98 * var(--fc-p, 1) * var(--fc-p, 1));
@@ -1961,12 +2064,12 @@
   }
 
   .heroCopy {
-    justify-self: start;
+    justify-self: end;
   }
 
   .heroMedia {
     width: min(100%, var(--history-hero-media));
-    transform: translate3d(clamp(-1.4rem, -1vw, -0.45rem), clamp(-1.35rem, -1.6vh, -0.7rem), 0);
+    transform: translate3d(clamp(1rem, 2.4vw, 4rem), clamp(-1.35rem, -1.6vh, -0.7rem), 0);
   }
 
   .heroStudy {
@@ -1976,7 +2079,7 @@
 
 @media (min-width: 1900px) {
   .heroMedia {
-    transform: translate3d(clamp(0.2rem, 0.85vw, 1.25rem), clamp(-1.35rem, -1.6vh, -0.7rem), 0);
+    transform: translate3d(clamp(2rem, 3vw, 5.5rem), clamp(-1.35rem, -1.6vh, -0.7rem), 0);
   }
 
   .heroArchiveRow {
@@ -2020,5 +2123,265 @@
   .heroStudy {
     /* A touch more vertical room for the mark in the smaller phone visor. */
     inset: 15% 11% 42% 11%;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   STATIC COMPOSITION (current direction · 2026-06-14)
+   "History" centred · astronaut in the bottom-right (suit pressed into the
+   deep-space black) · the Earth reflection in the visor · LOOM revealed only
+   when the cursor touches the helmet. Higher-specificity (.hero .x) overrides
+   so they win over the cinematic grid + every breakpoint regardless of order.
+   ════════════════════════════════════════════════════════════════════════ */
+/* Out of the cinematic grid → a simple centering flex, so "History" centres
+   naturally and the absolute helmet positions against the hero, not a cell. */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Premium deep black to match the astronaut photo's own background (drop the
+     cool/teal cast): a near-black with a faint neutral top-centre lift for
+     depth, so the helmet's dropped background and the scene read as one black. */
+  background:
+    /* Atmospheric scatter at the moon's limb (behind the orb) so it seats in
+       space instead of reading as a hard-edged paste. Near-neutral cool — stays
+       within the B&W + cyan-only discipline. */
+    radial-gradient(33rem 33rem at 62% 44%, transparent 56%, rgba(178, 184, 188, 0.075) 70%, transparent 86%),
+    radial-gradient(135% 105% at 50% 22%, #0d0e10 0%, #08090b 40%, #040405 72%, #020203 100%);
+  background-color: #040405;
+  /* Gentle cinematic vignette to focus the centre (behind the content). */
+  box-shadow: inset 0 0 16rem 3rem rgba(0, 0, 0, 0.62);
+  /* The hero is full-bleed; align "History" + the timeline to the SAME left
+     column as every section below (the 76rem shell edge) so the masthead no
+     longer juts further left than the content. */
+  --history-col-edge: max(var(--history-page-pad), calc((100% - var(--history-shell)) / 2 + var(--history-page-pad)));
+}
+
+.hero .heroCopy {
+  position: absolute;
+  grid-column: auto;
+  grid-row: auto;
+  left: var(--history-col-edge);
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(0.7rem, 1.5vh, 1.3rem);
+  width: auto;
+  max-width: min(48%, 42rem);
+  margin: 0;
+  transform: none;
+  text-align: left;
+  pointer-events: none; /* let hover pass through to the helmet below */
+}
+
+.hero .heroMedia {
+  position: absolute;
+  grid-column: auto;
+  grid-row: auto;
+  top: clamp(8rem, 21vh, 17rem);
+  bottom: auto;
+  left: auto;
+  right: clamp(3.5rem, 7vw, 9rem);
+  z-index: 2;
+  width: min(17vw, 13rem);
+  max-width: none;
+  margin: 0;
+  justify-self: auto;
+  align-self: auto;
+  transform: none;
+  /* No new stacking context here, so the helmet's lighten blend reaches the
+     page background and the photo's black truly melts into it (no seam). */
+  isolation: auto;
+  perspective: none;
+}
+
+/* No transform on the helmet in the static version — a transform would create a
+   stacking context that traps the photo's lighten blend (leaving a dark seam). */
+.hero .helmet {
+  transform: none;
+}
+
+/* Drop the old panel glow + light streak — keep the photographic helmet clean. */
+.hero .heroMedia::before,
+.hero .heroMedia::after {
+  display: none;
+}
+
+/* A minimal timeline strip at the bottom of the hero — V2 keeps a timeline; we
+   keep its structure (the hairline + year/milestone markers) but strip the
+   descriptive prose. */
+.hero .heroArchiveRow {
+  position: absolute;
+  left: var(--history-col-edge);
+  right: var(--history-col-edge);
+  bottom: clamp(2rem, 5vh, 3.5rem);
+  z-index: 3;
+}
+/* drop the descriptive paragraph + the call-to-action — keep it text-light */
+.hero .heroOriginCard p,
+.hero .heroOriginCard a {
+  display: none;
+}
+
+/* LOOM: on devices with a real cursor it stays hidden until the cursor touches
+   the helmet, then fades up. Touch devices have no hover, so gating the reveal
+   behind (hover: hover) lets the base .heroStudy opacity (lit at --fc-p:1) win
+   there — otherwise the mark would be permanently invisible on phones/tablets. */
+@media (hover: hover) and (pointer: fine) {
+  .hero .heroStudy {
+    opacity: 0;
+    transition: opacity 0.55s ease;
+  }
+
+  .hero .heroMedia:hover .heroStudy,
+  .hero .heroMedia:focus-within .heroStudy {
+    opacity: 1;
+  }
+}
+
+/* Phones: stack the composition — "History" upper-centre, the helmet centred
+   at the bottom — so the title and the astronaut never collide. */
+@media (max-width: 680px) {
+  .hero {
+    align-items: flex-start;
+    /* tall enough to stack the title above the bottom helmet (the earlier
+       ≤680 rule collapses min-height to auto, which let them overlap) */
+    min-height: max(42rem, 92svh);
+    box-shadow: inset 0 0 9rem 1rem rgba(0, 0, 0, 0.5);
+  }
+  .hero .heroCopy {
+    position: relative;
+    z-index: 3;
+    max-width: min(86%, 30rem);
+    transform: translateY(clamp(1rem, 6vh, 3rem));
+  }
+  .hero h1 {
+    font-size: clamp(2.6rem, 15vw, 4rem);
+    /* Phone: a hard contact shadow so "History" stays legible above the helmet. */
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.85),
+      0 0.04em 0.9em rgba(3, 5, 7, 0.7);
+  }
+  .hero .heroMedia {
+    top: clamp(13rem, 34vh, 22rem);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: min(78%, 22rem);
+    margin-inline: auto;
+    transform: none; /* margin-centre, not translateX, so no stacking context re-traps the visor blend on mobile */
+  }
+}
+
+/* ── The name & the mark — clean Fraunces LOOM + L/OO/M meanings (no eyes) ── */
+.nameMark {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: clamp(1.8rem, 4vw, 3.2rem);
+  width: min(100%, var(--history-shell));
+  margin: 0 auto;
+  padding: clamp(3.2rem, 7vw, 5.5rem) var(--history-page-pad) clamp(4.5rem, 10vw, 7.5rem);
+  text-align: center;
+  border-top: 1px solid var(--history-border);
+  /* The landing band: a diffuse cyan bloom off the seam grounds into a soft
+     floor, so the wordmark sits on staged ground, not a bare strip. */
+  background:
+    radial-gradient(64% 42% at 50% 0%, rgba(108, 231, 242, 0.05), transparent 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 26%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+/* The horizon — where the hero's deep space resolves into the documented
+   ground. A faint cyan signal threads along the seam (the timeline strip sits
+   just above it as the first stratum). */
+.nameMark::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 4%, rgba(108, 231, 242, 0.4) 50%, transparent 96%);
+  pointer-events: none;
+}
+
+.nameMark .label {
+  color: var(--history-subtle);
+}
+
+.markWord {
+  margin: 0;
+  font-family: var(--font-wordmark);
+  font-weight: 500;
+  font-size: clamp(4rem, 13vw, 10rem);
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  color: var(--history-ink);
+}
+
+/* OO = Eyes — the signal colour, rhyming with the visor mark above. Settled
+   (no pulse) since this is the grounded archive, not the living visor. */
+.markEye {
+  color: var(--signature-cyan);
+}
+
+/* Cyan discipline: the EYES-column "OO" fragment stays ink — the band already
+   carries two cyan marks (the giant wordmark OO + the horizon seam); a third in
+   one quiet viewport erodes "cyan is the single signal". */
+
+.markRows {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 4vw, 4.5rem);
+  width: 100%;
+  max-width: 54rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.markRow {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+  justify-items: center;
+}
+
+.markRow strong {
+  font-family: var(--font-wordmark);
+  font-size: clamp(2.6rem, 4.4vw, 4rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em; /* balance trailing tracking so the centred fragment (esp. OO) stays optically centred */
+  color: var(--history-ink);
+}
+
+.markName {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(214, 218, 220, 0.82);
+}
+
+.markNote {
+  max-width: 14rem;
+  color: var(--history-muted);
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  line-height: 1.45;
+}
+
+@media (max-width: 680px) {
+  .markRows {
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+    max-width: 22rem;
   }
 }

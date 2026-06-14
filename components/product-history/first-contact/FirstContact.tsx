@@ -21,7 +21,6 @@
  * Static-export safe: useFirstContact only touches the DOM inside an effect,
  * never during render; the moon is a CSS background-image (no next/image).
  */
-import { ColdOpen } from './ColdOpen';
 import { useFirstContact } from './useFirstContact';
 import styles from './FirstContact.module.css';
 
@@ -60,15 +59,13 @@ export function FirstContact() {
   return (
     <>
       <FirstContactLayers />
-      {/* One-shot comet flying from the M to the moon — lifted above the
-          content (like the cold open) so it reads as crossing the scene. */}
+      {/* (Static version: the one-shot comet + cold-open are disabled. The
+          comet markup stays for the cinematic restore but never animates.) */}
       <div className={styles.cometCanvas} aria-hidden="true">
         <span className={styles.comet} aria-hidden="true">
           <span className={styles.cometHead} aria-hidden="true" />
         </span>
       </div>
-      {/* Cold-open "History" flicker (client-only, once per session). */}
-      <ColdOpen />
     </>
   );
 }

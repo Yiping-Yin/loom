@@ -16,7 +16,7 @@
  */
 import { useEffect, useState } from 'react';
 import styles from './FirstContact.module.css';
-import { COLD_OPEN_DURATION_MS, COLD_OPEN_KEY, VISOR_WORDMARK } from './constants';
+import { COLD_OPEN_DURATION_MS, COLD_OPEN_KEY } from './constants';
 
 type Phase = 'idle' | 'playing' | 'done';
 
@@ -56,8 +56,8 @@ export function ColdOpen() {
 
   return (
     <div className={styles.coldOpen} aria-hidden="true">
+      {/* Only the word "History" at the cold open — no tag/label. */}
       <span className={styles.coldOpenWord}>History</span>
-      <span className={styles.coldOpenTag}>{VISOR_WORDMARK}</span>
     </div>
   );
 }

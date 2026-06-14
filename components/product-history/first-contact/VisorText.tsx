@@ -63,7 +63,13 @@ export function VisorText() {
                 return (
                   <tspan
                     key={`${letter}-${index}`}
-                    className={letter === 'M' ? styles.letterM : undefined}
+                    className={
+                      letter === 'M'
+                        ? styles.letterM
+                        : letter === 'O'
+                          ? styles.letterEye
+                          : undefined
+                    }
                     fillOpacity={opacity}
                     fontSize={`${(scale * 100).toFixed(2)}%`}
                   >

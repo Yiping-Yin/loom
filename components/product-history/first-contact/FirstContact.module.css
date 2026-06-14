@@ -53,6 +53,8 @@
       transparent 68%
     );
   opacity: calc(0.7 + 0.3 * var(--fc-p, 1));
+  /* Black-and-white / premium-black pass: drop the cyan cast to neutral. */
+  filter: grayscale(1);
 }
 
 /* ── Moon: waxes, sharpens, warms, parallaxes ───────────────────────────── */
@@ -125,7 +127,7 @@
     );
   opacity: calc(0.3 + 0.7 * var(--fc-p, 1));
   mix-blend-mode: screen;
-  filter: blur(6px);
+  filter: blur(6px) grayscale(1);
 }
 
 /* ── Colour reflection: grayscale → photographic colour, blooms at climax ── */
@@ -143,6 +145,10 @@
     radial-gradient(50% 54% at 12% 58%, rgba(64, 120, 92, 0.22), transparent 60%),
     radial-gradient(46% 50% at 82% 82%, rgba(224, 162, 74, 0.22), transparent 62%);
   opacity: calc(var(--fc-p, 1) * var(--fc-p, 1));
+  /* Black-and-white pass: grayscale the colour layer so nothing tints the scene
+     (survives the [data-fc-arrived] opacity:1 override). Remove to restore the
+     colour flood in a later phase. */
+  filter: grayscale(1);
   mix-blend-mode: screen;
 }
 
@@ -153,7 +159,7 @@
      the scene from the M to the moon. Below the cold open (z-index:8). */
   position: absolute !important;
   inset: 0 !important;
-  z-index: 5 !important;
+  z-index: 1 !important;
   pointer-events: none;
   overflow: clip;
 }
@@ -161,38 +167,55 @@
 /* A single comet drawn from the visor's M (upper-right) arcing down to the
    moon (lower-left): a memory-light flying from M=Memory toward the Moon. It
    draws once at the climax via scaleX from the M end, then dissipates. */
+/* A single cyan meteor streaking the upper void — the lone signal of a living
+   mind in the black. Slow + occasional (long pause each cycle), pure CSS loop. */
 .comet {
   position: absolute;
-  top: 44%;
-  left: 70%;
-  width: 56%;
-  height: 3px;
+  top: 8%;
+  left: 0;
+  width: 26%;
+  height: 2px;
   opacity: 0;
   transform-origin: left center;
-  transform: rotate(151deg) scaleX(0);
+  transform: translate3d(-35vw, -12vh, 0) rotate(22deg);
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(180, 224, 232, 0) 22%,
-    rgba(190, 230, 238, 0.5) 62%,
-    rgba(220, 246, 250, 0.9) 88%,
-    rgba(255, 255, 255, 1) 100%
+    rgba(76, 197, 222, 0) 22%,
+    rgba(108, 231, 242, 0.5) 68%,
+    rgba(154, 241, 248, 0.95) 100%
   );
-  filter: blur(0.6px) drop-shadow(0 0 6px rgba(120, 230, 240, 0.5));
+  filter: drop-shadow(0 0 5px rgba(108, 231, 242, 0.55));
+  animation: meteorStreak 11s ease-in-out infinite;
 }
 
 .cometHead {
   position: absolute;
-  right: -5px;
+  right: -4px;
   top: 50%;
-  width: 12px;
-  height: 12px;
+  width: 9px;
+  height: 9px;
   transform: translateY(-50%);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(140, 247, 230, 0.72) 42%, transparent 72%);
+  background: radial-gradient(circle, rgba(222, 250, 253, 0.98), rgba(108, 231, 242, 0.7) 45%, transparent 72%);
   box-shadow:
-    0 0 14px 4px rgba(140, 247, 230, 0.55),
-    0 0 34px 12px rgba(76, 197, 222, 0.32);
+    0 0 12px 3px rgba(108, 231, 242, 0.5),
+    0 0 26px 8px rgba(76, 197, 222, 0.28);
+}
+
+@keyframes meteorStreak {
+  0% { opacity: 0; transform: translate3d(-35vw, -12vh, 0) rotate(22deg); }
+  8% { opacity: 1; }
+  22% { opacity: 1; }
+  30% { opacity: 0; transform: translate3d(38vw, 26vh, 0) rotate(22deg); }
+  100% { opacity: 0; transform: translate3d(38vw, 26vh, 0) rotate(22deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comet {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* ── Cold open: "History" flicker, then reveal (client-only, once/session) ── */

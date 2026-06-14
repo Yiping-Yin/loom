@@ -1,33 +1,32 @@
 /* Helmet — photographic astronaut helmet, placed to fill the .helmet box.
  *
- * The .helmet parent owns the portrait aspect-ratio + approach transform; this
- * layer is the image itself, its emerge-from-dark filter, and an edge vignette
- * that melts the near-black photo borders into the cool-black scene so the
- * helmet reads as a real object lit out of the dark, not a pasted rectangle. */
+ * The PNG has its black background flood-filled to TRANSPARENT (the enclosed
+ * visor with its Earth reflection is preserved), so it composites with a normal
+ * blend: no rectangular box/seam, and the opaque helmet occludes the moon
+ * behind it (no bleed-through). Black-and-white pass for now (colour later). */
 .helmetPhoto {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url('/loom/history/helmet.jpg');
+  background-image: url('/loom/history/helmet.png');
   background-repeat: no-repeat;
   background-position: center top;
   background-size: cover;
-  /* Cold, dim, desaturated when the self is far (S0); brightens and floods to
-     full colour as it approaches the climax — the one precious colour moment.
-     At rest (--fc-p:1, no-JS / arrived) it sits at full brightness + colour. */
+  mix-blend-mode: normal;
   filter:
-    brightness(calc(0.42 + 0.46 * var(--fc-p, 1)))
-    contrast(calc(1.02 + 0.05 * var(--fc-p, 1)))
-    saturate(calc(0.14 + 0.86 * var(--fc-p, 1)));
-  /* Vignette the photo's own dark edges (dome crown, shoulders, suit) into the
-     scene; the visor core (50% 44%) stays fully lit. */
-  -webkit-mask-image: radial-gradient(118% 114% at 50% 43%, #000 53%, rgba(0, 0, 0, 0.5) 75%, transparent 94%);
-  mask-image: radial-gradient(118% 114% at 50% 43%, #000 53%, rgba(0, 0, 0, 0.5) 75%, transparent 94%);
+    brightness(calc(0.74 + 0.22 * var(--fc-p, 1)))
+    contrast(calc(1.04 + 0.12 * var(--fc-p, 1)))
+    saturate(1.12)
+    grayscale(0.12);
+  /* The suit + shoulders fade into the dark ("pressed into black"); the head +
+     visor stay lit. Also softens the flood-fill edge. */
+  -webkit-mask-image: radial-gradient(72% 80% at 50% 32%, #000 32%, rgba(0, 0, 0, 0.6) 56%, rgba(0, 0, 0, 0.2) 74%, transparent 88%);
+  mask-image: radial-gradient(72% 80% at 50% 32%, #000 32%, rgba(0, 0, 0, 0.6) 56%, rgba(0, 0, 0, 0.2) 74%, transparent 88%);
   pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .helmetPhoto {
-    filter: brightness(0.88) contrast(1.06) saturate(1);
+    filter: brightness(0.92) contrast(1.12) saturate(1.12) grayscale(0.12);
   }
 }

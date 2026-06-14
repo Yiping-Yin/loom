@@ -251,7 +251,7 @@ const TAGLINE_LINEAGE = [
 ] as const;
 
 const HERO_STATEMENT =
-  'Loom is a cognitive growth system: it turns source-backed thinking into personal growth, evidence, output, and Digital Me.';
+  'Early studies, original vocabulary, and the evolution of a cognitive growth system.';
 
 export function ProductHistoryPage() {
   const featuredSources = FEATURED_SOURCE_IDS.map(resolveVerifiedDossierArtifact);
@@ -299,6 +299,30 @@ export function ProductHistoryPage() {
             </a>
           </article>
         </div>
+      </section>
+
+      <section className={styles.nameMark} aria-labelledby="name-mark-title">
+        <p className={styles.label}>The name &amp; the mark</p>
+        <h2 id="name-mark-title" className={styles.markWord}>
+          L<span className={styles.markEye}>OO</span>M
+        </h2>
+        <ul className={styles.markRows}>
+          <li className={styles.markRow}>
+            <strong>L</strong>
+            <span className={styles.markName}>Library</span>
+            <span className={styles.markNote}>The source archive.</span>
+          </li>
+          <li className={styles.markRow}>
+            <strong>OO</strong>
+            <span className={styles.markName}>Eyes</span>
+            <span className={styles.markNote}>The critical eye.</span>
+          </li>
+          <li className={styles.markRow}>
+            <strong>M</strong>
+            <span className={styles.markName}>Memory</span>
+            <span className={styles.markNote}>The mark it leaves.</span>
+          </li>
+        </ul>
       </section>
 
       <section className={styles.roleSplit} aria-labelledby="role-title">
@@ -350,7 +374,7 @@ export function ProductHistoryPage() {
         </header>
         <ol className={styles.growthRail}>
           {GROWTH_LOOP.map((step, index) => (
-            <li key={step}>
+            <li key={step} data-loopclose={index === GROWTH_LOOP.length - 1 ? 'true' : undefined}>
               <span>{String(index + 1).padStart(2, '0')}</span>
               <strong>{step}</strong>
             </li>
@@ -412,8 +436,12 @@ export function ProductHistoryPage() {
           </div>
         </header>
         <ol className={styles.evolutionRail}>
-          {EVOLUTION_STAGES.map((stage) => (
-            <li key={`${stage.date}-${stage.title}`} className={styles.evolutionStage}>
+          {EVOLUTION_STAGES.map((stage, index) => (
+            <li
+              key={`${stage.date}-${stage.title}`}
+              className={styles.evolutionStage}
+              data-current={index === EVOLUTION_STAGES.length - 1 ? 'true' : undefined}
+            >
               <figure>
                 <span className={styles.evolutionImage}>
                   <img src={stage.src} alt={stage.alt} />
@@ -515,6 +543,7 @@ export function ProductHistoryPage() {
                 <FileBadge kind={source.kind} label={source.label} compact />
                 <strong>{source.preview?.title ?? source.label}</strong>
               </span>
+              <ArrowUpRight className={styles.sourceArrow} aria-hidden="true" size={16} strokeWidth={1.8} />
             </a>
           ))}
         </div>
