@@ -135,17 +135,33 @@ function EvidenceSignal({
       <path className={styles.evidenceSignalLine} d={linePath} fill="none" />
       {points.map((p) => {
         const active = p.claim.id === selectedClaimId;
+        const label = `${getClaimTitle(p.claim)} — ${STATUS_LABELS[p.claim.evidenceStatus]}`;
         return (
-          <circle
+          <g
             key={p.claim.id}
-            className={active ? styles.evidenceSignalNodeActive : styles.evidenceSignalNode}
-            cx={p.x}
-            cy={p.y}
-            r={active ? 1.9 : 1.2}
+            className={styles.evidenceSignalHit}
+            role="button"
+            tabIndex={0}
+            aria-label={label}
+            aria-pressed={active}
             onClick={() => onSelectClaim(p.claim.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelectClaim(p.claim.id);
+              }
+            }}
           >
-            <title>{`${getClaimTitle(p.claim)} — ${STATUS_LABELS[p.claim.evidenceStatus]}`}</title>
-          </circle>
+            <title>{label}</title>
+            {/* enlarged transparent hit/keyboard target */}
+            <circle cx={p.x} cy={p.y} r={4} fill="transparent" />
+            <circle
+              className={active ? styles.evidenceSignalNodeActive : styles.evidenceSignalNode}
+              cx={p.x}
+              cy={p.y}
+              r={active ? 1.9 : 1.2}
+            />
+          </g>
         );
       })}
     </svg>

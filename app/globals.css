@@ -19966,10 +19966,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__list .vd-entry-notes summary {
+  display: inline-flex;
+  align-items: center;
   width: fit-content;
+  min-height: 2.5rem; /* larger tap target than the bare ~13px label */
+  padding: 0.35rem 0;
   cursor: pointer;
   list-style: none;
-  color: rgba(232, 238, 244, 0.64);
+  color: rgba(232, 238, 244, 0.72);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.13em;

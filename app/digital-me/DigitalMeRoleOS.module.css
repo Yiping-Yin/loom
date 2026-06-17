@@ -458,6 +458,17 @@
   filter: drop-shadow(0 0 3px rgba(75, 197, 222, 0.55));
 }
 
+.evidenceSignalHit {
+  cursor: pointer;
+  outline: none;
+}
+
+.evidenceSignalHit:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi, #8af7e6);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
 .evidenceSignalNode {
   fill: var(--role-signal);
   fill-opacity: 0.55;
