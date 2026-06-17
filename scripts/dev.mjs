@@ -4,7 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const nextDir = path.join(root, process.env.LOOM_DIST_DIR || '.next');
+const devDistDir = process.env.LOOM_DIST_DIR || '.next-app-dev';
+const nextDir = path.join(root, devDistDir);
 const appBuildManifestPath = path.join(nextDir, 'app-build-manifest.json');
 const routesManifestPath = path.join(nextDir, 'routes-manifest.json');
 const nextBin = path.join(root, 'node_modules', 'next', 'dist', 'bin', 'next');
@@ -97,7 +98,10 @@ ensureRoutesManifest();
 const child = spawn(process.execPath, [nextBin, 'dev', ...process.argv.slice(2)], {
   cwd: root,
   stdio: 'inherit',
-  env: process.env,
+  env: {
+    ...process.env,
+    LOOM_DIST_DIR: devDistDir,
+  },
 });
 
 const interval = setInterval(ensureRoutesManifest, 250);

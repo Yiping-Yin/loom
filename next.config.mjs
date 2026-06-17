@@ -1,35 +1,20 @@
 import createMDX from '@next/mdx';
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
-import rehypeKatex from 'rehype-katex';
-import rehypeSlug from 'rehype-slug';
-import rehypePrettyCode from 'rehype-pretty-code';
-import { createHighlighter, createJavaScriptRegexEngine } from 'shiki';
 
-// Shiki's default WASM Oniguruma engine deadlocks next-swc during a cold
-// production build on this toolchain — the build hangs at 0% CPU compiling
-// `node_modules/vscode-oniguruma`. Shiki's pure-JS regex engine produces the
-// same highlighting without loading any WASM, so the cold build completes.
-// Created once and reused across all MDX files.
-const shikiJsEngine = createJavaScriptRegexEngine();
-
+// Next 16 builds/serves with Turbopack by default, which requires the MDX loader
+// options to be SERIALIZABLE — so remark/rehype plugins must be referenced by
+// STRING package name (Next resolves them), not as imported function refs, and
+// no functions may appear in plugin options. This also retires the old
+// webpack-era `getHighlighter` workaround (a function that forced Shiki's pure-JS
+// engine to dodge a next-swc/webpack WASM-Oniguruma cold-build deadlock):
+// Turbopack doesn't run webpack, so that deadlock no longer applies.
 const withMDX = createMDX({
   extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [remarkGfm, remarkMath],
+    remarkPlugins: ['remark-gfm', 'remark-math'],
     rehypePlugins: [
-      rehypeSlug,
-      rehypeKatex,
-      [
-        rehypePrettyCode,
-        {
-          theme: { dark: 'github-dark', light: 'github-light' },
-          keepBackground: false,
-          // Use Shiki's JS regex engine (no WASM) — see shikiJsEngine above.
-          getHighlighter: (options) =>
-            createHighlighter({ ...options, engine: shikiJsEngine }),
-        },
-      ],
+      'rehype-slug',
+      'rehype-katex',
+      ['rehype-pretty-code', { theme: { dark: 'github-dark', light: 'github-light' }, keepBackground: false }],
     ],
   },
 });
@@ -55,7 +40,9 @@ const nextConfig = {
   // the same TypeScript program walk during `next build`, which on this
   // codebase takes 10+ minutes for no additional information. Skip it.
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
+  // (Next 16 removed the `eslint` config key — `next lint` is gone and ESLint
+  // runs standalone now, so the old `eslint: { ignoreDuringBuilds: true }` is
+  // dropped; keeping it makes Next 16 crash on an undefined `.map`.)
   // Use an in-memory webpack cache instead of the default filesystem cache.
   // On this machine Spotlight / TimeMachine occasionally vanish `.pack_`
   // temp files before webpack can rename them, causing ENOENT and a 15-min

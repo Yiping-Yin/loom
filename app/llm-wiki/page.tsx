@@ -1,9 +1,8 @@
 import Link from 'next/link';
-import { QuietScene } from '../../components/QuietScene';
-import { PageFrame } from '../../components/PageFrame';
-import { StageShell } from '../../components/StageShell';
-import { WorkEyebrow, WorkSurface } from '../../components/WorkSurface';
+import { ArrowUpRight, BookOpenCheck, LibraryBig, Orbit } from 'lucide-react';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { getWikiHomeSections } from '../../lib/wiki-home';
+import styles from './LLMWikiPage.module.css';
 
 export const metadata = { title: 'LLM Wiki · Loom' };
 
@@ -12,67 +11,87 @@ export default async function LLMWikiPage() {
   const totalDocs = sections.reduce((sum, section) => sum + section.count, 0);
 
   return (
-    <main style={{ minHeight: '100vh' }}>
-      <StageShell
-        variant="archive"
-        contentVariant="archive"
-        innerStyle={{ minHeight: '100vh', paddingTop: '4.75rem', paddingBottom: '2.5rem' }}
-      >
-        <QuietScene tone="atlas">
-          <PageFrame
-            breadcrumb={
-              <>
-                <Link href="/desk" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-                  Desk
-                </Link>
-                <span aria-hidden>›</span>
+    <>
+      <LoomGlobalNav activeHref="/sources" ariaLabel="LLM Wiki navigation" />
+      <main className={styles.page}>
+        <div className={styles.shell}>
+          <header className={styles.hero}>
+            <div>
+              <nav className={styles.breadcrumb} aria-label="Reference breadcrumb">
+                <Link href="/sources">Sources</Link>
+                <span aria-hidden="true">/</span>
                 <span>LLM Wiki</span>
-              </>
-            }
-            eyebrow="Reference"
-            title="LLM Wiki"
-            description={
-              <>
-                <span>{sections.length} sections · {totalDocs} entries</span>
-                <br />
-                Built-in curriculum grouped by topic. These pages are read-only reference beside your own sources.
-              </>
-            }
-          >
-            <div style={{ display: 'grid', gap: 'var(--space-4)', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
-              {sections.map((section) => (
-                <WorkSurface key={section.label} tone="quiet" density="regular">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-                      <WorkEyebrow subtle>{section.label}</WorkEyebrow>
-                      <div style={{ color: 'var(--fg-secondary)', fontSize: '0.84rem' }}>
-                        {section.count} entries
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {section.items.map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          style={{
-                            textDecoration: 'none',
-                            color: 'var(--fg)',
-                            fontFamily: 'var(--display)',
-                            fontSize: '1.02rem',
-                            lineHeight: 1.15,
-                          }}
-                        >
-                          {item.title}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </WorkSurface>
-              ))}
+              </nav>
+              <p className={styles.eyebrow}>Reference atlas</p>
+              <h1 className={styles.title}>LLM Wiki</h1>
+              <p className={styles.lead}>
+                A read-only reference constellation beside your own Sources. Use it as
+                stable curriculum material, not as a third workspace.
+              </p>
             </div>
-          </PageFrame>
-        </QuietScene>
-      </StageShell>
-    </main>
+
+            <aside className={styles.summaryPanel} aria-label="LLM Wiki summary">
+              <div className={styles.summaryRow}>
+                <span className={styles.summaryIcon} aria-hidden="true">
+                  <Orbit size={18} strokeWidth={1.65} />
+                </span>
+                <span>
+                  <span className={styles.summaryValue}>{sections.length}</span>
+                  <span className={styles.summaryLabel}>Sections</span>
+                </span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span className={styles.summaryIcon} aria-hidden="true">
+                  <LibraryBig size={18} strokeWidth={1.65} />
+                </span>
+                <span>
+                  <span className={styles.summaryValue}>{totalDocs}</span>
+                  <span className={styles.summaryLabel}>Entries</span>
+                </span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span className={styles.summaryIcon} aria-hidden="true">
+                  <BookOpenCheck size={18} strokeWidth={1.65} />
+                </span>
+                <span>
+                  <span className={styles.summaryValue}>Read-only</span>
+                  <span className={styles.summaryLabel}>Reference shelf</span>
+                </span>
+              </div>
+            </aside>
+          </header>
+
+          <section className={styles.sectionGrid} aria-label="LLM Wiki sections">
+            {sections.map((section, index) => (
+              <article className={styles.sectionCard} key={section.label}>
+                <header className={styles.sectionHeader}>
+                  <span className={styles.sectionMeta}>
+                    <span className={styles.sectionLabel}>{section.label}</span>
+                    <span className={styles.sectionCount}>{section.count} entries</span>
+                  </span>
+                  <span className={styles.sectionNumber}>{String(index + 1).padStart(2, '0')}</span>
+                </header>
+                <ul className={styles.itemList}>
+                  {section.items.map((item) => (
+                    <li key={item.href}>
+                      <Link className={styles.itemLink} href={item.href}>
+                        <span className={styles.itemTitle}>{item.title}</span>
+                        <ArrowUpRight aria-hidden="true" size={14} strokeWidth={1.75} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </section>
+
+          <p className={styles.footerNote}>
+            Built-in entries remain separate from your imported files. They can ground
+            reading, source checks, and Draft references without changing the Sources /
+            Draft product loop.
+          </p>
+        </div>
+      </main>
+    </>
   );
 }

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect, type CSSProperties, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { ScanScopePicker } from '../../components/ScanScopePicker';
 import { TextInput } from '../../components/TextInput';
 import { WeftShuttle } from '../../components/DocViewer';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import styles from './OnboardingClient.module.css';
 
 type Phase = 'pick' | 'scope' | 'scanning' | 'done' | 'error';
 
@@ -24,10 +26,9 @@ declare global {
 }
 
 /**
- * First-run web surface. Mirrors `loom-entry.jsx` OnboardingSurface —
- * Cormorant-italic display title, italic EB Garamond body, paper-bordered
- * literary buttons, no iOS-blue. Preserves functional paths: POST
- * /api/content-root, POST /api/ingest, ScanScopePicker persist.
+ * First-run web surface. Shares the global Loom chrome and cold graphite setup
+ * scene while preserving the functional paths: POST /api/content-root, POST
+ * /api/ingest, ScanScopePicker persist.
  */
 export function OnboardingClient() {
   const router = useRouter();
@@ -105,130 +106,82 @@ export function OnboardingClient() {
   };
 
   return (
-    <main
-      style={{
-        background: 'var(--bg)',
-        minHeight: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        fontFamily: 'var(--serif)',
-        color: 'var(--fg)',
-      }}
-    >
-      <section
-        style={{
-          width: 'clamp(30rem, 36vw + 8rem, 44rem)',
-          maxWidth: '100%',
-          paddingTop: 'clamp(5rem, 8vh, 8rem)',
-          paddingBottom: 'clamp(3rem, 6vh, 5rem)',
-          paddingLeft: '2rem',
-          paddingRight: '2rem',
-        }}
-      >
-        <Eyebrow>Setup · sources</Eyebrow>
+    <>
+      <LoomGlobalNav ariaLabel="Onboarding navigation" />
+      <main className={styles.page}>
+        <section className={styles.shell}>
+          <Eyebrow>Setup · Sources</Eyebrow>
 
-        <h1
-          style={{
-            fontFamily: 'var(--display)',
-            fontSize: 'clamp(2.2rem, 2.4vw + 1rem, 3.4rem)',
-            fontWeight: 400,
-            lineHeight: 1.02,
-            letterSpacing: '-0.02em',
-            margin: '1.25rem 0 0',
-            color: 'var(--fg)',
-          }}
-        >
-          A room
-          <br />
-          <span style={{ fontStyle: 'italic', color: 'var(--fg-secondary)' }}>for slow reading.</span>
-        </h1>
-
-        <p
-          style={{
-            fontFamily: 'var(--serif)',
-            fontStyle: 'italic',
-            fontSize: 'clamp(1rem, 0.4vw + 0.9rem, 1.15rem)',
-            lineHeight: 1.65,
-            color: 'var(--fg-secondary)',
-            margin: '1.75rem 0 0',
-            maxWidth: '32rem',
-          }}
-        >
-          Bring a book, a notebook, a stack of letters. Loom keeps them side by side and remembers
-          the quiet phrase that returns across them.
-        </p>
-
-        {phase === 'pick' && (
-          <PickPhase
-            onPick={pickFolder}
-            manualPath={manualPath}
-            setManualPath={setManualPath}
-            onManualSubmit={() => void saveAndIngest(manualPath.trim())}
-            showManualPath={showManualPath}
-            setShowManualPath={setShowManualPath}
-            error={error}
-          />
-        )}
-
-        {phase === 'scope' && (
-          <ScopePhase
-            folder={folder}
-            onOpenModal={() => setScopeModalOpen(true)}
-            onSkip={() => void skipScopeAndIngestAll()}
-            scopeModalOpen={scopeModalOpen}
-            onCloseModal={() => setScopeModalOpen(false)}
-            onScopeSaved={() => {
-              setScopeModalOpen(false);
-              setPhase('done');
-              setTimeout(() => router.push(ONBOARDING_DONE_ROUTE), 600);
-            }}
-          />
-        )}
-
-        {phase === 'scanning' && <ScanningPhase folder={folder} />}
-
-        {phase === 'done' && (
-          <p
-            style={{
-              marginTop: '3rem',
-              fontFamily: 'var(--display)',
-              fontStyle: 'italic',
-              fontSize: '1.25rem',
-              color: 'var(--accent-text)',
-            }}
+          <h1
+            aria-label="Set up Sources."
+            className={styles.title}
           >
-            All set — opening Sources…
-          </p>
-        )}
+            Set up
+            <br />
+            {' '}
+            <span className={styles.titleAccent}>Sources.</span>
+          </h1>
 
-        {phase === 'error' && (
-          <ErrorPhase message={error} onRetry={() => setPhase('pick')} />
-        )}
-      </section>
-    </main>
+          <p className={styles.lead}>
+            Choose the folder that contains the files Loom should index. Local files stay on this
+            machine and become the source layer for Draft.
+          </p>
+
+          {phase === 'pick' && (
+            <PickPhase
+              onPick={pickFolder}
+              manualPath={manualPath}
+              setManualPath={setManualPath}
+              onManualSubmit={() => void saveAndIngest(manualPath.trim())}
+              showManualPath={showManualPath}
+              setShowManualPath={setShowManualPath}
+              error={error}
+            />
+          )}
+
+          {phase === 'scope' && (
+            <ScopePhase
+              folder={folder}
+              onOpenModal={() => setScopeModalOpen(true)}
+              onSkip={() => void skipScopeAndIngestAll()}
+              scopeModalOpen={scopeModalOpen}
+              onCloseModal={() => setScopeModalOpen(false)}
+              onScopeSaved={() => {
+                setScopeModalOpen(false);
+                setPhase('done');
+                setTimeout(() => router.push(ONBOARDING_DONE_ROUTE), 600);
+              }}
+            />
+          )}
+
+          {phase === 'scanning' && <ScanningPhase folder={folder} />}
+
+          {phase === 'done' && (
+            <p className={styles.done}>
+              All set — opening Sources…
+            </p>
+          )}
+
+          {phase === 'error' && (
+            <ErrorPhase message={error} onRetry={() => setPhase('pick')} />
+          )}
+        </section>
+      </main>
+    </>
   );
 }
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="loom-smallcaps"
-      style={{
-        fontFamily: 'var(--serif)',
-        fontSize: '0.84rem',
-        color: 'var(--muted)',
-        fontWeight: 500,
-      }}
-    >
+    <div className={styles.eyebrow}>
       {children}
     </div>
   );
 }
 
 /**
- * Cormorant-italic paper-bordered button. Primary actions use a real SVG
- * arrow, keeping navigation glyphs aligned with the global Loom chrome.
+ * Setup action button. Primary actions use a real SVG arrow, keeping navigation
+ * glyphs aligned with the global Loom chrome.
  */
 function VellumButton({
   label,
@@ -243,56 +196,14 @@ function VellumButton({
   disabled?: boolean;
   tone?: 'primary' | 'ghost';
 }) {
-  const [hover, setHover] = useState(false);
-  const baseStyle: CSSProperties =
-    tone === 'primary'
-      ? {
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.46rem',
-          padding: '0.75rem 1.5rem',
-          fontFamily: 'var(--display)',
-          fontStyle: 'italic',
-          fontSize: '1rem',
-          letterSpacing: '0.01em',
-          color: 'var(--fg)',
-          background: hover ? 'var(--accent-soft)' : 'transparent',
-          border: '0.5px solid var(--fg)',
-          borderRadius: 0,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.45 : 1,
-          transition: 'background 160ms var(--ease, ease), color 160ms var(--ease, ease)',
-        }
-      : {
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.38rem',
-          padding: '0.4rem 0',
-          marginLeft: '0.25rem',
-          fontFamily: 'var(--serif)',
-          fontStyle: 'italic',
-          fontSize: '0.9rem',
-          color: hover ? 'var(--accent-text)' : 'var(--fg-secondary)',
-          background: 'transparent',
-          border: 'none',
-          borderBottom: '1px solid',
-          borderBottomColor: hover ? 'var(--accent)' : 'transparent',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          transition: 'color 160ms var(--ease, ease), border-bottom-color 160ms var(--ease, ease)',
-        };
-
   return (
     <button
       type="button"
+      className={`${styles.button} ${
+        tone === 'primary' ? styles.primaryButton : styles.ghostButton
+      }`}
       onClick={onClick}
       disabled={disabled}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      onFocus={() => setHover(true)}
-      onBlur={() => setHover(false)}
-      style={baseStyle}
     >
       {label}
       {icon}
@@ -318,41 +229,25 @@ function PickPhase({
   error: string;
 }) {
   return (
-    <div style={{ marginTop: '3rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+    <div className={styles.phase}>
+      <div className={styles.actionRow}>
         <VellumButton
-          label="Open the first book"
+          label="Choose Sources root"
           icon={<ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />}
           onClick={onPick}
         />
         <button
           type="button"
           onClick={() => setShowManualPath(!showManualPath)}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            padding: 0,
-            fontFamily: 'var(--serif)',
-            fontStyle: 'italic',
-            fontSize: '0.875rem',
-            color: 'var(--muted)',
-            cursor: 'pointer',
-          }}
+          className={styles.manualToggle}
         >
           or paste a path
         </button>
       </div>
 
       {showManualPath && (
-        <div
-          style={{
-            marginTop: '1.5rem',
-            display: 'flex',
-            gap: '0.75rem',
-            maxWidth: '32rem',
-          }}
-        >
-          <div style={{ flex: 1 }}>
+        <div className={styles.manualPath}>
+          <div className={styles.pathField}>
             <TextInput
               size="md"
               value={manualPath}
@@ -369,31 +264,13 @@ function PickPhase({
         </div>
       )}
 
-      <p
-        style={{
-          marginTop: '2.5rem',
-          fontFamily: 'var(--serif)',
-          fontStyle: 'italic',
-          fontSize: '0.8rem',
-          color: 'var(--muted)',
-          maxWidth: '32rem',
-          lineHeight: 1.55,
-        }}
-      >
-        Loom reads the files you already organized — PDFs, slides, notes. Nothing leaves this
+      <p className={styles.note}>
+        Loom reads the files you already organized: PDFs, slides, notes. Nothing leaves this
         machine.
       </p>
 
       {error && (
-        <p
-          style={{
-            marginTop: '1rem',
-            fontFamily: 'var(--serif)',
-            fontStyle: 'italic',
-            fontSize: '0.85rem',
-            color: 'var(--tint-red)',
-          }}
-        >
+        <p className={styles.errorText}>
           {error}
         </p>
       )}
@@ -417,66 +294,27 @@ function ScopePhase({
   onScopeSaved: () => void;
 }) {
   return (
-    <div style={{ marginTop: '2.75rem', maxWidth: '34rem' }}>
-      <div
-        style={{
-          padding: '1.1rem 1.25rem',
-          borderRadius: 'var(--r-2)',
-          background: 'var(--mat-thin-bg)',
-          border: '0.5px solid var(--mat-border)',
-        }}
-      >
-        <div
-          style={{
-            fontFamily: 'var(--display)',
-            fontStyle: 'italic',
-            fontSize: '1.05rem',
-            color: 'var(--fg)',
-          }}
-        >
-          The room is set.
+    <div className={styles.scopePhase}>
+      <div className={styles.statePanel}>
+        <div className={styles.stateTitle}>
+          Sources root is set.
         </div>
-        <div
-          style={{
-            marginTop: '0.35rem',
-            fontFamily: 'var(--mono)',
-            fontSize: '0.8rem',
-            color: 'var(--fg-secondary)',
-            wordBreak: 'break-all',
-          }}
-        >
+        <div className={styles.monoPath}>
           {folder}
         </div>
-        <p
-          style={{
-            marginTop: '0.85rem',
-            fontFamily: 'var(--serif)',
-            fontStyle: 'italic',
-            fontSize: '0.9rem',
-            color: 'var(--fg-secondary)',
-            lineHeight: 1.6,
-          }}
-        >
-          Want Loom to read only certain shelves? Pick the subfolders you care about, or let it
+        <p className={styles.stateCopy}>
+          Want Loom to read only certain folders? Pick the subfolders you care about, or let it
           scan everything.
         </p>
       </div>
 
-      <div
-        style={{
-          marginTop: '1.5rem',
-          display: 'flex',
-          gap: '1.5rem',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className={styles.phaseActionRow}>
         <VellumButton
-          label="Choose shelves"
+          label="Choose source folders"
           icon={<ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />}
           onClick={onOpenModal}
         />
-        <VellumButton tone="ghost" label="scan everything" onClick={onSkip} />
+        <VellumButton tone="ghost" label="scan every source" onClick={onSkip} />
       </div>
 
       <ScanScopePicker open={scopeModalOpen} onClose={onCloseModal} onSaved={onScopeSaved} />
@@ -486,39 +324,14 @@ function ScopePhase({
 
 function ScanningPhase({ folder }: { folder: string }) {
   return (
-    <div
-      style={{
-        marginTop: '2.75rem',
-        maxWidth: '34rem',
-        padding: '1.1rem 1.25rem',
-        borderRadius: 'var(--r-2)',
-        background: 'var(--mat-thin-bg)',
-        border: '0.5px solid var(--mat-border)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+    <div className={`${styles.statePanel} ${styles.scanningPanel}`}>
+      <div className={styles.scanningHeader}>
         <WeftShuttle width={48} height={10} />
-        <span
-          style={{
-            fontFamily: 'var(--display)',
-            fontStyle: 'italic',
-            fontSize: '1rem',
-            color: 'var(--fg)',
-          }}
-        >
-          Reading the shelves…
+        <span className={styles.stateTitle}>
+          Reading sources…
         </span>
       </div>
-      <p
-        style={{
-          marginTop: '0.5rem',
-          fontFamily: 'var(--serif)',
-          fontStyle: 'italic',
-          fontSize: '0.85rem',
-          color: 'var(--muted)',
-          lineHeight: 1.55,
-        }}
-      >
+      <p className={styles.stateCopy}>
         Loom is looking through {folder}, drawing names from syllabi and slide decks. This takes a
         minute the first time.
       </p>
@@ -528,39 +341,14 @@ function ScanningPhase({ folder }: { folder: string }) {
 
 function ErrorPhase({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div
-      style={{
-        marginTop: '2.75rem',
-        maxWidth: '34rem',
-        padding: '1.1rem 1.25rem',
-        borderRadius: 'var(--r-2)',
-        background: 'color-mix(in srgb, var(--tint-red) 10%, transparent)',
-        border: '0.5px solid color-mix(in srgb, var(--tint-red) 35%, transparent)',
-      }}
-    >
-      <div
-        style={{
-          fontFamily: 'var(--display)',
-          fontStyle: 'italic',
-          fontSize: '1.05rem',
-          color: 'var(--fg)',
-        }}
-      >
-        Something didn’t settle.
+    <div className={styles.errorPanel}>
+      <div className={styles.stateTitle}>
+        Setup needs attention.
       </div>
-      <p
-        style={{
-          marginTop: '0.35rem',
-          fontFamily: 'var(--serif)',
-          fontStyle: 'italic',
-          fontSize: '0.9rem',
-          color: 'var(--fg-secondary)',
-          lineHeight: 1.55,
-        }}
-      >
+      <p className={styles.stateCopy}>
         {message}
       </p>
-      <div style={{ marginTop: '1rem' }}>
+      <div className={styles.phaseActionRow}>
         <VellumButton tone="ghost" label="try again" onClick={onRetry} />
       </div>
     </div>

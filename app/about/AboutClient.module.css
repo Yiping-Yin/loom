@@ -23,6 +23,7 @@
   background-attachment: fixed;
   background-repeat: no-repeat;
   color: var(--about-ink);
+  isolation: isolate; /* so .loom-cosmic-field (z-index:-1) sits above the backdrop, behind content */
 }
 
 .shell {

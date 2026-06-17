@@ -113,14 +113,16 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(globalNavSource, /window\.setTimeout\(focusInput, 0\)/);
   assert.match(globalNavSource, /function openSearch\(\)/);
   assert.match(globalNavSource, /flushSync\(\(\) => \{\s*setSearchOpen\(true\);\s*\}\)/);
-  assert.match(globalNavSource, /function onSearchFormPointerDown\(/);
-  assert.match(globalNavSource, /onPointerDown=\{onSearchFormPointerDown\}/);
   assert.match(globalNavSource, /function onSearchButtonPointerDown\(/);
   assert.match(globalNavSource, /onPointerDown=\{onSearchButtonPointerDown\}/);
-  assert.match(globalNavSource, /function onSearchButtonPointerDown\(event: React\.PointerEvent<HTMLButtonElement>\)/);
-  assert.match(globalNavSource, /event\.preventDefault\(\);\s*openSearch\(\);/);
+  assert.match(globalNavSource, /function onSearchButtonClick\(event: React\.MouseEvent<HTMLButtonElement>\)/);
+  assert.match(globalNavSource, /event\.preventDefault\(\);\s*if \(!searchOpenRef\.current\)/);
+  assert.match(globalNavSource, /function onSearchButtonPointerDown\(\)\s*\{\s*openSearch\(\);/);
+  assert.doesNotMatch(globalNavSource, /onPointerDown=\{onSearchFormPointerDown\}/);
+  assert.doesNotMatch(globalNavSource, /function onSearchFormPointerDown\(/);
+  assert.doesNotMatch(globalNavSource, /function onSearchFormPointerDown\([\s\S]*?event\.preventDefault\(\)/);
   assert.doesNotMatch(globalNavSource, /onMouseDown=\{\(event\) => event\.preventDefault\(\)\}/);
-  assert.doesNotMatch(globalNavSource, /event\.preventDefault\(\);\s*if \(!searchOpenRef\.current\)/);
+  assert.doesNotMatch(globalNavSource, /function onSearchButtonPointerDown\(event: React\.PointerEvent<HTMLButtonElement>\)[\s\S]*?event\.preventDefault\(\)/);
   assert.match(globalNavSource, /inputMode="search"/);
   assert.match(globalNavSource, /enterKeyHint="search"/);
   assert.match(globalNavSource, /window\.location\.assign\(`\/sources\?\$\{params\.toString\(\)\}`\)/);
@@ -139,6 +141,7 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
     path.join(repoRoot, 'components/verified-dossier/LoomGlobalNav.module.css'),
     'utf8',
   );
+  const globalsCss = fs.readFileSync(path.join(repoRoot, 'app/globals.css'), 'utf8');
   const aiKeyBannerSource = fs.readFileSync(
     path.join(repoRoot, 'components/AiKeyMissingBanner.tsx'),
     'utf8',
@@ -155,12 +158,25 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
     'Root layout must load the global navigation CSS so / keeps searchable nav styling even when the page CSS chunk is absent.',
   );
   assert.match(aiKeyBannerSource, /position: 'fixed'/);
+  assert.match(aiKeyBannerSource, /className="loom-ai-key-banner"/);
   assert.match(aiKeyBannerSource, /data-ai-key-banner="true"/);
   assert.match(aiKeyBannerSource, /pathname === ['"]\/sources['"]/);
+  assert.match(aiKeyBannerSource, /pathname === ['"]\/draft['"]/);
+  assert.match(aiKeyBannerSource, /pathname === ['"]\/drafts['"]/);
+  assert.match(aiKeyBannerSource, /pathname === ['"]\/help['"]/);
   assert.match(aiKeyBannerSource, /pathname === ['"]\/hour['"]/);
   assert.match(aiKeyBannerSource, /pathname === ['"]\/connections['"]/);
+  assert.match(aiKeyBannerSource, /pathname === ['"]\/offline['"]/);
+  assert.match(aiKeyBannerSource, /pathname === ['"]\/onboarding['"]/);
   assert.match(aiKeyBannerSource, /bottom: 'max\(0\.75rem, env\(safe-area-inset-bottom\)\)'/);
   assert.match(aiKeyBannerSource, /maxWidth: 'min\(25rem, calc\(100vw - 2rem\)\)'/);
+  assert.match(aiKeyBannerSource, /boxSizing: 'border-box'/);
+  assert.match(aiKeyBannerSource, /className="loom-ai-key-banner__copy"/);
+  assert.match(aiKeyBannerSource, /whiteSpace: 'nowrap'/);
+  assert.match(aiKeyBannerSource, /textOverflow: 'ellipsis'/);
+  assert.match(globalsCss, /body \.loom-ai-key-banner\s*\{[^}]*max-width:min\(16\.5rem, calc\(100vw - 2rem\)\)!important;/s);
+  assert.match(globalsCss, /body \.loom-ai-key-banner__copy\s*\{[^}]*max-width:10rem!important;/s);
+  assert.match(globalsCss, /body:has\(\.new-loom-draft\) \.loom-ai-key-banner\s*\{[^}]*display:none!important;/s);
   assert.doesNotMatch(aiKeyBannerSource, /--loom-ai-key-banner-offset/);
   assert.doesNotMatch(globalNavCss, /html\[data-loom-ai-key-banner='visible'\]/);
   assert.doesNotMatch(globalNavCss, /--loom-nav-banner-offset/);
@@ -407,6 +423,9 @@ test('white dashboard homepage is retired into the hybrid evidence cover design'
   assert.match(cssSource, /\.lcv-shell/);
   assert.match(cssSource, /\.lcv-rail/);
   assert.match(cssSource, /\.lcv-row\b/);
+  assert.match(cssSource, /body \.lcv \.lcv-dm__body\s*\{[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)!important;/s);
+  assert.match(cssSource, /body \.lcv \.lcv-dm__srcs\s*\{[^}]*grid-column:1 \/ -1!important;/s);
+  assert.match(cssSource, /body \.lcv \.lcv-dm__table\s*\{[^}]*table-layout:fixed!important;/s);
   assert.match(cssSource, /\.lcv-link-icon--linkedin/);
   assert.match(navCssSource, /\.nav\b/);
   assert.match(navCssSource, /23\.25rem/);

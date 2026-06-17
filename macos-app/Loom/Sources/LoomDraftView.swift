@@ -3282,13 +3282,18 @@ struct LoomDraftView: View {
     }
 
     private func providerErrorMessage(_ error: Error) -> String {
-        (error as? LoomAI.Failure)?.errorDescription
-            ?? (error as? AnthropicClient.Failure)?.errorDescription
-            ?? (error as? OpenAIClient.Failure)?.errorDescription
-            ?? (error as? CustomEndpointClient.Failure)?.errorDescription
-            ?? (error as? OllamaClient.Failure)?.errorDescription
-            ?? (error as? CLIRuntimeClient.Failure)?.errorDescription
-            ?? error.localizedDescription
+        // Sequential checks instead of a 6-deep `??` chain: the long
+        // nil-coalescing expression made the Swift type-checker time out
+        // ("unable to type-check this expression in reasonable time"). Behaviour
+        // is identical — the first non-nil provider errorDescription wins, else
+        // the localized description.
+        if let message = (error as? LoomAI.Failure)?.errorDescription { return message }
+        if let message = (error as? AnthropicClient.Failure)?.errorDescription { return message }
+        if let message = (error as? OpenAIClient.Failure)?.errorDescription { return message }
+        if let message = (error as? CustomEndpointClient.Failure)?.errorDescription { return message }
+        if let message = (error as? OllamaClient.Failure)?.errorDescription { return message }
+        if let message = (error as? CLIRuntimeClient.Failure)?.errorDescription { return message }
+        return error.localizedDescription
     }
 }
 

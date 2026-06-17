@@ -41,6 +41,7 @@ import {
   type PursuitSourceItem,
   type Pursuit,
 } from './pursuit-model';
+import { LoomGlobalNav } from '../components/verified-dossier/LoomGlobalNav';
 
 /** Minimal shape of the WKWebView → native bridge we post to. Mirrors
  *  the pattern used by `SoanClient`; declared narrowly so the non-WKWebView
@@ -180,24 +181,32 @@ export default function PursuitDetailClient({ id }: Props) {
   // the room" fallback — avoids a flash of that message on cold mount
   // when the pursuit is in fact stored locally.
   if (!loaded) {
-    return <div className="loom-pursuit-detail" aria-busy="true" />;
+    return (
+      <>
+        <LoomGlobalNav activeHref="/sources" ariaLabel="Pursuit navigation" />
+        <div className="loom-pursuit-detail" aria-busy="true" />
+      </>
+    );
   }
 
   if (!pursuit) {
     return (
-      <div className="loom-pursuit-detail">
-        <h1 className="loom-pursuit-detail-question">
-          This pursuit is not in the room.
-        </h1>
-        <p className="loom-pursuit-detail-meta">
-          It may have been set down, or never opened.
-        </p>
-        <div className="loom-pursuit-detail-actions">
-          <Link href="/sources" className="loom-pursuit-detail-action">
-            Return to Sources
-          </Link>
+      <>
+        <LoomGlobalNav activeHref="/sources" ariaLabel="Pursuit navigation" />
+        <div className="loom-pursuit-detail">
+          <h1 className="loom-pursuit-detail-question">
+            This pursuit is not in the room.
+          </h1>
+          <p className="loom-pursuit-detail-meta">
+            It may have been set down, or never opened.
+          </p>
+          <div className="loom-pursuit-detail-actions">
+            <Link href="/sources" className="loom-pursuit-detail-action">
+              Return to Sources
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -206,15 +215,17 @@ export default function PursuitDetailClient({ id }: Props) {
   const duration = pursuitSeasonFor(pursuit);
 
   return (
-    <div className="loom-pursuit-detail">
-      <h1 className="loom-pursuit-detail-question">{pursuit.question}</h1>
-      <p className="loom-pursuit-detail-meta">
-        {pursuit.sources} {pursuit.sources === 1 ? 'source' : 'sources'} gathered
-        {' · '}
-        {pursuit.panels} {pursuit.panels === 1 ? 'panel' : 'panels'} drawn
-        {' · '}
-        {pursuit.season} for {duration}
-      </p>
+    <>
+      <LoomGlobalNav activeHref="/sources" ariaLabel="Pursuit navigation" />
+      <div className="loom-pursuit-detail">
+        <h1 className="loom-pursuit-detail-question">{pursuit.question}</h1>
+        <p className="loom-pursuit-detail-meta">
+          {pursuit.sources} {pursuit.sources === 1 ? 'source' : 'sources'} gathered
+          {' · '}
+          {pursuit.panels} {pursuit.panels === 1 ? 'panel' : 'panels'} drawn
+          {' · '}
+          {pursuit.season} for {duration}
+        </p>
 
       {sources.length > 0 && (
         <section className="loom-pursuit-detail-section">
@@ -285,6 +296,7 @@ export default function PursuitDetailClient({ id }: Props) {
           Delete
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

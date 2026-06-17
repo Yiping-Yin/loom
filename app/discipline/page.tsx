@@ -47,10 +47,7 @@ export default function DisciplinePage() {
   return (
     <div className={styles.surface}>
       <LoomSupportNav active="/discipline" />
-      <main
-        className={styles.main}
-        style={{ padding: 'var(--support-main-padding)' }}
-      >
+      <main className={styles.main}>
         <article className={styles.shell}>
         <header className={styles.hero}>
           <div className={styles.heroText}>
@@ -73,22 +70,22 @@ export default function DisciplinePage() {
           </div>
         </header>
 
-        <ol className={styles.sectionGrid} style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        <ol className={`${styles.sectionGrid} ${styles.refusalList}`}>
           {REFUSALS.map((item, index) => (
             <li
               key={item.practice}
               className={styles.thinCard}
             >
-              <div className={styles.row} style={{ marginBottom: '0.35rem' }}>
+              <div className={`${styles.row} ${styles.refusalHeader}`}>
                 <span className={styles.stepNumber}>{index + 1}</span>
-                <strong style={{ fontFamily: 'var(--serif)', fontSize: '1.05rem' }}>
+                <strong className={styles.refusalTitle}>
                   {item.refusal}
                 </strong>
                 <span className={styles.supportNote}>
                   {item.practice}
                 </span>
               </div>
-              <p className={styles.muted} style={{ margin: 0 }}>{item.body}</p>
+              <p className={`${styles.muted} ${styles.refusalBody}`}>{item.body}</p>
             </li>
           ))}
         </ol>

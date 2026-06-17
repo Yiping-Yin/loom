@@ -9,16 +9,40 @@ test('AI key missing banner does not render on public presentation pages', () =>
   assert.match(source, /function isPresentationPath\(pathname: string\)/);
   assert.match(source, /pathname === ['"]\/['"]/);
   assert.match(source, /pathname === ['"]\/sources['"]/);
+  assert.match(source, /pathname === ['"]\/draft['"]/);
+  assert.match(source, /pathname === ['"]\/drafts['"]/);
   assert.match(source, /pathname === ['"]\/loom['"]/);
-  for (const supportPath of ['/system', '/discipline', '/year', '/hour', '/connections', '/colophon']) {
+  for (const supportPath of [
+    '/help',
+    '/system',
+    '/discipline',
+    '/year',
+    '/hour',
+    '/connections',
+    '/colophon',
+    '/offline',
+    '/onboarding',
+    '/llm-wiki',
+    '/quizzes',
+    '/doc',
+    '/panel',
+    '/pursuit',
+  ]) {
     assert.match(source, new RegExp(`pathname === ['"]${supportPath.replace('/', '\\/')}['"]`));
   }
+  assert.match(source, /pathname\.startsWith\(['"]\/panel\/['"]\)/);
+  assert.match(source, /pathname\.startsWith\(['"]\/pursuit\/['"]\)/);
   assert.match(source, /pathname === ['"]\/about['"]/);
   assert.match(source, /const shouldShow = visible && !isPresentationPath\(pathname\) && !isReadingPath\(pathname\)/);
   assert.match(source, /position: 'fixed'/);
+  assert.match(source, /className="loom-ai-key-banner"/);
   assert.match(source, /data-ai-key-banner="true"/);
   assert.match(source, /bottom: 'max\(0\.75rem, env\(safe-area-inset-bottom\)\)'/);
   assert.match(source, /maxWidth: 'min\(25rem, calc\(100vw - 2rem\)\)'/);
+  assert.match(source, /boxSizing: 'border-box'/);
+  assert.match(source, /className="loom-ai-key-banner__copy"/);
+  assert.match(source, /whiteSpace: 'nowrap'/);
+  assert.match(source, /textOverflow: 'ellipsis'/);
   assert.match(source, /backdropFilter: 'blur\(22px\) saturate\(118%\)'/);
   assert.match(source, /AI off\. Add a key in Settings; Sources and Draft still work\./);
   assert.doesNotMatch(source, /loomAiKeyBanner/);

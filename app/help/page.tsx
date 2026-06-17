@@ -12,212 +12,284 @@
  */
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { PageFrame } from '../../components/PageFrame';
+import {
+  ArrowUpRight,
+  BookOpenCheck,
+  CircleHelp,
+  FileText,
+  LockKeyhole,
+  Map,
+  Search,
+  ShieldCheck,
+} from 'lucide-react';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import styles from './HelpPage.module.css';
 
 export const metadata = { title: 'Help · Loom' };
 
+const LOOP_STEPS = [
+  {
+    label: '01',
+    title: 'Bring material in.',
+    copy: 'Add a local file or capture a page into Sources. Original files stay read-only.',
+  },
+  {
+    label: '02',
+    title: 'Read and mark.',
+    copy: 'Select a passage to keep a note, question, or source-backed reference in place.',
+  },
+  {
+    label: '03',
+    title: 'Write in Draft.',
+    copy: 'Draft keeps attached references beside the text so claims can point back to exact passages.',
+  },
+];
+
+const TROUBLESHOOTING = [
+  {
+    symptom: 'AI is unavailable',
+    fix: 'Open Settings and check the preferred local AI runtime. Loom only uses AI when you ask.',
+  },
+  {
+    symptom: "Can't find a feature",
+    fix: 'Use the global search or keyboard help to jump by route, source title, or support page.',
+  },
+  {
+    symptom: 'Removed a note and want it back',
+    fix: 'Removal hides the note from view. History remains append-only, and exports keep the record.',
+  },
+];
+
 export default function HelpPage() {
   return (
-    <article className="prose-notion" style={{ paddingTop: '4.5rem', paddingBottom: 'var(--space-9)' }}>
-      <PageFrame
-        eyebrow="Help"
-        title="Usage Guide."
-        description={
-          <>
-            Loom is a reading-and-thinking environment where source-bound understanding
-            becomes durable memory.{' '}
-            <Link href="/about" style={{ color: 'var(--accent)' }}>/about</Link>
-          </>
-        }
-      >
-      <h2>Two workspaces</h2>
-      <p>Everything in Loom happens in one of two places:</p>
-      <ul>
-        <li>
-          <Link href="/sources">/sources</Link> - add, capture, and review source material.
-          Web captures and local files sit on the same shelf, and original files stay
-          read-only.
-        </li>
-        <li>
-          <Link href="/draft">/draft</Link> - write with your sources beside you. Marked
-          passages attach as references, and citations point back to the exact passage
-          they came from.
-        </li>
-      </ul>
+    <>
+      <LoomGlobalNav ariaLabel="Help navigation" />
+      <main className={styles.page}>
+        <div className={styles.shell}>
+          <header className={styles.hero}>
+            <div>
+              <p className={styles.eyebrow}>Help</p>
+              <h1 className={styles.title}>Usage guide.</h1>
+              <p className={styles.lead}>
+                Loom is a local reading-and-thinking environment. Source-bound understanding
+                becomes durable memory, then moves into Draft with exact references.
+              </p>
+            </div>
 
-      <Callout>
-        <strong>Quick start:</strong> open Sources, read, mark a passage, then switch to
-        Draft and write with the passage attached. That's the whole loop.
-      </Callout>
+            <nav className={styles.jumpPanel} aria-label="Primary help links">
+              <JumpLink
+                href="/sources"
+                icon={<BookOpenCheck size={18} strokeWidth={1.65} />}
+                title="Sources"
+                copy="Add, capture, read, and review source material."
+              />
+              <JumpLink
+                href="/draft"
+                icon={<FileText size={18} strokeWidth={1.65} />}
+                title="Draft"
+                copy="Write with attached references beside the text."
+              />
+              <JumpLink
+                href="/about"
+                icon={<ShieldCheck size={18} strokeWidth={1.65} />}
+                title="About"
+                copy="See the source-backed identity layer behind this Loom."
+              />
+            </nav>
+          </header>
 
-      <h2>The core loop</h2>
-      <ol>
-        <li>
-          <strong>Bring material in.</strong> Capture a page from the web or point Loom at
-          a local file in Sources.
-        </li>
-        <li>
-          <strong>Read and mark.</strong> Select a passage to note it, or hold a question
-          in place for later.
-        </li>
-        <li>
-          <strong>Write in Draft.</strong> Your marked passages travel with you as attached
-          references beside the text.
-        </li>
-      </ol>
-      <p>
-        That's it: <strong>read → mark → write</strong>. Everything else in Loom supports
-        this loop.
-      </p>
+          <section className={styles.loopPanel} aria-label="Loom core loop">
+            {LOOP_STEPS.map((step) => (
+              <article className={styles.loopStep} key={step.label}>
+                <span className={styles.label}>{step.label}</span>
+                <h2 className={styles.loopTitle}>{step.title}</h2>
+                <p className={styles.loopCopy}>{step.copy}</p>
+              </article>
+            ))}
+          </section>
 
-      <h2>Getting around</h2>
-      <ul>
-        <li>
-          <strong>Shuttle</strong> — press <Kbd>⌘K</Kbd> to jump anywhere: a source, a
-          draft, or any support surface.
-        </li>
-        <li>
-          <strong>Home</strong> — the quiet start surface. It shows current work and recent
-          threads; it is not a feed.
-        </li>
-      </ul>
+          <section className={styles.workspaceGrid} aria-label="Loom workspaces">
+            <WorkspaceCard
+              href="/sources"
+              title="Sources"
+              meta="/sources"
+              copy="Add, capture, and review source material. Web captures and local files sit on the same shelf, and originals stay read-only."
+              items={[
+                'Open a local file or captured page.',
+                'Mark exact passages for later use.',
+                'Run source checks when a chapter is ready.',
+              ]}
+            />
+            <WorkspaceCard
+              href="/draft"
+              title="Draft"
+              meta="/draft"
+              copy="Write with your sources beside you. Marked passages attach as references, and citations point back to exact passages."
+              items={[
+                'Start from a blank draft or attached source.',
+                'Insert references without losing provenance.',
+                'Use the board when a draft needs structure.',
+              ]}
+            />
+          </section>
 
-      <h2>Support surfaces</h2>
-      <ul>
-        <li>
-          <Link href="/system">/system</Link> — how the loop fits together, on one sheet
-        </li>
-        <li>
-          <Link href="/discipline">/discipline</Link> — the six product refusals, written
-          down
-        </li>
-        <li>
-          <Link href="/year">/year</Link> — the annual review: twelve months of material,
-          by weight
-        </li>
-        <li>
-          <Link href="/hour">/hour</Link> — the current thinking window, ticking
-        </li>
-        <li>
-          <Link href="/connections">/connections</Link> — correspondents and cross-origin
-          links between sources
-        </li>
-      </ul>
+          <InfoSection
+            icon={<Search size={18} strokeWidth={1.65} />}
+            title="Getting around"
+            copy={
+              <>
+                Use the compact global navigation at the top of each page. Search opens
+                Sources search directly; Menu keeps the primary identity and workspace
+                routes in one place. Keyboard help is available with <Kbd>?</Kbd>.
+              </>
+            }
+            items={[
+              <>Home is the quiet start surface. It is not a feed.</>,
+              <>Global search sends queries into <Link href="/sources">Sources</Link>.</>,
+              <>Open keyboard help when route names or shortcuts are unclear.</>,
+            ]}
+          />
 
-      <h2>Where your data lives</h2>
-      <ul>
-        <li>
-          <strong>Locally.</strong> Notes and drafts live on this machine; nothing is
-          uploaded on its own.
-        </li>
-        <li>
-          <strong>AI runs through local runtimes</strong> — and only when you ask. It never
-          speaks first.
-        </li>
-        <li>
-          <strong>Original files are never modified</strong> — your notes are a separate
-          layer kept alongside the sources.
-        </li>
-        <li>
-          <strong>History is append-only</strong> — edits and removals hide things from
-          view; nothing is destroyed.
-        </li>
-      </ul>
+          <InfoSection
+            icon={<Map size={18} strokeWidth={1.65} />}
+            title="Support surfaces"
+            copy="Support pages explain the product loop without becoming new workspaces."
+            items={[
+              <><Link href="/system">/system</Link> - how Sources and Draft fit together.</>,
+              <><Link href="/discipline">/discipline</Link> - the six product refusals.</>,
+              <><Link href="/year">/year</Link> - the annual review by material weight.</>,
+              <><Link href="/hour">/hour</Link> - the current thinking window.</>,
+              <><Link href="/connections">/connections</Link> - correspondents and source links.</>,
+            ]}
+          />
 
-      <h2>Troubleshooting</h2>
+          <InfoSection
+            icon={<LockKeyhole size={18} strokeWidth={1.65} />}
+            title="Where your data lives"
+            copy="Loom is local-first. It should preserve the source layer instead of replacing it."
+            items={[
+              <>Notes and drafts live on this machine; nothing uploads on its own.</>,
+              <>AI runs through local runtimes and only when you ask.</>,
+              <>Original files are never modified; notes stay as a separate layer.</>,
+              <>History is append-only: removals hide records from view without destroying them.</>,
+            ]}
+          />
 
-      <Trouble
-        symptom="AI is unavailable"
-        fix="Loom runs through local AI runtimes on this machine. Open Settings and check the preferred AI runtime."
-      />
-      <Trouble
-        symptom="Can't find a feature"
-        fix="Press ⌘K to open the Shuttle and search by keyword. Or press ? to see the full keyboard shortcuts list."
-      />
-      <Trouble
-        symptom="Removed a note and want it back"
-        fix="Removal only hides the note from view — history is append-only, and JSON export shows everything."
-      />
+          <section className={styles.troublePanel} aria-label="Troubleshooting">
+            {TROUBLESHOOTING.map((item) => (
+              <article className={styles.troubleItem} key={item.symptom}>
+                <span className={styles.troubleIcon} aria-hidden="true">
+                  <CircleHelp size={18} strokeWidth={1.65} />
+                </span>
+                <div>
+                  <span className={styles.troubleLabel}>Troubleshooting</span>
+                  <h2 className={styles.troubleTitle}>{item.symptom}</h2>
+                  <p className={styles.troubleCopy}>{item.fix}</p>
+                </div>
+              </article>
+            ))}
+          </section>
 
-      <h2>North star</h2>
-      <p style={{ fontStyle: 'italic', color: 'var(--fg-secondary)' }}>
-        Notes are a byproduct of learning, not the object of learning. Time spent filing
-        thoughts is time not spent learning.
-      </p>
-      <p>
-        Your only job is to <strong>read, mark, and write</strong>. Leave the rest to Loom.
-      </p>
-      </PageFrame>
-    </article>
+          <section className={styles.northStar} aria-label="North star">
+            <span className={styles.label}>North star</span>
+            <h2 className={styles.northTitle}>Read, mark, write.</h2>
+            <p className={styles.northCopy}>
+              Notes are a byproduct of learning, not the object of learning. Your job is
+              to read carefully, mark evidence, and write from it.
+            </p>
+          </section>
+        </div>
+      </main>
+    </>
   );
 }
 
 // ── components ───────────────────────────────────────────────────────────
 
 function Kbd({ children }: { children: ReactNode }) {
+  return <kbd className={styles.kbd}>{children}</kbd>;
+}
+
+function JumpLink({
+  href,
+  icon,
+  title,
+  copy,
+}: {
+  href: string;
+  icon: ReactNode;
+  title: string;
+  copy: string;
+}) {
   return (
-    <kbd
-      style={{
-        padding: '1px 6px',
-        fontSize: '0.82em',
-        fontFamily: 'var(--mono)',
-        background: 'var(--code-bg)',
-        border: 'var(--hairline)',
-        borderRadius: 4,
-        color: 'var(--fg)',
-      }}
-    >
-      {children}
-    </kbd>
+    <Link className={styles.jumpLink} href={href}>
+      <span className={styles.jumpIcon} aria-hidden="true">{icon}</span>
+      <span>
+        <span className={styles.jumpTitle}>{title}</span>
+        <span className={styles.jumpCopy}>{copy}</span>
+      </span>
+      <ArrowUpRight aria-hidden="true" size={15} strokeWidth={1.75} />
+    </Link>
   );
 }
 
-function Callout({ children }: { children: ReactNode }) {
+function WorkspaceCard({
+  href,
+  title,
+  meta,
+  copy,
+  items,
+}: {
+  href: string;
+  title: string;
+  meta: string;
+  copy: string;
+  items: string[];
+}) {
   return (
-    <div
-      style={{
-        padding: '0.6rem 0 0.6rem 1rem',
-        borderLeft: '1px solid color-mix(in srgb, var(--accent) 55%, transparent)',
-        background: 'transparent',
-        borderRadius: 0,
-        margin: '1.2rem 0',
-        fontStyle: 'italic',
-        color: 'var(--fg)',
-        fontSize: '0.92rem',
-        lineHeight: 1.6,
-      }}
-    >
-      {children}
-    </div>
+    <article className={styles.workspaceCard}>
+      <header className={styles.cardHeader}>
+        <div>
+          <span className={styles.cardMeta}>{meta}</span>
+          <h2 className={styles.cardTitle}>{title}</h2>
+        </div>
+        <Link className={styles.cardLink} href={href} aria-label={`Open ${title}`}>
+          <ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.75} />
+        </Link>
+      </header>
+      <p className={styles.cardCopy}>{copy}</p>
+      <ul className={styles.cardList}>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </article>
   );
 }
 
-function Trouble({ symptom, fix }: { symptom: string; fix: string }) {
+function InfoSection({
+  icon,
+  title,
+  copy,
+  items,
+}: {
+  icon: ReactNode;
+  title: string;
+  copy: ReactNode;
+  items: ReactNode[];
+}) {
   return (
-    <div
-      style={{
-        padding: '10px 14px',
-        marginBottom: 8,
-        borderLeft: '2px solid var(--muted)',
-        background: 'color-mix(in srgb, var(--fg) 3%, var(--bg))',
-        borderRadius: '0 6px 6px 0',
-        fontSize: '0.86rem',
-        lineHeight: 1.55,
-      }}
-    >
-      <div
-        className="loom-smallcaps"
-        style={{
-          fontFamily: 'var(--serif)',
-          fontSize: '0.86rem',
-          color: 'var(--muted)',
-          fontWeight: 500,
-          marginBottom: 3,
-        }}
-      >
-        {symptom}
-      </div>
-      <div style={{ color: 'var(--fg)' }}>{fix}</div>
-    </div>
+    <section className={styles.section}>
+      <header className={styles.sectionHeader}>
+        <span className={styles.sectionIcon} aria-hidden="true">{icon}</span>
+        <h2 className={styles.sectionTitle}>{title}</h2>
+      </header>
+      <p className={styles.sectionCopy}>{copy}</p>
+      <ul className={styles.sectionList}>
+        {items.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+    </section>
   );
 }

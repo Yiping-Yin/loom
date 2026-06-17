@@ -127,6 +127,7 @@ export default function AboutClient() {
 
   return (
       <main className={styles.page} aria-labelledby="about-title" ref={rootRef}>
+        <div className="loom-cosmic-field" aria-hidden="true" />
         <ul className={styles.srOnly} aria-label="About positioning contract">
           {ABOUT_POSITIONING_PHRASES.map((phrase) => (
             <li key={phrase}>{phrase}</li>

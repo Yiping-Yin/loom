@@ -1,5 +1,6 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import Ornament from '../components/Ornament';
 import styles from './loom-support-page.module.css';
 import { LoomSupportNav } from './LoomSupportNav';
@@ -40,88 +41,37 @@ export default function ColophonClient() {
   return (
     <div className={styles.surface}>
       <LoomSupportNav active="/colophon" />
-      <main
-        className={styles.main}
-        style={{
-          alignItems: 'center',
-          padding:
-            'clamp(7.2rem, 12vh, 9rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 6vh, 6rem)',
-          fontFamily: 'var(--serif)',
-        }}
-      >
-        <article
-        className={styles.sectionCard}
-        style={{
-          width: '100%',
-          maxWidth: '34rem',
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '1.75rem',
-        }}
-      >
+      <main className={`${styles.main} ${styles.colophonMain}`}>
+        <article className={`${styles.sectionCard} ${styles.colophonCard}`}>
         {/* Eyebrow — serif small-caps per Vellum chrome rule. Reads as a
             proper tracked eyebrow (small-caps + letter-spacing) so it carries
             the site-wide eyebrow structure while keeping the editorial serif
             character of this chrome page. */}
-        <div
-          className="loom-smallcaps"
-          style={{
-            fontFamily: 'var(--serif)',
-            fontVariant: 'small-caps',
-            textTransform: 'lowercase',
-            fontSize: '0.82rem',
-            fontWeight: 500,
-            letterSpacing: '0.22em',
-            color: 'var(--fg-secondary)',
-          }}
-        >
+        <div className={`${styles.colophonEyebrow} loom-smallcaps`}>
           Colophon
         </div>
 
         {/* Title — Loom */}
-        <h1
-          style={{
-            fontFamily: 'Cormorant Garamond, var(--display)',
-            fontStyle: 'italic',
-            fontWeight: 400,
-            fontSize: '64px',
-            lineHeight: 1.05,
-            letterSpacing: '-0.01em',
-            color: 'var(--fg)',
-            margin: 0,
-          }}
-        >
+        <h1 className={styles.colophonTitle}>
           Loom
         </h1>
 
         {/* Subtitle — current visual canon */}
-        <div
-          style={{
-            fontFamily: 'Cormorant Garamond, var(--display)',
-            fontStyle: 'italic',
-            fontWeight: 400,
-            fontSize: '24px',
-            lineHeight: 1.2,
-            color: 'var(--muted)',
-            marginTop: '-0.5rem',
-          }}
-        >
+        <div className={styles.colophonSubtitle}>
           Graphite canon
         </div>
 
         <Ornament />
 
         {/* Type paragraph */}
-        <p style={bodyStyle}>
+        <p className={styles.colophonBody}>
           Set in Cormorant Garamond (chrome) and EB Garamond (body), with New
           York as the silent companion for ordinary reading. CJK falls through
           to Songti SC.
         </p>
 
         {/* Palette paragraph */}
-        <p style={bodyStyle}>
+        <p className={styles.colophonBody}>
           Palette is set in graphite-black <Swatch value="#070809" label="#070809" />{' '}
           with raised silver surfaces in <Swatch value="#181B1E" label="#181B1E" /> and{' '}
           <Swatch value="#30353A" label="#30353A" />. Comet ice{' '}
@@ -134,7 +84,7 @@ export default function ColophonClient() {
         <Ornament />
 
         {/* Hand paragraph */}
-        <p style={bodyStyle}>
+        <p className={styles.colophonBody}>
           Built by one hand.{' '}
           <br />
           With thanks to anyone who waited.
@@ -143,16 +93,7 @@ export default function ColophonClient() {
         <Ornament />
 
         {/* Footer */}
-        <div
-          style={{
-            fontFamily: 'Cormorant Garamond, var(--display)',
-            fontStyle: 'italic',
-            fontWeight: 400,
-            fontSize: '0.82rem',
-            color: 'var(--muted)',
-            marginTop: '0.5rem',
-          }}
-        >
+        <div className={styles.colophonFooter}>
           © 2026 · All rights respected
         </div>
         </article>
@@ -163,49 +104,15 @@ export default function ColophonClient() {
 
 // ── components ────────────────────────────────────────────────────────────
 
-const bodyStyle: React.CSSProperties = {
-  fontFamily: "'EB Garamond', var(--serif)",
-  fontSize: '0.95rem',
-  lineHeight: 1.7,
-  color: 'var(--fg)',
-  margin: 0,
-  maxWidth: '30rem',
-  textWrap: 'pretty' as unknown as undefined,
-};
-
 /** Tiny inline color chip used inline in the palette sentence. */
 function Swatch({ value, label }: { value: string; label: string }) {
   return (
     <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'baseline',
-        gap: '0.35em',
-        whiteSpace: 'nowrap',
-      }}
+      className={styles.swatch}
+      style={{ '--swatch-color': value } as CSSProperties}
     >
-      <span
-        aria-hidden="true"
-        style={{
-          display: 'inline-block',
-          width: '0.72em',
-          height: '0.72em',
-          background: value,
-          border: '0.5px solid var(--border)',
-          borderRadius: 2,
-          boxShadow: 'inset 0 0.5px 0 rgba(255, 255, 255, 0.12)',
-          verticalAlign: 'baseline',
-          transform: 'translateY(0.05em)',
-        }}
-      />
-      <span
-        style={{
-          fontFamily: 'var(--mono)',
-          fontSize: '0.82em',
-          color: 'var(--muted)',
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
+      <span className={styles.swatchDot} aria-hidden="true" />
+      <span className={styles.swatchLabel}>
         {label}
       </span>
     </span>

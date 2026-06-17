@@ -2384,18 +2384,42 @@ test('learning-target relation work enters Reader notes instead of legacy Graph'
 
 test('first-run and native shortcuts land on new Loom product capabilities', () => {
   const onboarding = read('app/onboarding/OnboardingClient.tsx');
+  const onboardingCss = read('app/onboarding/OnboardingClient.module.css');
+  const offline = read('app/offline/page.tsx');
+  const offlineCss = read('app/offline/offline.module.css');
   const app = read('macos-app/Loom/Sources/LoomApp.swift');
   const minimalRoot = read('macos-app/Loom/Sources/LoomMinimalRootView.swift');
   const help = read('macos-app/Loom/Sources/KeyboardHelpView.swift');
 
+  assert.ok(NEW_LOOM_SUPPORT_ROUTES.includes('/onboarding'), '/onboarding should stay a support route');
+  assert.ok(NEW_LOOM_SUPPORT_ROUTES.includes('/offline'), '/offline should stay a support route');
   assert.match(onboarding, /const ONBOARDING_DONE_ROUTE = '\/sources'/);
   assert.match(onboarding, /router\.push\(ONBOARDING_DONE_ROUTE\)/);
+  assert.match(onboarding, /LoomGlobalNav/);
+  assert.match(onboarding, /ariaLabel="Onboarding navigation"/);
+  assert.match(onboarding, /import styles from '\.\/OnboardingClient\.module\.css'/);
+  assert.match(onboarding, /Set up[\s\S]{0,120}Sources\./);
+  assert.match(onboarding, /<main className=\{styles\.page\}>/);
+  assert.doesNotMatch(onboarding, /<main style=\{\{/);
+  assert.match(onboardingCss, /radial-gradient\(66rem 42rem at 50% -18%, rgba\(232, 236, 238, 0\.14\)/);
+  assert.match(onboardingCss, /backdrop-filter:\s*blur\(30px\) saturate\(108%\)/);
+  assert.match(onboardingCss, /\.primaryButton\s*\{/);
   assert.match(onboarding, /import \{ ArrowRight \} from 'lucide-react'/);
-  assert.match(onboarding, /label="Open the first book"/);
-  assert.match(onboarding, /label="Choose shelves"/);
+  assert.match(onboarding, /label="Choose Sources root"/);
+  assert.match(onboarding, /label="Choose source folders"/);
+  assert.match(offline, /LoomGlobalNav/);
+  assert.match(offline, /ariaLabel="Offline navigation"/);
+  assert.match(offline, /import styles from '\.\/offline\.module\.css'/);
+  assert.match(offline, /<main className=\{styles\.page\}>/);
+  assert.doesNotMatch(offline, /<main style=\{\{/);
+  assert.match(offline, /href="\/sources" className=\{styles\.action\}>Open Sources<\/a>/);
+  assert.match(offlineCss, /radial-gradient\(58rem 34rem at 50% -16%, rgba\(232, 236, 238, 0\.13\)/);
+  assert.match(offlineCss, /backdrop-filter:\s*blur\(30px\) saturate\(108%\)/);
+  assert.match(offlineCss, /\.action\s*\{/);
   assert.match(onboarding, /icon=\{<ArrowRight aria-hidden="true" size=\{14\} strokeWidth=\{1\.8\} \/>/);
   assert.doesNotMatch(onboarding, /router\.push\('\/desk'\)|opening Desk/);
-  assert.doesNotMatch(onboarding, /Open the first book[\s\S]{0,80}→|Choose shelves[\s\S]{0,80}→/);
+  assert.doesNotMatch(onboarding, /Open the first book|Choose shelves|A room|for slow reading|room is set|Reading the shelves|→/);
+  assert.doesNotMatch(offline, /Continue weaving|href="\/"/);
 
   for (const label of ['Sources', 'Draft']) {
     assert.match(app, new RegExp(`Button\\("${label}"\\)`));
@@ -2419,6 +2443,68 @@ test('first-run and native shortcuts land on new Loom product capabilities', () 
   assert.match(minimalRoot, /func navigateProductPath\(_ path: String\)/);
   assert.match(minimalRoot, /case "\/", "\/collect", "\/sources", "\/knowledge":\s*\n\s*navigate\(\.sources\)/);
   assert.match(minimalRoot, /case "\/draft":\s*\n\s*navigate\(\.draft\)/);
+});
+
+test('support and detail fallback routes share the global Loom navigation', () => {
+  const llmWiki = read('app/llm-wiki/page.tsx');
+  const llmWikiCss = read('app/llm-wiki/LLMWikiPage.module.css');
+  const quizzesPage = read('app/quizzes/page.tsx');
+  const quizzes = read('app/quizzes/QuizzesClient.tsx');
+  const quizzesCss = read('app/quizzes/QuizzesPage.module.css');
+  const docClient = read('app/DocClient.tsx');
+  const panelPage = read('app/panel/page.tsx');
+  const panelDetail = read('app/PanelDetailClient.tsx');
+  const pursuitPage = read('app/pursuit/page.tsx');
+  const pursuitDetail = read('app/PursuitDetailClient.tsx');
+  const globals = read('app/globals.css');
+
+  assert.ok(NEW_LOOM_INTERNAL_ROUTES.includes('/llm-wiki'), '/llm-wiki should stay an internal reference route');
+  assert.ok(NEW_LOOM_INTERNAL_ROUTES.includes('/quizzes'), '/quizzes should stay an internal source-check route');
+  assert.match(llmWiki, /LoomGlobalNav/);
+  assert.match(llmWiki, /activeHref="\/sources"/);
+  assert.match(llmWiki, /import styles from '\.\/LLMWikiPage\.module\.css'/);
+  assert.match(llmWiki, /<main className=\{styles\.page\}>/);
+  assert.match(llmWiki, /href="\/sources"[\s\S]{0,160}Sources/);
+  assert.match(llmWiki, /Reference atlas/);
+  assert.match(llmWiki, /read-only reference constellation/);
+  assert.match(llmWiki, /Sources \/[\s\S]{0,80}Draft product loop/);
+  assert.doesNotMatch(llmWiki, /href="\/desk"[\s\S]{0,120}Desk/);
+  assert.doesNotMatch(llmWiki, /<StageShell|<PageFrame|<WorkSurface|<main style=\{\{/);
+  assert.match(llmWikiCss, /radial-gradient\(72rem 44rem at 50% -18%, rgba\(232, 236, 238, 0\.145\)/);
+  assert.match(llmWikiCss, /backdrop-filter:\s*blur\(30px\) saturate\(108%\)/);
+  assert.match(llmWikiCss, /\.sectionGrid\s*\{/);
+  assert.doesNotMatch(llmWikiCss, /content-visibility:\s*auto/);
+  assert.match(quizzes, /LoomGlobalNav/);
+  assert.match(quizzesPage, /metadata = \{ title: 'Source checks · Loom' \}/);
+  assert.match(quizzesPage, /<QuizzesClient \/>/);
+  assert.match(quizzes, /Source checks/);
+  assert.match(quizzes, /import styles from '\.\/QuizzesPage\.module\.css'/);
+  assert.match(quizzes, /<main className=\{styles\.page\}>/);
+  assert.match(quizzes, /Open Sources/);
+  assert.match(quizzes, /href="\/llm-wiki"/);
+  assert.match(quizzes, /Newest first/);
+  assert.doesNotMatch(quizzes, /<PageFrame|className="prose-notion"|<main style=\{\{/);
+  assert.match(quizzesCss, /radial-gradient\(68rem 42rem at 50% -18%, rgba\(232, 236, 238, 0\.14\)/);
+  assert.match(quizzesCss, /backdrop-filter:\s*blur\(30px\) saturate\(108%\)/);
+  assert.match(quizzesCss, /\.statRail\s*\{/);
+  assert.match(docClient, /LoomGlobalNav/);
+  assert.match(docClient, /ariaLabel="Source document navigation"/);
+  assert.match(panelPage, /metadata = \{ title: 'Reader note · Loom' \}/);
+  assert.match(panelPage, /<PanelPageClient \/>/);
+  assert.match(panelPage, /import PanelPageClient from '\.\/PanelPageClient'/);
+  assert.match(panelDetail, /LoomGlobalNav/);
+  assert.match(panelDetail, /ariaLabel="Reader note navigation"/);
+  assert.match(panelDetail, /<div className="loom-panel-detail-back">/);
+  assert.doesNotMatch(panelDetail, /<nav className="loom-panel-detail-back">/);
+  assert.doesNotMatch(panelDetail, /#9E7C3E/);
+  assert.match(pursuitPage, /metadata = \{ title: 'Question · Loom' \}/);
+  assert.match(pursuitPage, /<PursuitPageClient \/>/);
+  assert.match(pursuitPage, /import PursuitPageClient from '\.\/PursuitPageClient'/);
+  assert.match(pursuitDetail, /LoomGlobalNav/);
+  assert.match(pursuitDetail, /ariaLabel="Pursuit navigation"/);
+  assert.match(globals, /\.loom-panel-detail\s*\{[\s\S]*padding-top:\s*5rem/);
+  assert.match(globals, /@media \(max-width:\s*760px\)\s*\{[\s\S]*\.loom-panel-detail\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  assert.match(globals, /\.loom-panel-detail-title\s*\{[\s\S]*overflow-wrap:\s*anywhere/);
 });
 
 test('native menus and shortcut help do not expose old thinking product labels', () => {
@@ -2605,7 +2691,7 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
   }
 
   assert.match(files['app/layout.tsx'], /Add sources and draft clear writing from them\./);
-  assert.match(files['app/onboarding/OnboardingClient.tsx'], /<Eyebrow>Setup · sources<\/Eyebrow>/);
+  assert.match(files['app/onboarding/OnboardingClient.tsx'], /<Eyebrow>Setup · Sources<\/Eyebrow>/);
   assert.match(files['app/cover/page.tsx'], /redirect\('\/sources'\)/);
   assert.doesNotMatch(files['app/cover/page.tsx'], /CoverClient/);
   assert.match(files['app/frontispiece/page.tsx'], /redirect\('\/sources'\)/);
@@ -3596,13 +3682,19 @@ test('Draft streams /draft from #tag from matching draft-board cards', () => {
 
 test('Help explains Sources and Draft without reviving legacy product labels', () => {
   const helpPage = read('app/help/page.tsx');
+  const helpCss = read('app/help/HelpPage.module.css');
 
   for (const label of ['Sources', 'Draft']) {
     assert.match(helpPage, new RegExp(`\\b${label}\\b`));
   }
 
+  assert.match(helpPage, /import styles from '\.\/HelpPage\.module\.css'/);
+  assert.match(helpPage, /<main className=\{styles\.page\}>/);
+  assert.doesNotMatch(helpPage, /<PageFrame|className="prose-notion"|style=\{\{/);
+  assert.match(helpPage, /reading-and-thinking environment/);
   assert.doesNotMatch(helpPage, /\bCollect\b|\bOrganize\b|\borganize\b|href="\/collect"/);
-  assert.match(helpPage, /\/sources<\/Link> - add, capture, and review source material/);
+  assert.match(helpPage, /Add, capture, and review source material/);
+  assert.match(helpPage, /Read, mark, write\./);
 
   for (const href of ['/sources', '/draft']) {
     assert.match(helpPage, new RegExp(`href="${escapeRegExp(href)}"`));
@@ -3620,11 +3712,19 @@ test('Help explains Sources and Draft without reviving legacy product labels', (
       new RegExp(`href="${escapeRegExp(route)}"|>${escapeRegExp(route)}<`),
     );
   }
+
+  assert.match(
+    helpCss,
+    /radial-gradient\(70rem 43rem at 50% -18%, rgba\(232, 236, 238, 0\.145\)/,
+  );
+  assert.match(helpCss, /backdrop-filter:\s*blur\(30px\) saturate\(108%\)/);
+  assert.match(helpCss, /\.workspaceGrid\s*\{/);
 });
 
 test('/system explains the new Loom loop instead of the retired product map', () => {
   const systemPage = read('app/system/page.tsx');
   const systemClientPath = path.join(repoRoot, 'app/SystemClient.tsx');
+  const supportCss = read('app/loom-support-page.module.css');
 
   assert.ok(!fs.existsSync(path.join(repoRoot, 'app/SystemAtlasClient.tsx')));
   assert.ok(
@@ -3635,6 +3735,11 @@ test('/system explains the new Loom loop instead of the retired product map', ()
 
   assert.match(systemPage, /import SystemClient from '\.\.\/SystemClient'/);
   assert.match(systemPage, /return <SystemClient \/>/);
+  assert.doesNotMatch(systemClient, /padding:\s*'var\(--support-main-padding\)'/);
+  assert.match(systemClient, /className=\{styles\.main\}/);
+  assert.match(systemClient, /styles\.archiveStepLink/);
+  assert.match(systemClient, /styles\.archiveSupportSection/);
+  assert.match(supportCss, /radial-gradient\(76rem 44rem at 50% -18%, rgba\(232, 236, 238, 0\.145\)/);
 
   for (const label of ['Sources', 'Draft']) {
     assert.match(systemClient, new RegExp(`\\b${label}\\b`));
@@ -3660,6 +3765,7 @@ test('/system explains the new Loom loop instead of the retired product map', ()
 test('/discipline is an in-app support document for the six product refusals', () => {
   const productShell = read('lib/new-loom/product-shell.ts');
   const disciplinePath = path.join(repoRoot, 'app/discipline/page.tsx');
+  const supportCss = read('app/loom-support-page.module.css');
 
   assert.ok(
     NEW_LOOM_SUPPORT_ROUTES.includes('/discipline'),
@@ -3685,6 +3791,10 @@ test('/discipline is an in-app support document for the six product refusals', (
 
   assert.match(disciplinePage, /title:\s*'Discipline · Loom'/);
   assert.match(disciplinePage, /six product refusals/i);
+  assert.doesNotMatch(disciplinePage, /padding:\s*'var\(--support-main-padding\)'|style=\{\{ listStyle/);
+  assert.match(disciplinePage, /styles\.refusalList/);
+  assert.match(disciplinePage, /styles\.refusalTitle/);
+  assert.match(supportCss, /\.refusalList\s*\{/);
 
   for (const refusal of [
     '不监视你',
@@ -3738,6 +3848,7 @@ test('/year is a support surface for the annual wintering view, not a primary ro
   const yearPage = fs.readFileSync(yearPath, 'utf8');
   const yearClient = fs.readFileSync(yearClientPath, 'utf8');
   const yearSurfaceText = `${yearPage}\n${yearClient}`;
+  const supportCss = read('app/loom-support-page.module.css');
   const systemClient = read('app/SystemClient.tsx');
   const helpPage = read('app/help/page.tsx');
   const loomDoc = read('docs/loom.md');
@@ -3753,6 +3864,14 @@ test('/year is a support surface for the annual wintering view, not a primary ro
   assert.match(yearSurfaceText, /Question\s+containers/);
   assert.match(yearSurfaceText, /Sources/);
   assert.match(yearSurfaceText, /Draft/);
+  assert.doesNotMatch(yearSurfaceText, /padding:\s*'var\(--support-main-padding\)'|gridTemplateColumns:\s*'repeat\(12/);
+  assert.match(yearPage, /className=\{styles\.main\}/);
+  assert.match(yearClient, /styles\.yearChart/);
+  assert.match(yearClient, /styles\.monthBar/);
+  assert.match(yearClient, /styles\.bucketHeader/);
+  assert.match(yearClient, /styles\.emptyCopy/);
+  assert.match(supportCss, /\.yearChart\s*\{/);
+  assert.match(supportCss, /\.monthBar\s*\{/);
   assert.doesNotMatch(yearSurfaceText, /Source Index|Collect|Organize/);
 
   for (const month of [
@@ -3821,6 +3940,7 @@ test('/hour is a support surface for the current thinking window, not a primary 
 
   const hourPage = fs.readFileSync(hourPath, 'utf8');
   const hourClient = fs.readFileSync(hourClientPath, 'utf8');
+  const supportCss = read('app/loom-support-page.module.css');
   const systemClient = read('app/SystemClient.tsx');
   const helpPage = read('app/help/page.tsx');
   const yearPage = read('app/year/page.tsx');
@@ -3829,6 +3949,13 @@ test('/hour is a support surface for the current thinking window, not a primary 
   assert.match(hourPage, /title:\s*'The Hour · Loom'/);
   assert.match(hourPage, /import HourClient from '\.\/HourClient'/);
   assert.match(hourPage, /<HourClient \/>/);
+  assert.doesNotMatch(hourClient, /padding:\s*'var\(--support-main-padding\)'|background:\s*'color-mix/);
+  assert.match(hourClient, /className=\{styles\.main\}/);
+  assert.match(hourClient, /styles\.breathBar/);
+  assert.match(hourClient, /styles\.breathFill/);
+  assert.match(hourClient, /styles\.emptyCopy/);
+  assert.match(supportCss, /\.breathBar\s*\{/);
+  assert.match(supportCss, /\.breathFill\s*\{/);
 
   assert.match(hourClient, /'use client'/);
   assert.match(hourClient, /useAllTraces/);
@@ -3898,6 +4025,7 @@ test('/connections is a support surface for source connections and correspondent
   const sourceConnections = fs.readFileSync(sourceConnectionsPath, 'utf8');
   const connectionsPage = fs.readFileSync(connectionsPath, 'utf8');
   const connectionsClient = fs.readFileSync(connectionsClientPath, 'utf8');
+  const supportCss = read('app/loom-support-page.module.css');
   const systemClient = read('app/SystemClient.tsx');
   const helpPage = read('app/help/page.tsx');
   const hourClient = read('app/hour/HourClient.tsx');
@@ -3922,6 +4050,13 @@ test('/connections is a support surface for source connections and correspondent
   assert.match(connectionsClient, /!\s*publicWorkingMode[\s\S]{0,120}sourceConnectionDraftHref\(link\)/);
   assert.match(connectionsClient, /href="\/sources"/);
   assert.match(connectionsClient, /href="\/draft"/);
+  assert.doesNotMatch(connectionsClient, /padding:\s*'var\(--support-main-padding\)'|style=\{\{ marginTop/);
+  assert.match(connectionsClient, /className=\{styles\.main\}/);
+  assert.match(connectionsClient, /styles\.connectionsSection/);
+  assert.match(connectionsClient, /styles\.connectionMetaRow/);
+  assert.match(connectionsClient, /styles\.emptyCopy/);
+  assert.match(supportCss, /\.connectionsSection\s*\{/);
+  assert.match(supportCss, /\.connectionMetaRow\s*\{/);
 
   assert.match(systemClient, /href="\/connections"/);
   assert.match(helpPage, /href="\/connections"/);

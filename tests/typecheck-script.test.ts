@@ -36,6 +36,7 @@ test('typecheck script resolves repo root from the script path and serializes bu
 
   assert.match(source, /fileURLToPath\(import\.meta\.url\)/);
   assert.match(source, /withNextBuildLock\(root, async \(\) => \{/);
+  assert.match(source, /removePathWithRetry\(path\.join\(root, 'tsconfig\.tsbuildinfo'\), \{ recursive: false \}\)/);
   assert.match(source, /removeDuplicateArtifacts\(path\.join\(root, '\.next'\)\)/);
   assert.match(source, /removeDuplicateArtifacts\(path\.join\(root, '\.next-build'\)\)/);
   assert.match(source, /output\.includes\('TS6053'\) \|\| output\.includes\('TS2307'\)/);
@@ -48,10 +49,13 @@ test('typecheck script resolves repo root from the script path and serializes bu
   assert.match(buildSource, /removePathWithRetry\(path\.join\(root, '\.next-build', 'types'\)\);/);
   assert.match(buildSource, /removePathWithRetry\(path\.join\(root, 'public', 'pagefind'\)\);/);
   assert.match(devSource, /const appBuildManifestPath = path\.join\(nextDir, 'app-build-manifest\.json'\);/);
+  assert.match(devSource, /const devDistDir = process\.env\.LOOM_DIST_DIR \|\| '\.next-app-dev';/);
+  assert.match(devSource, /const nextDir = path\.join\(root, devDistDir\);/);
   assert.match(devSource, /function findMissingAppManifestAssets\(\) \{/);
   assert.match(devSource, /asset\.startsWith\('static\/'\)/);
   assert.match(devSource, /rmSync\(nextDir,\s*\{[\s\S]*recursive: true,[\s\S]*force: true,[\s\S]*\}\);/);
   assert.match(devSource, /removeCorruptNextDirIfNeeded\(\);[\s\S]*ensureRoutesManifest\(\);[\s\S]*const child = spawn/);
+  assert.match(devSource, /env:\s*\{[\s\S]*\.\.\.process\.env,[\s\S]*LOOM_DIST_DIR: devDistDir,[\s\S]*\}/);
   assert.match(exportSource, /import \{ removeDuplicateArtifacts, withNextBuildLock \} from '\.\/next-build-lock\.mjs';/);
   assert.match(exportSource, /await removeDuplicateArtifacts\(path\.join\(repoRoot, '\.next'\)\);/);
   assert.match(exportSource, /await removeDuplicateArtifacts\(path\.join\(repoRoot, '\.next-export'\)\);/);

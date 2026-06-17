@@ -40,12 +40,28 @@ macos-app/Loom/.build/
 .next-export-shelf/
 .next-export-out/
 .next-acceptance/
+.next-*/
 .playwright-cli/
 .playwright-mcp/
 .superpowers/
 tmp/
 tsconfig*.tsbuildinfo
 *.backup-*
+*.profraw
+*.swp
+*.swo
+
+# Local dev captures / screenshots / reference images — consolidated here so
+# they don't litter the parent folder, but never committed.
+captures/
+
+# Private local-only docs — never push to the public Wiki repo.
+# The canonical, intentionally-tracked copies live under docs/canon/.
+# These leading-slash entries only match stray copies at the repo root.
+/LOOM.md
+/LOOM_RULES.md
+/LOOM_USER_PROFILE.md
+/PROJECTS.md
 
 # Finder duplicates (generated, never commit)
 * 2.*

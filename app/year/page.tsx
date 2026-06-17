@@ -17,10 +17,7 @@ export default function YearPage() {
   return (
     <div className={styles.surface}>
       <LoomSupportNav active="/year" />
-      <main
-        className={styles.main}
-        style={{ padding: 'var(--support-main-padding)' }}
-      >
+      <main className={styles.main}>
         <div className={styles.shell}>
         <header className={styles.hero}>
           <div className={styles.heroText}>

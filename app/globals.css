@@ -1,7 +1,6 @@
 @import 'katex/dist/katex.min.css';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import './fonts.css';
+@import 'tailwindcss';
 
 /* =========================================================================
    Vellum link defaults — any anchor that carries a loom-* class must NOT
@@ -37,6 +36,7 @@ a[class*="loom-"] {
      beautiful for "Persuasion before structure" panel titles but wrong
      for the body paragraph the user will later paste into an email. */
   --font-cormorant: "Cormorant Garamond";
+  --font-wordmark: "Fraunces", "Cormorant Garamond", "New York", "Iowan Old Style", Georgia, "Times New Roman", "Songti SC", serif;
   --display: var(--font-cormorant), "Cormorant Garamond", "EB Garamond", "New York", "Iowan Old Style", "Songti SC", serif;
   --script: "Caveat", "Homemade Apple", "Segoe Print", "Kaiti SC", "STKaiti", cursive;
 
@@ -300,12 +300,12 @@ a[class*="loom-"] {
   --line-soft: #202428; /* inner divider */
   --text-1: #E7E9EA;    /* primary */
   --text-2: #A4A9AD;    /* secondary */
-  --text-3: #666D72;    /* tertiary / eyebrows / captions */
+  --text-3: #8E9499;    /* tertiary / eyebrows / captions — lifted to WCAG-AA (~5:1) on the dark surfaces incl. elevated cards */
 
-  /* Accents — precious, sparse, information-only. Legacy --gold token names
-     are retained for compatibility; visually they resolve to comet cyan. */
-  --gold: #4BC5DE;      /* comet cyan — hairline/mark/numeral/glow ONLY, never a fill */
-  --gold-hi: #8AF7E6;   /* pale ion highlight */
+  /* Accents - sparse, information-only. Legacy --gold token names are
+     retained for compatibility; new work should use --signature-cyan. */
+  --gold: var(--signature-cyan);      /* compatibility alias */
+  --gold-hi: var(--signature-cyan-hi);   /* compatibility alias */
   --cyan: #6CE7F2;      /* bright comet signal/data only */
   --up: #3FB37A;        /* market up — price/PnL numerals + sparklines only */
   --down: #E06A6A;      /* market down */
@@ -361,10 +361,10 @@ a[class*="loom-"] {
   box-shadow: var(--keylight), var(--float-1);
 }
 
-/* Signature mark — text/stroke only. NEVER a fill.
-   The class name is legacy; the resolved color is comet cyan. */
+/* Signature mark - text/stroke only. NEVER a fill. */
+.loom-signature-mark,
 .loom-gold-mark {
-  color: var(--gold);
+  color: var(--signature-cyan);
 }
 
 /* Data numerals — mono, tabular, quiet. */
@@ -1244,6 +1244,26 @@ html {
   }
 }
 
+/* Shared "star-field" cosmic atmosphere (matches /product-history, restrained).
+   Drop <div className="loom-cosmic-field" aria-hidden /> as the FIRST child of an
+   identity/landing surface root that sets `isolation: isolate`; it then sits
+   above that surface's deep-space backdrop and behind all its content. */
+.loom-cosmic-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url('/loom/history/stars.webp') center / cover no-repeat,
+    radial-gradient(48rem 42rem at 16% 6%, rgba(75, 197, 222, 0.05), transparent 60%),
+    radial-gradient(44rem 40rem at 88% 94%, rgba(46, 70, 90, 0.06), transparent 64%);
+  background-blend-mode: screen, normal, normal;
+  opacity: 0.55;
+}
+@media (prefers-reduced-data: reduce) {
+  .loom-cosmic-field { background-image: none; }
+}
+
 /* ── Prism Refined Glass (Nucleus Style) ── */
 .material-thin, .material-reg, .material-thick {
   box-shadow: var(--mat-hi);
@@ -1680,8 +1700,8 @@ html {
   --vd-border-strong: #ccd3cc;
   --vd-surface: #ffffff;
   --vd-surface-soft: #f7f9f6;
-  --vd-accent: var(--gold);
-  --vd-accent-strong: var(--gold-hi);
+  --vd-accent: var(--signature-cyan);
+  --vd-accent-strong: var(--signature-cyan-hi);
   --vd-shadow: 0 18px 48px rgba(18, 22, 21, 0.08);
   min-height: 100vh;
   overflow-x: clip;
@@ -2815,8 +2835,8 @@ html {
   --vd-page: #ffffff;
   --vd-paper: #fbfcfa;
   --vd-paper-strong: #f5f7f2;
-  --vd-accent: var(--gold);
-  --vd-accent-strong: var(--gold-hi);
+  --vd-accent: var(--signature-cyan);
+  --vd-accent-strong: var(--signature-cyan-hi);
   --vd-accent-soft: color-mix(in srgb, var(--vd-accent) 12%, transparent);
   --vd-shadow: 0 18px 42px rgba(22, 28, 24, 0.08);
   min-height: 100vh;
@@ -4538,7 +4558,7 @@ article.prose-notion {
   color: var(--text-1);
 }
 .prose-notion {
-  caret-color: var(--gold);
+  caret-color: var(--signature-cyan);
 }
 
 .prose-notion > :where(.loom-running-head, h1, h2, h3, h4, p, ul, ol, blockquote, hr) {
@@ -4733,7 +4753,7 @@ article.prose-notion {
 }
 .prose-notion sup a:hover,
 .prose-notion a[href^="#user-content-fn-"]:hover {
-  color: var(--gold-hi);
+  color: var(--signature-cyan-hi);
   text-decoration: underline;
   text-decoration-thickness: 0.5px;
   text-underline-offset: 2px;
@@ -4770,19 +4790,17 @@ article.prose-notion {
 }
 
 .prose-notion a {
-  /* Body links — gold on the cool-black desk. Gold reads bright and
-     legible against --ink (no need for the deep-gold light-paper
-     variant). Hairline border-bottom is the underline; brightens to
-     --gold-hi on hover for affordance. */
-  color: var(--gold);
+  /* Body links — signature cyan on the cool-black desk. Hairline
+     border-bottom is the underline; brightens on hover for affordance. */
+  color: var(--signature-cyan);
   text-decoration: none;
-  border-bottom: 0.0625rem solid color-mix(in srgb, var(--gold) 40%, transparent);
+  border-bottom: 0.0625rem solid color-mix(in srgb, var(--signature-cyan) 40%, transparent);
   transition: border-color 180ms var(--ease), color 180ms var(--ease);
 }
 
 .prose-notion a:hover {
-  border-bottom-color: var(--gold-hi);
-  color: var(--gold-hi);
+  border-bottom-color: var(--signature-cyan-hi);
+  color: var(--signature-cyan-hi);
 }
 
 .prose-notion ul,
@@ -4839,9 +4857,9 @@ kbd:not(pre kbd):not(code kbd) {
   font-family: var(--mono);
   font-size: 0.82em;
   padding: 0.05em 0.42em;
-  border: 0.5px solid color-mix(in srgb, var(--gold) 35%, transparent);
+  border: 0.5px solid color-mix(in srgb, var(--signature-cyan) 35%, transparent);
   border-radius: 3px;
-  background: color-mix(in srgb, var(--gold) 8%, var(--ink-2));
+  background: color-mix(in srgb, var(--signature-cyan) 8%, var(--ink-2));
   color: var(--text-1);
   line-height: 1;
   vertical-align: baseline;
@@ -4911,7 +4929,7 @@ kbd:not(pre kbd):not(code kbd) {
 .prose-notion blockquote {
   margin: 1.4rem 1.8rem;
   padding: 0.2rem 0 0.2rem 1.2rem;
-  border-left: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--signature-cyan) 55%, transparent);
   font-style: italic;
   color: var(--text-2);
   background: transparent;
@@ -5033,7 +5051,7 @@ kbd:not(pre kbd):not(code kbd) {
 }
 .prose-notion figure img:hover,
 .prose-notion > img:hover {
-  border-color: color-mix(in srgb, var(--gold) 40%, var(--line));
+  border-color: color-mix(in srgb, var(--signature-cyan) 40%, var(--line));
   box-shadow: var(--float-1);
 }
 
@@ -5284,8 +5302,8 @@ kbd:not(pre kbd):not(code kbd) {
   --vd-page: var(--ink-0);
   --vd-paper: var(--ink-3);
   --vd-paper-strong: var(--ink-4);
-  --vd-accent: var(--gold);
-  --vd-accent-strong: var(--gold-hi);
+  --vd-accent: var(--signature-cyan);
+  --vd-accent-strong: var(--signature-cyan-hi);
   --vd-accent-soft: rgba(75, 197, 222, 0.12);
   --vd-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
 }
@@ -6147,7 +6165,7 @@ select:focus-visible,
 }
 
 .note-rendered blockquote {
-  border-left: 3px solid color-mix(in srgb, var(--gold) 70%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--signature-cyan) 70%, transparent);
   padding: 0.4rem 0.8rem;
   background: rgba(75, 197, 222, 0.08);
   color: var(--text-2);
@@ -6156,7 +6174,7 @@ select:focus-visible,
 }
 
 .note-rendered a.wikilink {
-  color: var(--gold);
+  color: var(--signature-cyan);
   text-decoration: none;
   background: rgba(75, 197, 222, 0.12);
   padding: 0 6px;
@@ -6167,7 +6185,7 @@ select:focus-visible,
 
 .note-rendered a.wikilink:hover {
   background: rgba(75, 197, 222, 0.22);
-  color: var(--gold-hi);
+  color: var(--signature-cyan-hi);
 }
 
 .note-rendered .wikilink-broken {
@@ -7328,6 +7346,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0;
   max-width: var(--w-page);
   margin: 0 auto;
+  padding-top: 5rem;
+  box-sizing: border-box;
 }
 .loom-panel-detail-back {
   grid-column: 1 / -1;
@@ -7517,6 +7537,59 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   font-style: normal;
   color: var(--fg);
   font-size: 0.65rem;
+}
+
+@media (max-width: 760px) {
+  .loom-panel-detail {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    overflow-x: clip;
+    padding-top: 5.8rem;
+  }
+
+  .loom-panel-detail-back {
+    min-width: 0;
+    padding: 1rem clamp(1rem, 5vw, 1.4rem) 0;
+  }
+
+  .loom-panel-detail-body {
+    min-width: 0;
+    padding:
+      clamp(2.1rem, 7vh, 3.2rem) clamp(1rem, 5vw, 1.4rem)
+      clamp(2.5rem, 7vh, 3.6rem);
+  }
+
+  .loom-panel-detail-title {
+    max-width: 100%;
+    font-size: clamp(2.2rem, 13vw, 3.1rem);
+    overflow-wrap: anywhere;
+  }
+
+  .loom-panel-detail-subtitle,
+  .loom-panel-detail-prose,
+  .loom-panel-detail-provenance,
+  .loom-panel-detail-wefts,
+  .loom-panel-detail-wefts-empty,
+  .loom-panel-detail-footer {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .loom-panel-detail-provenance {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .loom-panel-detail-wefts {
+    border-top: 0.5px solid var(--border);
+    border-left: 0;
+    padding:
+      clamp(1.4rem, 5vh, 2.4rem) clamp(1rem, 5vw, 1.4rem)
+      clamp(2.5rem, 7vh, 3.6rem);
+  }
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
@@ -7939,18 +8012,18 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 /* New Loom Draft workspace: source-grounded writing surface. */
 .new-loom-draft {
-  --draft-ink: #151917;
-  --draft-muted: #5f6a64;
-  --draft-subtle: #7d8781;
-  --draft-line: #e1e6df;
-  --draft-line-strong: #c8d2c8;
-  --draft-surface: #ffffff;
-  --draft-paper: #fbfcfa;
-  --draft-panel: #f5f7f3;
-  --draft-panel-strong: #edf2eb;
-  --draft-accent: var(--gold);
-  --draft-accent-strong: var(--gold-hi);
-  --draft-accent-soft: color-mix(in srgb, var(--gold) 12%, transparent);
+  --draft-ink: var(--text-1);
+  --draft-muted: var(--text-2);
+  --draft-subtle: var(--text-3);
+  --draft-line: var(--line);
+  --draft-line-strong: #363C42;
+  --draft-surface: var(--ink-4);
+  --draft-paper: var(--ink-3);
+  --draft-panel: var(--ink-2);
+  --draft-panel-strong: var(--ink-3);
+  --draft-accent: var(--signature-cyan);
+  --draft-accent-strong: var(--signature-cyan-hi);
+  --draft-accent-soft: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
   display: grid;
   grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr) minmax(21rem, 27rem);
   gap: 1px;
@@ -13462,8 +13535,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-home-soft-line: #edf1ee;
   --vd-home-paper: #ffffff;
   --vd-home-soft: #f6f8f5;
-  --vd-home-green: #064f3f;
-  --vd-home-green-soft: #e8f2ed;
+  --vd-home-green: var(--signature-cyan);
+  --vd-home-green-soft: color-mix(in srgb, var(--signature-cyan) 10%, transparent);
   --vd-home-gold: #4BC5DE;
   min-height: 100vh;
   background: #fbfcfa;
@@ -13687,7 +13760,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-home-action--primary:hover {
-  background: #043d31;
+  background: color-mix(in srgb, var(--signature-cyan) 14%, #020303);
 }
 
 .vd-home-source-preview {
@@ -14247,8 +14320,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-hybrid-muted: rgba(248, 244, 232, 0.68);
   --vd-hybrid-subtle: rgba(248, 244, 232, 0.48);
   --vd-hybrid-line: rgba(248, 244, 232, 0.14);
-  --vd-hybrid-green: #8fc6ad;
-  --vd-hybrid-deep-green: #063f34;
+  --vd-hybrid-green: var(--signature-cyan);
+  --vd-hybrid-deep-green: #253036;
   --vd-hybrid-gold: #4BC5DE;
   min-height: 100vh;
   background:
@@ -14373,7 +14446,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   transform: translateY(-2px);
   box-shadow:
     0 2.4rem 6.5rem rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(143, 198, 173, 0.24);
+    inset 0 0 0 1px rgba(75, 197, 222, 0.24);
 }
 
 .vd-home--cover .vd-portrait-cover {
@@ -14625,7 +14698,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home-file-note span {
   width: max-content;
   padding: 0.28rem 0.42rem;
-  border: 1px solid rgba(4, 63, 52, 0.34);
+  border: 1px solid rgba(75, 197, 222, 0.34);
   border-radius: 4px;
   color: var(--vd-hybrid-deep-green);
   font-size: 0.68rem;
@@ -14691,7 +14764,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 0.25rem 0.7rem;
   align-items: baseline;
   padding: 0.5rem 0.62rem;
-  border: 1px solid rgba(4, 63, 52, 0.12);
+  border: 1px solid rgba(75, 197, 222, 0.12);
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.62);
 }
@@ -14732,7 +14805,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home-official-row span {
   overflow: hidden;
   padding: 0.52rem 0.62rem;
-  border: 1px solid rgba(4, 63, 52, 0.18);
+  border: 1px solid rgba(75, 197, 222, 0.18);
   border-radius: 5px;
   color: var(--vd-hybrid-deep-green);
   background: rgba(255, 255, 255, 0.72);
@@ -14749,7 +14822,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: 1px;
   padding: 1px 1px clamp(6.4rem, 8.6vw, 8rem);
   background:
-    linear-gradient(90deg, rgba(143, 198, 173, 0.18) 1px, transparent 1px) 0 0 / 20% 100%,
+    linear-gradient(90deg, rgba(75, 197, 222, 0.18) 1px, transparent 1px) 0 0 / 20% 100%,
     linear-gradient(135deg, #0b1512 0%, #030404 100%);
 }
 
@@ -14797,7 +14870,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   place-items: center;
   padding: clamp(1rem, 1.8vw, 1.45rem) clamp(1rem, 1.8vw, 1.45rem) clamp(6.6rem, 8.8vw, 8.4rem);
   background:
-    linear-gradient(90deg, rgba(143, 198, 173, 0.08) 1px, transparent 1px) 0 0 / 16.666% 100%,
+    linear-gradient(90deg, rgba(75, 197, 222, 0.08) 1px, transparent 1px) 0 0 / 16.666% 100%,
     linear-gradient(180deg, #101513 0%, #030404 100%);
 }
 
@@ -14882,10 +14955,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-home-answer-canvas li {
   padding: 0.44rem 0.5rem;
-  border: 1px solid rgba(143, 198, 173, 0.18);
+  border: 1px solid rgba(75, 197, 222, 0.18);
   border-radius: 4px;
   color: rgba(248, 244, 232, 0.76);
-  background: rgba(143, 198, 173, 0.07);
+  background: rgba(75, 197, 222, 0.07);
   font-size: 0.68rem;
   font-weight: 760;
   text-align: center;
@@ -14982,7 +15055,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: clamp(1.4rem, 3vh, 2.4rem);
   padding: clamp(1.65rem, 2.6vw, 2.35rem);
   background:
-    linear-gradient(90deg, rgba(143, 198, 173, 0.08) 1px, transparent 1px) 0 0 / 50% 100%,
+    linear-gradient(90deg, rgba(75, 197, 222, 0.08) 1px, transparent 1px) 0 0 / 50% 100%,
     linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0)),
     #030504;
 }
@@ -15008,7 +15081,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home--cover .vd-portrait-cover__veil {
   z-index: 1;
   background:
-    radial-gradient(circle at 75% 18%, rgba(143, 198, 173, 0.08), transparent 34%),
+    radial-gradient(circle at 75% 18%, rgba(75, 197, 222, 0.08), transparent 34%),
     linear-gradient(180deg, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.72) 100%);
   pointer-events: none;
 }
@@ -15229,7 +15302,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-home--cover .vd-cover-link:hover {
-  border-color: rgba(143, 198, 173, 0.34);
+  border-color: rgba(75, 197, 222, 0.34);
   background: rgba(2, 3, 3, 0.58);
 }
 
@@ -15271,7 +15344,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-home--cover .vd-portrait-cover__meta p:last-child {
-  color: #9ad7b8;
+  color: var(--signature-cyan);
 }
 
 .vd-home--cover .vd-cover-links {
@@ -15322,7 +15395,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-hybrid-muted: rgba(251, 248, 238, 0.66);
   --vd-hybrid-subtle: rgba(251, 248, 238, 0.44);
   --vd-hybrid-line: rgba(251, 248, 238, 0.13);
-  --vd-hybrid-green: #9ac9af;
+  --vd-hybrid-green: var(--signature-cyan);
   --vd-hybrid-gold: #4BC5DE;
   min-height: 100vh;
   background:
@@ -15598,7 +15671,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home--cover .vd-proof-cover:hover {
   transform: translateY(-2px);
   box-shadow:
-    inset 0 0 0 1px rgba(154, 201, 175, 0.28),
+    inset 0 0 0 1px rgba(75, 197, 222, 0.28),
     0 2rem 5rem rgba(0, 0, 0, 0.44);
 }
 
@@ -15723,7 +15796,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home--cover .vd-home-course-stack span {
   grid-template-columns: 4.35rem minmax(0, 1fr);
   padding: 0.48rem 0.56rem;
-  border-color: rgba(4, 63, 52, 0.13);
+  border-color: rgba(75, 197, 222, 0.13);
   background: rgba(255, 255, 255, 0.58);
 }
 
@@ -15795,7 +15868,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   padding: clamp(1rem, 1.4vw, 1.3rem) clamp(1rem, 1.4vw, 1.3rem) 5.8rem;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(154, 201, 175, 0.08) 1px, transparent 1px) 0 0 / 16.666% 100%,
+    linear-gradient(90deg, rgba(75, 197, 222, 0.08) 1px, transparent 1px) 0 0 / 16.666% 100%,
     linear-gradient(180deg, #0b1010 0%, #030404 100%);
 }
 
@@ -15812,7 +15885,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-home--cover .vd-home-market-lens span {
   justify-self: end;
-  color: rgba(154, 201, 175, 0.62);
+  color: rgba(75, 197, 222, 0.62);
   font-size: 0.7rem;
   font-weight: 780;
   letter-spacing: 0.08em;
@@ -15828,12 +15901,12 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home--cover .vd-home-market-lens path,
 .vd-home--cover .vd-home-market-lens circle {
   fill: none;
-  stroke: rgba(154, 201, 175, 0.54);
+  stroke: rgba(75, 197, 222, 0.54);
   stroke-width: 3;
 }
 
 .vd-home--cover .vd-home-market-lens path:first-child {
-  filter: drop-shadow(0 0 1rem rgba(154, 201, 175, 0.18));
+  filter: drop-shadow(0 0 1rem rgba(75, 197, 222, 0.18));
 }
 
 .vd-home--cover .vd-home-market-lens path:nth-child(2) {
@@ -15897,10 +15970,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-home--cover .vd-home-proof-flow span {
   padding: 0.62rem 0.7rem;
-  border: 1px solid rgba(154, 201, 175, 0.18);
+  border: 1px solid rgba(75, 197, 222, 0.18);
   border-radius: 5px;
   color: rgba(251, 248, 238, 0.78);
-  background: rgba(154, 201, 175, 0.06);
+  background: rgba(75, 197, 222, 0.06);
   font-size: 0.72rem;
   font-weight: 760;
 }
@@ -16145,7 +16218,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-home--cover .vd-cover-art--digital-me {
   padding-bottom: 5.15rem;
   background:
-    linear-gradient(90deg, rgba(154, 201, 175, 0.085) 1px, transparent 1px) 0 0 / 12.5% 100%,
+    linear-gradient(90deg, rgba(75, 197, 222, 0.085) 1px, transparent 1px) 0 0 / 12.5% 100%,
     linear-gradient(180deg, #0a0f10 0%, #030404 100%);
 }
 
@@ -16158,7 +16231,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   gap: clamp(0.72rem, 1vw, 0.95rem);
   padding: clamp(0.78rem, 1vw, 1rem);
   background:
-    linear-gradient(90deg, rgba(154, 201, 175, 0.05) 1px, transparent 1px) 0 0 / 25% 100%,
+    linear-gradient(90deg, rgba(75, 197, 222, 0.05) 1px, transparent 1px) 0 0 / 25% 100%,
     rgba(255, 255, 255, 0.03);
 }
 
@@ -16382,9 +16455,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   width: 2.15rem;
   height: 2.15rem;
   margin: 0;
-  border: 1px solid rgba(154, 201, 175, 0.22);
+  border: 1px solid rgba(75, 197, 222, 0.22);
   border-radius: 999px;
-  color: rgba(154, 201, 175, 0.9);
+  color: rgba(75, 197, 222, 0.9);
   display: inline-grid;
   place-items: center;
   font-family: var(--sans);
@@ -16396,7 +16469,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-home--cover .vd-proof-cover:hover .vd-proof-cover__arrow {
-  border-color: rgba(154, 201, 175, 0.44);
+  border-color: rgba(75, 197, 222, 0.44);
   color: #d6f2e1;
 }
 
@@ -16578,7 +16651,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   .vd-home--cover .vd-home-data-pulse span {
     height: 0.48rem;
     border-radius: 999px;
-    background: linear-gradient(90deg, rgba(154, 201, 175, 0.06), rgba(154, 201, 175, 0.44));
+    background: linear-gradient(90deg, rgba(75, 197, 222, 0.06), rgba(75, 197, 222, 0.44));
   }
 
   .vd-home--cover .vd-home-data-pulse span:nth-child(1) {
@@ -16621,8 +16694,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   .vd-home--cover .vd-proof-cover--digital-me .vd-home-proof-flow span {
     height: 0.35rem;
     padding: 0;
-    border-color: rgba(154, 201, 175, 0.18);
-    background: rgba(154, 201, 175, 0.16);
+    border-color: rgba(75, 197, 222, 0.18);
+    background: rgba(75, 197, 222, 0.16);
   }
 }
 
@@ -18030,10 +18103,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     --vd-home-cream: #fbf7ea;
     --vd-home-muted: rgba(246, 239, 223, 0.62);
     --vd-home-gold: #4BC5DE;
-    --vd-home-green: #9fcdae;
+    --vd-home-green: var(--signature-cyan);
     background:
       linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px) 0 0 / 25vw 100%,
-      radial-gradient(circle at 82% 38%, rgba(55, 68, 54, 0.14), transparent 30rem),
+      radial-gradient(circle at 82% 38%, rgba(75, 197, 222, 0.035), transparent 30rem),
       var(--vd-home-black) !important;
     color: var(--vd-home-cream);
   }
@@ -18353,7 +18426,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     grid-template-columns: minmax(12rem, 0.82fr) minmax(18rem, 1.18fr) !important;
     padding: 0.9rem 1.05rem !important;
     background:
-      linear-gradient(90deg, rgba(159, 205, 174, 0.08) 1px, transparent 1px) 0 0 / 12.5% 100%,
+      linear-gradient(90deg, rgba(75, 197, 222, 0.08) 1px, transparent 1px) 0 0 / 12.5% 100%,
       linear-gradient(180deg, rgba(8, 16, 14, 0.82), rgba(2, 5, 5, 0.94)) !important;
   }
 
@@ -18463,7 +18536,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     --vd-home-line: rgba(255, 250, 240, 0.15);
     --vd-home-line-soft: rgba(255, 250, 240, 0.08);
     --vd-home-gold: #4BC5DE;
-    --vd-home-green: #9fcfae;
+    --vd-home-green: var(--signature-cyan);
     width: 100% !important;
     height: 100vh !important;
     min-height: 100vh !important;
@@ -19416,7 +19489,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    Loom Visual System v1 — Archive scene: restrained, credible,
    document-forward. Base lifted to --ink-2 (the documents sit on a slightly
    raised reading desk), material strength dialed DOWN so evidence reads
-   clearly, gold ONLY on verified marks (stroke, never a fill) + the thin
+   clearly, signature cyan only on verified marks (stroke, never a fill) + the thin
    active-nav underline shared with the cover. */
 .vd-section-page {
   --vd-section-ink: var(--text-1);
@@ -19426,8 +19499,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-section-hairline: var(--line-soft);
   --vd-section-paper: var(--ink-3);
   --vd-section-soft: var(--ink-4);
-  --vd-section-accent: var(--gold);
-  --vd-section-accent-hover: var(--gold-hi);
+  --vd-section-accent: var(--signature-cyan);
+  --vd-section-accent-hover: var(--signature-cyan-hi);
   --vd-section-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --vd-section-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
   /* glass material tokens (chrome/nav layer only) — real optics */
@@ -19449,6 +19522,30 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   background-color: var(--ink-0);
   color: var(--vd-section-ink);
   font-family: var(--sans);
+  /* establish a stacking context so the star-field ::before sits ABOVE the
+     deep-space backdrop yet BEHIND all page content (z-index: -1). */
+  isolation: isolate;
+}
+
+/* History-grade "star-field" atmosphere — a faint starfield + two cyan/blue
+   nebula glows over the deep-space backdrop, behind all content. Brings the
+   /product-history cosmic feel to every vd-section-page surface. */
+.vd-section-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url('/loom/history/stars.webp') center / cover no-repeat,
+    radial-gradient(48rem 42rem at 16% 6%, rgba(75, 197, 222, 0.05), transparent 60%),
+    radial-gradient(44rem 40rem at 88% 94%, rgba(46, 70, 90, 0.06), transparent 64%);
+  background-blend-mode: screen, normal, normal;
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-data: reduce) {
+  .vd-section-page::before { background-image: none; }
 }
 
 .vd-section-page a {
@@ -19849,10 +19946,10 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   transform: translateY(-2px);
 }
 
-/* calmed a11y focus ring per global law: a thin 1.5px gold-hi hairline with a
-   larger offset + a soft outer glow, not a hard 2px solid gold rectangle */
+/* Calmed a11y focus ring per global law: a thin 1.5px signature-cyan
+   hairline with a larger offset + a soft outer glow. */
 .vd-section-page__grid a:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 4px;
   box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
 }
@@ -19911,10 +20008,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__list .vd-entry-notes summary {
+  display: inline-flex;
+  align-items: center;
   width: fit-content;
+  min-height: 2.5rem; /* larger tap target than the bare ~13px label */
+  padding: 0.35rem 0;
   cursor: pointer;
   list-style: none;
-  color: rgba(232, 238, 244, 0.64);
+  color: rgba(232, 238, 244, 0.72);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.13em;
@@ -19928,7 +20029,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__list .vd-entry-notes summary::after {
   content: " +";
-  color: var(--loom-signature-cyan);
+  color: var(--signature-cyan);
 }
 
 .vd-section-page__list .vd-entry-notes[open] summary::after {
@@ -19974,7 +20075,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__list article > a:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 4px;
   border-radius: 8px;
   box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
@@ -20185,7 +20286,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__course-strip a:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 4px;
   box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
 }
@@ -20235,7 +20336,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__artifact-strip > a:focus-visible {
-  outline: 1.5px solid var(--gold-hi);
+  outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 4px;
   box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
 }
@@ -20882,7 +20983,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     --vd-home-soft: rgba(255, 250, 240, 0.36);
     --vd-home-line: rgba(255, 250, 240, 0.145);
     --vd-home-line-soft: rgba(255, 250, 240, 0.095);
-    --vd-home-green: #9fcfb3;
+    --vd-home-green: var(--signature-cyan);
     --vd-home-gold: #4BC5DE;
     max-height: 100vh !important;
     padding: 0 !important;
@@ -21130,7 +21231,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     border: 1px solid currentColor !important;
     border-radius: 2px !important;
     background: transparent !important;
-    color: rgba(159, 207, 179, 0.88) !important;
+    color: rgba(75, 197, 222, 0.88) !important;
     font-size: 0.62rem !important;
     font-weight: 850 !important;
   }
@@ -21716,7 +21817,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
   .vd-home--cover .vd-proof-cover--digital-me .vd-home-market-lens path,
   .vd-home--cover .vd-proof-cover--digital-me .vd-home-market-lens circle {
-    stroke: rgba(159, 207, 179, 0.54) !important;
+    stroke: rgba(75, 197, 222, 0.54) !important;
   }
 
   .vd-home--cover .vd-home-footer {
@@ -23648,7 +23749,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    of the retired .vd-*cover* sediment applies to this markup.
    ============================================================ */
 .lcv{
-  --lcv-bg:var(--ink-0); --lcv-panel:var(--ink-3); --lcv-gold:var(--gold); --lcv-gold2:var(--gold-hi);
+  --lcv-bg:var(--ink-0); --lcv-panel:var(--ink-3); --lcv-signature:var(--signature-cyan); --lcv-signature2:var(--signature-cyan-hi);
   --lcv-ink:var(--text-1); --lcv-ink2:var(--text-2); --lcv-ink3:var(--text-3);
   --lcv-line:var(--line-soft); --lcv-line2:var(--line); --lcv-ok:var(--up);
   --lcv-serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
@@ -23714,7 +23815,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 @media (prefers-reduced-motion:reduce){.lcv-nav__links a{transition:none}}
 .lcv-nav__links a:hover{color:var(--lcv-ink)}
 /* comet touch 1 of 2 on this screen: the active-nav hairline underline */
-.lcv-nav__links a[aria-current="page"]{color:var(--lcv-ink);border-bottom:1px solid var(--lcv-gold)}
+.lcv-nav__links a[aria-current="page"]{color:var(--lcv-ink);border-bottom:1px solid var(--lcv-signature)}
 .lcv-nav__avatar{width:42px;height:42px;border-radius:999px;object-fit:cover;
   object-position:center 20%;border:1px solid var(--lcv-line2)}
 
@@ -23758,14 +23859,14 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    current page mark it as a deliberate "you are here" link (cyan hairline,
    matches .lcv-nav__links a[aria-current]) instead of a silent no-op click */
 .lcv-links a[aria-current="page"]{color:var(--lcv-ink2);cursor:default}
-.lcv-links a[aria-current="page"] .lcv-link-icon{fill:var(--lcv-gold)}
-.lcv-links a[aria-current="page"][fill="none"] .lcv-link-icon,.lcv-links a[aria-current="page"] .lcv-link-icon[fill="none"]{stroke:var(--lcv-gold)}
+.lcv-links a[aria-current="page"] .lcv-link-icon{fill:var(--lcv-signature)}
+.lcv-links a[aria-current="page"][fill="none"] .lcv-link-icon,.lcv-links a[aria-current="page"] .lcv-link-icon[fill="none"]{stroke:var(--lcv-signature)}
 .lcv-link-icon{width:20px;height:20px;flex:0 0 auto;fill:var(--lcv-ink);stroke:none}
 .lcv-link-icon[fill="none"]{stroke:var(--lcv-ink);stroke-width:1.6;fill:none}
 .lcv-link-icon--linkedin{fill:var(--lcv-ink)}
 .lcv-quote{display:flex;gap:12px;margin:0}
 /* comet touch 2 of 2 on this screen: the single thin serif quote mark */
-.lcv-quote__mark{font-size:44px;color:var(--lcv-gold);line-height:.7}
+.lcv-quote__mark{font-size:44px;color:var(--lcv-signature);line-height:.7}
 .lcv-quote p{font-size:16px;line-height:1.5;color:var(--lcv-ink);max-width:21rem;margin:0}
 .lcv-member{font-family:var(--lcv-mono);font-size:11px;letter-spacing:.18em;
   color:var(--lcv-ink3);margin:26px 0 0}
@@ -24162,6 +24263,62 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   body .lcv .lcv-ledger{
     padding-right:clamp(16px,4vw,20px)!important;
     padding-left:clamp(16px,4vw,20px)!important;
+  }
+
+  body .lcv .lcv-dm{
+    overflow:clip!important;
+  }
+
+  body .lcv .lcv-dm__body{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:10px!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  body .lcv .lcv-dm__body>*,
+  body .lcv .lcv-dm__table,
+  body .lcv .lcv-dm__graph{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+
+  body .lcv .lcv-dm__srcs{
+    grid-column:1 / -1!important;
+    justify-content:flex-start!important;
+    overflow:hidden!important;
+  }
+
+  body .lcv .lcv-dm__table{
+    table-layout:fixed!important;
+    width:100%!important;
+    font-size:10px!important;
+  }
+
+  body .lcv .lcv-dm__table th,
+  body .lcv .lcv-dm__table td{
+    padding-right:6px!important;
+    padding-left:6px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  body .lcv .lcv-dm__spark{
+    max-width:100%!important;
+  }
+
+  body .loom-ai-key-banner{
+    right:max(10px, env(safe-area-inset-right))!important;
+    bottom:max(10px, env(safe-area-inset-bottom))!important;
+    max-width:min(16.5rem, calc(100vw - 2rem))!important;
+  }
+
+  body .loom-ai-key-banner__copy{
+    max-width:10rem!important;
+  }
+
+  body:has(.new-loom-draft) .loom-ai-key-banner{
+    display:none!important;
   }
 
   body .lcv .lcv-nav,

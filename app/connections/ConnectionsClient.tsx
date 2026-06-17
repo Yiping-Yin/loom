@@ -72,10 +72,7 @@ export default function ConnectionsClient() {
   return (
     <div className={styles.surface}>
       <LoomSupportNav active="/connections" />
-      <main
-        className={styles.main}
-        style={{ padding: 'var(--support-main-padding)' }}
-      >
+      <main className={styles.main}>
         <article className={styles.shell}>
         <header className={styles.hero}>
           <div className={styles.heroText}>
@@ -107,7 +104,7 @@ export default function ConnectionsClient() {
         <section className={styles.sectionCard} aria-label="Correspondents">
           <h2 className={styles.sectionHeading}>Correspondents</h2>
           {connectionMap.correspondents.length === 0 ? (
-            <p className={styles.muted} style={{ margin: 0 }}>
+            <p className={styles.emptyCopy}>
               No correspondents yet. As sources accumulate, the people and places they came
               from appear here.
             </p>
@@ -129,10 +126,10 @@ export default function ConnectionsClient() {
           )}
         </section>
 
-        <section className={styles.sectionCard} aria-label="Cross-origin connections" style={{ marginTop: '1.2rem' }}>
+        <section className={`${styles.sectionCard} ${styles.connectionsSection}`} aria-label="Cross-origin connections">
           <h2 className={styles.sectionHeading}>Connections, cross-origin first</h2>
           {connectionMap.connections.length === 0 ? (
-            <p className={styles.muted} style={{ margin: 0 }}>
+            <p className={styles.emptyCopy}>
               No connections yet. When two sources share a correspondent, the link shows up
               here — cross-origin pairs first.
             </p>
@@ -143,12 +140,11 @@ export default function ConnectionsClient() {
                 ...connectionMap.connections.filter((link) => !link.crossOrigin),
               ].map((link) => (
                 <li key={link.id} className={styles.thinCard}>
-                  <div style={{ fontSize: '0.92rem', marginBottom: 2 }}>
+                  <div className={styles.connectionTitle}>
                     {link.from.title} ↔ {link.to.title}
                   </div>
                   <div
-                    className={styles.row}
-                    style={{ color: 'var(--muted)', fontSize: '0.8rem' }}
+                    className={`${styles.row} ${styles.connectionMetaRow}`}
                   >
                     <span>
                       via {link.via} · {link.from.origin} ↔ {link.to.origin}
