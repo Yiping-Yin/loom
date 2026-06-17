@@ -1244,6 +1244,26 @@ html {
   }
 }
 
+/* Shared "star-field" cosmic atmosphere (matches /product-history, restrained).
+   Drop <div className="loom-cosmic-field" aria-hidden /> as the FIRST child of an
+   identity/landing surface root that sets `isolation: isolate`; it then sits
+   above that surface's deep-space backdrop and behind all its content. */
+.loom-cosmic-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url('/loom/history/stars.webp') center / cover no-repeat,
+    radial-gradient(48rem 42rem at 16% 6%, rgba(75, 197, 222, 0.05), transparent 60%),
+    radial-gradient(44rem 40rem at 88% 94%, rgba(46, 70, 90, 0.06), transparent 64%);
+  background-blend-mode: screen, normal, normal;
+  opacity: 0.55;
+}
+@media (prefers-reduced-data: reduce) {
+  .loom-cosmic-field { background-image: none; }
+}
+
 /* ── Prism Refined Glass (Nucleus Style) ── */
 .material-thin, .material-reg, .material-thick {
   box-shadow: var(--mat-hi);

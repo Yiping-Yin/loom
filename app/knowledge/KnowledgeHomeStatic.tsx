@@ -168,6 +168,7 @@ export function KnowledgeHomeStatic({
 
   return (
     <main className={`vd-home ${styles.page}`} aria-labelledby="sources-title">
+      <div className="loom-cosmic-field" aria-hidden="true" />
       <LoomGlobalNav ariaLabel="Verified dossier navigation" />
 
       <section className={styles.hero}>

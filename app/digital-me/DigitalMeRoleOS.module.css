@@ -3,6 +3,7 @@
      foundation. Base --ink-1 + a faint cool ambient glow; comet ice is the
      data-signal and active-state hairline.
      Spec: docs/archive/ai-build-log/specs/2026-06-11-loom-visual-system-design.md */
+  isolation: isolate; /* .loom-cosmic-field (z-index:-1) sits above the backdrop, behind content */
   --role-page: var(--ink-0, #070809);
   --role-surface: var(--ink-3, #181B1E);
   --role-surface-soft: var(--ink-4, #22262A);

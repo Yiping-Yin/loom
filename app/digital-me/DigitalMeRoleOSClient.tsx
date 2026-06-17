@@ -356,6 +356,7 @@ export default function DigitalMeRoleOSClient() {
 
   return (
     <main className={styles.roleOsPage} aria-labelledby="digital-me-title" ref={revealRoot}>
+      <div className="loom-cosmic-field" aria-hidden="true" />
       <LoomGlobalNav activeHref="/digital-me" ariaLabel="Digital Me navigation" />
 
       <header className={styles.roleLens} data-reveal="">
