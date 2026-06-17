@@ -1,8 +1,6 @@
 @import 'katex/dist/katex.min.css';
 @import './fonts.css';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
 /* =========================================================================
    Vellum link defaults — any anchor that carries a loom-* class must NOT
