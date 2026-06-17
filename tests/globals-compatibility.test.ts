@@ -19,11 +19,13 @@ const coldInterfacePaletteSource = [
   'app/globals.css',
   'lib/loom-design-system.ts',
   'app/AtlasClient.tsx',
+  'app/PanelDetailClient.tsx',
   'app/PatternsClient.tsx',
   'app/WeavesClient.tsx',
   'app/draft/DraftBoardClient.tsx',
   'components/BPETokenizer.tsx',
   'components/LoomDiagram.tsx',
+  'components/LoomCursor.tsx',
   'components/ActiveRetrieval.tsx',
   'app/knowledge/KnowledgeHomeStatic.module.css',
   'app/knowledge/[category]/CategoryDossier.module.css',
@@ -119,7 +121,7 @@ test('global deep-space palette uses graphite black with silver lift', () => {
     ['--line-soft', '#202428'],
     ['--text-1', '#E7E9EA'],
     ['--text-2', '#A4A9AD'],
-    ['--text-3', '#666D72'],
+    ['--text-3', '#8E9499'], // lifted from #666D72 to clear WCAG-AA on dark surfaces
   ];
 
   for (const [token, value] of lockedTokens) {
@@ -205,12 +207,28 @@ test('global CSS does not keep retired deep-green dossier accents', () => {
     '#225c48',
     '#174534',
     '#0e3c2e',
+    '#064f3f',
+    '#043d31',
+    '#063f34',
+    '#e8f2ed',
+    '#8fc6ad',
+    '#9ac9af',
+    '#9ad7b8',
+    '#9fcdae',
+    '#9fcfae',
+    '#9fcfb3',
+    '4, 63, 52',
     '33, 91, 71',
     '34, 92, 72',
     '21, 81, 63',
     '31, 58, 47',
     '18, 63, 49',
     '30, 43, 37',
+    '55, 68, 54',
+    '143, 198, 173',
+    '154, 201, 175',
+    '159, 205, 174',
+    '159, 207, 179',
   ];
 
   for (const token of retiredDeepGreenTokens) {

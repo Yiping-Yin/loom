@@ -302,7 +302,7 @@ a[class*="loom-"] {
   --line-soft: #202428; /* inner divider */
   --text-1: #E7E9EA;    /* primary */
   --text-2: #A4A9AD;    /* secondary */
-  --text-3: #666D72;    /* tertiary / eyebrows / captions */
+  --text-3: #8E9499;    /* tertiary / eyebrows / captions — lifted to WCAG-AA (~5:1) on the dark surfaces incl. elevated cards */
 
   /* Accents - sparse, information-only. Legacy --gold token names are
      retained for compatibility; new work should use --signature-cyan. */
@@ -19983,7 +19983,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__list .vd-entry-notes summary::after {
   content: " +";
-  color: var(--loom-signature-cyan);
+  color: var(--signature-cyan);
 }
 
 .vd-section-page__list .vd-entry-notes[open] summary::after {
