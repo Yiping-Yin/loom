@@ -19502,6 +19502,30 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   background-color: var(--ink-0);
   color: var(--vd-section-ink);
   font-family: var(--sans);
+  /* establish a stacking context so the star-field ::before sits ABOVE the
+     deep-space backdrop yet BEHIND all page content (z-index: -1). */
+  isolation: isolate;
+}
+
+/* History-grade "star-field" atmosphere — a faint starfield + two cyan/blue
+   nebula glows over the deep-space backdrop, behind all content. Brings the
+   /product-history cosmic feel to every vd-section-page surface. */
+.vd-section-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url('/loom/history/stars.webp') center / cover no-repeat,
+    radial-gradient(48rem 42rem at 16% 6%, rgba(75, 197, 222, 0.05), transparent 60%),
+    radial-gradient(44rem 40rem at 88% 94%, rgba(46, 70, 90, 0.06), transparent 64%);
+  background-blend-mode: screen, normal, normal;
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-data: reduce) {
+  .vd-section-page::before { background-image: none; }
 }
 
 .vd-section-page a {
