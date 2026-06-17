@@ -306,16 +306,6 @@ export function LoomGlobalNav({
     openSearch();
   }
 
-  function onSearchFormPointerDown(event: React.PointerEvent<HTMLFormElement>) {
-    if (event.target === searchInputRef.current) {
-      openSearch();
-      return;
-    }
-
-    event.preventDefault();
-    openSearch();
-  }
-
   function onSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Escape') {
       closeSearch({ blur: true, clearQuery: true });
@@ -370,7 +360,6 @@ export function LoomGlobalNav({
           data-open={searchOpen ? 'true' : 'false'}
           onSubmit={onSearchSubmit}
           onFocus={openSearch}
-          onPointerDown={onSearchFormPointerDown}
         >
           <button
             className={`${styles.searchButton} loom-global-nav__search-button`}

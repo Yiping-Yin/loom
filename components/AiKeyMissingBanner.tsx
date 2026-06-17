@@ -28,14 +28,26 @@ function isPresentationPath(pathname: string) {
   return (
     pathname === '/' ||
     pathname === '/sources' ||
+    pathname === '/draft' ||
+    pathname === '/drafts' ||
     pathname === '/loom' ||
     pathname === '/product-history' ||
+    pathname === '/help' ||
+    pathname === '/offline' ||
+    pathname === '/onboarding' ||
     pathname === '/system' ||
     pathname === '/discipline' ||
     pathname === '/year' ||
     pathname === '/hour' ||
     pathname === '/connections' ||
     pathname === '/colophon' ||
+    pathname === '/llm-wiki' ||
+    pathname === '/quizzes' ||
+    pathname === '/doc' ||
+    pathname === '/panel' ||
+    pathname.startsWith('/panel/') ||
+    pathname === '/pursuit' ||
+    pathname.startsWith('/pursuit/') ||
     pathname === '/about' ||
     pathname === '/education' ||
     pathname === '/experience' ||
@@ -84,6 +96,7 @@ export function AiKeyMissingBanner() {
     <div
       role="status"
       aria-live="polite"
+      className="loom-ai-key-banner"
       data-ai-key-banner="true"
       style={{
         position: 'fixed',
@@ -117,6 +130,7 @@ export function AiKeyMissingBanner() {
       >
         <span aria-hidden style={statusDotStyle} />
         <span
+          className="loom-ai-key-banner__copy"
           title="AI off. Add a key in Settings; Sources and Draft still work."
           style={{
             flex: '1 1 auto',

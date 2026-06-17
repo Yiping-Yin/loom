@@ -18,6 +18,7 @@ import { CourseContextStrip } from '../components/CourseContextStrip';
 import { categoryTheme } from '../lib/category-theme';
 import { isEligibleCaptureDoc } from '../lib/knowledge-doc-state';
 import { isNativeMode } from '../lib/is-native-mode';
+import { LoomGlobalNav } from '../components/verified-dossier/LoomGlobalNav';
 
 type KnowledgeDoc = {
   id: string;
@@ -244,44 +245,55 @@ export default function DocClient() {
   }, [doc]);
 
   if (!loaded) {
-    return <main className="prose-notion" style={{ minHeight: '60vh' }} />;
+    return (
+      <>
+        <LoomGlobalNav activeHref="/sources" ariaLabel="Source document navigation" />
+        <main className="prose-notion" style={{ minHeight: '60vh' }} />
+      </>
+    );
   }
 
   if (!href || !doc) {
     return (
-      <main className="prose-notion" style={{ paddingTop: '4rem' }}>
-        <div className="loom-empty-state" role="note">
-          <div className="loom-empty-state-ornament" aria-hidden="true">── · ──</div>
-          <p className="loom-empty-state-copy">
-            No readable source is attached to this route.
-          </p>
-          <Link href="/sources" className="loom-empty-state-action">
-            Open Sources
-            <ArrowRight className="loom-empty-state-action-icon" aria-hidden="true" size={14} strokeWidth={1.8} />
-          </Link>
-        </div>
-      </main>
+      <>
+        <LoomGlobalNav activeHref="/sources" ariaLabel="Source document navigation" />
+        <main className="prose-notion" style={{ paddingTop: '5.5rem' }}>
+          <div className="loom-empty-state" role="note">
+            <div className="loom-empty-state-ornament" aria-hidden="true">── · ──</div>
+            <p className="loom-empty-state-copy">
+              No readable source is attached to this route.
+            </p>
+            <Link href="/sources" className="loom-empty-state-action">
+              Open Sources
+              <ArrowRight className="loom-empty-state-action-icon" aria-hidden="true" size={14} strokeWidth={1.8} />
+            </Link>
+          </div>
+        </main>
+      </>
     );
   }
 
   if (doc.kind === 'upload') {
     return (
-      <main className="prose-notion">
-        <TrackView id={doc.trackId} title={doc.title} href={doc.href} />
-        <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
-          <Link href="/sources">Sources</Link>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-          <h1 style={{ flex: 1 }}>{doc.title}</h1>
-          <PinButton id={doc.trackId} title={doc.title} href={doc.pinHref} size="md" />
-        </div>
-        <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: '1rem' }}>
-          {doc.ext.slice(1).toUpperCase() || 'FILE'} · {doc.sizeLabel}
-        </div>
-        <DocBodyProvider body={doc.body} title={doc.title} />
-        <DocViewer ext={doc.ext} sourceUrl={doc.sourceUrl} body={doc.body} title={doc.title} />
-        <LiveArtifact docId={doc.trackId} />
-      </main>
+      <>
+        <LoomGlobalNav activeHref="/sources" ariaLabel="Source document navigation" />
+        <main className="prose-notion">
+          <TrackView id={doc.trackId} title={doc.title} href={doc.href} />
+          <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
+            <Link href="/sources">Sources</Link>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <h1 style={{ flex: 1 }}>{doc.title}</h1>
+            <PinButton id={doc.trackId} title={doc.title} href={doc.pinHref} size="md" />
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: '1rem' }}>
+            {doc.ext.slice(1).toUpperCase() || 'FILE'} · {doc.sizeLabel}
+          </div>
+          <DocBodyProvider body={doc.body} title={doc.title} />
+          <DocViewer ext={doc.ext} sourceUrl={doc.sourceUrl} body={doc.body} title={doc.title} />
+          <LiveArtifact docId={doc.trackId} />
+        </main>
+      </>
     );
   }
 
@@ -289,16 +301,18 @@ export default function DocClient() {
   const theme = categoryTheme(doc.categorySlug);
 
   return (
-    <div
-      className="with-toc chapter-themed"
-      style={{
-        ['--accent' as never]: theme.accent,
-        ['--accent-soft' as never]: theme.accentSoft,
-        position: 'relative',
-      }}
-    >
-      <DocOutline />
-      <div className="doc-stage">
+    <>
+      <LoomGlobalNav activeHref="/sources" ariaLabel="Source document navigation" />
+      <div
+        className="with-toc chapter-themed"
+        style={{
+          ['--accent' as never]: theme.accent,
+          ['--accent-soft' as never]: theme.accentSoft,
+          position: 'relative',
+        }}
+      >
+        <DocOutline />
+        <div className="doc-stage">
         <div style={{ minWidth: 0, position: 'relative' }} className="prose-notion loom-source-prose">
           <TrackView id={doc.trackId} title={doc.title} href={doc.href} />
 
@@ -491,7 +505,8 @@ export default function DocClient() {
             user/AI anchors as gray-outlined dots; quiet, dismissible,
             curiosity-led. Empty / no-match resolves to nothing. */}
         {!showCapture ? <ExtractorAnchorLayer docId={doc.trackId} /> : null}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

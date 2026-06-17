@@ -36,10 +36,7 @@ export default function SystemClient() {
   return (
     <div className={styles.surface}>
       <LoomSupportNav active="/system" />
-      <main
-        className={styles.main}
-        style={{ padding: 'var(--support-main-padding)' }}
-      >
+      <main className={styles.main}>
         <article className={`${styles.shellNarrow} ${styles.noteShell}`}>
           <header className={styles.noteHeader}>
             <div className={styles.eyebrow}>Archived system note</div>
@@ -64,19 +61,18 @@ export default function SystemClient() {
                       <span className={styles.stepNumber}>{index + 1}</span>
                       <Link
                         href={step.href}
-                        className={styles.textLink}
-                        style={{ fontFamily: 'var(--serif)', fontSize: '1.05rem', fontWeight: 600 }}
+                        className={`${styles.textLink} ${styles.archiveStepLink}`}
                       >
                         {step.label}
                       </Link>
                     </div>
-                    <p className={styles.muted} style={{ margin: '0.4rem 0 0' }}>{step.body}</p>
+                    <p className={`${styles.muted} ${styles.archiveStepBody}`}>{step.body}</p>
                   </li>
                 ))}
               </ol>
             </section>
 
-            <section aria-label="Support surfaces" style={{ marginTop: '1.2rem' }}>
+            <section className={styles.archiveSupportSection} aria-label="Support surfaces">
               <h2 className={styles.sectionHeading}>Around the loop</h2>
               <ul className={styles.plainList}>
                 <li className={styles.row}>

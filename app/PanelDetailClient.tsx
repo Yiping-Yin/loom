@@ -22,6 +22,7 @@ import { subscribeLoomMirror } from '../lib/loom-mirror-store';
 import { fetchNativeJson } from '../lib/loom-native-json';
 import { loadPanelRecords, PANEL_RECORDS_KEY, type LoomPanelRecord } from '../lib/loom-panel-records';
 import Ornament from '../components/Ornament';
+import { LoomGlobalNav } from '../components/verified-dossier/LoomGlobalNav';
 
 // Typed view into the WebKit message bridge — mirrors the pattern used
 // across SoanClient / HomeClient. Absent when running outside the native
@@ -80,7 +81,7 @@ function coercePanelDetail(raw: unknown, requestedId: string): PanelDetail | nul
   const subtitle = typeof match.sub === 'string' ? match.sub : '';
   const color = typeof match.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(match.color)
     ? match.color
-    : '#9E7C3E';
+    : '#4BC5DE';
   const bodyText = typeof match.body === 'string' ? match.body : '';
   const thoughtsRaw = Array.isArray(match.thoughts) ? match.thoughts : [];
   const thoughts = thoughtsRaw.filter((t): t is string => typeof t === 'string' && t.length > 0);
@@ -133,7 +134,7 @@ function formatLongDate(ms: number): string {
 
 type Props = { id: string };
 
-// Wraps a literal highlight substring with the bronze inline style. The
+// Wraps a literal highlight substring with the signature-cyan inline style. The
 // highlight is the one phrase the author has pinned inside the prose —
 // typically the figure the panel is built around. We match once, case-
 // sensitive, and only in the first paragraph that contains it, so we
@@ -227,28 +228,33 @@ export default function PanelDetailClient({ id }: Props) {
 
   if (!panel) {
     return (
-      <article className="loom-panel-detail loom-panel-detail--empty">
-        <nav className="loom-panel-detail-back">
-          <Link href="/sources#reader-notes">{'\u2190 Reader notes'}</Link>
-        </nav>
-        <section className="loom-panel-detail-body">
-          <div className="loom-panel-detail-eyebrow">Reader note</div>
-          <h1 className="loom-panel-detail-title">
-            No held panel matches this route.
-          </h1>
-          <p className="loom-panel-detail-subtitle">
-            Open reader notes in Sources and choose a real record; this detail view no longer invents placeholder prose.
-          </p>
-        </section>
-      </article>
+      <>
+        <LoomGlobalNav activeHref="/sources" ariaLabel="Reader note navigation" />
+        <article className="loom-panel-detail loom-panel-detail--empty">
+          <div className="loom-panel-detail-back">
+            <Link href="/sources#reader-notes">{'\u2190 Reader notes'}</Link>
+          </div>
+          <section className="loom-panel-detail-body">
+            <div className="loom-panel-detail-eyebrow">Reader note</div>
+            <h1 className="loom-panel-detail-title">
+              No held panel matches this route.
+            </h1>
+            <p className="loom-panel-detail-subtitle">
+              Open reader notes in Sources and choose a real record; this detail view no longer invents placeholder prose.
+            </p>
+          </section>
+        </article>
+      </>
     );
   }
 
   return (
-    <article className="loom-panel-detail">
-      <nav className="loom-panel-detail-back">
+    <>
+      <LoomGlobalNav activeHref="/sources" ariaLabel="Reader note navigation" />
+      <article className="loom-panel-detail">
+      <div className="loom-panel-detail-back">
         <Link href="/sources#reader-notes">{'\u2190 Reader notes'}</Link>
-      </nav>
+      </div>
 
       <section className="loom-panel-detail-body">
         <div className="loom-panel-detail-eyebrow">Panel · held</div>
@@ -339,6 +345,7 @@ export default function PanelDetailClient({ id }: Props) {
           <span>source provenance still gated</span>
         </div>
       </aside>
-    </article>
+      </article>
+    </>
   );
 }

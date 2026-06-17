@@ -9,7 +9,7 @@
 
    Strategy: the legacy .new-loom-draft block reads almost every value
    from --draft-* custom properties. Re-point those onto the FIXED
-   cool-black --ink / --text / --line / --gold / --cyan tokens and the
+   cool-black --ink / --text / --line / --signature-cyan / --cyan tokens and the
    whole surface flips to the identity-page bar. Then layer real lit-glass
    material, generous layout, serif+eyebrow type hierarchy, luminance
    hover/focus, the cyan thread-of-light, and a reading-comfortable raised
@@ -40,7 +40,7 @@
   --draft-panel: var(--ink-2);         /* #111315 recessed rail */
   --draft-panel-strong: var(--ink-3);
   --draft-accent: var(--cyan);         /* signal links */
-  --draft-accent-strong: var(--gold-hi);
+  --draft-accent-strong: var(--signature-cyan-hi);
   --draft-accent-soft: rgba(75, 197, 222, 0.10);
 
   /* Reusable lit-glass material recipes (single key light, top-left). */
@@ -57,7 +57,7 @@
     0 20px 52px rgba(0, 0, 0, 0.58);
 
   color: var(--text-1);
-  caret-color: var(--gold-hi);
+  caret-color: var(--signature-cyan-hi);
   gap: 1px;
   /* Cool-black ground with restrained silver breath behind the working desk. */
   background-color: var(--ink-0);
@@ -84,12 +84,12 @@
 
 /* ---- Links: signal cyan, signature-cyan lift on hover ---------------- */
 .surface :global(.new-loom-draft a) { color: var(--cyan); }
-.surface :global(.new-loom-draft a:hover) { color: var(--gold-hi); }
+.surface :global(.new-loom-draft a:hover) { color: var(--signature-cyan-hi); }
 .surface :global(.new-loom-draft a:focus-visible),
 .surface :global(.new-loom-draft button:focus-visible),
 .surface :global(.new-loom-draft input:focus-visible),
 .surface :global(.new-loom-draft textarea:focus-visible) {
-  outline: 2px solid var(--gold-hi);
+  outline: 2px solid var(--signature-cyan-hi);
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -205,7 +205,7 @@
   letter-spacing: -0.005em;
 }
 .surface :global(.new-loom-draft__title::placeholder) { color: var(--text-3); }
-.surface :global(.new-loom-draft__title:focus) { border-color: var(--gold); }
+.surface :global(.new-loom-draft__title:focus) { border-color: var(--signature-cyan); }
 
 /* Proof strip — a lit instrument cluster, luminance-separated tiles. */
 .surface :global(.new-loom-draft__proof-strip) {
@@ -289,7 +289,7 @@
     0 10px 26px rgba(0, 0, 0, 0.45);
 }
 .surface :global(.new-loom-draft__type-button[aria-pressed="true"] span) {
-  color: var(--gold-hi);
+  color: var(--signature-cyan-hi);
 }
 
 /* ======================================================================
@@ -359,7 +359,7 @@
   border-color: rgba(75, 197, 222, 0.5);
   background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
   box-shadow: var(--keylight), 0 8px 22px rgba(0, 0, 0, 0.42);
-  color: var(--gold-hi);
+  color: var(--signature-cyan-hi);
 }
 .surface :global(.new-loom-draft .new-loom-shell__action:disabled),
 .surface :global(.new-loom-draft__reference-action:disabled) {
@@ -409,7 +409,7 @@
   color: var(--text-1);
 }
 .surface :global(.new-loom-draft__reference-search:focus) {
-  border-color: var(--gold);
+  border-color: var(--signature-cyan);
   background: var(--ink-3);
   box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.16);
 }
@@ -481,7 +481,7 @@
 .surface :global(.new-loom-draft__public-mode) {
   border: 1px solid rgba(75, 197, 222, 0.32);
   background: rgba(75, 197, 222, 0.08);
-  color: var(--gold-hi);
+  color: var(--signature-cyan-hi);
 }
 
 /* Inspector section frames */
@@ -569,7 +569,7 @@
   color: var(--cyan);
   font-weight: 500;
 }
-.surface :global(.new-loom-draft__answer-flow-link:hover) { color: var(--gold-hi); }
+.surface :global(.new-loom-draft__answer-flow-link:hover) { color: var(--signature-cyan-hi); }
 
 .surface :global(.new-loom-draft__ai-suggestion),
 .surface :global(.new-loom-draft__ai-empty) {
@@ -628,7 +628,7 @@
 }
 .surface :global(.new-loom-draft__source-tile a:hover),
 .surface :global(.new-loom-draft__reference-list li > a:hover) {
-  color: var(--gold-hi);
+  color: var(--signature-cyan-hi);
 }
 .surface :global(.new-loom-draft__source-tile small),
 .surface :global(.new-loom-draft__reference-meta) {
@@ -645,7 +645,7 @@
   color: var(--cyan);
   font-weight: 500;
 }
-.surface :global(.new-loom-draft__source-tile-actions a:hover) { color: var(--gold-hi); }
+.surface :global(.new-loom-draft__source-tile-actions a:hover) { color: var(--signature-cyan-hi); }
 .surface :global(.new-loom-draft__reference-list li) {
   padding: 0.95rem 0;
   border-top: 1px solid var(--line);
@@ -668,7 +668,7 @@
 .surface :global(.new-loom-draft__provenance-n) {
   border: 1px solid rgba(75, 197, 222, 0.45);
   background: transparent;
-  color: var(--gold-hi);
+  color: var(--signature-cyan-hi);
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
 }
@@ -719,7 +719,7 @@
   font-family: var(--serif);
 }
 .surface :global(.new-loom-draft__block-operation textarea:focus) {
-  border-color: var(--gold);
+  border-color: var(--signature-cyan);
   box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.16);
 }
 .surface :global(.new-loom-draft__block-operation [role="alert"]) { color: var(--down); }

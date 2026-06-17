@@ -463,7 +463,14 @@ test('CV and Optibook artifacts open real evidence targets', () => {
   );
 });
 
-test('Optibook static replica is rebadged as QBook in the shipped public bundle', () => {
+test('Optibook static replica is rebadged as QBook in the shipped public bundle', {
+  // public/optibook/ is the Optiver-IP replica build: gitignored here and shipped
+  // from the private Yiping-Yin/optibook-replica repo, so it is absent on a clean
+  // checkout / CI. Skip rather than fail when the bundle has not been copied in.
+  skip: existsSync(join(repoRoot, 'public/optibook/index.html'))
+    ? false
+    : 'public/optibook replica bundle absent (gitignored Optiver IP)',
+}, () => {
   const optibookRoot = join(repoRoot, 'public/optibook');
   assert.ok(existsSync(join(optibookRoot, 'index.html')), 'Optibook public bundle should exist');
 
@@ -509,6 +516,23 @@ test('Optibook static replica is rebadged as QBook in the shipped public bundle'
   }
 
   assert.equal(sawQBook, true, 'public Optibook bundle should visibly say QBook');
+});
+
+test('QBook documentation screens keep the cold Loom documentation skin', () => {
+  const cssRoot = join(repoRoot, 'public/optibook/assets');
+  const cssText = collectFiles(cssRoot)
+    .filter((file) => extname(file) === '.css')
+    .map((file) => readFileSync(file, 'utf8'))
+    .join('\n');
+
+  assert.match(cssText, /\.docs-app\{[^}]*color:#dce2e8[^}]*background:radial-gradient/);
+  assert.match(cssText, /\.docs-topline\{[^}]*background:(?:rgba\(13,17,23,.78\)|#0d1117c7)/);
+  assert.match(cssText, /\.module-list code,.reference-list code\{[^}]*color:#8af7e6[^}]*background:#0b1118/);
+  assert.match(cssText, /\.api-signature\{[^}]*color:#dce2e8[^}]*background:#0b1118/);
+  assert.doesNotMatch(cssText, /\.docs-app\{[^}]*background:#fafafa/);
+  assert.doesNotMatch(cssText, /\.docs-topline\{[^}]*background:#fff/);
+  assert.doesNotMatch(cssText, /\.docs-content\{[^}]*color:#33363a/);
+  assert.doesNotMatch(cssText, /\.docs-content h1 code\{[^}]*color:#e06a6a/);
 });
 
 test('Digital Me page ships professional section-page layout styles', () => {

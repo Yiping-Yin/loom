@@ -8,6 +8,7 @@
  */
 
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import styles from '../loom-support-page.module.css';
 import { useAllTraces } from '../../lib/trace';
@@ -88,39 +89,26 @@ export function YearClient() {
   return (
     <div className={styles.sectionGrid}>
       <section className={styles.sectionCard} aria-label="The Year material by month">
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-            gap: 6,
-            alignItems: 'end',
-            minHeight: 120,
-          }}
-        >
+        <div className={styles.yearChart}>
           {overview.months.map((column) => (
             <div
               key={column.month}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
+              className={styles.monthColumn}
             >
               <div
+                className={`${styles.monthBar} ${column.weight === 0 ? styles.monthBarEmpty : ''}`}
                 title={`${column.month} ${overview.year} · weight ${column.weight}`}
                 style={{
-                  width: '100%',
                   height: Math.round((column.weight / maxWeight) * 96) + 4,
-                  borderRadius: 3,
-                  background:
-                    column.weight > 0
-                      ? 'color-mix(in srgb, var(--accent-info, var(--accent)) 55%, var(--bg))'
-                      : 'color-mix(in srgb, var(--fg) 8%, var(--bg))',
-                }}
+                } as CSSProperties}
               />
-              <span style={{ fontFamily: 'var(--mono)', fontSize: '0.68rem', color: 'var(--muted)' }}>
+              <span className={styles.monthLabel}>
                 {column.month}
               </span>
             </div>
           ))}
         </div>
-        <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: '0.6rem' }}>
+        <p className={styles.yearCaption}>
           Twelve months of {overview.year}, by weight. Sources and Draft work both count;
           heavier columns mean heavier thinking, not more clicks.
         </p>
@@ -139,19 +127,19 @@ export function YearClient() {
             const items = overview.ribbon[bucket.key];
             return (
               <div key={bucket.key} className={styles.thinCard}>
-                <div className={styles.row}>
-                  <strong style={{ fontSize: '0.92rem' }}>{bucket.label}</strong>
+                <div className={styles.bucketHeader}>
+                  <strong className={styles.bucketTitle}>{bucket.label}</strong>
                   <span className={styles.supportNote}>
                     {items.length} · {bucket.note}
                   </span>
                 </div>
-                <ul className={styles.plainList} style={{ marginTop: '0.45rem' }}>
+                <ul className={`${styles.plainList} ${styles.bucketList}`}>
                   {items.slice(0, 5).map((item) => (
                     <li
                       key={item.id}
                       className={styles.row}
                     >
-                      <span style={{ color: 'var(--fg-secondary)' }}>{item.title}</span>
+                      <span className={styles.itemTitle}>{item.title}</span>
                       {!publicWorkingMode && (
                         <Link
                           href={yearItemDraftHref(item)}
@@ -172,7 +160,7 @@ export function YearClient() {
       <section className={styles.sectionCard} aria-label="The Year question containers">
         <h2 className={styles.sectionHeading}>Question containers</h2>
         {overview.questionContainers.length === 0 ? (
-          <p className={styles.muted} style={{ margin: 0 }}>
+          <p className={styles.emptyCopy}>
             No open questions gathered material this year. Hold a question while reading in
             Sources and it will appear here.
           </p>
@@ -180,7 +168,7 @@ export function YearClient() {
           <ul className={styles.plainList}>
             {overview.questionContainers.map((container) => (
               <li key={container.id} className={styles.thinCard}>
-                <div style={{ fontSize: '0.92rem', marginBottom: 2 }}>{container.question}</div>
+                <div className={styles.questionTitle}>{container.question}</div>
                 <div className={styles.supportNote}>
                   {container.items.length} linked item{container.items.length === 1 ? '' : 's'}
                 </div>

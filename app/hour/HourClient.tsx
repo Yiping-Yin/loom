@@ -106,10 +106,7 @@ export default function HourClient() {
   return (
     <div className={styles.surface}>
       <LoomSupportNav active="/hour" />
-      <main
-        className={styles.main}
-        style={{ padding: 'var(--support-main-padding)' }}
-      >
+      <main className={styles.main}>
         <article className={styles.shell}>
         <header className={styles.hero}>
           <div className={styles.heroText}>
@@ -133,26 +130,17 @@ export default function HourClient() {
                   : '--:--:--'}
               </div>
               <div
+                className={styles.breathBar}
                 role="progressbar"
                 aria-label="Breath bar — minute progress"
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={Math.round(minuteProgress)}
-                style={{
-                  marginTop: '1rem',
-                  height: 4,
-                  borderRadius: 999,
-                  background: 'color-mix(in srgb, var(--fg) 8%, var(--bg))',
-                  overflow: 'hidden',
-                }}
               >
                 <div
+                  className={styles.breathFill}
                   style={{
                     width: `${minuteProgress.toFixed(1)}%`,
-                    height: '100%',
-                    background:
-                      'linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-info, var(--accent)) 82%, white 6%), transparent)',
-                    transition: 'width 1s linear',
                   }}
                 />
               </div>
@@ -167,7 +155,7 @@ export default function HourClient() {
         <section className={styles.sectionCard} aria-label="Material in the current hour">
           <h2 className={styles.sectionHeading}>What this hour holds</h2>
           {currentItems.length === 0 ? (
-            <p className={styles.muted} style={{ margin: 0 }}>
+            <p className={styles.emptyCopy}>
               Nothing touched yet. Read something in Sources or write in Draft and it will
               appear here.
             </p>
@@ -178,7 +166,7 @@ export default function HourClient() {
                   key={item.id}
                   className={styles.row}
                 >
-                  <span style={{ color: 'var(--fg-secondary)' }}>{item.title}</span>
+                  <span className={styles.itemTitle}>{item.title}</span>
                   {!publicWorkingMode && (
                     <Link
                       href={hourItemDraftHref(item)}

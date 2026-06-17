@@ -158,7 +158,7 @@ export function BreadcrumbHome({
               <a
                 href={item.href}
                 style={{
-                  color: 'var(--gold)',
+                  color: 'var(--signature-cyan)',
                   textDecoration: 'none',
                   fontSize: 'var(--fs-caption)',
                 }}

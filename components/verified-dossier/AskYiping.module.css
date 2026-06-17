@@ -8,8 +8,8 @@
   --ask-ink: var(--role-ink, var(--text-1, #E6E9EE));
   --ask-muted: var(--role-muted, var(--text-2, #9BA3AE));
   --ask-subtle: var(--role-subtle, var(--text-3, #5E6671));
-  --ask-accent: var(--role-accent, var(--gold, #4BC5DE));
-  --ask-accent-strong: var(--role-accent-strong, var(--gold-hi, #8AF7E6));
+  --ask-accent: var(--role-accent, var(--signature-cyan, #4BC5DE));
+  --ask-accent-strong: var(--role-accent-strong, var(--signature-cyan-hi, #8AF7E6));
   --ask-signal: var(--role-signal, var(--cyan, #4BC5DE));
   --ask-border: var(--role-glass-border, var(--line, #232A33));
   --ask-border-strong: var(--role-border-strong, var(--line, #232A33));
