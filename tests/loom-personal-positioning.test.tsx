@@ -304,12 +304,10 @@ test('visible support surfaces use approved personal-identity and local-app posi
     read('app/product-history/page.tsx'),
     read('components/product-history/ProductHistoryPage.tsx'),
   ].join('\n');
-  const visorText = read('components/product-history/first-contact/VisorText.tsx');
-  const visorConstants = read('components/product-history/first-contact/constants.ts');
-  const visorTextCss = read('components/product-history/first-contact/VisorText.module.css');
   const layout = read('app/layout.tsx');
   const productHistoryCss = read('components/product-history/HistoryDossier.module.css');
   const globalsCss = read('app/globals.css');
+  const fontsCss = read('app/fonts.css');
   const globalNav = read('components/verified-dossier/LoomGlobalNav.tsx');
   const globalNavCss = read('components/verified-dossier/LoomGlobalNav.module.css');
   const supportCss = read('app/loom-support-page.module.css');
@@ -325,6 +323,10 @@ test('visible support surfaces use approved personal-identity and local-app posi
   ].join('\n');
   const privacy = read('public/privacy.html');
   const support = read('public/support.html');
+
+  assert.match(help, /LoomGlobalNav/);
+  assert.match(help, /ariaLabel="Help navigation"/);
+  assert.doesNotMatch(help, /LoomSupportNav|className="vd-nav"|className='vd-nav'/);
 
   assert.match(about, /personal knowledge identity platform/i);
   assert.match(about, /backed by sources/i);
@@ -378,52 +380,51 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.doesNotMatch(productHistory, /Loom archive/);
   assert.doesNotMatch(productHistory, /Early studies, original language/);
   assert.match(productHistory, /Source-backed self\. Living archive\./i);
-  assert.match(productHistory, /<p className=\{styles\.heroLead\}>\{HERO_STATEMENT\}<\/p>/);
   assert.match(productHistory, /Library \/ Eyes \/ Memory/i);
-  // The History visor now carries the LOCKED Loom identity (Fraunces "LOOM"
-  // wordmark + eyebrow + explanation) instead of the retired L-eyes-M
-  // monogram. The eyes moved to the app icon; the wordmark is clean Fraunces.
-  assert.match(productHistory, /aria-label=\{`Loom identity mark: \$\{EYEBROW\}\. \$\{EXPLANATION\}\.`\}/);
-  assert.match(productHistory, /<VisorText \/>/);
-  assert.match(productHistory, /import \{ EYEBROW, EXPLANATION \} from '\.\/first-contact\/constants'/);
-  assert.match(productHistory, /import \{ FirstContact \} from '\.\/first-contact\/FirstContact'/);
-  // The retired monogram markup, its annotation labels, and the "touch to
-  // read the mark" caption must be gone from the History surface and CSS.
+  // ---- New flat-composite "History" hero (Claude Design handoff) ----------
+  // The hero is a single flat composite-photo plate (history-hero.png) with a
+  // CENTERED, upright Cormorant masthead + a "2024 — PRESENT" eyebrow + a cyan
+  // timeline node. The live moon / astronaut-helmet / breathing-visor "First
+  // Contact" stack was retired; behaviour now lives in a client island.
+  assert.match(productHistory, /HistoryRuntime/);
+  assert.match(productHistory, /2024 — PRESENT/);
+  assert.match(productHistory, /comet-clean\.png/);
+  assert.match(productHistoryCss, /\.heroPlate[\s\S]*?history-hero\.png/);
+  assert.match(productHistoryCss, /\.heroGrid\s*\{[^}]*text-align:\s*center/s);
+  assert.match(productHistoryCss, /\.heroGrid h1\s*\{[^}]*font-weight:\s*600/s);
+  assert.match(productHistoryCss, /\.heroGrid h1\s*\{[^}]*font-style:\s*normal/s);
+  // The retired First Contact cluster must be gone from the History surface.
+  assert.doesNotMatch(productHistory, /first-contact/);
+  assert.doesNotMatch(productHistory, /<Helmet \/>|<VisorText \/>|<FirstContact \/>/);
+  assert.doesNotMatch(productHistory, /styles\.heroLead|HERO_STATEMENT/);
+  // The retired monogram markup + annotation labels stay gone (page + CSS).
   assert.doesNotMatch(productHistory, /Touch or focus to read the Loom mark/i);
   assert.doesNotMatch(productHistory, /Source atlas/i);
   assert.doesNotMatch(productHistory, /Weaver gaze/i);
   assert.doesNotMatch(productHistory, /Woven pattern/i);
   assert.doesNotMatch(productHistory, /studyMark|markAnnotations|studyEyes|studyLetter|studyBlueprint/);
   assert.doesNotMatch(productHistoryCss, /\.studyMark|\.markAnnotations|\.studyEyes|\.studyLetter|\.studyBlueprint/);
-  // The glass visor SHELL is preserved (only its inner content was swapped):
-  // the heroStudy shell and its scan element survive.
-  assert.match(productHistory, /styles\.heroStudy/);
-  assert.match(productHistory, /styles\.studyScan/);
-  assert.match(productHistoryCss, /\.heroStudy\s*\{/);
-  // The wordmark face is offline-safe and exposed ONLY as --font-wordmark.
+  assert.doesNotMatch(productHistoryCss, /helmetShell|helmetChin|helmetRim/);
+  // ---- New narrative sections: Origins / Weave / "became" / Footer / Earth -
+  assert.match(productHistory, /Before a system, a room for slow reading\./);
+  assert.match(productHistory, /Three threads, one figure\./);
+  assert.match(productHistory, /What Loom became/);
+  assert.match(productHistory, /Interface recedes\. Evidence remains\./);
+  assert.match(productHistory, /every source kept/);
+  assert.doesNotMatch(productHistory, /All threads respected/);
+  assert.match(productHistory, /The Earth in the visor/);
+  assert.match(productHistory, /Everything you’ve read, in orbit\./);
+  // ---- Display faces are self-hosted via @font-face (offline-safe), NOT
+  // next/font/google — the wordmark face stays exposed only as --font-wordmark.
   assert.doesNotMatch(layout, /next\/font\/google/);
   assert.doesNotMatch(layout, /Fraunces\(/);
   assert.match(globalsCss, /--font-wordmark:\s*"Fraunces",\s*"Cormorant Garamond"/);
-  // The visor wordmark uses the Fraunces variable (a serif, not a fallback
-  // sans), renders as a resting LIT static fallback (no window/document), and
-  // is a client piece behind 'use client'.
-  assert.match(visorTextCss, /\.wordmarkText\s*\{[^}]*font-family:\s*var\(--font-wordmark\)/s);
-  assert.match(visorText, /'use client'/);
-  // Static-export safe: no window/document ACCESS in render (the words may
-  // appear in the doc comment, so pin on property/global access patterns).
-  assert.doesNotMatch(visorText, /window\.|document\.|useEffect|useState|useRef\(/);
-  // Locked identity copy: the Fraunces LOOM wordmark, the LIBRARY · EYES ·
-  // MEMORY eyebrow, and the source-backed explanation are all present and
-  // wired into the visor.
-  assert.match(visorConstants, /VISOR_WORDMARK = 'LOOM'/);
-  assert.match(visorConstants, /EYEBROW = 'LIBRARY · EYES · MEMORY'/);
-  assert.match(
-    visorConstants,
-    /EXPLANATION = 'A living, source-backed identity that can answer for you'/,
-  );
-  assert.match(visorText, /VISOR_WORDMARK/);
-  assert.match(visorText, /EYEBROW/);
-  assert.match(visorText, /EXPLANATION/);
+  assert.match(globalsCss, /@import '\.\/fonts\.css'/);
+  assert.match(fontsCss, /@font-face/);
+  assert.match(fontsCss, /font-family:\s*'Cormorant Garamond'/);
+  assert.match(fontsCss, /font-family:\s*'Fraunces'/);
+  assert.match(fontsCss, /font-family:\s*'JetBrains Mono'/);
+  assert.doesNotMatch(fontsCss, /next\/font/);
   assert.match(productHistory, /ArrowUpRight/);
   assert.doesNotMatch(productHistory, /-&gt;|View archive\s*<span aria-hidden="true">/);
   assert.doesNotMatch(productHistory, /Past material\./i);
@@ -471,7 +472,7 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.doesNotMatch(productHistoryCss, /:global\(\.loom-global-nav__brand\)\s*\{/);
   assert.doesNotMatch(productHistoryCss, /:global\(\.loom-global-nav__icon(?:-orb)?\)\s*\{/);
   assert.doesNotMatch(productHistoryCss, /:global\(\.loom-global-nav__menu summary\)\s*\{/);
-  assert.match(productHistoryCss, /\.hero h1\s*\{[^}]*font-size:\s*clamp\(6rem,\s*8\.8vw,\s*8\.85rem\)/s);
+  assert.match(productHistoryCss, /\.heroGrid h1\s*\{[^}]*font-size:\s*clamp\(4\.4rem,\s*8\.6vw,\s*9\.2rem\)/s);
   assert.match(productHistory, /\/loom\/history\/early-version\/01-reading-thinking-environment\.jpg/);
   assert.match(productHistory, /\/loom\/history\/early-version\/02-name-mark-library-eyes-memory\.jpg/);
   assert.match(productHistory, /\/loom\/history\/early-version\/05-weaver-vocabulary\.jpg/);
@@ -492,11 +493,12 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(globalNav, /setSearchOpen/);
   assert.match(globalNav, /flushSync/);
   assert.match(globalNav, /searchOpenRef/);
-  assert.match(globalNav, /function onSearchFormPointerDown\(/);
-  assert.match(globalNav, /onPointerDown=\{onSearchFormPointerDown\}/);
   assert.match(globalNav, /onPointerDown=\{onSearchButtonPointerDown\}/);
   assert.match(globalNav, /function onSearchButtonClick\(event: React\.MouseEvent<HTMLButtonElement>\)/);
   assert.match(globalNav, /event\.preventDefault\(\);\s*if \(!searchOpenRef\.current\)/);
+  assert.doesNotMatch(globalNav, /function onSearchFormPointerDown\(/);
+  assert.doesNotMatch(globalNav, /onPointerDown=\{onSearchFormPointerDown\}/);
+  assert.doesNotMatch(globalNav, /function onSearchFormPointerDown\([\s\S]*?event\.preventDefault\(\)/);
   assert.doesNotMatch(globalNav, /onMouseDown=\{\(event\) => event\.preventDefault\(\)\}/);
   assert.doesNotMatch(globalNav, /function onSearchButtonPointerDown\(event: React\.PointerEvent<HTMLButtonElement>\)[\s\S]*?event\.preventDefault\(\)/);
   assert.match(globalNav, /onSearchSubmit/);
@@ -539,17 +541,6 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(globalNavCss, /@media \(max-width: 680px\)[\s\S]*\.menuPanel\s*{[^}]*width:\s*min\(calc\(100vw - 2rem\),\s*18\.65rem\);[^}]*grid-template-columns:\s*1fr;/s);
   assert.match(cssBlock(productHistoryCss, '.hero', 'min-height: max(48rem, 100svh)'), /contain:\s*paint/);
   assert.match(cssBlock(productHistoryCss, '.hero', 'min-height: max(48rem, 100svh)'), /overflow:\s*clip/);
-  assert.match(cssBlock(productHistoryCss, '.hero .heroLight'), /inset:\s*0/);
-  assert.match(cssBlock(productHistoryCss, '.hero .heroLight'), /contain:\s*paint/);
-  assert.match(cssBlock(productHistoryCss, '.hero .heroLight'), /overflow:\s*clip/);
-  assert.match(cssBlock(productHistoryCss, '.hero .heroDust'), /inset:\s*0/);
-  assert.match(cssBlock(productHistoryCss, '.hero .heroDust'), /contain:\s*paint/);
-  assert.match(cssBlock(productHistoryCss, '.hero .heroDust'), /overflow:\s*clip/);
-  assert.match(cssBlock(productHistoryCss, '.hero .heroDust'), /background-position:\s*-1rem 0\.3rem/);
-  assert.doesNotMatch(cssBlock(productHistoryCss, '.hero .heroDust'), /transform:/);
-  assert.match(cssBlock(productHistoryCss, '.heroDust::before'), /background-position:\s*1rem -0\.4rem/);
-  assert.doesNotMatch(cssBlock(productHistoryCss, '.heroDust::before'), /transform:/);
-  assert.match(productHistoryCss, /@keyframes heroDustDrift[\s\S]*background-position:\s*1\.5rem -0\.7rem/);
   assert.match(systemClient, /This page moved into Loom history/);
   assert.match(systemClient, /<details className=\{styles\.archiveDetails\}>/);
   assert.doesNotMatch(systemClient, /<details className=\{styles\.archiveDetails\} open/);
@@ -567,7 +558,18 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(visualSpec, /Signature cyan `--accent #4BC5DE`/);
   assert.match(visualSpec, /Data cyan `--cyan #6CE7F2`/);
   assert.doesNotMatch(visualSpec, /Champagne gold `--gold #C8A24A`/);
-  assert.match(supportClients, /padding:\s*'var\(--support-main-padding\)'/);
+  assert.doesNotMatch(supportClients, /padding:\s*'var\(--support-main-padding\)'/);
+  for (const selector of [
+    '.breathBar',
+    '.yearChart',
+    '.monthBar',
+    '.connectionsSection',
+    '.connectionMetaRow',
+    '.refusalList',
+    '.archiveStepLink',
+  ]) {
+    assert.match(supportCss, new RegExp(`${selector.replace('.', '\\.')}\\s*\\{`));
+  }
   assert.doesNotMatch(productHistory, /styles\.navSearch/);
   assert.doesNotMatch(productHistory, /styles\.brandLockup/);
   assert.doesNotMatch(productHistory, /styles\.brandIcon/);
@@ -589,6 +591,8 @@ test('visible support surfaces use approved personal-identity and local-app posi
 
 test('colophon keeps line-broken closing sentences readable as text', () => {
   const html = renderColophonClientHtml();
+  const colophon = read('app/ColophonClient.tsx');
+  const supportCss = read('app/loom-support-page.module.css');
   const text = html
     .replace(/<br\s*\/?>/g, '')
     .replace(/<[^>]+>/g, '')
@@ -598,6 +602,15 @@ test('colophon keeps line-broken closing sentences readable as text', () => {
   assert.doesNotMatch(text, /Vellum II/);
   assert.match(text, /Built by one hand\. With thanks to anyone who waited\./);
   assert.doesNotMatch(text, /hand\.With/);
+  assert.match(colophon, /LoomSupportNav active="\/colophon"/);
+  assert.match(colophon, /styles\.colophonMain/);
+  assert.match(colophon, /styles\.colophonCard/);
+  assert.match(colophon, /styles\.colophonBody/);
+  assert.match(colophon, /styles\.swatchDot/);
+  assert.doesNotMatch(colophon, /const bodyStyle|padding:\s*'clamp\(7\.2rem|fontSize:\s*'64px'/);
+  assert.match(supportCss, /\.colophonMain\s*\{/);
+  assert.match(supportCss, /\.colophonCard\s*\{/);
+  assert.match(supportCss, /\.swatchDot\s*\{/);
 });
 
 test('Loom product history evolution assets are curated under Loom folders', () => {
