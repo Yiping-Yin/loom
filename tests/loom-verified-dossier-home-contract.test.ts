@@ -518,7 +518,13 @@ test('Optibook static replica is rebadged as QBook in the shipped public bundle'
   assert.equal(sawQBook, true, 'public Optibook bundle should visibly say QBook');
 });
 
-test('QBook documentation screens keep the cold Loom documentation skin', () => {
+test('QBook documentation screens keep the cold Loom documentation skin', {
+  // Reads the gitignored Optiver-IP replica assets (see the rebadge test above);
+  // skip when public/optibook/assets has not been copied in (clean checkout / CI).
+  skip: existsSync(join(repoRoot, 'public/optibook/assets'))
+    ? false
+    : 'public/optibook replica bundle absent (gitignored Optiver IP)',
+}, () => {
   const cssRoot = join(repoRoot, 'public/optibook/assets');
   const cssText = collectFiles(cssRoot)
     .filter((file) => extname(file) === '.css')
