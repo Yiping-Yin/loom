@@ -31,9 +31,6 @@
     radial-gradient(72% 58% at 50% -12%, rgba(72, 92, 104, 0.05), transparent 60%),
     radial-gradient(100% 92% at 102% 108%, rgba(0, 0, 0, 0.5), transparent 70%),
     linear-gradient(180deg, #04060a 0%, #020305 52%, #010203 100%);
-  /* viewport-fixed descent gradient (matches the comp) — the floor stays put
-     while content scrolls past it. */
-  background-attachment: fixed;
   color: var(--history-ink);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
@@ -50,7 +47,7 @@
   inset: -10%;
   z-index: 0;
   pointer-events: none;
-  background: url('/loom/history/stars.png') center / cover no-repeat;
+  background: url('/loom/history/stars.webp') center / cover no-repeat;
   opacity: 0.18;
   mix-blend-mode: screen;
   animation: loomSkyBreath 19s ease-in-out infinite;
@@ -74,7 +71,7 @@
   inset: 0;
   z-index: 55; /* film grain rides above section content, below nav (z ~1000) + modal (z 120) */
   pointer-events: none;
-  background: url('/loom/history/grain.png') repeat;
+  background: url('/loom/history/grain.webp') repeat;
   background-size: 360px 360px;
   mix-blend-mode: screen;
   opacity: 0.36;
@@ -276,7 +273,7 @@
   inset: -2.4%;
   z-index: 0;
   pointer-events: none;
-  background: url('/loom/history/history-hero.png') center / cover no-repeat;
+  background: url('/loom/history/history-hero.webp') center / cover no-repeat;
 }
 
 .heroFade {
@@ -449,7 +446,7 @@
 
 .heroEyebrow > span:last-child {
   white-space: nowrap;
-  color: rgba(206, 210, 212, 0.62);
+  color: rgba(206, 210, 212, 0.78);
   font-family: var(--mono);
   font-size: 0.76rem;
   font-weight: 500;
@@ -566,7 +563,7 @@
 
 .heroOriginCard p {
   margin: 0;
-  color: rgba(223, 226, 227, 0.58);
+  color: rgba(223, 226, 227, 0.72);
   font-size: clamp(0.86rem, 0.94vw, 0.96rem);
   line-height: 1.55;
 }
@@ -576,7 +573,7 @@
   align-items: center;
   gap: 0.36rem;
   width: fit-content;
-  color: rgba(223, 226, 227, 0.66);
+  color: rgba(223, 226, 227, 0.78);
   font-size: 0.88rem;
   text-decoration: none;
   transition: color 0.25s ease, gap 0.25s ease;
@@ -604,7 +601,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: url('/loom/history/moon-limb.png') center bottom / cover no-repeat;
+  background: url('/loom/history/moon-limb.webp') center bottom / cover no-repeat;
   transform: scaleX(-1);
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.5) 24%, #000 54%);
   mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.5) 24%, #000 54%);
@@ -1035,10 +1032,14 @@
 .weaveOrbEarth {
   padding: 0;
   border: 0;
-  cursor: pointer;
   background: radial-gradient(circle at 40% 36%, #0c2236 0%, #06101e 72%, #03080f 100%);
   box-shadow: 0 0 1.4rem rgba(75, 197, 222, 0.22), inset -0.4rem -0.5rem 1rem rgba(0, 0, 0, 0.62);
   transition: transform 0.4s var(--ease), box-shadow 0.4s ease;
+}
+
+/* pointer only once HistoryRuntime has armed the orb as a button (JS present) */
+.weaveOrbEarth[role='button'] {
+  cursor: pointer;
 }
 
 .weaveOrbEarth:hover,
@@ -1050,7 +1051,7 @@
 .weaveEarthLights {
   position: absolute;
   inset: 0;
-  background: url('/loom/history/earth-lights.png') center / 180% 100% no-repeat;
+  background: url('/loom/history/earth-lights.webp') center / 180% 100% no-repeat;
   mix-blend-mode: screen;
   filter: brightness(1.3);
 }
@@ -1091,7 +1092,7 @@
 }
 
 .weaveOrbMoon {
-  background: url('/loom/history/moon-orb.png') center / cover no-repeat;
+  background: url('/loom/history/moon-orb.webp') center / cover no-repeat;
   filter: brightness(0.76) contrast(1.08) saturate(0.7);
   box-shadow:
     inset -0.5rem -0.6rem 1.1rem rgba(0, 0, 0, 0.7),
@@ -1744,7 +1745,7 @@
 
 .footerMeta {
   margin: 0;
-  color: #6c7174;
+  color: var(--history-subtle);
   font-family: var(--mono);
   font-size: 0.68rem;
   letter-spacing: 0.18em;
@@ -1759,13 +1760,16 @@
   display: grid;
   place-items: center;
   opacity: 0;
+  visibility: hidden; /* removes the closed dialog's buttons from the tab order + a11y tree */
   pointer-events: none;
-  transition: opacity 0.7s var(--ease);
+  transition: opacity 0.7s var(--ease), visibility 0s linear 0.7s;
 }
 
 .earthOpen {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition: opacity 0.7s var(--ease), visibility 0s;
 }
 
 .earthScrim {
@@ -1807,7 +1811,7 @@
 
 .earthOrb {
   position: relative;
-  width: clamp(16rem, 52vh, 33rem);
+  width: clamp(14rem, min(52vh, 78vw), 33rem); /* guarantee a side gutter < 375px */
   aspect-ratio: 1;
   border-radius: 50%;
   overflow: hidden;
@@ -1825,7 +1829,7 @@
   left: 0;
   width: 200%;
   height: 100%;
-  background: url('/loom/history/earth-lights.png') repeat-x;
+  background: url('/loom/history/earth-lights.webp') repeat-x;
   background-size: auto 100%;
   mix-blend-mode: screen;
   filter: brightness(1.3) saturate(1.05);
@@ -1952,7 +1956,7 @@
   transform: translateX(-50%);
   z-index: 2;
   white-space: nowrap;
-  color: #6c7174;
+  color: var(--history-subtle);
   font-family: var(--mono);
   font-size: 0.62rem;
   letter-spacing: 0.2em;
@@ -2048,6 +2052,15 @@
   .layerRows article p {
     grid-column: 2;
   }
+  /* 44px touch target for the hero "View archive" link */
+  .heroOriginCard a {
+    padding: 0.4rem 0;
+    min-height: 44px;
+  }
+  /* 9 steps = a clean 3x3 instead of a ragged auto-fit edge */
+  .growthRail {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 540px) {
@@ -2064,6 +2077,14 @@
   }
   .functionArrow {
     display: none;
+  }
+  /* stack the lineage date above its quote so the quote keeps full width */
+  .taglineEntry {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+  .taglineDate {
+    padding-top: 0;
   }
 }
 
@@ -2089,5 +2110,19 @@
   }
   .earthBody {
     transition: opacity 0.2s ease;
+  }
+}
+
+/* ===================== Reduced data / Save-Data ====================== */
+@media (prefers-reduced-data: reduce) {
+  .skyfield,
+  .nebula,
+  .grain,
+  .vignette {
+    background: none;
+  }
+  .heroPlate {
+    background-image: none;
+    background-color: #04060a;
   }
 }

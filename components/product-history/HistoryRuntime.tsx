@@ -64,17 +64,20 @@ export function HistoryRuntime() {
         });
       });
 
+      const revealTimers: number[] = [];
       const io = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (!entry.isIntersecting) return;
             const units = unitMap.get(entry.target) ?? [entry.target as HTMLElement];
             units.forEach((u, i) => {
-              window.setTimeout(() => {
-                u.style.opacity = '1';
-                u.style.transform = 'none';
-                u.style.filter = 'none';
-              }, Math.min(i, 8) * 85);
+              revealTimers.push(
+                window.setTimeout(() => {
+                  u.style.opacity = '1';
+                  u.style.transform = 'none';
+                  u.style.filter = 'none';
+                }, Math.min(i, 8) * 85),
+              );
             });
             io.unobserve(entry.target);
           });
@@ -82,7 +85,10 @@ export function HistoryRuntime() {
         { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
       );
       sections.forEach((s) => io.observe(s));
-      cleanups.push(() => io.disconnect());
+      cleanups.push(() => {
+        io.disconnect();
+        revealTimers.forEach((t) => clearTimeout(t));
+      });
     }
 
     // ---- Parallax ------------------------------------------------------
@@ -115,7 +121,12 @@ export function HistoryRuntime() {
         };
         window.addEventListener('scroll', onScroll, { passive: true });
         apply();
-        cleanups.push(() => window.removeEventListener('scroll', onScroll));
+        cleanups.push(() => {
+          window.removeEventListener('scroll', onScroll);
+          layers.forEach((l) => {
+            l.style.transform = '';
+          });
+        });
       }
     }
 
@@ -124,28 +135,80 @@ export function HistoryRuntime() {
     if (modal) {
       const openers = Array.from(document.querySelectorAll<HTMLElement>('[data-earth-open]'));
       const closers = Array.from(modal.querySelectorAll<HTMLElement>('[data-earth-close]'));
+      let lastOpener: HTMLElement | null = null;
+      const isOpen = () => modal.classList.contains(styles.earthOpen);
 
-      const open = () => {
+      const open = (opener: HTMLElement) => {
+        lastOpener = opener;
         modal.classList.add(styles.earthOpen);
         modal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden'; // lock background scroll while the modal is open
-        const focusTarget = modal.querySelector<HTMLElement>('[data-earth-close]');
-        focusTarget?.focus();
+        document.body.style.overflow = 'hidden'; // lock background scroll while open
+        modal.querySelector<HTMLElement>('[data-earth-close]')?.focus();
       };
       const close = () => {
         modal.classList.remove(styles.earthOpen);
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
+        lastOpener?.focus(); // restore focus to the trigger
       };
       const onKey = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') close();
+        if (!isOpen()) return;
+        if (e.key === 'Escape') {
+          close();
+          return;
+        }
+        if (e.key === 'Tab' && closers.length) {
+          // Trap focus inside the dialog (its only stops are the close buttons).
+          const first = closers[0];
+          const last = closers[closers.length - 1];
+          const active = document.activeElement;
+          if (active && !modal.contains(active)) {
+            e.preventDefault();
+            first.focus();
+          } else if (e.shiftKey && active === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       };
 
-      openers.forEach((o) => o.addEventListener('click', open));
+      // Progressively enhance each opener into a real, keyboard-operable button
+      // so it is never a dead, JS-less control announcing an action it can't do.
+      const openerHandlers: Array<{ el: HTMLElement; click: () => void; key: (e: KeyboardEvent) => void; wasPlain: boolean }> = [];
+      openers.forEach((el) => {
+        const wasPlain = el.tagName !== 'BUTTON';
+        if (wasPlain) {
+          el.setAttribute('role', 'button');
+          el.setAttribute('tabindex', '0');
+          const label = el.getAttribute('data-earth-label');
+          if (label && !el.getAttribute('aria-label')) el.setAttribute('aria-label', label);
+        }
+        const click = () => open(el);
+        const key = (e: KeyboardEvent) => {
+          if (wasPlain && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            open(el);
+          }
+        };
+        el.addEventListener('click', click);
+        el.addEventListener('keydown', key);
+        openerHandlers.push({ el, click, key, wasPlain });
+      });
+
       closers.forEach((c) => c.addEventListener('click', close));
       window.addEventListener('keydown', onKey);
       cleanups.push(() => {
-        openers.forEach((o) => o.removeEventListener('click', open));
+        openerHandlers.forEach(({ el, click, key, wasPlain }) => {
+          el.removeEventListener('click', click);
+          el.removeEventListener('keydown', key);
+          if (wasPlain) {
+            el.removeAttribute('role');
+            el.removeAttribute('tabindex');
+          }
+        });
         closers.forEach((c) => c.removeEventListener('click', close));
         window.removeEventListener('keydown', onKey);
         document.body.style.overflow = '';

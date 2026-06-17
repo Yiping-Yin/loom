@@ -382,14 +382,14 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(productHistory, /Source-backed self\. Living archive\./i);
   assert.match(productHistory, /Library \/ Eyes \/ Memory/i);
   // ---- New flat-composite "History" hero (Claude Design handoff) ----------
-  // The hero is a single flat composite-photo plate (history-hero.png) with a
+  // The hero is a single flat composite-photo plate (history-hero.webp) with a
   // CENTERED, upright Cormorant masthead + a "2024 — PRESENT" eyebrow + a cyan
   // timeline node. The live moon / astronaut-helmet / breathing-visor "First
   // Contact" stack was retired; behaviour now lives in a client island.
   assert.match(productHistory, /HistoryRuntime/);
   assert.match(productHistory, /2024 — PRESENT/);
   assert.match(productHistory, /comet-clean\.png/);
-  assert.match(productHistoryCss, /\.heroPlate[\s\S]*?history-hero\.png/);
+  assert.match(productHistoryCss, /\.heroPlate[\s\S]*?history-hero\.webp/);
   assert.match(productHistoryCss, /\.heroGrid\s*\{[^}]*text-align:\s*center/s);
   assert.match(productHistoryCss, /\.heroGrid h1\s*\{[^}]*font-weight:\s*600/s);
   assert.match(productHistoryCss, /\.heroGrid h1\s*\{[^}]*font-style:\s*normal/s);

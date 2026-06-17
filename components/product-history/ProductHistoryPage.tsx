@@ -439,10 +439,12 @@ export function ProductHistoryPage() {
           {WEAVE_THREADS.map((thread) => (
             <div key={thread.name} className={styles.weaveThreadCol}>
               {thread.orb === 'earth' ? (
-                <button type="button" className={styles.weaveOrbEarth} data-earth-open aria-label="Open the Earth in the visor">
+                // Decorative span by default; HistoryRuntime upgrades it to a
+                // keyboard-operable button only when JS is present.
+                <span className={styles.weaveOrbEarth} data-earth-open data-earth-label="Open the Earth in the visor">
                   <span className={styles.weaveEarthLights} aria-hidden="true" />
                   <span className={styles.weaveEarthShade} aria-hidden="true" />
-                </button>
+                </span>
               ) : thread.orb === 'eyes' ? (
                 <span
                   className={styles.weaveOrbEyes}
