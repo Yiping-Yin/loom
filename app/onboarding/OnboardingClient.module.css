@@ -73,7 +73,7 @@
 }
 
 .eyebrow {
-  color: var(--muted);
+  color: var(--fg-secondary);
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 650;
@@ -124,7 +124,7 @@
 .manualToggle {
   border: 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--fg-secondary);
   cursor: pointer;
   font-family: var(--serif);
   font-size: 0.875rem;
@@ -152,7 +152,7 @@
 .note {
   max-width: 32rem;
   margin: 2.5rem 0 0;
-  color: var(--muted);
+  color: var(--fg-secondary);
   font-family: var(--serif);
   font-size: 0.8rem;
   font-style: italic;

@@ -247,7 +247,7 @@ function kindBadge(kind: string): string {
   return KIND_BADGE[kind.toLowerCase()] ?? kind.slice(0, 3).toUpperCase();
 }
 
-export function ProductHistoryPage() {
+export function ProductHistoryPage({ brandCurrent = false }: { brandCurrent?: boolean } = {}) {
   const featuredSources = FEATURED_SOURCE_IDS.map(resolveVerifiedDossierArtifact);
 
   return (
@@ -257,7 +257,7 @@ export function ProductHistoryPage() {
       <span className={styles.grain} aria-hidden="true" />
       <span className={styles.vignette} aria-hidden="true" />
 
-      <LoomGlobalNav ariaLabel="Product system navigation" brandCurrent />
+      <LoomGlobalNav ariaLabel="Product system navigation" brandCurrent={brandCurrent} />
 
       {/* ============================== HERO ============================== */}
       <section id="top" className={styles.hero} data-screen-label="History · hero">

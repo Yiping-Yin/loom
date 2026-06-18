@@ -650,5 +650,6 @@ function formatOrdinal(value: number) {
 
 function formatCount(count: number, noun: string) {
   if (noun === 'shelf') return `${count} ${count === 1 ? 'shelf' : 'shelves'}`;
+  if (noun === 'category') return `${count} ${count === 1 ? 'category' : 'categories'}`;
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
