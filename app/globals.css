@@ -302,6 +302,7 @@ a[class*="loom-"] {
   --text-1: #E7E9EA;    /* primary */
   --text-2: #A4A9AD;    /* secondary */
   --text-3: #8E9499;    /* tertiary / eyebrows / captions — lifted to WCAG-AA (~5:1) on the dark surfaces incl. elevated cards */
+  --institution-mark-silver: #B9BDC4; /* institution-crest chip fill — shared by the knowledge dossiers */
 
   /* Accents - sparse, information-only. Legacy --gold token names are
      retained for compatibility; new work should use --signature-cyan. */

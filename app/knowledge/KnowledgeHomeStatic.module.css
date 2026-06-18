@@ -74,7 +74,7 @@
 .page:global(.vd-home) :global(.vd-institution-mark--wqu),
 .page:global(.vd-home) :global(.vd-institution-mark--quantnet) {
   border-color: var(--line);
-  background: #B9BDC4;
+  background: var(--institution-mark-silver);
 }
 
 .page:global(.vd-home) :global(.vd-institution-mark--about) {
