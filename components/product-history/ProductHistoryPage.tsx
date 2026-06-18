@@ -1,4 +1,4 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, FileText } from 'lucide-react';
 
 import { FileBadge } from '../verified-dossier/FileBadge';
 import { LoomGlobalNav } from '../verified-dossier/LoomGlobalNav';
@@ -228,23 +228,6 @@ const SATELLITE_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="
 
 function pad2(index: number): string {
   return String(index + 1).padStart(2, '0');
-}
-
-// Short, comp-style evidence-tile labels (DOC / PDF / WEB / IMG).
-const KIND_BADGE: Record<string, string> = {
-  word: 'DOC',
-  doc: 'DOC',
-  docx: 'DOC',
-  pdf: 'PDF',
-  web: 'WEB',
-  link: 'WEB',
-  url: 'WEB',
-  image: 'IMG',
-  img: 'IMG',
-};
-
-function kindBadge(kind: string): string {
-  return KIND_BADGE[kind.toLowerCase()] ?? kind.slice(0, 3).toUpperCase();
 }
 
 export function ProductHistoryPage({ brandCurrent = false }: { brandCurrent?: boolean } = {}) {
@@ -618,7 +601,7 @@ export function ProductHistoryPage({ brandCurrent = false }: { brandCurrent?: bo
                 {source.thumbnailSrc ? (
                   <img src={source.thumbnailSrc} alt={`${source.label} thumbnail`} loading="lazy" />
                 ) : (
-                  <span>{kindBadge(source.kind)}</span>
+                  <FileText aria-hidden="true" size={26} strokeWidth={1.4} />
                 )}
               </span>
               <span className={styles.sourceCopy}>
