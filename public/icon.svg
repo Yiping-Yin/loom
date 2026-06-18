@@ -1,29 +1,53 @@
-<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-<defs>
-<radialGradient id="moon" cx="35%" cy="27%" r="86%">
-<stop offset="0%" stop-color="#b3bfce"/>
-<stop offset="26%" stop-color="#6e7c8d"/>
-<stop offset="55%" stop-color="#3c4858"/>
-<stop offset="82%" stop-color="#1a2330"/>
-<stop offset="100%" stop-color="#090e16"/>
-</radialGradient>
-<radialGradient id="craterg" cx="42%" cy="34%" r="66%">
-<stop offset="0%" stop-color="#283340"/>
-<stop offset="100%" stop-color="#4a5764"/>
-</radialGradient>
-<clipPath id="orbclip2"><circle cx="512" cy="512" r="492"/></clipPath>
-</defs>
-<circle cx="512" cy="512" r="492" fill="url(#moon)"/>
-<g clip-path="url(#orbclip2)">
-<circle cx="423" cy="374" r="84" fill="url(#craterg)" opacity="0.5"/>
-<circle cx="610" cy="335" r="49" fill="url(#craterg)" opacity="0.45"/>
-<circle cx="669" cy="537" r="108" fill="url(#craterg)" opacity="0.4"/>
-<circle cx="443" cy="630" r="64" fill="url(#craterg)" opacity="0.45"/>
-<circle cx="355" cy="492" r="37" fill="url(#craterg)" opacity="0.45"/>
-<circle cx="561" cy="669" r="46" fill="url(#craterg)" opacity="0.38"/>
-<ellipse cx="709" cy="758" rx="580" ry="580" fill="#070b12" opacity="0.45"/>
-<path d="M266 207 Q906 537 473 837" fill="none" stroke="#4BC5DE" stroke-width="37" opacity="0.16" stroke-linecap="round"/>
-<path d="M266 207 Q906 537 473 837" fill="none" stroke="#4BC5DE" stroke-width="11" opacity="0.92" stroke-linecap="round"/>
-</g>
-<circle cx="512" cy="512" r="492" fill="none" stroke="#b3bfce" stroke-width="3.5" opacity="0.22"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Loom Moon Ledger icon">
+  <title>Loom</title>
+  <desc>A cool-black app tile with a cratered moon ledger crossed by one signature-cyan meridian line.</desc>
+  <defs>
+    <clipPath id="tile"><rect width="512" height="512" rx="112"/></clipPath>
+    <radialGradient id="bg" cx="22%" cy="12%" r="96%">
+      <stop offset="0" stop-color="#101820"/>
+      <stop offset="0.42" stop-color="#05090D"/>
+      <stop offset="1" stop-color="#010305"/>
+    </radialGradient>
+    <radialGradient id="moon" cx="29%" cy="27%" r="78%">
+      <stop offset="0" stop-color="#E8EFF1"/>
+      <stop offset="0.35" stop-color="#B8C4C9"/>
+      <stop offset="0.63" stop-color="#52616A"/>
+      <stop offset="0.86" stop-color="#151C24"/>
+      <stop offset="1" stop-color="#060A0F"/>
+    </radialGradient>
+    <radialGradient id="crater" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#020507" stop-opacity=".38"/>
+      <stop offset=".58" stop-color="#26343D" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#E0EBEF" stop-opacity=".18"/>
+    </radialGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4BC5DE"/>
+      <stop offset=".62" stop-color="#6CE7F2"/>
+      <stop offset="1" stop-color="#8AF7E6"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="7"/></filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="4" seed="12"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .13"/></feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g clip-path="url(#tile)">
+    <ellipse cx="263" cy="418" rx="156" ry="30" fill="#000" opacity=".34" filter="url(#soft)"/>
+    <circle cx="254" cy="251" r="174" fill="url(#moon)"/>
+    <circle cx="254" cy="251" r="174" filter="url(#grain)" opacity=".52"/>
+    <path d="M122 135c-33 41-52 90-52 139 0 96 70 161 166 163-46-54-60-110-42-177 17-64 58-116 122-154-60-24-141-12-194 29z" fill="#061014" opacity=".22"/>
+    <path d="M262 77c77 27 132 96 151 184 12 56 3 108-24 153 72-39 116-118 102-200-16-96-102-157-229-137z" fill="#020508" opacity=".42"/>
+    <g fill="url(#crater)" opacity=".72">
+      <circle cx="206" cy="174" r="28"/><circle cx="293" cy="219" r="19"/>
+      <circle cx="334" cy="281" r="31"/><circle cx="235" cy="313" r="22"/>
+      <circle cx="307" cy="354" r="15"/><circle cx="173" cy="330" r="16"/>
+      <circle cx="151" cy="235" r="12"/><circle cx="360" cy="190" r="14"/>
+    </g>
+    <path d="M88 147c122 3 263 121 311 250 17 46 4 76-33 86" fill="none" stroke="#4BC5DE" stroke-width="16" stroke-linecap="round" opacity=".16" filter="url(#soft)"/>
+    <path d="M88 147c122 3 263 121 311 250 17 46 4 76-33 86" fill="none" stroke="url(#cyan)" stroke-width="4.4" stroke-linecap="round"/>
+    <circle cx="367" cy="482" r="7" fill="#8AF7E6" opacity=".9" filter="url(#soft)"/>
+  </g>
+  <rect x="1" y="1" width="510" height="510" rx="111" fill="none" stroke="#20323A" stroke-width="2"/>
 </svg>
