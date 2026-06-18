@@ -3684,6 +3684,21 @@ struct LoomWebView: NSViewRepresentable {
                 return
             }
 
+            // New-window (target="_blank") requests to our own bundled content
+            // channel are otherwise silently dropped: WKWebView routes them to the
+            // uiDelegate's createWebViewWith, which the main web view doesn't
+            // implement. Load them in place so in-app links like "Launch QBook"
+            // (loom://…/optibook/index.html) and _blank PDF/doc links open instead
+            // of doing nothing.
+            if navigationAction.targetFrame == nil,
+               let url = navigationAction.request.url,
+               url.scheme == LoomURLSchemeHandler.scheme {
+                lastRequestedURL = url
+                webView.load(navigationAction.request)
+                decisionHandler(.cancel)
+                return
+            }
+
             if let url = navigationAction.request.url,
                ["http", "https"].contains(url.scheme?.lowercased() ?? "") {
                 if navigationAction.targetFrame == nil {
