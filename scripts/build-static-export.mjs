@@ -182,7 +182,31 @@ async function copySearchIndexIntoExport() {
   await fs.copyFile(source, target);
 }
 
+// iCloud "Desktop & Documents" sync creates "<name> 2" conflict copies. Under
+// app/ these surface as bogus duplicate routes (e.g. "[category] 2/[fileSlug]")
+// with no generateStaticParams, which aborts `output: export`. Strip them right
+// before the export so an iCloud sync mid-build can't break it. (Real fix: keep
+// the repo out of an iCloud-synced folder; this is a defensive guard.)
+async function removeICloudConflicts(dir) {
+  let entries;
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (/ \d+(\.[^.]+)?$/.test(entry.name)) {
+      await fs.rm(full, { recursive: true, force: true });
+      console.warn(`[build-static-export] removed iCloud conflict copy: ${path.relative(repoRoot, full)}`);
+    } else if (entry.isDirectory()) {
+      await removeICloudConflicts(full);
+    }
+  }
+}
+
 async function runStaticExport() {
+  await removeICloudConflicts(path.join(repoRoot, 'app'));
   await removeDuplicateArtifacts(path.join(repoRoot, '.next'));
   await removeDuplicateArtifacts(path.join(repoRoot, '.next-export'));
   await restoreStaleShelvedPaths();
