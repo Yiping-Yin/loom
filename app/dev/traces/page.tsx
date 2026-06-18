@@ -572,7 +572,7 @@ function TraceDetail({ trace }: { trace: Trace }) {
               <tbody>
                 {thoughtAnchors.map((e, idx) => (
                   <tr key={idx} style={{ borderTop: '0.5px solid var(--mat-border)' }}>
-                    <td style={tdStyle}>{new Date(e.at).toLocaleTimeString()}</td>
+                    <td style={tdStyle} suppressHydrationWarning>{new Date(e.at).toLocaleTimeString()}</td>
                     <td style={tdStyle}><code>{e.anchorId}</code></td>
                     <td style={tdStyle}><code>{e.anchorBlockId ?? '—'}</code></td>
                     <td style={tdStyle}>
@@ -613,7 +613,7 @@ function TraceDetail({ trace }: { trace: Trace }) {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)', marginBottom: 3 }}>
               <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{e.kind}</span>
-              <span>{new Date(e.at).toLocaleString()}</span>
+              <span suppressHydrationWarning>{new Date(e.at).toLocaleString()}</span>
             </div>
             <div style={{ color: 'var(--fg)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
               {JSON.stringify(e, null, 0).slice(0, 280)}

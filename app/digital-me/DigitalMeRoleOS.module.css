@@ -58,9 +58,9 @@
      clip prevents horizontal leak without creating a scroll container. */
   overflow-x: clip;
   /* Deep-space live room: mostly cold black, with low-contrast silver breath
-     and a small cyan signal trace reserved for Digital Me. */
-  background-image: var(--deep-space-field);
-  background-attachment: fixed;
+     and a small cyan signal trace reserved for Digital Me. The field itself is
+     painted once by .roleOsPage::before below (a fixed full-viewport layer), so
+     the element keeps only the solid fallback colour and isn't composited twice. */
   background-color: var(--ink-0);
   color: var(--role-ink);
   font-family: var(--sans);
