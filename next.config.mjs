@@ -43,15 +43,10 @@ const nextConfig = {
   // (Next 16 removed the `eslint` config key — `next lint` is gone and ESLint
   // runs standalone now, so the old `eslint: { ignoreDuringBuilds: true }` is
   // dropped; keeping it makes Next 16 crash on an undefined `.map`.)
-  // Use an in-memory webpack cache instead of the default filesystem cache.
-  // On this machine Spotlight / TimeMachine occasionally vanish `.pack_`
-  // temp files before webpack can rename them, causing ENOENT and a 15-min
-  // stall. Memory cache is rebuilt every run — cost is a slower cold build,
-  // but at least it completes deterministically.
-  webpack: (config) => {
-    config.cache = { type: 'memory' };
-    return config;
-  },
+  // (Next 16 builds/serves with Turbopack by default, which never runs a
+  // `webpack(config)` hook — keeping one only emits a "webpack config ignored"
+  // warning every build, so it's dropped. Use the `turbopack` key for any
+  // future bundler tuning.)
 };
 
 export default withMDX(nextConfig);
