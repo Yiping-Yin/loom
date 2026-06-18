@@ -194,11 +194,18 @@ async function removeICloudConflicts(dir) {
   } catch {
     return;
   }
+  const names = new Set(entries.map((entry) => entry.name));
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
-    if (/ \d+(\.[^.]+)?$/.test(entry.name)) {
+    // iCloud names a conflict copy "<original> <n>" (dirs) or "<stem> <n>.<ext>"
+    // (files) — the suffix sits right before any extension. Only treat it as a
+    // conflict (and delete) when the unsuffixed original ALSO exists as a sibling;
+    // otherwise it's a legitimately named path (e.g. "OAuth 2.tsx", "phase 2/").
+    const match = entry.name.match(/^(.+) \d+(\.[^.]+)?$/);
+    const original = match ? `${match[1]}${match[2] ?? ''}` : null;
+    if (original && names.has(original)) {
       await fs.rm(full, { recursive: true, force: true });
-      console.warn(`[build-static-export] removed iCloud conflict copy: ${path.relative(repoRoot, full)}`);
+      console.warn(`[build-static-export] removed iCloud conflict copy: ${path.relative(repoRoot, full)} (original ${original} kept)`);
     } else if (entry.isDirectory()) {
       await removeICloudConflicts(full);
     }
