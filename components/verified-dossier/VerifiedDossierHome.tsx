@@ -174,7 +174,7 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
             <span className="lcv-serif lcv-exp__optiver">Optiver</span>
             <span className="lcv-exp__tri" aria-hidden="true">▲</span>
           </header>
-          <h4>{optiver.role}</h4>
+          <h3>{optiver.role}</h3>
           <p>{optiver.organisation} · Trading &amp; Technology</p>
           <footer className="lcv-exp__foot">
             <Verified label="Verified source" />
@@ -192,7 +192,7 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
               UNSW<small>SYDNEY</small>
             </span>
           </header>
-          <h4>{unsw.role}</h4>
+          <h3>{unsw.role}</h3>
           <p>Quantitative Finance</p>
           <footer className="lcv-exp__foot">
             <Verified label="Verified source" />

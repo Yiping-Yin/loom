@@ -3,5 +3,5 @@ import ProductHistoryPage from '../../components/product-history/ProductHistoryP
 export const metadata = { title: 'Loom · Product System' };
 
 export default function LoomPage() {
-  return <ProductHistoryPage />;
+  return <ProductHistoryPage brandCurrent />;
 }

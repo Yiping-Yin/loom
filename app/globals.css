@@ -144,6 +144,7 @@ a[class*="loom-"] {
   --accent: #4BC5DE;            /* comet cyan — hairlines, marks, tints */
   --signature-cyan: #4BC5DE;    /* identity signature — stable even inside local accent scopes */
   --signature-cyan-hi: #8AF7E6; /* identity highlight */
+  --thread: var(--signature-cyan); /* connective thread — referenced by canvas/diagram CSS (NeuralNetCanvas, captures chip) */
   --accent-soft: rgba(75, 197, 222, 0.18);
   --accent-text: #2F7384;       /* deeper comet teal — body-text links */
   --accent-secondary: #8AF7E6;  /* pale ion highlight */
@@ -1519,7 +1520,7 @@ html {
   background: var(--ink-0);
 }
 
-.new-loom-home-capabilities__link {
+a.new-loom-home-capabilities__link {
   min-width: 6.4rem;
   border: 1px solid rgba(232, 236, 238, 0.14);
   border-radius: 999px;
@@ -1542,8 +1543,8 @@ html {
     background 0.18s var(--ease);
 }
 
-.new-loom-home-capabilities__link:hover,
-.new-loom-home-capabilities__link:focus-visible {
+a.new-loom-home-capabilities__link:hover,
+a.new-loom-home-capabilities__link:focus-visible {
   border-color: rgba(75, 197, 222, 0.42);
   color: var(--cyan);
   background:
@@ -9350,13 +9351,13 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border-color: var(--draft-accent);
 }
 
-.draft-board-card--thesis { border-top-color: #4bc5de; }
-.draft-board-card--instance { border-top-color: #8fa3a6; }
-.draft-board-card--counter { border-top-color: #a35f73; }
-.draft-board-card--question { border-top-color: #6ce7f2; }
-.draft-board-card--fog { border-top-color: #a4a9ad; }
-.draft-board-card--weft { border-top-color: #8af7e6; }
-.draft-board-card--sketch { border-top-color: #666d72; }
+.draft-board-card--thesis { border-top-color: var(--accent); }
+.draft-board-card--instance { border-top-color: var(--tint-green); }
+.draft-board-card--counter { border-top-color: var(--tint-pink); }
+.draft-board-card--question { border-top-color: var(--tint-cyan); }
+.draft-board-card--fog { border-top-color: var(--text-2); }
+.draft-board-card--weft { border-top-color: var(--signature-cyan-hi); }
+.draft-board-card--sketch { border-top-color: var(--text-3); }
 
 .draft-board-card-title {
   color: var(--draft-ink);
@@ -24081,7 +24082,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-exp__unsw{font-size:18px;font-weight:600;line-height:1}
 .lcv-exp__unsw small{display:block;font-family:var(--lcv-serif);font-size:8px;
   letter-spacing:.2em;color:var(--lcv-ink2);font-weight:400}
-.lcv-exp__card h4{font-size:15px;font-weight:500;margin:2px 0 0}
+.lcv-exp__card h3{font-size:15px;font-weight:500;margin:2px 0 0}
 .lcv-exp__card p{font-size:12.5px;color:var(--lcv-ink2);margin:0}
 .lcv-exp__foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:14px}
 .lcv-exp__foot .lcv-verified{margin-top:0;border:1px solid var(--lcv-line2);padding:5px 10px;border-radius:999px;font-size:12px}
@@ -24163,7 +24164,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     inset 0 1px 0 rgba(255,255,255,0.06),
     0 -14px 36px rgba(0,0,0,0.5);
   font-family:var(--lcv-mono);font-size:11px;letter-spacing:.14em;color:var(--lcv-ink3)}
-.lcv-foot__all{display:flex;align-items:center;gap:8px}
+.lcv-foot__all{display:flex;align-items:center;gap:8px;white-space:nowrap;flex:0 0 auto}
 .lcv-foot__all svg{width:14px;height:14px;stroke:var(--lcv-ink3);fill:none;stroke-width:1.6}
 
 /* ============================================================
@@ -24228,6 +24229,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   .lcv-nav__links a{flex:0 0 auto}
   .lcv-wordmark{font-size:23px}
   .lcv-nav__avatar{display:none}
+  /* stack the footer so its lede + "VIEW ALL SOURCES" link don't collide at phone widths */
+  .lcv-foot{flex-direction:column;align-items:flex-start;gap:14px}
 }
 
 /* Mobile nav hardening: keep the five primary public links visible without

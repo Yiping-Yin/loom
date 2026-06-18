@@ -746,6 +746,11 @@
   }
 }
 @media (max-width: 680px) {
+  /* When the proof strip stacks to one column, switch its separators from a
+     left vertical line to a top horizontal divider so stacked rows stay divided. */
+  .surface :global(.new-loom-draft__proof-strip span + span) {
+    box-shadow: inset 0 1px 0 var(--line);
+  }
   .surface :global(.new-loom-draft__type-buttons) {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -77,11 +77,11 @@ export function NeuralNetCanvas({ initialLayers = 4 }: { initialLayers?: number 
 
           ctx.beginPath();
           ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
-          const r = Math.floor(60 + brightness * 94);
-          const g = Math.floor(40 + brightness * 61);
-          const b = Math.floor(60 + brightness * 92);
+          const r = Math.floor(40 + brightness * 35);
+          const g = Math.floor(80 + brightness * 117);
+          const b = Math.floor(90 + brightness * 132);
           ctx.fillStyle = `rgb(${r},${g},${b})`;
-          ctx.strokeStyle = '#5E3D5C';
+          ctx.strokeStyle = color.thread;
           ctx.lineWidth = 1.5;
           ctx.fill();
           ctx.stroke();
@@ -110,9 +110,9 @@ export function NeuralNetCanvas({ initialLayers = 4 }: { initialLayers?: number 
       const py = fromN.y + (toN.y - fromN.y) * pulseFrac;
       ctx.beginPath();
       ctx.arc(px, py, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#FAF7EC';
+      ctx.fillStyle = color.ink1;
       ctx.shadowBlur = 10;
-      ctx.shadowColor = '#5E3D5C';
+      ctx.shadowColor = color.thread;
       ctx.fill();
       ctx.shadowBlur = 0;
     };
@@ -130,7 +130,7 @@ export function NeuralNetCanvas({ initialLayers = 4 }: { initialLayers?: number 
 
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', margin: '1.2rem 0', background: color.paperDeep }}>
-      <div style={{ padding: '0.5rem 0.9rem', background: 'rgba(36,32,24,0.85)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '0.5rem 0.9rem', background: 'rgba(24,27,30,0.85)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: '0.88rem', color: color.ink1, fontWeight: 400 }}>Live Neural Network</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <label style={{ fontSize: '0.7rem', color: color.ink3 }}>
@@ -138,7 +138,7 @@ export function NeuralNetCanvas({ initialLayers = 4 }: { initialLayers?: number 
             <select
               value={layers}
               onChange={(e) => setLayers(parseInt(e.target.value))}
-              style={{ marginLeft: 4, background: color.paperUp, color: '#FAF7EC', border: `1px solid ${color.paperCard}`, borderRadius: 3, fontSize: '0.7rem', padding: '1px 4px' }}
+              style={{ marginLeft: 4, background: color.paperUp, color: color.ink1, border: `1px solid ${color.paperCard}`, borderRadius: 3, fontSize: '0.7rem', padding: '1px 4px' }}
             >
               {[3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
@@ -146,7 +146,7 @@ export function NeuralNetCanvas({ initialLayers = 4 }: { initialLayers?: number 
           <button
             onClick={() => setRunning((r) => !r)}
             style={{
-              fontSize: '0.7rem', background: 'var(--thread)', color: '#FAF7EC',
+              fontSize: '0.7rem', background: 'var(--thread)', color: color.ink1,
               border: 0, padding: '3px 10px', borderRadius: 3, cursor: 'pointer',
             }}
           >{running ? 'Pause' : 'Play'}</button>

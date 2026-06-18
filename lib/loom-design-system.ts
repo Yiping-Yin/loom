@@ -31,25 +31,25 @@
 
 export const color = {
   /** Root background — deepest paper layer */
-  paperDeep: '#1A1815',
+  paperDeep: '#070809',
   /** One layer up from root */
-  paper: '#221E18',
+  paper: '#0B0C0D',
   /** Two layers up — surfaces, headers */
-  paperUp: '#2B2620',
+  paperUp: '#181B1E',
   /** Three layers up — cards, popovers */
-  paperCard: '#332E27',
+  paperCard: '#22262A',
 
   /** Primary body text */
-  ink1: '#E8E0CE',
+  ink1: '#E7E9EA',
   /** Secondary / metadata */
-  ink2: '#B9AE93',
+  ink2: '#A4A9AD',
   /** Muted / chrome */
-  ink3: '#8F8571',
+  ink3: '#8E9499',
 
   /** Default 0.5px hairline */
-  hair: 'rgba(232, 224, 206, 0.10)',
+  hair: 'rgba(231, 233, 234, 0.10)',
   /** Even fainter hairline (e.g. inner divisions) */
-  hairFaint: 'rgba(232, 224, 206, 0.05)',
+  hairFaint: 'rgba(231, 233, 234, 0.05)',
 
   /** Signature cyan accent — no broad fills. */
   thread: '#4BC5DE',

@@ -359,7 +359,6 @@ export function LoomGlobalNav({
           aria-label="Search Loom knowledge"
           data-open={searchOpen ? 'true' : 'false'}
           onSubmit={onSearchSubmit}
-          onFocus={openSearch}
         >
           <button
             className={`${styles.searchButton} loom-global-nav__search-button`}

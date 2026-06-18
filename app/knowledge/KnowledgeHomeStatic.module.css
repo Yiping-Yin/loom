@@ -842,7 +842,7 @@
 }
 
 .sourceTools :global(.loom-source-sample__move) {
-  max-width: 12rem;
+  max-width: 14rem;
   min-height: 2.1rem;
   padding: 0.38rem 0.5rem;
   border: 1px solid var(--line);

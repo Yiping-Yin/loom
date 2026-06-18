@@ -607,6 +607,22 @@
   border-top: 1px solid var(--role-border);
 }
 
+.roadmapArtifact li strong {
+  display: block;
+  color: var(--role-ink);
+  font-size: 0.91rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.roadmapArtifact li span {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--role-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .roadmapArtifact li::before {
   counter-increment: roadmap;
   content: counter(roadmap, decimal-leading-zero);

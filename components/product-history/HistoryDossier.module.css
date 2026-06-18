@@ -1618,6 +1618,7 @@
   display: grid;
   gap: 0.28rem;
   min-width: 0;
+  justify-items: start;
 }
 
 .sourceCopy strong {
@@ -2064,6 +2065,13 @@
     min-height: 44px;
   }
   /* 9 steps = a clean 3x3 instead of a ragged auto-fit edge */
+  .growthRail {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Tablet: auto-fit yields 6–7 cols with a ragged incomplete trailing row; force a clean 3×3. */
+@media (min-width: 761px) and (max-width: 1100px) {
   .growthRail {
     grid-template-columns: repeat(3, 1fr);
   }

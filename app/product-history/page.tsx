@@ -2,4 +2,6 @@ import ProductHistoryPage from '../../components/product-history/ProductHistoryP
 
 export const metadata = { title: 'Product System · Loom' };
 
-export default ProductHistoryPage;
+export default function ProductHistoryRoute() {
+  return <ProductHistoryPage />;
+}
