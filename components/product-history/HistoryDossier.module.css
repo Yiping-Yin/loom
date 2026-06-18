@@ -88,6 +88,12 @@
 /* ---- Nav glass (scoped; the shared Codex nav .tsx is untouched) -------- */
 .page :global(.loom-global-nav-slot) {
   min-height: 0 !important;
+  /* `.page > *` forces position:relative + z-index:1 onto every direct child,
+     which traps the fixed nav (z-index:1000) inside a z-1 stacking context — so
+     the hero section (also z-1, but later in the DOM) paints over it and the nav
+     vanishes. Lift the slot's stacking context above page content to free it. */
+  position: relative;
+  z-index: 1000;
 }
 
 .page :global(.loom-global-nav) {
