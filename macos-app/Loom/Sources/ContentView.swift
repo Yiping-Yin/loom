@@ -1736,6 +1736,19 @@ struct LoomWebView: NSViewRepresentable {
             components?.port = url.port
             return components?.url ?? url
         }
+        // Static-bundle mode navigates the top frame within the loom:// bundle —
+        // SPA routes plus full-page bundles like /optibook behind "Launch QBook".
+        // The base `url` is the fixed loom://bundle/index.html start route and the
+        // path persistence below only tracks http(s) URLs, so without this a SwiftUI
+        // refresh (e.g. a didCommit/didFinish state update right after the page
+        // loads) would reset the webview back to the start route. Preserve wherever
+        // the webview currently is instead. On first load webView.url is nil, so the
+        // start route is still used; error/termination recovery (which nils
+        // lastRequestedURL) correctly reloads the current page rather than home.
+        if let currentURL = webView.url,
+           currentURL.scheme == LoomURLSchemeHandler.scheme {
+            return currentURL
+        }
         if let storedRelative = UserDefaults.standard.string(forKey: lastLocalPathDefaultsKey),
            storedRelative.hasPrefix("/"),
            storedRelative != "/" {
