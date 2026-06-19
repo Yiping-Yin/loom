@@ -10,6 +10,8 @@ import {
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import { InstitutionMark } from '../../components/verified-dossier/InstitutionMark';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import { readBeginnerProfile } from '../../lib/profile/profile-store';
+import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import styles from './EducationPage.module.css';
 
 export const metadata = { title: 'Education · Loom' };
@@ -21,7 +23,7 @@ const EDUCATION_SHELF_LABELS: Record<string, string> = {
   claude: 'AI learning proof.',
 };
 
-export default function EducationPage() {
+function DossierEducationView() {
   const category = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((item) => item.id === 'education');
   if (!category) throw new Error('Missing Education category');
   const educationSourceSectionIds = new Set<string>(category.sourceSectionIds);
@@ -86,10 +88,97 @@ export default function EducationPage() {
   );
 }
 
+export function EducationProfileView({ profile }: { profile: BeginnerProfile }) {
+  const entries = profile.education;
+
+  return (
+    <main className="vd-section-page" aria-labelledby="education-title">
+      <LoomGlobalNav activeHref="/education" ariaLabel="Education navigation" />
+      <header className="vd-section-page__hero">
+        <div className="vd-section-page__hero-copy">
+          <p>Education</p>
+          <h1 id="education-title">Education.</h1>
+          <span>{entries.length} {entries.length === 1 ? 'institution' : 'institutions'} on record.</span>
+        </div>
+      </header>
+      {entries.length === 0 ? (
+        <section className="vd-section-page__grid" aria-label="Education entries">
+          <p className="vd-section-page__band-label">Institutions</p>
+        </section>
+      ) : (
+        <section className="vd-section-page__grid" aria-label="Education entries">
+          <p className="vd-section-page__band-label">Institutions</p>
+          {entries.map((entry, index) => (
+            <div key={index} className="vd-section-page__card">
+              <span
+                className="vd-education-profile-initials"
+                aria-label={entry.institution}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '2.4rem',
+                  height: '2.4rem',
+                  borderRadius: '50%',
+                  background: 'rgba(75, 197, 222, 0.12)',
+                  border: '1px solid rgba(75, 197, 222, 0.28)',
+                  color: 'var(--signature-cyan-hi, #8AF7E6)',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  lineHeight: 1,
+                  letterSpacing: '0.02em',
+                  userSelect: 'none',
+                }}
+              >
+                {institutionInitials(entry.institution)}
+              </span>
+              <strong>{entry.institution}</strong>
+              <small>
+                {[
+                  entry.qualification,
+                  entry.field,
+                  formatDateRange(entry.start, entry.end),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </small>
+            </div>
+          ))}
+        </section>
+      )}
+    </main>
+  );
+}
+
+export default async function EducationPage() {
+  const profile = await readBeginnerProfile();
+  return profile && profile.education.length > 0 ? (
+    <EducationProfileView profile={profile} />
+  ) : (
+    <DossierEducationView />
+  );
+}
+
 function courseTitle(course: (typeof VERIFIED_DOSSIER_UNSW_COURSES)[number]) {
   return (
     [course.moodleTitle, course.handbookYear ? `UNSW Handbook ${course.handbookYear}` : null]
       .filter(Boolean)
       .join(' / ') || course.status
   );
+}
+
+function institutionInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((word) => word[0].toUpperCase())
+    .join('');
+}
+
+function formatDateRange(start?: string, end?: string): string {
+  if (!start && !end) return '';
+  if (start && end) return `${start}–${end}`;
+  if (start) return `${start}–`;
+  return `–${end}`;
 }
