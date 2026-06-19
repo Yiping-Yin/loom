@@ -279,10 +279,11 @@ function PickPhase({
       {/* Profile wizard entry point */}
       <div className={styles.profileEntry}>
         <Link href="/onboarding/profile" className={styles.profileEntryLink}>
-          Build your profile pages →
+          Build your profile pages
+          <ArrowRight aria-hidden="true" size={13} strokeWidth={1.8} />
         </Link>
         <p className={styles.profileEntryCopy}>
-          Set up your Home, About, Education &amp; Experience — no folder needed.
+          Set up your Home, About, Education and Experience. No folder needed.
         </p>
       </div>
     </div>

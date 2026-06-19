@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
 import { LoomGlobalNav } from '../../../components/verified-dossier/LoomGlobalNav';
@@ -11,6 +11,10 @@ import {
   type ExperienceEntry,
   type ProfileLink,
 } from '../../../lib/profile/beginner-profile';
+import {
+  readBeginnerProfileLocal,
+  writeBeginnerProfileLocal,
+} from '../../../lib/profile/profile-storage';
 import styles from './ProfileWizard.module.css';
 
 type Step = 'home' | 'about' | 'education' | 'experience' | 'review';
@@ -30,7 +34,7 @@ export function buildProfilePayload(profile: BeginnerProfile): string {
   return JSON.stringify({ profile });
 }
 
-export function ProfileWizardClient({ initial }: { initial: BeginnerProfile | null }) {
+export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | null } = {}) {
   const router = useRouter();
   const [profile, setProfile] = useState<BeginnerProfile>(
     initial ?? emptyBeginnerProfile(),
@@ -38,6 +42,16 @@ export function ProfileWizardClient({ initial }: { initial: BeginnerProfile | nu
   const [stepIndex, setStepIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+
+  // Edit / resume: when no initial profile was supplied, hydrate from the
+  // localStorage store on mount so a returning user sees their saved profile.
+  useEffect(() => {
+    if (initial) return;
+    const stored = readBeginnerProfileLocal();
+    if (stored) setProfile(stored);
+    // Only on first mount; `initial` is stable for the wizard's lifetime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const currentStep = STEPS[stepIndex];
 
@@ -136,19 +150,13 @@ export function ProfileWizardClient({ initial }: { initial: BeginnerProfile | nu
       profile.about.links.map((l, i) => (i === idx ? { ...l, [key]: value } : l)),
     );
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSaving(true);
     setSaveError('');
     try {
-      const res = await fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: buildProfilePayload(profile),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as Record<string, unknown>;
-        throw new Error(String(body.error ?? `save failed (${res.status})`));
-      }
+      // Persist client-side: works in dev, web, and the shipped static macOS
+      // app (which has no Node server / API route).
+      writeBeginnerProfileLocal(profile);
       router.push('/about');
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err));

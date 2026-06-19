@@ -83,6 +83,7 @@ export const NEW_LOOM_SUPPORT_ROUTES = [
   '/help',
   '/offline',
   '/onboarding',
+  '/onboarding/profile',
   '/colophon',
   '/product-history',
   '/system',
