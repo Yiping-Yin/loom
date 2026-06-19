@@ -222,7 +222,7 @@ test('applyAnswer: full scripted run produces a correct normalized BeginnerProfi
   let stepId: string = 'name';
   let stepObj: Record<string, unknown> = { id: 'name' };
 
-  function step<S extends Record<string, unknown>>(s: S) { return s as Parameters<typeof applyAnswer>[1]; }
+  function step<S extends Record<string, unknown>>(s: S) { return s as unknown as Parameters<typeof applyAnswer>[1]; }
 
   // name
   let r = applyAnswer(profile, step(stepObj), 'Ada Lovelace');
@@ -399,7 +399,7 @@ test('applyAnswer: full works entry round-trips correctly through normalization'
   const { applyAnswer } = getClient();
   let profile = emptyBeginnerProfile();
 
-  function step<S extends Record<string, unknown>>(s: S) { return s as Parameters<typeof applyAnswer>[1]; }
+  function step<S extends Record<string, unknown>>(s: S) { return s as unknown as Parameters<typeof applyAnswer>[1]; }
 
   // Quickly get to work_title via exp_more path
   let r = applyAnswer(profile, step({ id: 'name' }), 'Ada');
