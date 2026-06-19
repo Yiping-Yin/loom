@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { emptyBeginnerProfile, normalizeBeginnerProfile } from '../lib/profile/beginner-profile';
+import { readBeginnerProfile, writeBeginnerProfile } from '../lib/profile/profile-store';
 
 test('emptyBeginnerProfile is a valid empty shape', () => {
   const p = emptyBeginnerProfile();
@@ -30,4 +34,21 @@ test('normalize preserves valid data and drops empty entries', () => {
   assert.equal(p.education.length, 1);
   assert.equal(p.experience.length, 1);
   assert.deepEqual(p.experience[0].bullets, ['shipped']);
+});
+
+test('store round-trips a profile and returns null when missing', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loom-profile-'));
+  const file = path.join(dir, 'beginner-profile.json');
+  try {
+    assert.equal(await readBeginnerProfile(file), null);
+    await writeBeginnerProfile(
+      normalizeBeginnerProfile({ home: { name: 'Ada', headline: 'Eng' } }),
+      file,
+    );
+    const back = await readBeginnerProfile(file);
+    assert.equal(back?.home.name, 'Ada');
+    assert.equal(back?.version, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
