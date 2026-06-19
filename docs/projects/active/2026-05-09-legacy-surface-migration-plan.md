@@ -50,7 +50,7 @@ Legacy surfaces are not first-level product concepts. They can remain as files a
 | `/salon` | Compatibility | Sources | Redirect to `/sources` until real shared-reading sessions exist; do not expose Coworks as the empty-state escape hatch. |
 | `/atlas`, `/atlas/shelf`, `/browse` | Compatibility | Sources | Redirect to `/sources`; do not pass old source-shelf aliases through Desk or expose "Atlas" as a product category. |
 | `/notes`, `/highlights` | Compatibility | Sources | Fold trace-backed and capture-reader note/highlight review into Sources; redirect these old routes to `/sources#reader-notes` until compatibility deletion is safe. |
-| `/today` | Compatibility | Sources | Redirect to `/sources` because current work now belongs in Sources, not the legacy Desk route. |
+| `/today` | Compatibility | Sources | Live daily capture surface (quick jot + recent jots, localStorage-backed). Not a redirect. Route stays legacy-classified (not a sidebar primary) until promoted. |
 | `/contents` | Compatibility | Sources | Redirect to `/sources` because the old table-of-contents surface map reintroduces hidden legacy concepts. |
 | `/uploads` | Compatibility | Sources | Redirect to `/sources` because file intake now lives in Sources on web and native. |
 | `/desk` | Compatibility | Sources | Redirect to `/sources` after shelf, today/current-work, and writing handoff jobs moved into Sources and Draft. |

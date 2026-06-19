@@ -9,11 +9,16 @@
  * the gamified surveillance UX that §11 forbids and that ChatGPT-style
  * tools mistake for engagement.
  *
- * What /today actually IS: the entry point for today's thinking. Two
- * quiet questions — what was read today, and what is pinned for later —
- * set in Vellum literary type. A day is not a to-do list.
+ * What /today actually IS: a frictionless capture surface for quick jots
+ * and the entry point for today's thinking. Two quiet questions — what was
+ * read today, and what is pinned for later — set in Vellum literary type.
+ * A day is not a to-do list.
+ *
+ * Jots are persisted client-side in localStorage via lib/jot/jot-storage so
+ * they work identically in dev, the web build, and the static macOS app
+ * (loom://bundle, no Node server).
  */
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { subscribeLoomMirror } from '../../lib/loom-mirror-store';
 import {
@@ -21,6 +26,7 @@ import {
   loadRecentRecords,
   type LoomRecentRecord,
 } from '../../lib/loom-recent-records';
+import { readJots, appendJot, type Jot } from '../../lib/jot/jot-storage';
 
 type Row = { href: string; title: string };
 
@@ -64,6 +70,17 @@ async function loadToday(): Promise<Row[]> {
   return rowsReadToday(await loadRecentRecords());
 }
 
+function relativeTime(at: number): string {
+  const diff = Date.now() - at;
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(diff / 3_600_000);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(diff / 86_400_000);
+  return `${days}d ago`;
+}
+
 function readPinned(): Row[] {
   const rows: Row[] = [];
   for (const entry of readJson('loom.pinned.v1')) {
@@ -80,6 +97,10 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
   const [greeting, setGreeting] = useState('Morning.');
   const [read, setRead] = useState<Row[]>([]);
   const [pinned, setPinned] = useState<Row[]>([]);
+  const [jots, setJots] = useState<Jot[]>([]);
+  const [jotInput, setJotInput] = useState('');
+  const [savedFlash, setSavedFlash] = useState(false);
+  const jotRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,6 +111,7 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
     setGreeting(greetingFor(new Date().getHours()));
     void hydrate();
     setPinned(readPinned());
+    setJots(readJots());
     setMounted(true);
     return () => {
       cancelled = true;
@@ -111,6 +133,24 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
     };
   }, []);
 
+  const submitJot = () => {
+    const jot = appendJot(jotInput);
+    if (!jot) return;
+    setJots(readJots());
+    setJotInput('');
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1400);
+    // Restore focus so the user can keep typing without re-clicking.
+    setTimeout(() => jotRef.current?.focus(), 0);
+  };
+
+  const handleJotKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitJot();
+    }
+  };
+
   const Container = embedded ? 'section' : 'main';
   const className = embedded ? 'loom-today loom-today--embedded' : 'loom-today';
 
@@ -122,6 +162,99 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
   return (
     <Container className={className}>
       <p className="loom-today-greeting">{greeting}</p>
+
+      {/* Jot capture — frictionless quick-thought input */}
+      <section className="loom-today-section" style={{ marginBottom: '2rem' }}>
+        <p className="loom-today-section-label">What are you thinking?</p>
+        <div style={{ position: 'relative' }}>
+          <textarea
+            ref={jotRef}
+            value={jotInput}
+            aria-label="Quick jot"
+            placeholder="Type a thought and press Enter…"
+            rows={1}
+            onChange={(e) => {
+              setJotInput(e.target.value);
+              const el = e.target;
+              el.style.height = 'auto';
+              el.style.height = Math.min(160, el.scrollHeight) + 'px';
+            }}
+            onKeyDown={handleJotKeyDown}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: '1px solid var(--mat-border)',
+              borderRadius: 0,
+              outline: 'none',
+              resize: 'none',
+              fontFamily: 'var(--serif)',
+              fontSize: '1rem',
+              lineHeight: 1.6,
+              color: 'var(--fg)',
+              padding: '0.25rem 0 0.35rem',
+              minHeight: 32,
+              maxHeight: 160,
+              overflowY: 'hidden',
+            }}
+          />
+          {savedFlash && (
+            <span
+              aria-live="polite"
+              style={{
+                position: 'absolute',
+                right: 0,
+                bottom: '0.4rem',
+                fontSize: '0.78rem',
+                color: 'var(--accent)',
+                fontFamily: 'var(--display)',
+                letterSpacing: '0.02em',
+                pointerEvents: 'none',
+                opacity: savedFlash ? 1 : 0,
+                transition: 'opacity 0.3s ease',
+              }}
+            >
+              Saved
+            </span>
+          )}
+        </div>
+      </section>
+
+      {/* Recent jots */}
+      {jots.length > 0 && (
+        <section className="loom-today-section">
+          <p className="loom-today-section-label">Recent.</p>
+          <ul className="loom-today-list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {jots.slice(0, 20).map((j) => (
+              <li key={j.id} style={{ marginBottom: '0.6rem' }}>
+                <span
+                  style={{
+                    display: 'block',
+                    fontFamily: 'var(--serif)',
+                    fontSize: '0.95rem',
+                    lineHeight: 1.5,
+                    color: 'var(--fg)',
+                  }}
+                >
+                  {j.text}
+                </span>
+                <span
+                  style={{
+                    display: 'block',
+                    fontFamily: 'var(--display)',
+                    fontSize: '0.72rem',
+                    color: 'var(--fg-secondary)',
+                    marginTop: '0.15rem',
+                    letterSpacing: '0.01em',
+                  }}
+                >
+                  {relativeTime(j.at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <Section label="What you have read today." rows={read} emptyLabel="Nothing yet." onGo={go} />
       <Section label="What you have pinned for later." rows={pinned} emptyLabel="A day is not a to-do list." onGo={go} />

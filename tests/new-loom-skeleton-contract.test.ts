@@ -2089,14 +2089,34 @@ test('notes and highlights are compatibility redirects into Sources reader notes
   assert.match(sourceIndex, /<section id=\{id\} className="loom-source-block">/);
 });
 
-test('today compatibility route lands in Sources current work instead of legacy Desk', () => {
+test('today is a live capture surface — not a redirect — with client-side jot persistence', () => {
   const todayPage = read('app/today/page.tsx');
+  const todayClient = read('app/today/TodayClient.tsx');
+  const jotStorage = read('lib/jot/jot-storage.ts');
   const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
 
-  assert.match(todayPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(todayPage, /redirect\('\/sources'\)/);
+  // /today renders TodayClient, does not redirect to /sources or /desk.
+  assert.doesNotMatch(todayPage, /redirect\('\/sources'\)/);
   assert.doesNotMatch(todayPage, /redirect\('\/desk'\)/);
-  assert.match(plan, /\| `\/today` \| Compatibility \| Sources \| Redirect to `\/sources`/);
+  assert.match(todayPage, /TodayClient/);
+
+  // Jot storage is localStorage-backed and exports the required API.
+  assert.match(jotStorage, /JOTS_KEY/);
+  assert.match(jotStorage, /export function readJots/);
+  assert.match(jotStorage, /export function appendJot/);
+  assert.match(jotStorage, /localStorage/);
+  // No server / IndexedDB dependency — stays client-safe.
+  assert.doesNotMatch(jotStorage, /appendEventForDoc|IndexedDB|indexedDB/);
+
+  // TodayClient wires the jot store into the capture surface.
+  assert.match(todayClient, /readJots/);
+  assert.match(todayClient, /appendJot/);
+  assert.match(todayClient, /jot-storage/);
+
+  // Route is still classified (legacy, not primary) so no sidebar link
+  // and the migration plan reflects the new role.
+  assert.match(plan, /`\/today`/);
+  assert.match(plan, /capture surface|jot|quick.jot|daily capture/i);
 });
 
 test('contents compatibility route lands in Sources instead of the legacy surface map', () => {
