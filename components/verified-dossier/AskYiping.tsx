@@ -43,19 +43,43 @@ type AskPhase = 'example' | 'streaming' | 'done' | 'unconfigured' | 'error';
 /** Raw citation shape the API emits ({done} or {configured:false}). */
 type ApiCitation = { artifactId?: unknown; title?: unknown; href?: unknown };
 
-/** Resolve an API citation to the real artifact; drop anything non-resolvable. */
+/**
+ * Resolve an API citation to a renderable citation.
+ *
+ * Owner citations: dossier resolution runs first and wins — kind/label/href are
+ * taken from the real verified artifact, byte-identical to before.
+ *
+ * Beginner citations (e.g. `me-exp-0`, `me-edu-0`): the dossier resolver returns
+ * null for those ids. When the raw citation already carries a string `title` and
+ * `href` (filled in server-side by the beginner citation resolver), build a
+ * ResolvedCitation from them with a neutral `kind` so FileBadge can render.
+ *
+ * Anything else (no title/href, non-string artifactId) is dropped.
+ */
 function resolveCitation(raw: ApiCitation): ResolvedCitation | null {
   if (typeof raw?.artifactId !== 'string') return null;
   const artifact = resolveVerifiedDossierArtifact(
     raw.artifactId as VerifiedDossierArtifactId,
   );
-  if (!artifact) return null;
-  return {
-    artifactId: artifact.id,
-    title: artifact.label,
-    href: artifact.href,
-    kind: artifact.kind,
-  };
+  if (artifact) {
+    return {
+      artifactId: artifact.id,
+      title: artifact.label,
+      href: artifact.href,
+      kind: artifact.kind,
+    };
+  }
+  // Beginner profile citations: the API provides title + href directly.
+  if (typeof raw.title === 'string' && raw.title.length > 0 &&
+      typeof raw.href === 'string' && raw.href.length > 0) {
+    return {
+      artifactId: raw.artifactId,
+      title: raw.title,
+      href: raw.href,
+      kind: 'text',
+    };
+  }
+  return null;
 }
 
 function resolveCitations(list: unknown): ResolvedCitation[] {
