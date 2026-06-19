@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 import {
@@ -10,11 +12,9 @@ import {
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import { InstitutionMark } from '../../components/verified-dossier/InstitutionMark';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
-import { readBeginnerProfile } from '../../lib/profile/profile-store';
+import { ProfileGate } from '../profile/ProfileGate';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import styles from './EducationPage.module.css';
-
-export const metadata = { title: 'Education · Loom' };
 
 const EDUCATION_SHELF_LABELS: Record<string, string> = {
   unsw: 'Course evidence.',
@@ -150,9 +150,12 @@ export function EducationProfileView({ profile }: { profile: BeginnerProfile }) 
   );
 }
 
-export default async function EducationPage() {
-  const profile = await readBeginnerProfile();
-  return profile ? <EducationProfileView profile={profile} /> : <DossierEducationView />;
+export default function EducationPage() {
+  return (
+    <ProfileGate renderProfile={(profile) => <EducationProfileView profile={profile} />}>
+      <DossierEducationView />
+    </ProfileGate>
+  );
 }
 
 function courseTitle(course: (typeof VERIFIED_DOSSIER_UNSW_COURSES)[number]) {

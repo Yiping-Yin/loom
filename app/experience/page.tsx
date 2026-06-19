@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 import {
@@ -8,11 +10,9 @@ import {
 } from '../../lib/new-loom/verified-dossier-home';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
-import { readBeginnerProfile } from '../../lib/profile/profile-store';
+import { ProfileGate } from '../profile/ProfileGate';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import styles from './ExperiencePage.module.css';
-
-export const metadata = { title: 'Experience · Loom' };
 
 const EXPERIENCE_ENTRY_LABELS: Record<string, string> = {
   'optiver-unsw-trading-academy': 'Trading academy + QBook.',
@@ -176,9 +176,12 @@ export function ExperienceProfileView({ profile }: { profile: BeginnerProfile })
   );
 }
 
-export default async function ExperiencePage() {
-  const profile = await readBeginnerProfile();
-  return profile ? <ExperienceProfileView profile={profile} /> : <DossierExperienceView />;
+export default function ExperiencePage() {
+  return (
+    <ProfileGate renderProfile={(profile) => <ExperienceProfileView profile={profile} />}>
+      <DossierExperienceView />
+    </ProfileGate>
+  );
 }
 
 function formatProfileDateRange(start?: string, end?: string): string {

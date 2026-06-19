@@ -1,10 +1,13 @@
+'use client';
+
 import AboutClient from './AboutClient';
 import { AboutProfileView } from './AboutProfileView';
-import { readBeginnerProfile } from '../../lib/profile/profile-store';
+import { ProfileGate } from '../profile/ProfileGate';
 
-export const metadata = { title: 'About · Loom' };
-
-export default async function AboutPage() {
-  const profile = await readBeginnerProfile();
-  return profile ? <AboutProfileView profile={profile} /> : <AboutClient />;
+export default function AboutPage() {
+  return (
+    <ProfileGate renderProfile={(profile) => <AboutProfileView profile={profile} />}>
+      <AboutClient />
+    </ProfileGate>
+  );
 }
