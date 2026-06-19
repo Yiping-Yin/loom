@@ -152,11 +152,7 @@ export function EducationProfileView({ profile }: { profile: BeginnerProfile }) 
 
 export default async function EducationPage() {
   const profile = await readBeginnerProfile();
-  return profile && profile.education.length > 0 ? (
-    <EducationProfileView profile={profile} />
-  ) : (
-    <DossierEducationView />
-  );
+  return profile ? <EducationProfileView profile={profile} /> : <DossierEducationView />;
 }
 
 function courseTitle(course: (typeof VERIFIED_DOSSIER_UNSW_COURSES)[number]) {
