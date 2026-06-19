@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fs from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -51,4 +52,14 @@ test('store round-trips a profile and returns null when missing', async () => {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test('api/profile route wires GET+POST to the store and normalizer', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'app/api/profile/route.ts'), 'utf8');
+  assert.match(src, /export async function GET/);
+  assert.match(src, /export async function POST/);
+  assert.match(src, /readBeginnerProfile/);
+  assert.match(src, /writeBeginnerProfile/);
+  assert.match(src, /normalizeBeginnerProfile/);
+  assert.match(src, /runtime = ['"]nodejs['"]/);
 });
