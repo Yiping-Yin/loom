@@ -1,0 +1,162 @@
+.section {
+  display: grid;
+  gap: clamp(1rem, 1.8vw, 1.4rem);
+  padding-top: clamp(1.2rem, 2vw, 1.8rem);
+  border-top: 1px solid var(--line);
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--text-3);
+  font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-1);
+}
+
+/* The vertical timeline */
+.timeline {
+  position: relative;
+  display: grid;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* Continuous rail — a single 1px line from the first node to the last */
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 0.55rem; /* align with node center */
+  bottom: 0.55rem;
+  left: 0.46rem; /* half of node width (0.94rem / 2) */
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+
+.milestone {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  gap: 0 0.75rem;
+  padding: 0 0 clamp(0.95rem, 1.6vw, 1.25rem);
+  align-items: start;
+}
+
+.milestone:last-child {
+  padding-bottom: 0;
+}
+
+/* Node dot — centered on the rail */
+.node {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0.36rem; /* nudge so the node center aligns with the label baseline */
+}
+
+.nodeDot {
+  width: 0.56rem;
+  height: 0.56rem;
+  border-radius: 999px;
+  background: var(--signature-cyan);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--signature-cyan) 48%, transparent);
+  flex: none;
+}
+
+/* Subtler dot for work items */
+.milestone[data-type='work'] .nodeDot {
+  background: transparent;
+  border: 1.5px solid var(--signature-cyan);
+  box-shadow: none;
+}
+
+/* Content block */
+.content {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.label {
+  color: var(--text-1);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.sublabel {
+  color: var(--text-2);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.date {
+  color: var(--text-3);
+  font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Type tag pill */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.42rem;
+  border-radius: 3px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+.tagEducation {
+  color: var(--signature-cyan);
+  border-color: color-mix(in srgb, var(--signature-cyan) 30%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 8%, transparent);
+}
+
+.tagExperience {
+  color: var(--text-2);
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--text-3) 10%, transparent);
+}
+
+.tagWork {
+  color: var(--text-3);
+  border-color: color-mix(in srgb, var(--text-3) 25%, transparent);
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nodeDot {
+    box-shadow: none;
+  }
+}

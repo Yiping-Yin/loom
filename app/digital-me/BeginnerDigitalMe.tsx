@@ -5,6 +5,7 @@ import { AskYiping } from '../../components/verified-dossier/AskYiping';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import styles from '../about/AboutClient.module.css';
+import { BeginnerJourney } from './BeginnerJourney';
 
 /**
  * Beginner-profile Digital Me view.
@@ -122,6 +123,10 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             </nav>
           )}
         </header>
+
+        {/* Journey timeline — derived from education + experience + works.
+            Rendered only when the profile has at least one entry in any section. */}
+        <BeginnerJourney profile={profile} />
 
         {/* Ask widget — centrepiece: answers are grounded in the beginner's
             localStorage profile which /api/ask receives automatically.
