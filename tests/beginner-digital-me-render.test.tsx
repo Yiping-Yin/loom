@@ -120,3 +120,72 @@ test('BeginnerDigitalMe falls back to "Your name" when name is empty', () => {
 
   assert.match(text, /Your name/);
 });
+
+// --- AskYiping suggestedQuestions / placeholder prop contract ---
+
+test('AskYiping renders custom suggestedQuestions when provided', () => {
+  const { AskYiping } = require('../components/verified-dossier/AskYiping') as typeof import('../components/verified-dossier/AskYiping');
+  const custom = ["What's their experience?", 'What are they strongest at?'];
+  const html = render(<AskYiping suggestedQuestions={custom} />);
+  const text = visibleText(html);
+
+  assert.match(text, /What's their experience\?/);
+  assert.match(text, /What are they strongest at\?/);
+
+  // Extract only the chips group HTML (role="group" aria-label="Suggested questions")
+  // to verify owner-specific chip text is absent from the chips — the example answer
+  // body may legitimately contain owner-specific terms.
+  const chipsMatch = html.match(/role="group" aria-label="Suggested questions"[^>]*>([\s\S]*?)<\/div>/);
+  const chipsHtml = chipsMatch ? chipsMatch[1] : '';
+  assert.ok(chipsHtml.length > 0, 'chips group should be present in the HTML');
+  assert.doesNotMatch(chipsHtml, /optimisation|Optibook|C\+\+/i);
+});
+
+test('AskYiping renders owner default chips when no suggestedQuestions prop is given', () => {
+  const { AskYiping } = require('../components/verified-dossier/AskYiping') as typeof import('../components/verified-dossier/AskYiping');
+  const { ASK_YIPING_SUGGESTED_QUESTIONS } = require('../lib/new-loom/ask-yiping') as typeof import('../lib/new-loom/ask-yiping');
+  const html = render(<AskYiping />);
+  const text = visibleText(html);
+
+  for (const chip of ASK_YIPING_SUGGESTED_QUESTIONS) {
+    assert.match(text, new RegExp(chip.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+});
+
+test('AskYiping renders custom placeholder when provided', () => {
+  const { AskYiping } = require('../components/verified-dossier/AskYiping') as typeof import('../components/verified-dossier/AskYiping');
+  const html = render(<AskYiping placeholder="Ask me anything…" />);
+
+  assert.match(html, /placeholder="Ask me anything…"/);
+  assert.doesNotMatch(html, /Ask about maths/);
+});
+
+test('AskYiping renders owner default placeholder when no placeholder prop is given', () => {
+  const { AskYiping } = require('../components/verified-dossier/AskYiping') as typeof import('../components/verified-dossier/AskYiping');
+  const html = render(<AskYiping />);
+
+  assert.match(html, /Ask about maths, optimisation, programming, or QBook/);
+});
+
+test('BeginnerDigitalMe passes generic chips and placeholder to AskYiping', () => {
+  const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
+  const html = render(<BeginnerDigitalMe profile={SAMPLE_PROFILE} />);
+  const text = visibleText(html);
+
+  // Generic chips must be present.
+  assert.match(text, /What's their experience\?/);
+  assert.match(text, /What are they strongest at\?/);
+  assert.match(text, /What have they studied\?/);
+  assert.match(text, /Why work with them\?/);
+  // Generic placeholder must be present.
+  assert.match(html, /placeholder="Ask me anything…"/);
+  // Owner-specific placeholder must NOT appear.
+  assert.doesNotMatch(html, /Ask about maths/);
+
+  // Extract chips group HTML to verify owner-specific chip text is absent from
+  // the chips — the example answer body may contain owner-specific terms.
+  const chipsMatch = html.match(/role="group" aria-label="Suggested questions"[^>]*>([\s\S]*?)<\/div>/);
+  const chipsHtml = chipsMatch ? chipsMatch[1] : '';
+  assert.ok(chipsHtml.length > 0, 'chips group should be present in the HTML');
+  assert.doesNotMatch(chipsHtml, /optimisation|Optibook|C\+\+/i);
+});

@@ -85,7 +85,19 @@ const EXAMPLE_CITATIONS: ResolvedCitation[] = VERIFIED_DOSSIER_AI_PROMPT.citatio
   .map((id) => resolveCitation({ artifactId: id }))
   .filter((citation): citation is ResolvedCitation => citation !== null);
 
-export function AskYiping() {
+export interface AskYipingProps {
+  /** Override the suggested-question chips. Defaults to the owner's questions. */
+  suggestedQuestions?: string[];
+  /** Override the input placeholder text. Defaults to the owner's placeholder. */
+  placeholder?: string;
+}
+
+const OWNER_PLACEHOLDER = 'Ask about maths, optimisation, programming, or QBook...';
+
+export function AskYiping({
+  suggestedQuestions = ASK_YIPING_SUGGESTED_QUESTIONS,
+  placeholder = OWNER_PLACEHOLDER,
+}: AskYipingProps = {}) {
   const [draft, setDraft] = useState('');
   const [askedQuestion, setAskedQuestion] = useState(VERIFIED_DOSSIER_AI_PROMPT.question);
   const [answer, setAnswer] = useState(VERIFIED_DOSSIER_AI_PROMPT.answer);
@@ -200,7 +212,7 @@ export function AskYiping() {
           name="question"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="Ask about maths, optimisation, programming, or QBook..."
+          placeholder={placeholder}
           aria-label="Ask Yiping a question"
           autoComplete="off"
           disabled={isBusy}
@@ -211,7 +223,7 @@ export function AskYiping() {
       </form>
 
       <div className={styles.chips} role="group" aria-label="Suggested questions">
-        {ASK_YIPING_SUGGESTED_QUESTIONS.map((question) => (
+        {suggestedQuestions.map((question) => (
           <button
             key={question}
             type="button"

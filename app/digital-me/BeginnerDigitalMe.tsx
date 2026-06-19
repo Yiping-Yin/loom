@@ -17,12 +17,11 @@ import styles from '../about/AboutClient.module.css';
  * Intentionally omits all Yiping-specific Role-OS richness: proof-path grid,
  * evidence graph, artifact runtime, QBook room — a beginner has none of these.
  *
- * Note: AskYiping's suggested-question chips and input placeholder are currently
- * Yiping-hardcoded in the shared component. When a beginner is present the
- * /api/ask answers are still about them (the route receives the localStorage
- * profile), but the pre-fill chips reference Yiping's topics. Adding a
- * suggestedQuestions prop to AskYiping is a follow-up (tracked in the commit
- * message) — it should not alter the shared widget's external contract today.
+ * AskYiping's suggested-question chips and input placeholder are overridden
+ * here with generic prompts (suggestedQuestions + placeholder props) so the
+ * visitor sees questions about this person, not Yiping's specific topics.
+ * Answers remain grounded in the beginner's profile via the localStorage data
+ * that /api/ask receives automatically.
  */
 export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   const { home, about } = profile;
@@ -125,8 +124,18 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
         </header>
 
         {/* Ask widget — centrepiece: answers are grounded in the beginner's
-            localStorage profile which /api/ask receives automatically. */}
-        <AskYiping />
+            localStorage profile which /api/ask receives automatically.
+            Generic chips/placeholder used so the visitor sees questions about
+            the profile owner (whoever that is), not Yiping's specific topics. */}
+        <AskYiping
+          suggestedQuestions={[
+            "What's their experience?",
+            'What are they strongest at?',
+            'What have they studied?',
+            'Why work with them?',
+          ]}
+          placeholder="Ask me anything…"
+        />
       </div>
     </main>
   );
