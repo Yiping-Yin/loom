@@ -131,6 +131,33 @@ test('readBeginnerProfileLocal returns null for unparseable stored value', () =>
   });
 });
 
+test('emptyBeginnerProfile has works: []', () => {
+  const p = emptyBeginnerProfile();
+  assert.deepEqual(p.works, []);
+});
+
+test('normalize preserves valid works and drops entries with empty title', () => {
+  const p = normalizeBeginnerProfile({
+    home: { name: 'Ada', headline: 'Engineer' },
+    works: [
+      { title: 'Option Pricer', description: 'Black-Scholes calc', link: 'https://example.com', role: 'Solo dev', date: '2024' },
+      { title: '' },
+      {},
+    ],
+  });
+  assert.equal(p.works.length, 1);
+  assert.equal(p.works[0].title, 'Option Pricer');
+  assert.equal(p.works[0].description, 'Black-Scholes calc');
+  assert.equal(p.works[0].link, 'https://example.com');
+  assert.equal(p.works[0].role, 'Solo dev');
+  assert.equal(p.works[0].date, '2024');
+});
+
+test('normalize coerces non-array works to empty array', () => {
+  const p = normalizeBeginnerProfile({ works: 'not-an-array' });
+  assert.deepEqual(p.works, []);
+});
+
 test('writeBeginnerProfileLocal is a no-op during SSR (no window)', () => {
   const prevWindow = (globalThis as Record<string, unknown>).window;
   delete (globalThis as Record<string, unknown>).window;

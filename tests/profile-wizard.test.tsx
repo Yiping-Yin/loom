@@ -99,6 +99,7 @@ const SAMPLE_PROFILE: BeginnerProfile = {
       bullets: ['Built a vol model'],
     },
   ],
+  works: [],
 };
 
 // ── Tests ─────────────────────────────────────────────────────────────────

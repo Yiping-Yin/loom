@@ -35,6 +35,7 @@ export function HomeProfileView({ profile }: { profile: BeginnerProfile }) {
           <a href="/about">About</a>
           <a href="/education">Education</a>
           <a href="/experience">Experience</a>
+          <a href="/works">Works</a>
         </nav>
       </main>
 

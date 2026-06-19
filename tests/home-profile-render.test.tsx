@@ -37,6 +37,7 @@ const SAMPLE_PROFILE: BeginnerProfile = {
   },
   education: [],
   experience: [],
+  works: [],
 };
 
 test('HomeProfileView renders name and headline', () => {
@@ -56,13 +57,14 @@ test('HomeProfileView renders summary when present', () => {
   assert.match(text, /Building knowledge systems at the intersection of finance and AI\./);
 });
 
-test('HomeProfileView renders section nav links to /about, /education, /experience', () => {
+test('HomeProfileView renders section nav links to /about, /education, /experience, /works', () => {
   const { HomeProfileView } = require('../app/HomeProfileView') as typeof import('../app/HomeProfileView');
   const html = render(<HomeProfileView profile={SAMPLE_PROFILE} />);
 
   assert.match(html, /href="\/about"/);
   assert.match(html, /href="\/education"/);
   assert.match(html, /href="\/experience"/);
+  assert.match(html, /href="\/works"/);
 });
 
 test('HomeProfileView renders NEW_LOOM_CAPABILITIES capability links', () => {

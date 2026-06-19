@@ -39,6 +39,7 @@ const SAMPLE_PROFILE: BeginnerProfile = {
   },
   education: [],
   experience: [],
+  works: [],
 };
 
 test('BeginnerDigitalMe renders name and headline', () => {

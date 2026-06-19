@@ -38,6 +38,7 @@ const SAMPLE_PROFILE: BeginnerProfile = {
   },
   education: [],
   experience: [],
+  works: [],
 };
 
 test('AboutProfileView renders name and summary', () => {

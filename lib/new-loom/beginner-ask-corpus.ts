@@ -32,6 +32,7 @@ export const BEGINNER_ABOUT_SOURCE_ID = 'me-about';
 
 const EDU_ID_PREFIX = 'me-edu-';
 const EXP_ID_PREFIX = 'me-exp-';
+const WORK_ID_PREFIX = 'me-work-';
 const LINK_ID_PREFIX = 'me-link-';
 
 /** Join non-empty parts into one searchable string. */
@@ -109,6 +110,18 @@ export function buildBeginnerCorpus(profile: BeginnerProfile): AskYipingSource[]
     });
   });
 
+  // 3.5. Works entries.
+  profile.works.forEach((entry, index) => {
+    const title = joinText([entry.title, entry.role ? `· ${entry.role}` : '']);
+    sources.push({
+      id: `${WORK_ID_PREFIX}${index}`,
+      title: title || `Work ${index + 1}`,
+      kind: 'work',
+      href: entry.link?.trim() || '/works',
+      text: joinText([entry.title, entry.description, entry.role, entry.date]),
+    });
+  });
+
   // 4. Links.
   profile.about.links.forEach((link, index) => {
     sources.push({
@@ -164,6 +177,17 @@ export function resolveBeginnerSource(
           ? `Experience · ${entry.role}`
           : 'Experience',
       href: '/experience',
+    };
+  }
+
+  if (id.startsWith(WORK_ID_PREFIX)) {
+    const index = Number(id.slice(WORK_ID_PREFIX.length));
+    const entry = profile.works[index];
+    if (!entry) return null;
+    return {
+      id,
+      label: `Works · ${entry.title}`,
+      href: entry.link?.trim() || '/works',
     };
   }
 

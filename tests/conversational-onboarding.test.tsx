@@ -268,8 +268,14 @@ test('applyAnswer: full scripted run produces a correct normalized BeginnerProfi
   r = applyAnswer(profile, step(stepObj), 'Built a vol model');
   profile = r.profile; stepObj = r.next as Record<string, unknown>; stepId = stepObj.id as string;
 
-  // exp_more → no
+  // exp_more → no → work_title
   r = applyAnswer(profile, step(stepObj), 'no');
+  profile = r.profile; stepObj = r.next as Record<string, unknown>; stepId = stepObj.id as string;
+
+  assert.equal(stepId, 'work_title');
+
+  // work_title → skip → review
+  r = applyAnswer(profile, step(stepObj), 'skip');
   profile = r.profile; stepObj = r.next as Record<string, unknown>; stepId = stepObj.id as string;
 
   assert.equal(stepId, 'review');
@@ -296,6 +302,9 @@ test('applyAnswer: full scripted run produces a correct normalized BeginnerProfi
   assert.equal(normalized.experience[0].organization, 'Acme Capital');
   assert.equal(normalized.experience[0].bullets.length, 1);
   assert.equal(normalized.experience[0].bullets[0], 'Built a vol model');
+
+  // Works (skipped)
+  assert.equal(normalized.works.length, 0);
 });
 
 // ── Render test ───────────────────────────────────────────────────────────────
@@ -328,6 +337,106 @@ test('ConversationalOnboardingClient: renders without error with no initial stat
     html = render(<ConversationalOnboardingClient />);
   });
   assert.ok(html.length > 0);
+});
+
+// ── Works loop tests ──────────────────────────────────────────────────────────
+
+test('applyAnswer: work_title "skip" advances to review', () => {
+  const { applyAnswer } = getClient();
+  const profile = emptyBeginnerProfile();
+  const { next } = applyAnswer(profile, { id: 'work_title', entryIdx: 0 }, 'skip');
+  assert.equal(next.id, 'review');
+});
+
+test('applyAnswer: work_title creates entry and advances to work_description', () => {
+  const { applyAnswer } = getClient();
+  const profile = emptyBeginnerProfile();
+  const { next, profile: p } = applyAnswer(profile, { id: 'work_title', entryIdx: 0 }, 'Option Pricer');
+  assert.equal(p.works.length, 1);
+  assert.equal(p.works[0].title, 'Option Pricer');
+  assert.equal(next.id, 'work_description');
+});
+
+test('applyAnswer: work_description stores description and advances to work_link', () => {
+  const { applyAnswer } = getClient();
+  const base = { ...emptyBeginnerProfile(), works: [{ title: 'Option Pricer' }] };
+  const { next, profile: p } = applyAnswer(base, { id: 'work_description', entryIdx: 0 }, 'Black-Scholes web calculator.');
+  assert.equal(p.works[0].description, 'Black-Scholes web calculator.');
+  assert.equal(next.id, 'work_link');
+});
+
+test('applyAnswer: work_description "skip" leaves description undefined', () => {
+  const { applyAnswer } = getClient();
+  const base = { ...emptyBeginnerProfile(), works: [{ title: 'Option Pricer' }] };
+  const { profile: p } = applyAnswer(base, { id: 'work_description', entryIdx: 0 }, 'skip');
+  assert.equal(p.works[0].description, undefined);
+});
+
+test('applyAnswer: work_link stores link and advances to work_more', () => {
+  const { applyAnswer } = getClient();
+  const base = { ...emptyBeginnerProfile(), works: [{ title: 'Option Pricer' }] };
+  const { next, profile: p } = applyAnswer(base, { id: 'work_link', entryIdx: 0 }, 'https://github.com/ada/op');
+  assert.equal(p.works[0].link, 'https://github.com/ada/op');
+  assert.equal(next.id, 'work_more');
+});
+
+test('applyAnswer: work_more "yes" advances to work_title with next index', () => {
+  const { applyAnswer } = getClient();
+  const base = { ...emptyBeginnerProfile(), works: [{ title: 'Option Pricer' }] };
+  const { next } = applyAnswer(base, { id: 'work_more' }, 'yes');
+  assert.equal(next.id, 'work_title');
+  assert.equal((next as { id: string; entryIdx: number }).entryIdx, 1);
+});
+
+test('applyAnswer: work_more "no" advances to review', () => {
+  const { applyAnswer } = getClient();
+  const base = emptyBeginnerProfile();
+  const { next } = applyAnswer(base, { id: 'work_more' }, 'no');
+  assert.equal(next.id, 'review');
+});
+
+test('applyAnswer: full works entry round-trips correctly through normalization', () => {
+  const { applyAnswer } = getClient();
+  let profile = emptyBeginnerProfile();
+
+  function step<S extends Record<string, unknown>>(s: S) { return s as Parameters<typeof applyAnswer>[1]; }
+
+  // Quickly get to work_title via exp_more path
+  let r = applyAnswer(profile, step({ id: 'name' }), 'Ada');
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'Engineer');
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'skip'); // summary
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'skip'); // edu_institution → exp_role
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'Analyst'); // exp_role
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'Acme'); // exp_organization
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'skip'); // exp_years
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'skip'); // exp_highlight
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'no'); // exp_more → work_title
+  profile = r.profile;
+  assert.equal((r.next as { id: string }).id, 'work_title');
+
+  r = applyAnswer(profile, step({ id: 'work_title', entryIdx: 0 }), 'Option Pricer');
+  profile = r.profile;
+  r = applyAnswer(profile, step({ id: 'work_description', entryIdx: 0 }), 'Black-Scholes calc');
+  profile = r.profile;
+  r = applyAnswer(profile, step({ id: 'work_link', entryIdx: 0 }), 'https://github.com/ada/op');
+  profile = r.profile;
+  r = applyAnswer(profile, step({ id: 'work_more' }), 'no');
+  profile = r.profile;
+  assert.equal((r.next as { id: string }).id, 'review');
+
+  const normalized = normalizeBeginnerProfile(profile);
+  assert.equal(normalized.works.length, 1);
+  assert.equal(normalized.works[0].title, 'Option Pricer');
+  assert.equal(normalized.works[0].description, 'Black-Scholes calc');
+  assert.equal(normalized.works[0].link, 'https://github.com/ada/op');
 });
 
 // Suppress unused variable warning

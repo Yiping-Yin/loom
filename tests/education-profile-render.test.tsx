@@ -45,6 +45,7 @@ const SAMPLE_PROFILE: BeginnerProfile = {
     },
   ],
   experience: [],
+  works: [],
 };
 
 test('EducationProfileView renders institution names and qualifications', () => {

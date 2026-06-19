@@ -46,6 +46,14 @@ const sampleProfile = normalizeBeginnerProfile({
       ],
     },
   ],
+  works: [
+    {
+      title: 'Option Pricer',
+      description: 'Black-Scholes web calculator built in TypeScript.',
+      link: 'https://github.com/ada/option-pricer',
+      role: 'Solo developer',
+    },
+  ],
 });
 
 test('buildBeginnerCorpus yields a source for every profile section with stable ids', () => {
@@ -59,9 +67,10 @@ test('buildBeginnerCorpus yields a source for every profile section with stable 
   assert.ok(ids.has('me-exp-0'), 'experience source present with stable id');
   assert.ok(ids.has('me-link-0'), 'link source present with stable id');
   assert.ok(ids.has('me-link-1'), 'second link source present with stable id');
+  assert.ok(ids.has('me-work-0'), 'work source present with stable id');
 
-  // total = about + 1 edu + 1 exp + 2 links
-  assert.equal(corpus.length, 5);
+  // total = about + 1 edu + 1 exp + 1 work + 2 links
+  assert.equal(corpus.length, 6);
 
   // Every source has the AskYipingSource shape: non-empty id/title/text/href + kind.
   for (const source of corpus) {
@@ -195,4 +204,46 @@ test('beginnerCitationResolver mirrors resolveBeginnerSource as an AskYipingCita
   // Non-citeable + fake ids are null, enforcing cite-only-real-ids.
   assert.equal(resolve(BEGINNER_ABOUT_SOURCE_ID), null);
   assert.equal(resolve('totally-made-up-id'), null);
+});
+
+test('buildBeginnerCorpus includes works sources with correct id and text', () => {
+  const corpus = buildBeginnerCorpus(sampleProfile);
+  const work = corpus.find((s) => s.id === 'me-work-0');
+  assert.ok(work, 'me-work-0 source present');
+  assert.match(work!.text, /Option Pricer/);
+  assert.match(work!.text, /Black-Scholes/);
+  assert.equal(work!.kind, 'work');
+  assert.equal(work!.href, 'https://github.com/ada/option-pricer');
+});
+
+test('resolveBeginnerSource resolves me-work-{i} to Works · {title} and correct href', () => {
+  const work = resolveBeginnerSource('me-work-0', sampleProfile);
+  assert.ok(work, 'real work id resolves');
+  assert.equal(work!.label, 'Works · Option Pricer');
+  assert.equal(work!.href, 'https://github.com/ada/option-pricer');
+
+  // Out-of-range returns null.
+  assert.equal(resolveBeginnerSource('me-work-99', sampleProfile), null);
+});
+
+test('retrieve over beginner corpus surfaces a work source for a works query', () => {
+  const context = beginnerCorpusContext(sampleProfile);
+  const workSources = retrieveAskYipingSources(
+    'What projects has she built? Tell me about the option pricer.',
+    6,
+    context,
+  );
+  const workIds = new Set(workSources.map((s) => s.id));
+  assert.ok(workIds.has('me-work-0'), 'a works query must surface the me-work source');
+});
+
+test('beginnerCitationResolver resolves me-work-{i} as an AskYipingCitation', () => {
+  const resolve = beginnerCitationResolver(sampleProfile);
+  const work = resolve('me-work-0');
+  assert.ok(work, 'work resolves to a citation');
+  assert.deepEqual(work, {
+    artifactId: 'me-work-0',
+    title: 'Works · Option Pricer',
+    href: 'https://github.com/ada/option-pricer',
+  });
 });

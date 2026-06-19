@@ -111,6 +111,7 @@ export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES = [
   '/drafts',
   '/education',
   '/experience',
+  '/works',
   '/knowledge/[category]',
   '/knowledge/unsw',
   '/loom',

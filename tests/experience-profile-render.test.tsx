@@ -47,6 +47,7 @@ const SAMPLE_PROFILE: BeginnerProfile = {
       bullets: ['Built ML-powered listing assistant.'],
     },
   ],
+  works: [],
 };
 
 test('ExperienceProfileView renders role and organization names', () => {

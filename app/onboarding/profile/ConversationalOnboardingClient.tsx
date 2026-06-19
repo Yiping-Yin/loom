@@ -10,6 +10,7 @@ import {
   type BeginnerProfile,
   type EducationEntry,
   type ExperienceEntry,
+  type WorkItem,
 } from '../../../lib/profile/beginner-profile';
 import {
   readBeginnerProfileLocal,
@@ -36,9 +37,13 @@ export type ConvoStep =
   | { id: 'exp_years'; entryIdx: number }
   | { id: 'exp_highlight'; entryIdx: number }
   | { id: 'exp_more' }
+  | { id: 'work_title'; entryIdx: number }
+  | { id: 'work_description'; entryIdx: number }
+  | { id: 'work_link'; entryIdx: number }
+  | { id: 'work_more' }
   | { id: 'review' };
 
-export const TOTAL_STEPS = 11; // name + headline + summary + edu(3) + exp(4) + edu_more + exp_more ≈ linearized as ~11 logical beats
+export const TOTAL_STEPS = 15; // name + headline + summary + edu(3) + exp(4) + edu_more + exp_more + works(4) ≈ 15 logical beats
 
 function stepPrompt(step: ConvoStep): string {
   switch (step.id) {
@@ -70,6 +75,16 @@ function stepPrompt(step: ConvoStep): string {
       return "One highlight bullet — what did you accomplish or build? (or \"skip\")";
     case 'exp_more':
       return "Add another experience entry? (yes / no)";
+    case 'work_title':
+      return step.entryIdx === 0
+        ? "Now let's add your works or projects. What's the project title? (or type \"skip\" to finish)"
+        : "Another project?";
+    case 'work_description':
+      return "One-line description — what did you build or create? (or \"skip\")";
+    case 'work_link':
+      return "A link to the project, portfolio, or write-up? (URL or \"skip\")";
+    case 'work_more':
+      return "Add another project? (yes / no)";
     case 'review':
       return "You're all set! Here's what I have. Hit Save to publish your profile, or go back to the form to edit anything.";
   }
@@ -90,6 +105,10 @@ function progressOf(step: ConvoStep): number {
     case 'exp_years': return 10;
     case 'exp_highlight': return 11;
     case 'exp_more': return 11;
+    case 'work_title': return 12;
+    case 'work_description': return 13;
+    case 'work_link': return 14;
+    case 'work_more': return 14;
     case 'review': return TOTAL_STEPS;
   }
 }
@@ -229,6 +248,46 @@ export function applyAnswer(
       if (isYes(trimmed)) {
         const nextIdx = profile.experience.length;
         return { next: { id: 'exp_role', entryIdx: nextIdx }, profile };
+      }
+      return { next: { id: 'work_title', entryIdx: 0 }, profile };
+    }
+    case 'work_title': {
+      if (isSkip(trimmed)) {
+        return { next: { id: 'review' }, profile };
+      }
+      const work: WorkItem = { title: trimmed };
+      const next: BeginnerProfile = {
+        ...profile,
+        works: [...profile.works, work],
+      };
+      return { next: { id: 'work_description', entryIdx: step.entryIdx }, profile: next };
+    }
+    case 'work_description': {
+      const idx = step.entryIdx;
+      const description = isSkip(trimmed) ? undefined : trimmed;
+      const updated = profile.works.map((w, i) =>
+        i === idx ? { ...w, description } : w,
+      );
+      return {
+        next: { id: 'work_link', entryIdx: idx },
+        profile: { ...profile, works: updated },
+      };
+    }
+    case 'work_link': {
+      const idx = step.entryIdx;
+      const link = isSkip(trimmed) ? undefined : trimmed;
+      const updated = profile.works.map((w, i) =>
+        i === idx ? { ...w, link } : w,
+      );
+      return {
+        next: { id: 'work_more' },
+        profile: { ...profile, works: updated },
+      };
+    }
+    case 'work_more': {
+      if (isYes(trimmed)) {
+        const nextIdx = profile.works.length;
+        return { next: { id: 'work_title', entryIdx: nextIdx }, profile };
       }
       return { next: { id: 'review' }, profile };
     }
@@ -561,6 +620,14 @@ function ProfileSummary({ profile }: { profile: BeginnerProfile }) {
           <span className={styles.summaryLabel}>Experience</span>
           <span className={styles.summaryValue}>
             {profile.experience.map((e) => `${e.role} · ${e.organization}`).join('; ')}
+          </span>
+        </div>
+      )}
+      {profile.works.length > 0 && (
+        <div className={styles.summaryRow}>
+          <span className={styles.summaryLabel}>Works</span>
+          <span className={styles.summaryValue}>
+            {profile.works.map((w) => w.title).join('; ')}
           </span>
         </div>
       )}

@@ -7,12 +7,20 @@ export type ExperienceEntry = {
   role: string; organization: string;
   start?: string; end?: string; location?: string; bullets: string[];
 };
+export type WorkItem = {
+  title: string;
+  description?: string;
+  link?: string;
+  role?: string;
+  date?: string;
+};
 export type BeginnerProfile = {
   version: 1;
   home: { name: string; headline: string };
   about: { summary: string; links: ProfileLink[] };
   education: EducationEntry[];
   experience: ExperienceEntry[];
+  works: WorkItem[];
 };
 
 export function emptyBeginnerProfile(): BeginnerProfile {
@@ -22,6 +30,7 @@ export function emptyBeginnerProfile(): BeginnerProfile {
     about: { summary: '', links: [] },
     education: [],
     experience: [],
+    works: [],
   };
 }
 
@@ -37,6 +46,7 @@ export function normalizeBeginnerProfile(raw: unknown): BeginnerProfile {
   const links = Array.isArray(about.links) ? (about.links as unknown[]) : [];
   const education = Array.isArray(r.education) ? (r.education as unknown[]) : [];
   const experience = Array.isArray(r.experience) ? (r.experience as unknown[]) : [];
+  const works = Array.isArray(r.works) ? (r.works as unknown[]) : [];
   return {
     version: 1,
     home: { name: str(home.name), headline: str(home.headline) },
@@ -62,6 +72,16 @@ export function normalizeBeginnerProfile(raw: unknown): BeginnerProfile {
         start: optStr(x.start), end: optStr(x.end), location: optStr(x.location),
         bullets: (Array.isArray(x.bullets) ? (x.bullets as unknown[]) : [])
           .filter((b) => typeof b === 'string' && b.trim()) as string[],
+      })),
+    works: works
+      .map((w) => (w && typeof w === 'object' ? (w as Record<string, unknown>) : {}))
+      .filter((w) => str(w.title).trim())
+      .map((w) => ({
+        title: str(w.title),
+        description: optStr(w.description),
+        link: optStr(w.link),
+        role: optStr(w.role),
+        date: optStr(w.date),
       })),
   };
 }
