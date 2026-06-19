@@ -158,16 +158,58 @@ test('normalize coerces non-array works to empty array', () => {
   assert.deepEqual(p.works, []);
 });
 
-test('writeBeginnerProfileLocal is a no-op during SSR (no window)', () => {
+test('writeBeginnerProfileLocal is a no-op during SSR (no window) and returns false', () => {
   const prevWindow = (globalThis as Record<string, unknown>).window;
   delete (globalThis as Record<string, unknown>).window;
   try {
+    let result: boolean | undefined;
     // Must not throw without a window/localStorage.
-    assert.doesNotThrow(() =>
-      writeBeginnerProfileLocal(normalizeBeginnerProfile({ home: { name: 'X' } })),
-    );
+    assert.doesNotThrow(() => {
+      result = writeBeginnerProfileLocal(normalizeBeginnerProfile({ home: { name: 'X' } }));
+    });
+    // Persistence unavailable → callers must see false and not navigate away.
+    assert.equal(result, false);
   } finally {
     if (prevWindow !== undefined) {
+      (globalThis as Record<string, unknown>).window = prevWindow;
+    }
+  }
+});
+
+test('writeBeginnerProfileLocal returns true on a successful write', () => {
+  withLocalStorage(() => {
+    const ok = writeBeginnerProfileLocal(
+      normalizeBeginnerProfile({ home: { name: 'Ada', headline: 'Eng' } }),
+    );
+    assert.equal(ok, true);
+  });
+});
+
+test('writeBeginnerProfileLocal returns false when setItem throws (private mode / quota)', () => {
+  // Simulate Safari/iOS private mode or quota: localStorage exists but setItem
+  // rejects. The function must swallow the throw and report failure so the
+  // caller stays on the page instead of stranding the user on a null profile.
+  const prevWindow = (globalThis as Record<string, unknown>).window;
+  (globalThis as Record<string, unknown>).window = {
+    localStorage: {
+      getItem: () => null,
+      setItem: () => {
+        throw new DOMException('QuotaExceededError');
+      },
+      removeItem: () => undefined,
+      clear: () => undefined,
+    },
+  };
+  try {
+    let result: boolean | undefined;
+    assert.doesNotThrow(() => {
+      result = writeBeginnerProfileLocal(normalizeBeginnerProfile({ home: { name: 'X' } }));
+    });
+    assert.equal(result, false);
+  } finally {
+    if (prevWindow === undefined) {
+      delete (globalThis as Record<string, unknown>).window;
+    } else {
       (globalThis as Record<string, unknown>).window = prevWindow;
     }
   }

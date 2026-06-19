@@ -45,16 +45,23 @@ export function readBeginnerProfileLocal(): BeginnerProfile | null {
 }
 
 /**
- * Normalize + persist the beginner profile to localStorage. No-op during SSR or
- * when localStorage is unavailable.
+ * Normalize + persist the beginner profile to localStorage.
+ *
+ * Returns `true` when the profile was written, `false` when persistence is
+ * unavailable or the write was rejected (SSR, Safari/iOS private mode, ITP,
+ * quota). Callers MUST check the result before navigating away — a swallowed
+ * failure would otherwise strand the user on a page that reads back null.
  */
-export function writeBeginnerProfileLocal(profile: BeginnerProfile): void {
+export function writeBeginnerProfileLocal(profile: BeginnerProfile): boolean {
   const store = getLocalStorage();
-  if (!store) return;
+  if (!store) return false;
   const normalized = normalizeBeginnerProfile(profile);
   try {
     store.setItem(BEGINNER_PROFILE_KEY, JSON.stringify(normalized));
+    return true;
   } catch {
-    // Quota / privacy mode — silently ignore; the wizard keeps in-memory state.
+    // Quota / privacy mode — the write failed; the wizard keeps in-memory state
+    // and the caller surfaces an error instead of navigating to a blank page.
+    return false;
   }
 }

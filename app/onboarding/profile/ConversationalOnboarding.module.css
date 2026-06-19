@@ -381,6 +381,14 @@
   flex-wrap: wrap;
 }
 
+.errorNote {
+  color: var(--tint-red, #f97474);
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
 /* ── Buttons ── */
 
 .primaryBtn {

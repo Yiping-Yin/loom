@@ -153,15 +153,19 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
   const handleSave = () => {
     setSaving(true);
     setSaveError('');
-    try {
-      // Persist client-side: works in dev, web, and the shipped static macOS
-      // app (which has no Node server / API route).
-      writeBeginnerProfileLocal(profile);
-      router.push('/about');
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : String(err));
+    // Persist client-side: works in dev, web, and the shipped static macOS app
+    // (which has no Node server / API route). A false return means the write was
+    // blocked (private mode / quota) — stay put and surface the error rather than
+    // navigating to a profile page that would read back null.
+    const ok = writeBeginnerProfileLocal(profile);
+    if (!ok) {
+      setSaveError(
+        "Couldn't save your profile — your browser is blocking local storage (e.g. private browsing). Try a normal window, then save again.",
+      );
       setSaving(false);
+      return;
     }
+    router.push('/about');
   };
 
   return (

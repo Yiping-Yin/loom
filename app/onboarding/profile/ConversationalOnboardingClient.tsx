@@ -322,6 +322,7 @@ export function ConversationalOnboardingClient() {
   const [input, setInput] = useState('');
   const [pasteMode, setPasteMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -390,12 +391,18 @@ export function ConversationalOnboardingClient() {
 
   const handleSave = () => {
     setSaving(true);
-    try {
-      writeBeginnerProfileLocal(normalizeBeginnerProfile(profile));
-      router.push('/digital-me');
-    } catch {
+    setSaveError('');
+    const ok = writeBeginnerProfileLocal(normalizeBeginnerProfile(profile));
+    if (!ok) {
+      // Persistence was blocked (private mode / quota). Stay on the page and
+      // tell the user instead of navigating to a profile that reads back null.
+      setSaveError(
+        "Couldn't save your profile — your browser is blocking local storage (e.g. private browsing). Try a normal window, then save again.",
+      );
       setSaving(false);
+      return;
     }
+    router.push('/digital-me');
   };
 
   const currentProgress = progressOf(step);
@@ -501,6 +508,11 @@ export function ConversationalOnboardingClient() {
         /* Review + Save */
         <div className={styles.reviewActions}>
           <ProfileSummary profile={profile} />
+          {saveError && (
+            <p className={styles.errorNote} role="alert">
+              {saveError}
+            </p>
+          )}
           <div className={styles.reviewButtons}>
             <button
               type="button"
