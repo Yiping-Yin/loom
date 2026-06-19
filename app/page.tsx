@@ -1,5 +1,4 @@
 import { promises as fs } from 'node:fs';
-import { redirect } from 'next/navigation';
 import { loomContentRootConfigPath } from '../lib/paths';
 import { HomeGate } from './HomeGate';
 
@@ -19,8 +18,10 @@ async function hasConfiguredContentRoot(): Promise<boolean> {
 
 export default async function Home() {
   const configured = await hasConfiguredContentRoot();
-  if (!configured) redirect('/onboarding');
-  // HomeGate renders the verified dossier on first paint and overlays the
-  // beginner profile (read from localStorage) on the client if one exists.
-  return <HomeGate />;
+  // The redirect to /onboarding is intentionally handled client-side in
+  // HomeGate: the localStorage beginner profile is not visible server-side, so
+  // a server redirect would block profile-only users from ever reaching
+  // HomeProfileView. HomeGate redirects to /onboarding only when there is no
+  // local profile AND configured is false (first-run behavior preserved).
+  return <HomeGate configured={configured} />;
 }
