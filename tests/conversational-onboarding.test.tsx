@@ -176,11 +176,45 @@ test('applyAnswer: edu_more "no" advances to exp_role', () => {
   assert.equal(next.id, 'exp_role');
 });
 
-test('applyAnswer: exp_role "skip" advances to review', () => {
+test('applyAnswer: exp_role "skip" advances to work_title (not review)', () => {
   const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next } = applyAnswer(profile, { id: 'exp_role', entryIdx: 0 }, 'skip');
-  assert.equal(next.id, 'review');
+  // A student with projects but no jobs must still reach Works after skipping
+  // experience — the skip branch advances to work_title, not straight to review.
+  assert.equal(next.id, 'work_title');
+  assert.equal((next as { id: string; entryIdx: number }).entryIdx, 0);
+});
+
+test('applyAnswer: skip experience → work_title → … → review (full edge)', () => {
+  const { applyAnswer } = getClient();
+  let profile = emptyBeginnerProfile();
+
+  function step<S extends Record<string, unknown>>(s: S) {
+    return s as unknown as Parameters<typeof applyAnswer>[1];
+  }
+
+  // Skip experience entirely.
+  let r = applyAnswer(profile, step({ id: 'exp_role', entryIdx: 0 }), 'skip');
+  profile = r.profile;
+  assert.equal((r.next as { id: string }).id, 'work_title');
+
+  // Add one project via the chat.
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'Option Pricer'); // work_title
+  profile = r.profile;
+  assert.equal((r.next as { id: string }).id, 'work_description');
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'Black-Scholes calc'); // work_description
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'skip'); // work_link
+  profile = r.profile;
+  r = applyAnswer(profile, r.next as Parameters<typeof applyAnswer>[1], 'no'); // work_more → review
+  profile = r.profile;
+  assert.equal((r.next as { id: string }).id, 'review');
+
+  const normalized = normalizeBeginnerProfile(profile);
+  assert.equal(normalized.experience.length, 0);
+  assert.equal(normalized.works.length, 1);
+  assert.equal(normalized.works[0].title, 'Option Pricer');
 });
 
 test('applyAnswer: exp_role creates entry and advances to exp_organization', () => {
@@ -211,6 +245,63 @@ test('applyAnswer: exp_highlight "skip" leaves bullets empty', () => {
   };
   const { profile: p } = applyAnswer(base, { id: 'exp_highlight', entryIdx: 0 }, 'skip');
   assert.equal(p.experience[0].bullets.length, 0);
+});
+
+// ── Returning / pre-populated profile: entryIdx must point at the new slot ─────
+
+test('applyAnswer: edu_institution on a pre-populated profile indexes the new slot, not entry[0]', () => {
+  const { applyAnswer } = getClient();
+  // A returning user whose profile already has one education entry.
+  const base: BeginnerProfile = {
+    ...emptyBeginnerProfile(),
+    education: [{ institution: 'Existing University', qualification: 'BSc Existing' }],
+  };
+  // entryIdx is 0 here (the step machine's "first entry" prompt), but the array
+  // is already populated — the new entry must land at index 1.
+  let r = applyAnswer(base, { id: 'edu_institution', entryIdx: 0 }, 'New College');
+  assert.equal(r.profile.education.length, 2);
+  assert.equal((r.next as { id: string; entryIdx: number }).entryIdx, 1);
+
+  // The follow-up qualification answer must write the NEW slot, leaving the old
+  // entry untouched and not stranding a half-empty entry.
+  r = applyAnswer(r.profile, r.next as Parameters<typeof applyAnswer>[1], 'MSc New');
+  assert.equal(r.profile.education[0].institution, 'Existing University');
+  assert.equal(r.profile.education[0].qualification, 'BSc Existing');
+  assert.equal(r.profile.education[1].institution, 'New College');
+  assert.equal(r.profile.education[1].qualification, 'MSc New');
+});
+
+test('applyAnswer: exp_role on a pre-populated profile indexes the new slot', () => {
+  const { applyAnswer } = getClient();
+  const base: BeginnerProfile = {
+    ...emptyBeginnerProfile(),
+    experience: [{ role: 'Old Role', organization: 'Old Org', bullets: [] }],
+  };
+  let r = applyAnswer(base, { id: 'exp_role', entryIdx: 0 }, 'New Role');
+  assert.equal(r.profile.experience.length, 2);
+  assert.equal((r.next as { id: string; entryIdx: number }).entryIdx, 1);
+
+  r = applyAnswer(r.profile, r.next as Parameters<typeof applyAnswer>[1], 'New Org');
+  assert.equal(r.profile.experience[0].role, 'Old Role');
+  assert.equal(r.profile.experience[0].organization, 'Old Org');
+  assert.equal(r.profile.experience[1].role, 'New Role');
+  assert.equal(r.profile.experience[1].organization, 'New Org');
+});
+
+test('applyAnswer: work_title on a pre-populated profile indexes the new slot', () => {
+  const { applyAnswer } = getClient();
+  const base: BeginnerProfile = {
+    ...emptyBeginnerProfile(),
+    works: [{ title: 'Old Project' }],
+  };
+  let r = applyAnswer(base, { id: 'work_title', entryIdx: 0 }, 'New Project');
+  assert.equal(r.profile.works.length, 2);
+  assert.equal((r.next as { id: string; entryIdx: number }).entryIdx, 1);
+
+  r = applyAnswer(r.profile, r.next as Parameters<typeof applyAnswer>[1], 'A new build');
+  assert.equal(r.profile.works[0].title, 'Old Project');
+  assert.equal(r.profile.works[1].title, 'New Project');
+  assert.equal(r.profile.works[1].description, 'A new build');
 });
 
 // ── Full scripted run ─────────────────────────────────────────────────────────

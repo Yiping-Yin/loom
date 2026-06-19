@@ -156,13 +156,16 @@ export function applyAnswer(
       if (isSkip(trimmed)) {
         return { next: { id: 'exp_role', entryIdx: 0 }, profile };
       }
-      // Start a new education entry
+      // Start a new education entry. Index the just-appended slot rather than
+      // step.entryIdx — on a returning/pre-populated profile the new entry lands
+      // at the end of an already-populated array, not at index 0.
       const edu: EducationEntry = { institution: trimmed, qualification: '' };
-      const next: BeginnerProfile = {
-        ...profile,
-        education: [...profile.education, edu],
+      const education = [...profile.education, edu];
+      const next: BeginnerProfile = { ...profile, education };
+      return {
+        next: { id: 'edu_qualification', entryIdx: education.length - 1 },
+        profile: next,
       };
-      return { next: { id: 'edu_qualification', entryIdx: step.entryIdx }, profile: next };
     }
     case 'edu_qualification': {
       const idx = step.entryIdx;
@@ -195,15 +198,15 @@ export function applyAnswer(
     }
     case 'exp_role': {
       if (isSkip(trimmed)) {
-        return { next: { id: 'review' }, profile };
+        // Skipping experience must still let a user (e.g. a student with
+        // projects but no jobs) reach the Works section, not jump to review.
+        return { next: { id: 'work_title', entryIdx: 0 }, profile };
       }
       const exp: ExperienceEntry = { role: trimmed, organization: '', bullets: [] };
-      const next: BeginnerProfile = {
-        ...profile,
-        experience: [...profile.experience, exp],
-      };
+      const experience = [...profile.experience, exp];
+      const next: BeginnerProfile = { ...profile, experience };
       return {
-        next: { id: 'exp_organization', entryIdx: step.entryIdx },
+        next: { id: 'exp_organization', entryIdx: experience.length - 1 },
         profile: next,
       };
     }
@@ -256,11 +259,12 @@ export function applyAnswer(
         return { next: { id: 'review' }, profile };
       }
       const work: WorkItem = { title: trimmed };
-      const next: BeginnerProfile = {
-        ...profile,
-        works: [...profile.works, work],
+      const works = [...profile.works, work];
+      const next: BeginnerProfile = { ...profile, works };
+      return {
+        next: { id: 'work_description', entryIdx: works.length - 1 },
+        profile: next,
       };
-      return { next: { id: 'work_description', entryIdx: step.entryIdx }, profile: next };
     }
     case 'work_description': {
       const idx = step.entryIdx;
