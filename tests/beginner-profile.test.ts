@@ -185,6 +185,56 @@ test('writeBeginnerProfileLocal returns true on a successful write', () => {
   });
 });
 
+// ── URL-scheme allowlist applied at the normalize seam ──────────────────────
+
+test('normalize drops an about link with a javascript: href', () => {
+  const p = normalizeBeginnerProfile({
+    home: { name: 'Ada', headline: 'Engineer' },
+    about: {
+      summary: 'hi',
+      links: [
+        { label: 'Evil', href: 'javascript:alert(1)' },
+        { label: 'Obfuscated', href: 'java\tscript:alert(1)' },
+        { label: 'Data', href: 'data:text/html,<script>1</script>' },
+        { label: 'GitHub', href: 'https://github.com/ada' },
+      ],
+    },
+  });
+  // Only the safe https link survives; every dangerous-scheme link is dropped.
+  assert.equal(p.about.links.length, 1);
+  assert.equal(p.about.links[0].label, 'GitHub');
+  assert.equal(p.about.links[0].href, 'https://github.com/ada');
+});
+
+test('normalize strips a works link with an unsafe scheme to undefined', () => {
+  const p = normalizeBeginnerProfile({
+    home: { name: 'Ada' },
+    works: [
+      { title: 'Evil', link: 'javascript:alert(1)' },
+      { title: 'Good', link: 'https://example.com/proj' },
+    ],
+  });
+  assert.equal(p.works.length, 2);
+  // The unsafe link is dropped to undefined; the entry itself is kept (it has a title).
+  assert.equal(p.works[0].title, 'Evil');
+  assert.equal(p.works[0].link, undefined);
+  assert.equal(p.works[1].link, 'https://example.com/proj');
+});
+
+test('normalize caps oversized fields without breaking normal content', () => {
+  const longSummary = 'x'.repeat(5000);
+  const longName = 'n'.repeat(1000);
+  const p = normalizeBeginnerProfile({
+    home: { name: longName, headline: 'fine' },
+    about: { summary: longSummary, links: [] },
+  });
+  // Summary capped to ~2000, short fields capped to ~300; normal content kept.
+  assert.ok(p.about.summary.length <= 2000, 'summary capped');
+  assert.ok(p.about.summary.length >= 1000, 'summary not over-truncated');
+  assert.ok(p.home.name.length <= 300, 'name capped');
+  assert.equal(p.home.headline, 'fine', 'normal short field untouched');
+});
+
 test('writeBeginnerProfileLocal returns false when setItem throws (private mode / quota)', () => {
   // Simulate Safari/iOS private mode or quota: localStorage exists but setItem
   // rejects. The function must swallow the throw and report failure so the

@@ -10,6 +10,7 @@ import {
 } from '../../lib/new-loom/verified-dossier-home';
 import { buildAskRequestBody } from '../../lib/new-loom/ask-yiping-body';
 import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
+import { safeHref } from '../../lib/profile/safe-href';
 import { FileBadge } from './FileBadge';
 import styles from './AskYiping.module.css';
 
@@ -69,13 +70,16 @@ function resolveCitation(raw: ApiCitation): ResolvedCitation | null {
       kind: artifact.kind,
     };
   }
-  // Beginner profile citations: the API provides title + href directly.
+  // Beginner profile citations: the API provides title + href directly. This is
+  // the one citation href that does NOT pass through normalizeBeginnerProfile, so
+  // run it through the same URL-scheme allowlist here. A dropped href ('') leaves
+  // a titled-but-unlinked citation rather than a dangerous-scheme anchor.
   if (typeof raw.title === 'string' && raw.title.length > 0 &&
       typeof raw.href === 'string' && raw.href.length > 0) {
     return {
       artifactId: raw.artifactId,
       title: raw.title,
-      href: raw.href,
+      href: safeHref(raw.href),
       kind: 'text',
     };
   }
@@ -300,12 +304,20 @@ export function AskYiping({
               {phase === 'unconfigured' ? 'Sources this answer would draw from' : 'Cited sources'}
             </h3>
             <div className={styles.sourceList} aria-label="Cited verified artifacts">
-              {citations.map((citation) => (
-                <a key={citation.artifactId} className={styles.sourceRow} href={citation.href}>
-                  <FileBadge kind={citation.kind} label={citation.title} compact />
-                  <span className={styles.sourceHref}>{citation.href}</span>
-                </a>
-              ))}
+              {citations.map((citation) =>
+                citation.href ? (
+                  <a key={citation.artifactId} className={styles.sourceRow} href={citation.href}>
+                    <FileBadge kind={citation.kind} label={citation.title} compact />
+                    <span className={styles.sourceHref}>{citation.href}</span>
+                  </a>
+                ) : (
+                  // href dropped by the URL-scheme allowlist — show the cited
+                  // source as plain text instead of a dangerous-scheme anchor.
+                  <div key={citation.artifactId} className={styles.sourceRow}>
+                    <FileBadge kind={citation.kind} label={citation.title} compact />
+                  </div>
+                ),
+              )}
             </div>
           </div>
         ) : null}
