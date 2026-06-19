@@ -1,0 +1,180 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--ink-0);
+  background-image: var(--deep-space-field);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--text-1);
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 2rem);
+}
+
+/* Stage wraps the postcard + its actions so they read as one shareable unit. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.2rem, 3vw, 1.8rem);
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+}
+
+.action {
+  min-height: 2.6rem;
+  padding: 0 1.15rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
+  color: var(--signature-cyan-hi);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.action:hover {
+  background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
+  border-color: var(--signature-cyan-hi);
+  transform: translateY(-1px);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+}
+
+.actionGhost {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: var(--line);
+  color: var(--text-1);
+}
+
+.actionGhost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: color-mix(in srgb, var(--signature-cyan) 35%, transparent);
+}
+
+.makeOwn {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-3);
+}
+
+.makeOwn a {
+  color: var(--signature-cyan);
+  text-decoration: none;
+}
+
+.makeOwn a:hover {
+  color: var(--signature-cyan-hi);
+}
+
+/* Calm empty / CTA state — no profile from hash or localStorage. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 26rem;
+  text-align: center;
+  padding: clamp(1.8rem, 5vw, 2.6rem);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(238, 241, 242, 0.06), transparent 50%),
+    linear-gradient(180deg, rgba(28, 33, 38, 0.9), rgba(12, 15, 18, 0.96));
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+  backdrop-filter: blur(20px) saturate(115%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
+.emptyMoon {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 0 20px rgba(75, 197, 222, 0.25);
+}
+
+.emptyEyebrow {
+  margin: 0;
+  font-family: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--signature-cyan);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.5rem, 4vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--text-1);
+}
+
+.emptyBody {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-3);
+}
+
+.emptyCta {
+  min-height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 1.3rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
+  color: var(--signature-cyan-hi);
+  font-size: 0.84rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.emptyCta:hover {
+  background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
+  border-color: var(--signature-cyan-hi);
+  transform: translateY(-1px);
+}
+
+/* Stable neutral first-paint shell — no window access during render. */
+.skeleton {
+  width: 100%;
+  max-width: 25rem;
+  height: 22rem;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(238, 241, 242, 0.05), transparent 50%),
+    linear-gradient(180deg, rgba(28, 33, 38, 0.85), rgba(12, 15, 18, 0.95));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 48px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action,
+  .actionGhost,
+  .emptyCta {
+    transition: none;
+  }
+}

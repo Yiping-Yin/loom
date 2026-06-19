@@ -122,6 +122,30 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
               ))}
             </nav>
           )}
+
+          {/* Entry point to the shareable digital postcard (pillar 3). Lives on
+              the beginner Digital Me surface, never in the owner's shared top nav. */}
+          <a
+            href="/card"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.3rem',
+              alignSelf: 'flex-start',
+              marginTop: '0.6rem',
+              fontSize: '0.82rem',
+              fontWeight: 500,
+              color: 'var(--signature-cyan-hi)',
+              textDecoration: 'none',
+              border: '1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent)',
+              background: 'color-mix(in srgb, var(--signature-cyan) 12%, transparent)',
+              borderRadius: '999px',
+              padding: '0.4rem 0.9rem',
+            }}
+          >
+            <span>Get your digital postcard</span>
+            <ArrowUpRight aria-hidden="true" size={13} strokeWidth={1.8} />
+          </a>
         </header>
 
         {/* Journey timeline — derived from education + experience + works.
