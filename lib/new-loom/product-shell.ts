@@ -107,6 +107,7 @@ export const NEW_LOOM_INTERNAL_ROUTES = [
 
 export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES = [
   '/wiki',
+  '/card',
   '/digital-me',
   '/drafts',
   '/education',
