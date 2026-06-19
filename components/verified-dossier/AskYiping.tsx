@@ -8,6 +8,8 @@ import {
   resolveVerifiedDossierArtifact,
   type VerifiedDossierArtifactId,
 } from '../../lib/new-loom/verified-dossier-home';
+import { buildAskRequestBody } from '../../lib/new-loom/ask-yiping-body';
+import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
 import { FileBadge } from './FileBadge';
 import styles from './AskYiping.module.css';
 
@@ -24,6 +26,9 @@ import styles from './AskYiping.module.css';
  * we then show the would-be sources plus a calm read-only note instead of
  * inventing an answer client-side. Loading + error states are handled inline.
  */
+
+// Re-export so callers that import from the component path still work.
+export { buildAskRequestBody } from '../../lib/new-loom/ask-yiping-body';
 
 /** A resolved citation as surfaced to the UI. Mirrors AskYipingCitation. */
 type ResolvedCitation = {
@@ -103,10 +108,11 @@ export function AskYiping() {
     setPhase('streaming');
 
     try {
+      const profile = readBeginnerProfileLocal();
       const response = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ question: trimmed }),
+        body: JSON.stringify(buildAskRequestBody(trimmed, profile)),
       });
 
       const contentType = response.headers.get('content-type') ?? '';
