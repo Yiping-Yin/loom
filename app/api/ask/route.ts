@@ -23,6 +23,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
+ * Upper bound on the serialized `profile` body. Generous — well above any
+ * realistic profile (normalizeBeginnerProfile additionally caps each field) —
+ * but blocks a multi-megabyte payload from driving unbounded token/cost.
+ */
+const MAX_PROFILE_BYTES = 64 * 1024;
+
+/**
  * Ask Yiping — the web-deployable conversational core of Digital Me.
  *
  * This route is the transport that pairs the pure retrieval/prompt/citation
@@ -92,6 +99,14 @@ export async function POST(request: Request): Promise<Response> {
   const question = typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) {
     return Response.json({ error: 'A non-empty question is required.' }, { status: 400 });
+  }
+
+  // Reject an absurdly large profile body before normalization to bound the
+  // token/cost an untrusted caller can drive on the keyed web deploy. The cap is
+  // far above any realistic profile (normalizeBeginnerProfile additionally caps
+  // every field), so legitimate requests are never affected.
+  if (body.profile != null && JSON.stringify(body.profile).length > MAX_PROFILE_BYTES) {
+    return Response.json({ error: 'Profile payload is too large.' }, { status: 413 });
   }
 
   // Choose the corpus for this request: a usable beginner profile grounds the

@@ -424,6 +424,29 @@ const SOURCES_DIRECTIVE = 'SOURCES:';
  * when unsupported, never invent facts) and instructs the model to end its
  * answer with a `SOURCES: id1, id2` line listing the source ids it actually used.
  */
+/** Max persona-name length interpolated into the system instruction. */
+const PERSONA_NAME_MAX = 80;
+
+/**
+ * Single-line and length-cap a (possibly user-supplied) persona name before it
+ * is interpolated into the system-instruction layer. Strips ASCII control
+ * characters and collapses any run of whitespace (incl. newlines/tabs) to a
+ * single space, so a beginner cannot inject a forged instruction line via their
+ * profile name. Returns '' for a missing/blank/non-string name. No behavior
+ * change for normal names (they have no control chars or newlines).
+ */
+export function sanitizePersonaName(raw: string | undefined): string {
+  if (typeof raw !== 'string') return '';
+  const singleLine = raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x1F\x7F]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return singleLine.length > PERSONA_NAME_MAX
+    ? singleLine.slice(0, PERSONA_NAME_MAX).trim()
+    : singleLine;
+}
+
 export function buildAskYipingPrompt(
   question: string,
   sources: AskYipingSource[],
@@ -432,8 +455,12 @@ export function buildAskYipingPrompt(
   // Persona name is the only dossier-specific token in the system prompt; it
   // defaults to Yiping so existing behavior is byte-identical, and a beginner
   // request passes the profile owner's own name. The grounding RULES below are
-  // intentionally identical regardless of corpus.
-  const personaName = context.personaName?.trim() || VERIFIED_DOSSIER_PROFILE.name;
+  // intentionally identical regardless of corpus. Because a beginner-supplied
+  // name flows into the system-instruction layer, sanitize it first: collapse
+  // all whitespace/control chars to single spaces (no newlines that could forge
+  // a new instruction line) and length-cap it. Normal names are unaffected.
+  const personaName =
+    sanitizePersonaName(context.personaName) || VERIFIED_DOSSIER_PROFILE.name;
   const firstName = personaName.split(/\s+/)[0] || personaName;
   const system = [
     `You are Ask ${firstName}, the verified Digital Me for ${personaName}.`,
