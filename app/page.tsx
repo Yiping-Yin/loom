@@ -2,6 +2,8 @@ import { promises as fs } from 'node:fs';
 import { redirect } from 'next/navigation';
 import { loomContentRootConfigPath } from '../lib/paths';
 import { HomeClient } from './HomeClient';
+import { HomeProfileView } from './HomeProfileView';
+import { readBeginnerProfile } from '../lib/profile/profile-store';
 
 
 async function hasConfiguredContentRoot(): Promise<boolean> {
@@ -18,6 +20,9 @@ async function hasConfiguredContentRoot(): Promise<boolean> {
 }
 
 export default async function Home() {
+  const profile = await readBeginnerProfile();
+  if (profile) return <HomeProfileView profile={profile} />;
+
   const configured = await hasConfiguredContentRoot();
   if (!configured) redirect('/onboarding');
   return <HomeClient />;
