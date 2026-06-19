@@ -4,6 +4,7 @@ import {
 } from '../../../lib/anthropic-http';
 import {
   buildAskYipingPrompt,
+  countResolvableSources,
   parseAskYipingCitations,
   resolveAskYipingDossierCitation,
   retrieveAskYipingSources,
@@ -112,6 +113,21 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const sources = retrieveAskYipingSources(question, 6, corpusContext);
+
+  // Grounding floor (MOAT-CRITICAL). If retrieval yields ZERO citeable sources
+  // for this question, there is nothing inspectable to ground or cite. Rather
+  // than stream a confident, uncited answer under the "Verified answers. Cited
+  // sources." promise, return an explicit no-sources signal with empty citations
+  // so the client can show a calm empty state. This only ever trips for a sparse
+  // beginner profile (about-only); the owner corpus always has resolvable
+  // artifacts, so the owner path is unchanged.
+  if (countResolvableSources(sources, resolveCitation) === 0) {
+    return Response.json(
+      { grounded: false, reason: 'no-sources', citations: [] as AskYipingCitation[] },
+      { status: 200 },
+    );
+  }
+
   const { system, user } = buildAskYipingPrompt(question, sources, { personaName });
 
   // runAnthropicHttp has no system parameter, so prepend the grounding system

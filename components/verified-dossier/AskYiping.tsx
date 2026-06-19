@@ -39,7 +39,7 @@ type ResolvedCitation = {
   kind: ReturnType<typeof resolveVerifiedDossierArtifact>['kind'];
 };
 
-type AskPhase = 'example' | 'streaming' | 'done' | 'unconfigured' | 'error';
+type AskPhase = 'example' | 'streaming' | 'done' | 'unconfigured' | 'no-sources' | 'error';
 
 /** Raw citation shape the API emits ({done} or {configured:false}). */
 type ApiCitation = { artifactId?: unknown; title?: unknown; href?: unknown };
@@ -104,6 +104,9 @@ type AskStreamEvent = {
 const READ_ONLY_NOTE =
   'Live answers need an AI key — this deploy is read-only; the verified sources below are what Yiping’s answer draws from.';
 
+const NO_SOURCES_NOTE =
+  'No inspectable sources yet — add your experience, education, or work to get cited answers about you.';
+
 /**
  * The canned grounded Q&A (VERIFIED_DOSSIER_AI_PROMPT) seeds the panel before the
  * visitor asks anything, so even a no-key deploy opens with a complete cited
@@ -161,7 +164,7 @@ export function AskYiping({
       // may carry { configured:false, citations } or an { error } message.
       if (!contentType.includes('text/event-stream')) {
         const payload = (await response.json().catch(() => null)) as
-          | { configured?: boolean; citations?: unknown; error?: string }
+          | { configured?: boolean; grounded?: boolean; reason?: string; citations?: unknown; error?: string }
           | null;
         if (!response.ok || !payload) {
           throw new Error(payload?.error ?? `Ask failed (${response.status}).`);
@@ -169,6 +172,14 @@ export function AskYiping({
         if (payload.configured === false) {
           setCitations(resolveCitations(payload.citations));
           setPhase('unconfigured');
+          return;
+        }
+        // Grounding floor: retrieval found no inspectable sources for this
+        // question, so the route refused to stream a confident, uncited answer.
+        // Show a calm empty state instead of an answer body.
+        if (payload.grounded === false) {
+          setCitations([]);
+          setPhase('no-sources');
           return;
         }
         // Defensive: an OK JSON body without a stream — treat as error.
@@ -291,6 +302,13 @@ export function AskYiping({
           </div>
         ) : null}
 
+        {phase === 'no-sources' ? (
+          <div className={styles.note}>
+            <strong>No inspectable sources yet</strong>
+            <p>{NO_SOURCES_NOTE}</p>
+          </div>
+        ) : null}
+
         {phase === 'error' ? (
           <div className={`${styles.note} ${styles.error}`} role="alert">
             <strong>Couldn’t reach Ask Yiping</strong>
@@ -336,6 +354,8 @@ function statusLabel(phase: AskPhase): string {
       return 'Example';
     case 'unconfigured':
       return 'Read-only';
+    case 'no-sources':
+      return 'No sources';
     case 'error':
       return 'Error';
     default:

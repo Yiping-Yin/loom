@@ -391,6 +391,31 @@ export function retrieveAskYipingSources(
   return result;
 }
 
+/**
+ * Counts how many of the retrieved sources resolve to a REAL, citeable artifact
+ * for this corpus. This is the grounding floor: when it is zero for a non-empty
+ * question, /api/ask must NOT produce a confident grounded answer — there is
+ * nothing inspectable to cite under the "Verified answers. Cited sources."
+ * promise.
+ *
+ * The OWNER corpus always yields ≥ MIN_RESOLVABLE_ARTIFACTS here (retrieve's
+ * no-overlap fallback returns resolvable artifacts, and its on-overlap path
+ * back-fills resolvable artifacts), so this never trips for the owner. Only a
+ * sparse beginner profile — e.g. name+headline+summary with no education,
+ * experience, works, or links — can retrieve only the non-citeable `me-about`
+ * entry and thus return 0 here.
+ */
+export function countResolvableSources(
+  sources: AskYipingSource[],
+  resolveCitation: AskYipingCitationResolver = resolveAskYipingDossierCitation,
+): number {
+  let count = 0;
+  for (const source of sources) {
+    if (resolveCitation(source.id) !== null) count += 1;
+  }
+  return count;
+}
+
 const SOURCES_DIRECTIVE = 'SOURCES:';
 
 /**
