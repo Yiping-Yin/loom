@@ -5,14 +5,18 @@ import {
 import {
   buildAskYipingPrompt,
   parseAskYipingCitations,
+  resolveAskYipingDossierCitation,
   retrieveAskYipingSources,
   type AskYipingCitation,
+  type AskYipingCitationResolver,
+  type AskYipingCorpusContext,
   type AskYipingSource,
 } from '../../../lib/new-loom/ask-yiping';
+import { beginnerCorpusContext } from '../../../lib/new-loom/beginner-ask-corpus';
 import {
-  resolveVerifiedDossierArtifact,
-  type VerifiedDossierArtifactId,
-} from '../../../lib/new-loom/verified-dossier-home';
+  normalizeBeginnerProfile,
+  type BeginnerProfile,
+} from '../../../lib/profile/beginner-profile';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,17 +40,39 @@ export const dynamic = 'force-dynamic';
 
 type AskRequestBody = {
   question?: unknown;
+  /**
+   * Optional beginner profile. When present, the request is grounded in this
+   * user's OWN profile sections instead of the hardcoded Yiping dossier. The
+   * client Ask widget holds it in localStorage and sends it; absent → Yiping.
+   */
+  profile?: unknown;
 };
 
 /** Turn a retrieved source into a real, resolvable citation (or null). */
-function toResolvableCitation(source: AskYipingSource): AskYipingCitation | null {
-  const artifact = resolveVerifiedDossierArtifact(source.id as VerifiedDossierArtifactId);
-  if (!artifact) return null;
-  return {
-    artifactId: artifact.id,
-    title: artifact.label,
-    href: artifact.href,
-  };
+function toResolvableCitation(
+  source: AskYipingSource,
+  resolveCitation: AskYipingCitationResolver,
+): AskYipingCitation | null {
+  return resolveCitation(source.id);
+}
+
+/**
+ * Decide whether the POST body carries a usable beginner profile. A profile is
+ * "present" only if normalizing it yields at least one searchable section
+ * (name/headline/summary/education/experience/link); an empty object falls back
+ * to the Yiping corpus exactly as before.
+ */
+function readUsableProfile(raw: unknown): BeginnerProfile | null {
+  if (raw == null || typeof raw !== 'object') return null;
+  const profile = normalizeBeginnerProfile(raw);
+  const hasContent =
+    Boolean(profile.home.name.trim()) ||
+    Boolean(profile.home.headline.trim()) ||
+    Boolean(profile.about.summary.trim()) ||
+    profile.about.links.length > 0 ||
+    profile.education.length > 0 ||
+    profile.experience.length > 0;
+  return hasContent ? profile : null;
 }
 
 /** SSE line for a single payload object. */
@@ -67,18 +93,26 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'A non-empty question is required.' }, { status: 400 });
   }
 
-  // No API key on this deploy: stay useful. Surface the verified artifacts that
-  // WOULD ground an answer (real, resolvable ids only) so the client can render
+  // Choose the corpus for this request: a usable beginner profile grounds the
+  // answer in the user's OWN sections; otherwise fall back to the Yiping dossier
+  // exactly as before. The same retrieve/prompt/citation core runs either way.
+  const profile = readUsableProfile(body.profile);
+  const corpusContext: AskYipingCorpusContext = profile ? beginnerCorpusContext(profile) : {};
+  const resolveCitation = corpusContext.resolveCitation ?? resolveAskYipingDossierCitation;
+  const personaName = profile?.home.name?.trim() || undefined;
+
+  // No API key on this deploy: stay useful. Surface the artifacts that WOULD
+  // ground an answer (real, resolvable ids only) so the client can render
   // sources and prompt the user to connect a key. Never stream, never guess.
   if (!isAnthropicConfigured()) {
-    const citations = retrieveAskYipingSources(question)
-      .map(toResolvableCitation)
+    const citations = retrieveAskYipingSources(question, 6, corpusContext)
+      .map((source) => toResolvableCitation(source, resolveCitation))
       .filter((citation): citation is AskYipingCitation => citation !== null);
     return Response.json({ configured: false, citations }, { status: 200 });
   }
 
-  const sources = retrieveAskYipingSources(question);
-  const { system, user } = buildAskYipingPrompt(question, sources);
+  const sources = retrieveAskYipingSources(question, 6, corpusContext);
+  const { system, user } = buildAskYipingPrompt(question, sources, { personaName });
 
   // runAnthropicHttp has no system parameter, so prepend the grounding system
   // prompt to the user prompt (it is sent as a single user message body).
@@ -105,7 +139,7 @@ export async function POST(request: Request): Promise<Response> {
           },
         });
 
-        const { citations } = parseAskYipingCitations(full, sources);
+        const { citations } = parseAskYipingCitations(full, sources, resolveCitation);
         enqueue({ done: true, citations });
       } catch (error) {
         // Abort and network/API errors both land here: report plainly so the

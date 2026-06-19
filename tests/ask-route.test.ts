@@ -22,8 +22,9 @@ test('ask route gates on isAnthropicConfigured and keeps a graceful configured:f
   assert.match(routeSource, /!isAnthropicConfigured\(\)/);
   assert.match(routeSource, /configured: false/);
   assert.match(routeSource, /retrieveAskYipingSources/);
-  // Citations in the graceful branch must resolve to real dossier artifacts.
-  assert.match(routeSource, /resolveVerifiedDossierArtifact/);
+  // Citations in the graceful branch must resolve to real artifacts via the
+  // default dossier citation resolver (which wraps resolveVerifiedDossierArtifact).
+  assert.match(routeSource, /resolveAskYipingDossierCitation/);
 });
 
 test('ask route validates a non-empty question with a 400', () => {
