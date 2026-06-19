@@ -8,6 +8,8 @@ import {
 } from '../../lib/new-loom/verified-dossier-home';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import { readBeginnerProfile } from '../../lib/profile/profile-store';
+import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import styles from './ExperiencePage.module.css';
 
 export const metadata = { title: 'Experience · Loom' };
@@ -63,7 +65,7 @@ function ExperienceEntryCard({ entry }: { entry: VerifiedDossierExperienceEntry 
   );
 }
 
-export default function ExperiencePage() {
+function DossierExperienceView() {
   const category = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find((item) => item.id === 'experience');
   if (!category) throw new Error('Missing Experience category');
   const artifacts = category.artifactIds.map(resolveVerifiedDossierArtifact);
@@ -128,4 +130,60 @@ export default function ExperiencePage() {
       </section>
     </main>
   );
+}
+
+export function ExperienceProfileView({ profile }: { profile: BeginnerProfile }) {
+  const entries = profile.experience;
+
+  return (
+    <main className="vd-section-page vd-section-page--experience" aria-labelledby="experience-title">
+      <LoomGlobalNav activeHref="/experience" ariaLabel="Experience navigation" />
+      <header className="vd-section-page__hero">
+        <div className="vd-section-page__hero-copy">
+          <p>Experience</p>
+          <h1 id="experience-title">Experience.</h1>
+          <span>{entries.length} {entries.length === 1 ? 'role' : 'roles'} on record.</span>
+        </div>
+      </header>
+      {entries.length === 0 ? (
+        <section className="vd-section-page__list" aria-label="Experience entries">
+          <p className="vd-section-page__band-label">Roles</p>
+        </section>
+      ) : (
+        <section className="vd-section-page__list" aria-label="Experience entries">
+          <p className="vd-section-page__band-label">Roles</p>
+          {entries.map((entry, index) => (
+            <article key={index} className="vd-section-page__card" aria-label={`${entry.organization} — ${entry.role}`}>
+              <strong>{entry.role}</strong>
+              <span className="vd-entry-role">{entry.organization}</span>
+              {(entry.start || entry.end) ? (
+                <span className="vd-entry-meta">{formatProfileDateRange(entry.start, entry.end)}{entry.location ? ` · ${entry.location}` : ''}</span>
+              ) : entry.location ? (
+                <span className="vd-entry-meta">{entry.location}</span>
+              ) : null}
+              {entry.bullets.length > 0 ? (
+                <ul className="vd-entry-bullets">
+                  {entry.bullets.map((bullet, bulletIndex) => (
+                    <li key={bulletIndex}>{bullet}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </article>
+          ))}
+        </section>
+      )}
+    </main>
+  );
+}
+
+export default async function ExperiencePage() {
+  const profile = await readBeginnerProfile();
+  return profile ? <ExperienceProfileView profile={profile} /> : <DossierExperienceView />;
+}
+
+function formatProfileDateRange(start?: string, end?: string): string {
+  if (!start && !end) return '';
+  if (start && end) return `${start}–${end}`;
+  if (start) return `${start}–`;
+  return `–${end}`;
 }
