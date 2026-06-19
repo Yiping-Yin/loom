@@ -114,3 +114,13 @@ test('ExperienceProfileView renders gracefully with zero entries', () => {
   assert.match(html, /vd-section-page/);
   assert.match(html, /Roles/);
 });
+
+test('ExperienceProfileView includes the beginner section cross-nav with /works', () => {
+  const { ExperienceProfileView } = require('../app/experience/page') as typeof import('../app/experience/page');
+  const html = render(<ExperienceProfileView profile={SAMPLE_PROFILE} />);
+
+  assert.match(html, /home-profile-section-nav/);
+  assert.match(html, /href="\/about"/);
+  assert.match(html, /href="\/education"/);
+  assert.match(html, /href="\/works"/);
+});

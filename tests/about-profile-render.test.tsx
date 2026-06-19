@@ -91,6 +91,16 @@ test('AboutProfileView renders with the about page shell and nav', () => {
   assert.match(html, /loom-cosmic-field/);
 });
 
+test('AboutProfileView includes the beginner section cross-nav with /works', () => {
+  const { AboutProfileView } = require('../app/about/AboutProfileView') as typeof import('../app/about/AboutProfileView');
+  const html = render(<AboutProfileView profile={SAMPLE_PROFILE} />);
+
+  assert.match(html, /home-profile-section-nav/);
+  assert.match(html, /href="\/education"/);
+  assert.match(html, /href="\/experience"/);
+  assert.match(html, /href="\/works"/);
+});
+
 test('AboutProfileView renders initials placeholder instead of photo', () => {
   const { AboutProfileView } = require('../app/about/AboutProfileView') as typeof import('../app/about/AboutProfileView');
   const html = render(<AboutProfileView profile={SAMPLE_PROFILE} />);

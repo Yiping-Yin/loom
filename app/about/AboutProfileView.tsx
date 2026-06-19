@@ -19,6 +19,12 @@ export function AboutProfileView({ profile }: { profile: BeginnerProfile }) {
     <main className={styles.page} aria-labelledby="about-title">
       <div className="loom-cosmic-field" aria-hidden="true" />
       <LoomGlobalNav activeHref="/about" ariaLabel="Verified dossier navigation" />
+      <nav className="home-profile-section-nav" aria-label="Profile sections">
+        <a href="/about" aria-current="page">About</a>
+        <a href="/education">Education</a>
+        <a href="/experience">Experience</a>
+        <a href="/works">Works</a>
+      </nav>
 
       <div className={styles.shell}>
         <section className={styles.hero}>

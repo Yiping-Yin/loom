@@ -1,13 +1,7 @@
-'use client';
+import { AboutGate } from './AboutGate';
 
-import AboutClient from './AboutClient';
-import { AboutProfileView } from './AboutProfileView';
-import { ProfileGate } from '../profile/ProfileGate';
+export const metadata = { title: 'About · Loom' };
 
 export default function AboutPage() {
-  return (
-    <ProfileGate renderProfile={(profile) => <AboutProfileView profile={profile} />}>
-      <AboutClient />
-    </ProfileGate>
-  );
+  return <AboutGate />;
 }

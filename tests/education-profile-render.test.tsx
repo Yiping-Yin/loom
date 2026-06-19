@@ -113,3 +113,13 @@ test('EducationProfileView renders gracefully with zero entries', () => {
   assert.match(html, /class="vd-section-page"/);
   assert.match(html, /Institutions/);
 });
+
+test('EducationProfileView includes the beginner section cross-nav with /works', () => {
+  const { EducationProfileView } = require('../app/education/page') as typeof import('../app/education/page');
+  const html = render(<EducationProfileView profile={SAMPLE_PROFILE} />);
+
+  assert.match(html, /home-profile-section-nav/);
+  assert.match(html, /href="\/about"/);
+  assert.match(html, /href="\/experience"/);
+  assert.match(html, /href="\/works"/);
+});

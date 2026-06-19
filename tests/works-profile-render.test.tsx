@@ -96,6 +96,31 @@ test('WorksProfileView renders gracefully with zero entries', () => {
   assert.doesNotMatch(html, /Option Pricer/);
 });
 
+test('WorksProfileView includes the beginner section cross-nav with /works', () => {
+  const { WorksProfileView } = require('../app/works/page') as typeof import('../app/works/page');
+  const html = render(<WorksProfileView profile={SAMPLE_PROFILE} />);
+
+  assert.match(html, /home-profile-section-nav/);
+  assert.match(html, /href="\/about"/);
+  assert.match(html, /href="\/education"/);
+  assert.match(html, /href="\/experience"/);
+  assert.match(html, /href="\/works"/);
+});
+
+test('WorksOwnerEmptyView renders an explicit empty-state, not the "0 projects" shell', () => {
+  const { WorksOwnerEmptyView } = require('../app/works/page') as typeof import('../app/works/page');
+  const html = render(<WorksOwnerEmptyView />);
+  const text = visibleText(html);
+
+  // Must NOT claim "0 projects on record." (the misleading beginner shell).
+  assert.doesNotMatch(text, /0 projects on record/);
+  // Must explain there is no works surface and point back to dossier sections.
+  assert.match(text, /No works surface here/);
+  assert.match(html, /href="\/experience"/);
+  assert.match(html, /id="works-title"/);
+  assert.match(html, /vd-section-page/);
+});
+
 test('WorksProfileView shows entries when works exist and omits them when empty', () => {
   const { WorksProfileView } = require('../app/works/page') as typeof import('../app/works/page');
 
