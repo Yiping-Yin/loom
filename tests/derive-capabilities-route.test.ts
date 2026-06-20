@@ -192,6 +192,55 @@ test('parseDerivedCapabilities recomputes status after evidence refs are dropped
   assert.equal(caps[0].status, 'partial');
 });
 
+// ── parseDerivedCapabilities: forged 'artifact' kind cannot reach 'strong' ────
+
+/**
+ * The moat invariant (route docstring): "a capability never claims 'strong' on
+ * hallucinated proof." A hallucinating/steered model can emit kind:'artifact' on
+ * a refId that DOES resolve — but to a non-artifact entry (e.g. edu-0). Because
+ * the refId is real, the evidence survives ref-validation, and computeStatus
+ * would award 'strong' off the forged kind even though the profile has ZERO
+ * uploaded artifacts. parseDerivedCapabilities must reconcile each evidence.kind
+ * with what its refId actually points to, so 'strong' is un-forgeable.
+ */
+test("parseDerivedCapabilities overwrites a forged 'artifact' kind with the refId's real kind (no artifacts → partial, not strong)", () => {
+  // A profile with TWO education entries and NO artifacts.
+  const artifactlessProfile: BeginnerProfile = normalizeBeginnerProfile({
+    home: { name: 'Grace Hopper', headline: 'Mathematician' },
+    education: [
+      { institution: 'Vassar College', qualification: 'BA Mathematics' },
+      { institution: 'Yale', qualification: 'PhD Mathematics' },
+    ],
+    // no experience, no works, no artifacts
+  });
+  assert.equal(artifactlessProfile.artifacts?.length ?? 0, 0, 'precondition: zero artifacts');
+
+  // Model forges kind:'artifact' on an edu-N refId (which resolves to education).
+  const forgedJson = JSON.stringify([
+    {
+      label: 'Mathematics',
+      status: 'strong', // model claims strong
+      evidence: [
+        { kind: 'artifact', refId: 'edu-0', label: 'Forged proof document' }, // resolves to EDUCATION, kind forged
+        { kind: 'education', refId: 'edu-1', label: 'PhD Mathematics at Yale' },
+      ],
+    },
+  ]);
+
+  const caps = parseDerivedCapabilities(forgedJson, artifactlessProfile);
+  assert.equal(caps.length, 1);
+  // Both refIds resolve, so neither evidence entry is dropped.
+  assert.equal(caps[0].evidence.length, 2);
+  // The forged 'artifact' kind is corrected to the refId's authoritative kind.
+  const edu0 = caps[0].evidence.find((e) => e.refId === 'edu-0');
+  assert.ok(edu0, 'edu-0 evidence should survive');
+  assert.equal(edu0!.kind, 'education');
+  // With zero real artifacts, NO evidence may claim 'artifact'.
+  assert.equal(caps[0].evidence.some((e) => e.kind === 'artifact'), false);
+  // The moat invariant: 'strong' requires a refId genuinely pointing at an artifact.
+  assert.equal(caps[0].status, 'partial');
+});
+
 // ── parseDerivedCapabilities: artifact ref by id resolves correctly ───────────
 
 test('parseDerivedCapabilities: artifact ref by id resolves correctly', () => {
@@ -246,4 +295,25 @@ test('parseDerivedCapabilities strips a ```json code fence around the array', ()
   const caps = parseDerivedCapabilities(fenced, sampleProfile);
   assert.equal(caps.length, 1);
   assert.equal(caps[0].label, 'Python');
+});
+
+// ── Moat hardening: duplicate evidence cannot inflate breadth to 'strong' ──────
+
+test('parseDerivedCapabilities: the same artifact cited twice cannot forge strong', () => {
+  // One real, resolvable artifact refId cited twice — every citation is real, but
+  // it is a SINGLE document and must not count as two proofs.
+  const modelJson = JSON.stringify([
+    {
+      label: 'Data Analysis',
+      status: 'strong',
+      evidence: [
+        { kind: 'artifact', refId: 'art-xyz', label: 'Report' },
+        { kind: 'artifact', refId: 'art-xyz', label: 'Report' },
+      ],
+    },
+  ]);
+  const caps = parseDerivedCapabilities(modelJson, sampleProfile);
+  assert.equal(caps.length, 1);
+  assert.equal(caps[0].evidence.length, 1, 'the duplicate artifact ref is collapsed to one');
+  assert.equal(caps[0].status, 'partial', 'a single document is not strong');
 });

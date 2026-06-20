@@ -244,3 +244,53 @@ test('mergeExtractedProfile normalizes the result (unsafe extracted href dropped
   const merged = mergeExtractedProfile(current, extracted);
   assert.equal(merged.about.links.length, 0, 'dangerous-scheme link dropped at the seam');
 });
+
+test("mergeExtractedProfile preserves the user's uploaded artifacts (the grounded-cited moat)", () => {
+  // Regression: the merged literal used to omit `artifacts`, so the trailing
+  // normalize defaulted it to [] — silently wiping an uploaded résumé's citeable
+  // ArtifactRef on the primary upload→extract→merge path.
+  const current = normalizeBeginnerProfile({
+    home: { name: 'Ada' },
+    artifacts: [
+      {
+        id: 'art-cv',
+        name: 'cv.pdf',
+        kind: 'pdf',
+        label: 'CV / Résumé',
+        extractedText: 'Ada Lovelace — analyst at Babbage Lab.',
+      },
+    ],
+  });
+  assert.equal(current.artifacts?.length, 1, 'precondition: current carries the artifact');
+
+  // A typical extracted profile carries structured fields but no artifacts.
+  const extracted = normalizeBeginnerProfile({
+    home: { name: 'Ada Lovelace' },
+    experience: [{ role: 'Analyst', organization: 'Babbage Lab', bullets: [] }],
+  });
+
+  const merged = mergeExtractedProfile(current, extracted);
+  assert.equal(merged.artifacts?.length, 1, 'the uploaded artifact must survive the merge');
+  assert.equal(merged.artifacts?.[0].id, 'art-cv');
+  assert.equal(merged.artifacts?.[0].extractedText, 'Ada Lovelace — analyst at Babbage Lab.');
+});
+
+test("mergeExtractedProfile preserves the user's existing capabilities", () => {
+  const current = normalizeBeginnerProfile({
+    home: { name: 'Ada' },
+    capabilities: [
+      {
+        id: 'cap-data',
+        label: 'Data Analysis',
+        status: 'partial',
+        evidence: [{ kind: 'experience', refId: 'exp-0', label: 'Analyst' }],
+      },
+    ],
+  });
+  assert.equal(current.capabilities?.length, 1, 'precondition: current carries the capability');
+
+  const extracted = normalizeBeginnerProfile({ home: { name: 'Ada Lovelace' } });
+  const merged = mergeExtractedProfile(current, extracted);
+  assert.equal(merged.capabilities?.length, 1, 'existing capabilities must survive the merge');
+  assert.equal(merged.capabilities?.[0].label, 'Data Analysis');
+});

@@ -251,6 +251,16 @@
   letter-spacing: 0.04em;
 }
 
+/* Surfaced when a capability-map build can't persist (private mode / quota). */
+.capabilitiesError {
+  flex-basis: 100%;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: var(--fs-caption);
+  font-style: italic;
+  color: var(--tint-red, #f97474);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .buildButton {
     transition: none;

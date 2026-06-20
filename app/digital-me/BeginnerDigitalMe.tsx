@@ -8,7 +8,10 @@ import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { type BeginnerCapability } from '../../lib/capability/capability-graph';
 import { buildCapabilities } from '../../lib/capability/derive-capabilities';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
-import { writeBeginnerProfileLocal } from '../../lib/profile/profile-storage';
+import {
+  readBeginnerProfileLocal,
+  writeBeginnerProfileLocal,
+} from '../../lib/profile/profile-storage';
 import shell from '../about/AboutClient.module.css';
 import styles from './BeginnerDigitalMe.module.css';
 import { BeginnerJourney } from './BeginnerJourney';
@@ -44,6 +47,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   // Local capability state — seeded from the profile's persisted capabilities.
   const [caps, setCaps] = useState<BeginnerCapability[]>(profile.capabilities ?? []);
   const [building, setBuilding] = useState(false);
+  const [buildError, setBuildError] = useState('');
 
   /** Count of capabilities whose status is 'strong' (backed by real proof). */
   const strongCount = caps.filter((c) => c.status === 'strong').length;
@@ -51,10 +55,22 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   async function handleBuildCapabilities() {
     if (building) return;
     setBuilding(true);
+    setBuildError('');
     try {
-      const derived = await buildCapabilities(profile);
+      // Read the freshest profile from storage rather than the prop captured at
+      // mount: an artifact uploaded via the Proof section after page load lives
+      // only in localStorage, so writing the stale prop back would silently drop
+      // it (orphaning the blob + its grounded text). Derive from `current` too so
+      // the map reflects newly-uploaded proof.
+      const current = readBeginnerProfileLocal() ?? profile;
+      const derived = await buildCapabilities(current);
       setCaps(derived);
-      writeBeginnerProfileLocal({ ...profile, capabilities: derived });
+      const saved = writeBeginnerProfileLocal({ ...current, capabilities: derived });
+      if (!saved) {
+        setBuildError(
+          "Couldn't save your capability map — your browser may be blocking local storage (private mode) or it's full.",
+        );
+      }
     } finally {
       setBuilding(false);
     }
@@ -142,6 +158,12 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
                 {caps.length} {caps.length === 1 ? 'capability' : 'capabilities'}
                 {' · '}
                 {strongCount} backed by proof
+              </p>
+            )}
+
+            {buildError && (
+              <p className={styles.capabilitiesError} role="alert">
+                {buildError}
               </p>
             )}
           </div>

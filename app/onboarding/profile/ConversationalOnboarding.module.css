@@ -644,6 +644,10 @@
 }
 
 .footerLink {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
   color: rgba(168, 178, 182, 0.42);
   font-family: var(--serif);
   font-size: 0.8rem;

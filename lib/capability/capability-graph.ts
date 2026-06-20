@@ -36,12 +36,33 @@ export function computeStatus(evidence: CapabilityEvidence[]): CapabilityStatus 
 
 // ── Heuristic derivation ─────────────────────────────────────────────────────
 
-/** Normalise a label into a URL-slug-style id segment. */
+/**
+ * Deterministic FNV-1a hash of a string → short base36 token. No Math.random,
+ * so the token is stable across reloads. Used as the slug fallback for labels
+ * with no ASCII alphanumerics (e.g. all-CJK labels) which would otherwise strip
+ * to an empty string.
+ */
+function hashToken(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+}
+
+/**
+ * Normalise a label into a URL-slug-style id segment. Falls back to a stable
+ * hash token when the label has no ASCII alphanumerics (e.g. '数据分析'), so two
+ * distinct non-Latin labels never both collapse to the same empty slug (which
+ * would silently drop one and collide React keys / card focus downstream).
+ */
 function slug(label: string): string {
-  return label
+  const base = label
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+  return base || `c${hashToken(label)}`;
 }
 
 /**
@@ -285,7 +306,7 @@ function optCapStr(v: unknown, max: number): string | undefined {
 export function normalizeCapabilities(raw: unknown): BeginnerCapability[] {
   if (!Array.isArray(raw)) return [];
 
-  return (raw as unknown[])
+  const normalized = (raw as unknown[])
     .slice(0, CAP_COUNT_MAX)
     .map((entry) => {
       if (!entry || typeof entry !== 'object') return null;
@@ -315,15 +336,28 @@ export function normalizeCapabilities(raw: unknown): BeginnerCapability[] {
         })
         .filter((ev): ev is CapabilityEvidence => ev !== null);
 
+      // Dedupe evidence by kind+refId: the SAME proof cited twice must not count
+      // as two pieces. computeStatus counts entries, so a duplicated artifact ref
+      // could otherwise forge a 'strong' badge from a single document.
+      const seenEvidenceKeys = new Set<string>();
+      const dedupedEvidence = evidence.filter((ev) => {
+        const key = `${ev.kind}|${ev.refId}`;
+        if (seenEvidenceKeys.has(key)) return false;
+        seenEvidenceKeys.add(key);
+        return true;
+      });
+
+      // Reuse slug() so a label with no ASCII alphanumerics (all-CJK) falls back
+      // to a stable hash token instead of collapsing to an empty 'cap-' id.
       const id = typeof e.id === 'string' && e.id.trim()
         ? e.id
-        : `cap-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
+        : `cap-${slug(label)}`;
 
       const result: BeginnerCapability = {
         id,
         label,
         status,
-        evidence,
+        evidence: dedupedEvidence,
       };
 
       const note = optCapStr(e.note, CAP_NOTE_MAX);
@@ -335,4 +369,23 @@ export function normalizeCapabilities(raw: unknown): BeginnerCapability[] {
       return result;
     })
     .filter((c): c is BeginnerCapability => c !== null);
+
+  // Id-uniqueness pass: two capabilities that derive the same id (identical
+  // labels, or a repeated explicit id in old/edited storage) would collide React
+  // keys + card refs in CapabilityMap. Suffix -2/-3/... on collision, mirroring
+  // the heuristic's seenIds guard.
+  const seenIds = new Set<string>();
+  for (const cap of normalized) {
+    if (!seenIds.has(cap.id)) {
+      seenIds.add(cap.id);
+      continue;
+    }
+    let unique = cap.id;
+    let n = 2;
+    while (seenIds.has(unique)) unique = `${cap.id}-${n++}`;
+    seenIds.add(unique);
+    cap.id = unique;
+  }
+
+  return normalized;
 }

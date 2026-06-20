@@ -183,6 +183,13 @@ export interface AskYipingProps {
    * Defaults to the owner's canned VERIFIED_DOSSIER_AI_PROMPT seed.
    */
   example?: AskYipingExample | null;
+  /**
+   * When true, ignore any beginner profile in localStorage and always ground the
+   * answer in the owner (Yiping) corpus. The owner showcase sets this so a
+   * visitor who happens to have their own beginner profile doesn't silently
+   * switch the demo to answer from their own data.
+   */
+  forceOwnerCorpus?: boolean;
 }
 
 const OWNER_PLACEHOLDER = 'Ask about maths, optimisation, programming, or QBook...';
@@ -205,6 +212,7 @@ export function AskYiping({
   lede = OWNER_LEDE,
   readOnlyNote = READ_ONLY_NOTE,
   example = OWNER_EXAMPLE,
+  forceOwnerCorpus = false,
 }: AskYipingProps = {}) {
   // When example is null we start in neutral idle; otherwise seed the panel.
   const [draft, setDraft] = useState('');
@@ -234,7 +242,9 @@ export function AskYiping({
     setPhase('streaming');
 
     try {
-      const profile = readBeginnerProfileLocal();
+      // forceOwnerCorpus (owner showcase) → never read the visitor's local
+      // profile, so the demo always answers from the Yiping corpus.
+      const profile = forceOwnerCorpus ? null : readBeginnerProfileLocal();
       const response = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },

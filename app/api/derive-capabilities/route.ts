@@ -10,6 +10,7 @@ import {
   normalizeCapabilities,
   computeStatus,
   type BeginnerCapability,
+  type CapabilityEvidence,
 } from '../../../lib/capability/capability-graph';
 
 export const runtime = 'nodejs';
@@ -146,17 +147,23 @@ function profileToPromptText(profile: BeginnerProfile): string {
 }
 
 /**
- * Build the set of valid refIds from a profile for evidence validation.
- * Returns a Set<string> of all legitimate refIds:
- *   edu-0, edu-1, ..., exp-0, ..., work-0, ..., and each artifact.id.
+ * Map every legitimate refId in a profile to its AUTHORITATIVE kind:
+ *   edu-N → education, exp-N → experience, work-N → work, artifact.id → artifact.
+ *
+ * Used both to validate evidence (a refId not in the map is dropped) AND to
+ * overwrite the model's claimed `kind` with the truth derived from the refId.
+ * Without the overwrite a model could emit { kind:'artifact', refId:'edu-0' } —
+ * a resolvable ref but a forged kind — and earn 'strong' (computeStatus requires
+ * an artifact) with zero real uploaded proof. Deriving kind from the refId makes
+ * 'strong' un-forgeable.
  */
-function buildValidRefIds(profile: BeginnerProfile): Set<string> {
-  const valid = new Set<string>();
-  (profile.education ?? []).forEach((_, i) => valid.add(`edu-${i}`));
-  (profile.experience ?? []).forEach((_, i) => valid.add(`exp-${i}`));
-  (profile.works ?? []).forEach((_, i) => valid.add(`work-${i}`));
-  (profile.artifacts ?? []).forEach((a) => valid.add(a.id));
-  return valid;
+function buildRefKinds(profile: BeginnerProfile): Map<string, CapabilityEvidence['kind']> {
+  const kinds = new Map<string, CapabilityEvidence['kind']>();
+  (profile.education ?? []).forEach((_, i) => kinds.set(`edu-${i}`, 'education'));
+  (profile.experience ?? []).forEach((_, i) => kinds.set(`exp-${i}`, 'experience'));
+  (profile.works ?? []).forEach((_, i) => kinds.set(`work-${i}`, 'work'));
+  (profile.artifacts ?? []).forEach((a) => kinds.set(a.id, 'artifact'));
+  return kinds;
 }
 
 /**
@@ -167,7 +174,8 @@ function buildValidRefIds(profile: BeginnerProfile): Set<string> {
  * 2. Locate the outer JSON array.
  * 3. JSON.parse defensively.
  * 4. normalizeCapabilities — sanitizes labels, lengths, evidence shapes.
- * 5. DROP any evidence entry whose refId is not in the profile's valid ref set.
+ * 5. DROP any evidence entry whose refId is not in the profile, and overwrite
+ *    each surviving entry's kind with the authoritative kind from its refId.
  * 6. RECOMPUTE status from the validated (possibly reduced) evidence.
  *
  * Returns [] on any parse failure so the route can distinguish:
@@ -209,13 +217,17 @@ export function parseDerivedCapabilities(
   // Sanitize: cap labels, coerce statuses, drop malformed evidence entries.
   const normalized = normalizeCapabilities(parsed);
 
-  // Build the set of valid refIds from the actual profile.
-  const validRefIds = buildValidRefIds(profile);
+  // Map each valid refId to its authoritative kind, derived from the profile.
+  const refKinds = buildRefKinds(profile);
 
-  // Drop evidence entries whose refId doesn't resolve to a real profile entry,
-  // then recompute status from the validated evidence.
+  // Drop evidence whose refId doesn't resolve to a real profile entry, OVERWRITE
+  // the model's claimed kind with the authoritative one (so a forged
+  // kind:'artifact' on a non-artifact ref can't earn 'strong'), then recompute
+  // status from the validated evidence.
   return normalized.map((cap) => {
-    const validatedEvidence = cap.evidence.filter((ev) => validRefIds.has(ev.refId));
+    const validatedEvidence = cap.evidence
+      .filter((ev) => refKinds.has(ev.refId))
+      .map((ev) => ({ ...ev, kind: refKinds.get(ev.refId)! }));
     const recomputedStatus = computeStatus(validatedEvidence);
     return {
       ...cap,

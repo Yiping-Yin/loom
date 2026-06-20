@@ -16,6 +16,10 @@ import {
  *     present (deduped by href).
  *   - education / experience / works: append extracted entries to whatever the
  *     user already has (extraction adds, it does not replace prior entries).
+ *   - artifacts / capabilities: preserved from the user's in-progress profile
+ *     (an extracted profile carries neither). Omitting them here would let the
+ *     trailing normalize default them to [] — silently wiping an uploaded
+ *     résumé's citeable artifact, the grounded-cited moat this flow exists for.
  *
  * The result is run through normalizeBeginnerProfile so the merged object is
  * always a clean, capped, href-sanitized profile regardless of inputs. Pure and
@@ -50,6 +54,10 @@ export function mergeExtractedProfile(
     education: [...cur.education, ...ext.education],
     experience: [...cur.experience, ...ext.experience],
     works: [...cur.works, ...ext.works],
+    // Keep the user's uploaded artifacts + derived capabilities through the
+    // merge (cur/ext are already normalized, so these are guaranteed arrays).
+    artifacts: [...(cur.artifacts ?? []), ...(ext.artifacts ?? [])],
+    capabilities: [...(cur.capabilities ?? []), ...(ext.capabilities ?? [])],
   };
 
   // Final pass through the trusted seam (re-caps the now-larger arrays, etc.).

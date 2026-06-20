@@ -212,3 +212,50 @@ test('normalizeBeginnerProfile with valid capabilities array survives normalize'
   assert.equal(p.capabilities?.[0].label, 'Data Analysis');
   assert.equal(p.capabilities?.[0].status, 'partial');
 });
+
+// ── Non-Latin (CJK) labels: stable, unique ids (no silent drop / key collision) ─
+
+test('deriveCapabilitiesHeuristic: distinct CJK roles get distinct, non-empty ids', () => {
+  const profile = normalizeBeginnerProfile({
+    home: { name: '小明' },
+    experience: [
+      { role: '数据分析', organization: '甲公司', bullets: [] },
+      { role: '机器学习', organization: '乙公司', bullets: [] },
+    ],
+  });
+  const caps = deriveCapabilitiesHeuristic(profile);
+  assert.ok(caps.length >= 2, `expected ≥2 capabilities for two distinct CJK roles, got ${caps.length}`);
+  const ids = caps.map((c) => c.id);
+  assert.equal(ids.length, new Set(ids).size, 'ids must be unique (no cap- collision)');
+  for (const id of ids) {
+    assert.notEqual(id, 'cap-', "id must not collapse to bare 'cap-'");
+    assert.ok(id.length > 'cap-'.length, `id ${id} must carry a stable token`);
+  }
+});
+
+test('normalizeCapabilities: identical CJK labels without ids get unique ids', () => {
+  const caps = normalizeCapabilities([
+    { label: '数据分析', status: 'partial', evidence: [] },
+    { label: '数据分析', status: 'partial', evidence: [] },
+  ]);
+  assert.equal(caps.length, 2);
+  assert.notEqual(caps[0].id, caps[1].id, 'duplicate labels must not share an id');
+  assert.notEqual(caps[0].id, 'cap-');
+});
+
+test('normalizeCapabilities: dedupes evidence by kind+refId', () => {
+  const caps = normalizeCapabilities([
+    {
+      id: 'cap-x',
+      label: 'Analysis',
+      status: 'partial',
+      evidence: [
+        { kind: 'artifact', refId: 'art-1', label: 'Report' },
+        { kind: 'artifact', refId: 'art-1', label: 'Report' }, // duplicate
+        { kind: 'experience', refId: 'exp-0', label: 'Analyst' },
+      ],
+    },
+  ]);
+  assert.equal(caps.length, 1);
+  assert.equal(caps[0].evidence.length, 2, 'the duplicate artifact ref is collapsed');
+});

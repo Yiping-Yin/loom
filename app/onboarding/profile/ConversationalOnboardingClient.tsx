@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
-import Link from 'next/link';
 import {
   emptyBeginnerProfile,
   normalizeBeginnerProfile,
@@ -631,6 +630,24 @@ export function ConversationalOnboardingClient() {
     }
   };
 
+  /**
+   * Persist the in-progress chat profile, THEN navigate to the form. The form
+   * route re-reads localStorage on mount, so without this save a first-time user
+   * would land on an empty form and silently lose the whole chat session. Mirrors
+   * handleSave's write-result check: a blocked write (private mode / quota) shows
+   * an error instead of navigating to a blank form.
+   */
+  const goToForm = () => {
+    const ok = writeBeginnerProfileLocal(normalizeBeginnerProfile(profile));
+    if (!ok) {
+      setSaveError(
+        "Couldn't save your progress — your browser is blocking local storage (e.g. private browsing). Try a normal window, then continue.",
+      );
+      return;
+    }
+    router.push('/onboarding/profile/form');
+  };
+
   const currentProgress = progressOf(step);
   const progressPercent = Math.round((currentProgress / TOTAL_STEPS) * 100);
 
@@ -800,9 +817,13 @@ export function ConversationalOnboardingClient() {
                 {saving ? 'Saving…' : 'Save & see my profile'}
                 {!saving && <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />}
               </button>
-              <Link href="/onboarding/profile/form" className={styles.ghostBtn}>
+              <button
+                type="button"
+                className={styles.ghostBtn}
+                onClick={goToForm}
+              >
                 Edit in form
-              </Link>
+              </button>
             </div>
           )}
         </div>
@@ -810,9 +831,9 @@ export function ConversationalOnboardingClient() {
 
       {/* Footer links */}
       <footer className={styles.footer}>
-        <Link href="/onboarding/profile/form" className={styles.footerLink}>
+        <button type="button" className={styles.footerLink} onClick={goToForm}>
           Prefer a form?
-        </Link>
+        </button>
       </footer>
     </main>
   );
