@@ -96,7 +96,7 @@ test('WorksProfileView renders gracefully with zero entries', () => {
   assert.doesNotMatch(html, /Option Pricer/);
 });
 
-test('WorksProfileView includes the beginner section cross-nav with /works', () => {
+test('WorksProfileView includes the beginner section cross-nav with /works, /digital-me, /card', () => {
   const { WorksProfileView } = require('../app/works/page') as typeof import('../app/works/page');
   const html = render(<WorksProfileView profile={SAMPLE_PROFILE} />);
 
@@ -105,6 +105,8 @@ test('WorksProfileView includes the beginner section cross-nav with /works', () 
   assert.match(html, /href="\/education"/);
   assert.match(html, /href="\/experience"/);
   assert.match(html, /href="\/works"/);
+  assert.match(html, /href="\/digital-me"/);
+  assert.match(html, /href="\/card"/);
 });
 
 test('WorksOwnerEmptyView renders an explicit empty-state, not the "0 projects" shell', () => {

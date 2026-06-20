@@ -57,7 +57,7 @@ test('HomeProfileView renders summary when present', () => {
   assert.match(text, /Building knowledge systems at the intersection of finance and AI\./);
 });
 
-test('HomeProfileView renders section nav links to /about, /education, /experience, /works', () => {
+test('HomeProfileView renders section nav links to /about, /education, /experience, /works, /digital-me, /card', () => {
   const { HomeProfileView } = require('../app/HomeProfileView') as typeof import('../app/HomeProfileView');
   const html = render(<HomeProfileView profile={SAMPLE_PROFILE} />);
 
@@ -65,6 +65,8 @@ test('HomeProfileView renders section nav links to /about, /education, /experien
   assert.match(html, /href="\/education"/);
   assert.match(html, /href="\/experience"/);
   assert.match(html, /href="\/works"/);
+  assert.match(html, /href="\/digital-me"/);
+  assert.match(html, /href="\/card"/);
 });
 
 test('HomeProfileView renders NEW_LOOM_CAPABILITIES capability links', () => {

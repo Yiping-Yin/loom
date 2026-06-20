@@ -91,7 +91,7 @@ test('AboutProfileView renders with the about page shell and nav', () => {
   assert.match(html, /loom-cosmic-field/);
 });
 
-test('AboutProfileView includes the beginner section cross-nav with /works', () => {
+test('AboutProfileView includes the beginner section cross-nav with /works, /digital-me, /card', () => {
   const { AboutProfileView } = require('../app/about/AboutProfileView') as typeof import('../app/about/AboutProfileView');
   const html = render(<AboutProfileView profile={SAMPLE_PROFILE} />);
 
@@ -99,6 +99,8 @@ test('AboutProfileView includes the beginner section cross-nav with /works', () 
   assert.match(html, /href="\/education"/);
   assert.match(html, /href="\/experience"/);
   assert.match(html, /href="\/works"/);
+  assert.match(html, /href="\/digital-me"/);
+  assert.match(html, /href="\/card"/);
 });
 
 test('AboutProfileView renders initials placeholder instead of photo', () => {

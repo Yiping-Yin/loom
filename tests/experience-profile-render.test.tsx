@@ -115,7 +115,7 @@ test('ExperienceProfileView renders gracefully with zero entries', () => {
   assert.match(html, /Roles/);
 });
 
-test('ExperienceProfileView includes the beginner section cross-nav with /works', () => {
+test('ExperienceProfileView includes the beginner section cross-nav with /works, /digital-me, /card', () => {
   const { ExperienceProfileView } = require('../app/experience/page') as typeof import('../app/experience/page');
   const html = render(<ExperienceProfileView profile={SAMPLE_PROFILE} />);
 
@@ -123,4 +123,6 @@ test('ExperienceProfileView includes the beginner section cross-nav with /works'
   assert.match(html, /href="\/about"/);
   assert.match(html, /href="\/education"/);
   assert.match(html, /href="\/works"/);
+  assert.match(html, /href="\/digital-me"/);
+  assert.match(html, /href="\/card"/);
 });

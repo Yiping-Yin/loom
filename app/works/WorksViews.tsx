@@ -13,6 +13,8 @@ export function WorksProfileView({ profile }: { profile: BeginnerProfile }) {
         <a href="/education">Education</a>
         <a href="/experience">Experience</a>
         <a href="/works" aria-current="page">Works</a>
+        <a href="/digital-me">Digital Me</a>
+        <a href="/card">Card</a>
       </nav>
       <header className="vd-section-page__hero">
         <div className="vd-section-page__hero-copy">
