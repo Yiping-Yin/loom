@@ -160,3 +160,94 @@ test('product-shell registers /example as an internal route prefix', () => {
     '/example must be registered in NEW_LOOM_INTERNAL_ROUTE_PREFIXES',
   );
 });
+
+// ---------------------------------------------------------------------------
+// F2 step 2 — the DEFAULT routes are now neutral for a no-profile STRANGER.
+//
+// renderToStaticMarkup never mounts, so the gates' localStorage useEffect never
+// runs: the SSR output is exactly the no-profile fallback a stranger first sees.
+// The owner dossier must be ABSENT from these default surfaces (it lives only at
+// /example*, asserted above).
+// ---------------------------------------------------------------------------
+
+test('/ (no profile) renders the neutral landing CTAs, NOT the owner dossier', () => {
+  const { default: HomePage } = require('../app/page') as { default: React.ComponentType };
+  const html = render(<HomePage />);
+  const text = visibleText(html);
+
+  // Neutral landing: the LOOM promise + Gather→Build→Represent + both CTAs.
+  assert.match(text, /verifiable identity/);
+  assert.match(text, /Gather/);
+  assert.match(text, /Build/);
+  assert.match(text, /Represent/);
+  assert.match(html, /href="\/onboarding\/profile"/);
+  assert.match(text, /Build your LOOM/);
+  assert.match(html, /href="\/example"/);
+  assert.match(text, /See an example/);
+
+  // Owner dossier markers must be ABSENT from the default home.
+  assert.doesNotMatch(text, /Yiping Yin/);
+  assert.doesNotMatch(html, /class="lcv-shell"/);
+  assert.doesNotMatch(html, /class="lcv-ledger"/);
+});
+
+test('default /about (no profile) renders a neutral empty state, not the owner About dossier', () => {
+  const { default: AboutPage } = require('../app/about/page') as { default: React.ComponentType };
+  const html = render(<AboutPage />);
+  const text = visibleText(html);
+
+  // Neutral empty state with build / see-example CTAs.
+  assert.match(text, /This is your About page/);
+  assert.match(html, /href="\/onboarding\/profile"/);
+  assert.match(html, /href="\/example"/);
+
+  // Owner About dossier content must be absent.
+  assert.doesNotMatch(text, /Yiping Yin/);
+  assert.doesNotMatch(text, /Curriculum Vitae/);
+});
+
+test('default /digital-me (no profile) renders a neutral empty state, not the owner Role-OS + Ask', () => {
+  const { default: DigitalMePage } = require('../app/digital-me/page') as {
+    default: React.ComponentType;
+  };
+  const html = render(<DigitalMePage />);
+  const text = visibleText(html);
+
+  // Neutral empty state; example CTA points at the showcase Digital Me.
+  assert.match(text, /This is your Digital Me page/);
+  assert.match(html, /href="\/onboarding\/profile"/);
+  assert.match(html, /href="\/example\/digital-me"/);
+
+  // Owner Role-OS markers AND the owner-corpus Ask widget must be absent on the
+  // default route (the owner Ask only mounts at /example/digital-me).
+  assert.doesNotMatch(text, /Role Lens/);
+  assert.doesNotMatch(text, /Capability Map/);
+  assert.doesNotMatch(html, /ask-yiping/i);
+});
+
+test('default /education and /experience (no profile) render neutral empty states, not owner dossiers', () => {
+  const { default: EducationPage } = require('../app/education/page') as {
+    default: React.ComponentType;
+  };
+  const { default: ExperiencePage } = require('../app/experience/page') as {
+    default: React.ComponentType;
+  };
+
+  const eduHtml = render(<EducationPage />);
+  const eduText = visibleText(eduHtml);
+  assert.match(eduText, /This is your Education page/);
+  assert.match(eduHtml, /href="\/onboarding\/profile"/);
+  assert.match(eduHtml, /href="\/example"/);
+  // Owner education evidence strips must be absent.
+  assert.doesNotMatch(eduText, /Evidence files/);
+  assert.doesNotMatch(eduText, /UNSW courses/);
+
+  const expHtml = render(<ExperiencePage />);
+  const expText = visibleText(expHtml);
+  assert.match(expText, /This is your Experience page/);
+  assert.match(expHtml, /href="\/onboarding\/profile"/);
+  assert.match(expHtml, /href="\/example"/);
+  // Owner experience evidence content must be absent.
+  assert.doesNotMatch(expText, /Optiver &(amp;)? UNSW/);
+  assert.doesNotMatch(expText, /Experience evidence\./);
+});

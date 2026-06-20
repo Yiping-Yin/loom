@@ -1,17 +1,24 @@
 /**
- * Tests for Bug 2: the Home gate redirect behavior.
+ * Tests for the Home gate default behavior.
  *
- * Before the fix, app/page.tsx did `if (!configured) redirect('/onboarding')`
- * server-side, which blocked profile-only users from ever reaching
- * HomeProfileView. The fix moves the redirect decision to the client HomeGate,
- * which can inspect localStorage.
+ * History:
+ * - Bug 2 (earlier): app/page.tsx redirected to /onboarding server-side, which
+ *   blocked profile-only users from ever reaching HomeProfileView. The fix moved
+ *   the redirect decision to the client HomeGate.
+ * - F2 step 2 (current): the default `/` route is now a generic product surface.
+ *   A no-profile STRANGER must NOT see the owner dossier (HomeClient, now at
+ *   /example) and must NOT be redirected to /onboarding (a dead-end). Instead
+ *   HomeGate renders the neutral on-brand HomeLanding, whose CTAs are the entry
+ *   points. The `configured` prop and content-root redirect are retired.
  *
- * These tests verify:
- * 1. app/page.tsx no longer contains a server-side redirect to /onboarding.
- * 2. app/page.tsx passes `configured` to HomeGate.
- * 3. HomeGate accepts a `configured` prop and performs a client-side redirect.
- * 4. HomeGate renders the profile view when a profile is present (regardless of `configured`).
- * 5. HomeGate renders HomeClient as the SSR/first-paint fallback (renderToStaticMarkup contract).
+ * These tests verify the NEW intent:
+ * 1. app/page.tsx does NOT redirect to /onboarding (server- or client-side).
+ * 2. app/page.tsx renders HomeGate with no `configured` plumbing.
+ * 3. HomeGate no longer redirects (no useRouter / router.replace) — the landing
+ *    replaces the old first-run redirect.
+ * 4. HomeGate renders HomeLanding (the neutral landing) as the SSR/first-paint
+ *    no-profile fallback — NOT the owner HomeClient.
+ * 5. HomeGate renders HomeProfileView when a profile is present.
  */
 
 import assert from 'node:assert/strict';
@@ -25,69 +32,64 @@ function read(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-test('app/page.tsx does NOT redirect to /onboarding server-side', () => {
+test('app/page.tsx does NOT redirect to /onboarding', () => {
   const page = read('app/page.tsx');
 
-  assert.doesNotMatch(
-    page,
-    /if \(!configured\) redirect/,
-    'server-side redirect must be removed; the redirect is now handled client-side in HomeGate',
-  );
   assert.doesNotMatch(
     page,
     /redirect\('\/onboarding'\)/,
-    'app/page.tsx must not redirect to /onboarding (beginner profile-only users would be blocked)',
+    'app/page.tsx must not redirect to /onboarding; the neutral landing replaces the first-run dead-end',
+  );
+  assert.doesNotMatch(
+    page,
+    /if \(!configured\) redirect/,
+    'the old server-side content-root redirect must stay removed',
   );
 });
 
-test('app/page.tsx passes configured to HomeGate', () => {
+test('app/page.tsx renders HomeGate without configured plumbing', () => {
   const page = read('app/page.tsx');
 
-  assert.match(
+  assert.match(page, /<HomeGate \/>/, 'app/page.tsx must render <HomeGate /> as the default surface');
+  assert.doesNotMatch(
     page,
-    /<HomeGate configured=\{configured\}/,
-    'app/page.tsx must pass the configured flag to HomeGate',
+    /configured/,
+    'the content-root `configured` flag is retired now that the landing replaces the redirect',
   );
 });
 
-test('HomeGate accepts a configured prop and does client-side redirect when no profile and not configured', () => {
+test('HomeGate no longer redirects — the neutral landing replaces the first-run redirect', () => {
   const gate = read('app/HomeGate.tsx');
 
-  // The prop must be declared.
-  assert.match(
-    gate,
-    /configured\s*\}:\s*\{\s*configured:\s*boolean/,
-    'HomeGate must declare a configured: boolean prop',
-  );
-
-  // The redirect must use next/navigation router.replace (client-side).
-  assert.match(
+  assert.doesNotMatch(
     gate,
     /useRouter/,
-    'HomeGate must use useRouter for client-side navigation',
+    'HomeGate must not use useRouter; there is no content-root redirect anymore',
   );
-  assert.match(
+  assert.doesNotMatch(
     gate,
     /router\.replace\('\/onboarding'\)/,
-    "HomeGate must call router.replace('/onboarding') for the first-run path",
+    'HomeGate must not redirect to /onboarding; a stranger sees the neutral landing instead',
   );
-
-  // The redirect is guarded: only when no profile AND not configured.
-  assert.match(
+  assert.doesNotMatch(
     gate,
-    /if \(!localProfile && !configured\)/,
-    'redirect must only fire when there is no local profile AND configured is false',
+    /configured/,
+    'HomeGate must not take a configured prop anymore',
   );
 });
 
-test('HomeGate renders HomeClient as the SSR first-paint fallback (dossier contract preserved)', () => {
+test('HomeGate renders the neutral HomeLanding as the no-profile SSR first paint (NOT the owner dossier)', () => {
   const gate = read('app/HomeGate.tsx');
 
-  // HomeClient must still be the un-mounted / SSR output.
   assert.match(
     gate,
-    /return <HomeClient \/>/,
-    'HomeClient must remain the SSR/first-paint fallback so the dossier renderToStaticMarkup contract holds',
+    /return <HomeLanding \/>/,
+    'HomeLanding must be the no-profile SSR/first-paint fallback so a stranger never sees the owner dossier by default',
+  );
+  assert.doesNotMatch(
+    gate,
+    /HomeClient/,
+    'HomeGate must NOT render the owner HomeClient (verified dossier) — it lives only at /example now',
   );
 });
 

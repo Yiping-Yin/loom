@@ -269,11 +269,17 @@ test('Digital Me is based on About, Education, and Experience layers', async () 
     assert.ok(digitalMe.sourceSectionIds.includes(educationSection));
   }
 
-  const { default: DigitalMePage } = await import('../app/digital-me/page');
+  // F2 step 2: the owner Role-OS dossier no longer renders on the DEFAULT
+  // /digital-me route (a stranger now gets a neutral empty state). It renders at
+  // the /example/digital-me showcase, which mounts DigitalMeRoleOSClient — so we
+  // assert the owner dossier content against that component (the example route).
+  const { default: DigitalMeRoleOSClient } = await import(
+    '../app/digital-me/DigitalMeRoleOSClient'
+  );
   const { renderToStaticMarkup } = require('react-dom/server') as {
     renderToStaticMarkup: (node: React.ReactElement) => string;
   };
-  const html = renderToStaticMarkup(React.createElement(DigitalMePage));
+  const html = renderToStaticMarkup(React.createElement(DigitalMeRoleOSClient));
 
   assert.match(html, /Quant Researcher \/ Trader|Quant Trader|Quant T\/R/);
   assert.match(html, /Role Lens/);
@@ -302,11 +308,14 @@ test('Digital Me exposes role-lens artifact runtime actions', async () => {
   );
   assert.ok(DIGITAL_ME_PROOF_PATH.claims.length >= 5);
 
-  const { default: DigitalMePage } = await import('../app/digital-me/page');
+  // F2 step 2: owner Role-OS renders at /example/digital-me (DigitalMeRoleOSClient).
+  const { default: DigitalMeRoleOSClient } = await import(
+    '../app/digital-me/DigitalMeRoleOSClient'
+  );
   const { renderToStaticMarkup } = require('react-dom/server') as {
     renderToStaticMarkup: (node: React.ReactElement) => string;
   };
-  const html = renderToStaticMarkup(React.createElement(DigitalMePage));
+  const html = renderToStaticMarkup(React.createElement(DigitalMeRoleOSClient));
 
   for (const mode of DIGITAL_ME_ARTIFACT_MODES) {
     assert.match(html, new RegExp(mode.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
@@ -336,11 +345,14 @@ test('Digital Me renders the Quant proof path with evidence statuses and gaps', 
     ),
   );
 
-  const { default: DigitalMePage } = await import('../app/digital-me/page');
+  // F2 step 2: owner Role-OS renders at /example/digital-me (DigitalMeRoleOSClient).
+  const { default: DigitalMeRoleOSClient } = await import(
+    '../app/digital-me/DigitalMeRoleOSClient'
+  );
   const { renderToStaticMarkup } = require('react-dom/server') as {
     renderToStaticMarkup: (node: React.ReactElement) => string;
   };
-  const html = renderToStaticMarkup(React.createElement(DigitalMePage));
+  const html = renderToStaticMarkup(React.createElement(DigitalMeRoleOSClient));
 
   assert.match(html, /Mathematical reasoning/);
   assert.match(html, /Optimisation thinking/);
@@ -355,14 +367,18 @@ test('Digital Me renders the Quant proof path with evidence statuses and gaps', 
 });
 
 test('education and experience section heroes expose compact evidence summaries', async () => {
-  const { default: EducationPage } = await import('../app/education/page');
-  const { default: ExperiencePage } = await import('../app/experience/page');
+  // F2 step 2: the owner Education/Experience dossier no longer renders on the
+  // DEFAULT routes (a stranger gets a neutral empty state). The owner evidence
+  // surfaces are the DossierEducationView / DossierExperienceView components
+  // (the showcase owner views), so we assert against those directly.
+  const { DossierEducationView } = await import('../app/education/page');
+  const { DossierExperienceView } = await import('../app/experience/page');
   const { renderToStaticMarkup } = require('react-dom/server') as {
     renderToStaticMarkup: (node: React.ReactElement) => string;
   };
 
-  const educationHtml = renderToStaticMarkup(React.createElement(EducationPage));
-  const experienceHtml = renderToStaticMarkup(React.createElement(ExperiencePage));
+  const educationHtml = renderToStaticMarkup(React.createElement(DossierEducationView));
+  const experienceHtml = renderToStaticMarkup(React.createElement(DossierExperienceView));
 
   assert.match(educationHtml, /class="vd-section-page__hero-copy"/);
   assert.match(educationHtml, /class="vd-section-page__hero-proof"/);
@@ -429,11 +445,13 @@ test('experience surface ships CV-backed entries with resolving proof artifacts'
     'Oak Financial Group entry should stay removed from the public Experience surface',
   );
 
-  const { default: ExperiencePage } = await import('../app/experience/page');
+  // F2 step 2: the owner Experience dossier renders via DossierExperienceView
+  // (the showcase owner view), not the default /experience route (now neutral).
+  const { DossierExperienceView } = await import('../app/experience/page');
   const { renderToStaticMarkup } = require('react-dom/server') as {
     renderToStaticMarkup: (node: React.ReactElement) => string;
   };
-  const html = renderToStaticMarkup(React.createElement(ExperiencePage));
+  const html = renderToStaticMarkup(React.createElement(DossierExperienceView));
 
   assert.match(html, /Optiver &(amp;)? UNSW/);
   assert.match(html, /Trading Academy Participant/);
