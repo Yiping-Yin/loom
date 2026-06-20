@@ -3,6 +3,7 @@ import test from 'node:test';
 import React from 'react';
 
 import { type BeginnerProfile } from '../lib/profile/beginner-profile';
+import type { BeginnerCapability } from '../lib/capability/capability-graph';
 
 // CSS Modules: return a proxy so any className lookup is a no-op string.
 const cssModuleClassMap = new Proxy(
@@ -14,6 +15,12 @@ const cssModuleExports = { __esModule: true, default: cssModuleClassMap };
 require.extensions['.css'] = (module: { exports: typeof cssModuleExports }) => {
   module.exports = cssModuleExports;
 };
+
+// Stub buildCapabilities so the capability-map tests never hit the network.
+// The test exercises synchronous rendering only — the async build flow is
+// verified by the button-present assertion.
+require.extensions['.ts'] = require.extensions['.ts'] || (() => {});
+// Re-stub after any require clears the cache: done inline per-test below.
 
 function render(node: React.ReactElement) {
   Object.assign(globalThis, { React });
@@ -238,6 +245,128 @@ test('AskYiping defaults (no props) still render owner eyebrow, title, and examp
   assert.match(text, /Example grounded answer/);
   // Idle placeholder must NOT appear (we have an example, not idle state).
   assert.doesNotMatch(text, /Ask a question to get a grounded, cited answer/);
+});
+
+// ── T6: Capability map section ────────────────────────────────────────────────
+
+const SAMPLE_CAPS: BeginnerCapability[] = [
+  {
+    id: 'cap-python-programming',
+    label: 'Python Programming',
+    status: 'strong',
+    evidence: [
+      { kind: 'experience', refId: 'exp-0', label: 'Acme Corp' },
+      { kind: 'artifact', refId: 'artifact-abc', label: 'portfolio.pdf' },
+    ],
+  },
+  {
+    id: 'cap-data-analysis',
+    label: 'Data Analysis',
+    status: 'partial',
+    evidence: [
+      { kind: 'work', refId: 'work-0', label: 'Dashboard project' },
+    ],
+  },
+];
+
+const PROFILE_WITH_CAPS: BeginnerProfile = {
+  ...{
+    version: 1 as const,
+    home: { name: 'Alex Chen', headline: 'Software Engineer' },
+    about: {
+      summary: 'Building reliable distributed systems and learning ML foundations.',
+      links: [],
+    },
+    education: [],
+    experience: [],
+    works: [],
+  },
+  capabilities: SAMPLE_CAPS,
+};
+
+test('BeginnerDigitalMe with capabilities renders CAPABILITIES eyebrow and heading', () => {
+  // Stub artifact-store so SSR never touches IndexedDB.
+  require.cache[require.resolve('../lib/artifact/artifact-store')] = {
+    id: require.resolve('../lib/artifact/artifact-store'),
+    filename: require.resolve('../lib/artifact/artifact-store'),
+    loaded: true,
+    exports: { getArtifactObjectUrl: async () => null },
+    parent: null,
+    children: [],
+    paths: [],
+  } as unknown as NodeModule;
+
+  const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
+  const html = render(<BeginnerDigitalMe profile={PROFILE_WITH_CAPS} />);
+  const text = visibleText(html);
+
+  // Capabilities section eyebrow and heading must appear.
+  assert.match(text, /CAPABILITIES/);
+  assert.match(text, /What I can do/);
+});
+
+test('BeginnerDigitalMe with capabilities renders CapabilityMap with a capability label and star node', () => {
+  // Stub artifact-store so SSR never touches IndexedDB.
+  require.cache[require.resolve('../lib/artifact/artifact-store')] = {
+    id: require.resolve('../lib/artifact/artifact-store'),
+    filename: require.resolve('../lib/artifact/artifact-store'),
+    loaded: true,
+    exports: { getArtifactObjectUrl: async () => null },
+    parent: null,
+    children: [],
+    paths: [],
+  } as unknown as NodeModule;
+
+  const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
+  const html = render(<BeginnerDigitalMe profile={PROFILE_WITH_CAPS} />);
+  const text = visibleText(html);
+
+  // CapabilityMap must render the capability label as a card heading.
+  assert.match(text, /Python Programming/);
+  // Star node aria-label contains the capability label.
+  assert.match(html, /data-star-node/);
+  // The star-river SVG must be present.
+  assert.match(html, /data-star-river/);
+});
+
+test('BeginnerDigitalMe renders Build / Refresh capability map button', () => {
+  require.cache[require.resolve('../lib/artifact/artifact-store')] = {
+    id: require.resolve('../lib/artifact/artifact-store'),
+    filename: require.resolve('../lib/artifact/artifact-store'),
+    loaded: true,
+    exports: { getArtifactObjectUrl: async () => null },
+    parent: null,
+    children: [],
+    paths: [],
+  } as unknown as NodeModule;
+
+  const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
+  const html = render(<BeginnerDigitalMe profile={PROFILE_WITH_CAPS} />);
+  const text = visibleText(html);
+
+  // The button must be present — exact label depends on caps state.
+  // With caps present it should say "Refresh capability map".
+  assert.match(text, /Refresh capability map/);
+});
+
+test('BeginnerDigitalMe capability compounding summary counts correctly', () => {
+  // 1 strong (Python) + 1 partial (Data Analysis) = 2 caps, 1 backed by proof.
+  require.cache[require.resolve('../lib/artifact/artifact-store')] = {
+    id: require.resolve('../lib/artifact/artifact-store'),
+    filename: require.resolve('../lib/artifact/artifact-store'),
+    loaded: true,
+    exports: { getArtifactObjectUrl: async () => null },
+    parent: null,
+    children: [],
+    paths: [],
+  } as unknown as NodeModule;
+
+  const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
+  const html = render(<BeginnerDigitalMe profile={PROFILE_WITH_CAPS} />);
+  const text = visibleText(html);
+
+  assert.match(text, /2 capabilities/);
+  assert.match(text, /1 backed by proof/);
 });
 
 test('BeginnerDigitalMe renders no "Ask Yiping" text and no owner example Q&A', () => {

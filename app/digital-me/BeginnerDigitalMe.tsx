@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { AskYiping } from '../../components/verified-dossier/AskYiping';
+import { CapabilityMap } from '../../components/CapabilityMap';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import { type BeginnerCapability } from '../../lib/capability/capability-graph';
+import { buildCapabilities } from '../../lib/capability/derive-capabilities';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
+import { writeBeginnerProfileLocal } from '../../lib/profile/profile-storage';
 import shell from '../about/AboutClient.module.css';
 import styles from './BeginnerDigitalMe.module.css';
 import { BeginnerJourney } from './BeginnerJourney';
@@ -36,6 +40,25 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   const { home, about } = profile;
   const displayName = home.name || 'Your name';
   const rootRef = useScrollReveal();
+
+  // Local capability state — seeded from the profile's persisted capabilities.
+  const [caps, setCaps] = useState<BeginnerCapability[]>(profile.capabilities ?? []);
+  const [building, setBuilding] = useState(false);
+
+  /** Count of capabilities whose status is 'strong' (backed by real proof). */
+  const strongCount = caps.filter((c) => c.status === 'strong').length;
+
+  async function handleBuildCapabilities() {
+    if (building) return;
+    setBuilding(true);
+    try {
+      const derived = await buildCapabilities(profile);
+      setCaps(derived);
+      writeBeginnerProfileLocal({ ...profile, capabilities: derived });
+    } finally {
+      setBuilding(false);
+    }
+  }
 
   return (
     <main ref={rootRef} className={shell.page} aria-labelledby="digital-me-title">
@@ -85,6 +108,46 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             />
           </a>
         </header>
+
+        {/* Capabilities — centerpiece section showing what this person can do,
+            derived from their profile data and backed by evidence.
+            Build/refresh action writes back to localStorage so caps persist. */}
+        <section className={styles.capabilitiesSection} aria-labelledby="capabilities-title" data-reveal="">
+          <header className={styles.capabilitiesHeader}>
+            <p className={styles.eyebrow}>CAPABILITIES</p>
+            <h2 id="capabilities-title" className={styles.capabilitiesHeading}>
+              What I can do
+            </h2>
+          </header>
+
+          <div className={styles.capabilitiesActions}>
+            <button
+              type="button"
+              className={styles.buildButton}
+              onClick={handleBuildCapabilities}
+              disabled={building}
+              aria-busy={building}
+            >
+              {building
+                ? 'Building…'
+                : caps.length === 0
+                  ? 'Build capability map'
+                  : 'Refresh capability map'}
+            </button>
+
+            {/* Compounding summary — hidden when no caps yet (CapabilityMap shows
+                its own empty prompt). */}
+            {caps.length > 0 && (
+              <p className={styles.capabilitiesSummary} aria-live="polite">
+                {caps.length} {caps.length === 1 ? 'capability' : 'capabilities'}
+                {' · '}
+                {strongCount} backed by proof
+              </p>
+            )}
+          </div>
+
+          <CapabilityMap capabilities={caps} profile={profile} />
+        </section>
 
         {/* Journey timeline — derived from education + experience + works.
             Rendered only when the profile has at least one entry in any section. */}

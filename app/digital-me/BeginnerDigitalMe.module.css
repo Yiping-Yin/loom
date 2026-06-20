@@ -171,3 +171,88 @@
     transition: none;
   }
 }
+
+/* ── Capabilities section ─────────────────────────────────────────────────── */
+
+.capabilitiesSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.capabilitiesHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Re-uses .eyebrow token; defined at component level so no selector clash. */
+.capabilitiesHeading {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--text-1);
+}
+
+.capabilitiesActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Build / Refresh button — restrained glass pill matching the postcard CTA
+   style: no fill at rest, 1px cyan hairline, lifts on hover. */
+.buildButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--signature-cyan) 10%, transparent);
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--signature-cyan-hi);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-2) var(--ease),
+    background var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease),
+    opacity var(--dur-2) var(--ease);
+}
+
+.buildButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--signature-cyan-hi);
+  background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
+}
+
+.buildButton:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+}
+
+.buildButton:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Compounding summary — muted mono line */
+.capabilitiesSummary {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buildButton {
+    transition: none;
+  }
+}
