@@ -137,8 +137,7 @@ export function BeginnerProofSection({ initialArtifacts = [] }: { initialArtifac
           Verified artifacts
         </h2>
         <p className={styles.lede}>
-          Upload the documents behind your story — a CV, a transcript, a certificate.
-          They&apos;re stored privately on this device and shown as inspectable proof.
+          Add a CV, transcript, or certificate as proof.
         </p>
       </header>
 

@@ -489,11 +489,6 @@ function CapabilityCard({
       {/* Capability heading */}
       <strong className={styles.capLabel}>{capability.label}</strong>
 
-      {/* Optional note */}
-      {capability.note && (
-        <p className={styles.note}>{capability.note}</p>
-      )}
-
       {/* Evidence chips */}
       {capability.evidence.length > 0 && (
         <ul className={styles.evidenceList} aria-label="Evidence">

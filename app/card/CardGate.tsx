@@ -90,8 +90,7 @@ export function CardGate() {
             <p className={styles.emptyEyebrow}>Digital postcard</p>
             <h1 className={styles.emptyTitle}>Build your Loom to get a shareable card.</h1>
             <p className={styles.emptyBody}>
-              Add your name, work, and experience — Loom turns it into a compact,
-              cited card you can share or download.
+              Add your name, work, and experience to get a shareable card.
             </p>
             <a className={styles.emptyCta} href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>
               Start your Loom →

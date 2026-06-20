@@ -171,7 +171,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
           <AskYiping
             eyebrow="Ask me"
             title={home.name ? `Ask ${home.name} anything` : 'Ask me anything'}
-            lede="Grounded answers. Cited from your verified profile."
+            lede="Grounded, cited answers."
             readOnlyNote="Live answers need an AI key — this deploy is read-only; the verified sources below are what this person's answer draws from."
             example={null}
             suggestedQuestions={[

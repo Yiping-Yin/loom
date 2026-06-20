@@ -27,11 +27,6 @@ export function HomeLanding() {
           Turn your scattered knowledge into a <em>verifiable identity</em> that
           answers for you.
         </h1>
-        <p className={styles.lede}>
-          Loom gathers your real sources, builds them into a cited dossier, and
-          lets it represent you — every answer grounded in evidence you can open.
-        </p>
-
         <ol className={styles.loop} aria-label="How Loom works">
           <li className={styles.step}>
             <span className={styles.stepName}>Gather</span>
