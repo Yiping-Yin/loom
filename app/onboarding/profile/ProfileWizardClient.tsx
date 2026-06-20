@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
+import Link from 'next/link';
 import { LoomGlobalNav } from '../../../components/verified-dossier/LoomGlobalNav';
 import {
   emptyBeginnerProfile,
@@ -165,7 +166,7 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
       setSaving(false);
       return;
     }
-    router.push('/about');
+    router.push('/digital-me');
   };
 
   return (
@@ -270,6 +271,13 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Mode-switch footer */}
+          <div className={styles.modeSwitch}>
+            <Link href="/onboarding/profile" className={styles.modeSwitchLink}>
+              Prefer a guided chat? →
+            </Link>
           </div>
         </div>
       </main>

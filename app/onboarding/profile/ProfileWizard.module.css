@@ -478,3 +478,24 @@
     font-size: 0.6rem;
   }
 }
+
+/* ── Mode-switch footer ── */
+
+.modeSwitch {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.modeSwitchLink {
+  color: rgba(168, 178, 182, 0.42);
+  font-family: var(--serif);
+  font-size: 0.8rem;
+  font-style: italic;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.modeSwitchLink:hover,
+.modeSwitchLink:focus-visible {
+  color: var(--fg-secondary);
+}
