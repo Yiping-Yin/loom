@@ -6,10 +6,12 @@ import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
 import { decodeProfileFromHash } from '../../lib/profile/profile-share';
 import { safeHref } from '../../lib/profile/safe-href';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { DigitalPostcard } from './DigitalPostcard';
 import styles from './CardPage.module.css';
 
 const ONBOARDING_HREF = '/onboarding/profile';
+const EXAMPLE_HREF = '/example';
 const MOON_SRC = '/brand/loom_lunar_orb.png';
 
 type Resolved =
@@ -65,35 +67,44 @@ export function CardGate() {
   }, []);
 
   return (
-    <main className={styles.page} aria-label="Loom digital postcard">
-      <div className="loom-cosmic-field" aria-hidden="true" />
+    <>
+      <LoomGlobalNav activeHref="/card" />
+      <main className={styles.page} aria-label="Loom digital postcard">
+        <div className="loom-cosmic-field" aria-hidden="true" />
 
-      {resolved === null && (
-        <div className={styles.skeleton} aria-hidden="true" />
-      )}
+        {resolved === null && (
+          <div className={styles.skeleton} aria-hidden="true" />
+        )}
 
-      {resolved?.kind === 'shared' && (
-        <DigitalPostcard profile={resolved.profile} isOwnCard={false} />
-      )}
+        {resolved?.kind === 'shared' && (
+          <DigitalPostcard profile={resolved.profile} isOwnCard={false} />
+        )}
 
-      {resolved?.kind === 'own' && (
-        <DigitalPostcard profile={resolved.profile} isOwnCard />
-      )}
+        {resolved?.kind === 'own' && (
+          <DigitalPostcard profile={resolved.profile} isOwnCard />
+        )}
 
-      {resolved?.kind === 'empty' && (
-        <section className={styles.empty} aria-label="No card yet">
-          <img className={styles.emptyMoon} src={MOON_SRC} alt="" draggable={false} />
-          <p className={styles.emptyEyebrow}>Digital postcard</p>
-          <h1 className={styles.emptyTitle}>Build your Loom to get a shareable card.</h1>
-          <p className={styles.emptyBody}>
-            Add your name, work, and experience — Loom turns it into a compact,
-            cited card you can share or download.
-          </p>
-          <a className={styles.emptyCta} href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>
-            Start your Loom →
-          </a>
-        </section>
-      )}
-    </main>
+        {resolved?.kind === 'empty' && (
+          <section className={styles.empty} aria-label="No card yet">
+            <img className={styles.emptyMoon} src={MOON_SRC} alt="" draggable={false} />
+            <p className={styles.emptyEyebrow}>Digital postcard</p>
+            <h1 className={styles.emptyTitle}>Build your Loom to get a shareable card.</h1>
+            <p className={styles.emptyBody}>
+              Add your name, work, and experience — Loom turns it into a compact,
+              cited card you can share or download.
+            </p>
+            <a className={styles.emptyCta} href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>
+              Start your Loom →
+            </a>
+            <p className={styles.emptySecondaryLinks}>
+              <a href={safeHref(EXAMPLE_HREF) || EXAMPLE_HREF} className={styles.emptySecondaryLink}>
+                See a finished example →
+              </a>
+              <a href="/" className={styles.emptySecondaryLink}>Home</a>
+            </p>
+          </section>
+        )}
+      </main>
+    </>
   );
 }
