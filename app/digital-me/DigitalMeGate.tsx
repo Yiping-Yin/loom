@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react';
 import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import { BeginnerDigitalMe } from './BeginnerDigitalMe';
-import DigitalMeRoleOSClient from './DigitalMeRoleOSClient';
+import { IdentityEmptyState } from '../IdentityEmptyState';
 
 /**
  * Client-side gate for Digital Me.
  *
- * Mirrors ProfileGate (app/profile/ProfileGate.tsx): SSR / first-paint renders
- * the owner DigitalMeRoleOSClient; after mount we read localStorage and, if a
- * beginner profile is present, swap to BeginnerDigitalMe.
- *
- * Rendering the owner view as the pre-mount fallback means renderToStaticMarkup
- * of the page yields the owner dossier — exactly what the verified-dossier
- * contract tests assert.
+ * F2 step 2: SSR / first paint and the no-profile STRANGER get a neutral
+ * IdentityEmptyState — NOT the owner DigitalMeRoleOSClient (which now renders
+ * only at /example/digital-me). Crucially, this means the owner-corpus Ask
+ * widget (the bare <AskYiping /> inside DigitalMeRoleOSClient, seeded with the
+ * owner corpus) no longer mounts on the default /digital-me route — it lives
+ * only on the showcase. The beginner's own grounded Ask still mounts via
+ * BeginnerDigitalMe once a localStorage profile is present.
  */
 export function DigitalMeGate() {
   const [profile, setProfile] = useState<BeginnerProfile | null>(null);
@@ -30,5 +30,12 @@ export function DigitalMeGate() {
     return <BeginnerDigitalMe profile={profile} />;
   }
 
-  return <DigitalMeRoleOSClient />;
+  return (
+    <IdentityEmptyState
+      section="Digital Me"
+      activeHref="/digital-me"
+      titleId="digital-me-title"
+      exampleHref="/example/digital-me"
+    />
+  );
 }

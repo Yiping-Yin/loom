@@ -1,24 +1,24 @@
 'use client';
 
 import { ProfileGate } from '../profile/ProfileGate';
-import { DossierExperienceView, ExperienceProfileView } from './ExperienceViews';
+import { ExperienceProfileView } from './ExperienceViews';
+import { IdentityEmptyState } from '../IdentityEmptyState';
 
 /**
  * Client gate for /experience. Wraps ProfileGate (which takes a `renderProfile`
  * function prop) so the page can stay a server component and keep its
- * `export const metadata` — a function prop cannot cross the server→client
- * boundary, so it must be created inside a client component. Views live in
- * ./ExperienceViews so importing them here never pulls page.tsx into the client
- * graph (which would re-taint the page as a client component).
+ * `export const metadata`. Views live in ./ExperienceViews so importing them
+ * here never pulls page.tsx into the client graph.
  *
- * SSR / first paint renders the owner dossier view (preserves contract-test
- * expectations); after mount ProfileGate swaps to ExperienceProfileView when a
- * beginner profile is present in localStorage.
+ * F2 step 2: SSR / first paint and the no-profile STRANGER get a neutral
+ * IdentityEmptyState — NOT the owner DossierExperienceView (which now renders
+ * only at /example). After mount, ProfileGate swaps to ExperienceProfileView
+ * when a beginner profile is present in localStorage.
  */
 export function ExperienceGate() {
   return (
     <ProfileGate renderProfile={(profile) => <ExperienceProfileView profile={profile} />}>
-      <DossierExperienceView />
+      <IdentityEmptyState section="Experience" activeHref="/experience" titleId="experience-title" />
     </ProfileGate>
   );
 }
