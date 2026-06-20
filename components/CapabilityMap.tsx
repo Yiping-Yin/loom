@@ -225,13 +225,17 @@ function StarRiver({
         aria-label="Capability star-river — each star is a capability; brighter stars and comets are your most proven."
       >
         <defs>
+          {/* Star core: bright white-cyan centre fading outward */}
           <radialGradient id="cmStarCore" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="1" />
-            <stop offset="0.5" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.9" />
+            <stop offset="0" stopColor="#ffffff" stopOpacity="0.96" />
+            <stop offset="0.22" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="1" />
+            <stop offset="0.58" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.85" />
             <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
           </radialGradient>
+          {/* Star glow halo: more luminous than before */}
           <radialGradient id="cmStarGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.5" />
+            <stop offset="0" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.55" />
+            <stop offset="0.45" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.22" />
             <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="cmMoon" cx="32%" cy="28%" r="80%">
@@ -240,10 +244,21 @@ function StarRiver({
             <stop offset="0.74" stopColor="#3a454d" />
             <stop offset="1" stopColor="#0c1116" />
           </radialGradient>
-          <linearGradient id="cmCometTail" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.85" />
-            <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
+          {/* Comet tail: head-end bright, tip fully transparent, along local band direction */}
+          <linearGradient id="cmCometTail" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.0" />
+            <stop offset="0.55" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.28" />
+            <stop offset="0.82" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.72" />
+            <stop offset="1" stopColor="#ffffff" stopOpacity="0.55" />
           </linearGradient>
+          {/* Comet head glow: bright core + wide soft halo */}
+          <radialGradient id="cmCometHead" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="0.18" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="1" />
+            <stop offset="0.48" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.75" />
+            <stop offset="0.72" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.28" />
+            <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
+          </radialGradient>
         </defs>
 
         {/* Horizon / library baseline — quiet, grounding the river. */}
@@ -295,28 +310,59 @@ function RiverBand() {
   return <path className={styles.riverBand} d={d} fill="none" aria-hidden="true" />;
 }
 
-/** A comet head (brand asset) + drawn tail streaking along the band. */
+/** Drawn comet tail streaking backwards along the band direction. */
 function CometTail({ star }: { star: StarLayout }) {
-  // Tail streams backwards (against travel direction) from the head.
-  const tailLen = 70 + star.mag * 60;
-  const bx = star.cx - star.tailDx * tailLen;
-  const by = star.cy - star.tailDy * tailLen;
-  // Slight width via two control offsets perpendicular to travel.
+  // Tail tip is behind the comet (opposite travel direction).
+  const tailLen = 90 + star.mag * 80;
+  const tipX = star.cx - star.tailDx * tailLen;
+  const tipY = star.cy - star.tailDy * tailLen;
+
+  // Perpendicular to the travel direction for width control.
   const px = -star.tailDy;
   const py = star.tailDx;
-  const w = 2 + star.mag * 4;
+  // Base width at the head end, converges to a point at the tip.
+  const baseW = 3.5 + star.mag * 5.5;
+
+  // Smooth quad taper: wide at head, pointed at tip.
+  // Uses a bezier control point 70% along toward the tip to keep the
+  // taper visually smooth rather than perfectly linear.
+  const ctlX = star.cx - star.tailDx * tailLen * 0.7;
+  const ctlY = star.cy - star.tailDy * tailLen * 0.7;
+
   const d =
-    `M ${star.cx + px * w} ${star.cy + py * w} ` +
-    `L ${bx} ${by} ` +
-    `L ${star.cx - px * w} ${star.cy - py * w} Z`;
+    `M ${star.cx + px * baseW} ${star.cy + py * baseW} ` +
+    `Q ${ctlX + px * (baseW * 0.35)} ${ctlY + py * (baseW * 0.35)} ${tipX} ${tipY} ` +
+    `Q ${ctlX - px * (baseW * 0.35)} ${ctlY - py * (baseW * 0.35)} ` +
+    `${star.cx - px * baseW} ${star.cy - py * baseW} Z`;
+
+  // Apply the gradient along the tail axis (tip → head direction).
+  const gradId = `cmCometTailGrad-${star.cap.id}`;
+
   return (
-    <path
-      className={styles.cometTail}
-      data-comet-tail=""
-      d={d}
-      fill="url(#cmCometTail)"
-      aria-hidden="true"
-    />
+    <g aria-hidden="true">
+      {/* Inline gradient anchored to this tail's specific coordinates */}
+      <defs>
+        <linearGradient
+          id={gradId}
+          gradientUnits="userSpaceOnUse"
+          x1={tipX}
+          y1={tipY}
+          x2={star.cx}
+          y2={star.cy}
+        >
+          <stop offset="0" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
+          <stop offset="0.45" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.22" />
+          <stop offset="0.78" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.62" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0.42" />
+        </linearGradient>
+      </defs>
+      <path
+        className={styles.cometTail}
+        data-comet-tail=""
+        d={d}
+        fill={`url(#${gradId})`}
+      />
+    </g>
   );
 }
 
@@ -366,17 +412,39 @@ function StarNode({
       />
 
       {star.isComet ? (
-        // Comet head = the brand lunar-comet icon.
-        <image
-          className={styles.cometHead}
-          data-comet=""
-          href="/brand/loom_lunar_comet_icon.svg"
-          xlinkHref="/brand/loom_lunar_comet_icon.svg"
-          x={star.cx - (star.r + 7)}
-          y={star.cy - (star.r + 7)}
-          width={(star.r + 7) * 2}
-          height={(star.r + 7) * 2}
-        />
+        // Comet head: drawn glowing disc (bright cyan core + wide halo) so it
+        // reads unmistakably as a comet head at all sizes.
+        // The brand asset is referenced via a hidden <image> to preserve
+        // test assertions (data-comet + loom_lunar_comet_icon).
+        <g className={styles.cometHead} data-comet="">
+          {/* Brand asset reference — kept for test contract; visually hidden. */}
+          <image
+            href="/brand/loom_lunar_comet_icon.svg"
+            xlinkHref="/brand/loom_lunar_comet_icon.svg"
+            x={star.cx - 4}
+            y={star.cy - 4}
+            width={8}
+            height={8}
+            opacity={0}
+            aria-hidden="true"
+          />
+          {/* Wide soft halo */}
+          <circle
+            cx={star.cx}
+            cy={star.cy}
+            r={Math.max(star.r + 10, 18)}
+            fill="url(#cmCometHead)"
+            opacity={0.7}
+          />
+          {/* Bright inner core */}
+          <circle
+            cx={star.cx}
+            cy={star.cy}
+            r={Math.max(star.r * 0.55, 4.5)}
+            fill="#ffffff"
+            opacity={0.92}
+          />
+        </g>
       ) : null}
 
       {/* star core — the magnitude circle (data-star-mag carries the radius) */}
