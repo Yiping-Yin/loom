@@ -1,15 +1,34 @@
+/* Beginner Journey — a navigable vertical timeline derived from the profile.
+   Lifted to the /example/digital-me bar: the section sits on a restrained
+   staged glass surface; each row is a link to its section (/education,
+   /experience, /works) and lights up on hover/focus with a luminance step +
+   a 1px cyan hairline (the data-signal), never a colour fill. */
+
 .section {
+  position: relative;
   display: grid;
-  gap: clamp(1rem, 1.8vw, 1.4rem);
-  padding-top: clamp(1.2rem, 2vw, 1.8rem);
-  border-top: 1px solid var(--line);
+  gap: clamp(var(--space-4), 1.8vw, var(--space-6));
+  padding: clamp(var(--space-5), 2.4vw, var(--space-7)) clamp(var(--space-5), 2.4vw, var(--space-7));
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  /* Calm staged glass — softer than the header so the timeline reads as a
+     quieter, secondary surface. */
+  background:
+    linear-gradient(135deg, rgba(238, 241, 242, 0.045), rgba(180, 187, 191, 0.016) 36%, transparent 64%),
+    linear-gradient(180deg, rgba(28, 31, 34, 0.46), rgba(18, 21, 24, 0.9));
+  -webkit-backdrop-filter: blur(18px) saturate(112%);
+  backdrop-filter: blur(18px) saturate(112%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 12px 32px rgba(0, 0, 0, 0.46);
 }
 
 .eyebrow {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--space-2);
   color: var(--text-3);
-  font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
-  font-size: 0.7rem;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -17,7 +36,7 @@
 
 .heading {
   margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-family: var(--display);
   font-size: clamp(1.25rem, 2vw, 1.6rem);
   font-weight: 600;
   line-height: 1.1;
@@ -84,24 +103,50 @@
   box-shadow: none;
 }
 
-/* Content block */
-.content {
+/* Row — the navigable content block. A link to its section; lights up via
+   luminance + a 1px cyan left hairline, never a colour fill. */
+.row {
   display: grid;
   gap: 0.18rem;
   min-width: 0;
+  padding: 0.5rem 0.6rem;
+  margin: -0.5rem -0.6rem;
+  border-left: 1px solid transparent;
+  border-radius: var(--r-1);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease);
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--signature-cyan) 55%, transparent);
+}
+
+.row:hover .label {
+  color: var(--text-1);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
 }
 
 .label {
   color: var(--text-1);
-  font-size: 0.9rem;
+  font-size: var(--fs-body);
   font-weight: 600;
   line-height: 1.35;
   margin: 0;
+  transition: color var(--dur-2) var(--ease);
 }
 
 .sublabel {
   color: var(--text-2);
-  font-size: 0.8rem;
+  font-size: var(--fs-small);
   line-height: 1.4;
   margin: 0;
 }
@@ -116,8 +161,8 @@
 
 .date {
   color: var(--text-3);
-  font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
-  font-size: 0.68rem;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
   font-weight: 400;
   letter-spacing: 0.1em;
   font-variant-numeric: tabular-nums;
@@ -158,5 +203,10 @@
 @media (prefers-reduced-motion: reduce) {
   .nodeDot {
     box-shadow: none;
+  }
+
+  .row,
+  .label {
+    transition: none;
   }
 }

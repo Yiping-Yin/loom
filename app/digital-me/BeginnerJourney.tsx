@@ -103,6 +103,13 @@ function tagLabel(type: MilestoneType): string {
   return 'Work';
 }
 
+/** Section route a milestone links to, so the timeline is navigable. */
+function hrefFor(type: MilestoneType): string {
+  if (type === 'education') return '/education';
+  if (type === 'experience') return '/experience';
+  return '/works';
+}
+
 /**
  * BeginnerJourney — a clean vertical timeline derived from a beginner's profile.
  *
@@ -131,8 +138,13 @@ export function BeginnerJourney({ profile }: { profile: BeginnerProfile }) {
               <span className={styles.nodeDot} />
             </span>
 
-            {/* Content */}
-            <div className={styles.content}>
+            {/* Content — a link to the matching section so the timeline is
+                navigable; the type tag names where the row leads. */}
+            <a
+              className={styles.row}
+              href={hrefFor(m.type)}
+              aria-label={`${m.label}${m.sublabel ? ` — ${m.sublabel}` : ''} · ${tagLabel(m.type)}`}
+            >
               <p className={styles.label}>{m.label}</p>
               {m.sublabel && <p className={styles.sublabel}>{m.sublabel}</p>}
               <div className={styles.meta}>
@@ -143,7 +155,7 @@ export function BeginnerJourney({ profile }: { profile: BeginnerProfile }) {
                   <time className={styles.date}>{m.dateLabel}</time>
                 )}
               </div>
-            </div>
+            </a>
           </li>
         ))}
       </ol>
