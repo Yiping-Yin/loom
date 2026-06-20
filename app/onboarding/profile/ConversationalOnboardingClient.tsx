@@ -11,6 +11,7 @@ import {
   type EducationEntry,
   type ExperienceEntry,
   type WorkItem,
+  type ArtifactRef,
 } from '../../../lib/profile/beginner-profile';
 import {
   readBeginnerProfileLocal,
@@ -18,6 +19,18 @@ import {
 } from '../../../lib/profile/profile-storage';
 import { mergeExtractedProfile } from '../../../lib/profile/merge-extracted-profile';
 import styles from './ConversationalOnboarding.module.css';
+
+/** Max file size for résumé import (mirrors the Proof section: 10 MB). */
+const RESUME_MAX_BYTES = 10 * 1024 * 1024;
+
+/** Accepted MIME types + extensions for résumé import. */
+const RESUME_ACCEPT = '.pdf,.txt,.md,.markdown';
+const RESUME_ACCEPTED_TYPES = new Set([
+  'application/pdf',
+  'text/plain',
+  'text/markdown',
+  'text/x-markdown',
+]);
 
 // ── Step machine ─────────────────────────────────────────────────────────────
 
@@ -330,7 +343,9 @@ export function ConversationalOnboardingClient() {
   const [step, setStep] = useState<ConvoStep>({ id: 'name' });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
-  const [pasteMode, setPasteMode] = useState(false);
+  const [importMode, setImportMode] = useState<'none' | 'upload' | 'paste'>('none');
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'reading' | 'extracting'>('idle');
+  const [uploadError, setUploadError] = useState('');
   const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -450,6 +465,134 @@ export function ConversationalOnboardingClient() {
   };
 
   /**
+   * File-upload résumé handler.
+   *
+   * Steps:
+   *   1. Validate file (size, type).
+   *   2. Show "Reading…" state.
+   *   3. putArtifact → stores blob in IndexedDB + extracts PDF text + thumbnail.
+   *   4. Get text: PDF → meta.extractedText; .txt/.md → file.text().
+   *   5. Run extraction (same POST flow as paste); falls back to about.summary.
+   *   6. Add the ArtifactRef (labelled "CV / Résumé") to profile.artifacts.
+   */
+  const handleFileUpload = async (file: File) => {
+    // Validate
+    if (file.size > RESUME_MAX_BYTES) {
+      setUploadError('File is larger than 10 MB — please use a smaller PDF or paste the text instead.');
+      return;
+    }
+    const type = (file.type || '').toLowerCase();
+    const name = (file.name || '').toLowerCase();
+    const isText = type === 'text/plain' || type === 'text/markdown' || type === 'text/x-markdown'
+      || name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.markdown');
+    const isPdf = type === 'application/pdf' || name.endsWith('.pdf');
+    if (!isPdf && !isText && !RESUME_ACCEPTED_TYPES.has(type)) {
+      setUploadError('Unsupported file type. Please upload a PDF, .txt, or .md file.');
+      return;
+    }
+
+    setUploadError('');
+    setImportMode('none');
+    setUploadStatus('reading');
+    appendMessages([{ from: 'user', text: `[Uploading: ${file.name}]` }]);
+
+    try {
+      // putArtifact is client-only (IndexedDB + pdfjs) — imported dynamically
+      // to stay SSR-safe (this function only runs on user action in the browser).
+      const { putArtifact } = await import('../../../lib/artifact/artifact-store');
+      const meta = await putArtifact(file);
+
+      // Get extractable text
+      let text: string | undefined;
+      if (isPdf) {
+        text = meta.extractedText;
+      } else if (isText) {
+        try {
+          text = await file.text();
+        } catch {
+          // fallback: no text
+        }
+      }
+
+      // Build ArtifactRef to persist (labelled as CV / Résumé)
+      const artifactRef: ArtifactRef = {
+        id: meta.id,
+        name: meta.name,
+        kind: meta.kind,
+        label: 'CV / Résumé',
+        thumbnailDataUri: meta.thumbnailDataUri,
+        extractedText: meta.extractedText,
+      };
+
+      if (!text || !text.trim()) {
+        // Scanned PDF / no extractable text — keep as proof artifact, advise manual entry
+        setProfile((p) => normalizeBeginnerProfile({
+          ...p,
+          artifacts: [...(p.artifacts ?? []), artifactRef],
+        }));
+        appendMessages([
+          {
+            from: 'loom',
+            text: `Saved as a proof document. It looks like this PDF doesn't have selectable text — add your details below and the file will stay as supporting proof.${step.id === 'name' ? " What's your full name?" : ''}`,
+          },
+        ]);
+        setUploadStatus('idle');
+        return;
+      }
+
+      // Run extraction (same as paste path)
+      setUploadStatus('extracting');
+      // First, wire in the artifact ref regardless of whether extraction succeeds
+      setProfile((p) => normalizeBeginnerProfile({
+        ...p,
+        artifacts: [...(p.artifacts ?? []), artifactRef],
+      }));
+      await runExtraction(text);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not read the file.';
+      setUploadError(msg);
+      appendMessages([
+        {
+          from: 'loom',
+          text: `Couldn't save the file — ${msg} Try pasting the text instead.`,
+        },
+      ]);
+    } finally {
+      setUploadStatus('idle');
+    }
+  };
+
+  /**
+   * Core extraction: POST text to /api/extract-profile, merge or fall back to
+   * summary. Shared by both the paste path and the file-upload path.
+   */
+  const runExtraction = async (trimmed: string) => {
+    setExtracting(true);
+    try {
+      const res = await fetch('/api/extract-profile', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: trimmed }),
+      });
+      if (!res.ok) {
+        storePastedAsSummary(trimmed);
+        return;
+      }
+      const data = (await res.json()) as { ok?: unknown; profile?: unknown };
+      if (data && typeof data === 'object' && data.ok === true) {
+        const extracted = normalizeBeginnerProfile(data.profile);
+        applyExtractedProfile(extracted);
+      } else {
+        storePastedAsSummary(trimmed);
+      }
+    } catch {
+      storePastedAsSummary(trimmed);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  /**
    * Paste-a-résumé handler. POSTs the raw text to /api/extract-profile and, on a
    * structured result, merges it into the profile. Degrades gracefully end to
    * end: a missing route (404 in the static export), no API key
@@ -460,36 +603,10 @@ export function ConversationalOnboardingClient() {
     const trimmed = text.trim();
     if (!trimmed || extracting) return;
 
-    setPasteMode(false);
+    setImportMode('none');
     appendMessages([{ from: 'user', text: '[Résumé pasted]' }]);
-    setExtracting(true);
-
-    try {
-      const res = await fetch('/api/extract-profile', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text: trimmed }),
-      });
-      // A shelved /api in the static export answers 404 — treat any non-OK
-      // response as "extraction unavailable" and fall back.
-      if (!res.ok) {
-        storePastedAsSummary(trimmed);
-        return;
-      }
-      const data = (await res.json()) as { ok?: unknown; profile?: unknown };
-      if (data && typeof data === 'object' && data.ok === true) {
-        const profile = normalizeBeginnerProfile(data.profile);
-        applyExtractedProfile(profile);
-      } else {
-        // {configured:false} or {ok:false} → honest fallback.
-        storePastedAsSummary(trimmed);
-      }
-    } catch {
-      // Network error / route absent / unparseable response → fallback.
-      storePastedAsSummary(trimmed);
-    } finally {
-      setExtracting(false);
-    }
+    // Delegate to shared extraction logic
+    await runExtraction(trimmed);
   };
 
   const handleSave = () => {
@@ -530,39 +647,61 @@ export function ConversationalOnboardingClient() {
             Let&apos;s build your <span className={styles.titleAccent}>LOOM.</span>
           </h1>
           <p className={styles.subtitle}>
-            No forms, just answer a few questions — or{' '}
+            Upload your résumé (PDF) — or{' '}
             <button
               type="button"
               className={styles.inlineBtn}
-              onClick={() => setPasteMode((v) => !v)}
+              onClick={() => setImportMode((v) => (v === 'upload' ? 'none' : 'upload'))}
             >
-              paste a résumé
+              import a file
+            </button>
+            {', or '}
+            <button
+              type="button"
+              className={styles.inlineBtn}
+              onClick={() => setImportMode((v) => (v === 'paste' ? 'none' : 'paste'))}
+            >
+              paste text
             </button>
             .
           </p>
         </div>
       </header>
 
-      {/* Paste résumé affordance */}
-      {pasteMode && (
+      {/* File upload affordance — primary import path */}
+      {importMode === 'upload' && (
         <div className={styles.pasteBox}>
-          <p className={styles.pasteLabel}>
-            Paste your résumé, CV, or bio below. I&apos;ll pull out your education, experience, and
-            projects into a structured profile you can review — or, if that&apos;s unavailable, save
-            the text to your About summary.
-          </p>
+          <UploadArea
+            onFile={handleFileUpload}
+            onCancel={() => { setImportMode('none'); setUploadError(''); }}
+            busy={uploadStatus !== 'idle'}
+            status={uploadStatus}
+            error={uploadError}
+          />
+        </div>
+      )}
+
+      {/* Paste résumé affordance — secondary */}
+      {importMode === 'paste' && (
+        <div className={styles.pasteBox}>
+          <p className={styles.pasteLabel}>Upload your résumé (PDF) — or paste it.</p>
           <PasteArea
             onSubmit={handlePasteResume}
-            onCancel={() => setPasteMode(false)}
+            onCancel={() => setImportMode('none')}
             busy={extracting}
           />
         </div>
       )}
 
-      {/* Extraction in-progress state */}
-      {extracting && (
+      {/* In-progress state */}
+      {(extracting || uploadStatus === 'extracting') && (
         <p className={styles.extractingNote} role="status" aria-live="polite">
           Extracting your profile…
+        </p>
+      )}
+      {uploadStatus === 'reading' && (
+        <p className={styles.extractingNote} role="status" aria-live="polite">
+          Reading…
         </p>
       )}
 
@@ -706,6 +845,97 @@ function MoonOrb({ small }: { small?: boolean }) {
         </radialGradient>
       </defs>
     </svg>
+  );
+}
+
+/**
+ * File upload zone — the primary résumé import affordance.
+ * A clear file-input button. Drop zone is a bonus on top.
+ */
+function UploadArea({
+  onFile,
+  onCancel,
+  busy = false,
+  status,
+  error,
+}: {
+  onFile: (file: File) => void;
+  onCancel: () => void;
+  busy?: boolean;
+  status: 'idle' | 'reading' | 'extracting';
+  error?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) onFile(file);
+    // Reset so the same file can be re-selected after an error
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) onFile(file);
+  };
+
+  const statusLabel =
+    status === 'reading' ? 'Reading…' :
+    status === 'extracting' ? 'Extracting…' :
+    'Choose file';
+
+  return (
+    <div className={styles.uploadInner}>
+      {/* Drop zone */}
+      <div
+        className={`${styles.dropZone} ${dragging ? styles.dropZoneDragging : ''}`}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        aria-label="Drop your résumé here"
+      >
+        <span className={styles.uploadIcon} aria-hidden="true">↑</span>
+        <span className={styles.dropZoneText}>
+          {busy ? statusLabel : 'Drop your résumé here'}
+        </span>
+        <span className={styles.dropZoneHint}>PDF, TXT, or MD · max 10 MB</span>
+      </div>
+      {/* Error */}
+      {error && (
+        <p className={styles.uploadError} role="alert">{error}</p>
+      )}
+      {/* Actions */}
+      <div className={styles.pasteActions}>
+        <button
+          type="button"
+          className={styles.primaryBtn}
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+        >
+          {statusLabel}
+        </button>
+        <button
+          type="button"
+          className={styles.ghostBtn}
+          onClick={onCancel}
+          disabled={busy}
+        >
+          Cancel
+        </button>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={RESUME_ACCEPT}
+        className={styles.fileInputHidden}
+        onChange={handleChange}
+        aria-label="Upload résumé file"
+        disabled={busy}
+      />
+    </div>
   );
 }
 
