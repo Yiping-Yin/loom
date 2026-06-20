@@ -39,7 +39,7 @@ type ResolvedCitation = {
   kind: ReturnType<typeof resolveVerifiedDossierArtifact>['kind'];
 };
 
-type AskPhase = 'example' | 'streaming' | 'done' | 'unconfigured' | 'no-sources' | 'error';
+type AskPhase = 'idle' | 'example' | 'streaming' | 'done' | 'unconfigured' | 'no-sources' | 'error';
 
 /** Raw citation shape the API emits ({done} or {configured:false}). */
 type ApiCitation = { artifactId?: unknown; title?: unknown; href?: unknown };
@@ -102,7 +102,7 @@ type AskStreamEvent = {
 };
 
 const READ_ONLY_NOTE =
-  'Live answers need an AI key — this deploy is read-only; the verified sources below are what Yiping’s answer draws from.';
+  "Live answers need an AI key — this deploy is read-only; the verified sources below are what Yiping's answer draws from.";
 
 const NO_SOURCES_NOTE =
   'No inspectable sources yet — add your experience, education, or work to get cited answers about you.';
@@ -116,24 +116,61 @@ const EXAMPLE_CITATIONS: ResolvedCitation[] = VERIFIED_DOSSIER_AI_PROMPT.citatio
   .map((id) => resolveCitation({ artifactId: id }))
   .filter((citation): citation is ResolvedCitation => citation !== null);
 
+/** Shape of the optional example seed (question + answer + resolved citations). */
+export type AskYipingExample = {
+  question: string;
+  answer: string;
+  citations: ResolvedCitation[];
+};
+
 export interface AskYipingProps {
   /** Override the suggested-question chips. Defaults to the owner's questions. */
   suggestedQuestions?: string[];
   /** Override the input placeholder text. Defaults to the owner's placeholder. */
   placeholder?: string;
+  /** Override the eyebrow label above the title. Defaults to "Ask Yiping". */
+  eyebrow?: string;
+  /** Override the section title. Defaults to "Ask Yiping's verified knowledge". */
+  title?: string;
+  /** Override the lede below the title. Defaults to "Verified answers. Cited sources." */
+  lede?: string;
+  /** Override the read-only deploy note. Defaults to the owner-specific note. */
+  readOnlyNote?: string;
+  /**
+   * Optional example Q&A to seed the panel before the visitor asks anything.
+   * Pass `null` to start in a neutral idle state (no seeded question/answer).
+   * Defaults to the owner's canned VERIFIED_DOSSIER_AI_PROMPT seed.
+   */
+  example?: AskYipingExample | null;
 }
 
 const OWNER_PLACEHOLDER = 'Ask about maths, optimisation, programming, or QBook...';
+const OWNER_EYEBROW = 'Ask Yiping';
+const OWNER_TITLE = "Ask Yiping's verified knowledge";
+const OWNER_LEDE = 'Verified answers. Cited sources.';
+
+/** The owner example seed, pre-resolved. Used as the default `example` prop value. */
+const OWNER_EXAMPLE: AskYipingExample = {
+  question: VERIFIED_DOSSIER_AI_PROMPT.question,
+  answer: VERIFIED_DOSSIER_AI_PROMPT.answer,
+  citations: EXAMPLE_CITATIONS,
+};
 
 export function AskYiping({
   suggestedQuestions = ASK_YIPING_SUGGESTED_QUESTIONS,
   placeholder = OWNER_PLACEHOLDER,
+  eyebrow = OWNER_EYEBROW,
+  title = OWNER_TITLE,
+  lede = OWNER_LEDE,
+  readOnlyNote = READ_ONLY_NOTE,
+  example = OWNER_EXAMPLE,
 }: AskYipingProps = {}) {
+  // When example is null we start in neutral idle; otherwise seed the panel.
   const [draft, setDraft] = useState('');
-  const [askedQuestion, setAskedQuestion] = useState(VERIFIED_DOSSIER_AI_PROMPT.question);
-  const [answer, setAnswer] = useState(VERIFIED_DOSSIER_AI_PROMPT.answer);
-  const [citations, setCitations] = useState<ResolvedCitation[]>(EXAMPLE_CITATIONS);
-  const [phase, setPhase] = useState<AskPhase>('example');
+  const [askedQuestion, setAskedQuestion] = useState(example?.question ?? '');
+  const [answer, setAnswer] = useState(example?.answer ?? '');
+  const [citations, setCitations] = useState<ResolvedCitation[]>(example?.citations ?? []);
+  const [phase, setPhase] = useState<AskPhase>(example !== null ? 'example' : 'idle');
   const [errorMessage, setErrorMessage] = useState('');
 
   // Guards against overlapping submissions racing the streamed answer.
@@ -203,7 +240,7 @@ export function AskYiping({
       setPhase((prev) => (prev === 'streaming' ? 'done' : prev));
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Ask Yiping failed to answer.',
+        error instanceof Error ? error.message : `${eyebrow} failed to answer.`,
       );
       setPhase('error');
     } finally {
@@ -233,15 +270,17 @@ export function AskYiping({
     phase === 'streaming' ||
     phase === 'done' ||
     (phase === 'error' && answer.length > 0);
+  // In idle phase, show a calm placeholder prose instead of an empty answer body.
+  const showIdlePlaceholder = phase === 'idle';
 
   return (
     <section className={styles.askYiping} aria-labelledby="ask-yiping-title" data-reveal="">
       <div className={styles.header}>
-        <p className={styles.eyebrow}>Ask Yiping</p>
+        <p className={styles.eyebrow}>{eyebrow}</p>
         <h2 id="ask-yiping-title" className={styles.title}>
-          Ask Yiping’s verified knowledge
+          {title}
         </h2>
-        <p className={styles.lede}>Verified answers. Cited sources.</p>
+        <p className={styles.lede}>{lede}</p>
       </div>
 
       <form className={styles.form} onSubmit={onSubmit}>
@@ -252,7 +291,7 @@ export function AskYiping({
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={placeholder}
-          aria-label="Ask Yiping a question"
+          aria-label={`${eyebrow} — ask a question`}
           autoComplete="off"
           disabled={isBusy}
         />
@@ -276,10 +315,12 @@ export function AskYiping({
       </div>
 
       <div className={styles.answerArea} aria-live="polite">
-        <div className={styles.answerHead}>
-          <p>{phase === 'example' ? 'Example grounded answer' : 'Grounded answer'}</p>
-          <span className={styles.status}>{statusLabel(phase)}</span>
-        </div>
+        {phase !== 'idle' ? (
+          <div className={styles.answerHead}>
+            <p>{phase === 'example' ? 'Example grounded answer' : 'Grounded answer'}</p>
+            <span className={styles.status}>{statusLabel(phase)}</span>
+          </div>
+        ) : null}
 
         {askedQuestion ? <p className={styles.askedQuestion}>{askedQuestion}</p> : null}
 
@@ -295,10 +336,16 @@ export function AskYiping({
           </p>
         ) : null}
 
+        {showIdlePlaceholder ? (
+          <p className={styles.answerBody} style={{ opacity: 0.5 }}>
+            Ask a question to get a grounded, cited answer.
+          </p>
+        ) : null}
+
         {phase === 'unconfigured' ? (
           <div className={styles.note}>
             <strong>Read-only deploy</strong>
-            <p>{READ_ONLY_NOTE}</p>
+            <p>{readOnlyNote}</p>
           </div>
         ) : null}
 
@@ -311,7 +358,7 @@ export function AskYiping({
 
         {phase === 'error' ? (
           <div className={`${styles.note} ${styles.error}`} role="alert">
-            <strong>Couldn’t reach Ask Yiping</strong>
+            <strong>Couldn't reach {eyebrow}</strong>
             <p>{errorMessage}</p>
           </div>
         ) : null}
@@ -346,6 +393,8 @@ export function AskYiping({
 
 function statusLabel(phase: AskPhase): string {
   switch (phase) {
+    case 'idle':
+      return '';
     case 'streaming':
       return 'Streaming…';
     case 'done':

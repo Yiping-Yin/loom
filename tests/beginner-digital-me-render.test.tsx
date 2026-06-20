@@ -190,3 +190,68 @@ test('BeginnerDigitalMe passes generic chips and placeholder to AskYiping', () =
   assert.ok(chipsHtml.length > 0, 'chips group should be present in the HTML');
   assert.doesNotMatch(chipsHtml, /optimisation|Optibook|C\+\+/i);
 });
+
+// --- De-branding: AskYiping with example=null + generic copy ---
+
+test('AskYiping with example=null renders no owner eyebrow/title and no owner example Q&A', () => {
+  const { AskYiping } = require('../components/verified-dossier/AskYiping') as typeof import('../components/verified-dossier/AskYiping');
+  const html = render(
+    <AskYiping
+      eyebrow="Ask me"
+      title="Ask Alex Chen anything"
+      lede="Grounded answers. Cited from your verified profile."
+      readOnlyNote="Live answers need an AI key — this deploy is read-only."
+      example={null}
+      suggestedQuestions={["What's their experience?", 'What are they strongest at?']}
+      placeholder="Ask me anything…"
+    />,
+  );
+  const text = visibleText(html);
+
+  // Must NOT contain owner-specific copy.
+  assert.doesNotMatch(text, /Ask Yiping/i);
+  assert.doesNotMatch(text, /Yiping/);
+  // Must NOT contain owner example question or answer.
+  assert.doesNotMatch(text, /ECON3202/);
+  assert.doesNotMatch(text, /concavity/i);
+  assert.doesNotMatch(text, /optimisation/i);
+  // Must NOT show "Example grounded answer" header (no example seed).
+  assert.doesNotMatch(text, /Example grounded answer/);
+  // Generic copy must be present.
+  assert.match(text, /Ask me/);
+  assert.match(text, /Alex Chen/);
+  // Idle placeholder must be present.
+  assert.match(text, /Ask a question to get a grounded, cited answer/);
+});
+
+test('AskYiping defaults (no props) still render owner eyebrow, title, and example seed', () => {
+  const { AskYiping } = require('../components/verified-dossier/AskYiping') as typeof import('../components/verified-dossier/AskYiping');
+  const html = render(<AskYiping />);
+  const text = visibleText(html);
+
+  // Owner eyebrow and title must be present.
+  assert.match(text, /Ask Yiping/);
+  assert.match(text, /Ask Yiping's verified knowledge/);
+  // Owner example question must be present (seeded).
+  assert.match(text, /ECON3202/);
+  // "Example grounded answer" header must be present (example phase).
+  assert.match(text, /Example grounded answer/);
+  // Idle placeholder must NOT appear (we have an example, not idle state).
+  assert.doesNotMatch(text, /Ask a question to get a grounded, cited answer/);
+});
+
+test('BeginnerDigitalMe renders no "Ask Yiping" text and no owner example Q&A', () => {
+  const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
+  const html = render(<BeginnerDigitalMe profile={SAMPLE_PROFILE} />);
+  const text = visibleText(html);
+
+  // Must NOT contain "Ask Yiping" anywhere (eyebrow, title, aria-label, error heading).
+  assert.doesNotMatch(text, /Ask Yiping/);
+  // Must NOT contain owner example question.
+  assert.doesNotMatch(text, /ECON3202/);
+  assert.doesNotMatch(text, /concavity/i);
+  // Generic eyebrow must be present.
+  assert.match(text, /Ask me/);
+  // Title with name must be present.
+  assert.match(text, /Ask Alex Chen anything/);
+});

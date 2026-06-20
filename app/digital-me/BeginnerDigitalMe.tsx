@@ -154,9 +154,15 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
 
         {/* Ask widget — centrepiece: answers are grounded in the beginner's
             localStorage profile which /api/ask receives automatically.
-            Generic chips/placeholder used so the visitor sees questions about
-            the profile owner (whoever that is), not Yiping's specific topics. */}
+            All owner-specific copy is overridden here with generic text so
+            the visitor sees prompts about this person, not Yiping's topics.
+            example={null} starts in a neutral idle state (no owner seed). */}
         <AskYiping
+          eyebrow="Ask me"
+          title={home.name ? `Ask ${home.name} anything` : 'Ask me anything'}
+          lede="Grounded answers. Cited from your verified profile."
+          readOnlyNote="Live answers need an AI key — this deploy is read-only; the verified sources below are what this person's answer draws from."
+          example={null}
           suggestedQuestions={[
             "What's their experience?",
             'What are they strongest at?',
