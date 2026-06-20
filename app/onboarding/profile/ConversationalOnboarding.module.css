@@ -397,6 +397,15 @@
   color: rgba(168, 178, 182, 0.5);
 }
 
+.extractingNote {
+  margin: 0.5rem 0 0;
+  color: var(--fg-secondary);
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
 .pasteInner {
   display: flex;
   flex-direction: column;

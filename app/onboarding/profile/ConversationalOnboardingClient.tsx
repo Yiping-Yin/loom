@@ -16,6 +16,7 @@ import {
   readBeginnerProfileLocal,
   writeBeginnerProfileLocal,
 } from '../../../lib/profile/profile-storage';
+import { mergeExtractedProfile } from '../../../lib/profile/merge-extracted-profile';
 import styles from './ConversationalOnboarding.module.css';
 
 // ── Step machine ─────────────────────────────────────────────────────────────
@@ -330,6 +331,7 @@ export function ConversationalOnboardingClient() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [pasteMode, setPasteMode] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -404,24 +406,89 @@ export function ConversationalOnboardingClient() {
     }
   };
 
-  const handlePasteResume = (text: string) => {
-    // Drop the pasted text into the about summary (real auto-extract is deferred).
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    setProfile((p) => ({
+  /**
+   * Fallback when structured extraction is unavailable (no API key on this
+   * deploy, the /api route is shelved in the static export → 404, or extraction
+   * failed/returned malformed output). Preserves the original behavior: drop the
+   * raw text into about.summary and tell the user honestly.
+   */
+  const storePastedAsSummary = (trimmed: string) => {
+    setProfile((p) => normalizeBeginnerProfile({
       ...p,
       about: { ...p.about, summary: trimmed },
     }));
-    setPasteMode(false);
-    // Advance to name step if still at the very start, otherwise stay
     if (step.id === 'name') {
       appendMessages([
-        { from: 'user', text: '[Résumé pasted]' },
         {
           from: 'loom',
-          text: "Saved to your summary — structured extraction is coming. For now let’s fill in the rest. What’s your full name?",
+          text: "Saved to your summary — I couldn't auto-structure it just now. Let's fill in the rest. What's your full name?",
         },
       ]);
+    }
+  };
+
+  /**
+   * Apply a successfully extracted profile: merge the structured fields into the
+   * in-progress profile (without clobbering anything the user already typed) so
+   * they land on a POPULATED, citeable profile.
+   */
+  const applyExtractedProfile = (extracted: BeginnerProfile) => {
+    setProfile((p) => mergeExtractedProfile(p, extracted));
+    if (step.id === 'name') {
+      const bits: string[] = [];
+      if (extracted.education.length) bits.push(`${extracted.education.length} education`);
+      if (extracted.experience.length) bits.push(`${extracted.experience.length} experience`);
+      if (extracted.works.length) bits.push(`${extracted.works.length} project${extracted.works.length === 1 ? '' : 's'}`);
+      const detail = bits.length ? ` (${bits.join(', ')})` : '';
+      appendMessages([
+        {
+          from: 'loom',
+          text: `Got it — I pulled a structured profile from that${detail}. What's your full name? (I'll fill the rest in, and you can review everything at the end.)`,
+        },
+      ]);
+    }
+  };
+
+  /**
+   * Paste-a-résumé handler. POSTs the raw text to /api/extract-profile and, on a
+   * structured result, merges it into the profile. Degrades gracefully end to
+   * end: a missing route (404 in the static export), no API key
+   * ({configured:false}), a thrown fetch, or malformed output ({ok:false}) all
+   * fall back to the honest summary stub — no crash, never strands the user.
+   */
+  const handlePasteResume = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || extracting) return;
+
+    setPasteMode(false);
+    appendMessages([{ from: 'user', text: '[Résumé pasted]' }]);
+    setExtracting(true);
+
+    try {
+      const res = await fetch('/api/extract-profile', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: trimmed }),
+      });
+      // A shelved /api in the static export answers 404 — treat any non-OK
+      // response as "extraction unavailable" and fall back.
+      if (!res.ok) {
+        storePastedAsSummary(trimmed);
+        return;
+      }
+      const data = (await res.json()) as { ok?: unknown; profile?: unknown };
+      if (data && typeof data === 'object' && data.ok === true) {
+        const profile = normalizeBeginnerProfile(data.profile);
+        applyExtractedProfile(profile);
+      } else {
+        // {configured:false} or {ok:false} → honest fallback.
+        storePastedAsSummary(trimmed);
+      }
+    } catch {
+      // Network error / route absent / unparseable response → fallback.
+      storePastedAsSummary(trimmed);
+    } finally {
+      setExtracting(false);
     }
   };
 
@@ -480,11 +547,23 @@ export function ConversationalOnboardingClient() {
       {pasteMode && (
         <div className={styles.pasteBox}>
           <p className={styles.pasteLabel}>
-            Paste your résumé text below. It will be saved to your About summary — structured
-            extraction is coming, so you can refine it later.
+            Paste your résumé, CV, or bio below. I&apos;ll pull out your education, experience, and
+            projects into a structured profile you can review — or, if that&apos;s unavailable, save
+            the text to your About summary.
           </p>
-          <PasteArea onSubmit={handlePasteResume} onCancel={() => setPasteMode(false)} />
+          <PasteArea
+            onSubmit={handlePasteResume}
+            onCancel={() => setPasteMode(false)}
+            busy={extracting}
+          />
         </div>
+      )}
+
+      {/* Extraction in-progress state */}
+      {extracting && (
+        <p className={styles.extractingNote} role="status" aria-live="polite">
+          Extracting your profile…
+        </p>
       )}
 
       {/* Progress bar */}
@@ -633,9 +712,11 @@ function MoonOrb({ small }: { small?: boolean }) {
 function PasteArea({
   onSubmit,
   onCancel,
+  busy = false,
 }: {
   onSubmit: (text: string) => void;
   onCancel: () => void;
+  busy?: boolean;
 }) {
   const [text, setText] = useState('');
   return (
@@ -646,6 +727,7 @@ function PasteArea({
         onChange={(e) => setText(e.target.value)}
         placeholder="Paste your résumé text here…"
         rows={8}
+        disabled={busy}
         autoFocus
       />
       <div className={styles.pasteActions}>
@@ -653,11 +735,16 @@ function PasteArea({
           type="button"
           className={styles.primaryBtn}
           onClick={() => onSubmit(text)}
-          disabled={!text.trim()}
+          disabled={!text.trim() || busy}
         >
-          Use this résumé
+          {busy ? 'Extracting…' : 'Use this résumé'}
         </button>
-        <button type="button" className={styles.ghostBtn} onClick={onCancel}>
+        <button
+          type="button"
+          className={styles.ghostBtn}
+          onClick={onCancel}
+          disabled={busy}
+        >
           Cancel
         </button>
       </div>
