@@ -17,6 +17,8 @@
  * Then:
  *   npm run llm:smoke
  *   npm run llm:smoke -- --resume ./my-resume.txt --question "What can they do?"
+ *   npm run llm:smoke -- --artifact ./transcript.txt   # attach a proof doc to
+ *       # exercise the moat's strong/comet path + a citation that opens the doc
  *
  * A plain ANTHROPIC_API_KEY exported in the shell also works. The token is
  * short-lived; re-run the `eval` line if a call fails with an auth error.
@@ -26,13 +28,19 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { basename } from 'node:path';
 
 import { POST as extractPost } from '../app/api/extract-profile/route';
 import { POST as derivePost } from '../app/api/derive-capabilities/route';
 import { POST as askPost } from '../app/api/ask/route';
 import { isAnthropicConfigured } from '../lib/anthropic-http';
 import { mergeExtractedProfile } from '../lib/profile/merge-extracted-profile';
-import { emptyBeginnerProfile, type BeginnerProfile } from '../lib/profile/beginner-profile';
+import {
+  emptyBeginnerProfile,
+  normalizeBeginnerProfile,
+  type BeginnerProfile,
+  type ArtifactRef,
+} from '../lib/profile/beginner-profile';
 import type { BeginnerCapability } from '../lib/capability/capability-graph';
 
 const API_BASE = 'http://localhost';
@@ -224,6 +232,27 @@ async function main(): Promise<void> {
     }
   } catch (err) {
     console.log(`  ✗ extract error: ${errMsg(err)}`);
+  }
+
+  // Optional proof artifact (`--artifact <file>`): attach its text to the profile
+  // so the derive + ask steps can exercise the moat's "strong = backed by real
+  // uploaded proof" path (→ comets) and an answer that cites the document. The
+  // blob lives in IndexedDB in the app; here we only need the citeable meta + text.
+  const artifactPath = arg('artifact');
+  if (artifactPath) {
+    const artifactText = readFileSync(artifactPath, 'utf8');
+    const ref: ArtifactRef = {
+      id: 'art-cli',
+      name: basename(artifactPath),
+      kind: 'doc',
+      label: basename(artifactPath),
+      extractedText: artifactText,
+    };
+    profile = normalizeBeginnerProfile({
+      ...profile,
+      artifacts: [...(profile.artifacts ?? []), ref],
+    });
+    console.log(`  + attached proof artifact "${ref.name}" (${artifactText.length} chars) as ${ref.id}`);
   }
 
   // ── 2. Derive capabilities ────────────────────────────────────────────────
