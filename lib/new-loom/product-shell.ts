@@ -111,6 +111,7 @@ export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES = [
   '/digital-me',
   '/drafts',
   '/education',
+  '/example',
   '/experience',
   '/works',
   '/knowledge/[category]',
