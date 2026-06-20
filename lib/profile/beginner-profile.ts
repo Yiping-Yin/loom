@@ -16,6 +16,21 @@ export type WorkItem = {
   role?: string;
   date?: string;
 };
+/**
+ * The citeable META projection of an uploaded artifact. The BLOB itself lives in
+ * IndexedDB keyed by `id` (see lib/artifact/artifact-store.ts) — only this small
+ * record is persisted in the localStorage profile, so the blob never eats the
+ * localStorage quota. `kind` is a free string here (the store narrows it to
+ * 'pdf'|'image'|'doc'|'other') so an unknown value from old/edited storage
+ * normalizes safely rather than being dropped.
+ */
+export type ArtifactRef = {
+  id: string;
+  name: string;
+  kind: string;
+  label?: string;
+  thumbnailDataUri?: string;
+};
 export type BeginnerProfile = {
   version: 1;
   home: { name: string; headline: string };
@@ -23,6 +38,8 @@ export type BeginnerProfile = {
   education: EducationEntry[];
   experience: ExperienceEntry[];
   works: WorkItem[];
+  /** Uploaded proof documents (blobs live in IndexedDB; this is the citeable meta). */
+  artifacts?: ArtifactRef[];
 };
 
 export function emptyBeginnerProfile(): BeginnerProfile {
@@ -33,6 +50,7 @@ export function emptyBeginnerProfile(): BeginnerProfile {
     education: [],
     experience: [],
     works: [],
+    artifacts: [],
   };
 }
 
@@ -44,6 +62,14 @@ export function emptyBeginnerProfile(): BeginnerProfile {
 const SUMMARY_MAX = 2000;
 const FIELD_MAX = 300;
 const HREF_MAX = 2048;
+// Artifact caps. The thumbnail is a downscaled data URI (~a few KB for a small
+// preview) — a generous ceiling keeps a normal preview while refusing a pasted
+// full-resolution blob that would blow the localStorage quota. The count cap
+// bounds how many proof cards (and how much localStorage) a profile can hold.
+const ARTIFACTS_MAX = 24;
+const ARTIFACT_NAME_MAX = 200;
+const ARTIFACT_LABEL_MAX = 120;
+const THUMBNAIL_MAX = 200_000;
 
 const cap = (v: string, max: number): string => (v.length > max ? v.slice(0, max) : v);
 
@@ -51,6 +77,18 @@ const str = (v: unknown, max = FIELD_MAX): string =>
   typeof v === 'string' ? cap(v, max) : '';
 const optStr = (v: unknown, max = FIELD_MAX): string | undefined =>
   typeof v === 'string' && v.trim() ? cap(v, max) : undefined;
+
+/**
+ * Keep a thumbnail only if it's a bounded image data URI. This is a defence at
+ * the storage seam: an arbitrary `data:` URI (e.g. text/html) or an oversized
+ * blob is dropped so a tampered/edited profile can never store something the
+ * card would render as anything other than an <img src>.
+ */
+const optThumbnail = (v: unknown): string | undefined => {
+  if (typeof v !== 'string') return undefined;
+  if (v.length > THUMBNAIL_MAX) return undefined;
+  return /^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.test(v) ? v : undefined;
+};
 
 export function normalizeBeginnerProfile(raw: unknown): BeginnerProfile {
   if (!raw || typeof raw !== 'object') return emptyBeginnerProfile();
@@ -61,6 +99,7 @@ export function normalizeBeginnerProfile(raw: unknown): BeginnerProfile {
   const education = Array.isArray(r.education) ? (r.education as unknown[]) : [];
   const experience = Array.isArray(r.experience) ? (r.experience as unknown[]) : [];
   const works = Array.isArray(r.works) ? (r.works as unknown[]) : [];
+  const artifacts = Array.isArray(r.artifacts) ? (r.artifacts as unknown[]) : [];
   return {
     version: 1,
     home: { name: str(home.name), headline: str(home.headline) },
@@ -108,5 +147,19 @@ export function normalizeBeginnerProfile(raw: unknown): BeginnerProfile {
           date: optStr(w.date),
         };
       }),
+    // Artifacts: keep only refs that carry a non-empty id + name (the id keys the
+    // IndexedDB blob, so a ref without one is unciteable and dropped). Caps name/
+    // label length, validates the thumbnail data URI, and bounds the array length.
+    artifacts: artifacts
+      .map((a) => (a && typeof a === 'object' ? (a as Record<string, unknown>) : {}))
+      .filter((a) => str(a.id) && str(a.name))
+      .slice(0, ARTIFACTS_MAX)
+      .map((a) => ({
+        id: str(a.id, FIELD_MAX),
+        name: str(a.name, ARTIFACT_NAME_MAX),
+        kind: str(a.kind) || 'other',
+        label: optStr(a.label, ARTIFACT_LABEL_MAX),
+        thumbnailDataUri: optThumbnail(a.thumbnailDataUri),
+      })),
   };
 }
