@@ -24364,3 +24364,336 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     display:none!important;
   }
 }
+
+/* ============================================================
+   BEGINNER PROFILE SURFACES — polish step 1
+   CSS-only, additive. All class names match exactly what the
+   beginner TSX components emit (HomeProfileView, IdentityEmptyState,
+   AboutProfileView, EducationProfileView, ExperienceProfileView,
+   WorksProfileView). Dark + signature-cyan (#4bc5de / #6ce7f2),
+   restrained glass, mirrors vd-section-page rhythm.
+   ============================================================ */
+
+/* ------------------------------------------------------------------
+   1. HOME PROFILE HERO
+   .home-profile-hero wraps the name/headline/summary trio on the
+   logged-in beginner home. Mirror HomeLanding's hero rhythm.
+   ------------------------------------------------------------------ */
+.home-profile-hero {
+  width: min(100%, 84rem);
+  margin-right: auto;
+  margin-left: auto;
+  padding: clamp(5.7rem, 7vw, 6.7rem) 0 clamp(1.15rem, 2.6vw, 2rem);
+  border-bottom: 1px solid var(--line-soft, rgba(232, 236, 238, 0.08));
+  display: grid;
+  gap: 0;
+  text-align: center;
+  justify-items: center;
+}
+
+/* Display name — the "h1" inside the hero */
+.home-profile-hero h1 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.6rem, 4vw, 3.2rem);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.01em;
+  color: var(--text-1, #e8ecee);
+}
+
+/* Sub-headline: one-line professional title */
+.home-profile-headline {
+  max-width: 52rem;
+  margin: 0.6rem 0 0;
+  color: var(--text-2, rgba(232, 236, 238, 0.74));
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  line-height: 1.45;
+}
+
+/* Extended summary: bio / intro paragraph */
+.home-profile-summary {
+  max-width: 46rem;
+  margin: 0.85rem 0 0;
+  color: var(--text-2, rgba(232, 236, 238, 0.74));
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  line-height: 1.55;
+}
+
+/* ------------------------------------------------------------------
+   2. SECTION NAV (beginner profile pages)
+   .home-profile-section-nav is used in HomeProfileView AND every
+   beginner identity view (About / Education / Experience / Works).
+   Renders the "About · Education · Experience · Works" row.
+   Mirrors .vd-section-page__nav active-link behaviour.
+   ------------------------------------------------------------------ */
+.home-profile-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1rem, 2vw, 1.6rem);
+  justify-content: center;
+  width: min(100%, 84rem);
+  margin-right: auto;
+  margin-left: auto;
+  padding: clamp(1rem, 2vw, 1.4rem) 0;
+}
+
+.home-profile-section-nav a {
+  position: relative;
+  color: var(--text-2, rgba(232, 236, 238, 0.74));
+  font-size: 0.94rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding-bottom: 2px;
+  transition: color 0.18s ease;
+}
+
+.home-profile-section-nav a:hover {
+  color: var(--text-1, #e8ecee);
+}
+
+/* Active state — ink text + 1px signature-cyan hairline (mirrors
+   .vd-section-page__nav a[aria-current="page"]) */
+.home-profile-section-nav a[aria-current="page"] {
+  color: var(--text-1, #e8ecee);
+  border-bottom: 1px solid var(--signature-cyan, #4bc5de);
+}
+
+.home-profile-section-nav a:focus-visible {
+  outline: 1.5px solid var(--signature-cyan-hi, #6ce7f2);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* ------------------------------------------------------------------
+   3. EMPTY-STATE CTA LINKS
+   In IdentityEmptyState the "Build your LOOM →" and "See an example →"
+   anchors are plain <a> tags inside .home-profile-section-nav inside
+   .vd-section-page__list — they need a pill/ghost button treatment.
+   We scope them via a data attribute absence heuristic: any
+   .home-profile-section-nav a that is NOT aria-current gets the pill
+   style only when the nav is inside .vd-section-page__list
+   (empty-state context), OR we style via the explicit wrapping context.
+   ------------------------------------------------------------------ */
+
+/* When .home-profile-section-nav sits inside a .vd-section-page__list
+   (the IdentityEmptyState "Get started" block), render all links as
+   pill-shaped ghost buttons matching CardPage.module.css .emptyCta. */
+.vd-section-page__list .home-profile-section-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.6rem;
+  padding: 0 1.3rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan, #4bc5de) 38%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan, #4bc5de) 12%, transparent);
+  color: var(--signature-cyan-hi, #6ce7f2);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+  /* reset the row-level border-bottom from the base .home-profile-section-nav a */
+  border-bottom-color: color-mix(in srgb, var(--signature-cyan, #4bc5de) 38%, transparent);
+  padding-bottom: 0;
+}
+
+.vd-section-page__list .home-profile-section-nav a:hover {
+  background: color-mix(in srgb, var(--signature-cyan, #4bc5de) 18%, transparent);
+  border-color: var(--signature-cyan-hi, #6ce7f2);
+  color: var(--signature-cyan-hi, #6ce7f2);
+  transform: translateY(-1px);
+}
+
+.vd-section-page__list .home-profile-section-nav a[aria-current="page"] {
+  /* In the empty-state context there are no active links — keep consistent pill */
+  border-bottom: 1px solid color-mix(in srgb, var(--signature-cyan, #4bc5de) 38%, transparent);
+}
+
+.vd-section-page__list .home-profile-section-nav a:focus-visible {
+  outline: 1.5px solid var(--signature-cyan-hi, #6ce7f2);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vd-section-page__list .home-profile-section-nav a {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   4. .vd-section-page__card — element-agnostic chrome
+   EducationProfileView emits <div class="vd-section-page__card"> and
+   ExperienceProfileView / WorksProfileView emit
+   <article class="vd-section-page__card">.
+   The existing rule at ~19920 only targets "article" and "a" selectors
+   so div cards get no surface. Append .vd-section-page__card to
+   the chrome group so ALL beginner cards are styled.
+   ------------------------------------------------------------------ */
+.vd-section-page__list .vd-section-page__card {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  min-height: 7rem;
+  padding: 1.25rem;
+  border: 1px solid var(--line, rgba(232, 236, 238, 0.1));
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.42),
+    0 26px 50px -16px rgba(0, 0, 0, 0.62),
+    0 6px 14px rgba(0, 0, 0, 0.4);
+  /* dimensional tilt matching the existing article staging */
+  position: relative;
+  transform: rotateX(4deg) translateY(-1px);
+  transform-origin: 50% 92%;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+/* Screen glare sweep matching the existing article::after rule */
+.vd-section-page__list .vd-section-page__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: screen;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.045) 16%, transparent 46%);
+}
+
+/* Hover: flatten tilt, lift toward viewer, inset cyan hairline */
+.vd-section-page__list article:hover,
+.vd-section-page__list .vd-section-page__card:hover {
+  transform: rotateX(2.5deg) translateY(-5px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.46),
+    inset 0 0 0 1px rgba(75, 197, 222, 0.22),
+    0 34px 62px -16px rgba(0, 0, 0, 0.68),
+    0 8px 18px rgba(0, 0, 0, 0.46);
+}
+
+/* Focus-within for linked Works cards (the inner <a> receives focus) */
+.vd-section-page__list .vd-section-page__card:focus-within {
+  outline: 1.5px solid var(--signature-cyan-hi, #6ce7f2);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vd-section-page__list .vd-section-page__card {
+    transform: none;
+    transition: none;
+  }
+  .vd-section-page__list article:hover,
+  .vd-section-page__list .vd-section-page__card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .vd-section-page__list .vd-section-page__card {
+    min-height: 0;
+  }
+}
+
+/* ------------------------------------------------------------------
+   5. .vd-entry-bullets
+   ExperienceProfileView emits <ul class="vd-entry-bullets"> inside
+   a .vd-section-page__card article. Mirror .vd-entry-highlight
+   list-reset + dash-marker pattern (~line 20041 in globals.css).
+   ------------------------------------------------------------------ */
+.vd-section-page__list .vd-entry-bullets,
+.vd-section-page__list .vd-section-page__card .vd-entry-bullets {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.vd-section-page__list .vd-entry-bullets li,
+.vd-section-page__list .vd-section-page__card .vd-entry-bullets li {
+  position: relative;
+  padding-left: 0.85rem;
+  color: var(--text-2, rgba(232, 236, 238, 0.74));
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+/* Faint dash marker identical to .vd-entry-highlight::before */
+.vd-section-page__list .vd-entry-bullets li::before,
+.vd-section-page__list .vd-section-page__card .vd-entry-bullets li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 0.4rem;
+  height: 1px;
+  background: var(--text-3, rgba(232, 236, 238, 0.42));
+}
+
+/* ------------------------------------------------------------------
+   6. [data-reveal] — fail-safe entrance animation
+   AskYiping and other surfaces emit data-reveal="". The existing
+   implementation in DigitalMeRoleOS uses a JS hook that sets
+   [data-reveal-ready] on the root before any element is hidden.
+   We mirror that same safe-gate here for global contexts:
+   — Default: fully visible (no opacity:0, no transform).
+   — Only hidden once the parent gains [data-reveal-ready="true"].
+   — Restored immediately on [data-revealed].
+   — Completely disabled under prefers-reduced-motion.
+   This guarantees content NEVER disappears without JS running.
+   ------------------------------------------------------------------ */
+[data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.52s ease-out, transform 0.52s ease-out;
+  will-change: auto;
+}
+
+/* The JS hook sets data-reveal-ready on the root BEFORE hiding anything */
+[data-reveal-ready="true"] [data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  will-change: opacity, transform;
+}
+
+[data-reveal-ready="true"] [data-reveal][data-revealed] {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-reveal-ready="true"] [data-reveal],
+  [data-reveal-ready="true"] [data-reveal][data-revealed] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+}
+
+/* ------------------------------------------------------------------
+   7. SINGLE-COLUMN HERO — beginner section pages lack vd-section-page__hero-proof
+   When the hero has no .vd-section-page__hero-proof child (beginner
+   education/experience/works/about + IdentityEmptyState), the existing
+   two-column grid leaves an empty right column. Collapse to a centred
+   single column for those surfaces.
+
+   We use :not(:has(.vd-section-page__hero-proof)) as the modern
+   selector (Chrome 105+, Firefox 121+, Safari 15.4+). A fallback
+   rule covers unsupported browsers by checking the --experience
+   variant already has single-column logic — the generic case needs it.
+   ------------------------------------------------------------------ */
+.vd-section-page__hero:not(:has(.vd-section-page__hero-proof)) {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+}
+
+/* IdentityEmptyState injects only .vd-section-page__hero-copy with
+   no proof dl, so the rule above covers it. No additional rule needed. */
