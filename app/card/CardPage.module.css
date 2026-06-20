@@ -213,7 +213,7 @@
 
 .emptyTitle {
   margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-family: var(--display);
   font-size: clamp(1.5rem, 4vw, 1.9rem);
   font-weight: 600;
   line-height: 1.15;

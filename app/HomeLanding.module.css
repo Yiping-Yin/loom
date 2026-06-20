@@ -31,7 +31,7 @@
 
 .eyebrow {
   font-family: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
-  font-size: 0.72rem;
+  font-size: var(--fs-caption, 0.68rem);
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -40,7 +40,7 @@
 }
 
 .headline {
-  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-family: var(--display);
   font-size: clamp(2.4rem, 6vw, 4.2rem);
   font-weight: 600;
   line-height: 1.08;
@@ -86,13 +86,13 @@
 }
 
 .stepName {
-  font-size: 0.92rem;
+  font-size: var(--fs-body, 0.88rem);
   font-weight: 600;
   color: var(--text-1, #e8ecee);
 }
 
 .stepHint {
-  font-size: 0.72rem;
+  font-size: var(--fs-caption, 0.68rem);
   color: var(--text-3, rgba(232, 236, 238, 0.55));
 }
 
@@ -122,7 +122,7 @@
   font-size: 0.95rem;
   font-weight: 600;
   text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+  transition: border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease), transform var(--dur-2) var(--ease);
 }
 
 .ctaPrimary {
