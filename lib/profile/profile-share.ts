@@ -56,9 +56,16 @@ function binaryStringToBytes(binary: string): Uint8Array {
  *
  * JSON → UTF-8 bytes (TextEncoder, so emoji / CJK survive) → base64 (btoa over a
  * one-byte-per-char binary string) → base64url.
+ *
+ * `artifacts` are deliberately STRIPPED from the share payload: an ArtifactRef
+ * points at a blob in THIS device's IndexedDB, which doesn't travel with the
+ * link, and its base64 thumbnail would bloat the URL. A shared postcard is the
+ * profile text only; proof artifacts live where they were uploaded. (Decode runs
+ * through normalize, which yields `artifacts: []`, so the round-trip is stable.)
  */
 export function encodeProfileToHash(profile: BeginnerProfile): string {
-  const json = JSON.stringify(profile);
+  const { artifacts: _artifacts, ...shareable } = profile;
+  const json = JSON.stringify(shareable);
   const bytes = new TextEncoder().encode(json);
   const base64 = btoa(bytesToBinaryString(bytes));
   return base64ToBase64url(base64);

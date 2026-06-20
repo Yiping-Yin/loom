@@ -1,0 +1,150 @@
+/* "Proof & documents" section on the beginner Digital Me.
+
+   Same restrained liquid-glass language as the rest of the surface: a dark-glass
+   header block, an upload control marked by a cyan hairline, and a responsive
+   grid of VerifiedArtifactCards. All tokens; reduced-motion friendly. */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--signature-cyan);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--text-1);
+}
+
+.lede {
+  margin: 0;
+  max-width: 56ch;
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--text-3);
+}
+
+/* ── Upload control ──────────────────────────────────────────────────────── */
+
+.uploadRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.upload {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--signature-cyan-hi);
+  background: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-2) var(--ease),
+    background var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+
+.upload:hover {
+  transform: translateY(-1px);
+  border-color: var(--signature-cyan-hi);
+  background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
+}
+
+.upload:focus-within {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+}
+
+.upload[data-disabled] {
+  cursor: default;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* Visually-hidden native input; the label is the styled affordance. Keep it
+   focusable so keyboard users can trigger the picker via the label. */
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.hint {
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+}
+
+.message {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--text-2);
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--text-3);
+  font-style: italic;
+}
+
+/* ── Card grid ───────────────────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gridItem {
+  display: flex;
+}
+
+.gridItem > * {
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload {
+    transition: none;
+  }
+
+  .upload:hover {
+    transform: none;
+  }
+}

@@ -8,6 +8,7 @@ import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import shell from '../about/AboutClient.module.css';
 import styles from './BeginnerDigitalMe.module.css';
 import { BeginnerJourney } from './BeginnerJourney';
+import { BeginnerProofSection } from './BeginnerProofSection';
 
 /**
  * Beginner-profile Digital Me view.
@@ -89,6 +90,13 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             Rendered only when the profile has at least one entry in any section. */}
         <div data-reveal="">
           <BeginnerJourney profile={profile} />
+        </div>
+
+        {/* Proof & documents — uploaded artifacts as inspectable, verified proof.
+            Additive moat slice M2a: blobs in IndexedDB, citeable meta in the
+            profile (localStorage). M2b wires the cited-answer engine to these. */}
+        <div data-reveal="">
+          <BeginnerProofSection initialArtifacts={profile.artifacts ?? []} />
         </div>
 
         {/* Ask widget — centrepiece: answers are grounded in the beginner's
