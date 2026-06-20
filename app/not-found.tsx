@@ -60,7 +60,7 @@ export default function NotFound() {
             lineHeight: 1,
             letterSpacing: '-0.02em',
             margin: 0,
-            color: 'var(--ink-0)',
+            color: 'var(--fg-secondary)',
           }}
         >
           404
