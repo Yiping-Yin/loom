@@ -36,22 +36,7 @@ export function AboutProfileView({ profile }: { profile: BeginnerProfile }) {
             {/* Initials placeholder — beginner has no photo */}
             <div
               aria-hidden="true"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                aspectRatio: '1.06 / 1',
-                borderRadius: '5px',
-                border: '1px solid var(--line)',
-                background: 'rgba(75, 197, 222, 0.06)',
-                color: 'var(--signature-cyan-hi, #8AF7E6)',
-                fontFamily: 'ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace',
-                fontSize: 'clamp(2.4rem, 4vw, 3rem)',
-                fontWeight: 600,
-                letterSpacing: '0.04em',
-                userSelect: 'none',
-              }}
+              className={styles.initialsChip}
             >
               {nameInitials(displayName)}
             </div>

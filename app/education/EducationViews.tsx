@@ -118,35 +118,18 @@ export function EducationProfileView({ profile }: { profile: BeginnerProfile }) 
               <span
                 className="vd-education-profile-initials"
                 aria-label={entry.institution}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '2.4rem',
-                  height: '2.4rem',
-                  borderRadius: '50%',
-                  background: 'rgba(75, 197, 222, 0.12)',
-                  border: '1px solid rgba(75, 197, 222, 0.28)',
-                  color: 'var(--signature-cyan-hi, #8AF7E6)',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  lineHeight: 1,
-                  letterSpacing: '0.02em',
-                  userSelect: 'none',
-                }}
               >
                 {institutionInitials(entry.institution)}
               </span>
               <strong>{entry.institution}</strong>
-              <small>
-                {[
-                  entry.qualification,
-                  entry.field,
-                  formatDateRange(entry.start, entry.end),
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </small>
+              {(entry.qualification || entry.field) && (
+                <span className="vd-education-entry-degree">
+                  {[entry.qualification, entry.field].filter(Boolean).join(' · ')}
+                </span>
+              )}
+              {formatDateRange(entry.start, entry.end) && (
+                <small>{formatDateRange(entry.start, entry.end)}</small>
+              )}
             </div>
           ))}
         </section>
