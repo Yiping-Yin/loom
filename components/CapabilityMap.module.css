@@ -1,0 +1,248 @@
+/* CapabilityMap — capability cards layer (Task 4).
+   Task 5 will prepend the SVG star-river canvas above .cardList.
+
+   Design language:
+   - Dark liquid-glass material, identical to VerifiedArtifactCard (same
+     background gradient + inset specular top edge + float shadow).
+   - Status ring is the ONLY colour signal: strong = full signature-cyan,
+     partial = dimmed cyan (42% opacity), direction = muted hairline only.
+   - Color is never the sole accessibility signal: each ring has a visible
+     text label ("Strong / Partial / Direction") next to it.
+   - Hover/focus-visible: 1px cyan hairline + translate(-2px) lift, never
+     a loud fill.
+   - All spacing/color/type through design tokens.
+   - prefers-reduced-motion: transitions stripped. */
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+
+.emptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+}
+
+.emptyPrompt {
+  max-width: 36rem;
+  font-size: var(--fs-body-lg);
+  color: var(--text-3, rgba(255, 255, 255, 0.38));
+  line-height: var(--lh-relaxed);
+  font-style: italic;
+}
+
+/* ── Card list ───────────────────────────────────────────────────────────── */
+
+.cardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+  border-radius: var(--r-2);
+  background:
+    linear-gradient(135deg, rgba(238, 241, 242, 0.05), rgba(180, 187, 191, 0.02) 34%, transparent 60%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.5), rgba(20, 23, 26, 0.92));
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+  backdrop-filter: blur(18px) saturate(115%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 12px 30px rgba(0, 0, 0, 0.45);
+  transition:
+    border-color var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--signature-cyan) 32%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 16px 36px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Status ring / badge ─────────────────────────────────────────────────── */
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.statusRing {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* strong: filled signature-cyan disk */
+.strong .statusRing {
+  background: var(--signature-cyan);
+  box-shadow: 0 0 6px rgba(75, 197, 222, 0.5);
+}
+
+/* partial: dimmer — same cyan at 42% opacity, hairline border */
+.partial .statusRing {
+  background: rgba(75, 197, 222, 0.42);
+  border: 1px solid rgba(75, 197, 222, 0.55);
+}
+
+/* direction: muted hairline only, no fill */
+.direction .statusRing {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+}
+
+.statusLabel {
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.strong .statusLabel {
+  color: var(--signature-cyan);
+}
+
+.partial .statusLabel {
+  color: rgba(75, 197, 222, 0.7);
+}
+
+.direction .statusLabel {
+  color: var(--text-3, rgba(255, 255, 255, 0.38));
+}
+
+/* ── Capability label ────────────────────────────────────────────────────── */
+
+.capLabel {
+  font-family: var(--display);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  color: var(--text-1, rgba(255, 255, 255, 0.9));
+  letter-spacing: -0.01em;
+}
+
+/* ── Note ────────────────────────────────────────────────────────────────── */
+
+.note {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--text-3, rgba(255, 255, 255, 0.38));
+  line-height: var(--lh-body);
+}
+
+/* ── Evidence chips ──────────────────────────────────────────────────────── */
+
+.evidenceList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.evidenceItem {
+  /* passthrough — styling lives on the link/button */
+}
+
+.evidenceLink,
+.evidenceButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: var(--r-1);
+  background: rgba(255, 255, 255, 0.04);
+  font: inherit;
+  font-size: var(--fs-small);
+  color: var(--text-2, rgba(255, 255, 255, 0.65));
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease),
+    background var(--dur-2) var(--ease);
+}
+
+.evidenceLink:hover,
+.evidenceButton:hover:not(:disabled) {
+  color: var(--signature-cyan-hi, #6ce7f2);
+  border-color: color-mix(in srgb, var(--signature-cyan) 40%, transparent);
+  background: rgba(75, 197, 222, 0.06);
+}
+
+.evidenceLink:focus-visible,
+.evidenceButton:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi, #6ce7f2);
+  outline-offset: 2px;
+  border-radius: var(--r-1);
+}
+
+.evidenceButton:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.evidenceUnavailable {
+  opacity: 0.55;
+  font-style: italic;
+  cursor: default;
+}
+
+.openArrow {
+  font-size: var(--fs-caption);
+  color: var(--signature-cyan, #4bc5de);
+  letter-spacing: 0;
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.evidenceButton:hover:not(:disabled) .openArrow {
+  transform: translate(1px, -1px);
+}
+
+/* ── Growth nudge ────────────────────────────────────────────────────────── */
+
+.growth {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--text-3, rgba(255, 255, 255, 0.38));
+  line-height: var(--lh-body);
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.06));
+  padding-top: var(--space-3);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .evidenceLink,
+  .evidenceButton,
+  .openArrow {
+    transition: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+}
