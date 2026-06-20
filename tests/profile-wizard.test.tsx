@@ -30,7 +30,7 @@ function iconStub(props: Record<string, unknown>) {
   id: string,
 ): unknown {
   if (id === 'next/navigation') {
-    return { useRouter: () => ({ push: (_path: string) => undefined }) };
+    return { useRouter: () => ({ push: (_path: string) => undefined }), usePathname: () => '/' };
   }
   if (id === 'next/link') {
     function LinkStub({
