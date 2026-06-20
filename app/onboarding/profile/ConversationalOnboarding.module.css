@@ -1,5 +1,30 @@
 /* ConversationalOnboarding — dark/cyan chat aesthetic */
 
+/* ── Bubble entrance animation ── */
+
+@keyframes bubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes typingPulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.75); }
+  40%           { opacity: 1;    transform: scale(1);    }
+}
+
+/* ── Done-beat overlay ── */
+
+@keyframes doneFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .page {
   position: relative;
   isolation: isolate;
@@ -157,6 +182,14 @@
   align-items: flex-start;
   gap: 0.55rem;
   max-width: 88%;
+  animation: bubbleIn var(--dur-2, 180ms) var(--ease-enter, cubic-bezier(0, 0, 0.2, 1)) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubbleLoom,
+  .bubbleUser {
+    animation: none;
+  }
 }
 
 .bubbleLoom {
@@ -166,6 +199,76 @@
 .bubbleUser {
   align-self: flex-end;
   flex-direction: row-reverse;
+}
+
+/* ── Typing indicator ── */
+
+.typingBubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  max-width: 88%;
+  align-self: flex-start;
+  animation: bubbleIn var(--dur-2, 180ms) var(--ease-enter, cubic-bezier(0, 0, 0.2, 1)) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typingBubble {
+    animation: none;
+  }
+}
+
+.typingDots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.6rem 0.95rem;
+  border-radius: 1.1rem;
+  border-bottom-left-radius: 0.3rem;
+  background:
+    radial-gradient(110% 130% at 18% -10%, rgba(255, 255, 255, 0.055), transparent 52%),
+    rgba(20, 24, 26, 0.72);
+  border: 1px solid rgba(232, 236, 238, 0.1);
+  min-height: 2.2rem;
+}
+
+.typingDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(75, 197, 222, 0.7);
+  animation: typingPulse 1.2s ease-in-out infinite;
+}
+
+.typingDot:nth-child(1) { animation-delay: 0ms; }
+.typingDot:nth-child(2) { animation-delay: 200ms; }
+.typingDot:nth-child(3) { animation-delay: 400ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .typingDot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ── Done beat ── */
+
+.doneBeat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.2rem;
+  color: rgba(75, 197, 222, 0.88);
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  font-style: italic;
+  animation: doneFadeIn var(--dur-2, 180ms) var(--ease-enter, cubic-bezier(0, 0, 0.2, 1)) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doneBeat {
+    animation: none;
+  }
 }
 
 .loomAvatar {

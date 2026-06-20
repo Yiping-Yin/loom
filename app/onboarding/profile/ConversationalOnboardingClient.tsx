@@ -307,6 +307,15 @@ type ChatMessage =
   | { from: 'loom'; text: string }
   | { from: 'user'; text: string };
 
+/**
+ * Returns true if the user's OS has prefers-reduced-motion: reduce set.
+ * Falls back to false in SSR / environments without matchMedia.
+ */
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 /**
@@ -323,6 +332,8 @@ export function ConversationalOnboardingClient() {
   const [pasteMode, setPasteMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [doneBeat, setDoneBeat] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -350,22 +361,47 @@ export function ConversationalOnboardingClient() {
     setMessages((prev) => [...prev, ...msgs]);
   };
 
+  /**
+   * Handles a user answer submission.
+   *
+   * Timing logic lives here, NOT in applyAnswer, so that applyAnswer stays pure
+   * and the contract tests remain synchronous.
+   *
+   * Flow:
+   *  1. Append user bubble immediately.
+   *  2. Set isTyping (shows 3-dot pulse in the LOOM avatar slot).
+   *  3. Wait ~500ms (or ~0ms under prefers-reduced-motion).
+   *  4. Append the LOOM prompt bubble, clear isTyping.
+   */
   const handleSubmit = (answerOverride?: string) => {
     const answer = (answerOverride ?? input).trim();
-    if (!answer) return;
+    if (!answer || isTyping) return;
 
-    // Append the user bubble
     const userMsg: ChatMessage = { from: 'user', text: answer };
 
-    // Transition
+    // Transition (pure — no side effects)
     const { next, profile: nextProfile } = applyAnswer(profile, step, answer);
     setProfile(nextProfile);
     setStep(next);
     setInput('');
 
-    // Append user bubble + next LOOM prompt
-    const loomMsg: ChatMessage = { from: 'loom', text: stepPrompt(next) };
-    appendMessages([userMsg, loomMsg]);
+    // Append user bubble first
+    setMessages((prev) => [...prev, userMsg]);
+
+    const delay = prefersReducedMotion() ? 0 : 500;
+
+    if (delay === 0) {
+      // Instant path for reduced-motion users
+      const loomMsg: ChatMessage = { from: 'loom', text: stepPrompt(next) };
+      setMessages((prev) => [...prev, loomMsg]);
+    } else {
+      setIsTyping(true);
+      setTimeout(() => {
+        const loomMsg: ChatMessage = { from: 'loom', text: stepPrompt(next) };
+        setMessages((prev) => [...prev, loomMsg]);
+        setIsTyping(false);
+      }, delay);
+    }
   };
 
   const handlePasteResume = (text: string) => {
@@ -383,7 +419,7 @@ export function ConversationalOnboardingClient() {
         { from: 'user', text: '[Résumé pasted]' },
         {
           from: 'loom',
-          text: "Got it — I've stored your résumé text as your About summary. You can refine it later. Let's fill in the rest. What's your full name?",
+          text: "Saved to your summary — structured extraction is coming. For now let’s fill in the rest. What’s your full name?",
         },
       ]);
     }
@@ -402,7 +438,13 @@ export function ConversationalOnboardingClient() {
       setSaving(false);
       return;
     }
-    router.push('/digital-me');
+    const delay = prefersReducedMotion() ? 0 : 600;
+    if (delay === 0) {
+      router.push('/digital-me');
+    } else {
+      setDoneBeat(true);
+      setTimeout(() => router.push('/digital-me'), delay);
+    }
   };
 
   const currentProgress = progressOf(step);
@@ -438,9 +480,8 @@ export function ConversationalOnboardingClient() {
       {pasteMode && (
         <div className={styles.pasteBox}>
           <p className={styles.pasteLabel}>
-            Paste your résumé text below. It will be saved as your About summary — you can edit it
-            later.{' '}
-            <span className={styles.pasteNote}>(Auto-extraction coming soon.)</span>
+            Paste your résumé text below. It will be saved to your About summary — structured
+            extraction is coming, so you can refine it later.
           </p>
           <PasteArea onSubmit={handlePasteResume} onCancel={() => setPasteMode(false)} />
         </div>
@@ -472,6 +513,19 @@ export function ConversationalOnboardingClient() {
             <span className={styles.bubbleText}>{msg.text}</span>
           </div>
         ))}
+        {/* Typing indicator — shown while LOOM is "thinking" */}
+        {isTyping && (
+          <div className={styles.typingBubble} aria-label="LOOM is typing" aria-live="polite">
+            <span className={styles.loomAvatar} aria-hidden="true">
+              <MoonOrb small />
+            </span>
+            <div className={styles.typingDots}>
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+              <span className={styles.typingDot} />
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -498,7 +552,7 @@ export function ConversationalOnboardingClient() {
           <button
             type="submit"
             className={styles.sendBtn}
-            disabled={!input.trim()}
+            disabled={!input.trim() || isTyping}
             aria-label="Send answer"
           >
             <ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -513,17 +567,26 @@ export function ConversationalOnboardingClient() {
               {saveError}
             </p>
           )}
-          <div className={styles.reviewButtons}>
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? 'Saving…' : 'Save & see my profile'}
-              {!saving && <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />}
-            </button>
-          </div>
+          {doneBeat ? (
+            <p className={styles.doneBeat} role="status">
+              Done — opening your Digital Me…
+            </p>
+          ) : (
+            <div className={styles.reviewButtons}>
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? 'Saving…' : 'Save & see my profile'}
+                {!saving && <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" />}
+              </button>
+              <Link href="/onboarding/profile/form" className={styles.ghostBtn}>
+                Edit in form
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
