@@ -18,8 +18,9 @@
  * they work identically in dev, the web build, and the static macOS app
  * (loom://bundle, no Node server).
  */
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import React, { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { subscribeLoomMirror } from '../../lib/loom-mirror-store';
 import {
   RECENT_RECORDS_KEY,
@@ -27,6 +28,7 @@ import {
   type LoomRecentRecord,
 } from '../../lib/loom-recent-records';
 import { readJots, appendJot, type Jot } from '../../lib/jot/jot-storage';
+import styles from './Today.module.css';
 
 type Row = { href: string; title: string };
 
@@ -151,16 +153,74 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
     }
   };
 
-  const Container = embedded ? 'section' : 'main';
-  const className = embedded ? 'loom-today loom-today--embedded' : 'loom-today';
-
-  if (!mounted) return <Container className={className} />;
-
   const go = (href: string) => { window.location.href = href; };
   const isQuiet = read.length === 0 && pinned.length === 0;
 
+  if (embedded) {
+    if (!mounted) return <section className="loom-today loom-today--embedded" />;
+    return (
+      <section className="loom-today loom-today--embedded">
+        <TodayBody
+          greeting={greeting}
+          jots={jots}
+          jotInput={jotInput}
+          setJotInput={setJotInput}
+          jotRef={jotRef}
+          savedFlash={savedFlash}
+          handleJotKeyDown={handleJotKeyDown}
+          read={read}
+          pinned={pinned}
+          isQuiet={isQuiet}
+          go={go}
+        />
+      </section>
+    );
+  }
+
+  if (!mounted) return <div className={styles.page}><div className={styles.shell} /></div>;
+
   return (
-    <Container className={className}>
+    <div className={styles.page}>
+      <LoomGlobalNav activeHref="/today" ariaLabel="Today navigation" />
+      <main className={styles.shell} aria-label="Today">
+        <TodayBody
+          greeting={greeting}
+          jots={jots}
+          jotInput={jotInput}
+          setJotInput={setJotInput}
+          jotRef={jotRef}
+          savedFlash={savedFlash}
+          handleJotKeyDown={handleJotKeyDown}
+          read={read}
+          pinned={pinned}
+          isQuiet={isQuiet}
+          go={go}
+        />
+      </main>
+    </div>
+  );
+}
+
+type TodayBodyProps = {
+  greeting: string;
+  jots: Jot[];
+  jotInput: string;
+  setJotInput: (v: string) => void;
+  jotRef: React.RefObject<HTMLTextAreaElement | null>;
+  savedFlash: boolean;
+  handleJotKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
+  read: Row[];
+  pinned: Row[];
+  isQuiet: boolean;
+  go: (href: string) => void;
+};
+
+function TodayBody({
+  greeting, jots, jotInput, setJotInput, jotRef, savedFlash,
+  handleJotKeyDown, read, pinned, isQuiet, go,
+}: TodayBodyProps) {
+  return (
+    <>
       <p className="loom-today-greeting">{greeting}</p>
 
       {/* Jot capture — frictionless quick-thought input */}
@@ -180,40 +240,10 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
               el.style.height = Math.min(160, el.scrollHeight) + 'px';
             }}
             onKeyDown={handleJotKeyDown}
-            style={{
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: '1px solid var(--mat-border)',
-              borderRadius: 0,
-              outline: 'none',
-              resize: 'none',
-              fontFamily: 'var(--serif)',
-              fontSize: '1rem',
-              lineHeight: 1.6,
-              color: 'var(--fg)',
-              padding: '0.25rem 0 0.35rem',
-              minHeight: 32,
-              maxHeight: 160,
-              overflowY: 'hidden',
-            }}
+            className={styles.jotTextarea}
           />
           {savedFlash && (
-            <span
-              aria-live="polite"
-              style={{
-                position: 'absolute',
-                right: 0,
-                bottom: '0.4rem',
-                fontSize: '0.78rem',
-                color: 'var(--accent)',
-                fontFamily: 'var(--display)',
-                letterSpacing: '0.02em',
-                pointerEvents: 'none',
-                opacity: savedFlash ? 1 : 0,
-                transition: 'opacity 0.3s ease',
-              }}
-            >
+            <span aria-live="polite" className={styles.savedFlash}>
               Saved
             </span>
           )}
@@ -224,32 +254,11 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
       {jots.length > 0 && (
         <section className="loom-today-section">
           <p className="loom-today-section-label">Recent.</p>
-          <ul className="loom-today-list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className="loom-today-list">
             {jots.slice(0, 20).map((j) => (
-              <li key={j.id} style={{ marginBottom: '0.6rem' }}>
-                <span
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--serif)',
-                    fontSize: '0.95rem',
-                    lineHeight: 1.5,
-                    color: 'var(--fg)',
-                  }}
-                >
-                  {j.text}
-                </span>
-                <span
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--display)',
-                    fontSize: '0.72rem',
-                    color: 'var(--fg-secondary)',
-                    marginTop: '0.15rem',
-                    letterSpacing: '0.01em',
-                  }}
-                >
-                  {relativeTime(j.at)}
-                </span>
+              <li key={j.id} className={styles.jotRow}>
+                <span className={styles.jotText}>{j.text}</span>
+                <span className={styles.jotMeta}>{relativeTime(j.at)}</span>
               </li>
             ))}
           </ul>
@@ -288,7 +297,7 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
           </>
         )}
       </div>
-    </Container>
+    </>
   );
 }
 
@@ -302,7 +311,11 @@ function Section({ label, rows, emptyLabel, onGo }: { label: string; rows: Row[]
         <ul className="loom-today-list">
           {rows.map((r) => (
             <li key={r.href}>
-              <a className="loom-today-item" href={r.href} onClick={(e) => { e.preventDefault(); onGo(r.href); }}>
+              <a
+                className={`loom-today-item ${styles.listItem}`}
+                href={r.href}
+                onClick={(e) => { e.preventDefault(); onGo(r.href); }}
+              >
                 {r.title}
               </a>
             </li>

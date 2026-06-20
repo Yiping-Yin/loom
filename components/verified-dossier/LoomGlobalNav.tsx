@@ -19,6 +19,7 @@ const DELTA_PX = 8;
 const LOOM_WORKSPACE_NAV = [
   { label: 'Sources', href: '/sources' },
   { label: 'Draft', href: '/draft' },
+  { label: 'Today', href: '/today' },
 ];
 
 export function LoomGlobalNav({
