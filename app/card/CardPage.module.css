@@ -22,6 +22,25 @@
   width: 100%;
 }
 
+/*
+ * Restrained hover on the live on-screen postcard only.
+ * Luminance lift + 2px lift — no color fill change.
+ * The standalone downloaded .html does NOT get this (postcardCss() is untouched).
+ */
+.stage :global(.loom-postcard) {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+}
+
+.stage :global(.loom-postcard:hover) {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 24px 56px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(75, 197, 222, 0.08);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -78,6 +97,79 @@
 
 .makeOwn a:hover {
   color: var(--signature-cyan-hi);
+}
+
+/* Clipboard fallback: in-card pre-selected read-only input */
+.fallbackInputWrap {
+  width: 100%;
+  max-width: 22rem;
+  display: flex;
+}
+
+.fallbackInput {
+  width: 100%;
+  padding: 0.38rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 6%, transparent);
+  color: var(--text-2);
+  font-size: 0.78rem;
+  font-family: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
+  letter-spacing: 0.01em;
+  outline: none;
+}
+
+.fallbackInput:focus {
+  border-color: var(--signature-cyan);
+}
+
+/* Visitor (shared card) — primary CTA + secondary links */
+.visitorActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.visitorPrimary {
+  min-height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 1.4rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 55%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 16%, transparent);
+  color: var(--signature-cyan-hi);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.visitorPrimary:hover {
+  background: color-mix(in srgb, var(--signature-cyan) 24%, transparent);
+  border-color: var(--signature-cyan-hi);
+  transform: translateY(-1px);
+}
+
+.visitorLinks {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+
+.visitorSecondaryLink {
+  color: var(--text-3);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.visitorSecondaryLink:hover {
+  color: var(--signature-cyan);
 }
 
 /* Calm empty / CTA state — no profile from hash or localStorage. */
@@ -156,6 +248,26 @@
   transform: translateY(-1px);
 }
 
+.emptySecondaryLinks {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+  font-size: 0.8rem;
+  color: var(--text-3);
+}
+
+.emptySecondaryLink {
+  color: var(--text-3);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.emptySecondaryLink:hover {
+  color: var(--signature-cyan);
+}
+
 /* Stable neutral first-paint shell — no window access during render. */
 .skeleton {
   width: 100%;
@@ -174,7 +286,14 @@
 @media (prefers-reduced-motion: reduce) {
   .action,
   .actionGhost,
-  .emptyCta {
+  .emptyCta,
+  .visitorPrimary,
+  .visitorSecondaryLink,
+  .emptySecondaryLink {
+    transition: none;
+  }
+
+  .stage :global(.loom-postcard) {
     transition: none;
   }
 }

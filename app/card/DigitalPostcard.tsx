@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import { safeHref } from '../../lib/profile/safe-href';
@@ -15,6 +15,7 @@ import styles from './CardPage.module.css';
 const MOON_SRC = '/brand/loom_lunar_orb.png';
 const DIGITAL_ME_HREF = '/digital-me';
 const ONBOARDING_HREF = '/onboarding/profile';
+const EXAMPLE_HREF = '/example';
 
 /**
  * Read the moon brand asset and return it as a data: URI so the downloaded card
@@ -69,14 +70,27 @@ export function DigitalPostcard({
 }) {
   const model = buildPostcardModel(profile);
   const safeDigitalMe = safeHref(DIGITAL_ME_HREF);
-  const [copied, setCopied] = useState(false);
 
-  // Reset the "Copied" confirmation after a short beat.
+  // Copy link state: idle | copied | fallback (shows the in-card input)
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'fallback'>('idle');
+  const fallbackUrl = useRef('');
+
+  // Download state: idle | preparing | downloaded
+  const [downloadState, setDownloadState] = useState<'idle' | 'preparing' | 'downloaded'>('idle');
+
+  // Reset "Copied" confirmation after a short beat.
   useEffect(() => {
-    if (!copied) return;
-    const timer = window.setTimeout(() => setCopied(false), 2200);
+    if (copyState !== 'copied') return;
+    const timer = window.setTimeout(() => setCopyState('idle'), 2200);
     return () => window.clearTimeout(timer);
-  }, [copied]);
+  }, [copyState]);
+
+  // Reset "Downloaded ✓" confirmation after a short beat.
+  useEffect(() => {
+    if (downloadState !== 'downloaded') return;
+    const timer = window.setTimeout(() => setDownloadState('idle'), 2200);
+    return () => window.clearTimeout(timer);
+  }, [downloadState]);
 
   async function copyShareLink() {
     const url = buildShareUrl(window.location.origin, profile);
@@ -90,7 +104,8 @@ export function DigitalPostcard({
       ok = false;
     }
     if (!ok) {
-      // Fallback for browsers without async clipboard / insecure contexts.
+      // Fallback for browsers without async clipboard / insecure contexts:
+      // try execCommand first, then surface an in-card pre-selected input.
       try {
         const textarea = document.createElement('textarea');
         textarea.value = url;
@@ -105,30 +120,47 @@ export function DigitalPostcard({
         ok = false;
       }
     }
-    if (ok) setCopied(true);
-    else window.prompt('Copy your shareable Loom card link:', url);
+    if (ok) {
+      setCopyState('copied');
+    } else {
+      // Last resort: show an in-card read-only input the user can copy from.
+      fallbackUrl.current = url;
+      setCopyState('fallback');
+    }
   }
 
   async function downloadCard() {
-    const moonDataUri = await loadMoonDataUri();
-    const digitalMeUrl = `${window.location.origin}${safeDigitalMe || DIGITAL_ME_HREF}`;
-    const html = buildStandaloneCardHtml(profile, moonDataUri, digitalMeUrl);
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = objectUrl;
-    anchor.download = `loom-card-${fileStem(model.name)}.html`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(objectUrl);
+    if (downloadState === 'preparing') return;
+    setDownloadState('preparing');
+    try {
+      const moonDataUri = await loadMoonDataUri();
+      const digitalMeUrl = `${window.location.origin}${safeDigitalMe || DIGITAL_ME_HREF}`;
+      const html = buildStandaloneCardHtml(profile, moonDataUri, digitalMeUrl);
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = `loom-card-${fileStem(model.name)}.html`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+      setDownloadState('downloaded');
+    } catch {
+      setDownloadState('idle');
+    }
   }
+
+  const copyLabel =
+    copyState === 'copied' ? 'Copied ✓' : copyState === 'fallback' ? 'Copy link' : 'Copy shareable link';
+  const downloadLabel =
+    downloadState === 'preparing' ? 'Preparing…' : downloadState === 'downloaded' ? 'Downloaded ✓' : 'Download card';
 
   return (
     <div className={styles.stage}>
       <style>{postcardCss()}</style>
 
-      <article className="loom-postcard" aria-label={`${model.name} — Loom digital postcard`}>
+      <article className={`loom-postcard${isOwnCard ? '' : ''}`} aria-label={`${model.name} — Loom digital postcard`}>
         <div className="loom-postcard__brand">
           {/* The realistic-moon brand mark — same asset/treatment as the nav orb. */}
           <img className="loom-postcard__moon" src={MOON_SRC} alt="" draggable={false} />
@@ -174,20 +206,55 @@ export function DigitalPostcard({
       {isOwnCard ? (
         <div className={styles.actions} aria-label="Card actions">
           <button type="button" className={styles.action} onClick={copyShareLink}>
-            {copied ? 'Copied' : 'Copy shareable link'}
+            {copyLabel}
           </button>
+          {copyState === 'fallback' && (
+            <div className={styles.fallbackInputWrap}>
+              <input
+                className={styles.fallbackInput}
+                type="text"
+                readOnly
+                value={fallbackUrl.current}
+                aria-label="Shareable link — select and copy"
+                ref={(el) => {
+                  if (el) {
+                    el.focus();
+                    el.select();
+                  }
+                }}
+              />
+            </div>
+          )}
           <button
             type="button"
             className={`${styles.action} ${styles.actionGhost}`}
             onClick={downloadCard}
+            disabled={downloadState === 'preparing'}
+            aria-busy={downloadState === 'preparing'}
           >
-            Download card
+            {downloadLabel}
           </button>
         </div>
       ) : (
-        <p className={styles.makeOwn}>
-          <a href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>Make your own Loom →</a>
-        </p>
+        <div className={styles.visitorActions}>
+          {safeDigitalMe && (
+            <a
+              href={safeDigitalMe}
+              className={styles.visitorPrimary}
+            >
+              Ask my Digital Me anything →
+            </a>
+          )}
+          <p className={styles.visitorLinks}>
+            <a href={safeHref(EXAMPLE_HREF) || EXAMPLE_HREF} className={styles.visitorSecondaryLink}>
+              See a finished example →
+            </a>
+            <a href="/" className={styles.visitorSecondaryLink}>Home</a>
+          </p>
+          <p className={styles.makeOwn}>
+            <a href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>Make your own Loom →</a>
+          </p>
+        </div>
       )}
     </div>
   );
