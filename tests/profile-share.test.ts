@@ -50,6 +50,7 @@ const FULL_PROFILE: BeginnerProfile = {
   // Artifacts are intentionally stripped from the share payload (blobs live in
   // the origin device's IndexedDB), so a round-tripped profile normalizes to [].
   artifacts: [],
+  capabilities: [],
 };
 
 test('encode → decode round-trips a full profile (incl. Unicode + emoji)', () => {

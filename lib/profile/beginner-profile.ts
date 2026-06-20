@@ -1,4 +1,6 @@
 import { safeHref } from './safe-href';
+import type { BeginnerCapability } from '../capability/capability-graph';
+import { normalizeCapabilities } from '../capability/capability-graph';
 
 export type ProfileLink = { label: string; href: string };
 export type EducationEntry = {
@@ -48,6 +50,8 @@ export type BeginnerProfile = {
   works: WorkItem[];
   /** Uploaded proof documents (blobs live in IndexedDB; this is the citeable meta). */
   artifacts?: ArtifactRef[];
+  /** Derived or LLM-provided capabilities with evidence backing. */
+  capabilities?: BeginnerCapability[];
 };
 
 export function emptyBeginnerProfile(): BeginnerProfile {
@@ -59,6 +63,7 @@ export function emptyBeginnerProfile(): BeginnerProfile {
     experience: [],
     works: [],
     artifacts: [],
+    capabilities: [],
   };
 }
 
@@ -193,5 +198,8 @@ export function normalizeBeginnerProfile(raw: unknown): BeginnerProfile {
         thumbnailDataUri: optThumbnail(a.thumbnailDataUri),
         extractedText: optExtractedText(a.extractedText),
       })),
+    // Capabilities: sanitize untrusted input from LLM route or old storage.
+    // A non-array is coerced to []; invalid entries are dropped.
+    capabilities: normalizeCapabilities(r.capabilities),
   };
 }
