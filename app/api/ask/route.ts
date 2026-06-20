@@ -25,9 +25,11 @@ export const dynamic = 'force-dynamic';
 /**
  * Upper bound on the serialized `profile` body. Generous — well above any
  * realistic profile (normalizeBeginnerProfile additionally caps each field) —
- * but blocks a multi-megabyte payload from driving unbounded token/cost.
+ * but blocks a multi-megabyte payload from driving unbounded token/cost. Sized
+ * to comfortably hold the M2b artifact dimension: up to 24 artifacts, each with
+ * a small thumbnail data URI and a ~4KB grounded text excerpt.
  */
-const MAX_PROFILE_BYTES = 64 * 1024;
+const MAX_PROFILE_BYTES = 1024 * 1024;
 
 /**
  * Ask Yiping — the web-deployable conversational core of Digital Me.
@@ -79,7 +81,9 @@ function readUsableProfile(raw: unknown): BeginnerProfile | null {
     Boolean(profile.about.summary.trim()) ||
     profile.about.links.length > 0 ||
     profile.education.length > 0 ||
-    profile.experience.length > 0;
+    profile.experience.length > 0 ||
+    profile.works.length > 0 ||
+    (profile.artifacts?.length ?? 0) > 0;
   return hasContent ? profile : null;
 }
 

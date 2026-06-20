@@ -247,3 +247,98 @@ test('beginnerCitationResolver resolves me-work-{i} as an AskYipingCitation', ()
     href: 'https://github.com/ada/option-pricer',
   });
 });
+
+// ── M2b: uploaded artifacts as grounded, openable citations ──────────────────
+
+// A profile whose proof is an uploaded document carrying real extracted text.
+const artifactProfile = normalizeBeginnerProfile({
+  home: { name: 'Grace Hopper', headline: 'Computer scientist' },
+  about: { summary: 'Pioneer of compiler design.' },
+  artifacts: [
+    {
+      id: 'af_blob_123',
+      name: 'transcript.pdf',
+      kind: 'pdf',
+      label: 'UNSW Transcript',
+      extractedText:
+        'University of New South Wales academic transcript. COMP2511 Object-Oriented Design High Distinction. MATH2069 Mathematics 2A Distinction.',
+    },
+  ],
+});
+
+test('buildBeginnerCorpus emits a me-artifact-{i} source whose text folds in the extracted document text', () => {
+  const corpus = buildBeginnerCorpus(artifactProfile);
+  const artifact = corpus.find((s) => s.id === 'me-artifact-0');
+  assert.ok(artifact, 'me-artifact-0 source present');
+  // Searchable text = name + label + the document's OWN extracted text.
+  assert.match(artifact!.text, /transcript\.pdf/);
+  assert.match(artifact!.text, /UNSW Transcript/);
+  assert.match(artifact!.text, /COMP2511/, 'extracted document text is searchable');
+  assert.match(artifact!.text, /High Distinction/);
+  // Title prefers the label; kind carries the file kind.
+  assert.equal(artifact!.title, 'UNSW Transcript');
+  assert.equal(artifact!.kind, 'pdf');
+});
+
+test('resolveBeginnerSource(me-artifact-0) returns a citation carrying the real blob artifactId', () => {
+  const resolved = resolveBeginnerSource('me-artifact-0', artifactProfile);
+  assert.ok(resolved, 'real artifact id resolves');
+  // Identity is the REAL IndexedDB blob id, NOT the corpus index id.
+  assert.equal(resolved!.artifactId, 'af_blob_123');
+  assert.equal(resolved!.label, 'UNSW Transcript');
+  assert.equal(resolved!.kind, 'pdf');
+
+  // Out-of-range artifact index → null (cite-only-real-ids).
+  assert.equal(resolveBeginnerSource('me-artifact-99', artifactProfile), null);
+});
+
+test('beginnerCitationResolver maps me-artifact-{i} to a blob-opening citation (no navigable href)', () => {
+  const resolve = beginnerCitationResolver(artifactProfile);
+  const cite = resolve('me-artifact-0');
+  assert.ok(cite, 'artifact resolves to a citation');
+  assert.equal(cite!.artifactId, 'af_blob_123', 'citation carries the real blob id');
+  assert.equal(cite!.title, 'UNSW Transcript');
+  assert.equal(cite!.kind, 'pdf', 'file kind flows through for the client open path');
+  // Artifact citations open the blob by id — there is no navigable href.
+  assert.equal(cite!.href, '');
+});
+
+test('parseAskYipingCitations accepts a resolvable me-artifact id and drops a fake one', () => {
+  const context = beginnerCorpusContext(artifactProfile);
+  const sources = retrieveAskYipingSources(
+    'What grades are on the transcript COMP2511?',
+    6,
+    context,
+  );
+
+  const answerText = [
+    'The transcript shows a High Distinction in COMP2511.',
+    'SOURCES: me-artifact-0, me-artifact-77, me-about',
+  ].join('\n');
+
+  const { answer, citations } = parseAskYipingCitations(
+    answerText,
+    sources,
+    context.resolveCitation,
+  );
+
+  assert.doesNotMatch(answer, /SOURCES:/);
+  // Only the real, resolvable artifact survives; its identity is the blob id.
+  assert.equal(citations.length, 1, 'exactly one resolvable artifact citation');
+  assert.equal(citations[0].artifactId, 'af_blob_123');
+  assert.ok(
+    !citations.some((c) => c.artifactId === 'me-artifact-77'),
+    'fabricated artifact id dropped',
+  );
+});
+
+test('retrieve over an artifact-grounded corpus surfaces the me-artifact source for an on-topic query', () => {
+  const context = beginnerCorpusContext(artifactProfile);
+  const sources = retrieveAskYipingSources(
+    'Tell me about COMP2511 object-oriented design.',
+    6,
+    context,
+  );
+  const ids = new Set(sources.map((s) => s.id));
+  assert.ok(ids.has('me-artifact-0'), 'an on-topic question must surface the artifact source');
+});

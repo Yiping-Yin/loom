@@ -9,15 +9,19 @@
  * anyone's data.
  *
  * Every source carries a STABLE id derived from the profile section it came from
- * (`me-about`, `me-edu-{i}`, `me-exp-{i}`, `me-link-{i}`). The citation resolver
- * maps those ids back to a displayable label + on-site href (e.g. "Experience ·
- * Optiver" → /experience), paralleling how the dossier resolves artifact ids.
+ * (`me-about`, `me-edu-{i}`, `me-exp-{i}`, `me-link-{i}`, `me-artifact-{i}`). The
+ * citation resolver maps those ids back to a displayable citation, paralleling how
+ * the dossier resolves artifact ids.
  *
- * NOTE on grounding: only sections with a real on-site destination resolve to a
- * citation. The free-text `me-about` block is searchable context but is NOT a
- * citeable artifact (it has no inspectable proof), so it is intentionally not
- * resolvable — exactly like the Yiping profile/claim entries. Education,
- * experience, and links DO resolve, so on-topic answers cite real sections.
+ * NOTE on grounding: a source resolves to a citation only if it points at real,
+ * inspectable proof. Education, experience, works, and links resolve to an on-site
+ * (or external) href. UPLOADED ARTIFACTS (`me-artifact-{i}`) are the strongest
+ * grounding: their searchable text is the document's OWN extracted text, and their
+ * citation carries the artifact's blob id so the client can open the real file at
+ * click time (there is no normal href — the blob lives in IndexedDB). This is the
+ * M2b fix for the "self-citation" problem: a beginner answer now grounds in and
+ * cites the actual document, not just the user's typed fields. The free-text
+ * `me-about` block remains searchable but NON-citeable (no inspectable proof).
  */
 
 import type {
@@ -34,6 +38,7 @@ const EDU_ID_PREFIX = 'me-edu-';
 const EXP_ID_PREFIX = 'me-exp-';
 const WORK_ID_PREFIX = 'me-work-';
 const LINK_ID_PREFIX = 'me-link-';
+const ARTIFACT_ID_PREFIX = 'me-artifact-';
 
 /** Join non-empty parts into one searchable string. */
 function joinText(parts: readonly (string | undefined)[]): string {
@@ -56,6 +61,10 @@ function formatDates(start?: string, end?: string): string {
  * - `me-edu-{i}` : institution + qualification + field + dates (+ notes).
  * - `me-exp-{i}` : role + organization + dates + location + bullets.
  * - `me-link-{i}`: label + href.
+ * - `me-artifact-{i}`: an uploaded document — searchable text is name + label +
+ *                  the document's OWN extracted text. RESOLVABLE (counts toward
+ *                  the grounding floor + is citeable); its citation opens the
+ *                  real blob by id, so an answer grounds in the actual file.
  *
  * Empty/garbage sections are assumed already dropped by normalizeBeginnerProfile,
  * but we still guard against blank searchable text so retrieval stays clean.
@@ -133,23 +142,64 @@ export function buildBeginnerCorpus(profile: BeginnerProfile): AskYipingSource[]
     });
   });
 
+  // 5. Uploaded artifacts. Searchable text = name + label + the document's OWN
+  //    extracted text (PDFs; images carry none). This is the grounded slice: an
+  //    on-topic question now matches the real document body, and the citation it
+  //    resolves to opens that actual file. `href` here is only a display fallback
+  //    (the digital-me surface where the proof cards live) — the citation does
+  //    NOT navigate it; the client opens the blob by artifactId at click time.
+  (profile.artifacts ?? []).forEach((artifact, index) => {
+    sources.push({
+      id: `${ARTIFACT_ID_PREFIX}${index}`,
+      title: artifact.label?.trim() || artifact.name,
+      kind: artifact.kind || 'doc',
+      href: '/digital-me',
+      text: joinText([artifact.name, artifact.label, artifact.extractedText]),
+    });
+  });
+
   return sources;
 }
 
 /**
+ * What a resolved beginner source citation carries.
+ *
+ * - `id`        : the corpus source id (e.g. `me-exp-0`, `me-artifact-0`).
+ * - `label`     : human-readable citation label.
+ * - `href`      : an on-site/external destination — for section/link citations
+ *                 the client navigates this.
+ * - `artifactId`: ONLY for `me-artifact-{i}`. The real `ArtifactRef.id` (the
+ *                 IndexedDB blob key). When present, the client opens the stored
+ *                 document by this id instead of navigating `href`.
+ * - `kind`      : optional file kind (artifacts), so the client renders the right
+ *                 badge and routes to the blob-open path.
+ */
+export type ResolvedBeginnerSource = {
+  id: string;
+  label: string;
+  href?: string;
+  artifactId?: string;
+  kind?: string;
+};
+
+/**
  * Citation display resolver for beginner source ids — the parallel of
- * resolveVerifiedDossierArtifact. Returns a label + on-site href for a REAL
- * education/experience/link id in this profile, and null for the non-citeable
- * `me-about` block or any unknown/fabricated id.
+ * resolveVerifiedDossierArtifact. Returns a citation for a REAL section/link/
+ * artifact id in this profile, and null for the non-citeable `me-about` block or
+ * any unknown/fabricated id.
+ *
+ * For `me-artifact-{i}` it returns a citation carrying the artifact's real blob
+ * `artifactId` + `kind` (no normal href — the client opens the blob at click
+ * time). This is what makes uploaded documents GROUNDED, openable citations.
  *
  * Returning null for unknown ids is the grounding guarantee: parseAskYipingCitations
- * drops anything this rejects, so a model can never cite a section that does not
- * exist in the profile.
+ * drops anything this rejects, so a model can never cite a section or document that
+ * does not exist in the profile.
  */
 export function resolveBeginnerSource(
   id: string,
   profile: BeginnerProfile,
-): { id: string; label: string; href?: string } | null {
+): ResolvedBeginnerSource | null {
   if (id.startsWith(EDU_ID_PREFIX)) {
     const index = Number(id.slice(EDU_ID_PREFIX.length));
     const entry = profile.education[index];
@@ -198,6 +248,21 @@ export function resolveBeginnerSource(
     return { id, label: link.label || 'Link', href: link.href };
   }
 
+  if (id.startsWith(ARTIFACT_ID_PREFIX)) {
+    const index = Number(id.slice(ARTIFACT_ID_PREFIX.length));
+    const artifact = (profile.artifacts ?? [])[index];
+    if (!artifact) return null;
+    // The citation's identity is the REAL blob id, not the corpus index id, so
+    // the client opens the actual stored document. No navigable href — the blob
+    // lives in IndexedDB and is resolved on click via getArtifactObjectUrl.
+    return {
+      id,
+      label: artifact.label?.trim() || artifact.name,
+      artifactId: artifact.id,
+      kind: artifact.kind || 'doc',
+    };
+  }
+
   // `me-about` (free-text, non-citeable) and any unknown id are not resolvable.
   return null;
 }
@@ -210,7 +275,20 @@ export function resolveBeginnerSource(
 export function beginnerCitationResolver(profile: BeginnerProfile): AskYipingCitationResolver {
   return (id: string): AskYipingCitation | null => {
     const resolved = resolveBeginnerSource(id, profile);
-    if (!resolved || !resolved.href) return null;
+    if (!resolved) return null;
+    // Uploaded artifact: the citation carries the REAL blob id (so the client
+    // opens the document) and its kind. There is no navigable href — href stays
+    // empty and the client routes to the blob-open path on the artifactId.
+    if (resolved.artifactId) {
+      return {
+        artifactId: resolved.artifactId,
+        title: resolved.label,
+        href: '',
+        kind: resolved.kind,
+      };
+    }
+    // Section/link citation: requires a real destination to be citeable.
+    if (!resolved.href) return null;
     return { artifactId: resolved.id, title: resolved.label, href: resolved.href };
   };
 }

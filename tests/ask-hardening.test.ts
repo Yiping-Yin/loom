@@ -54,7 +54,10 @@ test('buildAskYipingPrompt never emits a multi-line persona name into the system
 // ── Input size cap on the route ─────────────────────────────────────────────
 
 test('route rejects an absurdly large profile body with 413', async () => {
-  const huge = { home: { name: 'x'.repeat(200_000) } };
+  // Over the route's 1MB cap (raised in M2b to hold the artifact dimension:
+  // up to 24 artifacts, each with a small thumbnail + ~4KB text excerpt). A
+  // multi-megabyte single field is still rejected before normalization.
+  const huge = { home: { name: 'x'.repeat(2 * 1024 * 1024) } };
   const response = await POST(
     new Request('http://localhost/api/ask', {
       method: 'POST',

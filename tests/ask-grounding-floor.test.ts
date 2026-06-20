@@ -41,6 +41,23 @@ const citeableProfile = normalizeBeginnerProfile({
   ],
 });
 
+// M2b: a profile whose ONLY citeable proof is an uploaded artifact (+ a name).
+// Before M2b this was "born refusing" — its only retrievable source was the
+// non-citeable me-about block. The artifact source now counts toward the floor.
+const artifactOnlyProfile = normalizeBeginnerProfile({
+  home: { name: 'Grace Hopper', headline: '' },
+  artifacts: [
+    {
+      id: 'af_blob_xyz',
+      name: 'transcript.pdf',
+      kind: 'pdf',
+      label: 'Transcript',
+      extractedText:
+        'University academic transcript. COMP2511 Object-Oriented Design High Distinction.',
+    },
+  ],
+});
+
 test('owner retrieval always has resolvable sources (floor never trips)', () => {
   const sources = retrieveAskYipingSources('What are your C++ and Python foundations?');
   assert.ok(
@@ -69,6 +86,25 @@ test('beginner with a citeable section yields > 0 resolvable sources', () => {
     countResolvableSources(sources, context.resolveCitation) > 0,
     'a profile with an experience section must have ≥1 citeable source',
   );
+});
+
+test('M2b: an artifact-only profile is no longer born refusing — the floor counts it', () => {
+  const context = beginnerCorpusContext(artifactOnlyProfile);
+  const sources = retrieveAskYipingSources(
+    'What does the transcript say about COMP2511?',
+    6,
+    context,
+  );
+  assert.ok(
+    countResolvableSources(sources, context.resolveCitation) > 0,
+    'an uploaded artifact must count toward the grounding floor',
+  );
+  // The resolvable source is the artifact, citing the real blob id.
+  const cite = sources
+    .map((s) => context.resolveCitation(s.id))
+    .find((c) => c !== null);
+  assert.ok(cite, 'a resolvable artifact citation exists');
+  assert.equal(cite!.artifactId, 'af_blob_xyz');
 });
 
 // ── Route behavior: refuse for about-only, stream-eligible otherwise ─────────
@@ -137,5 +173,27 @@ test('about-only beginner with NO key still degrades to configured:false (no con
     // still never a confident, uncited answer.
     assert.equal(payload.configured, false);
     assert.deepEqual(payload.citations, []);
+  });
+});
+
+test('M2b: artifact-only profile with NO key surfaces the artifact citation (would-ground sources)', async () => {
+  await withEnv('ANTHROPIC_API_KEY', undefined, async () => {
+    const response = await ask({
+      question: 'What does the transcript say about COMP2511?',
+      profile: artifactOnlyProfile,
+    });
+    assert.equal(response.status, 200);
+    const payload = (await response.json()) as {
+      configured?: boolean;
+      citations?: { artifactId?: string; kind?: string }[];
+    };
+    assert.equal(payload.configured, false);
+    // The would-ground sources include the artifact, carrying the real blob id +
+    // its kind so the client can open the document — NOT empty as for about-only.
+    assert.ok(Array.isArray(payload.citations) && payload.citations.length > 0);
+    assert.ok(
+      payload.citations!.some((c) => c.artifactId === 'af_blob_xyz' && c.kind === 'pdf'),
+      'artifact citation present with blob id + kind',
+    );
   });
 });

@@ -37,6 +37,13 @@ export type AskYipingCitation = {
   artifactId: string;
   title: string;
   href: string;
+  /**
+   * Optional file kind for the cited source. Carried for uploaded beginner
+   * artifacts (me-artifact-*) so the client can render the right badge and,
+   * crucially, knows this citation opens a stored blob by `artifactId` rather
+   * than navigating `href`. Owner/dossier and section citations omit it.
+   */
+  kind?: string;
 };
 
 /**
