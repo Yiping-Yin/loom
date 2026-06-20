@@ -1,0 +1,173 @@
+/* Beginner Digital Me — premium polish.
+   Extracts the former ~9 inline style objects into one module and lifts the
+   surface to the /example/digital-me bar: restrained "liquid glass" staging
+   (dark-glass surface + a 1px inset specular top edge + a soft grounding
+   float) with active/hover marked by a 1px cyan hairline + a luminance lift,
+   never a colour fill. All sizing/colour routes through the design tokens.
+
+   Reveal: the major blocks carry data-reveal="" (set in the TSX). The global
+   [data-reveal] rule (app/globals.css) fails safe to fully visible and only
+   hides once a JS hook sets [data-reveal-ready="true"] on a root — so if the
+   hook never runs, nothing is ever stuck hidden. */
+
+/* Shell width — was a magic 860px inline style; now a local var on the shell
+   override so the page reads slightly tighter than the wide owner frame. */
+.shell {
+  --role-shell: 860px;
+  max-width: var(--role-shell);
+}
+
+/* ── Identity header ─────────────────────────────────────────────────────── */
+
+/* Restrained staged surface: the dark-glass material at calm strength, a 1px
+   specular top edge (key light from top-left) and a soft grounding float so the
+   header reads as a lifted lit panel, not a flat card on black. */
+.header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: clamp(var(--space-6), 3vw, var(--space-8));
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background:
+    linear-gradient(135deg, rgba(238, 241, 242, 0.06), rgba(180, 187, 191, 0.022) 34%, transparent 60%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.5), rgba(20, 23, 26, 0.92));
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+  backdrop-filter: blur(20px) saturate(115%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--signature-cyan);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-1);
+}
+
+.headline {
+  font-size: var(--fs-body-lg);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.summary {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--text-3);
+}
+
+/* ── Profile-link chips ──────────────────────────────────────────────────── */
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  font-size: var(--fs-small);
+  color: var(--signature-cyan);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.022);
+  transition:
+    border-color var(--dur-2) var(--ease),
+    background var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+
+.chip:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--signature-cyan) 35%, transparent);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+}
+
+.chipIcon {
+  flex: none;
+  color: var(--signature-cyan);
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.chip:hover .chipIcon {
+  transform: translate(1px, -1px);
+}
+
+/* ── Postcard CTA — the pill that points to /card ────────────────────────── */
+
+.postcard {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--signature-cyan-hi);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
+  transition:
+    border-color var(--dur-2) var(--ease),
+    background var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+
+.postcard:hover {
+  transform: translateY(-1px);
+  border-color: var(--signature-cyan-hi);
+  background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
+}
+
+.postcard:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+}
+
+.postcardIcon {
+  flex: none;
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.postcard:hover .postcardIcon {
+  transform: translate(1px, -1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .chipIcon,
+  .postcard,
+  .postcardIcon {
+    transition: none;
+  }
+}

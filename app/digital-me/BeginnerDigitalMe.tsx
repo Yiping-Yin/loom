@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { AskYiping } from '../../components/verified-dossier/AskYiping';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
-import styles from '../about/AboutClient.module.css';
+import shell from '../about/AboutClient.module.css';
+import styles from './BeginnerDigitalMe.module.css';
 import { BeginnerJourney } from './BeginnerJourney';
 
 /**
@@ -23,101 +25,48 @@ import { BeginnerJourney } from './BeginnerJourney';
  * visitor sees questions about this person, not Yiping's specific topics.
  * Answers remain grounded in the beginner's profile via the localStorage data
  * that /api/ask receives automatically.
+ *
+ * NOTE (follow-up): the owner's EvidenceSignal SVG (the cyan evidence-weight
+ * graph on /example/digital-me) is intentionally NOT ported here. It needs
+ * per-claim evidence-weight data a beginner does not yet have — that belongs to
+ * the moat's artifact step, not this presentation polish.
  */
 export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   const { home, about } = profile;
   const displayName = home.name || 'Your name';
+  const rootRef = useScrollReveal();
 
   return (
-    <main className={styles.page} aria-labelledby="digital-me-title">
+    <main ref={rootRef} className={shell.page} aria-labelledby="digital-me-title">
       <div className="loom-cosmic-field" aria-hidden="true" />
       <LoomGlobalNav activeHref="/digital-me" ariaLabel="Digital Me navigation" />
 
-      <div className={styles.shell} style={{ maxWidth: '860px' }}>
+      <div className={`${shell.shell} ${styles.shell}`}>
         {/* Identity header */}
-        <header
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            paddingBottom: 'clamp(1.2rem, 2vw, 2rem)',
-            borderBottom: '1px solid var(--line)',
-          }}
-        >
-          <p
-            style={{
-              fontFamily:
-                'ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace',
-              fontSize: '0.7rem',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: 'var(--signature-cyan)',
-              margin: 0,
-            }}
-          >
-            Digital Me
-          </p>
-          <h1
-            id="digital-me-title"
-            style={{
-              fontFamily: '"Cormorant Garamond", Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-              fontWeight: 600,
-              lineHeight: 1.1,
-              color: 'var(--text-1)',
-              margin: 0,
-            }}
-          >
+        <header className={styles.header} data-reveal="">
+          <p className={styles.eyebrow}>Digital Me</p>
+          <h1 id="digital-me-title" className={styles.name}>
             {displayName}
           </h1>
-          {home.headline && (
-            <strong
-              style={{
-                fontSize: 'clamp(0.85rem, 1.2vw, 1rem)',
-                fontWeight: 500,
-                color: 'var(--text-2)',
-              }}
-            >
-              {home.headline}
-            </strong>
-          )}
-          {about.summary && (
-            <p
-              style={{
-                fontSize: 'clamp(0.82rem, 1.1vw, 0.95rem)',
-                color: 'var(--text-3)',
-                margin: 0,
-                maxWidth: '52ch',
-              }}
-            >
-              {about.summary}
-            </p>
-          )}
+          {home.headline && <strong className={styles.headline}>{home.headline}</strong>}
+          {about.summary && <p className={styles.summary}>{about.summary}</p>}
           {about.links.length > 0 && (
-            <nav
-              aria-label="Profile links"
-              style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.4rem' }}
-            >
+            <nav aria-label="Profile links" className={styles.links}>
               {about.links.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    fontSize: '0.8rem',
-                    color: 'var(--signature-cyan)',
-                    textDecoration: 'none',
-                    border: '1px solid var(--line)',
-                    borderRadius: '4px',
-                    padding: '0.25rem 0.6rem',
-                  }}
+                  className={styles.chip}
                 >
                   <span>{link.label}</span>
-                  <ArrowUpRight aria-hidden="true" size={12} strokeWidth={1.8} />
+                  <ArrowUpRight
+                    className={styles.chipIcon}
+                    aria-hidden="true"
+                    size={12}
+                    strokeWidth={1.8}
+                  />
                 </a>
               ))}
             </nav>
@@ -125,53 +74,117 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
 
           {/* Entry point to the shareable digital postcard (pillar 3). Lives on
               the beginner Digital Me surface, never in the owner's shared top nav. */}
-          <a
-            href="/card"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-              alignSelf: 'flex-start',
-              marginTop: '0.6rem',
-              fontSize: '0.82rem',
-              fontWeight: 500,
-              color: 'var(--signature-cyan-hi)',
-              textDecoration: 'none',
-              border: '1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent)',
-              background: 'color-mix(in srgb, var(--signature-cyan) 12%, transparent)',
-              borderRadius: '999px',
-              padding: '0.4rem 0.9rem',
-            }}
-          >
+          <a href="/card" className={styles.postcard}>
             <span>Get your digital postcard</span>
-            <ArrowUpRight aria-hidden="true" size={13} strokeWidth={1.8} />
+            <ArrowUpRight
+              className={styles.postcardIcon}
+              aria-hidden="true"
+              size={13}
+              strokeWidth={1.8}
+            />
           </a>
         </header>
 
         {/* Journey timeline — derived from education + experience + works.
             Rendered only when the profile has at least one entry in any section. */}
-        <BeginnerJourney profile={profile} />
+        <div data-reveal="">
+          <BeginnerJourney profile={profile} />
+        </div>
 
         {/* Ask widget — centrepiece: answers are grounded in the beginner's
             localStorage profile which /api/ask receives automatically.
             All owner-specific copy is overridden here with generic text so
             the visitor sees prompts about this person, not Yiping's topics.
             example={null} starts in a neutral idle state (no owner seed). */}
-        <AskYiping
-          eyebrow="Ask me"
-          title={home.name ? `Ask ${home.name} anything` : 'Ask me anything'}
-          lede="Grounded answers. Cited from your verified profile."
-          readOnlyNote="Live answers need an AI key — this deploy is read-only; the verified sources below are what this person's answer draws from."
-          example={null}
-          suggestedQuestions={[
-            "What's their experience?",
-            'What are they strongest at?',
-            'What have they studied?',
-            'Why work with them?',
-          ]}
-          placeholder="Ask me anything…"
-        />
+        <div data-reveal="">
+          <AskYiping
+            eyebrow="Ask me"
+            title={home.name ? `Ask ${home.name} anything` : 'Ask me anything'}
+            lede="Grounded answers. Cited from your verified profile."
+            readOnlyNote="Live answers need an AI key — this deploy is read-only; the verified sources below are what this person's answer draws from."
+            example={null}
+            suggestedQuestions={[
+              "What's their experience?",
+              'What are they strongest at?',
+              'What have they studied?',
+              'Why work with them?',
+            ]}
+            placeholder="Ask me anything…"
+          />
+        </div>
       </div>
     </main>
   );
+}
+
+/**
+ * Restrained scroll-reveal for the page's major blocks (header, journey, ask).
+ *
+ * Mirrors the owner Role-OS hook: the global [data-reveal] CSS rule fails safe
+ * to fully visible and only hides an element once an ancestor gains
+ * [data-reveal-ready="true"]. We set that flag ONLY after first marking any
+ * already-visible target as revealed, so nothing flashes hidden, and we never
+ * set it at all when there are no targets. Under prefers-reduced-motion or when
+ * IntersectionObserver is unavailable, every target is revealed immediately.
+ * If this effect never runs (SSR / JS disabled), the fail-safe keeps the page
+ * fully visible.
+ */
+function useScrollReveal() {
+  const rootRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const targets = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal]'));
+    if (targets.length === 0) return;
+
+    const revealVisibleTargets = () => {
+      targets.forEach((el) => {
+        if (el.hasAttribute('data-revealed')) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.96 && rect.bottom > 0) {
+          el.setAttribute('data-revealed', '');
+        }
+      });
+    };
+
+    // Reveal anything already in view BEFORE arming the hide-gate, so the
+    // first paint never flashes blank.
+    revealVisibleTargets();
+    root.setAttribute('data-reveal-ready', 'true');
+
+    const reduce =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduce || typeof IntersectionObserver === 'undefined') {
+      targets.forEach((el) => el.setAttribute('data-revealed', ''));
+      return;
+    }
+
+    window.addEventListener('scroll', revealVisibleTargets, { passive: true });
+    window.addEventListener('resize', revealVisibleTargets);
+
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        const arriving = entries.filter((entry) => entry.isIntersecting);
+        arriving.forEach((entry, i) => {
+          const el = entry.target as HTMLElement;
+          el.style.transitionDelay = `${Math.min(i * 0.07, 0.21)}s`;
+          el.setAttribute('data-revealed', '');
+          obs.unobserve(el);
+        });
+      },
+      { rootMargin: '0px 0px -12% 0px', threshold: 0.08 },
+    );
+    targets.forEach((el) => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', revealVisibleTargets);
+      window.removeEventListener('resize', revealVisibleTargets);
+      root.removeAttribute('data-reveal-ready');
+    };
+  }, []);
+  return rootRef;
 }
