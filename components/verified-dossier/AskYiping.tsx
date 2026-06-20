@@ -11,6 +11,7 @@ import {
 import { buildAskRequestBody } from '../../lib/new-loom/ask-yiping-body';
 import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
 import { safeHref } from '../../lib/profile/safe-href';
+import { getArtifactObjectUrl } from '../../lib/artifact/artifact-store';
 import { FileBadge } from './FileBadge';
 import styles from './AskYiping.module.css';
 
@@ -22,6 +23,11 @@ import styles from './AskYiping.module.css';
  * answer. The route NEVER fabricates: every citation is a real verified dossier
  * artifact id resolved here via resolveVerifiedDossierArtifact and shown with the
  * AnswerInspector visual language (FileBadge title + kind + href).
+ *
+ * Beginner uploaded-artifact citations (me-artifact-*) are openable: the API
+ * carries the real IndexedDB blob id + file kind, and the cited "Open →" resolves
+ * and opens the ACTUAL document by id (mirroring VerifiedArtifactCard) rather than
+ * navigating an href — so a beginner answer cites and opens its real proof.
  *
  * No API key on the deploy -> the route returns `{configured:false, citations}`;
  * we then show the would-be sources plus a calm read-only note instead of
@@ -37,12 +43,29 @@ type ResolvedCitation = {
   title: string;
   href: string;
   kind: ReturnType<typeof resolveVerifiedDossierArtifact>['kind'];
+  /**
+   * Set for an uploaded beginner artifact (me-artifact-*). When present, the
+   * citation has no navigable href — its "Open →" resolves the real document blob
+   * from IndexedDB by this id at click time (mirroring VerifiedArtifactCard),
+   * grounding the citation in the actual file rather than a typed field.
+   */
+  openArtifactId?: string;
 };
 
 type AskPhase = 'idle' | 'example' | 'streaming' | 'done' | 'unconfigured' | 'no-sources' | 'error';
 
 /** Raw citation shape the API emits ({done} or {configured:false}). */
-type ApiCitation = { artifactId?: unknown; title?: unknown; href?: unknown };
+type ApiCitation = { artifactId?: unknown; title?: unknown; href?: unknown; kind?: unknown };
+
+/**
+ * Map a beginner artifact's free-string kind to a FileBadge file kind. Uploaded
+ * artifacts are 'pdf' | 'image' | 'doc' | 'other'; the badge vocabulary has no
+ * image glyph, so non-PDF artifacts fall back to the neutral 'text' badge. The
+ * artifact still opens its real blob regardless of the badge shown.
+ */
+function artifactBadgeKind(kind: unknown): ResolvedCitation['kind'] {
+  return kind === 'pdf' ? 'pdf' : 'text';
+}
 
 /**
  * Resolve an API citation to a renderable citation.
@@ -50,12 +73,17 @@ type ApiCitation = { artifactId?: unknown; title?: unknown; href?: unknown };
  * Owner citations: dossier resolution runs first and wins — kind/label/href are
  * taken from the real verified artifact, byte-identical to before.
  *
- * Beginner citations (e.g. `me-exp-0`, `me-edu-0`): the dossier resolver returns
- * null for those ids. When the raw citation already carries a string `title` and
- * `href` (filled in server-side by the beginner citation resolver), build a
- * ResolvedCitation from them with a neutral `kind` so FileBadge can render.
+ * Beginner uploaded-artifact citations (me-artifact-*): the API sends the real
+ * IndexedDB blob id as `artifactId`, a `title`, a file `kind`, and an EMPTY href.
+ * These open the actual stored document by id (not a navigable link), so build an
+ * openable ResolvedCitation flagged with `openArtifactId`.
  *
- * Anything else (no title/href, non-string artifactId) is dropped.
+ * Beginner section citations (e.g. `me-exp-0`, `me-edu-0`): the dossier resolver
+ * returns null for those ids. When the raw citation already carries a string
+ * `title` and `href` (filled in server-side by the beginner citation resolver),
+ * build a ResolvedCitation from them with a neutral `kind` so FileBadge can render.
+ *
+ * Anything else (no title, non-string artifactId) is dropped.
  */
 function resolveCitation(raw: ApiCitation): ResolvedCitation | null {
   if (typeof raw?.artifactId !== 'string') return null;
@@ -70,7 +98,20 @@ function resolveCitation(raw: ApiCitation): ResolvedCitation | null {
       kind: artifact.kind,
     };
   }
-  // Beginner profile citations: the API provides title + href directly. This is
+  // Uploaded beginner artifact: a present `kind` (a file kind) is the signal that
+  // this citation opens a stored blob by id rather than navigating an href. Its
+  // href is intentionally empty; the "Open →" resolves the blob at click time.
+  if (typeof raw.kind === 'string' && raw.kind.length > 0 &&
+      typeof raw.title === 'string' && raw.title.length > 0) {
+    return {
+      artifactId: raw.artifactId,
+      title: raw.title,
+      href: '',
+      kind: artifactBadgeKind(raw.kind),
+      openArtifactId: raw.artifactId,
+    };
+  }
+  // Beginner section citations: the API provides title + href directly. This is
   // the one citation href that does NOT pass through normalizeBeginnerProfile, so
   // run it through the same URL-scheme allowlist here. A dropped href ('') leaves
   // a titled-but-unlinked citation rather than a dangerous-scheme anchor.
@@ -172,6 +213,11 @@ export function AskYiping({
   const [citations, setCitations] = useState<ResolvedCitation[]>(example?.citations ?? []);
   const [phase, setPhase] = useState<AskPhase>(example !== null ? 'example' : 'idle');
   const [errorMessage, setErrorMessage] = useState('');
+  // Per-artifact open status for citations that open a stored blob by id.
+  const [openingArtifactId, setOpeningArtifactId] = useState<string | null>(null);
+  const [unavailableArtifactIds, setUnavailableArtifactIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   // Guards against overlapping submissions racing the streamed answer.
   const inFlight = useRef(false);
@@ -263,6 +309,34 @@ export function AskYiping({
     },
     [runAsk],
   );
+
+  // Open an uploaded artifact citation: resolve the real blob from IndexedDB by
+  // id and open it in a new tab. Mirrors VerifiedArtifactCard's open behavior,
+  // including the popup-blocked same-tab fallback. If the blob is gone (cleared
+  // IndexedDB), mark the citation unavailable instead of failing silently.
+  const openArtifact = useCallback(async (artifactId: string) => {
+    if (openingArtifactId) return;
+    setOpeningArtifactId(artifactId);
+    try {
+      const url = await getArtifactObjectUrl(artifactId);
+      if (!url) {
+        setUnavailableArtifactIds((prev) => new Set(prev).add(artifactId));
+        return;
+      }
+      const win =
+        typeof window !== 'undefined'
+          ? window.open(url, '_blank', 'noopener,noreferrer')
+          : null;
+      if (!win && typeof window !== 'undefined') {
+        // Pop-up blocked — fall back to navigating the current tab to the blob.
+        window.location.href = url;
+      }
+    } catch {
+      setUnavailableArtifactIds((prev) => new Set(prev).add(artifactId));
+    } finally {
+      setOpeningArtifactId(null);
+    }
+  }, [openingArtifactId]);
 
   const isBusy = phase === 'streaming';
   const showAnswerBody =
@@ -369,8 +443,29 @@ export function AskYiping({
               {phase === 'unconfigured' ? 'Sources this answer would draw from' : 'Cited sources'}
             </h3>
             <div className={styles.sourceList} aria-label="Cited verified artifacts">
-              {citations.map((citation) =>
-                citation.href ? (
+              {citations.map((citation) => {
+                // Uploaded artifact citation: opens the real document blob by id
+                // (no navigable href). Mirrors VerifiedArtifactCard's open path.
+                if (citation.openArtifactId) {
+                  const id = citation.openArtifactId;
+                  const unavailable = unavailableArtifactIds.has(id);
+                  const opening = openingArtifactId === id;
+                  return (
+                    <button
+                      key={citation.artifactId}
+                      type="button"
+                      className={styles.sourceRow}
+                      onClick={() => void openArtifact(id)}
+                      disabled={opening || unavailable}
+                    >
+                      <FileBadge kind={citation.kind} label={citation.title} compact />
+                      <span className={styles.sourceHref}>
+                        {unavailable ? 'File unavailable' : opening ? 'Opening…' : 'Open →'}
+                      </span>
+                    </button>
+                  );
+                }
+                return citation.href ? (
                   <a key={citation.artifactId} className={styles.sourceRow} href={citation.href}>
                     <FileBadge kind={citation.kind} label={citation.title} compact />
                     <span className={styles.sourceHref}>{citation.href}</span>
@@ -381,8 +476,8 @@ export function AskYiping({
                   <div key={citation.artifactId} className={styles.sourceRow}>
                     <FileBadge kind={citation.kind} label={citation.title} compact />
                   </div>
-                ),
-              )}
+                );
+              })}
             </div>
           </div>
         ) : null}

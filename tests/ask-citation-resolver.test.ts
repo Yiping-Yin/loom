@@ -120,3 +120,68 @@ test('resolveVerifiedDossierArtifact returns a falsy value for beginner me-* ids
     'me-exp-0 is not a dossier artifact — resolveVerifiedDossierArtifact is falsy (root cause confirmed)',
   );
 });
+
+// ── M2b: openable artifact citations in AskYiping ────────────────────────────
+
+test('AskYiping source: an artifact citation (kind present) becomes an openable, blob-id citation', () => {
+  const src = fs.readFileSync(
+    path.join(repoRoot, 'components/verified-dossier/AskYiping.tsx'),
+    'utf8',
+  );
+
+  // The artifact branch keys off a present file `kind` and flags the citation
+  // with openArtifactId so the row opens the blob by id instead of navigating.
+  assert.match(src, /openArtifactId\?:\s*string/, 'ResolvedCitation carries an openArtifactId flag');
+  assert.match(
+    src,
+    /typeof raw\.kind === 'string'[\s\S]{0,400}openArtifactId: raw\.artifactId/,
+    'a present file kind drives the openable-artifact branch',
+  );
+});
+
+test('AskYiping source: opens the real blob by id via getArtifactObjectUrl with a popup fallback', () => {
+  const src = fs.readFileSync(
+    path.join(repoRoot, 'components/verified-dossier/AskYiping.tsx'),
+    'utf8',
+  );
+
+  assert.match(
+    src,
+    /import \{ getArtifactObjectUrl \} from '\.\.\/\.\.\/lib\/artifact\/artifact-store'/,
+    'imports the blob resolver from the artifact store',
+  );
+  // The open handler resolves the blob, opens a new tab, and falls back to the
+  // same tab when the popup is blocked (mirrors VerifiedArtifactCard).
+  assert.match(src, /getArtifactObjectUrl\(artifactId\)/, 'resolves the blob by id at click time');
+  assert.match(src, /window\.open\(url, '_blank', 'noopener,noreferrer'\)/, 'opens a new tab');
+  assert.match(src, /window\.location\.href = url/, 'popup-blocked same-tab fallback');
+  // An openable citation renders a <button>, not an <a href>.
+  assert.match(
+    src,
+    /if \(citation\.openArtifactId\)[\s\S]{0,400}<button/,
+    'an openable artifact citation renders as a button',
+  );
+});
+
+test('beginner citation resolver maps an artifact id to a blob-opening citation (kind + empty href)', () => {
+  const { beginnerCitationResolver } = require('../lib/new-loom/beginner-ask-corpus') as
+    typeof import('../lib/new-loom/beginner-ask-corpus');
+  const { normalizeBeginnerProfile } = require('../lib/profile/beginner-profile') as
+    typeof import('../lib/profile/beginner-profile');
+
+  const profile = normalizeBeginnerProfile({
+    home: { name: 'Test User', headline: 'Engineer' },
+    artifacts: [
+      { id: 'af_real_blob', name: 'cv.pdf', kind: 'pdf', label: 'My CV', extractedText: 'COMP2511 HD' },
+    ],
+  });
+
+  const resolve = beginnerCitationResolver(profile);
+  const cite = resolve('me-artifact-0');
+  assert.ok(cite, 'me-artifact-0 resolves');
+  // The citation carries the REAL blob id (not the corpus index id) + the kind,
+  // and an empty href so the client routes to the blob-open path.
+  assert.equal(cite!.artifactId, 'af_real_blob');
+  assert.equal(cite!.kind, 'pdf');
+  assert.equal(cite!.href, '');
+});

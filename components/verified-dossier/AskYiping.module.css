@@ -445,14 +445,24 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.6rem;
   align-items: center;
+  width: 100%;
   padding: 0.62rem 0.8rem;
   border: 1px solid var(--ask-border-strong);
   border-radius: 8px;
   background: var(--ask-glass-inset);
   box-shadow: var(--ask-glass-inset-shadow);
   color: inherit;
+  /* Button reset so an openable artifact citation (a <button>) matches the <a>/<div>
+     rows: inherit type, left-align, show the affordance, no native chrome. */
+  font: inherit;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.sourceRow:disabled {
+  cursor: default;
 }
 
 .sourceRow:hover {
