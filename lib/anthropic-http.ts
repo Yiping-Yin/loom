@@ -4,7 +4,9 @@
  * App-Store-friendly transport: no subprocess, no bundled binaries. The Swift
  * layer is the primary AI surface (see Loom/Sources/AIProviderSettingsView);
  * this module exists for the Next.js side that still needs server-side
- * Anthropic calls (e.g. cowork routes). Credential source is ANTHROPIC_API_KEY.
+ * Anthropic calls (e.g. cowork routes). Credential source is ANTHROPIC_API_KEY
+ * (x-api-key) or ANTHROPIC_AUTH_TOKEN (OAuth bearer, for local `ant`-login
+ * validation — see scripts/llm-smoke.ts).
  */
 
 const DEFAULT_TIMEOUT_MS = 180000;
@@ -12,6 +14,8 @@ const DEFAULT_MODEL = 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 4096;
 const API_URL = 'https://api.anthropic.com/v1/messages';
 const ANTHROPIC_VERSION = '2023-06-01';
+/** Beta header required when authenticating with an OAuth bearer token. */
+const OAUTH_BETA = 'oauth-2025-04-20';
 
 export type AnthropicRunOptions = {
   model?: string;
@@ -35,17 +39,36 @@ export class AnthropicHttpError extends Error {
 export function isAnthropicConfigured(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  return Boolean(env.ANTHROPIC_API_KEY?.trim());
+  return Boolean(env.ANTHROPIC_API_KEY?.trim() || env.ANTHROPIC_AUTH_TOKEN?.trim());
+}
+
+/**
+ * Resolve the request auth headers from the available credential, in priority:
+ *   1. opts.apiKey or ANTHROPIC_API_KEY → `x-api-key` (the deploy / production
+ *      path — unchanged behaviour).
+ *   2. ANTHROPIC_AUTH_TOKEN → `Authorization: Bearer` + the oauth beta header.
+ *      An `ant auth login` OAuth token, used for LOCAL validation without a static
+ *      key (see scripts/llm-smoke.ts). The token is short-lived — re-run
+ *      `eval "$(ant auth print-credentials --env)"` if it expires.
+ * Returns null when no credential is present.
+ */
+function resolveAuthHeaders(opts: AnthropicRunOptions): Record<string, string> | null {
+  const key = opts.apiKey?.trim() || process.env.ANTHROPIC_API_KEY?.trim();
+  if (key) return { 'x-api-key': key };
+  const token = process.env.ANTHROPIC_AUTH_TOKEN?.trim();
+  if (token) return { authorization: `Bearer ${token}`, 'anthropic-beta': OAUTH_BETA };
+  return null;
 }
 
 export async function runAnthropicHttp(
   prompt: string,
   opts: AnthropicRunOptions = {},
 ): Promise<string> {
-  const apiKey = opts.apiKey ?? process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) {
+  const authHeaders = resolveAuthHeaders(opts);
+  if (!authHeaders) {
     throw new AnthropicHttpError(
-      'ANTHROPIC_API_KEY not set. Add it in Settings or via env.',
+      'No Anthropic credential. Set ANTHROPIC_API_KEY, or run `ant auth login` then ' +
+        'eval "$(ant auth print-credentials --env)" to set ANTHROPIC_AUTH_TOKEN.',
       0,
       false,
     );
@@ -62,7 +85,7 @@ export async function runAnthropicHttp(
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-api-key': apiKey,
+        ...authHeaders,
         'anthropic-version': ANTHROPIC_VERSION,
       },
       body: JSON.stringify({

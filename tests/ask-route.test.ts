@@ -73,9 +73,11 @@ test('ask route returns 400 JSON for invalid body (behavioural)', async () => {
   assert.equal(response.status, 400);
 });
 
-test('ask route degrades gracefully when no API key is set (behavioural)', async () => {
+test('ask route degrades gracefully when no credential is set (behavioural)', async () => {
   const previousKey = process.env.ANTHROPIC_API_KEY;
+  const previousToken = process.env.ANTHROPIC_AUTH_TOKEN;
   delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.ANTHROPIC_AUTH_TOKEN;
   try {
     const response = await POST(
       new Request('http://localhost/api/ask', {
@@ -102,10 +104,9 @@ test('ask route degrades gracefully when no API key is set (behavioural)', async
       assert.ok(citation.href.length > 0, 'citation should carry an href');
     }
   } finally {
-    if (previousKey === undefined) {
-      delete process.env.ANTHROPIC_API_KEY;
-    } else {
-      process.env.ANTHROPIC_API_KEY = previousKey;
-    }
+    if (previousKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = previousKey;
+    if (previousToken === undefined) delete process.env.ANTHROPIC_AUTH_TOKEN;
+    else process.env.ANTHROPIC_AUTH_TOKEN = previousToken;
   }
 });

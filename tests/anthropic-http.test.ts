@@ -10,11 +10,14 @@ import {
 
 const { drainSseEvents, extractDeltaText, extractTextFromMessage, consumeSseStream } = __testing;
 
-test('isAnthropicConfigured reads ANTHROPIC_API_KEY', () => {
+test('isAnthropicConfigured reads ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN', () => {
   assert.equal(isAnthropicConfigured({}), false);
   assert.equal(isAnthropicConfigured({ ANTHROPIC_API_KEY: '' }), false);
   assert.equal(isAnthropicConfigured({ ANTHROPIC_API_KEY: '   ' }), false);
   assert.equal(isAnthropicConfigured({ ANTHROPIC_API_KEY: 'sk-abc' }), true);
+  // OAuth bearer token (`ant auth login`) is also a valid credential.
+  assert.equal(isAnthropicConfigured({ ANTHROPIC_AUTH_TOKEN: 'oat-abc' }), true);
+  assert.equal(isAnthropicConfigured({ ANTHROPIC_AUTH_TOKEN: '   ' }), false);
 });
 
 test('drainSseEvents splits on blank-line event boundaries', () => {
@@ -81,16 +84,19 @@ test('consumeSseStream surfaces incremental chunks and returns full text', async
   assert.equal(full, 'alpha');
 });
 
-test('runAnthropicHttp rejects when key missing', async () => {
-  const prev = process.env.ANTHROPIC_API_KEY;
+test('runAnthropicHttp rejects when no credential is present', async () => {
+  const prevKey = process.env.ANTHROPIC_API_KEY;
+  const prevToken = process.env.ANTHROPIC_AUTH_TOKEN;
   delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.ANTHROPIC_AUTH_TOKEN;
   try {
     await assert.rejects(
       runAnthropicHttp('hi'),
       (err: unknown) => err instanceof AnthropicHttpError && err.status === 0 && err.recoverable === false,
     );
   } finally {
-    if (prev !== undefined) process.env.ANTHROPIC_API_KEY = prev;
+    if (prevKey !== undefined) process.env.ANTHROPIC_API_KEY = prevKey;
+    if (prevToken !== undefined) process.env.ANTHROPIC_AUTH_TOKEN = prevToken;
   }
 });
 

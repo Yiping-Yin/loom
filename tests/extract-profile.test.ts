@@ -36,15 +36,23 @@ function postExtract(body: unknown): Promise<Response> {
   );
 }
 
-/** Run `fn` with ANTHROPIC_API_KEY forced unset, restoring it afterwards. */
+/**
+ * Run `fn` with BOTH Anthropic credentials forced unset (key + OAuth token),
+ * restoring them afterwards — so the unconfigured path is deterministic even when
+ * an ANTHROPIC_AUTH_TOKEN is present in the shell (e.g. after `ant auth login`).
+ */
 async function withoutApiKey(fn: () => Promise<void>) {
-  const prev = process.env.ANTHROPIC_API_KEY;
+  const prevKey = process.env.ANTHROPIC_API_KEY;
+  const prevToken = process.env.ANTHROPIC_AUTH_TOKEN;
   delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.ANTHROPIC_AUTH_TOKEN;
   try {
     await fn();
   } finally {
-    if (prev === undefined) delete process.env.ANTHROPIC_API_KEY;
-    else process.env.ANTHROPIC_API_KEY = prev;
+    if (prevKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = prevKey;
+    if (prevToken === undefined) delete process.env.ANTHROPIC_AUTH_TOKEN;
+    else process.env.ANTHROPIC_AUTH_TOKEN = prevToken;
   }
 }
 

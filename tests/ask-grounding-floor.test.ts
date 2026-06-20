@@ -119,6 +119,17 @@ function withEnv(key: string, value: string | undefined, fn: () => Promise<void>
   });
 }
 
+/**
+ * Run `fn` with BOTH Anthropic credentials cleared (key + OAuth token), so the
+ * unconfigured path is deterministic even when an ANTHROPIC_AUTH_TOKEN is in the
+ * shell (e.g. after `ant auth login`).
+ */
+function withoutCreds(fn: () => Promise<void>): Promise<void> {
+  return withEnv('ANTHROPIC_API_KEY', undefined, () =>
+    withEnv('ANTHROPIC_AUTH_TOKEN', undefined, fn),
+  );
+}
+
 function ask(body: unknown): Promise<Response> {
   return POST(
     new Request('http://localhost/api/ask', {
@@ -151,7 +162,7 @@ test('route returns grounded:false no-sources for an about-only beginner profile
 });
 
 test('OWNER path is unchanged: no-key deploy still returns configured:false with citations', async () => {
-  await withEnv('ANTHROPIC_API_KEY', undefined, async () => {
+  await withoutCreds(async () => {
     const response = await ask({ question: 'What are your Python and C++ foundations?' });
     assert.equal(response.status, 200);
     const payload = (await response.json()) as { configured?: boolean; citations?: unknown[] };
@@ -162,7 +173,7 @@ test('OWNER path is unchanged: no-key deploy still returns configured:false with
 });
 
 test('about-only beginner with NO key still degrades to configured:false (no confident answer)', async () => {
-  await withEnv('ANTHROPIC_API_KEY', undefined, async () => {
+  await withoutCreds(async () => {
     const response = await ask({
       question: 'What have you worked on?',
       profile: aboutOnlyProfile,
@@ -177,7 +188,7 @@ test('about-only beginner with NO key still degrades to configured:false (no con
 });
 
 test('M2b: artifact-only profile with NO key surfaces the artifact citation (would-ground sources)', async () => {
-  await withEnv('ANTHROPIC_API_KEY', undefined, async () => {
+  await withoutCreds(async () => {
     const response = await ask({
       question: 'What does the transcript say about COMP2511?',
       profile: artifactOnlyProfile,
