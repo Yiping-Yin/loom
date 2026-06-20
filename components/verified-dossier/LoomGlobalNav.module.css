@@ -4,7 +4,7 @@
   z-index: 1000;
   min-height: var(--loom-nav-clearance);
   pointer-events: none;
-  transition: min-height 0.22s var(--ease);
+  transition: min-height var(--dur-2) var(--ease);
 }
 
 .nav {
@@ -48,11 +48,11 @@
   transform: translateX(-50%) perspective(900px) rotateX(var(--nav-tilt-x)) rotateY(var(--nav-tilt-y)) translateY(var(--nav-lift));
   transform-origin: 50% 45%;
   transition:
-    transform 0.28s var(--ease),
-    opacity 0.2s ease,
-    border-color 0.18s ease,
-    background 0.24s ease,
-    box-shadow 0.24s ease;
+    transform var(--dur-3) var(--ease),
+    opacity var(--dur-2) var(--ease),
+    border-color var(--dur-1) var(--ease),
+    background var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease);
   will-change: transform, opacity;
 }
 
@@ -85,7 +85,7 @@
   pointer-events: none;
   transform: translateX(var(--nav-glint-shift));
   animation: loomNavSpecularBreath 7.5s ease-in-out infinite;
-  transition: opacity 0.22s ease;
+  transition: opacity var(--dur-2) var(--ease);
 }
 
 .nav > * {
@@ -139,11 +139,11 @@
   border-radius: 999px;
   color: rgba(232, 236, 238, 0.82);
   transition:
-    background 0.18s ease,
-    box-shadow 0.18s ease,
-    color 0.18s ease,
-    width 0.22s var(--ease),
-    grid-template-columns 0.22s var(--ease);
+    background var(--dur-1) var(--ease),
+    box-shadow var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease),
+    width var(--dur-2) var(--ease),
+    grid-template-columns var(--dur-2) var(--ease);
 }
 
 .searchForm[data-open='true'],
@@ -171,9 +171,9 @@
   cursor: pointer;
   padding: 0;
   transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s var(--ease);
+    background var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
 
 .searchButton svg {
@@ -203,8 +203,8 @@
   pointer-events: none;
   text-shadow: 0 0 16px rgba(255, 255, 255, 0.12);
   transition:
-    color 0.16s ease,
-    opacity 0.16s ease;
+    color var(--dur-1) var(--ease),
+    opacity var(--dur-1) var(--ease);
 }
 
 .searchInput:focus,
@@ -226,8 +226,8 @@
   pointer-events: auto;
   text-shadow: 0 0 14px rgba(138, 247, 230, 0.14);
   transition:
-    color 0.16s ease,
-    text-shadow 0.16s ease;
+    color var(--dur-1) var(--ease),
+    text-shadow var(--dur-1) var(--ease);
 }
 
 .brand {
@@ -245,8 +245,8 @@
     0 1px 0 rgba(255, 255, 255, 0.08),
     0 0 1.35rem rgba(255, 255, 255, 0.08);
   transition:
-    color 0.18s ease,
-    transform 0.22s var(--ease);
+    color var(--dur-1) var(--ease),
+    transform var(--dur-2) var(--ease);
 }
 
 .nav .brand,
@@ -282,9 +282,9 @@
   transform: translateZ(18px);
   transform-style: preserve-3d;
   transition:
-    box-shadow 0.24s ease,
-    filter 0.24s ease,
-    transform 0.24s var(--ease);
+    box-shadow var(--dur-2) var(--ease),
+    filter var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
   will-change: transform;
 }
 
@@ -331,8 +331,8 @@
   filter: grayscale(0.08) contrast(1.28) saturate(0.7) brightness(0.91);
   animation: loomLunarSurfaceDrift 88s ease-in-out infinite;
   transition:
-    filter 0.24s ease,
-    transform 0.24s var(--ease);
+    filter var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
 }
 
 .menu {
@@ -362,11 +362,11 @@
   overflow: hidden;
   user-select: none;
   transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s var(--ease);
+    background var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease),
+    box-shadow var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
 
 .menu summary::before {
@@ -380,7 +380,7 @@
   content: '';
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease;
+  transition: opacity var(--dur-1) var(--ease);
 }
 
 .menuLabel,
@@ -395,8 +395,8 @@
   color: rgba(232, 236, 238, 0.68);
   transform: translateY(0);
   transition:
-    color 0.18s ease,
-    transform 0.18s var(--ease);
+    color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
 
 .menuChevron::before,
@@ -462,7 +462,7 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.025),
     inset 0 -1px 0 rgba(0, 0, 0, 0.55),
     0 1rem 2.2rem rgba(0, 0, 0, 0.5);
-  animation: loomMenuMaterialize 0.18s var(--ease) both;
+  animation: loomMenuMaterialize var(--dur-1) var(--ease) both;
   transform-origin: 50% -0.8rem;
 }
 
@@ -547,9 +547,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s var(--ease);
+    background var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
 
 .menuPanel a::before {
@@ -565,9 +565,9 @@
   opacity: 0;
   transform: translateX(-50%) scaleX(0.55);
   transition:
-    opacity 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s var(--ease);
+    opacity var(--dur-1) var(--ease),
+    box-shadow var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
 
 .menuPanel a + a {
@@ -747,8 +747,8 @@
   opacity: 1 !important;
   pointer-events: auto;
   transition:
-    color 0.16s ease,
-    text-shadow 0.16s ease;
+    color var(--dur-1) var(--ease),
+    text-shadow var(--dur-1) var(--ease);
 }
 
 .navSearching .brand,
