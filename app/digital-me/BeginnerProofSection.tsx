@@ -20,8 +20,9 @@ import styles from './BeginnerProofSection.module.css';
  * "Verified. Cited." real: the visitor can open the underlying document.
  *
  * The blob (IndexedDB) vs meta (localStorage profile) split keeps the profile
- * tiny while the heavy bytes live in a quota-friendly store. M2b will wire the
- * cited-answer engine to these refs — out of scope here (store + upload + render).
+ * tiny while the heavy bytes live in a quota-friendly store. The meta also carries
+ * a bounded text excerpt (PDFs) so the cited-answer engine grounds in the real
+ * document — see lib/new-loom/beginner-ask-corpus.ts (me-artifact-* sources).
  *
  * Client-only: the initial artifacts come from props (SSR-safe; the page reads
  * localStorage on the server pass as null and hydrates), then this component
@@ -77,6 +78,9 @@ export function BeginnerProofSection({ initialArtifacts = [] }: { initialArtifac
             name: meta.name,
             kind: meta.kind,
             thumbnailDataUri: meta.thumbnailDataUri,
+            // Carry the document's text excerpt into the profile so the cited
+            // answer engine can GROUND in the real document, not typed fields.
+            extractedText: meta.extractedText,
           };
           next = [...next, ref];
           added += 1;

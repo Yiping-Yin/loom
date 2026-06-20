@@ -136,6 +136,62 @@ test('normalizeBeginnerProfile yields [] artifacts when none are present', () =>
   assert.deepEqual(p.artifacts, []);
 });
 
+// ── M2b: extractedText normalization (cap + sanitize) ────────────────────────
+
+test('normalizeBeginnerProfile keeps a valid extractedText excerpt', () => {
+  const raw = {
+    version: 1,
+    artifacts: [
+      { id: 'af_t', name: 'cv.pdf', kind: 'pdf', extractedText: 'COMP2511 High Distinction' },
+    ],
+  };
+  const p = normalizeBeginnerProfile(raw);
+  assert.equal(p.artifacts![0].extractedText, 'COMP2511 High Distinction');
+});
+
+test('normalizeBeginnerProfile caps the extractedText length (~4KB)', () => {
+  const raw = {
+    version: 1,
+    artifacts: [{ id: 'af_t2', name: 'big.pdf', kind: 'pdf', extractedText: 'x'.repeat(50_000) }],
+  };
+  const p = normalizeBeginnerProfile(raw);
+  const text = p.artifacts![0].extractedText ?? '';
+  assert.ok(text.length <= 4000, `extractedText should be capped, got ${text.length}`);
+});
+
+test('normalizeBeginnerProfile strips control chars and collapses whitespace in extractedText', () => {
+  const raw = {
+    version: 1,
+    artifacts: [
+      // Embedded NUL + control char + newlines/tabs must be sanitized away.
+      { id: 'af_t3', name: 'x.pdf', kind: 'pdf', extractedText: 'A B\n\nC\t\tD' },
+    ],
+  };
+  const p = normalizeBeginnerProfile(raw);
+  const text = p.artifacts![0].extractedText ?? '';
+  // eslint-disable-next-line no-control-regex
+  assert.doesNotMatch(text, /[\x00-\x1F\x7F]/, 'no control chars');
+  assert.equal(text, 'A B C D', 'control chars + whitespace runs collapse to single spaces');
+});
+
+test('normalizeBeginnerProfile drops an empty/whitespace-only extractedText', () => {
+  const raw = {
+    version: 1,
+    artifacts: [{ id: 'af_t4', name: 'blank.pdf', kind: 'pdf', extractedText: '   \n\t  ' }],
+  };
+  const p = normalizeBeginnerProfile(raw);
+  assert.equal(p.artifacts![0].extractedText, undefined, 'blank excerpt → undefined');
+});
+
+test('normalizeBeginnerProfile drops a non-string extractedText', () => {
+  const raw = {
+    version: 1,
+    artifacts: [{ id: 'af_t5', name: 'n.pdf', kind: 'pdf', extractedText: { not: 'a string' } }],
+  };
+  const p = normalizeBeginnerProfile(raw);
+  assert.equal(p.artifacts![0].extractedText, undefined);
+});
+
 // ── VerifiedArtifactCard render ──────────────────────────────────────────────
 
 test('VerifiedArtifactCard renders the name, a Verified mark, and an Open affordance', () => {

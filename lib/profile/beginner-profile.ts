@@ -30,6 +30,14 @@ export type ArtifactRef = {
   kind: string;
   label?: string;
   thumbnailDataUri?: string;
+  /**
+   * A bounded plain-text excerpt of the document (PDF first pages only; images/
+   * unknown carry none). This is what makes the artifact a GROUNDED citation: the
+   * cited-answer engine searches + answers from this real text, fixing the
+   * "self-citation" problem where a beginner's citation only pointed back at their
+   * own typed fields. Capped + control-stripped here at the storage seam.
+   */
+  extractedText?: string;
 };
 export type BeginnerProfile = {
   version: 1;
@@ -70,6 +78,11 @@ const ARTIFACTS_MAX = 24;
 const ARTIFACT_NAME_MAX = 200;
 const ARTIFACT_LABEL_MAX = 120;
 const THUMBNAIL_MAX = 200_000;
+// The extracted-text excerpt cap. Matches the store's extraction ceiling so a
+// legitimate PDF excerpt survives intact, while a tampered profile carrying a
+// huge or control-char-laden value is bounded + sanitized at the storage seam
+// (the same defence applied to every other free-text field).
+const ARTIFACT_TEXT_MAX = 4000;
 
 const cap = (v: string, max: number): string => (v.length > max ? v.slice(0, max) : v);
 
@@ -88,6 +101,24 @@ const optThumbnail = (v: unknown): string | undefined => {
   if (typeof v !== 'string') return undefined;
   if (v.length > THUMBNAIL_MAX) return undefined;
   return /^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.test(v) ? v : undefined;
+};
+
+/**
+ * Sanitize an artifact's extracted-text excerpt at the storage seam. Strips ASCII
+ * control characters (keeping ordinary whitespace), collapses whitespace runs to
+ * single spaces, then hard-caps the length. Returns undefined for a non-string or
+ * empty result so an artifact never carries a garbage/oversized excerpt — the
+ * grounded corpus then folds in only clean, bounded document text.
+ */
+const optExtractedText = (v: unknown): string | undefined => {
+  if (typeof v !== 'string') return undefined;
+  const cleaned = v
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return undefined;
+  return cap(cleaned, ARTIFACT_TEXT_MAX);
 };
 
 export function normalizeBeginnerProfile(raw: unknown): BeginnerProfile {
@@ -160,6 +191,7 @@ export function normalizeBeginnerProfile(raw: unknown): BeginnerProfile {
         kind: str(a.kind) || 'other',
         label: optStr(a.label, ARTIFACT_LABEL_MAX),
         thumbnailDataUri: optThumbnail(a.thumbnailDataUri),
+        extractedText: optExtractedText(a.extractedText),
       })),
   };
 }

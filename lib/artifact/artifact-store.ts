@@ -11,9 +11,11 @@
  *   - BLOB  → IndexedDB, keyed by a generated id. Can be large; never touches
  *             localStorage's ~5MB quota and is read lazily only on "Open".
  *   - META  → the BeginnerProfile in localStorage (an `ArtifactRef`: id, name,
- *             kind, optional label + small thumbnail data URI). This is the
- *             *citeable* record M2b will draw on, and it's tiny enough to live
- *             beside the rest of the profile.
+ *             kind, optional label, small thumbnail data URI, and a bounded text
+ *             excerpt). This is the *citeable, grounded* record the cited-answer
+ *             engine draws on (M2b), and it's tiny enough to live beside the rest
+ *             of the profile. The excerpt is what lets an answer ground in the
+ *             document's REAL text instead of the user's typed fields.
  *
  * SSR-safety: nothing here touches `indexedDB`, `window`, `crypto`, `Image`, or
  * `pdfjs` at module load. Every entry point guards for a browser first and
@@ -42,6 +44,15 @@ export type ArtifactMeta = {
   size: number;
   /** Tiny PNG/JPEG data URI preview, when one could be produced. */
   thumbnailDataUri?: string;
+  /**
+   * A bounded plain-text excerpt pulled from the document (PDF first pages only;
+   * images/unknown get nothing — no OCR). This is what turns an uploaded artifact
+   * into a GROUNDED citation: the cited-answer engine searches and answers from
+   * this real text, not the user's typed fields. Capped + control-stripped at the
+   * profile seam (normalizeBeginnerProfile) so a tampered profile can't smuggle a
+   * giant or forged excerpt.
+   */
+  extractedText?: string;
   /** Unix ms timestamp of upload. */
   addedAt: number;
 };
@@ -52,6 +63,16 @@ const STORE = 'artifacts';
 
 /** Max edge (px) of the generated thumbnail; downscaled to keep the data URI small. */
 const THUMB_MAX_EDGE = 320;
+
+/**
+ * How many leading PDF pages to pull text from, and the hard ceiling on the
+ * excerpt. Bounded so a huge PDF can't drive an unbounded localStorage profile
+ * or token cost — the first few pages are the high-signal part (a CV header,
+ * a transcript's grades, a certificate's body). ~4KB is the spec target; the
+ * normalize seam re-caps to the same bound defensively.
+ */
+const EXTRACT_MAX_PAGES = 4;
+const EXTRACT_MAX_CHARS = 4000;
 
 // ── id generation (client-only; never at module load) ───────────────────────
 
@@ -229,6 +250,72 @@ async function pdfThumb(file: File): Promise<string | null> {
   }
 }
 
+/**
+ * Collapse whitespace and strip ASCII control chars from raw extracted text, then
+ * hard-cap its length. Mirrors the normalize seam so the value the store returns
+ * is already clean (the seam re-applies the same bound defensively on read).
+ */
+function sanitizeExcerpt(raw: string): string {
+  const cleaned = raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned.length > EXTRACT_MAX_CHARS ? cleaned.slice(0, EXTRACT_MAX_CHARS) : cleaned;
+}
+
+/**
+ * Pull a bounded plain-text excerpt from a PDF's first pages with pdfjs. Reuses
+ * the SAME dynamic, browser-only import that renders the thumbnail (worker
+ * disabled, main-thread parse), so it never lands in the SSR/server bundle and
+ * needs no separate worker asset. Returns undefined on any failure or when the
+ * PDF carries no extractable text (e.g. a pure scan — no OCR here).
+ */
+async function pdfText(file: File): Promise<string | undefined> {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    try {
+      (pdfjs as { GlobalWorkerOptions?: { workerSrc: string } }).GlobalWorkerOptions!.workerSrc = '';
+    } catch {
+      /* older builds: ignore */
+    }
+    const data = new Uint8Array(await file.arrayBuffer());
+    const doc = await pdfjs.getDocument({ data, verbosity: 0, disableWorker: true } as Parameters<typeof pdfjs.getDocument>[0]).promise;
+    try {
+      const pageCount = Math.min(doc.numPages, EXTRACT_MAX_PAGES);
+      const parts: string[] = [];
+      let total = 0;
+      for (let pageNum = 1; pageNum <= pageCount && total < EXTRACT_MAX_CHARS; pageNum += 1) {
+        const page = await doc.getPage(pageNum);
+        const content = await page.getTextContent();
+        // Each item is a text run; join with spaces to recover word boundaries.
+        const pageText = content.items
+          .map((item) => (typeof (item as { str?: unknown }).str === 'string' ? (item as { str: string }).str : ''))
+          .join(' ');
+        parts.push(pageText);
+        total += pageText.length;
+      }
+      const excerpt = sanitizeExcerpt(parts.join('\n'));
+      return excerpt.length > 0 ? excerpt : undefined;
+    } finally {
+      await doc.destroy();
+    }
+  } catch {
+    return undefined;
+  }
+}
+
+/** Best-effort text excerpt for a File based on its kind. Never throws. PDFs only. */
+async function makeExtractedText(file: File, kind: ArtifactKind): Promise<string | undefined> {
+  try {
+    if (kind === 'pdf') return await pdfText(file);
+  } catch {
+    // A missing excerpt is fine — the artifact still grounds on its name + label.
+  }
+  return undefined;
+}
+
 /** Best-effort thumbnail for a File based on its kind. Never throws. */
 async function makeThumbnail(file: File, kind: ArtifactKind): Promise<string | undefined> {
   try {
@@ -255,7 +342,13 @@ export async function putArtifact(file: File): Promise<ArtifactMeta> {
   if (!db) throw new Error('Document storage is unavailable in this browser.');
 
   const kind = classifyKind(file);
-  const thumbnailDataUri = await makeThumbnail(file, kind);
+  // Thumbnail (PDF/image) and the searchable text excerpt (PDF only) are both
+  // best-effort and independent — run them together. Both reuse the same dynamic
+  // browser-only pdfjs import and never throw.
+  const [thumbnailDataUri, extractedText] = await Promise.all([
+    makeThumbnail(file, kind),
+    makeExtractedText(file, kind),
+  ]);
 
   const meta: ArtifactMeta = {
     id: generateArtifactId(),
@@ -263,6 +356,7 @@ export async function putArtifact(file: File): Promise<ArtifactMeta> {
     kind,
     size: file.size,
     thumbnailDataUri,
+    extractedText,
     addedAt: Date.now(),
   };
   const record: ArtifactRecord = { ...meta, blob: file };
