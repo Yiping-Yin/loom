@@ -24674,3 +24674,23 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   letter-spacing: 0.02em;
   user-select: none;
 }
+
+/* Education profile entry: stack institution / degree / dates so the
+   institution name, qualification and date range don't run together. */
+.vd-section-page__card:has(> .vd-education-profile-initials) > strong,
+.vd-section-page__card:has(> .vd-education-profile-initials) > .vd-education-entry-degree,
+.vd-section-page__card:has(> .vd-education-profile-initials) > small {
+  display: block;
+}
+.vd-section-page__card:has(> .vd-education-profile-initials) > strong {
+  margin-top: 0.7rem;
+}
+.vd-section-page__card:has(> .vd-education-profile-initials) > .vd-education-entry-degree {
+  margin-top: 0.25rem;
+  color: var(--text-2);
+  font-size: var(--fs-small, 0.82rem);
+}
+.vd-section-page__card:has(> .vd-education-profile-initials) > small {
+  margin-top: 0.25rem;
+  color: var(--vd-section-muted, var(--text-3));
+}
