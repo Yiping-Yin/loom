@@ -260,3 +260,163 @@ test('CapabilityMap artifact chip renders Open ↗ affordance', () => {
   // "Open ↗" text should be present in the artifact chip.
   assert.match(html, /Open ↗/);
 });
+
+// ── Task 5: star-river + comets visualization ─────────────────────────────────
+
+/** Count occurrences of a substring in the rendered markup. */
+function count(html: string, needle: RegExp): number {
+  const matches = html.match(needle);
+  return matches ? matches.length : 0;
+}
+
+test('CapabilityMap renders one star node per capability (star-river)', () => {
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={SAMPLE_CAPABILITIES} profile={SAMPLE_PROFILE} />);
+
+  // One star node per capability, marked by a stable data attribute.
+  assert.equal(
+    count(html, /data-star-node=/g),
+    SAMPLE_CAPABILITIES.length,
+    'expected one star node per capability',
+  );
+});
+
+test('CapabilityMap renders the star-river SVG above the cards', () => {
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={SAMPLE_CAPABILITIES} profile={SAMPLE_PROFILE} />);
+
+  const svgIdx = html.indexOf('data-star-river');
+  const cardIdx = html.indexOf('data-status=');
+  assert.ok(svgIdx >= 0, 'star-river container should be present');
+  assert.ok(cardIdx >= 0, 'cards should still be present');
+  assert.ok(svgIdx < cardIdx, 'star-river SVG must render above the cards list');
+});
+
+test('CapabilityMap renders a comet marker for a strong capability', () => {
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={SAMPLE_CAPABILITIES} profile={SAMPLE_PROFILE} />);
+
+  // The strong capability becomes a comet — marked by a stable data attribute,
+  // and the brand comet asset is referenced.
+  assert.match(html, /data-comet=/);
+  assert.match(html, /loom_lunar_comet_icon/);
+});
+
+test('CapabilityMap star nodes have an aria-label including the capability label', () => {
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={SAMPLE_CAPABILITIES} profile={SAMPLE_PROFILE} />);
+
+  // Each star node is a focusable button with a descriptive aria-label.
+  assert.match(html, /aria-label="Python Programming — strong, 2 evidence"/);
+  assert.match(html, /aria-label="Data Analysis — partial, 1 evidence"/);
+  assert.match(html, /aria-label="Machine Learning — direction, 0 evidence"/);
+
+  // Star nodes are keyboard-focusable controls.
+  assert.match(html, /role="button"[^>]*tabindex="0"|tabindex="0"[^>]*role="button"/);
+});
+
+test('CapabilityMap star magnitude scales with evidence (radius differs by strength)', () => {
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={SAMPLE_CAPABILITIES} profile={SAMPLE_PROFILE} />);
+
+  // Collect the radii emitted on star magnitude circles (data-star-mag).
+  const radii = Array.from(html.matchAll(/data-star-mag[^>]*\br="([\d.]+)"/g)).map((m) =>
+    parseFloat(m[1]),
+  );
+  assert.ok(radii.length >= 2, 'expected magnitude circles for the stars');
+  // Not all the same — magnitude must respond to evidence strength.
+  const distinct = new Set(radii.map((r) => r.toFixed(2)));
+  assert.ok(distinct.size > 1, 'star radii should vary with evidence strength');
+});
+
+test('CapabilityMap caps comets at 3 even with many strong capabilities', () => {
+  const caps: BeginnerCapability[] = Array.from({ length: 6 }, (_, i) => ({
+    id: `cap-strong-${i}`,
+    label: `Strong Skill ${i}`,
+    status: 'strong' as const,
+    evidence: [
+      { kind: 'experience' as const, refId: `exp-${i}`, label: `Org ${i}` },
+      { kind: 'artifact' as const, refId: `artifact-${i}`, label: `Proof ${i}` },
+    ],
+  }));
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={caps} profile={SAMPLE_PROFILE} />);
+
+  assert.ok(count(html, /data-comet=/g) <= 3, 'comets must be capped at 3');
+  // But every capability still has a star node.
+  assert.equal(count(html, /data-star-node=/g), caps.length);
+});
+
+test('CapabilityMap falls back to top-by-evidence comets when none are strong', () => {
+  const caps: BeginnerCapability[] = [
+    {
+      id: 'cap-a',
+      label: 'Alpha',
+      status: 'partial',
+      evidence: [
+        { kind: 'work', refId: 'work-0', label: 'P1' },
+        { kind: 'work', refId: 'work-1', label: 'P2' },
+        { kind: 'experience', refId: 'exp-0', label: 'E1' },
+      ],
+    },
+    {
+      id: 'cap-b',
+      label: 'Beta',
+      status: 'partial',
+      evidence: [{ kind: 'work', refId: 'work-2', label: 'P3' }],
+    },
+    {
+      id: 'cap-c',
+      label: 'Gamma',
+      status: 'direction',
+      evidence: [],
+    },
+  ];
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={caps} profile={SAMPLE_PROFILE} />);
+
+  // No strong capability, but the richest-evidence one (Alpha) becomes a comet.
+  assert.ok(count(html, /data-comet=/g) >= 1, 'expected a fallback comet');
+});
+
+test('CapabilityMap star-river has a moon (Memory) anchor and a horizon baseline', () => {
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={SAMPLE_CAPABILITIES} profile={SAMPLE_PROFILE} />);
+
+  assert.match(html, /data-moon-anchor/);
+  assert.match(html, /data-horizon/);
+});
+
+test('CapabilityMap star-river layout is deterministic across renders (SSR-stable)', () => {
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const a = render(<CapabilityMap capabilities={SAMPLE_CAPABILITIES} profile={SAMPLE_PROFILE} />);
+  const b = render(<CapabilityMap capabilities={SAMPLE_CAPABILITIES} profile={SAMPLE_PROFILE} />);
+  assert.equal(a, b, 'two renders of the same input must produce identical markup');
+});
+
+test('CapabilityMap exposes a reduced-motion affordance for the star-river', () => {
+  // The reduced-motion gating lives in the CSS module; assert the source block
+  // exists so motion is provably gated behind prefers-reduced-motion.
+  const fs = require('node:fs') as typeof import('node:fs');
+  const path = require('node:path') as typeof import('node:path');
+  const css = fs.readFileSync(
+    path.join(__dirname, '../components/CapabilityMap.module.css'),
+    'utf8',
+  );
+  // Idle motion must be gated behind no-preference (only runs when motion is OK),
+  // and a reduce block must exist to strip any remaining transitions.
+  assert.match(css, /prefers-reduced-motion:\s*no-preference/);
+  assert.match(css, /prefers-reduced-motion:\s*reduce/);
+});
+
+test('CapabilityMap with empty capabilities renders no star nodes (still the prompt)', () => {
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={[]} profile={SAMPLE_PROFILE} />);
+  const text = visibleText(html);
+
+  // Still the Task-4 empty prompt.
+  assert.match(text, /Build your capability map/);
+  // No star-river SVG nodes.
+  assert.doesNotMatch(html, /data-star-node=/);
+  assert.doesNotMatch(html, /data-star-river/);
+});
