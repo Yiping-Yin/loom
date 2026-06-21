@@ -66,7 +66,7 @@ export function HomeConversationalCover() {
         value={c.input}
         onChange={(e) => c.setInput(e.target.value)}
         disabled={c.checking}
-        placeholder="Tell me about yourself…"
+        placeholder="Type your answer…"
         aria-label="Your answer"
         autoComplete="off"
       />

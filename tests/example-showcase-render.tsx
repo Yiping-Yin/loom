@@ -223,7 +223,7 @@ test('/ (no profile) renders the cosmic cover front door, NOT the owner dossier'
   const text = visibleText(html);
 
   // The conversational cosmos cover: the single answer input + whisper links.
-  assert.match(html, /Tell me about yourself/i);
+  assert.match(html, /Type your answer/i);
   assert.match(html, /aria-label="Your answer"/);
   assert.match(html, /loom-cosmic-field/);
   assert.match(text, /See an example/);

@@ -145,7 +145,7 @@ test('HomeConversationalCover: first contact renders the landing hero + input', 
   assert.ok(text.length > 0);
 
   // The single answer input must render with its accessible label/placeholder.
-  assert.match(html, /Tell me about yourself/i);
+  assert.match(html, /Type your answer/i);
   assert.match(html, /aria-label="Your answer"/);
 
   // The LOOM wordmark sits in the nav.
@@ -243,7 +243,7 @@ test('HomeConversationalCover: at review, shows a Save affordance and hides the 
   // The chat input must be gone at review (typing + submit re-appended the same
   // review prompt forever — the endless loop this fix closes).
   assert.doesNotMatch(html, /aria-label="Your answer"/);
-  assert.doesNotMatch(html, /Tell me about yourself/i);
+  assert.doesNotMatch(html, /Type your answer/i);
 
   // The résumé import is an answer-time affordance — gone once we reach review
   // (nothing left to pre-fill). This also keeps the cover from reading import
