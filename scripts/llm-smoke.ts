@@ -11,19 +11,20 @@
  * It calls the same code that ships — the route handlers are plain async
  * functions. No browser, no deploy; the credential never touches the deploy.
  *
- * Credential — use your Anthropic account, no static key needed (run once):
- *   ant auth login
- *   eval "$(ant auth print-credentials --env)"    # sets ANTHROPIC_AUTH_TOKEN
- * Then:
+ * Backend — by DEFAULT this drives the model through the local `claude` CLI
+ * (Claude Code subscription), so it costs NO API credits:
  *   npm run llm:smoke
  *   npm run llm:smoke -- --resume ./my-resume.txt --question "What can they do?"
  *   npm run llm:smoke -- --artifact ./transcript.txt   # attach a proof doc to
  *       # exercise the moat's strong/comet path + a citation that opens the doc
- *   npm run llm:smoke -- --cli                 # drive the model via the local
- *       # `claude` CLI (Claude Code subscription) instead of the API — no credits
+ * The `claude` CLI must be logged in to your subscription — `claude auth status`
+ * should show "authMethod": "claude.ai". If an ANTHROPIC_AUTH_TOKEN / API_KEY is
+ * exported in the shell it can override the subscription; unset it (the harness
+ * also strips it from the spawned CLI).
  *
- * A plain ANTHROPIC_API_KEY exported in the shell also works. The token is
- * short-lived; re-run the `eval` line if a call fails with an auth error.
+ * Pass --api to use the HTTP Messages API instead (bills API credits):
+ *   export ANTHROPIC_API_KEY=sk-ant-...   # or `ant auth login` + the eval line
+ *   npm run llm:smoke -- --api
  *
  * NOTE: extraction takes plain TEXT (the browser turns a PDF into text before
  * calling the route). Pass a .txt/.md résumé to `--resume`, not a raw PDF.
@@ -197,24 +198,25 @@ function printCitations(citations: Array<Record<string, unknown>>): void {
 }
 
 async function main(): Promise<void> {
-  // `--cli` → drive the model through the local `claude` CLI (Claude Code
-  // subscription, no API credits). Must be set before the configured-check.
-  if (process.argv.includes('--cli')) process.env.LOOM_LLM_BACKEND = 'cli';
+  // Default: drive the model through the local `claude` CLI (Claude Code
+  // subscription — no API credits). Pass --api to use the HTTP Messages API
+  // (ANTHROPIC_API_KEY / `ant auth login` OAuth) instead. (--cli is still
+  // accepted as an explicit no-op.) Set before the configured-check below.
+  const useApi = process.argv.includes('--api');
+  if (!useApi) process.env.LOOM_LLM_BACKEND = 'cli';
 
   if (!isAnthropicConfigured()) {
     console.error(
       [
-        'No Anthropic credential found. Either:',
+        'No Anthropic credential for --api mode. Either:',
         '',
-        '  • Use Claude Code (your subscription, no API credits):',
-        '      npm run llm:smoke -- --cli',
-        '',
-        '  • Or use your Anthropic API account (no static key needed):',
-        '      ant auth login',
-        '      eval "$(ant auth print-credentials --env)"   # sets ANTHROPIC_AUTH_TOKEN',
+        '  • Drop --api to use Claude Code (your subscription, no API credits):',
         '      npm run llm:smoke',
         '',
-        '  (A plain ANTHROPIC_API_KEY exported in the shell also works.)',
+        '  • Or provide an API credential, then re-run with --api:',
+        '      export ANTHROPIC_API_KEY=sk-ant-...                # a funded org key',
+        '      # or: ant auth login && set -a; eval "$(ant auth print-credentials --env)"; set +a',
+        '      npm run llm:smoke -- --api',
       ].join('\n'),
     );
     process.exitCode = 1;
@@ -251,7 +253,7 @@ async function main(): Promise<void> {
       printProfile(profile);
     } else {
       console.log('  → extraction failed (ok:false) — the model output did not parse.');
-      console.log('    (LLM variance — re-run; with --cli set LOOM_LLM_DEBUG=1 to see the raw output.)');
+      console.log('    (LLM variance — re-run, or set LOOM_LLM_DEBUG=1 to see the raw model output.)');
     }
   } catch (err) {
     console.log(`  ✗ extract error: ${errMsg(err)}`);
@@ -293,7 +295,7 @@ async function main(): Promise<void> {
       console.log('  → route reported not configured.');
     } else {
       console.log('  → derivation failed (ok:false).');
-      console.log('    (LLM variance — re-run; with --cli set LOOM_LLM_DEBUG=1 to see the raw output.)');
+      console.log('    (LLM variance — re-run, or set LOOM_LLM_DEBUG=1 to see the raw model output.)');
     }
   } catch (err) {
     console.log(`  ✗ derive error: ${errMsg(err)}`);
