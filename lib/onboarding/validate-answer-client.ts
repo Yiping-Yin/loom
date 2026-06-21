@@ -26,3 +26,18 @@ export async function validateAnswerRemote(
     return { verdict: 'accept' };
   }
 }
+
+export type RemoteResolution =
+  | { nudge: true; key: string; hint?: string }
+  | { nudge: false; answer: string };
+
+/** Pure: turn a remote verdict + the prior answer into advance-or-reask. */
+export function resolveRemote(
+  remote: ValidateResult,
+  key: string,
+  answer: string,
+): RemoteResolution {
+  if (remote.verdict === 'reask') return { nudge: true, key, hint: remote.hint };
+  if (remote.verdict === 'clean' && remote.cleaned) return { nudge: false, answer: remote.cleaned };
+  return { nudge: false, answer };
+}

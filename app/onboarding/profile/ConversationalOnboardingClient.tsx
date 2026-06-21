@@ -23,7 +23,7 @@ import {
   isYes,
   decideChatGate,
 } from '../../../lib/onboarding/chat-gate';
-import { validateAnswerRemote } from '../../../lib/onboarding/validate-answer-client';
+import { validateAnswerRemote, resolveRemote } from '../../../lib/onboarding/validate-answer-client';
 import styles from './ConversationalOnboarding.module.css';
 
 /** Max file size for résumé import (mirrors the Proof section: 10 MB). */
@@ -338,6 +338,7 @@ export function ConversationalOnboardingClient() {
   const [reasked, setReasked] = useState<Set<string>>(() => new Set());
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const submitting = useRef(false);
 
   // Seed the initial LOOM question
   useEffect(() => {
@@ -394,51 +395,56 @@ export function ConversationalOnboardingClient() {
    */
   const handleSubmit = async (answerOverride?: string) => {
     let answer = (answerOverride ?? input).trim();
-    if (!answer || isTyping) return;
-
-    // Answer-quality gate (free-text steps only; skip answers + already-reasked pass through).
-    // Two layers: the deterministic floor (offline, always) then the optional LLM smart layer
-    // (keyed web only, fail-open). Both can re-ask ONCE; neither traps the user.
-    const gate = decideChatGate(step, answer, reasked);
-    if (gate.kind === 'nudge') {
-      setReasked((s) => new Set(s).add(gate.key));
-      nudge(answer, gate.hint);
-      return;
-    }
-    if (gate.kind === 'check') {
-      const remote = await validateAnswerRemote(gate.field, stepPrompt(step), answer);
-      if (remote.verdict === 'reask') {
+    if (!answer || isTyping || submitting.current) return;
+    submitting.current = true;
+    try {
+      // Answer-quality gate (free-text steps only; skip answers + already-reasked pass through).
+      // Two layers: the deterministic floor (offline, always) then the optional LLM smart layer
+      // (keyed web only, fail-open). Both can re-ask ONCE; neither traps the user.
+      const gate = decideChatGate(step, answer, reasked);
+      if (gate.kind === 'nudge') {
         setReasked((s) => new Set(s).add(gate.key));
-        nudge(answer, remote.hint);
+        nudge(answer, gate.hint);
         return;
       }
-      if (remote.verdict === 'clean' && remote.cleaned) answer = remote.cleaned;
-    }
+      if (gate.kind === 'check') {
+        const remote = await validateAnswerRemote(gate.field, stepPrompt(step), answer);
+        const r = resolveRemote(remote, gate.key, answer);
+        if (r.nudge) {
+          setReasked((s) => new Set(s).add(r.key));
+          nudge(answer, r.hint);
+          return;
+        }
+        answer = r.answer;
+      }
 
-    const userMsg: ChatMessage = { from: 'user', text: answer };
+      const userMsg: ChatMessage = { from: 'user', text: answer };
 
-    // Transition (pure — no side effects)
-    const { next, profile: nextProfile } = applyAnswer(profile, step, answer);
-    setProfile(nextProfile);
-    setStep(next);
-    setInput('');
+      // Transition (pure — no side effects)
+      const { next, profile: nextProfile } = applyAnswer(profile, step, answer);
+      setProfile(nextProfile);
+      setStep(next);
+      setInput('');
 
-    // Append user bubble first
-    setMessages((prev) => [...prev, userMsg]);
+      // Append user bubble first
+      setMessages((prev) => [...prev, userMsg]);
 
-    const delay = prefersReducedMotion() ? 0 : 500;
+      const delay = prefersReducedMotion() ? 0 : 500;
 
-    if (delay === 0) {
-      // Instant path for reduced-motion users
-      const loomMsg: ChatMessage = { from: 'loom', text: stepPrompt(next) };
-      setMessages((prev) => [...prev, loomMsg]);
-    } else {
-      setIsTyping(true);
-      setTimeout(() => {
+      if (delay === 0) {
+        // Instant path for reduced-motion users
         const loomMsg: ChatMessage = { from: 'loom', text: stepPrompt(next) };
         setMessages((prev) => [...prev, loomMsg]);
-        setIsTyping(false);
-      }, delay);
+      } else {
+        setIsTyping(true);
+        setTimeout(() => {
+          const loomMsg: ChatMessage = { from: 'loom', text: stepPrompt(next) };
+          setMessages((prev) => [...prev, loomMsg]);
+          setIsTyping(false);
+        }, delay);
+      }
+    } finally {
+      submitting.current = false;
     }
   };
 
