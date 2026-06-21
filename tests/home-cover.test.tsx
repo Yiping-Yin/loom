@@ -14,6 +14,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
 import Module from 'node:module';
+import type { ConversationApi } from '../lib/onboarding/useConversation';
+import type { BeginnerProfile } from '../lib/profile/beginner-profile';
 
 // ── CSS module stub (must precede the first require of the component) ─────────
 const cssModuleClassMap = new Proxy(
@@ -30,10 +32,21 @@ const cssModuleExports = { __esModule: true, default: cssModuleClassMap };
 // ── Dependency stubs (installed before the component is first require()'d) ────
 const _orig = (Module.prototype as NodeJS.Module).require as (id: string) => unknown;
 
+// Opt-in mock for the shared conversation hook. When set, HomeConversationalCover
+// binds to this api instead of the real useConversation(); when null, the real
+// hook runs (so the first-paint tests below are unaffected). This lets a static
+// render exercise the review/save branch — which the real hook only reaches after
+// async chat interaction that renderToStaticMarkup cannot drive.
+let mockConversation: ConversationApi | null = null;
+
 (Module.prototype as NodeJS.Module).require = function stubRequire(
   this: NodeJS.Module,
   id: string,
 ): unknown {
+  if (id.endsWith('onboarding/useConversation')) {
+    const real = _orig.call(this, id) as typeof import('../lib/onboarding/useConversation');
+    return { ...real, useConversation: () => mockConversation ?? real.useConversation() };
+  }
   if (id === 'next/navigation') {
     return { useRouter: () => ({ push: (_path: string) => undefined }), usePathname: () => '/' };
   }
@@ -76,6 +89,45 @@ function visibleText(html: string): string {
 
 function getCover() {
   return require('../app/HomeConversationalCover') as typeof import('../app/HomeConversationalCover');
+}
+
+// A ConversationApi parked at the review step. Only the fields the cover reads
+// are populated; a partial cast keeps the rest out so the view binds. Overrides
+// flip the one field a given test cares about (saveError / doneBeat / saving).
+function reviewApi(overrides: Partial<ConversationApi> = {}): ConversationApi {
+  const { emptyBeginnerProfile } = require('../lib/profile/beginner-profile') as {
+    emptyBeginnerProfile: () => BeginnerProfile;
+  };
+  const noop = () => undefined;
+  const base: Partial<ConversationApi> = {
+    profile: emptyBeginnerProfile(),
+    step: { id: 'review' },
+    messages: [{ from: 'loom', text: "You're all set! Here's what I have." }],
+    input: '',
+    setInput: noop,
+    isTyping: false,
+    checking: false,
+    saving: false,
+    doneBeat: false,
+    saveError: '',
+    promptText: '',
+    inputRef: { current: null },
+    bottomRef: { current: null },
+    handleSubmit: async () => undefined,
+    handleSave: noop,
+    goToForm: noop,
+  };
+  return { ...base, ...overrides } as ConversationApi;
+}
+
+function renderWithApi(api: ConversationApi): string {
+  mockConversation = api;
+  try {
+    const { HomeConversationalCover } = getCover();
+    return render(<HomeConversationalCover />);
+  } finally {
+    mockConversation = null;
+  }
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -127,4 +179,40 @@ test('HomeConversationalCover: renders without error with no initial state', () 
     html = render(<HomeConversationalCover />);
   });
   assert.ok(html.length > 0);
+});
+
+// ── Review / Save branch (the bug: cover ignored c.step → no Save UI) ──────────
+
+test('HomeConversationalCover: at review, shows a Save affordance and hides the chat input', () => {
+  const html = renderWithApi(reviewApi());
+  const text = visibleText(html);
+
+  // The Save control the cover was missing — completes the flow without looping.
+  // (renderToStaticMarkup escapes the & in "Save & see…", so match the tail.)
+  assert.match(text, /see my profile/i);
+
+  // The chat input must be gone at review (typing + submit re-appended the same
+  // review prompt forever — the endless loop this fix closes).
+  assert.doesNotMatch(html, /aria-label="Your answer"/);
+  assert.doesNotMatch(html, /Tell me about yourself/i);
+
+  // The form escape is still offered.
+  assert.match(text, /Prefer a form\?/i);
+});
+
+test('HomeConversationalCover: at review, surfaces a save error', () => {
+  const msg = "Couldn't save your profile — your browser is blocking local storage.";
+  const html = renderWithApi(reviewApi({ saveError: msg }));
+
+  assert.match(html, /role="alert"/);
+  assert.match(visibleText(html), /blocking local storage/i);
+});
+
+test('HomeConversationalCover: at review, the done beat replaces the Save button while navigating', () => {
+  const html = renderWithApi(reviewApi({ doneBeat: true }));
+  const text = visibleText(html);
+
+  assert.match(text, /opening your Digital Me/i);
+  // While navigating, the Save button is gone (no double-submit, no flicker).
+  assert.doesNotMatch(text, /see my profile/i);
 });

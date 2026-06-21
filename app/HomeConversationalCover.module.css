@@ -217,6 +217,69 @@
   outline-offset: 3px;
 }
 
+/* ── Review + Save: the conversation's terminal action ────────────────────── */
+
+.reviewActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 32rem;
+}
+
+.save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 3rem;
+  padding: 0 1.6rem;
+  font-family: var(--display);
+  font-size: clamp(1rem, 1.6vw, 1.1rem);
+  font-weight: 600;
+  color: var(--ink-0);
+  background: var(--signature-cyan-hi);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    transform var(--dur-2) var(--ease),
+    opacity var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease);
+}
+
+.save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature-cyan-hi) 18%, transparent);
+}
+
+.save:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.save:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 3px;
+}
+
+.saveError {
+  margin: 0;
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  color: var(--tint-red, #f97474);
+  text-align: center;
+}
+
+.doneBeat {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: rgba(75, 197, 222, 0.88);
+}
+
 /* ── Whisper chrome: two muted links, nothing else ────────────────────────── */
 
 .whisper {

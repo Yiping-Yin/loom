@@ -71,33 +71,62 @@ export function HomeConversationalCover() {
           </div>
         )}
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void c.handleSubmit();
-          }}
-          className={styles.inputRow}
-        >
-          <input
-            ref={c.inputRef as React.RefObject<HTMLInputElement>}
-            type="text"
-            className={styles.input}
-            value={c.input}
-            onChange={(e) => c.setInput(e.target.value)}
-            disabled={c.checking}
-            placeholder="Tell me about yourself…"
-            aria-label="Your answer"
-            autoComplete="off"
-          />
-          <button
-            type="submit"
-            className={styles.send}
-            disabled={!c.input.trim() || c.isTyping || c.checking}
-            aria-label="Send"
+        {c.step.id === 'review' ? (
+          // The conversation is complete — replace the input with the publish
+          // action so a user who finished the whole chat on the cover isn't
+          // trapped re-answering the final prompt. Mirrors the chat client's
+          // review branch (Save · saveError · doneBeat); the "Prefer a form?"
+          // escape stays in the whisper nav below.
+          <div className={styles.reviewActions}>
+            {c.saveError && (
+              <p className={styles.saveError} role="alert">
+                {c.saveError}
+              </p>
+            )}
+            {c.doneBeat ? (
+              <p className={styles.doneBeat} role="status">
+                Opening your Digital Me…
+              </p>
+            ) : (
+              <button
+                type="button"
+                className={styles.save}
+                onClick={c.handleSave}
+                disabled={c.saving}
+              >
+                {c.saving ? 'Saving…' : 'Save & see my profile'}
+              </button>
+            )}
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void c.handleSubmit();
+            }}
+            className={styles.inputRow}
           >
-            →
-          </button>
-        </form>
+            <input
+              ref={c.inputRef as React.RefObject<HTMLInputElement>}
+              type="text"
+              className={styles.input}
+              value={c.input}
+              onChange={(e) => c.setInput(e.target.value)}
+              disabled={c.checking}
+              placeholder="Tell me about yourself…"
+              aria-label="Your answer"
+              autoComplete="off"
+            />
+            <button
+              type="submit"
+              className={styles.send}
+              disabled={!c.input.trim() || c.isTyping || c.checking}
+              aria-label="Send"
+            >
+              →
+            </button>
+          </form>
+        )}
 
         <nav className={styles.whisper} aria-label="Other ways to start">
           <Link href="/example" className={styles.whisperLink}>

@@ -173,11 +173,11 @@
   align-self: flex-start;
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-1) 18%, transparent);
   border-radius: 999px;
   font-size: var(--fs-small);
   font-weight: 500;
-  color: var(--text-dim);
+  color: var(--text-2);
   text-decoration: none;
   background: transparent;
   transition:
