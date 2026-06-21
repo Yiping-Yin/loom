@@ -67,8 +67,12 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
     goNext(); // never blocked — hints are advisory
   };
 
-  const updateHome = (key: keyof BeginnerProfile['home'], value: string) =>
+  const updateHome = (key: keyof BeginnerProfile['home'], value: string) => {
     setProfile((p) => ({ ...p, home: { ...p.home, [key]: value } }));
+    if (key === 'name' || key === 'headline') {
+      setHomeHints((h) => ({ ...h, [key]: undefined }));
+    }
+  };
 
   const updateAbout = (key: keyof BeginnerProfile['about'], value: unknown) =>
     setProfile((p) => ({ ...p, about: { ...p.about, [key]: value } }));
@@ -321,8 +325,9 @@ function HomeStep({
             onChange={(e) => updateHome('name', e.target.value)}
             placeholder="Ada Lovelace"
             autoComplete="name"
+            aria-describedby={hints?.name ? 'home-name-hint' : undefined}
           />
-          {hints?.name && <p className={styles.fieldHint}>{hints.name}</p>}
+          {hints?.name && <p id="home-name-hint" className={styles.fieldHint}>{hints.name}</p>}
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="home-headline">
@@ -335,8 +340,9 @@ function HomeStep({
             value={profile.home.headline}
             onChange={(e) => updateHome('headline', e.target.value)}
             placeholder="Quant developer · Sydney"
+            aria-describedby={hints?.headline ? 'home-headline-hint' : undefined}
           />
-          {hints?.headline && <p className={styles.fieldHint}>{hints.headline}</p>}
+          {hints?.headline && <p id="home-headline-hint" className={styles.fieldHint}>{hints.headline}</p>}
         </div>
       </div>
     </>
