@@ -7,6 +7,10 @@
  * decorative: the star-river adapts the deterministic layout/comet math from
  * components/CapabilityMap.tsx but drops all interactivity, IndexedDB, and
  * cards. The SVG is aria-hidden; twinkle is reduced-motion-gated in CSS.
+ *
+ * Layout: an identity row on top (initials + name/role + proof chips), then the
+ * star-river full-width below so the constellation has room to breathe (a cramped
+ * half-width river collided its labels).
  */
 
 import { SHOWCASE_PERSONA, SHOWCASE_CAPABILITIES } from '../lib/onboarding/showcase-persona';
@@ -14,7 +18,16 @@ import type { BeginnerCapability } from '../lib/capability/capability-graph';
 import styles from './LandingShowcase.module.css';
 
 const VW = 1000;
-const VH = 300;
+const VH = 240;
+
+// The river curve (quadratic Bézier). Stars are seated ON this curve so the
+// constellation reads as a flowing river and labels split cleanly into two rows
+// (above the curve / below it) instead of scattering and colliding.
+const P0 = { x: 96, y: VH * 0.6 };
+const C = { x: VW * 0.4, y: VH * 0.22 };
+const P1 = { x: VW - 40, y: VH * 0.5 };
+const bez = (u: number, a: number, b: number, c: number) =>
+  (1 - u) * (1 - u) * a + 2 * (1 - u) * u * b + u * u * c;
 
 /** Deterministic FNV-1a → [0,1) jitter. No Math.random → SSR-stable layout. */
 function hash01(id: string): number {
@@ -30,22 +43,31 @@ function magnitudeOf(cap: BeginnerCapability): number {
   const ev = cap.evidence?.length ?? 0;
   if (cap.status === 'strong') return Math.min(1, 0.72 + ev * 0.08);
   if (cap.status === 'partial') return 0.46 + Math.min(ev, 2) * 0.04;
-  return 0.2;
+  return 0.22;
 }
 
-type Star = { cap: BeginnerCapability; x: number; y: number; r: number; mag: number };
+type Star = { cap: BeginnerCapability; x: number; y: number; r: number; mag: number; above: boolean };
 
 function layoutStars(caps: BeginnerCapability[]): Star[] {
   const n = caps.length;
   return caps.map((cap, i) => {
     const mag = magnitudeOf(cap);
-    const t = n <= 1 ? 0.5 : i / (n - 1);
-    const x = 130 + t * (VW - 230);
-    const y = 96 + hash01(`${cap.id}:y`) * 118;
-    const r = 3 + mag * 7;
-    return { cap, x, y, r, mag };
+    // Even spread along the curve, leaving room for the moon at the source.
+    const u = n <= 1 ? 0.5 : 0.14 + (i / (n - 1)) * 0.82;
+    const x = bez(u, P0.x, C.x, P1.x);
+    const y = bez(u, P0.y, C.y, P1.y) + (hash01(`${cap.id}:y`) - 0.5) * 14;
+    const r = 4 + mag * 9;
+    // Alternate labels above/below the curve so neighbours never collide.
+    return { cap, x, y, r, mag, above: i % 2 === 0 };
   });
 }
+
+const INITIALS = SHOWCASE_PERSONA.name
+  .split(/\s+/)
+  .map((w) => w[0])
+  .join('')
+  .slice(0, 2)
+  .toUpperCase();
 
 export function LandingShowcase() {
   const stars = layoutStars(SHOWCASE_CAPABILITIES);
@@ -62,116 +84,110 @@ export function LandingShowcase() {
 
         <div className={styles.stage}>
           <div className={styles.panel}>
-            <div className={styles.grid}>
-              <div className={styles.identity}>
-                <div className={styles.avatar} aria-hidden />
-                <p className={styles.name}>{SHOWCASE_PERSONA.name}</p>
-                <p className={styles.role}>
+            <header className={styles.identity}>
+              <span className={styles.avatar} aria-hidden>
+                {INITIALS}
+              </span>
+              <span className={styles.idText}>
+                <span className={styles.name}>{SHOWCASE_PERSONA.name}</span>
+                <span className={styles.role}>
                   {SHOWCASE_PERSONA.role} · {SHOWCASE_PERSONA.location}
-                </p>
-                <p className={styles.summary}>{SHOWCASE_PERSONA.summary}</p>
-                <div className={styles.chips}>
-                  <span className={styles.chip}>{SHOWCASE_PERSONA.sourcesCount} sources</span>
-                  <span className={`${styles.chip} ${styles.chipVerified}`}>
-                    {SHOWCASE_PERSONA.artifactsVerified} artifacts verified
-                  </span>
-                </div>
-              </div>
+                </span>
+              </span>
+              <span className={styles.chips}>
+                <span className={styles.chip}>{SHOWCASE_PERSONA.sourcesCount} sources</span>
+                <span className={`${styles.chip} ${styles.chipVerified}`}>
+                  {SHOWCASE_PERSONA.artifactsVerified} artifacts verified
+                </span>
+              </span>
+            </header>
 
-              <div className={styles.river}>
-                <p className={styles.riverLabel}>Capability star-river</p>
-                <svg
-                  className={styles.riverSvg}
-                  viewBox={`0 0 ${VW} ${VH}`}
-                  preserveAspectRatio="xMidYMid meet"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <radialGradient id="lsStar" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#eafdff" />
-                      <stop offset="45%" stopColor="var(--signature-cyan-hi)" />
-                      <stop offset="100%" stopColor="var(--signature-cyan)" stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id="lsGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="var(--signature-cyan-hi)" stopOpacity="0.5" />
-                      <stop offset="100%" stopColor="var(--signature-cyan-hi)" stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id="lsMoon" cx="38%" cy="32%" r="72%">
-                      <stop offset="0%" stopColor="#eef3f6" />
-                      <stop offset="60%" stopColor="#c7d4db" />
-                      <stop offset="100%" stopColor="#8aa0ac" />
-                    </radialGradient>
-                    <linearGradient id="lsComet" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="var(--signature-cyan-hi)" stopOpacity="0" />
-                      <stop offset="100%" stopColor="var(--signature-cyan-hi)" stopOpacity="0.85" />
-                    </linearGradient>
-                  </defs>
+            <p className={styles.summary}>{SHOWCASE_PERSONA.summary}</p>
 
-                  {/* river band */}
+            <div className={styles.river}>
+              <p className={styles.riverLabel}>Capability star-river</p>
+              <svg
+                className={styles.riverSvg}
+                viewBox={`0 0 ${VW} ${VH}`}
+                preserveAspectRatio="xMidYMid meet"
+                aria-hidden="true"
+              >
+                <defs>
+                  <radialGradient id="lsStar" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#eafdff" />
+                    <stop offset="50%" stopColor="var(--signature-cyan-hi)" />
+                    <stop offset="100%" stopColor="var(--signature-cyan)" stopOpacity="0" />
+                  </radialGradient>
+                  <radialGradient id="lsGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="var(--signature-cyan-hi)" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="var(--signature-cyan-hi)" stopOpacity="0" />
+                  </radialGradient>
+                  <radialGradient id="lsMoon" cx="38%" cy="32%" r="72%">
+                    <stop offset="0%" stopColor="#eef3f6" />
+                    <stop offset="60%" stopColor="#c7d4db" />
+                    <stop offset="100%" stopColor="#8aa0ac" />
+                  </radialGradient>
+                  <linearGradient id="lsComet" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="var(--signature-cyan-hi)" stopOpacity="0" />
+                    <stop offset="100%" stopColor="var(--signature-cyan-hi)" stopOpacity="0.85" />
+                  </linearGradient>
+                </defs>
+
+                {/* flowing river band — the curve the stars are seated on */}
+                <path
+                  d={`M${P0.x} ${P0.y} Q ${C.x} ${C.y} ${P1.x} ${P1.y}`}
+                  fill="none"
+                  stroke="var(--signature-cyan)"
+                  strokeOpacity="0.08"
+                  strokeWidth="22"
+                  strokeLinecap="round"
+                />
+
+                {/* links between consecutive capabilities */}
+                {stars.slice(0, -1).map((s, i) => (
+                  <line
+                    key={`link-${s.cap.id}`}
+                    x1={s.x}
+                    y1={s.y}
+                    x2={stars[i + 1].x}
+                    y2={stars[i + 1].y}
+                    stroke="var(--signature-cyan-hi)"
+                    strokeOpacity="0.16"
+                    strokeWidth="1"
+                  />
+                ))}
+
+                {/* moon anchor (Memory) at the river's source */}
+                <circle cx="44" cy={P0.y} r="24" fill="url(#lsMoon)" />
+
+                {/* comets — the standout strong capabilities */}
+                {comets.map((s) => (
                   <path
-                    d={`M40 ${VH * 0.62} Q ${VW * 0.4} ${VH * 0.28} ${VW - 40} ${VH * 0.52}`}
+                    key={`comet-${s.cap.id}`}
+                    d={`M${s.x - 130} ${s.y - 30} Q ${s.x - 55} ${s.y - 10} ${s.x} ${s.y}`}
                     fill="none"
-                    stroke="var(--signature-cyan)"
-                    strokeOpacity="0.12"
-                    strokeWidth="40"
+                    stroke="url(#lsComet)"
+                    strokeWidth="2.5"
                     strokeLinecap="round"
                   />
-                  {/* horizon */}
-                  <line
-                    x1="40"
-                    y1={VH - 36}
-                    x2={VW - 40}
-                    y2={VH - 36}
-                    stroke="#ffffff"
-                    strokeOpacity="0.06"
-                    strokeDasharray="2 8"
-                  />
-                  {/* moon anchor (Memory) */}
-                  <circle cx="58" cy={VH * 0.5} r="26" fill="url(#lsMoon)" />
+                ))}
 
-                  {/* links between consecutive capabilities */}
-                  {stars.slice(0, -1).map((s, i) => (
-                    <line
-                      key={`link-${s.cap.id}`}
-                      x1={s.x}
-                      y1={s.y}
-                      x2={stars[i + 1].x}
-                      y2={stars[i + 1].y}
-                      stroke="var(--signature-cyan-hi)"
-                      strokeOpacity="0.18"
-                      strokeWidth="1"
-                    />
-                  ))}
-
-                  {/* comets — the standout strong capabilities */}
-                  {comets.map((s) => (
-                    <path
-                      key={`comet-${s.cap.id}`}
-                      d={`M${s.x - 120} ${s.y - 26} Q ${s.x - 50} ${s.y - 8} ${s.x} ${s.y}`}
-                      fill="none"
-                      stroke="url(#lsComet)"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                  ))}
-
-                  {/* stars + labels */}
-                  {stars.map((s) => (
-                    <g key={s.cap.id} className={styles.star}>
-                      <circle cx={s.x} cy={s.y} r={s.r * 3.2} fill="url(#lsGlow)" />
-                      <circle cx={s.x} cy={s.y} r={s.r} fill="url(#lsStar)" />
-                      <text
-                        x={s.x}
-                        y={s.y + s.r + 20}
-                        textAnchor="middle"
-                        className={styles.starLabel}
-                      >
-                        {s.cap.label}
-                      </text>
-                    </g>
-                  ))}
-                </svg>
-              </div>
+                {/* stars + alternating labels */}
+                {stars.map((s) => (
+                  <g key={s.cap.id} className={styles.star}>
+                    <circle cx={s.x} cy={s.y} r={s.r * 3.4} fill="url(#lsGlow)" />
+                    <circle cx={s.x} cy={s.y} r={s.r} fill="url(#lsStar)" />
+                    <text
+                      x={s.x}
+                      y={s.above ? s.y - s.r - 12 : s.y + s.r + 22}
+                      textAnchor="middle"
+                      className={styles.starLabel}
+                    >
+                      {s.cap.label}
+                    </text>
+                  </g>
+                ))}
+              </svg>
             </div>
           </div>
         </div>
