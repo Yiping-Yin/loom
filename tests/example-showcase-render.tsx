@@ -8,6 +8,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
+import Module from 'node:module';
 
 // CSS Modules: return a proxy so any className lookup is a no-op string.
 const cssModuleClassMap = new Proxy(
@@ -19,6 +20,49 @@ const cssModuleExports = { __esModule: true, default: cssModuleClassMap };
 require.extensions['.css'] = (module: { exports: typeof cssModuleExports }) => {
   module.exports = cssModuleExports;
 };
+
+// Dependency stubs (installed before the gated home is first require()'d). The
+// default `/` is now the conversation-first cosmic cover (HomeGate → cover),
+// which — like the chat client — calls useRouter() and renders next/link, neither
+// of which is mounted in a bare renderToStaticMarkup. We stub next/navigation +
+// next/link, and force a no-profile read so the cover (the new-user front door),
+// not the returning-user /digital-me redirect, is what `/` paints. Mirrors the
+// harness in home-cover.test.tsx. The owner components rendered below
+// (HomeClient, DigitalMeRoleOSClient, ExampleBanner) tolerate these stubs:
+// ExampleBanner's next/link still emits a plain <a href>, the others import no
+// navigation hooks.
+const _origRequire = (Module.prototype as NodeJS.Module).require as (id: string) => unknown;
+
+(Module.prototype as NodeJS.Module).require = function stubRequire(
+  this: NodeJS.Module,
+  id: string,
+): unknown {
+  if (id === 'next/navigation') {
+    return { useRouter: () => ({ push: () => undefined, replace: () => undefined }), usePathname: () => '/' };
+  }
+  if (id === 'next/link') {
+    function LinkStub({
+      href,
+      children,
+      className,
+    }: {
+      href: string;
+      children: React.ReactNode;
+      className?: string;
+    }) {
+      return React.createElement('a', { href, className }, children);
+    }
+    return { __esModule: true, default: LinkStub };
+  }
+  if (id.endsWith('profile-storage')) {
+    return {
+      readBeginnerProfileLocal: () => null,
+      writeBeginnerProfileLocal: () => undefined,
+      BEGINNER_PROFILE_KEY: 'loom:beginner-profile',
+    };
+  }
+  return _origRequire.call(this, id);
+} as typeof _origRequire;
 
 function render(node: React.ReactElement) {
   Object.assign(globalThis, { React });
@@ -162,28 +206,33 @@ test('product-shell registers /example as an internal route prefix', () => {
 });
 
 // ---------------------------------------------------------------------------
-// F2 step 2 — the DEFAULT routes are now neutral for a no-profile STRANGER.
+// Conversational cosmos entry — the DEFAULT `/` is the two-door home.
 //
-// renderToStaticMarkup never mounts, so the gates' localStorage useEffect never
-// runs: the SSR output is exactly the no-profile fallback a stranger first sees.
-// The owner dossier must be ABSENT from these default surfaces (it lives only at
-// /example*, asserted above).
+// renderToStaticMarkup never mounts, so HomeGate's localStorage useEffect never
+// runs and the profile-storage stub reads null: the SSR output is exactly the
+// no-profile front door a new user first sees — the conversation-first cosmic
+// cover (HomeConversationalCover), NOT the retired neutral landing and NOT the
+// owner dossier (which lives only at /example*, asserted above). A returning
+// user with a profile is redirected to /digital-me after mount, covered by
+// home-gate-redirect.test.ts.
 // ---------------------------------------------------------------------------
 
-test('/ (no profile) renders the neutral landing CTAs, NOT the owner dossier', () => {
+test('/ (no profile) renders the cosmic cover front door, NOT the owner dossier', () => {
   const { default: HomePage } = require('../app/page') as { default: React.ComponentType };
   const html = render(<HomePage />);
   const text = visibleText(html);
 
-  // Neutral landing: the LOOM promise + Gather→Build→Represent + both CTAs.
-  assert.match(text, /verifiable identity/);
-  assert.match(text, /Gather/);
-  assert.match(text, /Build/);
-  assert.match(text, /Represent/);
-  assert.match(html, /href="\/onboarding\/profile"/);
-  assert.match(text, /Build your LOOM/);
-  assert.match(html, /href="\/example"/);
+  // The conversational cosmos cover: the single answer input + whisper links.
+  assert.match(html, /Tell me about yourself/i);
+  assert.match(html, /aria-label="Your answer"/);
+  assert.match(html, /loom-cosmic-field/);
   assert.match(text, /See an example/);
+  assert.match(html, /href="\/example"/);
+  assert.match(text, /Prefer a form\?/i);
+
+  // The retired neutral landing must be GONE from the default home.
+  assert.doesNotMatch(text, /verifiable identity/);
+  assert.doesNotMatch(text, /Build your LOOM/);
 
   // Owner dossier markers must be ABSENT from the default home.
   assert.doesNotMatch(text, /Yiping Yin/);
