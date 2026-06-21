@@ -165,16 +165,21 @@
 .input {
   flex: 1;
   min-height: 3rem;
-  padding: 0.65rem 0.25rem;
+  padding: 0.7rem 1rem;
   font-family: inherit;
   font-size: clamp(1rem, 1.6vw, 1.1rem);
   color: var(--text-1);
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-2) 36%, transparent);
-  border-radius: 0;
+  /* Restrained liquid glass — a thin frosted field over the cosmos. */
+  background: var(--mat-thin-bg);
+  -webkit-backdrop-filter: var(--mat-blur);
+  backdrop-filter: var(--mat-blur);
+  border: 1px solid var(--mat-border);
+  border-radius: 14px;
   outline: none;
-  transition: border-color var(--dur-2) var(--ease);
+  box-shadow: var(--mat-hi);
+  transition:
+    border-color var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease);
 }
 
 .input::placeholder {
@@ -182,7 +187,10 @@
 }
 
 .input:focus {
-  border-bottom-color: var(--signature-cyan-hi);
+  border-color: color-mix(in srgb, var(--signature-cyan-hi) 55%, var(--mat-border));
+  box-shadow:
+    var(--mat-hi),
+    0 0 0 3px color-mix(in srgb, var(--signature-cyan-hi) 14%, transparent);
 }
 
 .input:disabled {
@@ -199,20 +207,28 @@
   height: 3rem;
   font-size: 1.25rem;
   line-height: 1;
-  color: var(--ink-0);
-  background: var(--signature-cyan-hi);
-  border: none;
+  /* Liquid-glass orb — cyan-tinted translucency + blur + specular edge. */
+  color: var(--signature-cyan-hi);
+  background: color-mix(in srgb, var(--signature-cyan-hi) 16%, var(--mat-reg-bg));
+  -webkit-backdrop-filter: var(--mat-blur);
+  backdrop-filter: var(--mat-blur);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan-hi) 38%, var(--mat-border));
   border-radius: 999px;
   cursor: pointer;
+  box-shadow: var(--mat-hi);
   transition:
     transform var(--dur-2) var(--ease),
     opacity var(--dur-2) var(--ease),
+    background var(--dur-2) var(--ease),
     box-shadow var(--dur-2) var(--ease);
 }
 
 .send:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature-cyan-hi) 18%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan-hi) 28%, var(--mat-reg-bg));
+  box-shadow:
+    var(--mat-hi),
+    0 0 0 4px color-mix(in srgb, var(--signature-cyan-hi) 16%, transparent);
 }
 
 .send:disabled {
