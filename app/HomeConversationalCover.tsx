@@ -19,11 +19,15 @@
  * c.bottomRef on its scroll anchor so those effects apply cleanly — no fork.
  */
 
+import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { useConversation } from '../lib/onboarding/useConversation';
+import { useConversation, type ConversationApi } from '../lib/onboarding/useConversation';
 import { constellationFor } from '../lib/onboarding/constellation';
 import { ConstellationField } from './ConstellationField';
 import styles from './HomeConversationalCover.module.css';
+
+/** Accepted résumé extensions (mirrors the chat client's import affordance). */
+const RESUME_ACCEPT = '.pdf,.txt,.md,.markdown';
 
 export function HomeConversationalCover() {
   const c = useConversation();
@@ -128,6 +132,12 @@ export function HomeConversationalCover() {
           </form>
         )}
 
+        {/* Résumé import: a quiet whisper toggle that lets a new user auto-fill
+            from a CV instead of typing every answer. Pure VIEW over the shared
+            hook's import side effects — no forked logic. Gone once we reach
+            review (there's nothing left to pre-fill). */}
+        {c.step.id !== 'review' && <ResumeImport c={c} />}
+
         <nav className={styles.whisper} aria-label="Other ways to start">
           <Link href="/example" className={styles.whisperLink}>
             See an example
@@ -172,5 +182,131 @@ function MoonOrb() {
         </radialGradient>
       </defs>
     </svg>
+  );
+}
+
+/**
+ * ResumeImport — a quiet "Import a résumé" whisper on the cover that lets a new
+ * user auto-fill from a CV rather than typing every answer. It is a sparser
+ * cosmic VIEW over the SAME shared hook side effects the chat client's
+ * UploadArea/PasteArea drive (c.importMode/c.handleFileUpload/c.handlePasteResume
+ * /c.uploadStatus/c.uploadError/c.extracting) — no forked logic.
+ *
+ * The hook closes c.importMode back to 'none' the moment an import starts (see
+ * handleFileUpload/handlePasteResume), so the busy/error feedback lives OUTSIDE
+ * the open panel — otherwise "Extracting…" would vanish the instant it began.
+ * The caller renders this only before review.
+ */
+function ResumeImport({ c }: { c: ConversationApi }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pasteText, setPasteText] = useState('');
+  const open = c.importMode !== 'none';
+  const busy = c.uploadStatus !== 'idle' || c.extracting;
+  const status =
+    c.uploadStatus === 'reading'
+      ? 'Reading…'
+      : c.uploadStatus === 'extracting' || c.extracting
+        ? 'Extracting your profile…'
+        : '';
+
+  return (
+    <div className={styles.import}>
+      <button
+        type="button"
+        className={styles.importToggle}
+        onClick={() => c.setImportMode(open ? 'none' : 'upload')}
+        aria-expanded={open}
+        disabled={busy}
+      >
+        {open ? 'Hide résumé import' : 'Import a résumé'}
+      </button>
+
+      {open && (
+        <div className={styles.importPanel}>
+          {c.importMode === 'upload' ? (
+            <div className={styles.importRow}>
+              <button
+                type="button"
+                className={styles.importAction}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={busy}
+              >
+                Choose a file
+              </button>
+              <button
+                type="button"
+                className={styles.importSwitch}
+                onClick={() => {
+                  c.setUploadError('');
+                  c.setImportMode('paste');
+                }}
+                disabled={busy}
+              >
+                or paste text
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={RESUME_ACCEPT}
+                className={styles.importFile}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void c.handleFileUpload(file);
+                  // Reset so the same file can be re-picked after an error.
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                aria-label="Upload résumé file"
+                disabled={busy}
+              />
+            </div>
+          ) : (
+            <div className={styles.importPaste}>
+              <textarea
+                className={styles.importTextarea}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder="Paste your résumé text…"
+                rows={6}
+                disabled={busy}
+                aria-label="Paste résumé text"
+              />
+              <div className={styles.importRow}>
+                <button
+                  type="button"
+                  className={styles.importAction}
+                  onClick={() => void c.handlePasteResume(pasteText)}
+                  disabled={!pasteText.trim() || busy}
+                >
+                  Use this résumé
+                </button>
+                <button
+                  type="button"
+                  className={styles.importSwitch}
+                  onClick={() => {
+                    c.setUploadError('');
+                    c.setImportMode('upload');
+                  }}
+                  disabled={busy}
+                >
+                  or upload a file
+                </button>
+              </div>
+            </div>
+          )}
+          <p className={styles.importHint}>PDF, TXT, or MD · max 10 MB</p>
+        </div>
+      )}
+
+      {status && (
+        <p className={styles.importStatus} role="status" aria-live="polite">
+          {status}
+        </p>
+      )}
+      {c.uploadError && (
+        <p className={styles.importError} role="alert">
+          {c.uploadError}
+        </p>
+      )}
+    </div>
   );
 }

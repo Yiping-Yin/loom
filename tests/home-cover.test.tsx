@@ -181,6 +181,19 @@ test('HomeConversationalCover: renders without error with no initial state', () 
   assert.ok(html.length > 0);
 });
 
+test('HomeConversationalCover: offers a quiet résumé-import toggle before review', () => {
+  const { HomeConversationalCover } = getCover();
+  const html = render(<HomeConversationalCover />);
+  const text = visibleText(html);
+
+  // A new user can auto-fill from a CV instead of typing — the whisper toggle
+  // that reveals the shared upload/paste affordance must be present.
+  assert.match(text, /Import a résumé/i);
+
+  // It's a collapsible toggle (closed at first paint), not a navigation link.
+  assert.match(html, /aria-expanded="false"/);
+});
+
 // ── Review / Save branch (the bug: cover ignored c.step → no Save UI) ──────────
 
 test('HomeConversationalCover: at review, shows a Save affordance and hides the chat input', () => {
@@ -195,6 +208,11 @@ test('HomeConversationalCover: at review, shows a Save affordance and hides the 
   // review prompt forever — the endless loop this fix closes).
   assert.doesNotMatch(html, /aria-label="Your answer"/);
   assert.doesNotMatch(html, /Tell me about yourself/i);
+
+  // The résumé import is an answer-time affordance — gone once we reach review
+  // (nothing left to pre-fill). This also keeps the cover from reading import
+  // fields the review-branch mock intentionally omits.
+  assert.doesNotMatch(text, /Import a résumé/i);
 
   // The form escape is still offered.
   assert.match(text, /Prefer a form\?/i);
