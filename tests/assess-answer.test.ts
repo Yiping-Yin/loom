@@ -39,3 +39,17 @@ test('bad/weak results carry a hint; ok does not', () => {
   assert.ok(assessAnswer('name', 'asdfgh').hint);
   assert.equal(assessAnswer('name', 'Lin Wei').hint, undefined);
 });
+
+test('tech-stack headline with slashes is ok (no false no-vowel flag)', () => {
+  assert.equal(assessAnswer('headline', 'HTML/CSS/JS developer').level, 'ok');
+});
+
+test('CJK short answers are not over-penalized', () => {
+  assert.equal(assessAnswer('name', '李明').level, 'ok');
+  assert.equal(assessAnswer('headline', '金融学生').level, 'ok');
+  assert.equal(assessAnswer('summary', '应届计算机毕业生，做数据小工具。').level, 'ok');
+});
+
+test('a long all-consonant token is still bad (no-vowel branch)', () => {
+  assert.equal(assessAnswer('summary', 'bcdfghjk').level, 'bad');
+});
