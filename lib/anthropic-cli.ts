@@ -7,17 +7,21 @@
  * Activated only when LOOM_LLM_BACKEND=cli (set by `npm run llm:smoke -- --cli`).
  * The deploy NEVER sets it — the web/app paths use the HTTP Messages API.
  *
+ * `claude -p` is the full agent and is not perfectly reliable for back-to-back
+ * programmatic calls (occasional non-zero exits / empty output, e.g. transient
+ * throttling or contention with an open interactive Claude Code session), so each
+ * call retries a few times with backoff. Set LOOM_LLM_DEBUG=1 to dump raw output.
+ *
  * Caveats (this is local validation, not a pristine eval):
  *   - The spawned `claude` runs from a temp cwd to avoid the repo's CLAUDE.md,
  *     but your GLOBAL ~/.claude memory still loads as background context (mild).
- *     For a fully clean signal, use the HTTP API (a few cents of credit).
  *   - It is the full Claude Code agent in print mode (slower than a raw API call).
- *   - The model is whatever you pass via --model (Sonnet by default, matching prod).
  */
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 
 const DEFAULT_TIMEOUT_MS = 180000;
+const MAX_ATTEMPTS = 3;
 // `claude -p` is the full agent; without a firm instruction it tends to wrap
 // structured output in prose ("Here's the profile:" + ```json fences + trailing
 // commentary), which breaks the routes' JSON parsers. This forces a raw artifact.
@@ -28,13 +32,23 @@ const NEUTRAL_SYSTEM =
   'markdown code fences, no preamble, no trailing commentary, no explanation. ' +
   'Never ask clarifying questions. Never use tools.';
 
-export async function runViaClaudeCli(
-  prompt: string,
-  opts: { model?: string; timeoutMs?: number; onChunk?: (chunk: string) => void } = {},
-): Promise<string> {
+type CliOpts = { model?: string; timeoutMs?: number; onChunk?: (chunk: string) => void };
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** One `claude -p` attempt. Rejects on spawn error, timeout, non-zero exit, or empty output. */
+function attemptClaudeCli(prompt: string, opts: CliOpts): Promise<string> {
   const bin = process.env.LOOM_LLM_CLI?.trim() || 'claude';
   const model = opts.model?.trim() || 'sonnet';
-  const args = ['-p', '--model', model, '--output-format', 'text', '--system-prompt', NEUTRAL_SYSTEM];
+  const args = [
+    '-p',
+    '--model', model,
+    '--output-format', 'text',
+    '--system-prompt', NEUTRAL_SYSTEM,
+    '--no-session-persistence',
+  ];
 
   return new Promise<string>((resolve, reject) => {
     const child = spawn(bin, args, { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'] });
@@ -57,20 +71,22 @@ export async function runViaClaudeCli(
     });
     child.on('close', (code: number | null) => {
       clearTimeout(timer);
-      if (code !== 0) {
-        reject(new Error(`${bin} -p exited with code ${code}: ${err.trim().slice(0, 400)}`));
-        return;
-      }
       const text = out.trim();
       if (process.env.LOOM_LLM_DEBUG) {
-        process.stderr.write(`\n[llm cli] raw output (${text.length} chars):\n${text.slice(0, 2000)}\n\n`);
+        process.stderr.write(
+          `\n[llm cli] exit=${code}, stdout(${text.length} chars):\n${text.slice(0, 2000)}\n` +
+            (err.trim() ? `[llm cli] stderr:\n${err.trim().slice(0, 1000)}\n` : '') +
+            '\n',
+        );
       }
-      if (opts.onChunk && text) {
-        try {
-          opts.onChunk(text);
-        } catch {
-          /* ignore */
-        }
+      if (code !== 0) {
+        // `claude -p` errors often land on stdout, not stderr — surface both.
+        reject(new Error(`${bin} -p exited with code ${code}: ${(err.trim() || text || '(no output)').slice(0, 500)}`));
+        return;
+      }
+      if (!text) {
+        reject(new Error(`${bin} -p returned empty output`));
+        return;
       }
       resolve(text);
     });
@@ -78,4 +94,28 @@ export async function runViaClaudeCli(
     child.stdin.write(prompt);
     child.stdin.end();
   });
+}
+
+export async function runViaClaudeCli(prompt: string, opts: CliOpts = {}): Promise<string> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const text = await attemptClaudeCli(prompt, opts);
+      if (opts.onChunk) {
+        try {
+          opts.onChunk(text);
+        } catch {
+          /* ignore */
+        }
+      }
+      return text;
+    } catch (e) {
+      lastErr = e;
+      if (process.env.LOOM_LLM_DEBUG) {
+        process.stderr.write(`[llm cli] attempt ${attempt}/${MAX_ATTEMPTS} failed: ${e instanceof Error ? e.message : String(e)}\n`);
+      }
+      if (attempt < MAX_ATTEMPTS) await delay(1500 * attempt);
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }
