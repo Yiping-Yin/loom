@@ -181,17 +181,19 @@ test('HomeConversationalCover: renders without error with no initial state', () 
   assert.ok(html.length > 0);
 });
 
-test('HomeConversationalCover: offers a quiet résumé-import toggle before review', () => {
+test('HomeConversationalCover: offers a quiet résumé-import affordance before review', () => {
   const { HomeConversationalCover } = getCover();
   const html = render(<HomeConversationalCover />);
   const text = visibleText(html);
 
-  // A new user can auto-fill from a CV instead of typing — the whisper toggle
-  // that reveals the shared upload/paste affordance must be present.
+  // A new user can auto-fill from a CV instead of typing — a single quiet
+  // "Import a résumé" whisper in the nav line.
   assert.match(text, /Import a résumé/i);
 
-  // It's a collapsible toggle (closed at first paint), not a navigation link.
-  assert.match(html, /aria-expanded="false"/);
+  // It opens the system file picker DIRECTLY — a hidden file input, with no
+  // inline panel/format blurb/paste box (the cover stays sparse).
+  assert.match(html, /type="file"/);
+  assert.doesNotMatch(html, /aria-expanded/);
 });
 
 // ── Review / Save branch (the bug: cover ignored c.step → no Save UI) ──────────
