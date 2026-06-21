@@ -17,7 +17,14 @@ import {
   writeBeginnerProfileLocal,
 } from '../../../lib/profile/profile-storage';
 import { mergeExtractedProfile } from '../../../lib/profile/merge-extracted-profile';
-import { assessAnswer, type AnswerField } from '../../../lib/onboarding/assess-answer';
+import {
+  type ConvoStep,
+  isSkip,
+  isYes,
+  fieldOf,
+  stepKey,
+  decideChatGate,
+} from '../../../lib/onboarding/chat-gate';
 import styles from './ConversationalOnboarding.module.css';
 
 /** Max file size for résumé import (mirrors the Proof section: 10 MB). */
@@ -33,33 +40,14 @@ const RESUME_ACCEPTED_TYPES = new Set([
 ]);
 
 // ── Step machine ─────────────────────────────────────────────────────────────
-
-/**
- * Each discriminated step knows which field in BeginnerProfile it populates.
- * The machine is deterministic and offline-safe — no LLM call.
- */
-export type ConvoStep =
-  | { id: 'name' }
-  | { id: 'headline' }
-  | { id: 'summary' }
-  | { id: 'edu_institution'; entryIdx: number }
-  | { id: 'edu_qualification'; entryIdx: number }
-  | { id: 'edu_years'; entryIdx: number }
-  | { id: 'edu_more' }
-  | { id: 'exp_role'; entryIdx: number }
-  | { id: 'exp_organization'; entryIdx: number }
-  | { id: 'exp_years'; entryIdx: number }
-  | { id: 'exp_highlight'; entryIdx: number }
-  | { id: 'exp_more' }
-  | { id: 'work_title'; entryIdx: number }
-  | { id: 'work_description'; entryIdx: number }
-  | { id: 'work_link'; entryIdx: number }
-  | { id: 'work_more' }
-  | { id: 'review' };
+// The ConvoStep type, isSkip/isYes, fieldOf/stepKey, and the pure gate decision
+// (decideChatGate) live in lib/onboarding/chat-gate.ts so they're unit-testable
+// without a React/jsdom harness. This component owns only the rendering + the
+// component-local pure helpers (stepPrompt, progressOf, applyAnswer).
 
 export const TOTAL_STEPS = 15; // name + headline + summary + edu(3) + exp(4) + edu_more + exp_more + works(4) ≈ 15 logical beats
 
-export function stepPrompt(step: ConvoStep): string {
+function stepPrompt(step: ConvoStep): string {
   switch (step.id) {
     case 'name':
       return "What's your full name?";
@@ -125,35 +113,6 @@ function progressOf(step: ConvoStep): number {
     case 'work_more': return 14;
     case 'review': return TOTAL_STEPS;
   }
-}
-
-const isSkip = (answer: string) => /^(skip|s|no|nope|none|n\/a|-)$/i.test(answer.trim());
-const isYes = (answer: string) => /^(yes|y|yeah|sure|yep|ok)$/i.test(answer.trim());
-
-/**
- * Map a chat step to the answer-quality floor's AnswerField, or null for
- * non-free-text steps (year ranges, yes/no "add another?", link, review) which
- * get no floor check. Exported so the gate's mapping is contract-tested.
- */
-export function fieldOf(step: ConvoStep): AnswerField | null {
-  switch (step.id) {
-    case 'name': return 'name';
-    case 'headline': return 'headline';
-    case 'summary': return 'summary';
-    case 'edu_institution': return 'institution';
-    case 'edu_qualification': return 'qualification';
-    case 'exp_role': return 'role';
-    case 'exp_organization': return 'organization';
-    case 'exp_highlight': return 'highlight';
-    case 'work_title': return 'work_title';
-    case 'work_description': return 'work_description';
-    default: return null;
-  }
-}
-
-/** Stable key per step occurrence (entryIdx disambiguates repeated edu/exp/work). */
-export function stepKey(step: ConvoStep): string {
-  return 'entryIdx' in step ? `${step.id}:${step.entryIdx}` : step.id;
 }
 
 /**
@@ -439,15 +398,11 @@ export function ConversationalOnboardingClient() {
     if (!answer || isTyping) return;
 
     // Answer-quality gate (free-text steps only; skip answers + already-reasked pass through)
-    const field = fieldOf(step);
-    const key = stepKey(step);
-    if (field && !isSkip(answer) && !reasked.has(key)) {
-      const floor = assessAnswer(field, answer);
-      if (floor.level === 'bad') {
-        setReasked((s) => new Set(s).add(key));
-        nudge(answer, floor.hint);
-        return;
-      }
+    const gate = decideChatGate(step, answer, reasked);
+    if (gate.nudge) {
+      setReasked((s) => new Set(s).add(gate.key));
+      nudge(answer, gate.hint);
+      return;
     }
 
     const userMsg: ChatMessage = { from: 'user', text: answer };
