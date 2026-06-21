@@ -165,6 +165,16 @@
   box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.08);
 }
 
+/* Quiet, advisory floor hint under a HOME field. Muted + italic guidance —
+   deliberately NOT an error color: it never blocks the Next action. */
+.fieldHint {
+  margin: 0.4rem 0 0;
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--fg-secondary);
+}
+
 .textarea {
   composes: input;
   min-height: 7rem;

@@ -15,6 +15,7 @@ import {
   readBeginnerProfileLocal,
   writeBeginnerProfileLocal,
 } from '../../../lib/profile/profile-storage';
+import { assessHomeFields, type HomeHints } from '../../../lib/onboarding/form-gate';
 import styles from './ProfileWizard.module.css';
 
 type Step = 'home' | 'about' | 'education' | 'experience' | 'review';
@@ -42,6 +43,7 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
   const [stepIndex, setStepIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [homeHints, setHomeHints] = useState<HomeHints>({});
 
   // Edit / resume: when no initial profile was supplied, hydrate from the
   // localStorage store on mount so a returning user sees their saved profile.
@@ -57,6 +59,13 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
 
   const goNext = () => setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   const goBack = () => setStepIndex((i) => Math.max(i - 1, 0));
+
+  // Quiet, advisory floor for the HOME step: compute hints on Next, but never
+  // block navigation — the hints are guidance, not a gate.
+  const goNextChecked = () => {
+    if (currentStep === 'home') setHomeHints(assessHomeFields(profile.home));
+    goNext(); // never blocked — hints are advisory
+  };
 
   const updateHome = (key: keyof BeginnerProfile['home'], value: string) =>
     setProfile((p) => ({ ...p, home: { ...p.home, [key]: value } }));
@@ -199,7 +208,7 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
           {/* Step content */}
           <div className={styles.stepContent}>
             {currentStep === 'home' && (
-              <HomeStep profile={profile} updateHome={updateHome} />
+              <HomeStep profile={profile} updateHome={updateHome} hints={homeHints} />
             )}
             {currentStep === 'about' && (
               <AboutStep
@@ -252,7 +261,7 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
                 <span className={styles.savingNote}>Saving…</span>
               )}
               {currentStep !== 'review' ? (
-                <button type="button" className={styles.primaryButton} onClick={goNext}>
+                <button type="button" className={styles.primaryButton} onClick={goNextChecked}>
                   Next
                   <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
                 </button>
@@ -288,9 +297,11 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
 function HomeStep({
   profile,
   updateHome,
+  hints,
 }: {
   profile: BeginnerProfile;
   updateHome: (key: keyof BeginnerProfile['home'], value: string) => void;
+  hints?: HomeHints;
 }) {
   return (
     <>
@@ -311,6 +322,7 @@ function HomeStep({
             placeholder="Ada Lovelace"
             autoComplete="name"
           />
+          {hints?.name && <p className={styles.fieldHint}>{hints.name}</p>}
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="home-headline">
@@ -324,6 +336,7 @@ function HomeStep({
             onChange={(e) => updateHome('headline', e.target.value)}
             placeholder="Quant developer · Sydney"
           />
+          {hints?.headline && <p className={styles.fieldHint}>{hints.headline}</p>}
         </div>
       </div>
     </>

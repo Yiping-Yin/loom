@@ -149,6 +149,21 @@ test('ProfileWizardClient: renders without error when initial is null', () => {
   assert.ok(html.length > 0);
 });
 
+test('ProfileWizardClient: HOME step renders with no fieldHint initially (hint is opt-in, never auto-blocks)', () => {
+  // The form floor is advisory: homeHints starts empty, so no `fieldHint` line
+  // is present on first paint. The hint only appears after the user presses Next
+  // (an interaction this static harness does not exercise). The pure decision is
+  // covered directly by tests/form-gate.test.ts.
+  const { ProfileWizardClient } = require('../app/onboarding/profile/ProfileWizardClient') as typeof import('../app/onboarding/profile/ProfileWizardClient');
+
+  const html = render(<ProfileWizardClient initial={SAMPLE_PROFILE} />);
+
+  // Home inputs are present (we're on the HOME step)...
+  assert.match(html, /Ada Lovelace/);
+  // ...but no advisory hint line has rendered yet.
+  assert.doesNotMatch(html, /class="fieldHint"/);
+});
+
 test('ProfileWizardClient: first step is marked with aria-current=step', () => {
   const { ProfileWizardClient } = require('../app/onboarding/profile/ProfileWizardClient') as typeof import('../app/onboarding/profile/ProfileWizardClient');
 
