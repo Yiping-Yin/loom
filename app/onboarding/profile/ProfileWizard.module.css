@@ -1,0 +1,511 @@
+/* ProfileWizard — inherits the onboarding dark/cosmic aesthetic */
+
+/* ── Page shell (mirrors OnboardingClient.module.css) ── */
+.page {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 100vh;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: clip;
+  background:
+    radial-gradient(66rem 42rem at 50% -18%, rgba(232, 236, 238, 0.14), rgba(118, 128, 130, 0.045) 42%, transparent 70%),
+    radial-gradient(42rem 28rem at 68% 18%, rgba(75, 197, 222, 0.045), transparent 68%),
+    linear-gradient(180deg, rgba(25, 28, 29, 0.78), rgba(8, 10, 11, 0.94) 44%, #020303 100%);
+  color: var(--fg);
+  font-family: var(--serif);
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  width: clamp(30rem, 46vw + 6rem, 56rem);
+  max-width: 100%;
+  padding: clamp(2.8rem, 5.6vh, 5rem) 2rem clamp(3.2rem, 7vh, 5.6rem);
+}
+
+/* ── Eyebrow + title ── */
+.eyebrow {
+  color: var(--fg-secondary);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 1.15rem 0 0;
+  color: var(--fg);
+  font-family: var(--display);
+  font-size: clamp(2rem, 2.2vw + 0.8rem, 3rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.04;
+}
+
+.titleAccent {
+  color: var(--fg-secondary);
+  font-style: italic;
+}
+
+/* ── Progress bar ── */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 2.5rem 0 2.75rem;
+  border: 1px solid rgba(232, 236, 238, 0.10);
+  border-radius: 999px;
+  padding: 0.3rem 0.4rem;
+  background: rgba(12, 14, 15, 0.46);
+}
+
+.progressStep {
+  flex: 1;
+  padding: 0.36rem 0.6rem;
+  border-radius: 999px;
+  color: var(--fg-secondary);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  transition: background 180ms ease, color 180ms ease;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.progressStepActive {
+  background: rgba(75, 197, 222, 0.18);
+  color: var(--signature-cyan-hi, #8AF7E6);
+}
+
+.progressStepDone {
+  color: rgba(75, 197, 222, 0.55);
+}
+
+/* ── Step content ── */
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stepDescription {
+  margin: 0 0 0.5rem;
+  color: var(--fg-secondary);
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.6;
+  max-width: 38rem;
+}
+
+/* ── Form fields ── */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.label {
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.labelOptional {
+  margin-left: 0.55em;
+  color: var(--fg-secondary);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  font-style: italic;
+  font-size: 0.68rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba(232, 236, 238, 0.14);
+  border-radius: var(--r-1, 6px);
+  background: rgba(12, 14, 15, 0.52);
+  color: var(--fg);
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+  appearance: none;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: rgba(168, 178, 182, 0.38);
+  font-style: italic;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(75, 197, 222, 0.46);
+  background: rgba(14, 17, 18, 0.7);
+  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.08);
+}
+
+/* Quiet, advisory floor hint under a HOME field. Muted + italic guidance —
+   deliberately NOT an error color: it never blocks the Next action. */
+.fieldHint {
+  margin: 0.4rem 0 0;
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--fg-secondary);
+}
+
+.textarea {
+  composes: input;
+  min-height: 7rem;
+  resize: vertical;
+  font-family: var(--serif);
+  line-height: 1.65;
+}
+
+.select {
+  composes: input;
+  cursor: pointer;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(168,178,182,0.5)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+}
+
+/* ── Entry cards (education / experience) ── */
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.card {
+  padding: 1.25rem 1.3rem;
+  border: 1px solid rgba(232, 236, 238, 0.10);
+  border-radius: var(--r-2, 10px);
+  background: rgba(12, 14, 15, 0.44);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cardIndex {
+  color: var(--fg-secondary);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.removeBtn {
+  border: 0;
+  background: transparent;
+  color: rgba(168, 178, 182, 0.45);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+.removeBtn:hover {
+  color: var(--tint-red, #f97474);
+  background: rgba(249, 116, 116, 0.08);
+}
+
+.cardRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* ── Bullets editor ── */
+.bulletsLabel {
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.bulletRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.bulletDot {
+  color: var(--fg-secondary);
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.bulletInput {
+  composes: input;
+  flex: 1;
+}
+
+/* ── Links editor ── */
+.linkRow {
+  display: grid;
+  grid-template-columns: 10rem 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.65rem;
+}
+
+/* ── Add button ── */
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px dashed rgba(75, 197, 222, 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(75, 197, 222, 0.7);
+  cursor: pointer;
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 0.42rem 1rem;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+  margin-top: 0.25rem;
+}
+
+.addBtn:hover {
+  border-color: rgba(75, 197, 222, 0.54);
+  color: var(--signature-cyan-hi, #8AF7E6);
+  background: rgba(75, 197, 222, 0.06);
+}
+
+/* ── Navigation row ── */
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.75rem;
+  flex-wrap: wrap;
+}
+
+.navLeft {
+  display: flex;
+  align-items: center;
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ── Buttons (match onboarding VellumButton style) ── */
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.46rem;
+  min-height: 3.1rem;
+  padding: 0 1.5rem;
+  border: 1px solid rgba(232, 236, 238, 0.22);
+  border-radius: 999px;
+  background:
+    radial-gradient(110% 140% at 22% -18%, rgba(255, 255, 255, 0.11), transparent 48%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(232, 236, 238, 0.012)),
+    rgba(12, 14, 15, 0.58);
+  color: rgba(246, 248, 249, 0.94);
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 1rem;
+  font-style: italic;
+  letter-spacing: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.34),
+    0 0.9rem 2.4rem rgba(0, 0, 0, 0.24);
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.primaryButton:hover:not(:disabled),
+.primaryButton:focus-visible {
+  border-color: rgba(138, 247, 230, 0.34);
+  background:
+    radial-gradient(110% 140% at 22% -18%, rgba(255, 255, 255, 0.14), transparent 48%),
+    linear-gradient(145deg, rgba(75, 197, 222, 0.08), rgba(232, 236, 238, 0.018)),
+    rgba(14, 17, 18, 0.7);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.38),
+    0 1rem 2.6rem rgba(0, 0, 0, 0.3),
+    0 0 1.2rem rgba(75, 197, 222, 0.08);
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.primaryButton:focus-visible {
+  outline: 1px solid rgba(138, 247, 230, 0.58);
+  outline-offset: 3px;
+}
+
+.ghostButton {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 0.4rem 0;
+  transition: border-bottom-color 150ms ease, color 150ms ease;
+}
+
+.ghostButton:hover,
+.ghostButton:focus-visible {
+  border-bottom-color: var(--accent);
+  color: var(--accent-text);
+}
+
+/* ── Review step ── */
+.reviewSection {
+  border: 1px solid rgba(232, 236, 238, 0.10);
+  border-radius: var(--r-2, 10px);
+  padding: 1.25rem 1.4rem;
+  background: rgba(12, 14, 15, 0.44);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.reviewSectionTitle {
+  color: var(--fg-secondary);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.reviewLine {
+  color: var(--fg);
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.reviewMuted {
+  color: var(--fg-secondary);
+  font-style: italic;
+}
+
+.reviewEmpty {
+  color: rgba(168, 178, 182, 0.38);
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* ── Save states ── */
+.savingNote {
+  color: var(--fg-secondary);
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.errorNote {
+  color: var(--tint-red, #f97474);
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-top: 0.65rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .shell {
+    width: 100%;
+    padding-right: 1.15rem;
+    padding-left: 1.15rem;
+  }
+
+  .cardRow {
+    grid-template-columns: 1fr;
+  }
+
+  .linkRow {
+    grid-template-columns: 1fr;
+  }
+
+  .progress {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    border-radius: var(--r-2, 10px);
+  }
+
+  .progressStep {
+    font-size: 0.6rem;
+  }
+}
+
+/* ── Mode-switch footer ── */
+
+.modeSwitch {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.modeSwitchLink {
+  color: rgba(168, 178, 182, 0.42);
+  font-family: var(--serif);
+  font-size: 0.8rem;
+  font-style: italic;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.modeSwitchLink:hover,
+.modeSwitchLink:focus-visible {
+  color: var(--fg-secondary);
+}

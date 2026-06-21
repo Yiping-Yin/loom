@@ -83,6 +83,8 @@ export const NEW_LOOM_SUPPORT_ROUTES = [
   '/help',
   '/offline',
   '/onboarding',
+  '/onboarding/profile',
+  '/onboarding/profile/form',
   '/colophon',
   '/product-history',
   '/system',
@@ -105,10 +107,13 @@ export const NEW_LOOM_INTERNAL_ROUTES = [
 
 export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES = [
   '/wiki',
+  '/card',
   '/digital-me',
   '/drafts',
   '/education',
+  '/example',
   '/experience',
+  '/works',
   '/knowledge/[category]',
   '/knowledge/unsw',
   '/loom',

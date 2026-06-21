@@ -370,7 +370,7 @@ export default function DigitalMeRoleOSClient() {
         </ul>
       </header>
 
-      <AskYiping />
+      <AskYiping forceOwnerCorpus />
 
       <section className={styles.proofPath} aria-label="Digital Me proof path" data-reveal="">
         <aside className={styles.claimRail} aria-label="Claim Engine">

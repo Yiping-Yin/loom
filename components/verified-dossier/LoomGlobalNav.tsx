@@ -1,6 +1,7 @@
 'use client';
 
 import { Search } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
@@ -18,13 +19,16 @@ const DELTA_PX = 8;
 const LOOM_WORKSPACE_NAV = [
   { label: 'Sources', href: '/sources' },
   { label: 'Draft', href: '/draft' },
+  { label: 'Today', href: '/today' },
 ];
 
 export function LoomGlobalNav({
-  activeHref,
+  activeHref: activeHrefProp,
   ariaLabel = 'Loom navigation',
   brandCurrent = false,
 }: LoomGlobalNavProps) {
+  const currentPathname = usePathname();
+  const activeHref = activeHrefProp ?? currentPathname ?? undefined;
   const [hidden, setHidden] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

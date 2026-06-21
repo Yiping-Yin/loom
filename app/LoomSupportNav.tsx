@@ -13,6 +13,6 @@ export type LoomSupportNavKey =
   | '/connections'
   | '/colophon';
 
-export function LoomSupportNav({ active: _active }: { active: LoomSupportNavKey }) {
-  return <LoomGlobalNav ariaLabel="Loom support navigation" />;
+export function LoomSupportNav({ active }: { active: LoomSupportNavKey }) {
+  return <LoomGlobalNav ariaLabel="Loom support navigation" activeHref={active} />;
 }

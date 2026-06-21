@@ -1,0 +1,69 @@
+/*
+ * ExampleBanner — slim showcase ribbon for /example pages.
+ * Uses the dark/cyan token vocabulary established across CardPage.module.css
+ * and OnboardingClient.module.css. Stays below the global nav z-index (1000).
+ */
+
+.banner {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem clamp(1rem, 4vw, 2rem);
+  background: color-mix(in srgb, var(--ink-0, #0b0e12) 88%, var(--signature-cyan, #4bc5de) 12%);
+  border-bottom: 1px solid color-mix(in srgb, var(--signature-cyan, #4bc5de) 28%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(110%);
+  backdrop-filter: blur(12px) saturate(110%);
+}
+
+.label {
+  font-size: 0.82rem;
+  color: var(--text-2, rgba(232, 236, 238, 0.72));
+  line-height: 1.4;
+}
+
+.eyebrow {
+  font-family: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--signature-cyan, #4bc5de);
+}
+
+.cta {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan, #4bc5de) 42%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan, #4bc5de) 14%, transparent);
+  color: var(--signature-cyan-hi, #6ce7f2);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.cta:hover {
+  background: color-mix(in srgb, var(--signature-cyan, #4bc5de) 22%, transparent);
+  border-color: var(--signature-cyan-hi, #6ce7f2);
+  transform: translateY(-1px);
+}
+
+.cta:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi, #6ce7f2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta {
+    transition: none;
+  }
+}

@@ -200,7 +200,7 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(globalNavCss, /\.navSearching::before,\s*\.nav:has\(\.searchInput:focus\)::before\s*{[^}]*opacity: 0\.42;/s);
   assert.match(globalNavCss, /\.navSearching \.searchForm:focus-within,\s*\.nav:has\(\.searchInput:focus\) \.searchForm:focus-within\s*{[^}]*box-shadow: none;/s);
   assert.match(globalNavCss, /\.navSearching \.searchInput,\s*\.nav:has\(\.searchInput:focus\) \.searchInput\s*{[^}]*opacity: 1 !important;/s);
-  assert.match(globalNavCss, /\.navSearching \.searchInput,\s*\.nav:has\(\.searchInput:focus\) \.searchInput\s*{[^}]*transition:[^}]*color 0\.16s ease,[^}]*text-shadow 0\.16s ease;/s);
+  assert.match(globalNavCss, /\.navSearching \.searchInput,\s*\.nav:has\(\.searchInput:focus\) \.searchInput\s*{[^}]*transition:[^}]*color var\(--dur-1\) var\(--ease\),[^}]*text-shadow var\(--dur-1\) var\(--ease\);/s);
   assert.doesNotMatch(globalNavCss, /\.navSearching \.searchInput,[\s\S]*?\.nav:has\(\.searchInput:focus\) \.searchInput\s*{[^}]*opacity 0\.16s ease/s);
   assert.match(globalNavCss, /\.searchInput:focus,\s*\.searchInput:focus-visible\s*{[^}]*outline: none !important;[^}]*box-shadow: none !important;/s);
   assert.match(globalNavCss, /\.navSearching \.brand,\s*\.navSearching \.menu,[\s\S]*\.nav:has\(\.searchInput:focus\) \.brand,[\s\S]*\.nav:has\(\.searchInput:focus\) \.menu\s*{[^}]*opacity: 0;/s);

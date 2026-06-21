@@ -43,10 +43,10 @@ test('today and patterns keep their current route-level shells', () => {
   const todaySource = read('app/today/TodayClient.tsx');
   const patternsSource = read('app/PatternsClient.tsx');
 
-  assert.match(
-    todaySource,
-    /className\s*=\s*embedded \? 'loom-today loom-today--embedded' : 'loom-today'/,
-  );
+  // /today now uses styles.page (lit scene) for the standalone route and
+  // loom-today--embedded only in the embedded variant.
+  assert.match(todaySource, /styles\.page/);
+  assert.match(todaySource, /loom-today--embedded/);
   assert.match(patternsSource, /className="loom-patterns"/);
 });
 

@@ -37,10 +37,55 @@ export type AskYipingCitation = {
   artifactId: string;
   title: string;
   href: string;
+  /**
+   * Optional file kind for the cited source. Carried for uploaded beginner
+   * artifacts (me-artifact-*) so the client can render the right badge and,
+   * crucially, knows this citation opens a stored blob by `artifactId` rather
+   * than navigating `href`. Owner/dossier and section citations omit it.
+   */
+  kind?: string;
+};
+
+/**
+ * A citation resolver maps a corpus source id to a real, displayable citation
+ * (artifactId + title + href) or null when the id is NOT a citeable artifact.
+ * This is the single seam that lets the same grounding/citation discipline run
+ * over any corpus: the Yiping corpus resolves ids via the verified dossier, a
+ * beginner corpus resolves ids via that user's own profile sections. Returning
+ * null is what enforces "cite only real ids" — non-resolvable corpus entries
+ * (claims, courses, a beginner's free-text about block) are dropped from
+ * citations exactly as before.
+ */
+export type AskYipingCitationResolver = (id: string) => AskYipingCitation | null;
+
+/**
+ * The optional retrieval/grounding context the core functions accept. Every
+ * field defaults to the existing Yiping behavior, so passing nothing is
+ * identical to the original single-corpus implementation.
+ */
+export type AskYipingCorpusContext = {
+  /** The searchable corpus to retrieve from. Defaults to ASK_YIPING_CORPUS. */
+  corpus?: AskYipingSource[];
+  /** Maps a source id to a citation or null. Defaults to the dossier resolver. */
+  resolveCitation?: AskYipingCitationResolver;
+  /** Id of the always-included profile entry. Defaults to the Yiping profile. */
+  profileSourceId?: string;
 };
 
 /** Stable id for the always-included profile/role lens entry. */
 export const ASK_YIPING_PROFILE_SOURCE_ID = 'profile-role-lens';
+
+/**
+ * Default citation resolver: a corpus id is citeable iff it is a real verified
+ * dossier artifact id, in which case it resolves to that artifact's label+href.
+ * This preserves the original Yiping behavior (claims/courses/experience/profile
+ * ids are non-resolvable → dropped from citations).
+ */
+export const resolveAskYipingDossierCitation: AskYipingCitationResolver = (id) => {
+  const artifact = resolveVerifiedDossierArtifact(id as VerifiedDossierArtifactId);
+  if (!artifact) return null;
+  return { artifactId: artifact.id, title: artifact.label, href: artifact.href };
+};
 
 const STOPWORDS = new Set([
   'a', 'about', 'above', 'after', 'again', 'all', 'am', 'an', 'and', 'any', 'are',
@@ -237,14 +282,10 @@ function buildCorpus(): AskYipingSource[] {
   return sources;
 }
 
-function isResolvableArtifactId(id: string): id is VerifiedDossierArtifactId {
-  return Boolean(resolveVerifiedDossierArtifact(id as VerifiedDossierArtifactId));
-}
-
-function findProfileSource(): AskYipingSource {
-  const profile = ASK_YIPING_CORPUS.find((source) => source.id === ASK_YIPING_PROFILE_SOURCE_ID);
+function findProfileSource(corpus: AskYipingSource[], profileSourceId: string): AskYipingSource {
+  const profile = corpus.find((source) => source.id === profileSourceId);
   // The profile entry is always pushed first in buildCorpus, so this is non-null.
-  return profile ?? ASK_YIPING_CORPUS[0];
+  return profile ?? corpus[0];
 }
 
 /**
@@ -260,12 +301,22 @@ function findProfileSource(): AskYipingSource {
  */
 const MIN_RESOLVABLE_ARTIFACTS = 2;
 
-export function retrieveAskYipingSources(question: string, limit = 6): AskYipingSource[] {
+export function retrieveAskYipingSources(
+  question: string,
+  limit = 6,
+  context: AskYipingCorpusContext = {},
+): AskYipingSource[] {
+  const corpus = context.corpus ?? ASK_YIPING_CORPUS;
+  const resolveCitation = context.resolveCitation ?? resolveAskYipingDossierCitation;
+  const profileSourceId = context.profileSourceId ?? ASK_YIPING_PROFILE_SOURCE_ID;
+  // A source is citeable for THIS corpus iff its resolver returns a citation.
+  const isResolvableId = (id: string): boolean => resolveCitation(id) !== null;
+
   const safeLimit = Math.max(1, Math.floor(limit));
   const queryTerms = expandedTokenSet(question);
-  const profile = findProfileSource();
+  const profile = findProfileSource(corpus, profileSourceId);
 
-  const scored = ASK_YIPING_CORPUS.filter((source) => source.id !== ASK_YIPING_PROFILE_SOURCE_ID)
+  const scored = corpus.filter((source) => source.id !== profileSourceId)
     .map((source) => {
       const sourceTerms = expandedTokenSet(`${source.title} ${source.text}`);
       let score = 0;
@@ -288,12 +339,12 @@ export function retrieveAskYipingSources(question: string, limit = 6): AskYiping
     // best-scoring resolvable artifacts — preferring ones already scored, then
     // the most relevant remaining artifacts — so /api/ask always has something
     // citeable when there is any topical overlap.
-    const resolvableInCandidates = candidates.filter((source) => isResolvableArtifactId(source.id));
+    const resolvableInCandidates = candidates.filter((source) => isResolvableId(source.id));
     if (resolvableInCandidates.length < MIN_RESOLVABLE_ARTIFACTS) {
       const present = new Set(candidates.map((source) => source.id));
       // Score the remaining (un-hit) artifacts so the back-fill is still relevant.
-      const backfill = ASK_YIPING_CORPUS.filter(
-        (source) => isResolvableArtifactId(source.id) && !present.has(source.id),
+      const backfill = corpus.filter(
+        (source) => isResolvableId(source.id) && !present.has(source.id),
       )
         .map((source) => {
           const sourceTerms = expandedTokenSet(`${source.title} ${source.text}`);
@@ -312,9 +363,8 @@ export function retrieveAskYipingSources(question: string, limit = 6): AskYiping
   } else {
     // No overlap (or empty question): fall back to the most representative,
     // resolvable artifacts so the model still has grounding to refuse against.
-    candidates = ASK_YIPING_CORPUS.filter(
-      (source) =>
-        source.id !== ASK_YIPING_PROFILE_SOURCE_ID && isResolvableArtifactId(source.id),
+    candidates = corpus.filter(
+      (source) => source.id !== profileSourceId && isResolvableId(source.id),
     );
   }
 
@@ -335,7 +385,7 @@ export function retrieveAskYipingSources(question: string, limit = 6): AskYiping
     for (const source of candidates) {
       if (result.length >= safeLimit) break;
       if (resolvableTaken >= MIN_RESOLVABLE_ARTIFACTS) break;
-      if (isResolvableArtifactId(source.id)) {
+      if (isResolvableId(source.id)) {
         take(source);
         resolvableTaken += 1;
       }
@@ -348,6 +398,31 @@ export function retrieveAskYipingSources(question: string, limit = 6): AskYiping
   return result;
 }
 
+/**
+ * Counts how many of the retrieved sources resolve to a REAL, citeable artifact
+ * for this corpus. This is the grounding floor: when it is zero for a non-empty
+ * question, /api/ask must NOT produce a confident grounded answer — there is
+ * nothing inspectable to cite under the "Verified answers. Cited sources."
+ * promise.
+ *
+ * The OWNER corpus always yields ≥ MIN_RESOLVABLE_ARTIFACTS here (retrieve's
+ * no-overlap fallback returns resolvable artifacts, and its on-overlap path
+ * back-fills resolvable artifacts), so this never trips for the owner. Only a
+ * sparse beginner profile — e.g. name+headline+summary with no education,
+ * experience, works, or links — can retrieve only the non-citeable `me-about`
+ * entry and thus return 0 here.
+ */
+export function countResolvableSources(
+  sources: AskYipingSource[],
+  resolveCitation: AskYipingCitationResolver = resolveAskYipingDossierCitation,
+): number {
+  let count = 0;
+  for (const source of sources) {
+    if (resolveCitation(source.id) !== null) count += 1;
+  }
+  return count;
+}
+
 const SOURCES_DIRECTIVE = 'SOURCES:';
 
 /**
@@ -356,17 +431,51 @@ const SOURCES_DIRECTIVE = 'SOURCES:';
  * when unsupported, never invent facts) and instructs the model to end its
  * answer with a `SOURCES: id1, id2` line listing the source ids it actually used.
  */
+/** Max persona-name length interpolated into the system instruction. */
+const PERSONA_NAME_MAX = 80;
+
+/**
+ * Single-line and length-cap a (possibly user-supplied) persona name before it
+ * is interpolated into the system-instruction layer. Strips ASCII control
+ * characters and collapses any run of whitespace (incl. newlines/tabs) to a
+ * single space, so a beginner cannot inject a forged instruction line via their
+ * profile name. Returns '' for a missing/blank/non-string name. No behavior
+ * change for normal names (they have no control chars or newlines).
+ */
+export function sanitizePersonaName(raw: string | undefined): string {
+  if (typeof raw !== 'string') return '';
+  const singleLine = raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x1F\x7F]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return singleLine.length > PERSONA_NAME_MAX
+    ? singleLine.slice(0, PERSONA_NAME_MAX).trim()
+    : singleLine;
+}
+
 export function buildAskYipingPrompt(
   question: string,
   sources: AskYipingSource[],
+  context: { personaName?: string } = {},
 ): { system: string; user: string } {
+  // Persona name is the only dossier-specific token in the system prompt; it
+  // defaults to Yiping so existing behavior is byte-identical, and a beginner
+  // request passes the profile owner's own name. The grounding RULES below are
+  // intentionally identical regardless of corpus. Because a beginner-supplied
+  // name flows into the system-instruction layer, sanitize it first: collapse
+  // all whitespace/control chars to single spaces (no newlines that could forge
+  // a new instruction line) and length-cap it. Normal names are unaffected.
+  const personaName =
+    sanitizePersonaName(context.personaName) || VERIFIED_DOSSIER_PROFILE.name;
+  const firstName = personaName.split(/\s+/)[0] || personaName;
   const system = [
-    `You are Ask Yiping, the verified Digital Me for ${VERIFIED_DOSSIER_PROFILE.name}.`,
-    `Answer strictly from Yiping's verified knowledge, education, and experience context provided below in CONTEXT.`,
+    `You are Ask ${firstName}, the verified Digital Me for ${personaName}.`,
+    `Answer strictly from ${firstName}'s verified knowledge, education, and experience context provided below in CONTEXT.`,
     `Cite the specific sources you used by their id and title.`,
     `If the provided context does not support an answer, say so plainly: "I don't have verified evidence for that yet." Do not guess.`,
     `Never invent facts, dates, employers, links, grades, or credentials that are not in the context.`,
-    `Speak about Yiping in a clear, professional, first- or third-person voice; keep the answer concise.`,
+    `Speak about ${firstName} in a clear, professional, first- or third-person voice; keep the answer concise.`,
     `End your answer with a final line in exactly this format listing only the ids you actually used: ${SOURCES_DIRECTIVE} id1, id2`,
     `Use only ids that appear in the CONTEXT blocks. If you used no source, write "${SOURCES_DIRECTIVE} none".`,
   ].join('\n');
@@ -401,6 +510,7 @@ export function buildAskYipingPrompt(
 export function parseAskYipingCitations(
   answerText: string,
   sources: AskYipingSource[],
+  resolveCitation: AskYipingCitationResolver = resolveAskYipingDossierCitation,
 ): { answer: string; citations: AskYipingCitation[] } {
   const sourcesById = new Map(sources.map((source) => [source.id, source]));
 
@@ -426,17 +536,15 @@ export function parseAskYipingCitations(
   for (const id of listedIds) {
     const source = sourcesById.get(id);
     if (!source) continue;
-    // The citation must resolve to a REAL dossier artifact; corpus entries whose
-    // id is not an artifact id (claims, courses, experience, profile) are dropped.
-    if (!isResolvableArtifactId(source.id)) continue;
-    if (seen.has(source.id)) continue;
-    const artifact = resolveVerifiedDossierArtifact(source.id as VerifiedDossierArtifactId);
-    seen.add(source.id);
-    citations.push({
-      artifactId: artifact.id,
-      title: artifact.label,
-      href: artifact.href,
-    });
+    // The citation must resolve to a REAL artifact via the corpus's resolver;
+    // entries the resolver rejects (claims, courses, experience, profile, or a
+    // beginner's free-text about block) are dropped. This is the grounding
+    // discipline: cite only real, resolvable ids, never fabricated ones.
+    const citation = resolveCitation(source.id);
+    if (!citation) continue;
+    if (seen.has(citation.artifactId)) continue;
+    seen.add(citation.artifactId);
+    citations.push(citation);
   }
 
   return { answer: cleaned, citations };

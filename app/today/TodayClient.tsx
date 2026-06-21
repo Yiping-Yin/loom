@@ -9,18 +9,26 @@
  * the gamified surveillance UX that §11 forbids and that ChatGPT-style
  * tools mistake for engagement.
  *
- * What /today actually IS: the entry point for today's thinking. Two
- * quiet questions — what was read today, and what is pinned for later —
- * set in Vellum literary type. A day is not a to-do list.
+ * What /today actually IS: a frictionless capture surface for quick jots
+ * and the entry point for today's thinking. Two quiet questions — what was
+ * read today, and what is pinned for later — set in Vellum literary type.
+ * A day is not a to-do list.
+ *
+ * Jots are persisted client-side in localStorage via lib/jot/jot-storage so
+ * they work identically in dev, the web build, and the static macOS app
+ * (loom://bundle, no Node server).
  */
-import { useEffect, useState, type ReactNode } from 'react';
+import React, { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { subscribeLoomMirror } from '../../lib/loom-mirror-store';
 import {
   RECENT_RECORDS_KEY,
   loadRecentRecords,
   type LoomRecentRecord,
 } from '../../lib/loom-recent-records';
+import { readJots, appendJot, type Jot } from '../../lib/jot/jot-storage';
+import styles from './Today.module.css';
 
 type Row = { href: string; title: string };
 
@@ -64,6 +72,17 @@ async function loadToday(): Promise<Row[]> {
   return rowsReadToday(await loadRecentRecords());
 }
 
+function relativeTime(at: number): string {
+  const diff = Date.now() - at;
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(diff / 3_600_000);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(diff / 86_400_000);
+  return `${days}d ago`;
+}
+
 function readPinned(): Row[] {
   const rows: Row[] = [];
   for (const entry of readJson('loom.pinned.v1')) {
@@ -80,6 +99,10 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
   const [greeting, setGreeting] = useState('Morning.');
   const [read, setRead] = useState<Row[]>([]);
   const [pinned, setPinned] = useState<Row[]>([]);
+  const [jots, setJots] = useState<Jot[]>([]);
+  const [jotInput, setJotInput] = useState('');
+  const [savedFlash, setSavedFlash] = useState(false);
+  const jotRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,6 +113,7 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
     setGreeting(greetingFor(new Date().getHours()));
     void hydrate();
     setPinned(readPinned());
+    setJots(readJots());
     setMounted(true);
     return () => {
       cancelled = true;
@@ -111,17 +135,135 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
     };
   }, []);
 
-  const Container = embedded ? 'section' : 'main';
-  const className = embedded ? 'loom-today loom-today--embedded' : 'loom-today';
+  const submitJot = () => {
+    const jot = appendJot(jotInput);
+    if (!jot) return;
+    setJots(readJots());
+    setJotInput('');
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1400);
+    // Restore focus so the user can keep typing without re-clicking.
+    setTimeout(() => jotRef.current?.focus(), 0);
+  };
 
-  if (!mounted) return <Container className={className} />;
+  const handleJotKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitJot();
+    }
+  };
 
   const go = (href: string) => { window.location.href = href; };
   const isQuiet = read.length === 0 && pinned.length === 0;
 
+  if (embedded) {
+    if (!mounted) return <section className="loom-today loom-today--embedded" />;
+    return (
+      <section className="loom-today loom-today--embedded">
+        <TodayBody
+          greeting={greeting}
+          jots={jots}
+          jotInput={jotInput}
+          setJotInput={setJotInput}
+          jotRef={jotRef}
+          savedFlash={savedFlash}
+          handleJotKeyDown={handleJotKeyDown}
+          read={read}
+          pinned={pinned}
+          isQuiet={isQuiet}
+          go={go}
+        />
+      </section>
+    );
+  }
+
+  if (!mounted) return <div className={styles.page}><div className={styles.shell} /></div>;
+
   return (
-    <Container className={className}>
+    <div className={styles.page}>
+      <LoomGlobalNav activeHref="/today" ariaLabel="Today navigation" />
+      <main className={styles.shell} aria-label="Today">
+        <TodayBody
+          greeting={greeting}
+          jots={jots}
+          jotInput={jotInput}
+          setJotInput={setJotInput}
+          jotRef={jotRef}
+          savedFlash={savedFlash}
+          handleJotKeyDown={handleJotKeyDown}
+          read={read}
+          pinned={pinned}
+          isQuiet={isQuiet}
+          go={go}
+        />
+      </main>
+    </div>
+  );
+}
+
+type TodayBodyProps = {
+  greeting: string;
+  jots: Jot[];
+  jotInput: string;
+  setJotInput: (v: string) => void;
+  jotRef: React.RefObject<HTMLTextAreaElement | null>;
+  savedFlash: boolean;
+  handleJotKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
+  read: Row[];
+  pinned: Row[];
+  isQuiet: boolean;
+  go: (href: string) => void;
+};
+
+function TodayBody({
+  greeting, jots, jotInput, setJotInput, jotRef, savedFlash,
+  handleJotKeyDown, read, pinned, isQuiet, go,
+}: TodayBodyProps) {
+  return (
+    <>
       <p className="loom-today-greeting">{greeting}</p>
+
+      {/* Jot capture — frictionless quick-thought input */}
+      <section className="loom-today-section" style={{ marginBottom: '2rem' }}>
+        <p className="loom-today-section-label">What are you thinking?</p>
+        <div style={{ position: 'relative' }}>
+          <textarea
+            ref={jotRef}
+            value={jotInput}
+            aria-label="Quick jot"
+            placeholder="Type a thought and press Enter…"
+            rows={1}
+            onChange={(e) => {
+              setJotInput(e.target.value);
+              const el = e.target;
+              el.style.height = 'auto';
+              el.style.height = Math.min(160, el.scrollHeight) + 'px';
+            }}
+            onKeyDown={handleJotKeyDown}
+            className={styles.jotTextarea}
+          />
+          {savedFlash && (
+            <span aria-live="polite" className={styles.savedFlash}>
+              Saved
+            </span>
+          )}
+        </div>
+      </section>
+
+      {/* Recent jots */}
+      {jots.length > 0 && (
+        <section className="loom-today-section">
+          <p className="loom-today-section-label">Recent.</p>
+          <ul className="loom-today-list">
+            {jots.slice(0, 20).map((j) => (
+              <li key={j.id} className={styles.jotRow}>
+                <span className={styles.jotText}>{j.text}</span>
+                <span className={styles.jotMeta}>{relativeTime(j.at)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <Section label="What you have read today." rows={read} emptyLabel="Nothing yet." onGo={go} />
       <Section label="What you have pinned for later." rows={pinned} emptyLabel="A day is not a to-do list." onGo={go} />
@@ -155,7 +297,7 @@ export function TodayClient(_props: { totalDocs: number; docsLite: unknown[]; da
           </>
         )}
       </div>
-    </Container>
+    </>
   );
 }
 
@@ -169,7 +311,11 @@ function Section({ label, rows, emptyLabel, onGo }: { label: string; rows: Row[]
         <ul className="loom-today-list">
           {rows.map((r) => (
             <li key={r.href}>
-              <a className="loom-today-item" href={r.href} onClick={(e) => { e.preventDefault(); onGo(r.href); }}>
+              <a
+                className={`loom-today-item ${styles.listItem}`}
+                href={r.href}
+                onClick={(e) => { e.preventDefault(); onGo(r.href); }}
+              >
                 {r.title}
               </a>
             </li>

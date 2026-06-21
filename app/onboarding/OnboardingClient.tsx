@@ -3,6 +3,7 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { ScanScopePicker } from '../../components/ScanScopePicker';
 import { TextInput } from '../../components/TextInput';
 import { WeftShuttle } from '../../components/DocViewer';
@@ -274,6 +275,17 @@ function PickPhase({
           {error}
         </p>
       )}
+
+      {/* Profile wizard entry point */}
+      <div className={styles.profileEntry}>
+        <Link href="/onboarding/profile" className={styles.profileEntryLink}>
+          Build your profile pages
+          <ArrowRight aria-hidden="true" size={13} strokeWidth={1.8} />
+        </Link>
+        <p className={styles.profileEntryCopy}>
+          Set up your Home, About, Education and Experience. No folder needed.
+        </p>
+      </div>
     </div>
   );
 }
