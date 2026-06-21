@@ -387,16 +387,18 @@
   pointer-events: none;
 }
 
-/* The photoreal moon as a real object, upper-right, casting a soft glow. */
+/* The photoreal moon as a real object, upper-right. Uses the TRANSPARENT moon
+   (moon-orb.webp has an alpha channel — the brand PNG does not, which left a hard
+   box). With circular alpha the drop-shadow becomes a soft round glow, no box. */
 .heroMoon {
   position: absolute;
-  top: clamp(2rem, 6vw, 5rem);
-  right: clamp(-4rem, 2vw, 4rem);
-  width: clamp(13rem, 30vw, 26rem);
+  top: clamp(1rem, 6vw, 5rem);
+  right: clamp(-1rem, 5vw, 7rem);
+  width: clamp(15rem, 34vw, 30rem);
   height: auto;
   z-index: 0;
   pointer-events: none;
-  filter: drop-shadow(0 0 5rem color-mix(in srgb, var(--signature-cyan) 22%, transparent));
+  filter: drop-shadow(0 0 4rem color-mix(in srgb, var(--signature-cyan) 18%, transparent));
 }
 
 .heroInner {

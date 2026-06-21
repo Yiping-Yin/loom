@@ -201,6 +201,14 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
               </p>
             )}
 
+            {/* Sparse profile → guide, don't strand: when nothing is proof-backed
+                yet, point at the next action instead of leaving a bare "0". */}
+            {caps.length > 0 && strongCount === 0 && (
+              <p className={styles.capabilitiesNudge}>
+                Add proof below to turn these into evidence-backed strengths.
+              </p>
+            )}
+
             {buildError && (
               <p className={styles.capabilitiesError} role="alert">
                 {buildError}

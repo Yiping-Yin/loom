@@ -66,7 +66,7 @@ export function HomeConversationalCover() {
         value={c.input}
         onChange={(e) => c.setInput(e.target.value)}
         disabled={c.checking}
-        placeholder="Tell me about yourself…"
+        placeholder="Type your answer…"
         aria-label="Your answer"
         autoComplete="off"
       />
@@ -152,7 +152,7 @@ export function HomeConversationalCover() {
         <section className={styles.hero} aria-label="Start your LOOM">
           <img
             className={styles.heroMoon}
-            src="/brand/loom_lunar_orb.png"
+            src="/loom/history/moon-orb.webp"
             alt=""
             draggable={false}
             aria-hidden="true"
