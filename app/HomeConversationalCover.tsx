@@ -42,7 +42,14 @@ export function HomeConversationalCover() {
 
       {/* Brand mark: the lunar moon + LOOM wordmark, quiet at the top. */}
       <div className={styles.brand}>
-        <MoonOrb />
+        <img
+          className={styles.brandMoon}
+          src="/brand/loom_lunar_orb.png"
+          alt=""
+          draggable={false}
+          width={30}
+          height={30}
+        />
         <span className={styles.wordmark}>LOOM</span>
       </div>
 
@@ -151,37 +158,6 @@ export function HomeConversationalCover() {
         </nav>
       </section>
     </main>
-  );
-}
-
-/**
- * The LOOM lunar mark — the same inline moon orb the chat client uses, kept in
- * sync visually (radial-grad moon + faint craters). Inline SVG (not the /public
- * asset) so it themes with the surface and needs no network/asset wiring.
- */
-function MoonOrb() {
-  return (
-    <svg
-      width={28}
-      height={28}
-      viewBox="0 0 36 36"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <circle cx="18" cy="18" r="18" fill="url(#cover-moon-grad)" />
-      <circle cx="18" cy="18" r="17" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
-      <circle cx="13" cy="14" r="2.5" fill="rgba(0,0,0,0.18)" />
-      <circle cx="22" cy="22" r="1.8" fill="rgba(0,0,0,0.14)" />
-      <circle cx="24" cy="13" r="1.2" fill="rgba(0,0,0,0.10)" />
-      <defs>
-        <radialGradient id="cover-moon-grad" cx="38%" cy="28%" r="68%" gradientUnits="objectBoundingBox">
-          <stop offset="0%" stopColor="#d8e4e8" />
-          <stop offset="55%" stopColor="#9ab0b8" />
-          <stop offset="100%" stopColor="#5e7880" />
-        </radialGradient>
-      </defs>
-    </svg>
   );
 }
 
