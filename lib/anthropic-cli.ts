@@ -18,9 +18,15 @@ import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 
 const DEFAULT_TIMEOUT_MS = 180000;
+// `claude -p` is the full agent; without a firm instruction it tends to wrap
+// structured output in prose ("Here's the profile:" + ```json fences + trailing
+// commentary), which breaks the routes' JSON parsers. This forces a raw artifact.
 const NEUTRAL_SYSTEM =
-  'You are a precise assistant. Follow the user instructions exactly and output ' +
-  'only what they ask for — no preamble, no commentary, and do not use any tools.';
+  'You are a precise execution engine, not a conversational assistant. Follow the ' +
+  'user instructions EXACTLY and output ONLY the artifact they ask for. If the ' +
+  'instructions ask for JSON, output a single raw JSON value and nothing else — no ' +
+  'markdown code fences, no preamble, no trailing commentary, no explanation. ' +
+  'Never ask clarifying questions. Never use tools.';
 
 export async function runViaClaudeCli(
   prompt: string,
@@ -56,6 +62,9 @@ export async function runViaClaudeCli(
         return;
       }
       const text = out.trim();
+      if (process.env.LOOM_LLM_DEBUG) {
+        process.stderr.write(`\n[llm cli] raw output (${text.length} chars):\n${text.slice(0, 2000)}\n\n`);
+      }
       if (opts.onChunk && text) {
         try {
           opts.onChunk(text);

@@ -106,6 +106,16 @@ function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+/** Read a text file, exiting with a friendly message (not a stack trace) if missing. */
+function readTextFile(path: string, label: string): string {
+  try {
+    return readFileSync(path, 'utf8');
+  } catch {
+    console.error(`✗ ${label} file not found: ${path}\n  Pass a path to a real .txt/.md file, or omit the flag.`);
+    process.exit(1);
+  }
+}
+
 type AskResult = {
   answer: string;
   citations: Array<Record<string, unknown>>;
@@ -218,7 +228,7 @@ async function main(): Promise<void> {
         ? 'ANTHROPIC_API_KEY (x-api-key)'
         : 'ANTHROPIC_AUTH_TOKEN (OAuth bearer via ant)';
   const resumePath = arg('resume');
-  const resumeText = resumePath ? readFileSync(resumePath, 'utf8') : SAMPLE_RESUME;
+  const resumeText = resumePath ? readTextFile(resumePath, 'résumé (--resume)') : SAMPLE_RESUME;
   const question = arg('question') ?? DEFAULT_QUESTION;
 
   console.log(`LOOM LLM smoke — credential: ${credLabel}`);
@@ -241,6 +251,7 @@ async function main(): Promise<void> {
       printProfile(profile);
     } else {
       console.log('  → extraction failed (ok:false) — the model output did not parse.');
+      console.log('    (LLM variance — re-run; with --cli set LOOM_LLM_DEBUG=1 to see the raw output.)');
     }
   } catch (err) {
     console.log(`  ✗ extract error: ${errMsg(err)}`);
@@ -252,7 +263,7 @@ async function main(): Promise<void> {
   // blob lives in IndexedDB in the app; here we only need the citeable meta + text.
   const artifactPath = arg('artifact');
   if (artifactPath) {
-    const artifactText = readFileSync(artifactPath, 'utf8');
+    const artifactText = readTextFile(artifactPath, 'artifact (--artifact)');
     const ref: ArtifactRef = {
       id: 'art-cli',
       name: basename(artifactPath),
@@ -282,6 +293,7 @@ async function main(): Promise<void> {
       console.log('  → route reported not configured.');
     } else {
       console.log('  → derivation failed (ok:false).');
+      console.log('    (LLM variance — re-run; with --cli set LOOM_LLM_DEBUG=1 to see the raw output.)');
     }
   } catch (err) {
     console.log(`  ✗ derive error: ${errMsg(err)}`);
