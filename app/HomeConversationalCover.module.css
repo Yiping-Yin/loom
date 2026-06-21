@@ -46,6 +46,14 @@
   color: var(--text-2);
 }
 
+/* The photoreal LOOM lunar mark (same /brand/loom_lunar_orb.png the nav uses). */
+.brandMoon {
+  width: 30px;
+  height: 30px;
+  display: block;
+  object-fit: contain;
+}
+
 /* ── Locus: the prompt + input, centered with generous whitespace ─────────── */
 
 .locus {
