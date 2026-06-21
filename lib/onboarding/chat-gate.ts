@@ -66,14 +66,17 @@ export function stepKey(step: ConvoStep): string {
 // ── Gate decision ─────────────────────────────────────────────────────────────
 
 export type ChatGate =
-  | { nudge: true; key: string; hint?: string }
-  | { nudge: false };
+  | { kind: 'nudge'; key: string; hint?: string } // floor said bad → nudge once, don't advance
+  | { kind: 'check'; field: AnswerField; key: string } // floor passed → smart layer may validate
+  | { kind: 'pass' }; // skip / non-free-text / already reasked → advance now
 
-/** Pure floor decision for a chat answer: nudge once on a `bad` free-text answer, else proceed. */
+/** Pure floor decision. `nudge` = bad answer (coach, don't advance). `check` = eligible for the
+ *  optional LLM smart layer. `pass` = advance immediately (skip/non-free-text/already-reasked). */
 export function decideChatGate(step: ConvoStep, answer: string, reasked: Set<string>): ChatGate {
   const field = fieldOf(step);
   const key = stepKey(step);
-  if (!field || isSkip(answer) || reasked.has(key)) return { nudge: false };
+  if (!field || isSkip(answer) || reasked.has(key)) return { kind: 'pass' };
   const floor = assessAnswer(field, answer);
-  return floor.level === 'bad' ? { nudge: true, key, hint: floor.hint } : { nudge: false };
+  if (floor.level === 'bad') return { kind: 'nudge', key, hint: floor.hint };
+  return { kind: 'check', field, key };
 }

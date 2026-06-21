@@ -21,10 +21,9 @@ import {
   type ConvoStep,
   isSkip,
   isYes,
-  fieldOf,
-  stepKey,
   decideChatGate,
 } from '../../../lib/onboarding/chat-gate';
+import { validateAnswerRemote } from '../../../lib/onboarding/validate-answer-client';
 import styles from './ConversationalOnboarding.module.css';
 
 /** Max file size for résumé import (mirrors the Proof section: 10 MB). */
@@ -393,16 +392,27 @@ export function ConversationalOnboardingClient() {
    *  3. Wait ~500ms (or ~0ms under prefers-reduced-motion).
    *  4. Append the LOOM prompt bubble, clear isTyping.
    */
-  const handleSubmit = (answerOverride?: string) => {
-    const answer = (answerOverride ?? input).trim();
+  const handleSubmit = async (answerOverride?: string) => {
+    let answer = (answerOverride ?? input).trim();
     if (!answer || isTyping) return;
 
-    // Answer-quality gate (free-text steps only; skip answers + already-reasked pass through)
+    // Answer-quality gate (free-text steps only; skip answers + already-reasked pass through).
+    // Two layers: the deterministic floor (offline, always) then the optional LLM smart layer
+    // (keyed web only, fail-open). Both can re-ask ONCE; neither traps the user.
     const gate = decideChatGate(step, answer, reasked);
-    if (gate.nudge) {
+    if (gate.kind === 'nudge') {
       setReasked((s) => new Set(s).add(gate.key));
       nudge(answer, gate.hint);
       return;
+    }
+    if (gate.kind === 'check') {
+      const remote = await validateAnswerRemote(gate.field, stepPrompt(step), answer);
+      if (remote.verdict === 'reask') {
+        setReasked((s) => new Set(s).add(gate.key));
+        nudge(answer, remote.hint);
+        return;
+      }
+      if (remote.verdict === 'clean' && remote.cleaned) answer = remote.cleaned;
     }
 
     const userMsg: ChatMessage = { from: 'user', text: answer };
@@ -782,7 +792,7 @@ export function ConversationalOnboardingClient() {
           className={styles.inputRow}
           onSubmit={(e) => {
             e.preventDefault();
-            handleSubmit();
+            void handleSubmit();
           }}
         >
           <input
