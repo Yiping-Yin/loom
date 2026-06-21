@@ -119,10 +119,12 @@ export function useConversation(): ConversationApi {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-focus input after each exchange
+  // Auto-focus input after each exchange. preventScroll so the focus doesn't
+  // yank the page down to the input — on the landing that would skip past the
+  // hero headline/nav on load; in the chat it avoids a jump on each exchange.
   useEffect(() => {
     if (step.id !== 'review') {
-      inputRef.current?.focus();
+      inputRef.current?.focus({ preventScroll: true });
     }
   }, [step]);
 

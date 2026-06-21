@@ -132,20 +132,23 @@ function renderWithApi(api: ConversationApi): string {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-test('HomeConversationalCover: renders the living prompt and the input', () => {
+test('HomeConversationalCover: first contact renders the landing hero + input', () => {
   const { HomeConversationalCover } = getCover();
   const html = render(<HomeConversationalCover />);
   const text = visibleText(html);
 
-  // The first scripted LOOM prompt is the locus before any message.
-  assert.match(html, /class="prompt"/);
+  // First contact is the product landing: the editorial hero headline is the
+  // brand line; the live conversational prompt sits above the answer input.
+  assert.match(html, /class="heroHeadline"/);
+  assert.match(text, /woven into one self/i);
+  assert.match(html, /class="heroPrompt"/);
   assert.ok(text.length > 0);
 
   // The single answer input must render with its accessible label/placeholder.
   assert.match(html, /Tell me about yourself/i);
   assert.match(html, /aria-label="Your answer"/);
 
-  // The LOOM wordmark sits at the top.
+  // The LOOM wordmark sits in the nav.
   assert.match(text, /LOOM/);
 });
 
@@ -194,6 +197,37 @@ test('HomeConversationalCover: offers a quiet résumé-import affordance before 
   // inline panel/format blurb/paste box (the cover stays sparse).
   assert.match(html, /type="file"/);
   assert.doesNotMatch(html, /aria-expanded/);
+});
+
+// ── Landing mode: the full product page (nav + hero + showcase + footer) ──────
+
+test('HomeConversationalCover: landing shows nav chrome with a Begin CTA', () => {
+  const { HomeConversationalCover } = getCover();
+  const text = visibleText(render(<HomeConversationalCover />));
+
+  // Real product chrome, not a lone widget: a Begin CTA + links to real pages.
+  assert.match(text, /Begin/);
+  assert.match(text, /History/);
+  assert.match(text, /Example/);
+});
+
+test('HomeConversationalCover: landing shows the product showcase (sample LOOM)', () => {
+  const { HomeConversationalCover } = getCover();
+  const text = visibleText(render(<HomeConversationalCover />));
+
+  // Substance via SHOWING a finished LOOM through a fictional persona — never
+  // the owner's data.
+  assert.match(text, /weaving/i);
+  assert.match(text, /Maya Chen/);
+  assert.match(text, /star-river/i);
+});
+
+test('HomeConversationalCover: landing grounds the page with a real footer', () => {
+  const { HomeConversationalCover } = getCover();
+  const text = visibleText(render(<HomeConversationalCover />));
+
+  assert.match(text, /© 2026/);
+  assert.match(text, /Help/);
 });
 
 // ── Review / Save branch (the bug: cover ignored c.step → no Save UI) ──────────

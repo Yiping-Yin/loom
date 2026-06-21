@@ -1,0 +1,198 @@
+/* LandingShowcase — a dimensionally staged product showcase: the panel is a lit
+   object (perspective + grounding shadow + glare + cyan atmosphere), not a flat
+   card on black. Tokens only. Motion is reduced-motion-gated. */
+
+.showcase {
+  position: relative;
+  z-index: 1;
+  padding: clamp(4rem, 10vh, 8rem) clamp(1.25rem, 4vw, 3rem) clamp(5rem, 12vh, 9rem);
+  border-top: 1px solid var(--line);
+}
+
+.inner {
+  max-width: var(--w-wide);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--signature-cyan);
+}
+
+.heading {
+  margin: 0.6rem 0 clamp(2.5rem, 6vh, 4rem);
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1.12;
+  color: var(--text-1);
+}
+
+/* Perspective context for the staged panel. */
+.stage {
+  perspective: 1600px;
+}
+
+.panel {
+  position: relative;
+  margin: 0 auto;
+  max-width: 56rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  background:
+    linear-gradient(135deg, rgba(238, 241, 242, 0.05), rgba(180, 187, 191, 0.02) 34%, transparent 60%),
+    linear-gradient(180deg, rgba(34, 38, 42, 0.55), rgba(14, 21, 28, 0.94));
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  backdrop-filter: blur(20px) saturate(120%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    0 0 90px -30px color-mix(in srgb, var(--signature-cyan) 42%, transparent);
+  transform: rotateX(3deg);
+  transform-origin: center top;
+}
+
+/* Specular glare across the top edge — the lit-object highlight. */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 45%;
+  border-radius: var(--r-3) var(--r-3) 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+  pointer-events: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: center;
+  text-align: left;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 0.4rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 38% 32%, #eef3f6, #c7d4db 60%, #8aa0ac);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.role {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--signature-cyan);
+}
+
+.summary {
+  margin: 0.4rem 0 0;
+  max-width: 32ch;
+  font-family: var(--serif);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.chip {
+  padding: 0.3rem 0.7rem;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.03em;
+  color: var(--text-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.chipVerified {
+  color: var(--signature-cyan-hi);
+  border-color: color-mix(in srgb, var(--signature-cyan) 40%, transparent);
+}
+
+.river {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.riverLabel {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.riverSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.starLabel {
+  font-family: var(--mono);
+  font-size: 19px;
+  fill: var(--text-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .star {
+    animation: lsTwinkle 6s ease-in-out infinite;
+  }
+  .star:nth-child(2n) {
+    animation-delay: 1.2s;
+  }
+  .star:nth-child(3n) {
+    animation-delay: 2.4s;
+  }
+  @keyframes lsTwinkle {
+    0%,
+    100% {
+      opacity: 0.78;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+}
+
+@media (max-width: 48rem) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .panel {
+    transform: none;
+  }
+}
