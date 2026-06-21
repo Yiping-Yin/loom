@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
 import Link from 'next/link';
-import { LoomGlobalNav } from '../../../components/verified-dossier/LoomGlobalNav';
 import {
   emptyBeginnerProfile,
   type BeginnerProfile,
@@ -171,7 +170,6 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
 
   return (
     <>
-      <LoomGlobalNav ariaLabel="Profile wizard navigation" />
       <main className={styles.page}>
         <div className={styles.shell}>
           {/* Eyebrow + title */}
