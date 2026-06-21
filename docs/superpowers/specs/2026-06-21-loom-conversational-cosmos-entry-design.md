@@ -17,7 +17,7 @@ A new entry surface at `/` — the front door, shown **first, always** — that:
 - Presents one calm cosmic surface: brand (moon + LOOM), one conversational prompt + a single input, and recede-to-whisper chrome only (Sign in, See an example, Continue as [name]). No cards, no toolbar.
 - Starts a dialogue: the first input begins the conversation that *is* onboarding, continuing on the same surface (reusing the existing step machine + the just-shipped answer-quality floor/smart-layer).
 - Forms a constellation live: as answers arrive, capability "stars" appear (ambient star-river response; standouts = comets).
-- Routes cleanly: new → conversation builds their LOOM; returning (profile exists) → prominent "Continue as [name]" → their existing identity pages; "See an example" → `/example`; "Sign in" → stubbed (accounts deferred).
+- Routes by who you are: NEW (no profile) → the welcome cover that builds their LOOM; RETURNING (profile exists) → **straight into their usable LOOM (`/digital-me`)** to keep using and building it — no intermediate "welcome back" screen. The cover (new users only) also offers "See an example" → `/example` and a stubbed "Sign in".
 
 ## Non-goals (later phases)
 
@@ -28,7 +28,7 @@ A new entry surface at `/` — the front door, shown **first, always** — that:
 
 ## Architecture / components
 
-1. **Entry routing — `app/HomeGate.tsx`.** It no longer auto-swaps to `HomeProfileView`. It always renders the new entry surface. Returning detection: read `readBeginnerProfileLocal()` client-side; if a profile exists, pass the name so the surface shows "Continue as [name] ›" (→ the existing identity home) while still inviting more conversation. `HomeProfileView` / the per-route gates (`/about`, `/digital-me`, …) are unchanged and remain reachable *after* entry.
+1. **Entry routing — `app/HomeGate.tsx`.** Branch on profile existence: **no profile → render the welcome cover** (the new entry surface); **profile exists → go straight to the user's usable LOOM (`/digital-me`)** — no cover, no "welcome back" launchpad. (`readBeginnerProfileLocal()` decides client-side; SSR first paint can render the cover, then redirect to `/digital-me` once a profile is found.) `HomeProfileView` is retired as the `/` default; `/digital-me` (BeginnerDigitalMe — Ask + capability star-river + keep-building) is the returning hub. The cover is therefore a **new-user-only** surface.
 
 2. **The entry surface — new `app/home-cover/ConversationalCosmosEntry.tsx` (+ `.module.css`).** Renders: the cosmic backdrop (moon, soft glow, sparse star field, a faint forming constellation), the brand lockup, the prompt line, the single input, and the whisper chrome. Uses the existing brand tokens (signature cyan `#4BC5DE` / data cyan `#6CE7F2`, dark cover, restrained liquid-glass). Client component (reads localStorage, hosts the conversation).
 
@@ -36,7 +36,7 @@ A new entry surface at `/` — the front door, shown **first, always** — that:
 
 4. **Live constellation — `app/home-cover/ConstellationField.tsx` + a pure `lib/onboarding/constellation.ts`.** A pure mapping turns the current profile/answered-steps into a small set of stars (+ a comet for a standout); the field renders them as SVG. v1 is deterministic and offline (each completed area → a star); reduced-motion safe; decorative (`aria-hidden`). Deeper capability-derivation integration deferred.
 
-5. **Whisper chrome.** `Sign in` (stub: a quiet "coming soon" affordance / no-op for now), `See an example` (`<Link href="/example">`), `Continue as [name]` (navigates to the existing identity home — see open decision).
+5. **Whisper chrome (cover, new users only).** `Sign in` (stub: a quiet "coming soon" affordance / no-op for now) and `See an example` (`<Link href="/example">`). No "Continue as [name]" — returning users never see the cover; they're routed straight to `/digital-me`.
 
 ## Data flow / degradation
 
@@ -52,7 +52,7 @@ A new entry surface at `/` — the front door, shown **first, always** — that:
 
 ## Testing
 
-- **Routing (`HomeGate`):** always renders the entry surface (never `HomeProfileView`) even when a profile exists; the returning branch exposes "Continue as [name]"; the new branch shows the fresh prompt. (Render/contract test, static-harness friendly — assert the rendered branch/markup.)
+- **Routing (`HomeGate`):** no profile → renders the welcome cover (never `HomeProfileView`); profile present → routes to `/digital-me` (cover not shown). (Render/contract test, static-harness friendly — assert the rendered branch / redirect target.)
 - **Conversation reuse:** the entry's first submit drives the existing step machine — covered by the existing pure `applyAnswer` / gate tests; assert the entry calls the shared core (no forked logic).
 - **Constellation:** the pure `lib/onboarding/constellation.ts` mapping (profile → stars/comet) unit-tested at boundaries.
 - **Degradation:** renders correctly with no profile, with a profile, and offline (no `/api`).
@@ -60,7 +60,7 @@ A new entry surface at `/` — the front door, shown **first, always** — that:
 
 ## Open decisions (resolve in review)
 
-1. **"Continue as [name]" target** — `/digital-me` (the richest "your LOOM") vs the `/` profile home. Proposed: `/digital-me`.
+1. **Resolved (owner direction):** returning users go **directly to `/digital-me`** to keep using their LOOM — no "welcome back" launchpad, and they never see the cover. The cover is new-user-only.
 2. **Form wizard from the entry** — keep a quiet "prefer a form?" secondary, or drop it from the front door entirely. Proposed: keep it as a quiet secondary, not on the cover.
 3. **Constellation depth in v1** — proposed lightweight ambient (one star per completed onboarding area, comet for a flagged standout), not the full capability graph.
 
