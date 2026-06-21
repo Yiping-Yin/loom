@@ -353,6 +353,113 @@
   text-align: center;
 }
 
+/* ── Landing mode: the full product page (nav + hero + showcase + footer) ──── */
+
+.landing {
+  position: relative;
+  min-height: 100dvh;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-1);
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: clamp(34rem, 78vh, 52rem);
+  padding: clamp(2rem, 6vh, 5rem) clamp(1.5rem, 5vw, 4.5rem) clamp(3rem, 8vh, 6rem);
+  overflow: hidden;
+}
+
+/* Cyan bloom reading as light falling from the moon, upper-right. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(
+    52rem 40rem at 78% 12%,
+    color-mix(in srgb, var(--signature-cyan) 8%, transparent),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* The photoreal moon as a real object, upper-right, casting a soft glow. */
+.heroMoon {
+  position: absolute;
+  top: clamp(2rem, 6vw, 5rem);
+  right: clamp(-4rem, 2vw, 4rem);
+  width: clamp(13rem, 30vw, 26rem);
+  height: auto;
+  z-index: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 5rem color-mix(in srgb, var(--signature-cyan) 22%, transparent));
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 42rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(1rem, 2.4vw, 1.6rem);
+  text-align: left;
+}
+
+.heroEyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--signature-cyan);
+}
+
+.heroHeadline {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--text-1);
+}
+
+.heroPrompt {
+  margin: 0.4rem 0 0;
+  font-family: var(--display);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--text-2);
+}
+
+@media (max-width: 48rem) {
+  .hero {
+    min-height: auto;
+    padding-top: clamp(3rem, 12vh, 6rem);
+  }
+  .heroMoon {
+    width: 11rem;
+    top: 1rem;
+    right: -2rem;
+    opacity: 0.85;
+  }
+  .heroInner {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heroInner {
+    animation: coverRise 0.7s var(--ease-enter, ease) both;
+  }
+}
+
 /* ── Entrance: only when motion is welcome; instant under reduce ──────────── */
 
 @media (prefers-reduced-motion: no-preference) {

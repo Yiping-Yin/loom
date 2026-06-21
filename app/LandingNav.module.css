@@ -1,0 +1,100 @@
+/* LandingNav — calm marketing chrome over the cosmic field. */
+
+.nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: var(--w-page);
+  margin: 0 auto;
+  padding: clamp(1rem, 2.4vw, 1.6rem) clamp(1.25rem, 4vw, 3rem);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brandMoon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--text-2);
+}
+
+.links {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(1rem, 2.4vw, 1.8rem);
+}
+
+.link {
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  text-decoration: none;
+  transition: color var(--dur-2) var(--ease);
+}
+
+.link:hover {
+  color: var(--text-1);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.begin {
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  letter-spacing: 0.06em;
+  color: var(--signature-cyan-hi);
+  background: color-mix(in srgb, var(--signature-cyan-hi) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan-hi) 40%, transparent);
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-2) var(--ease),
+    background var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+
+.begin:hover {
+  transform: translateY(-1px);
+  border-color: var(--signature-cyan-hi);
+  background: color-mix(in srgb, var(--signature-cyan-hi) 16%, transparent);
+}
+
+.begin:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 3px;
+}
+
+@media (max-width: 34rem) {
+  .link {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .begin,
+  .link {
+    transition: none;
+  }
+}
