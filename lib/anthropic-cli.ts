@@ -50,8 +50,18 @@ function attemptClaudeCli(prompt: string, opts: CliOpts): Promise<string> {
     '--no-session-persistence',
   ];
 
+  // Force subscription auth: strip any inherited API credentials so `claude` uses
+  // its own logged-in account (keychain/subscription), NOT an ANTHROPIC_AUTH_TOKEN
+  // / ANTHROPIC_API_KEY the user may have exported into their shell — e.g. an
+  // `ant auth print-credentials --env` token points at a (possibly credit-empty)
+  // API org, which makes `claude -p` fail with "Credit balance is too low".
+  const childEnv: NodeJS.ProcessEnv = { ...process.env };
+  delete childEnv.ANTHROPIC_API_KEY;
+  delete childEnv.ANTHROPIC_AUTH_TOKEN;
+  delete childEnv.ANTHROPIC_BASE_URL;
+
   return new Promise<string>((resolve, reject) => {
-    const child = spawn(bin, args, { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(bin, args, { cwd: tmpdir(), env: childEnv, stdio: ['pipe', 'pipe', 'pipe'] });
     let out = '';
     let err = '';
     const timer = setTimeout(() => {
