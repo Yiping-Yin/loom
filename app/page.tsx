@@ -1,10 +1,9 @@
 import { HomeGate } from './HomeGate';
 
 export default function Home() {
-  // F2 step 2: the default `/` route is a generic product surface. A no-profile
-  // STRANGER sees the neutral HomeLanding (rendered by HomeGate); a beginner
-  // with a localStorage profile sees HomeProfileView. The owner verified dossier
-  // is no longer the default — it lives at /example. There is no server-side
-  // content-root redirect: the landing's CTAs are the entry points.
+  // The `/` route is the two-door entry (HomeGate): a new visitor (no profile)
+  // gets the conversation-first cosmic cover; a returning user (localStorage
+  // profile) is routed straight into their LOOM at /digital-me. The owner
+  // verified dossier lives at /example.
   return <HomeGate />;
 }
