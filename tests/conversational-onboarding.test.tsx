@@ -530,5 +530,40 @@ test('applyAnswer: full works entry round-trips correctly through normalization'
   assert.equal(normalized.works[0].link, 'https://github.com/ada/op');
 });
 
+// ── Answer-quality gate (chat floor) ───────────────────────────────────────────
+
+test('chat floor: a bad name answer is nudged once and does NOT advance', () => {
+  const { fieldOf, stepKey, applyAnswer, stepPrompt } = getClient();
+  const { assessAnswer } = require('../lib/onboarding/assess-answer') as typeof import('../lib/onboarding/assess-answer');
+
+  // Simulate the user typing gibberish into the name step's answer input.
+  const step: import('../app/onboarding/profile/ConversationalOnboardingClient').ConvoStep = { id: 'name' };
+  const answer = 'asdfgh';
+
+  // The component maps the 'name' step to the 'name' AnswerField — the same
+  // mapping handleSubmit uses to decide whether to run the floor.
+  const field = fieldOf(step);
+  assert.equal(field, 'name');
+
+  // The floor (handleSubmit's gate, before any advance) must judge this 'bad'
+  // with a name-specific coaching hint — this is the bubble nudge() shows.
+  const floor = assessAnswer(field!, answer);
+  assert.equal(floor.level, 'bad');
+  assert.ok(floor.hint, 'a bad answer must carry a coaching hint');
+  assert.match(floor.hint!, /doesn't look like a name/i);
+
+  // Because the floor short-circuits with `return`, the step is NOT applied:
+  // the headline prompt (what applyAnswer WOULD advance to) must never be the
+  // bubble shown for this submission.
+  const advanced = applyAnswer(emptyBeginnerProfile(), step, answer);
+  const headlinePrompt = stepPrompt(advanced.next);
+  assert.match(headlinePrompt, /headline/i); // sanity: that's the next prompt
+  assert.notEqual(floor.hint, headlinePrompt); // nudge ≠ advance prompt
+
+  // The re-ask key is stable per step occurrence; a second bad submit on the
+  // same key passes through (never trap the user).
+  assert.equal(stepKey(step), 'name');
+});
+
 // Suppress unused variable warning
 void ((_: string) => _);

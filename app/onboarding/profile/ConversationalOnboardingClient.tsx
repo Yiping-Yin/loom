@@ -17,6 +17,7 @@ import {
   writeBeginnerProfileLocal,
 } from '../../../lib/profile/profile-storage';
 import { mergeExtractedProfile } from '../../../lib/profile/merge-extracted-profile';
+import { assessAnswer, type AnswerField } from '../../../lib/onboarding/assess-answer';
 import styles from './ConversationalOnboarding.module.css';
 
 /** Max file size for résumé import (mirrors the Proof section: 10 MB). */
@@ -58,7 +59,7 @@ export type ConvoStep =
 
 export const TOTAL_STEPS = 15; // name + headline + summary + edu(3) + exp(4) + edu_more + exp_more + works(4) ≈ 15 logical beats
 
-function stepPrompt(step: ConvoStep): string {
+export function stepPrompt(step: ConvoStep): string {
   switch (step.id) {
     case 'name':
       return "What's your full name?";
@@ -128,6 +129,32 @@ function progressOf(step: ConvoStep): number {
 
 const isSkip = (answer: string) => /^(skip|s|no|nope|none|n\/a|-)$/i.test(answer.trim());
 const isYes = (answer: string) => /^(yes|y|yeah|sure|yep|ok)$/i.test(answer.trim());
+
+/**
+ * Map a chat step to the answer-quality floor's AnswerField, or null for
+ * non-free-text steps (year ranges, yes/no "add another?", link, review) which
+ * get no floor check. Exported so the gate's mapping is contract-tested.
+ */
+export function fieldOf(step: ConvoStep): AnswerField | null {
+  switch (step.id) {
+    case 'name': return 'name';
+    case 'headline': return 'headline';
+    case 'summary': return 'summary';
+    case 'edu_institution': return 'institution';
+    case 'edu_qualification': return 'qualification';
+    case 'exp_role': return 'role';
+    case 'exp_organization': return 'organization';
+    case 'exp_highlight': return 'highlight';
+    case 'work_title': return 'work_title';
+    case 'work_description': return 'work_description';
+    default: return null;
+  }
+}
+
+/** Stable key per step occurrence (entryIdx disambiguates repeated edu/exp/work). */
+export function stepKey(step: ConvoStep): string {
+  return 'entryIdx' in step ? `${step.id}:${step.entryIdx}` : step.id;
+}
 
 /**
  * Pure, exported transition function. Takes the current profile + step + user
@@ -350,6 +377,7 @@ export function ConversationalOnboardingClient() {
   const [saveError, setSaveError] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [doneBeat, setDoneBeat] = useState(false);
+  const [reasked, setReasked] = useState<Set<string>>(() => new Set());
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -377,6 +405,23 @@ export function ConversationalOnboardingClient() {
     setMessages((prev) => [...prev, ...msgs]);
   };
 
+  /** Show the user's answer + one quiet LOOM coaching bubble, without advancing. */
+  const nudge = (userText: string, hint?: string) => {
+    setInput('');
+    setMessages((prev) => [...prev, { from: 'user', text: userText }]);
+    const text = hint ?? "That doesn't look quite right — mind trying again?";
+    const delay = prefersReducedMotion() ? 0 : 500;
+    if (delay === 0) {
+      setMessages((prev) => [...prev, { from: 'loom', text }]);
+    } else {
+      setIsTyping(true);
+      setTimeout(() => {
+        setMessages((prev) => [...prev, { from: 'loom', text }]);
+        setIsTyping(false);
+      }, delay);
+    }
+  };
+
   /**
    * Handles a user answer submission.
    *
@@ -392,6 +437,18 @@ export function ConversationalOnboardingClient() {
   const handleSubmit = (answerOverride?: string) => {
     const answer = (answerOverride ?? input).trim();
     if (!answer || isTyping) return;
+
+    // Answer-quality gate (free-text steps only; skip answers + already-reasked pass through)
+    const field = fieldOf(step);
+    const key = stepKey(step);
+    if (field && !isSkip(answer) && !reasked.has(key)) {
+      const floor = assessAnswer(field, answer);
+      if (floor.level === 'bad') {
+        setReasked((s) => new Set(s).add(key));
+        nudge(answer, floor.hint);
+        return;
+      }
+    }
 
     const userMsg: ChatMessage = { from: 'user', text: answer };
 
