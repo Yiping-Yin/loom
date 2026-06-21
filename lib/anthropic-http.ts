@@ -39,7 +39,13 @@ export class AnthropicHttpError extends Error {
 export function isAnthropicConfigured(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  return Boolean(env.ANTHROPIC_API_KEY?.trim() || env.ANTHROPIC_AUTH_TOKEN?.trim());
+  // LOOM_LLM_BACKEND=cli routes calls through the `claude` CLI (its own auth), so
+  // no key/token is needed — local validation only (see lib/anthropic-cli.ts).
+  return Boolean(
+    env.LOOM_LLM_BACKEND?.trim() === 'cli' ||
+      env.ANTHROPIC_API_KEY?.trim() ||
+      env.ANTHROPIC_AUTH_TOKEN?.trim(),
+  );
 }
 
 /**
@@ -64,6 +70,18 @@ export async function runAnthropicHttp(
   prompt: string,
   opts: AnthropicRunOptions = {},
 ): Promise<string> {
+  // Local validation backend: route through the `claude` CLI (subscription, no
+  // API credits) when LOOM_LLM_BACKEND=cli. Dynamic import keeps node:child_process
+  // out of the default module graph; the deploy never sets this env var.
+  if (process.env.LOOM_LLM_BACKEND?.trim() === 'cli') {
+    const { runViaClaudeCli } = await import('./anthropic-cli');
+    return runViaClaudeCli(prompt, {
+      model: opts.model,
+      timeoutMs: opts.timeoutMs,
+      onChunk: opts.onChunk,
+    });
+  }
+
   const authHeaders = resolveAuthHeaders(opts);
   if (!authHeaders) {
     throw new AnthropicHttpError(

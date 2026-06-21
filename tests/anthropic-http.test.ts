@@ -10,7 +10,7 @@ import {
 
 const { drainSseEvents, extractDeltaText, extractTextFromMessage, consumeSseStream } = __testing;
 
-test('isAnthropicConfigured reads ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN', () => {
+test('isAnthropicConfigured reads ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, or the CLI backend', () => {
   assert.equal(isAnthropicConfigured({}), false);
   assert.equal(isAnthropicConfigured({ ANTHROPIC_API_KEY: '' }), false);
   assert.equal(isAnthropicConfigured({ ANTHROPIC_API_KEY: '   ' }), false);
@@ -18,6 +18,9 @@ test('isAnthropicConfigured reads ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN', ()
   // OAuth bearer token (`ant auth login`) is also a valid credential.
   assert.equal(isAnthropicConfigured({ ANTHROPIC_AUTH_TOKEN: 'oat-abc' }), true);
   assert.equal(isAnthropicConfigured({ ANTHROPIC_AUTH_TOKEN: '   ' }), false);
+  // CLI backend (LOOM_LLM_BACKEND=cli) brings its own auth — counts as configured.
+  assert.equal(isAnthropicConfigured({ LOOM_LLM_BACKEND: 'cli' }), true);
+  assert.equal(isAnthropicConfigured({ LOOM_LLM_BACKEND: 'http' }), false);
 });
 
 test('drainSseEvents splits on blank-line event boundaries', () => {
