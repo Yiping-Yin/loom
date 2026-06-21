@@ -14,10 +14,15 @@ import Module from 'node:module';
 
 import { emptyBeginnerProfile, normalizeBeginnerProfile } from '../lib/profile/beginner-profile';
 import type { BeginnerProfile } from '../lib/profile/beginner-profile';
+// The pure step machine now lives in lib/onboarding/steps.ts (React/CSS-free),
+// so applyAnswer is imported directly — no client/CSS harness needed for the
+// step-machine contracts. The render tests below still require the component.
+import { applyAnswer } from '../lib/onboarding/steps';
 
 // ── CSS module stub ─────────────────────────────────────────────────────────
-// Must be installed BEFORE the client module is first require()'d so that the
-// CSS import inside ConversationalOnboardingClient.tsx is intercepted.
+// Still required for the render tests, which mount the client component (and its
+// CSS import) via getClient(). Must be installed BEFORE the client module is
+// first require()'d so that the CSS import inside the client is intercepted.
 const cssModuleClassMap = new Proxy(
   {},
   { get: (_target, className) => (typeof className === 'string' ? className : '') },
@@ -93,7 +98,6 @@ function getClient() {
 // ── applyAnswer pure helper tests ────────────────────────────────────────────
 
 test('applyAnswer: name step stores name and advances to headline', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next, profile: p } = applyAnswer(profile, { id: 'name' }, 'Ada Lovelace');
   assert.equal(p.home.name, 'Ada Lovelace');
@@ -101,7 +105,6 @@ test('applyAnswer: name step stores name and advances to headline', () => {
 });
 
 test('applyAnswer: headline step stores headline and advances to summary', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next, profile: p } = applyAnswer(profile, { id: 'headline' }, 'Quant developer · Sydney');
   assert.equal(p.home.headline, 'Quant developer · Sydney');
@@ -109,7 +112,6 @@ test('applyAnswer: headline step stores headline and advances to summary', () =>
 });
 
 test('applyAnswer: summary step stores summary and advances to edu_institution', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next, profile: p } = applyAnswer(profile, { id: 'summary' }, 'Building knowledge systems.');
   assert.equal(p.about.summary, 'Building knowledge systems.');
@@ -117,7 +119,6 @@ test('applyAnswer: summary step stores summary and advances to edu_institution',
 });
 
 test('applyAnswer: summary "skip" leaves summary empty and advances', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next, profile: p } = applyAnswer(profile, { id: 'summary' }, 'skip');
   assert.equal(p.about.summary, '');
@@ -125,14 +126,12 @@ test('applyAnswer: summary "skip" leaves summary empty and advances', () => {
 });
 
 test('applyAnswer: edu_institution "skip" jumps to exp_role', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next } = applyAnswer(profile, { id: 'edu_institution', entryIdx: 0 }, 'skip');
   assert.equal(next.id, 'exp_role');
 });
 
 test('applyAnswer: edu_institution creates entry and advances to edu_qualification', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next, profile: p } = applyAnswer(
     profile,
@@ -145,7 +144,6 @@ test('applyAnswer: edu_institution creates entry and advances to edu_qualificati
 });
 
 test('applyAnswer: edu_qualification sets qualification', () => {
-  const { applyAnswer } = getClient();
   const base = { ...emptyBeginnerProfile(), education: [{ institution: 'USYD', qualification: '' }] };
   const { next, profile: p } = applyAnswer(base, { id: 'edu_qualification', entryIdx: 0 }, 'BSc Mathematics');
   assert.equal(p.education[0].qualification, 'BSc Mathematics');
@@ -153,7 +151,6 @@ test('applyAnswer: edu_qualification sets qualification', () => {
 });
 
 test('applyAnswer: edu_years parses start and end', () => {
-  const { applyAnswer } = getClient();
   const base = { ...emptyBeginnerProfile(), education: [{ institution: 'USYD', qualification: 'BSc' }] };
   const { next, profile: p } = applyAnswer(base, { id: 'edu_years', entryIdx: 0 }, '2019–2022');
   assert.equal(p.education[0].start, '2019');
@@ -162,7 +159,6 @@ test('applyAnswer: edu_years parses start and end', () => {
 });
 
 test('applyAnswer: edu_more "yes" advances to edu_institution with next index', () => {
-  const { applyAnswer } = getClient();
   const base = { ...emptyBeginnerProfile(), education: [{ institution: 'USYD', qualification: 'BSc' }] };
   const { next } = applyAnswer(base, { id: 'edu_more' }, 'yes');
   assert.equal(next.id, 'edu_institution');
@@ -170,14 +166,12 @@ test('applyAnswer: edu_more "yes" advances to edu_institution with next index', 
 });
 
 test('applyAnswer: edu_more "no" advances to exp_role', () => {
-  const { applyAnswer } = getClient();
   const base = emptyBeginnerProfile();
   const { next } = applyAnswer(base, { id: 'edu_more' }, 'no');
   assert.equal(next.id, 'exp_role');
 });
 
 test('applyAnswer: exp_role "skip" advances to work_title (not review)', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next } = applyAnswer(profile, { id: 'exp_role', entryIdx: 0 }, 'skip');
   // A student with projects but no jobs must still reach Works after skipping
@@ -187,7 +181,6 @@ test('applyAnswer: exp_role "skip" advances to work_title (not review)', () => {
 });
 
 test('applyAnswer: skip experience → work_title → … → review (full edge)', () => {
-  const { applyAnswer } = getClient();
   let profile = emptyBeginnerProfile();
 
   function step<S extends Record<string, unknown>>(s: S) {
@@ -218,7 +211,6 @@ test('applyAnswer: skip experience → work_title → … → review (full edge)
 });
 
 test('applyAnswer: exp_role creates entry and advances to exp_organization', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next, profile: p } = applyAnswer(profile, { id: 'exp_role', entryIdx: 0 }, 'Quant Researcher');
   assert.equal(p.experience.length, 1);
@@ -227,7 +219,6 @@ test('applyAnswer: exp_role creates entry and advances to exp_organization', () 
 });
 
 test('applyAnswer: exp_highlight stores bullet', () => {
-  const { applyAnswer } = getClient();
   const base = {
     ...emptyBeginnerProfile(),
     experience: [{ role: 'QR', organization: 'Acme', bullets: [] }],
@@ -238,7 +229,6 @@ test('applyAnswer: exp_highlight stores bullet', () => {
 });
 
 test('applyAnswer: exp_highlight "skip" leaves bullets empty', () => {
-  const { applyAnswer } = getClient();
   const base = {
     ...emptyBeginnerProfile(),
     experience: [{ role: 'QR', organization: 'Acme', bullets: [] }],
@@ -250,7 +240,6 @@ test('applyAnswer: exp_highlight "skip" leaves bullets empty', () => {
 // ── Returning / pre-populated profile: entryIdx must point at the new slot ─────
 
 test('applyAnswer: edu_institution on a pre-populated profile indexes the new slot, not entry[0]', () => {
-  const { applyAnswer } = getClient();
   // A returning user whose profile already has one education entry.
   const base: BeginnerProfile = {
     ...emptyBeginnerProfile(),
@@ -272,7 +261,6 @@ test('applyAnswer: edu_institution on a pre-populated profile indexes the new sl
 });
 
 test('applyAnswer: exp_role on a pre-populated profile indexes the new slot', () => {
-  const { applyAnswer } = getClient();
   const base: BeginnerProfile = {
     ...emptyBeginnerProfile(),
     experience: [{ role: 'Old Role', organization: 'Old Org', bullets: [] }],
@@ -289,7 +277,6 @@ test('applyAnswer: exp_role on a pre-populated profile indexes the new slot', ()
 });
 
 test('applyAnswer: work_title on a pre-populated profile indexes the new slot', () => {
-  const { applyAnswer } = getClient();
   const base: BeginnerProfile = {
     ...emptyBeginnerProfile(),
     works: [{ title: 'Old Project' }],
@@ -307,7 +294,6 @@ test('applyAnswer: work_title on a pre-populated profile indexes the new slot', 
 // ── Full scripted run ─────────────────────────────────────────────────────────
 
 test('applyAnswer: full scripted run produces a correct normalized BeginnerProfile', () => {
-  const { applyAnswer } = getClient();
   let profile = emptyBeginnerProfile();
   // Use the shape directly rather than the exported type to avoid static import
   let stepId: string = 'name';
@@ -433,14 +419,12 @@ test('ConversationalOnboardingClient: renders without error with no initial stat
 // ── Works loop tests ──────────────────────────────────────────────────────────
 
 test('applyAnswer: work_title "skip" advances to review', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next } = applyAnswer(profile, { id: 'work_title', entryIdx: 0 }, 'skip');
   assert.equal(next.id, 'review');
 });
 
 test('applyAnswer: work_title creates entry and advances to work_description', () => {
-  const { applyAnswer } = getClient();
   const profile = emptyBeginnerProfile();
   const { next, profile: p } = applyAnswer(profile, { id: 'work_title', entryIdx: 0 }, 'Option Pricer');
   assert.equal(p.works.length, 1);
@@ -449,7 +433,6 @@ test('applyAnswer: work_title creates entry and advances to work_description', (
 });
 
 test('applyAnswer: work_description stores description and advances to work_link', () => {
-  const { applyAnswer } = getClient();
   const base = { ...emptyBeginnerProfile(), works: [{ title: 'Option Pricer' }] };
   const { next, profile: p } = applyAnswer(base, { id: 'work_description', entryIdx: 0 }, 'Black-Scholes web calculator.');
   assert.equal(p.works[0].description, 'Black-Scholes web calculator.');
@@ -457,14 +440,12 @@ test('applyAnswer: work_description stores description and advances to work_link
 });
 
 test('applyAnswer: work_description "skip" leaves description undefined', () => {
-  const { applyAnswer } = getClient();
   const base = { ...emptyBeginnerProfile(), works: [{ title: 'Option Pricer' }] };
   const { profile: p } = applyAnswer(base, { id: 'work_description', entryIdx: 0 }, 'skip');
   assert.equal(p.works[0].description, undefined);
 });
 
 test('applyAnswer: work_link stores link and advances to work_more', () => {
-  const { applyAnswer } = getClient();
   const base = { ...emptyBeginnerProfile(), works: [{ title: 'Option Pricer' }] };
   const { next, profile: p } = applyAnswer(base, { id: 'work_link', entryIdx: 0 }, 'https://github.com/ada/op');
   assert.equal(p.works[0].link, 'https://github.com/ada/op');
@@ -472,7 +453,6 @@ test('applyAnswer: work_link stores link and advances to work_more', () => {
 });
 
 test('applyAnswer: work_more "yes" advances to work_title with next index', () => {
-  const { applyAnswer } = getClient();
   const base = { ...emptyBeginnerProfile(), works: [{ title: 'Option Pricer' }] };
   const { next } = applyAnswer(base, { id: 'work_more' }, 'yes');
   assert.equal(next.id, 'work_title');
@@ -480,14 +460,12 @@ test('applyAnswer: work_more "yes" advances to work_title with next index', () =
 });
 
 test('applyAnswer: work_more "no" advances to review', () => {
-  const { applyAnswer } = getClient();
   const base = emptyBeginnerProfile();
   const { next } = applyAnswer(base, { id: 'work_more' }, 'no');
   assert.equal(next.id, 'review');
 });
 
 test('applyAnswer: full works entry round-trips correctly through normalization', () => {
-  const { applyAnswer } = getClient();
   let profile = emptyBeginnerProfile();
 
   function step<S extends Record<string, unknown>>(s: S) { return s as unknown as Parameters<typeof applyAnswer>[1]; }
