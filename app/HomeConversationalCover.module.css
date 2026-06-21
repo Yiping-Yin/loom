@@ -1,0 +1,356 @@
+/*
+ * HomeConversationalCover — the conversation-first cosmic front door (new user).
+ *
+ * Visual target: a calm dark cosmic surface. ONE living prompt + input as the
+ * locus, the conversation continuing on the same surface, a constellation
+ * forming behind it, whisper-only chrome. No card chrome, no top nav, no
+ * sign-in. Tokens only (var()); never hardcode the cyans — uses
+ * --signature-cyan-hi for the send fill, never #6CE7F2.
+ *
+ * `isolation: isolate` on the root makes the fixed `.loom-cosmic-field`
+ * (z-index:-1) and the absolute <ConstellationField> sit behind the locus
+ * content (which lifts to z-index:1).
+ *
+ * Motion: any entrance lives under @media (prefers-reduced-motion:
+ * no-preference); reduced motion gets the resting state instantly.
+ */
+
+.cover {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  padding: 2rem;
+  color: var(--text-1);
+}
+
+/* ── Brand mark (moon + wordmark), quiet at the top ───────────────────────── */
+
+.brand {
+  position: absolute;
+  top: clamp(1.25rem, 4vw, 2.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--text-2);
+}
+
+/* ── Locus: the prompt + input, centered with generous whitespace ─────────── */
+
+.locus {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.6rem, 4vw, 2.4rem);
+  width: 100%;
+  max-width: 40rem;
+  text-align: center;
+}
+
+.prompt {
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* ── Running dialogue on the same surface ─────────────────────────────────── */
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 100%;
+  max-height: min(46vh, 30rem);
+  overflow-y: auto;
+  text-align: left;
+  padding: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.bubbleLoom,
+.bubbleUser {
+  display: flex;
+  max-width: 86%;
+}
+
+.bubbleLoom {
+  align-self: flex-start;
+}
+
+.bubbleUser {
+  align-self: flex-end;
+}
+
+.bubbleText {
+  font-size: clamp(0.98rem, 1.6vw, 1.12rem);
+  line-height: 1.5;
+  padding: 0.05rem 0;
+}
+
+/* LOOM speaks in light ink, like the living prompt; the user's words read as a
+   calm cyan-tinted echo. No card chrome on either — this is a conversation on
+   a surface, not a chat app. */
+.bubbleLoom .bubbleText {
+  font-family: var(--display);
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.bubbleUser .bubbleText {
+  color: var(--signature-cyan-hi);
+}
+
+.typingBubble {
+  align-self: flex-start;
+}
+
+.typingDots {
+  display: inline-block;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  color: var(--text-3);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .typingDots {
+    animation: coverPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes coverPulse {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.9;
+    }
+  }
+}
+
+/* ── Input: a calm underline pill, the locus of action ────────────────────── */
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 32rem;
+}
+
+.input {
+  flex: 1;
+  min-height: 3rem;
+  padding: 0.65rem 0.25rem;
+  font-family: inherit;
+  font-size: clamp(1rem, 1.6vw, 1.1rem);
+  color: var(--text-1);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-2) 36%, transparent);
+  border-radius: 0;
+  outline: none;
+  transition: border-color var(--dur-2) var(--ease);
+}
+
+.input::placeholder {
+  color: var(--text-3);
+}
+
+.input:focus {
+  border-bottom-color: var(--signature-cyan-hi);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.send {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--ink-0);
+  background: var(--signature-cyan-hi);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    transform var(--dur-2) var(--ease),
+    opacity var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease);
+}
+
+.send:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature-cyan-hi) 18%, transparent);
+}
+
+.send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.send:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 3px;
+}
+
+/* ── Review + Save: the conversation's terminal action ────────────────────── */
+
+.reviewActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 32rem;
+}
+
+.save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 3rem;
+  padding: 0 1.6rem;
+  font-family: var(--display);
+  font-size: clamp(1rem, 1.6vw, 1.1rem);
+  font-weight: 600;
+  color: var(--ink-0);
+  background: var(--signature-cyan-hi);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    transform var(--dur-2) var(--ease),
+    opacity var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease);
+}
+
+.save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature-cyan-hi) 18%, transparent);
+}
+
+.save:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.save:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 3px;
+}
+
+.saveError {
+  margin: 0;
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  color: var(--tint-red, #f97474);
+  text-align: center;
+}
+
+.doneBeat {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: rgba(75, 197, 222, 0.88);
+}
+
+/* ── Whisper chrome: two muted links, nothing else ────────────────────────── */
+
+.whisper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--fs-caption);
+}
+
+.whisperLink,
+.formLink {
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0.25rem 0.1rem;
+  cursor: pointer;
+  transition: color var(--dur-2) var(--ease);
+}
+
+.whisperLink:hover,
+.formLink:hover {
+  color: var(--text-1);
+}
+
+.whisperLink:focus-visible,
+.formLink:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.whisperDot {
+  color: var(--text-3);
+}
+
+/* ── Entrance: only when motion is welcome; instant under reduce ──────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .brand,
+  .locus {
+    animation: coverRise 0.7s var(--ease-enter, ease) both;
+  }
+  .locus {
+    animation-delay: 0.08s;
+  }
+  @keyframes coverRise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  /* Preserve the brand's centering transform after the rise. */
+  .brand {
+    animation-name: coverRiseBrand;
+  }
+  @keyframes coverRiseBrand {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+}

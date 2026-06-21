@@ -163,11 +163,56 @@
   transform: translate(1px, -1px);
 }
 
+/* "Keep building" — the returning user's forward path back into onboarding.
+   A restrained ghost variant of the postcard pill so it reads as secondary to
+   the cyan postcard CTA while sharing its shape + interaction recipe. */
+.keepBuilding {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--text-1) 18%, transparent);
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  background: transparent;
+  transition:
+    border-color var(--dur-2) var(--ease),
+    color var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+
+.keepBuilding:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--text) 34%, transparent);
+  color: var(--text);
+}
+
+.keepBuilding:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+}
+
+.keepBuildingIcon {
+  flex: none;
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.keepBuilding:hover .keepBuildingIcon {
+  transform: translate(1px, -1px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chip,
   .chipIcon,
   .postcard,
-  .postcardIcon {
+  .postcardIcon,
+  .keepBuilding,
+  .keepBuildingIcon {
     transition: none;
   }
 }

@@ -24308,62 +24308,16 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* ============================================================
    BEGINNER PROFILE SURFACES — polish step 1
    CSS-only, additive. All class names match exactly what the
-   beginner TSX components emit (HomeProfileView, IdentityEmptyState,
+   beginner TSX components emit (IdentityEmptyState,
    AboutProfileView, EducationProfileView, ExperienceProfileView,
    WorksProfileView). Dark + signature-cyan (#4bc5de / #6ce7f2),
    restrained glass, mirrors vd-section-page rhythm.
    ============================================================ */
 
 /* ------------------------------------------------------------------
-   1. HOME PROFILE HERO
-   .home-profile-hero wraps the name/headline/summary trio on the
-   logged-in beginner home. Mirror HomeLanding's hero rhythm.
-   ------------------------------------------------------------------ */
-.home-profile-hero {
-  width: min(100%, 84rem);
-  margin-right: auto;
-  margin-left: auto;
-  padding: clamp(5.7rem, 7vw, 6.7rem) 0 clamp(1.15rem, 2.6vw, 2rem);
-  border-bottom: 1px solid var(--line-soft, rgba(232, 236, 238, 0.08));
-  display: grid;
-  gap: 0;
-  text-align: center;
-  justify-items: center;
-}
-
-/* Display name — the "h1" inside the hero */
-.home-profile-hero h1 {
-  margin: 0;
-  font-family: var(--display);
-  font-size: clamp(2.6rem, 4vw, 3.2rem);
-  font-weight: 600;
-  line-height: 1.06;
-  letter-spacing: -0.01em;
-  color: var(--text-1, #e8ecee);
-}
-
-/* Sub-headline: one-line professional title */
-.home-profile-headline {
-  max-width: 52rem;
-  margin: 0.6rem 0 0;
-  color: var(--text-2, rgba(232, 236, 238, 0.74));
-  font-size: clamp(1rem, 1.6vw, 1.2rem);
-  line-height: 1.45;
-}
-
-/* Extended summary: bio / intro paragraph */
-.home-profile-summary {
-  max-width: 46rem;
-  margin: 0.85rem 0 0;
-  color: var(--text-2, rgba(232, 236, 238, 0.74));
-  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
-  line-height: 1.55;
-}
-
-/* ------------------------------------------------------------------
-   2. SECTION NAV (beginner profile pages)
-   .home-profile-section-nav is used in HomeProfileView AND every
-   beginner identity view (About / Education / Experience / Works).
+   1. SECTION NAV (beginner profile pages)
+   .home-profile-section-nav is used by every beginner identity view
+   (About / Education / Experience / Works) and IdentityEmptyState.
    Renders the "About · Education · Experience · Works" row.
    Mirrors .vd-section-page__nav active-link behaviour.
    ------------------------------------------------------------------ */
@@ -24406,7 +24360,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 /* ------------------------------------------------------------------
-   3. EMPTY-STATE CTA LINKS
+   2. EMPTY-STATE CTA LINKS
    In IdentityEmptyState the "Build your LOOM →" and "See an example →"
    anchors are plain <a> tags inside .home-profile-section-nav inside
    .vd-section-page__list — they need a pill/ghost button treatment.
@@ -24461,7 +24415,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 /* ------------------------------------------------------------------
-   4. .vd-section-page__card — element-agnostic chrome
+   3. .vd-section-page__card — element-agnostic chrome
    EducationProfileView emits <div class="vd-section-page__card"> and
    ExperienceProfileView / WorksProfileView emit
    <article class="vd-section-page__card">.
@@ -24540,7 +24494,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 /* ------------------------------------------------------------------
-   5. .vd-entry-bullets
+   4. .vd-entry-bullets
    ExperienceProfileView emits <ul class="vd-entry-bullets"> inside
    a .vd-section-page__card article. Mirror .vd-entry-highlight
    list-reset + dash-marker pattern (~line 20041 in globals.css).
@@ -24576,7 +24530,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 /* ------------------------------------------------------------------
-   6. [data-reveal] — fail-safe entrance animation
+   5. [data-reveal] — fail-safe entrance animation
    AskYiping and other surfaces emit data-reveal="". The existing
    implementation in DigitalMeRoleOS uses a JS hook that sets
    [data-reveal-ready] on the root before any element is hidden.
@@ -24619,7 +24573,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 /* ------------------------------------------------------------------
-   7. SINGLE-COLUMN HERO — beginner section pages lack vd-section-page__hero-proof
+   6. SINGLE-COLUMN HERO — beginner section pages lack vd-section-page__hero-proof
    When the hero has no .vd-section-page__hero-proof child (beginner
    education/experience/works/about + IdentityEmptyState), the existing
    two-column grid leaves an empty right column. Collapse to a centred
@@ -24653,7 +24607,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 /* ------------------------------------------------------------------
-   8. .vd-education-profile-initials — institution initials chip
+   7. .vd-education-profile-initials — institution initials chip
    EducationProfileView renders a cyan-tinted initials badge in place of
    InstitutionMark for beginner profiles (no verified institution logos).
    Token-driven; replaces the previous inline style object.
