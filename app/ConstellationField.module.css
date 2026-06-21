@@ -1,0 +1,53 @@
+/* ConstellationField — decorative ambient star field for the cosmos entry cover.
+   Sits absolutely over a parent with position: relative.
+   Motion is gated behind prefers-reduced-motion: no-preference (same recipe as
+   CapabilityMap.module.css). Reduced motion → fully static, animation: none. */
+
+.field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.star {
+  fill: var(--signature-cyan-hi);
+  opacity: 0.55;
+}
+
+.comet {
+  fill: var(--signature-cyan-hi);
+  opacity: 0.95;
+}
+
+/* ── Idle twinkle — only when the user has NOT requested reduced motion ───── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .star {
+    animation: cfTwinkle 6s ease-in-out infinite;
+  }
+
+  .comet {
+    animation: cfTwinkle 4s ease-in-out infinite;
+  }
+
+  @keyframes cfTwinkle {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+}
+
+/* ── Reduced motion — strip all animation ────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .star,
+  .comet {
+    animation: none;
+  }
+}
