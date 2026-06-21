@@ -255,17 +255,22 @@ test('default /about (no profile) renders a neutral empty state, not the owner A
   assert.doesNotMatch(text, /Curriculum Vitae/);
 });
 
-test('default /digital-me (no profile) renders a neutral empty state, not the owner Role-OS + Ask', () => {
+test('default /digital-me first paint is a neutral cosmic skeleton, not the owner Role-OS + Ask', () => {
+  // CE-T5 (clean returning door): returning users are routed straight to
+  // /digital-me, so the pre-mount first paint must NOT flash the stranger empty
+  // state (it would look wrong to a returning user) — nor the owner Role-OS.
+  // SSR (renderToStaticMarkup) never mounts, so this captures that first paint:
+  // a neutral cosmic field. The stranger empty state / returning view only
+  // resolve AFTER mount, once localStorage has been read.
   const { default: DigitalMePage } = require('../app/digital-me/page') as {
     default: React.ComponentType;
   };
   const html = render(<DigitalMePage />);
   const text = visibleText(html);
 
-  // Neutral empty state; example CTA points at the showcase Digital Me.
-  assert.match(text, /This is your Digital Me page/);
-  assert.match(html, /href="\/onboarding\/profile"/);
-  assert.match(html, /href="\/example\/digital-me"/);
+  // First paint is the neutral cosmic skeleton (aria-hidden, no copy).
+  assert.match(html, /loom-cosmic-field/);
+  assert.doesNotMatch(text, /This is your Digital Me page/);
 
   // Owner Role-OS markers AND the owner-corpus Ask widget must be absent on the
   // default route (the owner Ask only mounts at /example/digital-me).

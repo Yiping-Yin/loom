@@ -48,6 +48,10 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   const [caps, setCaps] = useState<BeginnerCapability[]>(profile.capabilities ?? []);
   const [building, setBuilding] = useState(false);
   const [buildError, setBuildError] = useState('');
+  // Once-only guard for the on-entry auto-build (CE-T5). A ref (not state) so it
+  // is set synchronously before the async build resolves — preventing a second
+  // run if the effect re-fires before `caps` updates.
+  const autoBuiltRef = useRef(false);
 
   /** Count of capabilities whose status is 'strong' (backed by real proof). */
   const strongCount = caps.filter((c) => c.status === 'strong').length;
@@ -75,6 +79,29 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
       setBuilding(false);
     }
   }
+
+  // CE-T5 — auto-build the star-river ONCE on first entry when the profile has no
+  // persisted capabilities yet, so a returning user lands on a populated map
+  // instead of an empty-until-click prompt. This front-runs the manual button by
+  // reusing the exact same `handleBuildCapabilities` path — no duplicated
+  // derive/merge/persist logic, so the prior hardening holds:
+  //   • once-only: `autoBuiltRef` flips synchronously before the async build
+  //     resolves, and we only enter when `caps.length === 0`, so it never loops
+  //     and never runs when capabilities already exist.
+  //   • fail-open: `buildCapabilities` never throws and falls back to the offline
+  //     heuristic for every failure mode (no /api on the static loom://bundle,
+  //     offline, AI off…), exactly like the manual path — a failed/empty derive
+  //     leaves the UI usable.
+  //   • non-clobbering: it goes through handleBuildCapabilities, which reads the
+  //     freshest profile and merges `{ ...current, capabilities }`, preserving
+  //     existing artifacts (prior Fix #4/#1).
+  useEffect(() => {
+    if (autoBuiltRef.current) return;
+    if (caps.length > 0) return;
+    autoBuiltRef.current = true;
+    void handleBuildCapabilities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main ref={rootRef} className={shell.page} aria-labelledby="digital-me-title">
@@ -118,6 +145,19 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             <span>Get your digital postcard</span>
             <ArrowUpRight
               className={styles.postcardIcon}
+              aria-hidden="true"
+              size={13}
+              strokeWidth={1.8}
+            />
+          </a>
+
+          {/* The returning user's forward path: /onboarding/profile preloads the
+              stored profile and returns here on save, so this is "add more"
+              rather than "start over". */}
+          <a href="/onboarding/profile" className={styles.keepBuilding}>
+            <span>Keep building</span>
+            <ArrowUpRight
+              className={styles.keepBuildingIcon}
               aria-hidden="true"
               size={13}
               strokeWidth={1.8}

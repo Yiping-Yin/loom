@@ -9,13 +9,19 @@ import { IdentityEmptyState } from '../IdentityEmptyState';
 /**
  * Client-side gate for Digital Me.
  *
- * F2 step 2: SSR / first paint and the no-profile STRANGER get a neutral
- * IdentityEmptyState — NOT the owner DigitalMeRoleOSClient (which now renders
- * only at /example/digital-me). Crucially, this means the owner-corpus Ask
- * widget (the bare <AskYiping /> inside DigitalMeRoleOSClient, seeded with the
- * owner corpus) no longer mounts on the default /digital-me route — it lives
- * only on the showcase. The beginner's own grounded Ask still mounts via
- * BeginnerDigitalMe once a localStorage profile is present.
+ * F2 step 2: the no-profile STRANGER gets a neutral IdentityEmptyState — NOT the
+ * owner DigitalMeRoleOSClient (which now renders only at /example/digital-me).
+ * Crucially, this means the owner-corpus Ask widget (the bare <AskYiping />
+ * inside DigitalMeRoleOSClient, seeded with the owner corpus) no longer mounts
+ * on the default /digital-me route — it lives only on the showcase. The
+ * beginner's own grounded Ask still mounts via BeginnerDigitalMe once a
+ * localStorage profile is present.
+ *
+ * CE-T5 (clean returning door): returning users are now routed straight here, so
+ * the FIRST paint must NOT flash the stranger IdentityEmptyState. Before mount we
+ * render a neutral cosmic skeleton; only AFTER mount, when there is genuinely no
+ * profile, do we fall through to the stranger empty state. A returning user with
+ * a profile lands directly in their usable LOOM.
  */
 export function DigitalMeGate() {
   const [profile, setProfile] = useState<BeginnerProfile | null>(null);
@@ -26,7 +32,14 @@ export function DigitalMeGate() {
     setMounted(true);
   }, []);
 
-  if (mounted && profile) {
+  // Pre-mount: localStorage is unreadable (SSR / first paint). Show a neutral
+  // cosmic field rather than guessing stranger-vs-returning — never flash the
+  // stranger empty state at a returning user.
+  if (!mounted) {
+    return <div className="loom-cosmic-field" aria-hidden />;
+  }
+
+  if (profile) {
     return <BeginnerDigitalMe profile={profile} />;
   }
 
