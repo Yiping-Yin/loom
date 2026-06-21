@@ -53,3 +53,17 @@ test('CJK short answers are not over-penalized', () => {
 test('a long all-consonant token is still bad (no-vowel branch)', () => {
   assert.equal(assessAnswer('summary', 'bcdfghjk').level, 'bad');
 });
+
+test('per-field MIN_LEN flags too-short answers as weak', () => {
+  // highlight MIN_LEN is 8; 'built' (5) is under it
+  assert.equal(assessAnswer('highlight', 'built').level, 'weak');
+  // work_description MIN_LEN is 8; 'ok' (2) is under it
+  assert.equal(assessAnswer('work_description', 'ok').level, 'weak');
+});
+
+test('hyphen/dot/colon tech stacks are not no-vowel-flagged (FIX C)', () => {
+  assert.equal(assessAnswer('headline', 'ML-DL-NLP engineer').level, 'ok');
+  assert.equal(assessAnswer('headline', 'HTML-CSS-JS').level, 'ok');
+  // …but a genuine consonant run still fails
+  assert.equal(assessAnswer('summary', 'bcdfghjk').level, 'bad');
+});

@@ -334,6 +334,7 @@ export function ConversationalOnboardingClient() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [doneBeat, setDoneBeat] = useState(false);
   const [reasked, setReasked] = useState<Set<string>>(() => new Set());
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -395,7 +396,7 @@ export function ConversationalOnboardingClient() {
    */
   const handleSubmit = async (answerOverride?: string) => {
     let answer = (answerOverride ?? input).trim();
-    if (!answer || isTyping || submitting.current) return;
+    if (!answer || isTyping || checking || submitting.current) return;
     submitting.current = true;
     try {
       // Answer-quality gate (free-text steps only; skip answers + already-reasked pass through).
@@ -408,7 +409,13 @@ export function ConversationalOnboardingClient() {
         return;
       }
       if (gate.kind === 'check') {
-        const remote = await validateAnswerRemote(gate.field, stepPrompt(step), answer);
+        setChecking(true);
+        let remote;
+        try {
+          remote = await validateAnswerRemote(gate.field, stepPrompt(step), answer);
+        } finally {
+          setChecking(false);
+        }
         const r = resolveRemote(remote, gate.key, answer);
         if (r.nudge) {
           setReasked((s) => new Set(s).add(r.key));
@@ -776,8 +783,8 @@ export function ConversationalOnboardingClient() {
             <span className={styles.bubbleText}>{msg.text}</span>
           </div>
         ))}
-        {/* Typing indicator — shown while LOOM is "thinking" */}
-        {isTyping && (
+        {/* Typing indicator — shown while LOOM is "thinking" (advance tail or smart-layer check) */}
+        {(isTyping || checking) && (
           <div className={styles.typingBubble} aria-label="LOOM is typing" aria-live="polite">
             <span className={styles.loomAvatar} aria-hidden="true">
               <MoonOrb small />
@@ -811,11 +818,12 @@ export function ConversationalOnboardingClient() {
             aria-label="Your answer"
             autoComplete="off"
             autoFocus
+            disabled={checking}
           />
           <button
             type="submit"
             className={styles.sendBtn}
-            disabled={!input.trim() || isTyping}
+            disabled={!input.trim() || isTyping || checking}
             aria-label="Send answer"
           >
             <ArrowRight size={16} strokeWidth={1.8} aria-hidden="true" />

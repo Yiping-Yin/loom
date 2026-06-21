@@ -128,6 +128,16 @@ test('parseValidation: a reask verdict carries the hint', () => {
   assert.equal(result.hint, 'Just your name.');
 });
 
+test('parseValidation: a reask verdict with no hint → {verdict:reask}', () => {
+  // The route emits an explicit hint:undefined when no hint is present; under
+  // node:assert/strict that key is significant, so assert the real shape.
+  assert.deepEqual(parseValidation('{"verdict":"reask"}'), { verdict: 'reask', hint: undefined });
+});
+
+test('parseValidation: an unknown verdict fails open to accept', () => {
+  assert.deepEqual(parseValidation('{"verdict":"banana"}'), { verdict: 'accept' });
+});
+
 // ── parseValidation: fail-open ───────────────────────────────────────────────
 
 test('parseValidation: non-JSON input fails open to accept', () => {

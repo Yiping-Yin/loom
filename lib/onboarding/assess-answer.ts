@@ -40,7 +40,7 @@ function isGibberish(text: string): boolean {
   const lower = text.toLowerCase();
   if (/(.)\1{4,}/.test(lower)) return true; // 'aaaaaa'
   if (/asdf|qwer|zxcv|hjkl|qwerty|asdfgh|zxcvbn/.test(lower)) return true; // keyboard mash
-  for (const tok of lower.split(/[\s/&·,]+/)) {
+  for (const tok of lower.split(/[\s/&·,.:|-]+/)) {
     const alpha = tok.replace(/[^a-z]/g, '');
     if (alpha.length >= 6 && !/[aeiouy]/.test(alpha)) return true; // long, no vowels
   }

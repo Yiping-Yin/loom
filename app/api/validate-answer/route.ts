@@ -77,7 +77,7 @@ export async function POST(request: Request): Promise<Response> {
   let body: { field?: unknown; question?: unknown; answer?: unknown };
   try {
     const rawBody = await request.text();
-    if (rawBody.length > MAX_BODY_BYTES) {
+    if (Buffer.byteLength(rawBody, 'utf8') > MAX_BODY_BYTES) {
       return Response.json({ error: 'Request body is too large.' }, { status: 413 });
     }
     body = JSON.parse(rawBody);

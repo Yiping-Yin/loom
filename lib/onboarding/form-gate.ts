@@ -6,12 +6,8 @@ import { assessAnswer } from './assess-answer';
 
 export type HomeHints = { name?: string; headline?: string };
 
-/** Non-blocking floor hints for the form's HOME step. Empty object = nothing to flag. */
-export function assessHomeFields(home: { name: string; headline: string }): HomeHints {
-  const hints: HomeHints = {};
-  const name = assessAnswer('name', home.name);
-  const headline = assessAnswer('headline', home.headline);
-  if (name.level !== 'ok') hints.name = name.hint;
-  if (headline.level !== 'ok') hints.headline = headline.hint;
-  return hints;
+/** Non-blocking floor hint for one HOME field. undefined = nothing to flag. */
+export function assessHomeField(field: 'name' | 'headline', value: string): string | undefined {
+  const a = assessAnswer(field, value);
+  return a.level !== 'ok' ? a.hint : undefined;
 }
