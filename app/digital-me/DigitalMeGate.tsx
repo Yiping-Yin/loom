@@ -7,6 +7,7 @@ import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import { BeginnerDigitalMe } from './BeginnerDigitalMe';
 import { IdentityEmptyState } from '../IdentityEmptyState';
 import { DraftClient } from '../draft/DraftClient';
+import { EditorErrorBoundary } from './EditorErrorBoundary';
 
 /**
  * Client-side gate for Digital Me.
@@ -40,10 +41,12 @@ export function DigitalMeGate() {
   // Studio editor IS Digital Me here; there is no separate /draft surface.
   if (searchParams.has('edit')) {
     return (
-      <DraftClient
-        editId={searchParams.get('edit') || 'new'}
-        initialDraftTypeId={searchParams.get('draftType') ?? undefined}
-      />
+      <EditorErrorBoundary>
+        <DraftClient
+          editId={searchParams.get('edit') || 'new'}
+          initialDraftTypeId={searchParams.get('draftType') ?? undefined}
+        />
+      </EditorErrorBoundary>
     );
   }
 
