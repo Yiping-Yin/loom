@@ -15,7 +15,7 @@
  * `includedInDigitalMe` are exposed. Everything else stays private.
  */
 
-import type { ArtifactRef } from '../profile/beginner-profile';
+import type { ArtifactRef, BeginnerProfile } from '../profile/beginner-profile';
 import {
   listDrafts,
   type DraftStorageAdapter,
@@ -95,4 +95,32 @@ export function includedDraftArtifacts(
   return listDrafts(adapter, key)
     .filter((draft) => draft.includedInDigitalMe)
     .map(draftRecordToArtifactRef);
+}
+
+/**
+ * Transiently fold draft-derived artifacts into a profile for capability
+ * derivation. Returns a NEW profile whose `artifacts` is the user's OWN
+ * artifacts followed by the draft refs — so an included draft backs capabilities
+ * as evidence, exactly like an uploaded artifact.
+ *
+ * Discipline (mirrors prior Fix #4 non-clobbering):
+ *   - PURE: the input profile (and its artifacts array) is never mutated. The
+ *     caller persists ONLY the derived capabilities, never this merged profile —
+ *     so the user's real `profile.artifacts` are never overwritten with the
+ *     draft copies.
+ *   - NON-CLOBBERING: the profile's own artifacts come first and WIN on id
+ *     collision; a draft ref whose `draft-<id>` already exists as a real
+ *     artifact is dropped, never overwriting the real one or duplicating the id.
+ */
+export function mergeDraftArtifactsForDerivation(
+  profile: BeginnerProfile,
+  draftArtifacts: ArtifactRef[],
+): BeginnerProfile {
+  const own = profile.artifacts ?? [];
+  if (draftArtifacts.length === 0) {
+    return { ...profile, artifacts: [...own] };
+  }
+  const seen = new Set(own.map((a) => a.id));
+  const additions = draftArtifacts.filter((ref) => !seen.has(ref.id));
+  return { ...profile, artifacts: [...own, ...additions] };
 }
