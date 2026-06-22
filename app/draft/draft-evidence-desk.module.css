@@ -416,6 +416,22 @@
   color: var(--text-3);
   opacity: 0.55;
 }
+/* Keyboard focus ring — the project's signature-cyan outline pattern. */
+.surface :global(.new-loom-draft__reference-action:focus-visible) {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+}
+/* Pressed state — the "Include in Digital Me" toggle reads as cyan signal when
+   on (aria-pressed="true"), mirroring the type-button selected register. */
+.surface :global(.new-loom-draft__reference-action[aria-pressed="true"]) {
+  border-color: color-mix(in srgb, var(--signature-cyan) 55%, transparent);
+  background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
+  color: var(--signature-cyan-hi);
+  box-shadow:
+    var(--keylight),
+    inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent),
+    0 10px 26px rgba(0, 0, 0, 0.45);
+}
 /* Primary actions read as cyan signal — the live tick of the surface. */
 .surface :global(.new-loom-draft .new-loom-shell__action) {
   border-color: color-mix(in srgb, var(--signature-cyan) 40%, transparent);
@@ -1084,6 +1100,10 @@
   .surface :global(.new-loom-draft__block-add),
   .surface :global(.new-loom-draft__block-add button) {
     transition: none;
+  }
+  /* Neutralise the toggle's :active translate, not just its animation. */
+  .surface :global(.new-loom-draft__reference-action:active:not(:disabled)) {
+    transform: none;
   }
 }
 
