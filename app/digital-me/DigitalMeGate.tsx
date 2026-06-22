@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import { BeginnerDigitalMe } from './BeginnerDigitalMe';
 import { IdentityEmptyState } from '../IdentityEmptyState';
+import { DraftClient } from '../draft/DraftClient';
 
 /**
  * Client-side gate for Digital Me.
@@ -26,11 +28,24 @@ import { IdentityEmptyState } from '../IdentityEmptyState';
 export function DigitalMeGate() {
   const [profile, setProfile] = useState<BeginnerProfile | null>(null);
   const [mounted, setMounted] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setProfile(readBeginnerProfileLocal());
     setMounted(true);
   }, []);
+
+  // Edit mode: /digital-me?edit=<id|new> renders the Studio editor full-screen
+  // (no cosmic field, no nav) — mutually exclusive with the identity view. The
+  // Studio editor IS Digital Me here; there is no separate /draft surface.
+  if (searchParams.has('edit')) {
+    return (
+      <DraftClient
+        editId={searchParams.get('edit') || 'new'}
+        initialDraftTypeId={searchParams.get('draftType') ?? undefined}
+      />
+    );
+  }
 
   // Pre-mount: localStorage is unreadable (SSR / first paint). Show a neutral
   // cosmic field rather than guessing stranger-vs-returning — never flash the

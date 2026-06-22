@@ -81,6 +81,7 @@ import {
   fileToDocBlock,
   type NewLoomDraftDocBlock,
 } from '../../lib/new-loom/draft-blocks';
+import { selectDraftById } from '../../lib/new-loom/draft-routing';
 import { DraftBlockEditor } from './DraftBlockEditor';
 import DraftBoardClient from './DraftBoardClient';
 import draftDeskStyles from './draft-evidence-desk.module.css';
@@ -417,9 +418,10 @@ function makeId(): string {
 
 type DraftClientProps = {
   initialDraftTypeId?: string;
+  editId?: string;
 };
 
-export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
+export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {}) {
   const [draft, setDraft] = useState<NewLoomDraftRecord | null>(null);
   const [title, setTitle] = useState('Untitled draft');
   const [body, setBody] = useState('');
@@ -550,7 +552,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
         setSaveState('unavailable');
         return;
       }
-      const existing = listDrafts(fallbackStorage)[0];
+      const existing = selectDraftById(listDrafts(fallbackStorage), editId);
       const mergedReferences = existing
         ? mergeDraftReferences(existing.references, incomingReferences)
         : incomingReferences;
@@ -573,7 +575,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [editId]);
 
   useEffect(() => {
     if (!publicWorkingMode || !referencePickerOpen) return;
@@ -983,7 +985,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     });
     const currentDraftUrl =
       typeof window === 'undefined'
-        ? '/draft'
+        ? '/digital-me'
         : `${window.location.pathname}${window.location.search}${window.location.hash}`;
     const record = buildDraftRecord({
       title: preview.draftTitle,
