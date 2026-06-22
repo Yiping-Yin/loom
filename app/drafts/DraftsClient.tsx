@@ -99,7 +99,7 @@ export function DraftsClient() {
           <section className="vd-draft-library__empty" aria-label="No Draft records">
             <h2>No Draft records yet</h2>
             <p>Publish an AI Answer preview from Draft to create the first library record.</p>
-            <a href="/draft?draftType=ai-answer">
+            <a href="/digital-me?edit=new&draftType=ai-answer">
               Open Draft <ArrowIcon />
             </a>
           </section>

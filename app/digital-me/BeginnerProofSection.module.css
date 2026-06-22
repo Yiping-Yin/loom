@@ -81,6 +81,11 @@
   outline-offset: 2px;
 }
 
+.upload:active {
+  transform: translateY(0) scale(0.98);
+  background: color-mix(in srgb, var(--signature-cyan) 22%, transparent);
+}
+
 .upload[data-disabled] {
   cursor: default;
   opacity: 0.6;
@@ -144,6 +149,10 @@
   }
 
   .upload:hover {
+    transform: none;
+  }
+
+  .upload:active {
     transform: none;
   }
 }

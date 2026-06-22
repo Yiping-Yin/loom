@@ -534,6 +534,42 @@ html {
   .loom-cosmic-field { background-image: none; }
 }
 
+/* Quiet fallback for the in-place Studio editor (app/digital-me) when the
+   editor render throws — see app/digital-me/EditorErrorBoundary.tsx. Calm, no
+   alarm: just a line of copy and a way back to Digital Me. */
+.editor-error-boundary {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 2rem;
+  text-align: center;
+}
+.editor-error-boundary__title {
+  margin: 0;
+  font-size: 1.06rem;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+.editor-error-boundary__back {
+  color: var(--signature-cyan);
+  text-decoration: none;
+  font-size: 0.9rem;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  transition: opacity 0.18s var(--ease);
+}
+.editor-error-boundary__back:hover {
+  opacity: 0.78;
+}
+@media (prefers-reduced-motion: reduce) {
+  .editor-error-boundary__back { transition: none; }
+}
+
 /* ── Prism Refined Glass (Nucleus Style) ── */
 .material-thin, .material-reg, .material-thick {
   box-shadow: var(--mat-hi);
@@ -7335,6 +7371,18 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   color: var(--draft-accent-strong);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Home link interaction states — kept consistent with the module copy
+   (draft-evidence-desk.module.css .new-loom-draft__home:focus-visible). */
+.new-loom-draft__home:focus-visible {
+  outline: 2px solid var(--signature-cyan);
+  outline-offset: 3px;
+  border-radius: var(--r-1);
+}
+
+.new-loom-draft__home:active {
+  color: var(--draft-accent-strong);
 }
 
 .new-loom-draft__identity-rail {

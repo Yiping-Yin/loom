@@ -135,6 +135,19 @@
   color: var(--text-2);
   border: 1px solid var(--line);
   border-radius: 999px;
+  transition:
+    border-color var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--signature-cyan);
+  outline-offset: 2px;
+}
+
+.chip:active {
+  transform: scale(0.97);
+  border-color: color-mix(in srgb, var(--signature-cyan) 40%, transparent);
 }
 
 .chipVerified {
@@ -209,6 +222,15 @@
     50% {
       opacity: 1;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: none;
+  }
+  .chip:active {
+    transform: none;
   }
 }
 
