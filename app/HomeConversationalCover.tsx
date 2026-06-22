@@ -185,7 +185,7 @@ export function HomeConversationalCover() {
       <div className={styles.brand}>
         <img
           className={styles.brandMoon}
-          src="/brand/loom_lunar_orb.png"
+          src="/loom/history/moon-orb.webp"
           alt=""
           draggable={false}
           width={30}
