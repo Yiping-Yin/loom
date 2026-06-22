@@ -18,7 +18,9 @@ const HIDE_AFTER_PX = 96;
 const DELTA_PX = 8;
 const LOOM_WORKSPACE_NAV = [
   { label: 'Sources', href: '/sources' },
-  { label: 'Draft', href: '/draft' },
+  // Draft is no longer a peer workspace — it lives inside Digital Me (open it
+  // from the Studio section there). Reached via /digital-me?edit; /draft stays a
+  // redirect stub for legacy links.
   { label: 'Today', href: '/today' },
 ];
 
