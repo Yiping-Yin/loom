@@ -300,31 +300,26 @@
 
 /* Build / Refresh button — restrained glass pill matching the postcard CTA
    style: no fill at rest, 1px cyan hairline, lifts on hover. */
+/* Quiet, secondary action — the map auto-builds on entry, so a manual refresh is
+   a rare convenience, not a primary control. A muted mono text action, not a
+   cyan pill. */
 .buildButton {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-5);
-  border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--signature-cyan) 10%, transparent);
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+  border: none;
+  background: none;
   font-family: var(--mono);
-  font-size: var(--fs-small);
-  font-weight: 500;
+  font-size: var(--fs-caption);
   letter-spacing: 0.04em;
-  color: var(--signature-cyan-hi);
+  color: var(--text-3);
   cursor: pointer;
-  transition:
-    border-color var(--dur-2) var(--ease),
-    background var(--dur-2) var(--ease),
-    transform var(--dur-2) var(--ease),
-    opacity var(--dur-2) var(--ease);
+  transition: color var(--dur-2) var(--ease);
 }
 
 .buildButton:hover:not(:disabled) {
-  transform: translateY(-1px);
-  border-color: var(--signature-cyan-hi);
-  background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
+  color: var(--text-1);
 }
 
 .buildButton:focus-visible {
