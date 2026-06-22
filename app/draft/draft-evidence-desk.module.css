@@ -130,6 +130,24 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 16px 38px rgba(0, 0, 0, 0.55);
 }
+/* Neutral monogram avatar — the editor lives in everyone's Digital Me, so it
+   shows the current user's initial, not the owner's photo. */
+.surface :global(.new-loom-draft__avatar) {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--draft-glass-bg, rgba(255, 255, 255, 0.04));
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 26px rgba(0, 0, 0, 0.4);
+}
 .surface :global(.new-loom-draft__profile-card h2) {
   font-family: var(--serif);
   font-weight: 600;

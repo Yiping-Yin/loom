@@ -5,6 +5,8 @@ import { callAiPrompt } from '../../lib/ai/runtime';
 import { loadSoanPayload } from '../../lib/loom-soan-records';
 import { fetchSearchIndex } from '../../lib/search-index-client';
 import { safeHref } from '../../lib/profile/safe-href';
+import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
+import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
 import {
   loadReferenceCitationDraftCorpusDocs,
   mergeDraftCorpusDocs,
@@ -426,6 +428,9 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
   const [title, setTitle] = useState('Untitled draft');
   const [body, setBody] = useState('');
   const [blocks, setBlocks] = useState<NewLoomDraftDocBlock[]>([]);
+  // The editor lives inside everyone's Digital Me, so its identity rail must
+  // reflect the CURRENT user (read after mount; null until then → neutral fallback).
+  const [identityProfile, setIdentityProfile] = useState<BeginnerProfile | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saved' | 'unavailable'>('idle');
   const [aiState, setAiState] = useState<DraftAIState>('idle');
   const [aiSuggestion, setAiSuggestion] = useState('');
@@ -520,6 +525,10 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
       window.location.search,
       browserPublicWorkingStorage(),
     ));
+  }, []);
+
+  useEffect(() => {
+    setIdentityProfile(readBeginnerProfileLocal());
   }, []);
 
   useEffect(() => {
@@ -1147,10 +1156,13 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
       <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
         <a className="new-loom-draft__home" href="/digital-me">← Digital Me</a>
         <section className="new-loom-draft__profile-card" aria-label="Profile">
-          <img src="/profile/yiping-profile-white-shirt.png" alt="Yiping Yin" />
-          <h2>Yiping Yin</h2>
-          <p>Student · Builder · Learner</p>
-          <span>Sydney, Australia</span>
+          <span className="new-loom-draft__avatar" aria-hidden="true">
+            {(identityProfile?.home.name?.trim() || 'Your name').charAt(0).toUpperCase()}
+          </span>
+          <h2>{identityProfile?.home.name?.trim() || 'Your name'}</h2>
+          {identityProfile?.home.headline?.trim() ? (
+            <p>{identityProfile.home.headline.trim()}</p>
+          ) : null}
         </section>
         <section className="new-loom-draft__rail-section" aria-label="Workspace status">
           <h3>Workspace</h3>
