@@ -27,4 +27,6 @@ test('DraftBlockEditor renders text + code + cite blocks in order', () => {
   assert.match(html, /print\(1\)/);
   assert.match(html, /Source A/);
   assert.match(html, /new-loom-draft__block/);
+  // The cite block links to its source so the citation is openable.
+  assert.match(html, /<a[^>]*href="\/s"[^>]*>[\s\S]*Source A/);
 });

@@ -29,6 +29,25 @@ export function fileToDocBlock(name: string, text: string, createId: () => strin
   return { id: createId(), kind: 'code', text, lang: LANG_BY_EXT[ext], source: name };
 }
 
+// Build a cite block from a chosen reference (the picker's "insert as citation"
+// path). The cite stays grounded in the real source — its href/label/excerpt
+// come straight from the reference, so blocksToBody emits a quote + link that
+// draftProvenanceMatches() still sees.
+export function citeBlockFromReference(
+  ref: NewLoomDraftReference,
+  createId: () => string,
+): NewLoomDraftDocBlock {
+  const label = ref.label?.trim() || ref.href;
+  const excerpt = ref.excerpt?.trim();
+  return {
+    id: createId(),
+    kind: 'cite',
+    href: ref.href,
+    label,
+    ...(excerpt ? { excerpt } : {}),
+  };
+}
+
 export function blocksToBody(blocks: NewLoomDraftDocBlock[]): string {
   return blocks
     .map((b) => {

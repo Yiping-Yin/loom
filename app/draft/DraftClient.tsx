@@ -28,6 +28,7 @@ import {
   draftReferenceMentionToken,
   draftReferencesChanged,
   draftProvenanceMatches,
+  draftReferenceFromCorpusDoc,
   draftSourceTilesFromReferences,
   draftWordCount,
   importWorkbenchDraft,
@@ -75,6 +76,7 @@ import {
 import {
   blocksToBody,
   bodyToBlocks,
+  citeBlockFromReference,
   fileToDocBlock,
   type NewLoomDraftDocBlock,
 } from '../../lib/new-loom/draft-blocks';
@@ -847,6 +849,33 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     window.requestAnimationFrame(() => bodyTextareaRef.current?.focus());
   };
 
+  const closeReferencePicker = () => {
+    setReferencePickerOpen(false);
+    setReferencePickerSource(null);
+    setReferencePickerQuery('');
+  };
+
+  // The manual "@ Reference" picker inserts the chosen source as a first-class
+  // cite block (blocks are canonical). The source is also merged into the draft
+  // references so it stays grounded and shows in the Sources inspector; the
+  // cite block serializes to a quote + link, so provenance still matches.
+  const insertCiteBlock = (doc: NewLoomDraftCorpusDoc) => {
+    if (publicWorkingMode) return;
+    if (!draft) return;
+    const reference = draftReferenceFromCorpusDoc(doc);
+    const nextBlocks = [...blocks, citeBlockFromReference(reference, makeId)];
+    const nextBody = blocksToBody(nextBlocks);
+    const nextReferences = mergeDraftReferences(references, [reference]);
+    setBlocks(nextBlocks);
+    setBody(nextBody);
+    setDraft({ ...draft, body: nextBody, references: nextReferences });
+    setSaveState('idle');
+    closeReferencePicker();
+    void commitDraft(draft, title, nextBody, nextReferences, nextBlocks).catch(() => {
+      setSaveState('unavailable');
+    });
+  };
+
   const continueWithAI = async () => {
     if (aiState === 'streaming') return;
     const controller = new AbortController();
@@ -1323,7 +1352,13 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                     type="button"
                     className="new-loom-draft__reference-result"
                     key={doc.href}
-                    onClick={() => insertReferenceCandidate(doc)}
+                    onClick={() =>
+                      // Inline @-mention (typed into the focused raw body) stays
+                      // inline; the manual picker inserts a first-class cite block.
+                      referencePickerSource === 'mention'
+                        ? insertReferenceCandidate(doc)
+                        : insertCiteBlock(doc)
+                    }
                   >
                     <span>{doc.title}</span>
                     <small>
