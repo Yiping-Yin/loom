@@ -103,7 +103,7 @@ test('BeginnerDigitalMe mounts the Studio section (empty state in SSR)', () => {
   const text = visibleText(html);
   assert.match(text, /Studio/);
   assert.match(text, /Start a document/);
-  assert.match(html, /href="\/draft"/);
+  assert.match(html, /href="\/digital-me\?edit=new"/);
 });
 
 test('BeginnerDigitalMe omits Yiping Role-OS markers', () => {

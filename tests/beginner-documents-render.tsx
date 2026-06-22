@@ -42,8 +42,8 @@ test('BeginnerDocuments renders document cards that open /draft?d=<id>', () => {
       ]}
     />,
   );
-  assert.match(html, /href="\/draft\?d=d1"/);
-  assert.match(html, /href="\/draft"/); // the "New document" header action
+  assert.match(html, /href="\/digital-me\?edit=d1"/);
+  assert.match(html, /href="\/digital-me\?edit=new"/); // the "New document" header action
   const text = visibleText(html);
   assert.match(text, /Studio/);
   assert.match(text, /Quant note/);
@@ -54,6 +54,6 @@ test('BeginnerDocuments renders document cards that open /draft?d=<id>', () => {
 test('BeginnerDocuments shows an empty-state CTA when there are no documents', () => {
   const { BeginnerDocuments } = require('../app/digital-me/BeginnerDocuments');
   const html = render(<BeginnerDocuments documents={[]} />);
-  assert.match(html, /href="\/draft"/);
+  assert.match(html, /href="\/digital-me\?edit=new"/);
   assert.match(visibleText(html), /Start a document/);
 });

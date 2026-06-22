@@ -985,7 +985,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
     });
     const currentDraftUrl =
       typeof window === 'undefined'
-        ? '/draft'
+        ? '/digital-me'
         : `${window.location.pathname}${window.location.search}${window.location.hash}`;
     const record = buildDraftRecord({
       title: preview.draftTitle,
