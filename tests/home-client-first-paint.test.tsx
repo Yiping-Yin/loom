@@ -74,11 +74,12 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
     );
   }
 
-  for (const menuLabel of ['Identity', 'Workspaces', 'Sources', 'Draft']) {
+  for (const menuLabel of ['Identity', 'Workspaces', 'Sources']) {
     assert.match(primaryNavHtml, new RegExp(`>${menuLabel}<`));
   }
   assert.match(primaryNavHtml, /href="\/sources"/);
-  assert.match(primaryNavHtml, /href="\/draft"/);
+  // Draft is no longer a peer workspace nav item — it lives inside Digital Me.
+  assert.doesNotMatch(primaryNavHtml, /href="\/draft"/);
   assert.doesNotMatch(primaryNavHtml, /href="\/drafts"/);
 
   // New "ledger cover" (Home v12): identity rail + numbered evidence ledger.
@@ -133,7 +134,7 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.doesNotMatch(globalNavSource, /if \(!searchQuery\.trim\(\)\)/);
   assert.match(globalNavSource, /const LOOM_WORKSPACE_NAV = \[/);
   assert.match(globalNavSource, /\{ label: 'Sources', href: '\/sources' \}/);
-  assert.match(globalNavSource, /\{ label: 'Draft', href: '\/draft' \}/);
+  assert.doesNotMatch(globalNavSource, /label: 'Draft'/);
   assert.match(globalNavSource, />\s*Identity\s*</);
   assert.match(globalNavSource, />\s*Workspaces\s*</);
 

@@ -164,11 +164,12 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
-  for (const menuLabel of ['Identity', 'Workspaces', 'Sources', 'Draft']) {
+  for (const menuLabel of ['Identity', 'Workspaces', 'Sources']) {
     assert.match(primaryNavHtml, new RegExp(`>${menuLabel}<`));
   }
   assert.match(primaryNavHtml, /href="\/sources"/);
-  assert.match(primaryNavHtml, /href="\/draft"/);
+  // Draft is no longer a peer workspace nav item — it lives inside Digital Me.
+  assert.doesNotMatch(primaryNavHtml, /href="\/draft"/);
   assert.doesNotMatch(primaryNavHtml, /href="\/drafts"/);
 
   for (const label of [
@@ -509,7 +510,7 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(globalNav, /requestAnimationFrame/);
   assert.match(globalNav, /const LOOM_WORKSPACE_NAV = \[/);
   assert.match(globalNav, /\{ label: 'Sources', href: '\/sources' \}/);
-  assert.match(globalNav, /\{ label: 'Draft', href: '\/draft' \}/);
+  assert.doesNotMatch(globalNav, /label: 'Draft'/);
   assert.match(globalNav, />\s*Identity\s*</);
   assert.match(globalNav, />\s*Workspaces\s*</);
   assert.match(globalNavCss, /position:\s*fixed/);
