@@ -17,6 +17,7 @@
   --role-signal: var(--cyan, #6CE7F2);
   --role-row-active: var(--ink-5, #30353A);
   --role-ok: var(--up, #3FB37A);
+  --role-down: var(--down, #E06A6A);
   --role-mono: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
   --role-shell: 1344px;
   --role-gutter: clamp(28px, 4vw, 48px);
@@ -1066,26 +1067,71 @@
   max-width: 36rem;
 }
 
+/* Live-desk telemetry — the card speaks QBook's own terminal vocabulary
+   (connection state + last tick) rather than asserting "live" in prose. */
+.marketRoomStatus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 16px;
+  font-family: var(--role-mono);
+  font-size: 0.66rem;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 1;
+  color: var(--role-subtle);
+}
+
+.marketRoomDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--role-ok);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marketRoomDot {
+    animation: marketRoomPulse 1.9s ease-out infinite;
+  }
+  @keyframes marketRoomPulse {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--role-ok) 55%, transparent);
+    }
+    70%,
+    100% {
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--role-ok) 0%, transparent);
+    }
+  }
+}
+
+.marketRoomConn {
+  color: var(--role-ok);
+}
+
+.marketRoomTick {
+  color: var(--role-subtle);
+}
+
 .marketRoomMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 18px;
-  margin-top: 14px;
+  gap: 6px 16px;
+  margin-top: 10px;
   font-family: var(--role-mono);
   font-size: 0.7rem;
   letter-spacing: var(--tracking-eyebrow);
-  color: var(--role-muted);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 1;
+  color: var(--role-subtle);
 }
 
-.marketRoomMeta span::before {
-  content: "";
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--role-signal);
-  margin-right: 8px;
-  vertical-align: 2px;
+/* Bright value, dim label — the terminal ledger read. */
+.marketRoomMeta b {
+  font-weight: 600;
+  color: var(--role-ink);
 }
 
 /* Launch affordance — glass, never a color fill. Comet ice lives only in the
