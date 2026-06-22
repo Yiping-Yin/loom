@@ -216,7 +216,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
         {established && (
         <section className={styles.capabilitiesSection} aria-labelledby="capabilities-title" data-reveal="">
           <header className={styles.capabilitiesHeader}>
-            <p className={styles.eyebrow}>CAPABILITIES</p>
+            <p className={styles.eyebrow}>Capabilities</p>
             <h2 id="capabilities-title" className={styles.capabilitiesHeading}>
               What I can do
             </h2>

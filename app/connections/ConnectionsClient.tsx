@@ -106,7 +106,11 @@ export default function ConnectionsClient() {
           {connectionMap.correspondents.length === 0 ? (
             <p className={styles.emptyCopy}>
               No correspondents yet. As sources accumulate, the people and places they came
-              from appear here.
+              from appear here. Start in{' '}
+              <Link href="/sources" className={styles.textLink}>
+                Sources
+              </Link>
+              .
             </p>
           ) : (
             <ul className={styles.plainList}>

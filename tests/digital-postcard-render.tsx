@@ -101,7 +101,7 @@ test('owner card shows Copy + Download actions', () => {
   assert.match(text, /Copy shareable link/);
   assert.match(text, /Download card/);
   // The owner is not shown the visitor "Make your own" link.
-  assert.doesNotMatch(text, /Make your own Loom/);
+  assert.doesNotMatch(text, /Make your own LOOM/);
 });
 
 test('shared card hides owner actions and shows Make your own', () => {
@@ -110,7 +110,7 @@ test('shared card hides owner actions and shows Make your own', () => {
   const text = visibleText(html);
   assert.doesNotMatch(text, /Copy shareable link/);
   assert.doesNotMatch(text, /Download card/);
-  assert.match(text, /Make your own Loom/);
+  assert.match(text, /Make your own LOOM/);
 });
 
 test('sparse profile (name + headline only) degrades cleanly', () => {

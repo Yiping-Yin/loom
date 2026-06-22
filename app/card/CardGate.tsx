@@ -88,12 +88,12 @@ export function CardGate() {
           <section className={styles.empty} aria-label="No card yet">
             <img className={styles.emptyMoon} src={MOON_SRC} alt="" draggable={false} />
             <p className={styles.emptyEyebrow}>Digital postcard</p>
-            <h1 className={styles.emptyTitle}>Build your Loom to get a shareable card.</h1>
+            <h1 className={styles.emptyTitle}>Build your LOOM to get a shareable card.</h1>
             <p className={styles.emptyBody}>
               Add your name, work, and experience to get a shareable card.
             </p>
             <a className={styles.emptyCta} href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>
-              Start your Loom →
+              Start your LOOM →
             </a>
             <p className={styles.emptySecondaryLinks}>
               <a href={safeHref(EXAMPLE_HREF) || EXAMPLE_HREF} className={styles.emptySecondaryLink}>

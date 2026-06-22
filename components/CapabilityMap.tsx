@@ -59,7 +59,7 @@ export function CapabilityMap({
     return (
       <div className={styles.emptyState} role="status">
         <p className={styles.emptyPrompt}>
-          Build your capability map — Loom reads your experience, work, and proof to map what you can do.
+          Build your capability map — LOOM reads your experience, work, and proof to map what you can do.
         </p>
       </div>
     );
