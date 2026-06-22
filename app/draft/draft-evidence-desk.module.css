@@ -1068,3 +1068,22 @@
     transition: none;
   }
 }
+
+/* Home link — the quiet way back to Digital Me (the editor carries no nav pill). */
+.surface :global(.new-loom-draft__home) {
+  align-self: start;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  transition: color var(--dur-1) var(--ease);
+}
+.surface :global(.new-loom-draft__home:hover) {
+  color: var(--text-1);
+}
+.surface :global(.new-loom-draft__home:focus-visible) {
+  outline: 2px solid var(--signature-cyan);
+  outline-offset: 3px;
+  border-radius: var(--r-1);
+}

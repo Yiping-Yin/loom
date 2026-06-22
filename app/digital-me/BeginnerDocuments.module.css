@@ -1,0 +1,114 @@
+.section {
+  display: grid;
+  gap: 1rem;
+}
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3, #8a9099);
+}
+.title {
+  margin: 0.15rem 0 0;
+  font-family: var(--serif, Georgia, serif);
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: var(--text-1, #f3f5f7);
+}
+.newAction {
+  flex: none;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.14));
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: var(--text-1, #f3f5f7);
+  background: var(--loom-glass-bg, rgba(255, 255, 255, 0.04));
+  -webkit-backdrop-filter: var(--loom-glass-blur, blur(20px));
+  backdrop-filter: var(--loom-glass-blur, blur(20px));
+  transition:
+    border-color 200ms ease,
+    background 200ms ease;
+}
+.newAction:hover,
+.newAction:focus-visible {
+  border-color: var(--signature-cyan, #4bc5de);
+}
+.list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem 1.05rem;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.12));
+  border-radius: 14px;
+  background: var(--loom-glass-bg, rgba(255, 255, 255, 0.04));
+  box-shadow: var(--loom-glass-shadow, 0 1px 0 rgba(255, 255, 255, 0.06) inset);
+  transition:
+    border-color 200ms ease,
+    transform 200ms ease;
+}
+.card:hover,
+.card:focus-visible {
+  border-color: var(--signature-cyan, #4bc5de);
+  transform: translateY(-1px);
+}
+.cardTitle {
+  color: var(--text-1, #f3f5f7);
+  font-weight: 600;
+  font-size: 1rem;
+}
+.cardMeta {
+  color: var(--text-3, #8a9099);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+}
+.empty {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.4rem 1.2rem;
+  text-align: left;
+  border: 1px dashed var(--line, rgba(255, 255, 255, 0.16));
+  border-radius: 14px;
+  background: var(--loom-glass-bg, rgba(255, 255, 255, 0.03));
+  transition: border-color 200ms ease;
+}
+.empty:hover,
+.empty:focus-visible {
+  border-color: var(--signature-cyan, #4bc5de);
+}
+.emptyTitle {
+  color: var(--text-1, #f3f5f7);
+  font-size: 0.98rem;
+}
+.emptyCta {
+  color: var(--signature-cyan, #4bc5de);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .newAction,
+  .empty {
+    transition: none;
+  }
+  .card:hover,
+  .card:focus-visible {
+    transform: none;
+  }
+}

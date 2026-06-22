@@ -95,6 +95,17 @@ test('BeginnerDigitalMe renders the Ask widget section', () => {
   assert.match(html, /ask-yiping/i);
 });
 
+test('BeginnerDigitalMe mounts the Studio section (empty state in SSR)', () => {
+  const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
+  // SSR render: the listDrafts effect does not run, so the Studio section shows
+  // its header + empty-state CTA. This pins that the section is mounted.
+  const html = render(<BeginnerDigitalMe profile={ESTABLISHED_PROFILE} />);
+  const text = visibleText(html);
+  assert.match(text, /Studio/);
+  assert.match(text, /Start a document/);
+  assert.match(html, /href="\/draft"/);
+});
+
 test('BeginnerDigitalMe omits Yiping Role-OS markers', () => {
   const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
   const html = render(<BeginnerDigitalMe profile={SAMPLE_PROFILE} />);
