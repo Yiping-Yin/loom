@@ -270,7 +270,7 @@ function ArtifactOutput({
           onClick={() => onSelectClaim(claim.id)}
         >
           <strong>{getClaimTitle(claim)}</strong>
-          <span>{STATUS_LABELS[claim.evidenceStatus]}</span>
+          <span data-evidence={claim.evidenceStatus}>{STATUS_LABELS[claim.evidenceStatus]}</span>
           <small>{CLAIM_SUMMARIES[claim.id]}</small>
         </button>
       ))}
@@ -384,7 +384,7 @@ export default function DigitalMeRoleOSClient() {
               onClick={() => setSelectedClaimId(claim.id)}
             >
               <strong>{getClaimTitle(claim)}</strong>
-              <span>{STATUS_LABELS[claim.evidenceStatus]}</span>
+              <span data-evidence={claim.evidenceStatus}>{STATUS_LABELS[claim.evidenceStatus]}</span>
             </button>
           ))}
         </aside>

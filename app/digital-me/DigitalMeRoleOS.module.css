@@ -18,6 +18,12 @@
   --role-row-active: var(--ink-5, #30353A);
   --role-ok: var(--up, #3FB37A);
   --role-down: var(--down, #E06A6A);
+  /* Evidence-strength tiers — the proof moat made glanceable (verified → missing).
+     One reserved warm amber for "partial"; the rest stay on the cyan/grey palette. */
+  --evidence-strong: var(--role-signal);
+  --evidence-partial: #D7A24A;
+  --evidence-direction: color-mix(in srgb, var(--role-signal) 42%, var(--role-subtle));
+  --evidence-missing: var(--role-subtle);
   --role-mono: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
   --role-shell: 1344px;
   --role-gutter: clamp(28px, 4vw, 48px);
@@ -278,22 +284,15 @@
   padding: 1rem 1.1rem;
 }
 
-/* Artifact Runtime — the LIVE TERMINAL of the scene. Full-strength staging:
-   it tilts back + recedes on the proof-path perspective, with a deep grounding
-   float and a diagonal screen-glare across the top of its glass. */
+/* Artifact Runtime — a flat dossier page, read head-on. The evidence is the
+   subject here, so it stays on the picture plane (no 3D tilt); dramatic
+   lit-object staging is reserved for the QBook marketRoom device shot, where the
+   object itself is the subject. Glass + a calm grounding float remain. */
 .artifactStage {
   display: grid;
   gap: 1.15rem;
   padding: clamp(1.2rem, 2vw, 1.7rem) clamp(1.2rem, 2vw, 1.7rem) clamp(1.4rem, 2.2vw, 1.9rem);
-  transform: rotateX(5deg) rotateZ(-0.4deg);
-  transform-origin: 50% 84%;
-  transform-style: preserve-3d;
-  /* Grounding: a deeper directional float seats it on the desk under the tilt. */
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 36px 60px rgba(0, 0, 0, 0.55),
-    0 14px 26px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--role-glass-shadow);
 }
 
 /* SCREEN GLARE on the runtime glass — a diagonal specular sweep across the top,
@@ -358,6 +357,39 @@
   color: var(--role-muted);
   font-size: 0.76rem;
   line-height: 1.35;
+}
+
+/* Evidence-strength, glanceable: a colored dot + tinted label so proof depth
+   reads instantly instead of vanishing into uniform grey. The label keeps body
+   weight; the dot + tint carry the tier (strong=cyan / partial=amber /
+   direction=faint cyan-grey / missing=grey). */
+.roleOsPage span[data-evidence] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.44em;
+  color: var(--ev, var(--role-muted));
+}
+
+.roleOsPage span[data-evidence]::before {
+  content: "";
+  flex: none;
+  width: 0.44em;
+  height: 0.44em;
+  border-radius: 999px;
+  background: var(--ev, var(--role-muted));
+}
+
+.roleOsPage span[data-evidence="strong"] {
+  --ev: var(--evidence-strong);
+}
+.roleOsPage span[data-evidence="partial"] {
+  --ev: var(--evidence-partial);
+}
+.roleOsPage span[data-evidence="direction"] {
+  --ev: var(--evidence-direction);
+}
+.roleOsPage span[data-evidence="missing"] {
+  --ev: var(--evidence-missing);
 }
 
 .claimButton[aria-pressed="true"] {
