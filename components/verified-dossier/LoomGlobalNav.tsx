@@ -211,6 +211,14 @@ export function LoomGlobalNav({
 
   function onNavPointerMove(event: React.PointerEvent<HTMLElement>) {
     if (event.pointerType === 'touch' || hidden) return;
+    // Respect reduced-motion: skip the JS-driven 3D tilt/glint entirely (CSS
+    // media queries can't reach this handler, so guard it here).
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return;
+    }
 
     const nav = navRef.current;
 
@@ -405,7 +413,7 @@ export function LoomGlobalNav({
               draggable={false}
             />
           </span>
-          <span style={{ letterSpacing: '0.16em' }}>LOOM</span>
+          <span style={{ letterSpacing: 'var(--tracking-wordmark)' }}>LOOM</span>
         </a>
         <details
           ref={menuRef}

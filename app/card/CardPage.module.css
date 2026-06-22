@@ -48,10 +48,29 @@
   gap: 0.7rem;
 }
 
-.action {
+/*
+ * Shared pill recipe — .action / .visitorPrimary / .emptyCta compose from this,
+ * varying only the color-mix cyan % (and per-variant padding / type / display).
+ * 999px stays literal (pill, not a card-corner tier). Motion routed to tokens:
+ * --dur-2 (= 180ms, identical to the prior 0.18s) and --ease.
+ */
+.pillBase {
   min-height: 2.6rem;
-  padding: 0 1.15rem;
   border-radius: 999px;
+  transition:
+    border-color var(--dur-2) var(--ease),
+    background var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+
+.pillBase:hover {
+  border-color: var(--signature-cyan-hi);
+  transform: translateY(-1px);
+}
+
+.action {
+  composes: pillBase;
+  padding: 0 1.15rem;
   border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
   background: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
   color: var(--signature-cyan-hi);
@@ -59,13 +78,10 @@
   font-weight: 500;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
 .action:hover {
   background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
-  border-color: var(--signature-cyan-hi);
-  transform: translateY(-1px);
 }
 
 .action:focus-visible {
@@ -142,24 +158,20 @@
 }
 
 .visitorPrimary {
-  min-height: 2.6rem;
+  composes: pillBase;
   display: inline-flex;
   align-items: center;
   padding: 0 1.4rem;
-  border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--signature-cyan) 55%, transparent);
   background: color-mix(in srgb, var(--signature-cyan) 16%, transparent);
   color: var(--signature-cyan-hi);
   font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
 .visitorPrimary:hover {
   background: color-mix(in srgb, var(--signature-cyan) 24%, transparent);
-  border-color: var(--signature-cyan-hi);
-  transform: translateY(-1px);
 }
 
 .visitorPrimary:focus-visible {
@@ -202,16 +214,15 @@
   min-width: 0;
   text-align: center;
   padding: clamp(1.8rem, 5vw, 2.6rem);
-  border-radius: 16px;
+  border-radius: var(--r-3);
   border: 1px solid var(--line);
+  /* Bespoke top-left sheen kept; generic glass body routed to shared tokens. */
   background:
     linear-gradient(135deg, rgba(238, 241, 242, 0.06), transparent 50%),
-    linear-gradient(180deg, rgba(28, 33, 38, 0.9), rgba(12, 15, 18, 0.96));
-  -webkit-backdrop-filter: blur(20px) saturate(115%);
-  backdrop-filter: blur(20px) saturate(115%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 18px 48px rgba(0, 0, 0, 0.5);
+    var(--loom-glass-bg);
+  -webkit-backdrop-filter: var(--loom-glass-blur);
+  backdrop-filter: var(--loom-glass-blur);
+  box-shadow: var(--loom-glass-shadow);
 }
 
 .emptyMoon {
@@ -251,24 +262,20 @@
 }
 
 .emptyCta {
-  min-height: 2.6rem;
+  composes: pillBase;
   display: inline-flex;
   align-items: center;
   padding: 0 1.3rem;
-  border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--signature-cyan) 38%, transparent);
   background: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
   color: var(--signature-cyan-hi);
   font-size: 0.84rem;
   font-weight: 500;
   text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
 }
 
 .emptyCta:hover {
   background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
-  border-color: var(--signature-cyan-hi);
-  transform: translateY(-1px);
 }
 
 .emptyCta:focus-visible {
@@ -306,17 +313,18 @@
   width: 100%;
   max-width: 25rem;
   height: 22rem;
-  border-radius: 16px;
+  border-radius: var(--r-3);
   border: 1px solid var(--line);
+  /* Bespoke top-left sheen kept; generic glass body routed to shared tokens
+     so the first-paint shell matches the .empty card it precedes. */
   background:
     linear-gradient(135deg, rgba(238, 241, 242, 0.05), transparent 50%),
-    linear-gradient(180deg, rgba(28, 33, 38, 0.85), rgba(12, 15, 18, 0.95));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 18px 48px rgba(0, 0, 0, 0.5);
+    var(--loom-glass-bg);
+  box-shadow: var(--loom-glass-shadow);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .pillBase,
   .action,
   .actionGhost,
   .emptyCta,
