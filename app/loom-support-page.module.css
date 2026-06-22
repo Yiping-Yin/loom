@@ -221,7 +221,7 @@
   color: var(--fg);
   font-family: var(--serif);
   font-size: clamp(1.65rem, 3.4vw, 2.55rem);
-  font-weight: 560;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.08;
 }
@@ -316,7 +316,7 @@
   color: var(--fg);
   font-family: var(--serif);
   font-size: clamp(2.15rem, 5.7vw, 4.85rem);
-  font-weight: 560;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 0.94;
 }
@@ -454,7 +454,7 @@
   color: var(--fg);
   font-family: var(--serif);
   font-size: clamp(1.18rem, 2.4vw, 1.55rem);
-  font-weight: 620;
+  font-weight: 600;
 }
 
 .muted {
@@ -596,7 +596,7 @@
   color: var(--fg);
   font-family: var(--serif);
   font-size: 1rem;
-  font-weight: 620;
+  font-weight: 600;
 }
 
 .bucketList {
@@ -635,7 +635,7 @@
   color: var(--fg);
   font-family: var(--serif);
   font-size: 1.05rem;
-  font-weight: 620;
+  font-weight: 600;
 }
 
 .refusalBody {

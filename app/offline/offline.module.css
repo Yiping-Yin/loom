@@ -74,7 +74,7 @@
   color: var(--fg);
   font-family: var(--display);
   font-size: clamp(2rem, 3vw, 3.1rem);
-  font-weight: 520;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.04;
   text-shadow: 0 0 2rem rgba(255, 255, 255, 0.08);
