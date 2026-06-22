@@ -68,6 +68,20 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
     ? { href: '/card', label: 'Get your digital postcard' }
     : { href: '/onboarding/profile', label: 'Keep building' };
 
+  // Progressive disclosure: a brand-new profile (just name/headline/bio + an
+  // auto-derived "direction") is shown as identity + the next step only. The
+  // heavier sections — the capability star-river and Ask Me — appear once the
+  // profile has real substance: journey entries, uploaded proof, or a capability
+  // actually backed by evidence. This keeps a fresh Digital Me calm, not a wall
+  // of near-empty sections.
+  const hasJourney =
+    profile.education.length > 0 ||
+    profile.experience.length > 0 ||
+    profile.works.length > 0;
+  const hasProof = (profile.artifacts?.length ?? 0) > 0;
+  const hasBackedCaps = caps.some((c) => c.evidence.length > 0);
+  const established = hasJourney || hasProof || hasBackedCaps;
+
   async function handleBuildCapabilities() {
     if (building) return;
     setBuilding(true);
@@ -180,7 +194,10 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
 
         {/* Capabilities — centerpiece section showing what this person can do,
             derived from their profile data and backed by evidence.
-            Build/refresh action writes back to localStorage so caps persist. */}
+            Build/refresh action writes back to localStorage so caps persist.
+            Progressive disclosure: hidden until the profile is `established`, so a
+            brand-new user isn't shown a near-empty star-river + build controls. */}
+        {established && (
         <section className={styles.capabilitiesSection} aria-labelledby="capabilities-title" data-reveal="">
           <header className={styles.capabilitiesHeader}>
             <p className={styles.eyebrow}>CAPABILITIES</p>
@@ -231,6 +248,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
 
           <CapabilityMap capabilities={caps} profile={profile} />
         </section>
+        )}
 
         {/* Journey timeline — derived from education + experience + works.
             Rendered only when the profile has at least one entry in any section. */}
