@@ -81,7 +81,6 @@ import {
   fileToDocBlock,
   type NewLoomDraftDocBlock,
 } from '../../lib/new-loom/draft-blocks';
-import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { DraftBlockEditor } from './DraftBlockEditor';
 import DraftBoardClient from './DraftBoardClient';
 import draftDeskStyles from './draft-evidence-desk.module.css';
@@ -1142,9 +1141,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
   }
 
   return (
-    <>
-      <LoomGlobalNav activeHref="/draft" ariaLabel="Draft navigation" />
-      <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
+    <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
       <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
         <section className="new-loom-draft__profile-card" aria-label="Profile">
           <img src="/profile/yiping-profile-white-shirt.png" alt="Yiping Yin" />
@@ -1210,18 +1207,10 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
               <strong>{wordCount} {wordCount === 1 ? 'word' : 'words'}</strong>
               <small>{displayReferences.length} attached reference{displayReferences.length === 1 ? '' : 's'}</small>
             </span>
-            <span>
-              <strong>{selectedOutputType.label}</strong>
-              <small>Current output type</small>
-            </span>
           </div>
         </section>
         <section className="new-loom-draft__type-rail" aria-label="Draft type">
-          <div className="new-loom-draft__type-copy">
-            <p className="new-loom-draft__eyebrow">Output type</p>
-            <h2>{selectedOutputType.label}</h2>
-            <p>{selectedOutputType.goal}</p>
-          </div>
+          <span className="new-loom-draft__type-label">Output</span>
           <div className="new-loom-draft__type-buttons">
             {NEW_LOOM_DRAFT_OUTPUT_TYPES.map((outputType) => (
               <button
@@ -1902,7 +1891,6 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
           </section>
         ) : null}
       </aside>
-      </main>
-    </>
+    </main>
   );
 }
