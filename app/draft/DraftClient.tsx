@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { callAiPrompt } from '../../lib/ai/runtime';
 import { loadSoanPayload } from '../../lib/loom-soan-records';
 import { fetchSearchIndex } from '../../lib/search-index-client';
@@ -75,6 +75,7 @@ import {
 import {
   blocksToBody,
   bodyToBlocks,
+  fileToDocBlock,
   type NewLoomDraftDocBlock,
 } from '../../lib/new-loom/draft-blocks';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
@@ -508,6 +509,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
   const bodyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const aiAbortRef = useRef<AbortController | null>(null);
   const inlineEditAbortRef = useRef<AbortController | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setPublicWorkingMode(isNewLoomPublicWorkingMode(
@@ -712,6 +714,22 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     setBody(nextBody);
     setSaveState('idle');
     scheduleSave(title, nextBody, next);
+  }
+
+  // Import path (Phase-1 slice of bring-your-real-work-in): read an uploaded
+  // code/text file and append it as an attributed block. Paste already works
+  // inside any block textarea.
+  async function handleImportFile(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      handleBlocksChange([...blocks, fileToDocBlock(file.name, text, makeId)]);
+    } finally {
+      // Reset so re-importing the same file fires another change event.
+      input.value = '';
+    }
   }
 
   // Body-only mutations (quote insert, AI insert/edit, outline, block ops) keep
@@ -1209,6 +1227,22 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                   @ Reference
                 </button>
               ) : null}
+              <button
+                type="button"
+                className="new-loom-shell__action"
+                onClick={() => importInputRef.current?.click()}
+              >
+                Import
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".py,.ts,.tsx,.js,.jsx,.go,.rs,.java,.c,.cpp,.sql,.sh,.json,.css,.html,.md,.markdown,.txt"
+                style={{ display: 'none' }}
+                aria-hidden="true"
+                tabIndex={-1}
+                onChange={(event) => void handleImportFile(event)}
+              />
               <button type="button" className="new-loom-shell__action" onClick={() => save()}>
                 Save draft
               </button>

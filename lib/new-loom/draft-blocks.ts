@@ -17,6 +17,18 @@ export function newDocBlock(kind: DocBlockKind, createId: () => string): NewLoom
   return { id, kind: 'text', text: '' };
 }
 
+const LANG_BY_EXT: Record<string, string> = {
+  py: 'python', ts: 'ts', tsx: 'tsx', js: 'js', jsx: 'jsx', go: 'go',
+  rs: 'rust', java: 'java', c: 'c', cpp: 'cpp', sql: 'sql', sh: 'bash', json: 'json', css: 'css', html: 'html',
+};
+const PROSE_EXT = new Set(['md', 'markdown', 'txt', '']);
+
+export function fileToDocBlock(name: string, text: string, createId: () => string): NewLoomDraftDocBlock {
+  const ext = name.split('.').pop()?.toLowerCase() ?? '';
+  if (PROSE_EXT.has(ext)) return { id: createId(), kind: 'text', text };
+  return { id: createId(), kind: 'code', text, lang: LANG_BY_EXT[ext], source: name };
+}
+
 export function blocksToBody(blocks: NewLoomDraftDocBlock[]): string {
   return blocks
     .map((b) => {
