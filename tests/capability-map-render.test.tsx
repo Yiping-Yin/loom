@@ -261,6 +261,84 @@ test('CapabilityMap artifact chip renders Open ↗ affordance', () => {
   assert.match(html, /Open ↗/);
 });
 
+// ── Task 2 (r4): grounded evidence excerpts ───────────────────────────────────
+
+test('CapabilityMap shows an evidence excerpt AND keeps its openable cross-ref (link)', () => {
+  const caps: BeginnerCapability[] = [
+    {
+      id: 'cap-excerpt-link',
+      label: 'User Research',
+      status: 'partial',
+      evidence: [
+        {
+          kind: 'experience',
+          refId: 'exp-0',
+          label: 'Atlas Labs',
+          excerpt: 'Ran weekly usability sessions that reshaped the onboarding flow.',
+        },
+      ],
+    },
+  ];
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={caps} profile={SAMPLE_PROFILE} />);
+  const text = visibleText(html);
+
+  // The grounded snippet is shown…
+  assert.match(text, /Ran weekly usability sessions that reshaped the onboarding flow\./);
+  // …with no "Excerpt:" prefix (copy stays minimal — just the quote).
+  assert.doesNotMatch(text, /Excerpt:/i);
+  // …and the openable cross-ref is still there, exactly as before (link to the source).
+  assert.match(html, /href="\/experience"/);
+  const text2 = visibleText(html);
+  assert.match(text2, /Atlas Labs/);
+});
+
+test('CapabilityMap shows an evidence excerpt AND keeps the artifact open button', () => {
+  const caps: BeginnerCapability[] = [
+    {
+      id: 'cap-excerpt-artifact',
+      label: 'Machine Learning',
+      status: 'strong',
+      evidence: [
+        { kind: 'experience', refId: 'exp-0', label: 'Org' },
+        {
+          kind: 'artifact',
+          refId: 'artifact-ml',
+          label: 'Thesis PDF',
+          excerpt: 'A convolutional network trained on the augmented dataset.',
+        },
+      ],
+    },
+  ];
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={caps} profile={SAMPLE_PROFILE} />);
+  const text = visibleText(html);
+
+  // The grounded snippet is shown next to the artifact chip…
+  assert.match(text, /A convolutional network trained on the augmented dataset\./);
+  // …and the artifact is still openable (button, not an anchor) + Open ↗ affordance.
+  assert.match(html, /<button[^>]*type="button"[^>]*>[\s\S]*?Thesis PDF/);
+  assert.match(html, /Open ↗/);
+});
+
+test('CapabilityMap omits the excerpt line when an evidence item has none', () => {
+  const caps: BeginnerCapability[] = [
+    {
+      id: 'cap-no-excerpt',
+      label: 'Research',
+      status: 'partial',
+      evidence: [{ kind: 'experience', refId: 'exp-0', label: 'Lab' }],
+    },
+  ];
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={caps} profile={SAMPLE_PROFILE} />);
+
+  // The cross-ref still renders…
+  assert.match(html, /href="\/experience"/);
+  // …but no excerpt element is emitted for a label-only evidence item.
+  assert.doesNotMatch(html, /class="evidenceExcerpt"/);
+});
+
 // ── Task 5: star-river + comets visualization ─────────────────────────────────
 
 /** Count occurrences of a substring in the rendered markup. */

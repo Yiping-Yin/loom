@@ -579,7 +579,7 @@ const EVIDENCE_ROUTE: Record<Exclude<CapabilityEvidence['kind'], 'artifact'>, st
 
 function EvidenceChip({ evidence }: { evidence: CapabilityEvidence }) {
   if (evidence.kind === 'artifact') {
-    return <ArtifactChip refId={evidence.refId} label={evidence.label} />;
+    return <ArtifactChip refId={evidence.refId} label={evidence.label} excerpt={evidence.excerpt} />;
   }
 
   const href = EVIDENCE_ROUTE[evidence.kind];
@@ -588,8 +588,22 @@ function EvidenceChip({ evidence }: { evidence: CapabilityEvidence }) {
       <Link href={href} className={styles.evidenceLink}>
         {evidence.label}
       </Link>
+      <EvidenceExcerpt excerpt={evidence.excerpt} />
     </li>
   );
+}
+
+/**
+ * The grounded supporting line under an evidence chip — a quiet quote from the
+ * source text (the corpus/quote register used elsewhere: muted, with a hairline
+ * cyan rule). Shows WHAT proof backs the capability, not just that it's backed.
+ * Renders nothing for a label-only evidence item (no excerpt), so a bare source
+ * never invents a quote. The excerpt arrives already bounded + control-stripped
+ * from the graph/normalizer seam; CSS line-clamps it for graceful overflow.
+ */
+function EvidenceExcerpt({ excerpt }: { excerpt?: string }) {
+  if (!excerpt) return null;
+  return <p className={styles.evidenceExcerpt}>{excerpt}</p>;
 }
 
 // ── ArtifactChip ──────────────────────────────────────────────────────────────
@@ -601,7 +615,7 @@ function EvidenceChip({ evidence }: { evidence: CapabilityEvidence }) {
  *  3. If url: window.open(url, '_blank', 'noopener,noreferrer')
  *  4. If window.open returns null (popup blocked): window.location.href = url
  */
-function ArtifactChip({ refId, label }: { refId: string; label: string }) {
+function ArtifactChip({ refId, label, excerpt }: { refId: string; label: string; excerpt?: string }) {
   const [chipStatus, setChipStatus] = useState<'idle' | 'opening' | 'unavailable'>('idle');
 
   async function handleOpen() {
@@ -646,6 +660,7 @@ function ArtifactChip({ refId, label }: { refId: string; label: string }) {
           </>
         )}
       </button>
+      <EvidenceExcerpt excerpt={excerpt} />
     </li>
   );
 }
