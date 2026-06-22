@@ -197,7 +197,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: var(--space-5);
 }
 
@@ -277,14 +277,14 @@
 /* direction: muted hairline only, no fill */
 .direction .statusRing {
   background: transparent;
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
 }
 
 .statusLabel {
   font-family: var(--mono);
   font-size: var(--fs-caption);
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
 }
 
@@ -293,7 +293,7 @@
 }
 
 .partial .statusLabel {
-  color: rgba(75, 197, 222, 0.7);
+  color: color-mix(in srgb, var(--signature-cyan) 80%, var(--text-2));
 }
 
 .direction .statusLabel {
@@ -309,6 +309,7 @@
   line-height: var(--lh-snug);
   color: var(--text-1, rgba(255, 255, 255, 0.9));
   letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
 }
 
 /* ── Note ────────────────────────────────────────────────────────────────── */

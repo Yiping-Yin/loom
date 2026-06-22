@@ -35,14 +35,14 @@
   z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .wordmark {
   font-family: var(--display);
   font-size: 1.15rem;
   font-weight: 600;
-  letter-spacing: 0.22em;
+  letter-spacing: var(--tracking-wordmark);
   color: var(--text-2);
 }
 
@@ -62,7 +62,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(1.6rem, 4vw, 2.4rem);
+  gap: clamp(var(--space-7), 4vw, var(--space-9));
   width: 100%;
   max-width: 40rem;
   text-align: center;
@@ -72,8 +72,9 @@
   font-family: var(--display);
   font-size: clamp(1.6rem, 4vw, 2.4rem);
   font-weight: 500;
-  line-height: 1.18;
-  letter-spacing: -0.01em;
+  font-style: italic;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
   color: var(--text-1);
   margin: 0;
   text-wrap: balance;
@@ -84,12 +85,12 @@
 .thread {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: var(--space-3);
   width: 100%;
   max-height: min(46vh, 30rem);
   overflow-y: auto;
   text-align: left;
-  padding: 0.25rem;
+  padding: var(--space-1);
   scrollbar-width: thin;
 }
 
@@ -109,7 +110,7 @@
 
 .bubbleText {
   font-size: clamp(0.98rem, 1.6vw, 1.12rem);
-  line-height: 1.5;
+  line-height: var(--lh-body);
   padding: 0.05rem 0;
 }
 
@@ -131,10 +132,16 @@
 }
 
 .typingDots {
-  display: inline-block;
-  font-size: 1.1rem;
-  letter-spacing: 0.15em;
-  color: var(--text-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.dot {
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: var(--text-3);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -157,7 +164,7 @@
 .inputRow {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   width: 100%;
   max-width: 32rem;
 }
@@ -165,7 +172,7 @@
 .input {
   flex: 1;
   min-height: 3rem;
-  padding: 0.7rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-family: inherit;
   font-size: clamp(1rem, 1.6vw, 1.1rem);
   color: var(--text-1);
@@ -205,8 +212,6 @@
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  font-size: 1.25rem;
-  line-height: 1;
   /* Liquid-glass orb — cyan-tinted translucency + blur + specular edge. */
   color: var(--signature-cyan-hi);
   background: color-mix(in srgb, var(--signature-cyan-hi) 16%, var(--mat-reg-bg));
@@ -231,6 +236,11 @@
     0 0 0 4px color-mix(in srgb, var(--signature-cyan-hi) 16%, transparent);
 }
 
+.send:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
 .send:disabled {
   opacity: 0.35;
   cursor: not-allowed;
@@ -247,7 +257,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.9rem;
+  gap: var(--space-3);
   width: 100%;
   max-width: 32rem;
 }
@@ -258,7 +268,7 @@
   justify-content: center;
   gap: 0.4rem;
   min-height: 3rem;
-  padding: 0 1.6rem;
+  padding: 0 var(--space-6);
   font-family: var(--display);
   font-size: clamp(1rem, 1.6vw, 1.1rem);
   font-weight: 600;
@@ -276,6 +286,12 @@
 .save:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature-cyan-hi) 18%, transparent);
+}
+
+.save:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+  transition-duration: var(--dur-1);
 }
 
 .save:disabled {
@@ -301,7 +317,7 @@
   font-family: var(--serif);
   font-size: 0.95rem;
   font-style: italic;
-  color: rgba(75, 197, 222, 0.88);
+  color: var(--accent-text);
 }
 
 /* ── Whisper chrome: two muted links, nothing else ────────────────────────── */
@@ -309,7 +325,7 @@
 .whisper {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-3);
   font-size: var(--fs-caption);
 }
 
@@ -322,7 +338,7 @@
   text-decoration: none;
   background: none;
   border: none;
-  padding: 0.25rem 0.1rem;
+  padding: var(--space-1) var(--space-0_5);
   cursor: pointer;
   transition: color var(--dur-2) var(--ease);
 }
@@ -431,10 +447,13 @@
   line-height: 1.08;
   letter-spacing: -0.015em;
   color: var(--text-1);
+  text-wrap: balance;
+  max-width: 22ch;
+  overflow-wrap: anywhere;
 }
 
 .heroPrompt {
-  margin: 0.4rem 0 0;
+  margin: 0;
   font-family: var(--display);
   font-size: clamp(1.1rem, 2vw, 1.4rem);
   color: var(--text-2);
@@ -495,5 +514,23 @@
       opacity: 1;
       transform: translateX(-50%);
     }
+  }
+}
+
+/* ── Reduced motion: drop transition lifts on interactive elements ────────── */
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .send,
+  .save,
+  .whisperLink,
+  .formLink,
+  .heroInner {
+    transition: none;
+  }
+  .send:hover,
+  .send:active,
+  .save:hover,
+  .save:active {
+    transform: none;
   }
 }

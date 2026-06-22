@@ -277,7 +277,6 @@ function StarRiver({
       className={`${styles.starRiver}${geo.compact ? ` ${styles.starRiverCompact}` : ''}`}
       data-star-river=""
       data-compact={geo.compact ? '' : undefined}
-      aria-hidden={false}
     >
       <svg
         className={styles.starRiverSvg}
@@ -450,7 +449,6 @@ function StarNode({
       role="button"
       tabIndex={0}
       aria-label={label}
-      aria-pressed={active}
       onClick={handle}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
