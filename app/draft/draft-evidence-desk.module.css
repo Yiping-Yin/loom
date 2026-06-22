@@ -41,7 +41,7 @@
   --draft-panel-strong: var(--ink-3);
   --draft-accent: var(--cyan);         /* signal links */
   --draft-accent-strong: var(--signature-cyan-hi);
-  --draft-accent-soft: rgba(75, 197, 222, 0.10);
+  --draft-accent-soft: color-mix(in srgb, var(--signature-cyan) 10%, transparent);
 
   /* Reusable lit-glass material recipes (single key light, top-left). */
   --draft-glass-bg:
@@ -66,7 +66,7 @@
 }
 
 .surface :global(.new-loom-draft ::selection) {
-  background: rgba(75, 197, 222, 0.30);
+  background: color-mix(in srgb, var(--signature-cyan) 30%, transparent);
   color: var(--text-1);
 }
 
@@ -101,7 +101,7 @@
   font-family: var(--mono);
   font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--tracking-eyebrow);
   line-height: 1.1;
   text-transform: uppercase;
 }
@@ -148,7 +148,7 @@
   font-family: var(--mono);
   font-weight: 600;
   font-size: 0.72rem;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--tracking-eyebrow);
 }
 .surface :global(.new-loom-draft__rail-section li) {
   padding: 0.6rem 0;
@@ -281,11 +281,11 @@
   box-shadow: var(--keylight), 0 8px 22px rgba(0, 0, 0, 0.4);
 }
 .surface :global(.new-loom-draft__type-button[aria-pressed="true"]) {
-  border-color: rgba(75, 197, 222, 0.55);
+  border-color: color-mix(in srgb, var(--signature-cyan) 55%, transparent);
   background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
   box-shadow:
     var(--keylight),
-    inset 0 0 0 1px rgba(75, 197, 222, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent),
     0 10px 26px rgba(0, 0, 0, 0.45);
 }
 .surface :global(.new-loom-draft__type-button[aria-pressed="true"] span) {
@@ -325,7 +325,7 @@
 }
 .surface :global(.new-loom-draft__body::placeholder) { color: var(--text-3); }
 .surface :global(.new-loom-draft__body:focus) {
-  box-shadow: inset 0 0 0 2px rgba(75, 197, 222, 0.22);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--signature-cyan) 22%, transparent);
 }
 
 /* Footer / counts */
@@ -356,7 +356,7 @@
 }
 .surface :global(.new-loom-draft .new-loom-shell__action:hover:not(:disabled)),
 .surface :global(.new-loom-draft__reference-action:hover:not(:disabled)) {
-  border-color: rgba(75, 197, 222, 0.5);
+  border-color: color-mix(in srgb, var(--signature-cyan) 50%, transparent);
   background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
   box-shadow: var(--keylight), 0 8px 22px rgba(0, 0, 0, 0.42);
   color: var(--signature-cyan-hi);
@@ -368,18 +368,18 @@
 }
 /* Primary actions read as cyan signal — the live tick of the surface. */
 .surface :global(.new-loom-draft .new-loom-shell__action) {
-  border-color: rgba(75, 197, 222, 0.4);
+  border-color: color-mix(in srgb, var(--signature-cyan) 40%, transparent);
   color: var(--cyan);
 }
 .surface :global(.new-loom-draft .new-loom-shell__action:hover:not(:disabled)) {
-  border-color: rgba(75, 197, 222, 0.7);
+  border-color: color-mix(in srgb, var(--signature-cyan) 70%, transparent);
   color: var(--cyan);
 }
 .surface :global(.new-loom-draft .new-loom-shell__eyebrow) {
   color: var(--text-3);
   font-family: var(--mono);
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
 }
 
@@ -411,7 +411,7 @@
 .surface :global(.new-loom-draft__reference-search:focus) {
   border-color: var(--signature-cyan);
   background: var(--ink-3);
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.16);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 16%, transparent);
 }
 .surface :global(.new-loom-draft__reference-results) {
   border: 1px solid var(--line);
@@ -450,7 +450,7 @@
   color: var(--text-3);
   font-family: var(--mono);
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--tracking-eyebrow);
 }
 .surface :global(.new-loom-draft__inspector-header h2) {
   color: var(--text-1);
@@ -472,6 +472,10 @@
   transition: background 0.18s var(--ease), color 0.18s var(--ease);
 }
 .surface :global(.new-loom-draft__inspector-tab:hover) { color: var(--text-1); }
+.surface :global(.new-loom-draft__inspector-tab:focus-visible) {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 2px;
+}
 .surface :global(.new-loom-draft__inspector-tab[aria-pressed="true"]) {
   border-color: var(--line);
   background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
@@ -479,8 +483,8 @@
   box-shadow: var(--keylight), 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 .surface :global(.new-loom-draft__public-mode) {
-  border: 1px solid rgba(75, 197, 222, 0.32);
-  background: rgba(75, 197, 222, 0.08);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 32%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 8%, transparent);
   color: var(--signature-cyan-hi);
 }
 
@@ -521,7 +525,7 @@
   border: 1px solid var(--line);
   border-radius: 13px;
   background:
-    linear-gradient(90deg, rgba(75, 197, 222, 0.10), transparent 70%),
+    linear-gradient(90deg, color-mix(in srgb, var(--signature-cyan) 10%, transparent), transparent 70%),
     var(--draft-glass-bg);
   box-shadow: var(--draft-glass-shadow);
   position: relative;
@@ -537,7 +541,7 @@
   left: 12%;
   right: 12%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(75, 197, 222, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--signature-cyan) 50%, transparent), transparent);
   pointer-events: none;
 }
 .surface :global(.new-loom-draft__answer-flow li) {
@@ -547,17 +551,17 @@
   box-shadow: var(--keylight);
 }
 .surface :global(.new-loom-draft__answer-flow li[data-state="complete"]) {
-  border-color: rgba(75, 197, 222, 0.45);
+  border-color: color-mix(in srgb, var(--signature-cyan) 45%, transparent);
   background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
 }
 .surface :global(.new-loom-draft__answer-flow li[data-state="active"]) {
-  border-color: rgba(75, 197, 222, 0.75);
-  box-shadow: var(--keylight), 0 0 0 1px rgba(75, 197, 222, 0.25), 0 8px 22px rgba(0, 0, 0, 0.4);
+  border-color: color-mix(in srgb, var(--signature-cyan) 75%, transparent);
+  box-shadow: var(--keylight), 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 25%, transparent), 0 8px 22px rgba(0, 0, 0, 0.4);
 }
 .surface :global(.new-loom-draft__answer-flow span) {
   color: var(--text-3);
   font-family: var(--mono);
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
 }
 .surface :global(.new-loom-draft__answer-flow strong) { color: var(--text-1); }
@@ -585,8 +589,8 @@
     var(--ink-3);
 }
 .surface :global(.new-loom-draft__answer-preview-status) {
-  border: 1px solid rgba(75, 197, 222, 0.28);
-  background: rgba(75, 197, 222, 0.07);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 28%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 7%, transparent);
   color: var(--cyan);
 }
 
@@ -608,7 +612,7 @@
   transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
 }
 .surface :global(.new-loom-draft__source-tile:hover) {
-  border-color: rgba(75, 197, 222, 0.4);
+  border-color: color-mix(in srgb, var(--signature-cyan) 40%, transparent);
   box-shadow: var(--draft-raised-shadow);
 }
 .surface :global(.new-loom-draft__source-tile > span:first-child),
@@ -616,7 +620,7 @@
   color: var(--text-3);
   font-family: var(--mono);
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
 }
 .surface :global(.new-loom-draft__source-tile a),
@@ -666,7 +670,7 @@
   color: var(--text-2);
 }
 .surface :global(.new-loom-draft__provenance-n) {
-  border: 1px solid rgba(75, 197, 222, 0.45);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 45%, transparent);
   background: transparent;
   color: var(--signature-cyan-hi);
   font-family: var(--mono);
@@ -720,7 +724,7 @@
 }
 .surface :global(.new-loom-draft__block-operation textarea:focus) {
   border-color: var(--signature-cyan);
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.16);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 16%, transparent);
 }
 .surface :global(.new-loom-draft__block-operation [role="alert"]) { color: var(--down); }
 
@@ -777,5 +781,19 @@
   .surface :global(.new-loom-draft__rail-section[aria-label="Workspace status"] li strong) {
     font-size: 1rem;
     color: var(--text-1);
+  }
+}
+
+/* ======================================================================
+   A11y — honour reduced-motion: drop the hover/press transitions on the
+   animated controls (additive; existing :focus-visible rings are kept).
+   ====================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .surface :global(.new-loom-draft__type-button),
+  .surface :global(.new-loom-draft .new-loom-shell__action),
+  .surface :global(.new-loom-draft__reference-action),
+  .surface :global(.new-loom-draft__source-tile),
+  .surface :global(.new-loom-draft__inspector-tab) {
+    transition: none;
   }
 }

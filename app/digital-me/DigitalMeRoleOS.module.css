@@ -9,12 +9,12 @@
   --role-surface-soft: var(--ink-4, #22262A);
   --role-ink: var(--text-1, #E7E9EA);
   --role-muted: var(--text-2, #A4A9AD);
-  --role-subtle: var(--text-3, #666D72);
+  --role-subtle: var(--text-3, #8E9499);
   --role-border: var(--line-soft, #202428);
   --role-border-strong: var(--line, #2A2F34);
   --role-accent: var(--accent, #4BC5DE);
   --role-accent-strong: var(--accent-info, #8AF7E6);
-  --role-signal: var(--cyan, #4BC5DE);
+  --role-signal: var(--cyan, #6CE7F2);
   --role-row-active: var(--ink-5, #30353A);
   --role-ok: var(--up, #3FB37A);
   --role-mono: var(--mono, ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace);
@@ -28,7 +28,7 @@
   --role-glass:
     linear-gradient(135deg, rgba(238, 241, 242, 0.075), rgba(176, 184, 188, 0.028) 34%, transparent 62%),
     linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
-  --role-glass-border: var(--line, #232A33);
+  --role-glass-border: var(--line, #2A2F34);
   /* Real optics: 1px specular top edge (key light) + inner bottom thickness
      + a soft directional float so the panel reads as lifted lit glass. */
   --role-glass-shadow:
@@ -166,7 +166,7 @@
   font-family: var(--role-mono);
   font-size: 0.7rem;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--tracking-eyebrow);
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -245,7 +245,7 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(46% 70% at 50% 22%, rgba(75, 197, 222, 0.09) 0%, rgba(75, 197, 222, 0) 64%),
+    radial-gradient(46% 70% at 50% 22%, color-mix(in srgb, var(--role-signal) 9%, transparent) 0%, color-mix(in srgb, var(--role-signal) 0%, transparent) 64%),
     radial-gradient(120% 110% at 50% 36%, transparent 56%, rgba(7, 9, 12, 0.55) 100%);
 }
 
@@ -456,7 +456,7 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 3px rgba(75, 197, 222, 0.55));
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--role-signal) 55%, transparent));
 }
 
 .evidenceSignalHit {
@@ -479,7 +479,7 @@
 .evidenceSignalNodeActive {
   fill: var(--role-signal);
   cursor: pointer;
-  filter: drop-shadow(0 0 4px rgba(75, 197, 222, 0.7));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--role-signal) 70%, transparent));
 }
 
 .evidenceSignalNode:hover {
@@ -491,7 +491,7 @@
   font-family: var(--role-mono);
   font-size: 0.64rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--tracking-eyebrow);
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -768,7 +768,7 @@
   font-family: var(--role-mono);
   font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--tracking-eyebrow);
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -960,7 +960,7 @@
      the screen (right), a faint ion-tail counter-glow, and a vignette closing the
      edges over the cool-black desk. Not pure black. */
   background:
-    radial-gradient(58% 78% at 74% 42%, rgba(75, 197, 222, 0.12) 0%, rgba(75, 197, 222, 0) 62%),
+    radial-gradient(58% 78% at 74% 42%, color-mix(in srgb, var(--role-signal) 12%, transparent) 0%, color-mix(in srgb, var(--role-signal) 0%, transparent) 62%),
     radial-gradient(70% 90% at 18% 8%, rgba(138, 247, 230, 0.045) 0%, rgba(138, 247, 230, 0) 58%),
     radial-gradient(135% 130% at 50% 30%, transparent 52%, rgba(7, 9, 12, 0.72) 100%),
     var(--role-page);
@@ -1013,7 +1013,7 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(80% 60% at 70% 22%, rgba(75, 197, 222, 0.08) 0%, rgba(75, 197, 222, 0) 64%),
+    radial-gradient(80% 60% at 70% 22%, color-mix(in srgb, var(--role-signal) 8%, transparent) 0%, color-mix(in srgb, var(--role-signal) 0%, transparent) 64%),
     linear-gradient(180deg, rgba(7, 9, 12, 0) 56%, rgba(7, 9, 12, 0.34) 100%);
 }
 
@@ -1044,7 +1044,7 @@
   margin: 0;
   font-family: var(--role-mono);
   font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
   color: var(--role-subtle);
 }
@@ -1073,7 +1073,7 @@
   margin-top: 14px;
   font-family: var(--role-mono);
   font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-eyebrow);
   color: var(--role-muted);
 }
 
@@ -1113,7 +1113,7 @@
   border-color: var(--role-accent-strong);
   box-shadow:
     var(--role-glass-inset-shadow),
-    0 0 24px rgba(75, 197, 222, 0.14);
+    0 0 24px color-mix(in srgb, var(--role-signal) 14%, transparent);
   gap: 14px;
 }
 

@@ -79,14 +79,14 @@
   outline: none;
   resize: none;
   font-family: var(--serif);
-  font-size: var(--fs-body, 1rem);
+  font-size: var(--fs-body-lg);
   line-height: 1.6;
   color: var(--fg);
-  padding: var(--space-1, 0.25rem) 0 var(--space-1, 0.35rem);
+  padding: var(--space-1) 0;
   min-height: 32px;
   max-height: 160px;
   overflow-y: hidden;
-  transition: border-color var(--dur-fast, 160ms) var(--ease-out, ease-out);
+  transition: border-color var(--dur-1) var(--ease);
 }
 
 .jotTextarea:focus-visible {
@@ -103,15 +103,15 @@
 .jotText {
   display: block;
   font-family: var(--serif);
-  font-size: var(--fs-sm, 0.95rem);
+  font-size: var(--fs-small);
   line-height: 1.5;
   color: var(--fg);
 }
 
 .jotMeta {
   display: block;
-  font-family: var(--display);
-  font-size: 0.72rem;
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
   color: var(--fg-secondary);
   margin-top: 0.15rem;
   letter-spacing: 0.01em;
@@ -122,19 +122,28 @@
   position: absolute;
   right: 0;
   bottom: 0.4rem;
-  font-size: 0.78rem;
+  font-size: var(--fs-caption);
   color: var(--accent);
-  font-family: var(--display);
+  font-family: var(--mono);
   letter-spacing: 0.02em;
   pointer-events: none;
-  transition: opacity var(--dur-fast, 300ms) ease;
+  transition: opacity var(--dur-3) var(--ease);
 }
 
 /* ── Section list items ──────────────────────────────────────────────────── */
 .listItem {
-  transition: color var(--dur-fast, 160ms) ease-out;
+  transition: color var(--dur-1) var(--ease);
 }
 
 .listItem:hover {
   color: var(--accent-text);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .jotTextarea,
+  .listItem,
+  .savedFlash {
+    transition: none;
+  }
 }

@@ -19986,6 +19986,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   font-size: 0.9rem;
   font-weight: 500;
   line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .vd-section-page__list .vd-entry-meta {
@@ -19995,6 +19996,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   font-size: 0.72rem;
   letter-spacing: 0.1em;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .vd-section-page__list .vd-entry-summary {
@@ -20002,6 +20004,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   color: var(--text-2);
   font-size: 0.9rem;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .vd-section-page__list .vd-entry-highlights {
@@ -20050,6 +20053,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   color: var(--text-2);
   font-size: 0.84rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .vd-section-page__list .vd-entry-highlight:first-child {
@@ -23851,7 +23855,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 /* comet touch 2 of 2 on this screen: the single thin serif quote mark */
 .lcv-quote__mark{font-size:44px;color:var(--lcv-signature);line-height:.7}
 .lcv-quote p{font-size:16px;line-height:1.5;color:var(--lcv-ink);max-width:21rem;margin:0}
-.lcv-member{font-family:var(--lcv-mono);font-size:11px;letter-spacing:.18em;
+.lcv-member{font-family:var(--lcv-mono);font-size:11px;letter-spacing:var(--tracking-eyebrow);
   color:var(--lcv-ink3);margin:26px 0 0}
 
 /* ledger rows — entire row is one link; two columns (label block + asset). */
@@ -23999,7 +24003,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   transform:perspective(1200px) rotateX(3.5deg) rotateY(-1deg);transform-origin:50% 0}
 .lcv-cv__sheet::before{content:"";position:absolute;top:-12px;left:14px;right:-14px;height:30px;
   background:#cfccc3;border-radius:3px;z-index:-1;opacity:.5}
-.lcv-cv__kicker{font-family:var(--lcv-mono);font-size:9px;letter-spacing:.18em;color:#8a877e}
+.lcv-cv__kicker{font-family:var(--lcv-mono);font-size:9px;letter-spacing:var(--tracking-eyebrow);color:#8a877e}
 .lcv-cv__name{font-family:var(--lcv-serif);font-size:20px;font-weight:600;color:#1a1a1a;margin-top:-4px}
 .lcv-cv__line{height:5px;background:#cdcabf;border-radius:2px;display:block}
 .lcv-cv__line--s{width:60%}
