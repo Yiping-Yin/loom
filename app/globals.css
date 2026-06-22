@@ -4001,6 +4001,23 @@ article.prose-notion {
      so the optical left edge of the paragraph reads flush. Classic
      book typography, native in Safari. Harmless no-op elsewhere. */
   hanging-punctuation: first last;
+  /* Book discipline on screen too (not only @media print): never strand a
+     single line of a paragraph across a column/page break. */
+  orphans: 2;
+  widows: 2;
+}
+
+/* A heading never sits alone at the foot of a column/page — keep it with the
+   text it introduces. */
+.prose-notion :where(h1, h2, h3, h4),
+.loom-source-prose :where(h1, h2, h3, h4) {
+  break-after: avoid;
+}
+
+.loom-source-prose p,
+.loom-source-prose li {
+  orphans: 2;
+  widows: 2;
 }
 
 /* Footnote superscripts — mockup (loom-reading.jsx:218) renders
