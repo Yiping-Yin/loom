@@ -31,6 +31,8 @@ import type {
   AskYipingSource,
 } from './ask-yiping';
 import type { BeginnerProfile } from '../profile/beginner-profile';
+import { draftArtifactEditHref } from './draft-artifacts';
+import { safeHref } from '../profile/safe-href';
 
 export const BEGINNER_ABOUT_SOURCE_ID = 'me-about';
 
@@ -252,12 +254,27 @@ export function resolveBeginnerSource(
     const index = Number(id.slice(ARTIFACT_ID_PREFIX.length));
     const artifact = (profile.artifacts ?? [])[index];
     if (!artifact) return null;
-    // The citation's identity is the REAL blob id, not the corpus index id, so
-    // the client opens the actual stored document. No navigable href — the blob
-    // lives in IndexedDB and is resolved on click via getArtifactObjectUrl.
+    const label = artifact.label?.trim() || artifact.name;
+    // Draft-derived artifact (id `draft-<draftId>`): a curated Studio draft has
+    // NO IndexedDB blob, so its citation must NAVIGATE the Studio editor
+    // (/digital-me?edit=<draftId>) rather than open a blob by id. Build that href
+    // and run it through the URL-scheme allowlist (it is always a kept relative
+    // route, but route it through safeHref for the same discipline as every other
+    // user-facing href). Returning an `href` (and no `artifactId`/`kind`) makes
+    // this a navigable citation on the client, not a blob-open one.
+    const editHref = draftArtifactEditHref(artifact.id);
+    if (editHref) {
+      const href = safeHref(editHref);
+      if (!href) return null;
+      return { id, label, href };
+    }
+    // Uploaded artifact: the citation's identity is the REAL blob id, not the
+    // corpus index id, so the client opens the actual stored document. No
+    // navigable href — the blob lives in IndexedDB and is resolved on click via
+    // getArtifactObjectUrl.
     return {
       id,
-      label: artifact.label?.trim() || artifact.name,
+      label,
       artifactId: artifact.id,
       kind: artifact.kind || 'doc',
     };

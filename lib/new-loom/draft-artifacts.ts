@@ -26,8 +26,28 @@ import {
  * Distinguishes a draft-derived artifact id from an uploaded artifact id (whose
  * id is the IndexedDB blob key). The prefix guarantees the two id spaces never
  * collide when both kinds live in `profile.artifacts`.
+ *
+ * Exported because the Ask corpus needs it to tell a draft-derived artifact
+ * apart from an uploaded one: an uploaded artifact's citation opens its
+ * IndexedDB blob by id, but a draft has NO blob — its citation must instead
+ * navigate to the Studio editor (`/digital-me?edit=<draftId>`). See
+ * `resolveBeginnerSource` in beginner-ask-corpus.ts.
  */
-const DRAFT_ARTIFACT_ID_PREFIX = 'draft-';
+export const DRAFT_ARTIFACT_ID_PREFIX = 'draft-';
+
+/**
+ * Build the Studio editor href for a draft-derived artifact id. Strips the
+ * `draft-` prefix back to the raw draft id and points at the edit-mode route
+ * (`/digital-me?edit=<draftId>`) that DigitalMeGate renders as the full-screen
+ * DraftClient. Returns null when the id is not a draft artifact id, so callers
+ * can fall back to the uploaded-artifact (blob-open) path.
+ */
+export function draftArtifactEditHref(artifactId: string): string | null {
+  if (!artifactId.startsWith(DRAFT_ARTIFACT_ID_PREFIX)) return null;
+  const draftId = artifactId.slice(DRAFT_ARTIFACT_ID_PREFIX.length);
+  if (!draftId) return null;
+  return `/digital-me?edit=${encodeURIComponent(draftId)}`;
+}
 
 /**
  * The closest existing ArtifactRef kind for a written document. The uploaded
