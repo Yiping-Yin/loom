@@ -66,10 +66,28 @@
   border-color: var(--signature-cyan, #4bc5de);
   transform: translateY(-1px);
 }
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
 .cardTitle {
   color: var(--text-1, #f3f5f7);
   font-weight: 600;
   font-size: 1rem;
+}
+.chip {
+  flex: none;
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--signature-cyan, #4bc5de);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--signature-cyan, #4bc5de);
 }
 .cardMeta {
   color: var(--text-3, #8a9099);
