@@ -27,6 +27,12 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   // DraftClient accepts an editId so /digital-me can drive which doc opens (by-id).
   assert.match(draftClient, /editId\??:\s*string/);
   assert.match(draftClient, /selectDraftById\(/);
+  // The editor identity rail reflects the CURRENT user (the editor lives inside
+  // everyone's Digital Me), not the hardcoded owner.
+  assert.doesNotMatch(draftClient, /Yiping Yin/);
+  assert.doesNotMatch(draftClient, /yiping-profile-white-shirt/);
+  assert.match(draftClient, /readBeginnerProfileLocal/);
+  assert.match(draftClient, /Your name/);
   assert.match(draftClient, /<h1 className="new-loom-draft__sr-title">Draft evidence desk<\/h1>/);
   assert.doesNotMatch(draftClient, /new-loom-draft__wordmark/);
   assert.doesNotMatch(globals, /new-loom-draft__wordmark/);
