@@ -1,3 +1,5 @@
+import { type NewLoomDraftDocBlock, blocksToBody } from './draft-blocks';
+
 export type NewLoomDraftArtifactState = {
   targetId: string;
   kind?: string;
@@ -295,6 +297,7 @@ export type NewLoomDraftRecord = {
   title: string;
   body: string;
   references: NewLoomDraftReference[];
+  blocks?: NewLoomDraftDocBlock[];
   createdAt: string;
   updatedAt: string;
 };
@@ -2027,6 +2030,7 @@ export function createDraft(
     title?: string;
     body?: string;
     references?: NewLoomDraftReference[];
+    blocks?: NewLoomDraftDocBlock[];
   } = {},
   options: {
     key?: string;
@@ -2040,8 +2044,9 @@ export function createDraft(
   const draft: NewLoomDraftRecord = {
     id: createId(),
     title: input.title?.trim() || 'Untitled draft',
-    body: input.body ?? '',
+    body: input.blocks ? (input.body ?? blocksToBody(input.blocks)) : (input.body ?? ''),
     references: input.references ?? [],
+    blocks: input.blocks,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -2053,7 +2058,7 @@ export function createDraft(
 export function updateDraft(
   adapter: DraftStorageAdapter,
   id: string,
-  patch: Partial<Pick<NewLoomDraftRecord, 'title' | 'body' | 'references'>>,
+  patch: Partial<Pick<NewLoomDraftRecord, 'title' | 'body' | 'references' | 'blocks'>>,
   options: {
     key?: string;
     now?: DraftClock;
@@ -2067,7 +2072,8 @@ export function updateDraft(
   const next: NewLoomDraftRecord = {
     ...existing,
     title: patch.title?.trim() || existing.title,
-    body: patch.body ?? existing.body,
+    blocks: patch.blocks ?? existing.blocks,
+    body: patch.blocks ? blocksToBody(patch.blocks) : (patch.body ?? existing.body),
     references: patch.references ?? existing.references,
     updatedAt: (options.now ?? defaultClock)(),
   };
