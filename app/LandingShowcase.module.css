@@ -19,7 +19,7 @@
   margin: 0;
   font-family: var(--mono);
   font-size: var(--fs-caption);
-  letter-spacing: 0.28em;
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
   color: var(--signature-cyan);
 }
@@ -104,10 +104,11 @@
 
 .name {
   font-family: var(--display);
-  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
   font-weight: 600;
   line-height: 1.1;
   color: var(--text-1);
+  overflow-wrap: anywhere;
 }
 
 .role {
@@ -146,8 +147,9 @@
   max-width: 46ch;
   font-family: var(--serif);
   font-size: var(--fs-body-lg);
-  line-height: 1.55;
+  line-height: var(--lh-relaxed);
   color: var(--text-2);
+  overflow-wrap: anywhere;
 }
 
 /* ── Capability star-river ────────────────────────────────────────────────── */
@@ -165,7 +167,7 @@
   margin: 0;
   font-family: var(--mono);
   font-size: var(--fs-caption);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
   color: var(--text-3);
 }
@@ -178,9 +180,15 @@
 
 .starLabel {
   font-family: var(--mono);
-  font-size: 17px;
+  /* user units relative to the SVG viewBox (0 0 1000 240), not CSS px —
+     survives the responsive scale so labels stay legible on a phone */
+  font-size: 26px;
   letter-spacing: 0.02em;
   fill: var(--text-2);
+  paint-order: stroke;
+  stroke: var(--ink-0);
+  stroke-width: 3px;
+  stroke-opacity: 0.55;
 }
 
 @media (prefers-reduced-motion: no-preference) {

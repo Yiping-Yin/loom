@@ -141,7 +141,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
           <h1 id="digital-me-title" className={styles.name}>
             {displayName}
           </h1>
-          {home.headline && <strong className={styles.headline}>{home.headline}</strong>}
+          {home.headline && <p className={styles.headline}>{home.headline}</p>}
           {about.summary && <p className={styles.summary}>{about.summary}</p>}
           {about.links.length > 0 && (
             <nav aria-label="Profile links" className={styles.links}>

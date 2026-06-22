@@ -94,6 +94,11 @@ a[class*="loom-"] {
   --lh-body: 1.5;
   --lh-relaxed: 1.6;
 
+  /* Letter-spacing roles — one source of tracking per semantic, so the same
+     element never ships three different values across surfaces. */
+  --tracking-eyebrow: 0.18em;  /* uppercase mono kickers / labels */
+  --tracking-wordmark: 0.2em;  /* the LOOM logotype */
+
   --shadow-1: 0 8px 24px rgba(0, 0, 0, 0.05);
   --shadow-2: 0 14px 36px rgba(0, 0, 0, 0.08);
   --shadow-3: 0 24px 80px rgba(0, 0, 0, 0.16);

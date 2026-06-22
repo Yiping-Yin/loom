@@ -20,6 +20,7 @@
 
 import { useRef } from 'react';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { useConversation } from '../lib/onboarding/useConversation';
 import { constellationFor } from '../lib/onboarding/constellation';
 import { ConstellationField } from './ConstellationField';
@@ -75,7 +76,7 @@ export function HomeConversationalCover() {
         disabled={!c.input.trim() || c.isTyping || c.checking}
         aria-label="Send"
       >
-        →
+        <ArrowRight size={20} strokeWidth={1.8} aria-hidden />
       </button>
     </form>
   );
@@ -160,9 +161,7 @@ export function HomeConversationalCover() {
           <div className={styles.heroInner}>
             <p className={styles.heroEyebrow}>A living knowledge identity</p>
             <h1 className={styles.heroHeadline}>
-              Everything you know,
-              <br />
-              woven into one self.
+              Everything you know, woven into one self.
             </h1>
             <p className={styles.heroPrompt}>{c.promptText}</p>
             {inputForm}
@@ -212,7 +211,11 @@ export function HomeConversationalCover() {
           ))}
           {(c.isTyping || c.checking) && (
             <div className={styles.typingBubble} aria-label="LOOM is typing" aria-live="polite">
-              <span className={styles.typingDots}>· · ·</span>
+              <span className={styles.typingDots}>
+                <span className={styles.dot} aria-hidden />
+                <span className={styles.dot} aria-hidden />
+                <span className={styles.dot} aria-hidden />
+              </span>
             </div>
           )}
           <div ref={c.bottomRef} />
