@@ -6,6 +6,7 @@ import {
   type DocBlockKind,
   newDocBlock,
 } from '../../lib/new-loom/draft-blocks';
+import { safeHref } from '../../lib/profile/safe-href';
 
 function makeId(): string {
   try {
@@ -79,7 +80,7 @@ export function DraftBlockEditor({
               </>
             )}
             {b.kind === 'cite' && (
-              <a className="new-loom-draft__block-cite" href={b.href || undefined}>
+              <a className="new-loom-draft__block-cite" href={safeHref(b.href) || undefined}>
                 <span className="new-loom-draft__block-cite-label">{b.label || 'Untitled source'}</span>
                 {b.excerpt ? <span className="new-loom-draft__block-cite-excerpt">{b.excerpt}</span> : null}
               </a>

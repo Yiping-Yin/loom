@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { callAiPrompt } from '../../lib/ai/runtime';
 import { loadSoanPayload } from '../../lib/loom-soan-records';
 import { fetchSearchIndex } from '../../lib/search-index-client';
+import { safeHref } from '../../lib/profile/safe-href';
 import {
   loadReferenceCitationDraftCorpusDocs,
   mergeDraftCorpusDocs,
@@ -1568,7 +1569,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                       >
                         <span>{tile.kindLabel}</span>
                         {!publicWorkingMode ? (
-                          <a href={tile.href} onClick={(event) => openDraftReference(event, tile)}>
+                          <a href={safeHref(tile.href) || undefined} onClick={(event) => openDraftReference(event, tile)}>
                             {tile.label}
                           </a>
                         ) : (
@@ -1578,7 +1579,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                         {tile.excerpt ? <p>{tile.excerpt}</p> : null}
                         <div className="new-loom-draft__source-tile-actions">
                           {!publicWorkingMode ? (
-                            <a href={tile.href} onClick={(event) => openDraftReference(event, tile)}>
+                            <a href={safeHref(tile.href) || undefined} onClick={(event) => openDraftReference(event, tile)}>
                               Open
                             </a>
                           ) : null}
@@ -1624,7 +1625,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                         </span>
                         {!publicWorkingMode && realReference ? (
                           <a
-                            href={realReference.href}
+                            href={safeHref(realReference.href) || undefined}
                             onClick={(event) => openDraftReference(event, realReference)}
                           >
                             {reference.label}
@@ -1702,7 +1703,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                     <li key={`${match.href}:${match.n}`}>
                       <span className="new-loom-draft__provenance-n">{match.n}</span>
                       <span>{match.phrase}</span>
-                      <a href={match.href} onClick={(event) => openDraftReference(event, match)}>
+                      <a href={safeHref(match.href) || undefined} onClick={(event) => openDraftReference(event, match)}>
                         {match.label}
                       </a>
                       {match.artifactState ? (

@@ -2,15 +2,18 @@
  * URL-scheme allowlist for user-supplied hrefs.
  *
  * Beginner profiles let users paste arbitrary link hrefs (about links, works
- * links). Those strings are rendered verbatim into `<a href=...>` sinks, so a
- * `javascript:`/`data:`/`vbscript:` scheme would execute on click. A truthiness
+ * links), and the /draft surface renders source/reference hrefs that can arrive
+ * from imported or merged sources. Those strings are rendered verbatim into
+ * `<a href=...>` sinks, so a `javascript:`/`data:`/`vbscript:` scheme would
+ * execute on click. (React only neutralizes `javascript:`, not `data:` et al.)
+ * A truthiness
  * check is NOT enough: browsers tolerate leading/trailing whitespace, control
  * characters, mixed case, and embedded `\t`/`\n`/`\r` inside the scheme
  * (e.g. `java\tscript:alert(1)` still runs). This helper normalizes those away
  * and allows ONLY safe destinations, dropping everything else to `''`.
  *
  * Allowed:
- *   - http://  https://  mailto:  (case-insensitive)
+ *   - http://  https://  mailto:  loom://  (case-insensitive)
  *   - relative / in-page hrefs: `/...`, `#...`, `./...`, `../...`
  * Dropped (→ ''):
  *   - any other explicit scheme (javascript:, data:, vbscript:, file:, ftp:, …)
@@ -19,7 +22,7 @@
  * Mirrors the spirit of the http/https allowlist in app/api/url-preview/route.ts.
  */
 
-const ALLOWED_SCHEMES = ['http:', 'https:', 'mailto:'];
+const ALLOWED_SCHEMES = ['http:', 'https:', 'mailto:', 'loom:'];
 
 // ASCII control characters (0x00–0x1F and 0x7F). Browsers strip tab/newline/CR
 // from URLs before parsing the scheme, so `java\tscript:` must collapse to

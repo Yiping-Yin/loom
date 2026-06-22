@@ -13,6 +13,15 @@ test('safeHref keeps http, https, and mailto', () => {
   assert.equal(safeHref('HTTPS://Example.com'), 'HTTPS://Example.com');
 });
 
+test("safeHref keeps the app's loom:// scheme", () => {
+  // loom:// is the app's internal source/navigation scheme; draft references and
+  // source tiles cite sources via it, so it must survive the allowlist.
+  assert.equal(safeHref('loom://s/econ'), 'loom://s/econ');
+  assert.equal(safeHref('loom://artifact/42?q=1'), 'loom://artifact/42?q=1');
+  // Scheme casing is irrelevant to the allowlist.
+  assert.equal(safeHref('LOOM://s/econ'), 'LOOM://s/econ');
+});
+
 test('safeHref keeps relative and in-page hrefs', () => {
   assert.equal(safeHref('/works'), '/works');
   assert.equal(safeHref('/about#profile-links'), '/about#profile-links');
