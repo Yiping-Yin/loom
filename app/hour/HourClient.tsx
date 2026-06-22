@@ -186,7 +186,7 @@ export default function HourClient() {
           className={styles.linkRail}
         >
           <Link href="/sources">Sources</Link>
-          <Link href="/draft">Draft</Link>
+          <Link href="/digital-me?edit=new">Draft</Link>
           <Link href="/year">The Year</Link>
           <Link href="/connections">Connections</Link>
           <Link href="/discipline">Discipline</Link>

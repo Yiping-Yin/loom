@@ -84,7 +84,7 @@ export default function HelpPage() {
                 copy="Add, capture, read, and review source material."
               />
               <JumpLink
-                href="/draft"
+                href="/digital-me?edit=new"
                 icon={<FileText size={18} strokeWidth={1.65} />}
                 title="Draft"
                 copy="Write with attached references beside the text."
@@ -121,7 +121,7 @@ export default function HelpPage() {
               ]}
             />
             <WorkspaceCard
-              href="/draft"
+              href="/digital-me?edit=new"
               title="Draft"
               meta="/draft"
               copy="Write with your sources beside you. Marked passages attach as references, and citations point back to exact passages."

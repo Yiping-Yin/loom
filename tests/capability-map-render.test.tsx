@@ -339,6 +339,82 @@ test('CapabilityMap omits the excerpt line when an evidence item has none', () =
   assert.doesNotMatch(html, /class="evidenceExcerpt"/);
 });
 
+// ── Regression: draft-derived artifact opens the Studio editor (not a blob) ────
+
+test('CapabilityMap draft-artifact evidence opens the Studio editor (link, not blob button)', () => {
+  const caps: BeginnerCapability[] = [
+    {
+      id: 'cap-draft-artifact',
+      label: 'Technical Writing',
+      status: 'strong',
+      evidence: [
+        { kind: 'artifact', refId: 'draft-abc123', label: 'My Draft Essay' },
+      ],
+    },
+  ];
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={caps} profile={SAMPLE_PROFILE} />);
+
+  // The draft-derived artifact must be an openable cross-ref to the Studio editor…
+  assert.match(html, /href="\/digital-me\?edit=abc123"/);
+  // …rendered as an anchor carrying the draft label (same-tab nav, like the editor).
+  assert.match(html, /<a[^>]*href="\/digital-me\?edit=abc123"[^>]*>[\s\S]*?My Draft Essay/);
+  // …and NOT the blob-open <button> path (which would go "file unavailable").
+  const draftAsButton = html.match(/<button[^>]*type="button"[^>]*>[\s\S]*?My Draft Essay/);
+  assert.equal(draftAsButton, null, 'a draft artifact must not render as a blob-open button');
+});
+
+test('CapabilityMap draft-artifact link keeps its excerpt and is same-tab (no _blank)', () => {
+  const caps: BeginnerCapability[] = [
+    {
+      id: 'cap-draft-excerpt',
+      label: 'Product Thinking',
+      status: 'partial',
+      evidence: [
+        {
+          kind: 'artifact',
+          refId: 'draft-xyz',
+          label: 'Roadmap Notes',
+          excerpt: 'A phased plan from discovery to launch.',
+        },
+      ],
+    },
+  ];
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={caps} profile={SAMPLE_PROFILE} />);
+
+  // The editor cross-ref renders…
+  assert.match(html, /href="\/digital-me\?edit=xyz"/);
+  // …same-tab (the draft anchor must not open a new tab).
+  const draftAnchor = html.match(/<a[^>]*href="\/digital-me\?edit=xyz"[^>]*>/);
+  assert.ok(draftAnchor, 'draft artifact must render an anchor');
+  assert.doesNotMatch(draftAnchor![0], /target="_blank"/);
+  // …and the grounded excerpt is still shown beside it.
+  const text = visibleText(html);
+  assert.match(text, /A phased plan from discovery to launch\./);
+});
+
+test('CapabilityMap uploaded (non-draft) artifact still uses the blob open button', () => {
+  const caps: BeginnerCapability[] = [
+    {
+      id: 'cap-uploaded-artifact',
+      label: 'Design',
+      status: 'strong',
+      evidence: [
+        { kind: 'artifact', refId: 'artifact-real-blob', label: 'Portfolio PDF' },
+      ],
+    },
+  ];
+  const { CapabilityMap } = require('../components/CapabilityMap') as typeof import('../components/CapabilityMap');
+  const html = render(<CapabilityMap capabilities={caps} profile={SAMPLE_PROFILE} />);
+
+  // An uploaded artifact (no draft- prefix) keeps the blob-open button + Open ↗.
+  assert.match(html, /<button[^>]*type="button"[^>]*>[\s\S]*?Portfolio PDF/);
+  assert.match(html, /Open ↗/);
+  // …and must NOT become an editor link.
+  assert.doesNotMatch(html, /href="\/digital-me\?edit=/);
+});
+
 // ── Task 5: star-river + comets visualization ─────────────────────────────────
 
 /** Count occurrences of a substring in the rendered markup. */

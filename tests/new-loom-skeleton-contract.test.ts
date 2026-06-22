@@ -3718,7 +3718,7 @@ test('Help explains Sources and Draft without reviving legacy product labels', (
   assert.match(helpPage, /Add, capture, and review source material/);
   assert.match(helpPage, /Read, mark, write\./);
 
-  for (const href of ['/sources', '/draft']) {
+  for (const href of ['/sources', '/digital-me?edit=new']) {
     assert.match(helpPage, new RegExp(`href="${escapeRegExp(href)}"`));
   }
 
@@ -3914,7 +3914,7 @@ test('/year is a support surface for the annual wintering view, not a primary ro
   }
 
   assert.match(yearPage, /href="\/sources"/);
-  assert.match(yearPage, /href="\/draft"/);
+  assert.match(yearPage, /href="\/digital-me\?edit=new"/);
   assert.match(yearPage, /href="\/discipline"/);
   assert.match(yearClient, /'use client'/);
   assert.match(yearClient, /useAllTraces/);
@@ -4000,7 +4000,7 @@ test('/hour is a support surface for the current thinking window, not a primary 
   assert.match(hourClient, /breath bar/i);
   assert.match(hourClient, /No alerts/);
   assert.match(hourClient, /href="\/sources"/);
-  assert.match(hourClient, /href="\/draft"/);
+  assert.match(hourClient, /href="\/digital-me\?edit=new"/);
   assert.match(hourClient, /href="\/year"/);
   assert.match(hourClient, /href="\/discipline"/);
 
@@ -4071,7 +4071,7 @@ test('/connections is a support surface for source connections and correspondent
   assert.match(connectionsClient, /Draft this connection/);
   assert.match(connectionsClient, /!\s*publicWorkingMode[\s\S]{0,120}sourceConnectionDraftHref\(link\)/);
   assert.match(connectionsClient, /href="\/sources"/);
-  assert.match(connectionsClient, /href="\/draft"/);
+  assert.match(connectionsClient, /href="\/digital-me\?edit=new"/);
   assert.doesNotMatch(connectionsClient, /padding:\s*'var\(--support-main-padding\)'|style=\{\{ marginTop/);
   assert.match(connectionsClient, /className=\{styles\.main\}/);
   assert.match(connectionsClient, /styles\.connectionsSection/);

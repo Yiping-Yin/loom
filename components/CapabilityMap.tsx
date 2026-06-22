@@ -5,6 +5,8 @@ import Link from 'next/link';
 import type { BeginnerCapability, CapabilityEvidence, CapabilityStatus } from '../lib/capability/capability-graph';
 import type { BeginnerProfile } from '../lib/profile/beginner-profile';
 import { getArtifactObjectUrl } from '../lib/artifact/artifact-store';
+import { draftArtifactEditHref } from '../lib/new-loom/draft-artifacts';
+import { safeHref } from '../lib/profile/safe-href';
 import styles from './CapabilityMap.module.css';
 
 /**
@@ -28,7 +30,10 @@ import styles from './CapabilityMap.module.css';
  *   education  → /education
  *   experience → /experience
  *   work       → /works
- *   artifact   → button: IndexedDB blob open-in-new-tab (mirrors VerifiedArtifactCard)
+ *   artifact   → uploaded: button, IndexedDB blob open-in-new-tab (mirrors
+ *                VerifiedArtifactCard); draft-derived (refId `draft-<id>`): a
+ *                same-tab link to the Studio editor (/digital-me?edit=<id>) since
+ *                a draft has no blob (mirrors the Ask-side citation path)
  *
  * SSR-safe: layout is deterministic (no Math.random at render — positions derive
  * from the capability index + a stable hash of its id), and getArtifactObjectUrl
@@ -609,14 +614,39 @@ function EvidenceExcerpt({ excerpt }: { excerpt?: string }) {
 // ── ArtifactChip ──────────────────────────────────────────────────────────────
 
 /**
- * Mirrors VerifiedArtifactCard's open behavior exactly:
- *  1. getArtifactObjectUrl(id) → null | url
- *  2. If null: set unavailable (disabled, "file unavailable")
- *  3. If url: window.open(url, '_blank', 'noopener,noreferrer')
- *  4. If window.open returns null (popup blocked): window.location.href = url
+ * Routes an artifact evidence chip by id space:
+ *
+ *  - DRAFT-DERIVED (refId `draft-<id>`): a curated Studio draft has NO IndexedDB
+ *    blob, so opening it as a blob would always go "file unavailable". Instead it
+ *    cross-refs the Studio editor (/digital-me?edit=<id>) as a same-tab link —
+ *    mirroring the Ask-side citation path (resolveBeginnerSource +
+ *    draftArtifactEditHref). The href is run through safeHref for the same
+ *    URL-scheme discipline as every other user-facing href.
+ *  - UPLOADED: opens the real document blob (mirrors VerifiedArtifactCard):
+ *      1. getArtifactObjectUrl(id) → null | url
+ *      2. If null: set unavailable (disabled, "file unavailable")
+ *      3. If url: window.open(url, '_blank', 'noopener,noreferrer')
+ *      4. If window.open returns null (popup blocked): window.location.href = url
  */
 function ArtifactChip({ refId, label, excerpt }: { refId: string; label: string; excerpt?: string }) {
   const [chipStatus, setChipStatus] = useState<'idle' | 'opening' | 'unavailable'>('idle');
+
+  // Draft-derived artifact: open the Studio editor, not a (nonexistent) blob.
+  const editHref = draftArtifactEditHref(refId);
+  if (editHref) {
+    const href = safeHref(editHref);
+    if (href) {
+      return (
+        <li className={styles.evidenceItem}>
+          <Link href={href} className={styles.evidenceLink} aria-label={`Open ${label}`}>
+            <span>{label}</span>
+            <span className={styles.openArrow} aria-hidden="true"> Open ↗</span>
+          </Link>
+          <EvidenceExcerpt excerpt={excerpt} />
+        </li>
+      );
+    }
+  }
 
   async function handleOpen() {
     if (chipStatus === 'opening') return;

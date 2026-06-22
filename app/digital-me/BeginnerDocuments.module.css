@@ -73,6 +73,13 @@
   gap: 0.6rem;
 }
 .cardTitle {
+  /* Flex child must be allowed to shrink below its content width, then truncate,
+     so a long title can't overflow the card or shove the "In Digital Me" chip
+     off the row. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-1);
   font-weight: 600;
   font-size: 1rem;

@@ -27,7 +27,7 @@ export default function YearPage() {
               Twelve months of material, weighed rather than counted. The wintering ribbon
               shows what cooled; Question containers hold what is still open. Everything here
               arrived through <Link href="/sources" className={styles.textLink}>Sources</Link>{' '}
-              and can continue in <Link href="/draft" className={styles.textLink}>Draft</Link>.
+              and can continue in <Link href="/digital-me?edit=new" className={styles.textLink}>Draft</Link>.
             </p>
             <nav aria-label="The Year related surfaces" className={styles.linkRail}>
               <Link href="/hour">The Hour</Link>
