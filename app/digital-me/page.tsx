@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 
 import { DigitalMeGate } from './DigitalMeGate';
 
 export const metadata = { title: 'Digital Me · Loom' };
 
 export default function DigitalMePage() {
-  // F2 step 2: DigitalMeGate renders a neutral IdentityEmptyState for a
-  // no-profile STRANGER (the owner Role-OS surface + its owner-corpus Ask widget
-  // now live only at /example/digital-me) and swaps to BeginnerDigitalMe when a
-  // beginner profile is present in localStorage.
-  return <DigitalMeGate />;
+  // DigitalMeGate reads the `edit` search param (useSearchParams) to render the
+  // Studio editor in-place, so it must sit under a Suspense boundary (Next 15/16).
+  // The gate otherwise renders IdentityEmptyState (no profile) or BeginnerDigitalMe.
+  return (
+    <Suspense fallback={<div className="loom-cosmic-field" aria-hidden />}>
+      <DigitalMeGate />
+    </Suspense>
+  );
 }
