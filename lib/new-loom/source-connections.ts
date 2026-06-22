@@ -87,5 +87,5 @@ export function sourceConnectionDraftHref(link: NewLoomSourceConnection) {
     params.append('kind', 'source');
   }
   params.set('excerpt', `Connected via ${link.via} (${link.from.origin} ↔ ${link.to.origin})`);
-  return `/draft?${params.toString()}`;
+  return `/digital-me?edit=new&${params.toString()}`;
 }

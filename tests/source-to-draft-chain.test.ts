@@ -35,7 +35,7 @@ test('verified source artifacts build a Draft URL with source context and AI Ans
     resolveVerifiedDossierArtifact('econ-tutorial'),
   ], { type: 'ai-answer' });
 
-  assert.ok(url.startsWith('/draft?'), url);
+  assert.ok(url.startsWith('/digital-me?'), url);
   const params = new URLSearchParams(url.slice(url.indexOf('?') + 1));
 
   assert.equal(params.get('draftType'), 'ai-answer');
