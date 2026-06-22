@@ -1143,6 +1143,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
   return (
     <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
       <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
+        <a className="new-loom-draft__home" href="/digital-me">← Digital Me</a>
         <section className="new-loom-draft__profile-card" aria-label="Profile">
           <img src="/profile/yiping-profile-white-shirt.png" alt="Yiping Yin" />
           <h2>Yiping Yin</h2>

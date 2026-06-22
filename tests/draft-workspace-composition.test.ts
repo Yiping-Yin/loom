@@ -17,8 +17,11 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
 
   assert.match(draftPage, /title: 'Draft · Loom'/);
   assert.match(draftPage, /description: 'Write source-grounded drafts from verified Loom evidence\.'/);
-  // /draft is a focused workbench, not a browsable page — it carries NO global nav.
+  // /draft is a focused workbench, not a browsable page — it carries NO global nav,
+  // but it must still offer a quiet way home to Digital Me.
   assert.doesNotMatch(draftClient, /LoomGlobalNav/);
+  assert.match(draftClient, /<a className="new-loom-draft__home" href="\/digital-me">/);
+  assert.match(draftDeskCss, /\.surface :global\(\.new-loom-draft__home\)/);
   assert.match(draftClient, /<h1 className="new-loom-draft__sr-title">Draft evidence desk<\/h1>/);
   assert.doesNotMatch(draftClient, /new-loom-draft__wordmark/);
   assert.doesNotMatch(globals, /new-loom-draft__wordmark/);
