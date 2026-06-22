@@ -9,10 +9,15 @@ import {
   resolveBeginnerSource,
 } from '../lib/new-loom/beginner-ask-corpus';
 import {
+  countResolvableSources,
   parseAskYipingCitations,
   retrieveAskYipingSources,
 } from '../lib/new-loom/ask-yiping';
 import { normalizeBeginnerProfile } from '../lib/profile/beginner-profile';
+import {
+  draftRecordToArtifactRef,
+  mergeDraftArtifactsForDerivation,
+} from '../lib/new-loom/draft-artifacts';
 
 // A representative beginner profile covering every section the corpus maps.
 const sampleProfile = normalizeBeginnerProfile({
@@ -341,4 +346,115 @@ test('retrieve over an artifact-grounded corpus surfaces the me-artifact source 
   );
   const ids = new Set(sources.map((s) => s.id));
   assert.ok(ids.has('me-artifact-0'), 'an on-topic question must surface the artifact source');
+});
+
+// ── Task 4: included Studio drafts feed the Ask corpus + citations ───────────
+//
+// The moat: a draft the user explicitly opted into Digital Me is mapped to an
+// ArtifactRef (id `draft-<id>`) and folded into profile.artifacts. The corpus
+// must then (a) emit it as a resolvable me-artifact-* source grounded in the
+// draft's own text, (b) count it toward the grounding floor, and (c) resolve its
+// citation to OPEN the Studio editor at /digital-me?edit=<draftId> (NOT a blob —
+// a draft has no IndexedDB blob), with the href run through safeHref.
+
+// A profile whose only proof is an INCLUDED Studio draft, folded in exactly as
+// the client does before sending to /api/ask (transient, non-clobbering merge).
+const draftRef = draftRecordToArtifactRef({
+  id: 'draft123',
+  title: 'Phillips Curve note',
+  body: 'The Phillips Curve describes the short-run trade-off between inflation and unemployment in macroeconomics.',
+  references: [],
+  includedInDigitalMe: true,
+  createdAt: '2026-06-23T00:00:00.000Z',
+  updatedAt: '2026-06-23T00:00:00.000Z',
+});
+const draftBackedProfile = mergeDraftArtifactsForDerivation(
+  normalizeBeginnerProfile({
+    home: { name: 'John Maynard', headline: 'Economist' },
+    about: { summary: 'Studies inflation and employment.' },
+  }),
+  [draftRef],
+);
+
+test('(a) an included draft becomes a resolvable me-artifact source grounded in its own text', () => {
+  const corpus = buildBeginnerCorpus(draftBackedProfile);
+  const source = corpus.find((s) => s.id === 'me-artifact-0');
+  assert.ok(source, 'the draft artifact is folded in as a me-artifact-* source');
+  // Searchable text = name + label + the draft's OWN body text.
+  assert.match(source!.text, /Phillips Curve note/, 'draft title is searchable');
+  assert.match(source!.text, /short-run trade-off/, 'the draft body is searchable');
+  assert.match(source!.text, /macroeconomics/);
+});
+
+test('(a) an on-topic question surfaces the included-draft source', () => {
+  const context = beginnerCorpusContext(draftBackedProfile);
+  const sources = retrieveAskYipingSources(
+    'What does the note say about inflation and unemployment?',
+    6,
+    context,
+  );
+  const ids = new Set(sources.map((s) => s.id));
+  assert.ok(ids.has('me-artifact-0'), 'a draft-topic question must surface the draft source');
+});
+
+test('(b) the included-draft source counts toward the grounding floor', () => {
+  const context = beginnerCorpusContext(draftBackedProfile);
+  const sources = retrieveAskYipingSources(
+    'What does the note say about inflation and unemployment?',
+    6,
+    context,
+  );
+  // Without the draft this profile would be about-only → grounding floor 0.
+  assert.ok(
+    countResolvableSources(sources, context.resolveCitation) >= 1,
+    'the included draft makes the floor non-zero so /api/ask can ground + cite',
+  );
+});
+
+test('(c) the draft citation resolves to open the Studio editor at /digital-me?edit=<draftId>', () => {
+  const resolved = resolveBeginnerSource('me-artifact-0', draftBackedProfile);
+  assert.ok(resolved, 'the draft artifact id resolves');
+  assert.equal(resolved!.label, 'Phillips Curve note');
+  // A draft has NO IndexedDB blob — its citation must NAVIGATE the editor href,
+  // not carry a blob artifactId for the blob-open path.
+  assert.equal(resolved!.href, '/digital-me?edit=draft123', 'navigates the Studio editor by draft id');
+  assert.equal(resolved!.artifactId, undefined, 'no blob artifactId — a draft is not a stored blob');
+});
+
+test('(c) beginnerCitationResolver maps the draft to a navigable (non-blob) citation', () => {
+  const resolve = beginnerCitationResolver(draftBackedProfile);
+  const cite = resolve('me-artifact-0');
+  assert.ok(cite, 'the draft artifact resolves to a citation');
+  assert.equal(cite!.title, 'Phillips Curve note');
+  assert.equal(cite!.href, '/digital-me?edit=draft123', 'citation opens the editor href');
+  // It is a navigable citation, not a blob-open one: artifactId is the corpus id
+  // (the section seam), and there is no file `kind` that would route it to the
+  // blob-open path on the client.
+  assert.equal(cite!.artifactId, 'me-artifact-0');
+  assert.equal(cite!.kind, undefined, 'no file kind → client renders a navigable link, not Open-blob');
+});
+
+test('(c) a draft edit href survives the URL-scheme allowlist (safeHref)', () => {
+  // The editor href is relative (/digital-me?edit=…), which safeHref always keeps;
+  // assert the resolved href is the kept, navigable form rather than dropped to ''.
+  const resolve = beginnerCitationResolver(draftBackedProfile);
+  const cite = resolve('me-artifact-0');
+  assert.ok(cite!.href.startsWith('/digital-me?edit='), 'href is the relative editor route safeHref keeps');
+});
+
+test('an end-to-end answer can cite the included draft, and the citation opens the editor', () => {
+  const context = beginnerCorpusContext(draftBackedProfile);
+  const sources = retrieveAskYipingSources(
+    'Summarise the Phillips Curve note on inflation.',
+    6,
+    context,
+  );
+  const answerText = [
+    'The note explains the short-run inflation/unemployment trade-off.',
+    'SOURCES: me-artifact-0, me-about, fake-id',
+  ].join('\n');
+  const { answer, citations } = parseAskYipingCitations(answerText, sources, context.resolveCitation);
+  assert.doesNotMatch(answer, /SOURCES:/);
+  assert.equal(citations.length, 1, 'only the real draft citation survives');
+  assert.equal(citations[0].href, '/digital-me?edit=draft123');
 });

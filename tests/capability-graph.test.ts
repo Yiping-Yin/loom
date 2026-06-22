@@ -259,3 +259,82 @@ test('normalizeCapabilities: dedupes evidence by kind+refId', () => {
   assert.equal(caps.length, 1);
   assert.equal(caps[0].evidence.length, 2, 'the duplicate artifact ref is collapsed');
 });
+
+// ── Task 3: draft-derived artifacts feed capability derivation ────────────────
+// The moat: an INCLUDED Studio draft, mapped to an ArtifactRef with id
+// `draft-<id>`, must be scanned by deriveCapabilitiesHeuristic as artifact
+// evidence — exactly like an uploaded artifact, no more (no auto-'strong'). A
+// NON-included draft is never mapped in, so it contributes nothing. (The
+// inclusion gate lives in includedDraftArtifacts; here we prove the heuristic
+// counts a draft-derived artifact ref once it IS in profile.artifacts, and
+// treats `draft-<id>` as a distinct refId.)
+
+test('deriveCapabilitiesHeuristic: a draft-derived artifact contributes evidence to a matching candidate', () => {
+  // 'Data Analysis' is seeded as a candidate by the experience/about text; the
+  // draft-derived artifact's text matches the same keyword, so it must attach as
+  // a piece of evidence on that capability.
+  const profile: BeginnerProfile = {
+    ...sampleProfile,
+    artifacts: [
+      { id: 'draft-included-1', name: 'Analytics retro', kind: 'doc', label: 'Analytics retro', extractedText: 'A retro on the analytics dashboard I built and the data analysis behind it.' },
+    ],
+  };
+  const caps = deriveCapabilitiesHeuristic(profile);
+  const dataCap = caps.find((c) => c.label === 'Data Analysis');
+  assert.ok(dataCap, 'expected a Data Analysis capability');
+  const draftEv = dataCap!.evidence.filter((e) => e.kind === 'artifact' && e.refId === 'draft-included-1');
+  assert.equal(draftEv.length, 1, 'the draft-derived artifact backs the matching capability exactly once');
+});
+
+test('deriveCapabilitiesHeuristic: a draft whose text matches NO capability contributes no evidence', () => {
+  // A draft-derived artifact about an unrelated topic must NOT attach to any of
+  // the profile's capabilities (mirrors a non-included draft contributing
+  // nothing: it never earns evidence it does not back).
+  const profile: BeginnerProfile = {
+    ...sampleProfile,
+    artifacts: [
+      { id: 'draft-included-2', name: 'Gardening log', kind: 'doc', label: 'Gardening log', extractedText: 'Notes on watering schedules and soil for tomatoes.' },
+    ],
+  };
+  const caps = deriveCapabilitiesHeuristic(profile);
+  const draftEvAnywhere = caps
+    .flatMap((c) => c.evidence)
+    .some((e) => e.kind === 'artifact' && e.refId === 'draft-included-2');
+  assert.equal(draftEvAnywhere, false, 'an off-topic draft-derived artifact backs no capability');
+});
+
+test('deriveCapabilitiesHeuristic: a draft-derived artifact and an uploaded artifact are distinct evidence (draft-<id> refId is its own key)', () => {
+  // Both an uploaded artifact and a draft-derived artifact match the same
+  // capability. Their refIds differ ('art-1' vs 'draft-d9'), so BOTH must count
+  // — the draft id space never collides with the uploaded id space.
+  const profile: BeginnerProfile = {
+    ...sampleProfile,
+    artifacts: [
+      { id: 'art-1', name: 'analysis-report.pdf', kind: 'pdf', label: 'Data Analysis Report', extractedText: 'Quarterly data analysis report.' },
+      { id: 'draft-d9', name: 'Analysis note', kind: 'doc', label: 'Analysis note', extractedText: 'My own write-up of the data analysis method.' },
+    ],
+  };
+  const caps = deriveCapabilitiesHeuristic(profile);
+  const dataCap = caps.find((c) => c.label === 'Data Analysis');
+  assert.ok(dataCap, 'expected a Data Analysis capability');
+  const artifactRefIds = dataCap!.evidence.filter((e) => e.kind === 'artifact').map((e) => e.refId);
+  assert.ok(artifactRefIds.includes('art-1'), 'uploaded artifact counts');
+  assert.ok(artifactRefIds.includes('draft-d9'), 'draft-derived artifact counts as distinct evidence');
+});
+
+test('deriveCapabilitiesHeuristic: a single draft-derived artifact does NOT auto-inflate to strong', () => {
+  // A lone draft-derived artifact backing a capability that has no other
+  // evidence is 'partial', not 'strong' — draft evidence is weighted like any
+  // single artifact (strong still needs ≥2 evidence incl. an artifact).
+  const profile: BeginnerProfile = {
+    ...emptyBeginnerProfile(),
+    about: { summary: 'Interested in data analysis', links: [] },
+    artifacts: [
+      { id: 'draft-solo', name: 'Analytics note', kind: 'doc', label: 'Analytics note', extractedText: 'A short note on data analysis.' },
+    ],
+  };
+  const caps = deriveCapabilitiesHeuristic(profile);
+  const dataCap = caps.find((c) => c.label === 'Data Analysis');
+  assert.ok(dataCap, 'expected a Data Analysis capability');
+  assert.notEqual(dataCap!.status, 'strong', 'one draft-derived artifact alone is not strong');
+});

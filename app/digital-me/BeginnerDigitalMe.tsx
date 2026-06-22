@@ -18,6 +18,10 @@ import { BeginnerJourney } from './BeginnerJourney';
 import { BeginnerProofSection } from './BeginnerProofSection';
 import { BeginnerDocuments, toStudioDocumentSummary, type StudioDocumentSummary } from './BeginnerDocuments';
 import { browserDraftStorage, listDrafts } from '../../lib/new-loom/draft-storage';
+import {
+  includedDraftArtifacts,
+  mergeDraftArtifactsForDerivation,
+} from '../../lib/new-loom/draft-artifacts';
 
 /**
  * Beginner-profile Digital Me view.
@@ -106,7 +110,18 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
       // it (orphaning the blob + its grounded text). Derive from `current` too so
       // the map reflects newly-uploaded proof.
       const current = readBeginnerProfileLocal() ?? profile;
-      const derived = await buildCapabilities(current);
+      // The moat: an INCLUDED Studio draft must back capabilities as evidence.
+      // Map each opted-in draft to an ArtifactRef and TRANSIENTLY fold it into the
+      // profile's artifacts so deriveCapabilitiesHeuristic (and the /api/derive
+      // route, via buildCapabilities) scans the user's own writing as proof —
+      // weighted exactly like any artifact (no auto-'strong'). The merge is
+      // non-clobbering (real uploads win on id collision) and NOT persisted: we
+      // save only the derived capabilities below, preserving `current.artifacts`.
+      const adapter = browserDraftStorage();
+      const deriveProfile = adapter
+        ? mergeDraftArtifactsForDerivation(current, includedDraftArtifacts(adapter))
+        : current;
+      const derived = await buildCapabilities(deriveProfile);
       setCaps(derived);
       const saved = writeBeginnerProfileLocal({ ...current, capabilities: derived });
       if (!saved) {

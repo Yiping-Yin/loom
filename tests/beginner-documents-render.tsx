@@ -31,6 +31,21 @@ test('toStudioDocumentSummary maps a draft record, defaulting an empty title', (
   assert.equal(s.sourceCount, 1);
   assert.equal(s.wordCount, 3);
   assert.equal(s.updatedAt, '2026-06-22T10:00:00.000Z');
+  assert.equal(s.includedInDigitalMe, undefined);
+});
+
+test('toStudioDocumentSummary carries the includedInDigitalMe curation flag', () => {
+  const { toStudioDocumentSummary } = require('../app/digital-me/BeginnerDocuments');
+  const included = toStudioDocumentSummary({
+    id: 'd2',
+    title: 'Included note',
+    body: 'one two',
+    references: [],
+    includedInDigitalMe: true,
+    createdAt: '2026-06-22T00:00:00.000Z',
+    updatedAt: '2026-06-22T10:00:00.000Z',
+  });
+  assert.equal(included.includedInDigitalMe, true);
 });
 
 test('BeginnerDocuments renders document cards that open /draft?d=<id>', () => {
@@ -49,6 +64,22 @@ test('BeginnerDocuments renders document cards that open /draft?d=<id>', () => {
   assert.match(text, /Quant note/);
   assert.match(text, /Grounded by 2 sources/);
   assert.match(text, /120 words/);
+});
+
+test('BeginnerDocuments marks included docs with a quiet "In Digital Me" chip', () => {
+  const { BeginnerDocuments } = require('../app/digital-me/BeginnerDocuments');
+  const html = render(
+    <BeginnerDocuments
+      documents={[
+        { id: 'in', title: 'Included', sourceCount: 1, wordCount: 10, updatedAt: '2026-06-22T10:00:00.000Z', includedInDigitalMe: true },
+        { id: 'out', title: 'Excluded', sourceCount: 1, wordCount: 10, updatedAt: '2026-06-22T10:00:00.000Z' },
+      ]}
+    />,
+  );
+  // The chip appears exactly once — only on the included card.
+  const matches = html.match(/In Digital Me/g) ?? [];
+  assert.equal(matches.length, 1);
+  assert.match(visibleText(html), /In Digital Me/);
 });
 
 test('BeginnerDocuments shows an empty-state CTA when there are no documents', () => {

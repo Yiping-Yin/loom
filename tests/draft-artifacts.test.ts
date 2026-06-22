@@ -1,0 +1,259 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  draftRecordToArtifactRef,
+  includedDraftArtifacts,
+  mergeDraftArtifactsForDerivation,
+  withIncludedDraftArtifacts,
+} from '../lib/new-loom/draft-artifacts';
+import { emptyBeginnerProfile, type ArtifactRef } from '../lib/profile/beginner-profile';
+import {
+  createDraft,
+  type DraftStorageAdapter,
+  type NewLoomDraftRecord,
+} from '../lib/new-loom/draft-storage';
+import { normalizeBeginnerProfile } from '../lib/profile/beginner-profile';
+
+// Task 2 (the moat mechanism): an INCLUDED Studio draft is mapped to an
+// ArtifactRef and routed through the EXISTING artifact pipeline — so the user's
+// own writing feeds BOTH the Ask corpus (me-artifact-* sources) AND capability
+// derivation (artifacts back capabilities as evidence). These two pure helpers
+// are that mapping: draftRecordToArtifactRef (one draft -> one ArtifactRef) and
+// includedDraftArtifacts (the curation collector: only opted-in drafts).
+
+function mem(): DraftStorageAdapter {
+  const m = new Map<string, string>();
+  return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => void m.set(k, v) };
+}
+
+function draft(partial: Partial<NewLoomDraftRecord>): NewLoomDraftRecord {
+  return {
+    id: 'd1',
+    title: 'Phillips Curve note',
+    body: 'The Phillips Curve gives a short-run trade-off.',
+    references: [],
+    createdAt: '2026-06-23T00:00:00.000Z',
+    updatedAt: '2026-06-23T00:00:00.000Z',
+    ...partial,
+  };
+}
+
+test('draftRecordToArtifactRef maps a draft to a well-formed ArtifactRef', () => {
+  const ref = draftRecordToArtifactRef(
+    draft({ id: 'abc', title: 'Concavity note', body: 'Concavity gives a stable interpretation.' }),
+  );
+  assert.equal(ref.name, 'Concavity note');
+  assert.equal(ref.label, 'Concavity note');
+  assert.equal(ref.kind, 'doc');
+  assert.equal(ref.extractedText, 'Concavity gives a stable interpretation.');
+});
+
+test('draftRecordToArtifactRef prefixes the id with draft- to avoid collision with uploaded artifacts', () => {
+  const ref = draftRecordToArtifactRef(draft({ id: 'abc' }));
+  assert.equal(ref.id, 'draft-abc');
+});
+
+test('draftRecordToArtifactRef falls back to a placeholder name for an untitled draft', () => {
+  const ref = draftRecordToArtifactRef(draft({ title: '   ', body: 'has body' }));
+  assert.equal(ref.name, 'Untitled document');
+  assert.equal(ref.label, 'Untitled document');
+});
+
+test('draftRecordToArtifactRef strips control chars, collapses whitespace, and caps body like an uploaded artifact', () => {
+  // A long, control-char-laden body must come out bounded + clean — the same
+  // discipline the storage seam applies to uploaded extractedText, so a draft
+  // ref never carries a garbage/oversized excerpt into the corpus.
+  const noisy = `start\x00  spaced\n\nlines${'x'.repeat(8000)}`;
+  const ref = draftRecordToArtifactRef(draft({ body: noisy }));
+  assert.ok(ref.extractedText);
+  assert.ok(ref.extractedText!.length <= 4000, 'extractedText is capped at the artifact ceiling');
+  assert.ok(!/[\x00-]/.test(ref.extractedText!), 'control chars are stripped');
+  assert.ok(ref.extractedText!.startsWith('start spaced lines'), 'whitespace runs collapse to single spaces');
+});
+
+test('draftRecordToArtifactRef yields undefined extractedText for an empty body', () => {
+  const ref = draftRecordToArtifactRef(draft({ body: '   \n  ' }));
+  assert.equal(ref.extractedText, undefined);
+});
+
+test('a draft-derived ArtifactRef survives normalizeBeginnerProfile intact', () => {
+  // The mechanism routes the ref through the profile; it must not be dropped or
+  // mangled by the profile's artifact sanitizer.
+  const ref = draftRecordToArtifactRef(draft({ id: 'abc', title: 'Note', body: 'grounded text' }));
+  const profile = normalizeBeginnerProfile({ artifacts: [ref] });
+  assert.equal(profile.artifacts?.length, 1);
+  assert.equal(profile.artifacts?.[0]?.id, 'draft-abc');
+  assert.equal(profile.artifacts?.[0]?.kind, 'doc');
+  assert.equal(profile.artifacts?.[0]?.extractedText, 'grounded text');
+});
+
+test('includedDraftArtifacts returns only drafts explicitly marked includedInDigitalMe', () => {
+  const a = mem();
+  const opts = { now: () => '2026-06-23T00:00:00.000Z' };
+  createDraft(a, { title: 'Included A', body: 'a', includedInDigitalMe: true }, { ...opts, createId: () => 'in-a' });
+  createDraft(a, { title: 'Excluded', body: 'b', includedInDigitalMe: false }, { ...opts, createId: () => 'ex' });
+  createDraft(a, { title: 'Untouched', body: 'c' }, { ...opts, createId: () => 'un' });
+  createDraft(a, { title: 'Included B', body: 'd', includedInDigitalMe: true }, { ...opts, createId: () => 'in-b' });
+
+  const refs = includedDraftArtifacts(a);
+  const ids = refs.map((r) => r.id).sort();
+  assert.deepEqual(ids, ['draft-in-a', 'draft-in-b']);
+  refs.forEach((r) => assert.equal(r.kind, 'doc'));
+});
+
+test('includedDraftArtifacts returns [] when nothing is curated', () => {
+  const a = mem();
+  createDraft(a, { title: 'Plain', body: 'x' }, { now: () => '2026-06-23T00:00:00.000Z', createId: () => 'p' });
+  assert.deepEqual(includedDraftArtifacts(a), []);
+});
+
+test('includedDraftArtifacts returns [] for empty storage', () => {
+  assert.deepEqual(includedDraftArtifacts(mem()), []);
+});
+
+// Task 3: the transient, non-clobbering merge used right before capability
+// derivation. It appends draft-derived artifacts to the profile's OWN artifacts
+// (so documents back capabilities as evidence) WITHOUT mutating the input and
+// WITHOUT dropping or overwriting the user's uploaded artifacts (mirrors the
+// prior Fix #4 non-clobbering discipline). The merged profile is transient: only
+// the derived capabilities are persisted, never these artifacts.
+
+const upload: ArtifactRef = { id: 'art-up', name: 'report.pdf', kind: 'pdf', label: 'Report' };
+
+test('mergeDraftArtifactsForDerivation appends draft artifacts after the profile own artifacts', () => {
+  const base = { ...emptyBeginnerProfile(), artifacts: [upload] };
+  const draftRef = draftRecordToArtifactRef(draft({ id: 'd1', title: 'Note', body: 'text' }));
+  const merged = mergeDraftArtifactsForDerivation(base, [draftRef]);
+  assert.deepEqual(merged.artifacts?.map((a) => a.id), ['art-up', 'draft-d1']);
+});
+
+test('mergeDraftArtifactsForDerivation does NOT mutate the input profile (transient merge)', () => {
+  const base = { ...emptyBeginnerProfile(), artifacts: [upload] };
+  const draftRef = draftRecordToArtifactRef(draft({ id: 'd1', title: 'Note', body: 'text' }));
+  mergeDraftArtifactsForDerivation(base, [draftRef]);
+  assert.deepEqual(base.artifacts?.map((a) => a.id), ['art-up'], 'real profile artifacts are untouched');
+});
+
+test('mergeDraftArtifactsForDerivation never clobbers an uploaded artifact that shares a draft id', () => {
+  // Defensive: if an uploaded artifact already carries a draft-<id> id, the real
+  // (uploaded) one wins and the draft copy is dropped — no overwrite, no dupe.
+  const collide: ArtifactRef = { id: 'draft-d1', name: 'real upload', kind: 'pdf' };
+  const base = { ...emptyBeginnerProfile(), artifacts: [collide] };
+  const draftRef = draftRecordToArtifactRef(draft({ id: 'd1', title: 'Draft copy', body: 'text' }));
+  const merged = mergeDraftArtifactsForDerivation(base, [draftRef]);
+  assert.equal(merged.artifacts?.length, 1, 'no duplicate id');
+  assert.equal(merged.artifacts?.[0]?.name, 'real upload', 'the existing artifact wins (non-clobbering)');
+});
+
+test('mergeDraftArtifactsForDerivation with no draft artifacts returns the profile artifacts unchanged', () => {
+  const base = { ...emptyBeginnerProfile(), artifacts: [upload] };
+  const merged = mergeDraftArtifactsForDerivation(base, []);
+  assert.deepEqual(merged.artifacts?.map((a) => a.id), ['art-up']);
+});
+
+test('mergeDraftArtifactsForDerivation handles a profile with no artifacts', () => {
+  const base = emptyBeginnerProfile();
+  const draftRef = draftRecordToArtifactRef(draft({ id: 'd1', title: 'Note', body: 'text' }));
+  const merged = mergeDraftArtifactsForDerivation(base, [draftRef]);
+  assert.deepEqual(merged.artifacts?.map((a) => a.id), ['draft-d1']);
+});
+
+// Task 4 fix — the Ask path. The Ask CLIENT (AskYiping.tsx) sends a profile to
+// /api/ask; for the moat to be real on the Ask half, that profile must carry the
+// user's INCLUDED Studio drafts as artifacts so the corpus emits them as grounded
+// me-artifact-* sources with openable citations. `withIncludedDraftArtifacts` is
+// the shared, pure seam the client calls: it folds includedDraftArtifacts(adapter)
+// into a profile via the same non-clobbering, transient merge handleBuildCapabilities
+// uses — NOT persisted, real uploads win on id collision. These tests exercise the
+// exact seam that was previously untested (the corpus tests manually pre-merged).
+
+test('withIncludedDraftArtifacts folds an included draft into the Ask-bound profile', () => {
+  const a = mem();
+  createDraft(
+    a,
+    { title: 'Phillips Curve note', body: 'short-run inflation/unemployment trade-off', includedInDigitalMe: true },
+    { now: () => '2026-06-23T00:00:00.000Z', createId: () => 'd-incl' },
+  );
+  const base = normalizeBeginnerProfile({
+    home: { name: 'John Maynard', headline: 'Economist' },
+    about: { summary: 'Studies inflation.' },
+  });
+
+  const askProfile = withIncludedDraftArtifacts(base, a);
+  assert.ok(askProfile, 'a content-bearing profile is returned');
+  const ids = askProfile!.artifacts?.map((art) => art.id) ?? [];
+  assert.ok(
+    ids.includes('draft-d-incl'),
+    'the included draft reaches the profile the Ask client sends to /api/ask',
+  );
+});
+
+test('withIncludedDraftArtifacts excludes drafts NOT opted into Digital Me', () => {
+  const a = mem();
+  createDraft(
+    a,
+    { title: 'Private draft', body: 'not shared', includedInDigitalMe: false },
+    { now: () => '2026-06-23T00:00:00.000Z', createId: () => 'd-priv' },
+  );
+  const base = normalizeBeginnerProfile({ home: { name: 'Ada', headline: 'Engineer' } });
+
+  const askProfile = withIncludedDraftArtifacts(base, a);
+  const ids = askProfile!.artifacts?.map((art) => art.id) ?? [];
+  assert.ok(!ids.includes('draft-d-priv'), 'an un-opted draft never reaches the Ask corpus');
+});
+
+test('withIncludedDraftArtifacts is transient: it does not mutate the input profile', () => {
+  const a = mem();
+  createDraft(
+    a,
+    { title: 'Note', body: 'text', includedInDigitalMe: true },
+    { now: () => '2026-06-23T00:00:00.000Z', createId: () => 'd-x' },
+  );
+  const base = normalizeBeginnerProfile({ home: { name: 'Ada', headline: 'Engineer' } });
+  const beforeIds = (base.artifacts ?? []).map((art) => art.id);
+
+  withIncludedDraftArtifacts(base, a);
+  assert.deepEqual(
+    (base.artifacts ?? []).map((art) => art.id),
+    beforeIds,
+    'the persisted profile artifacts are never overwritten by the Ask merge',
+  );
+});
+
+test('withIncludedDraftArtifacts passes a null profile straight through (Yiping fallback)', () => {
+  // forceOwnerCorpus / no local profile → null. The Ask client must still send
+  // null so /api/ask falls back to the Yiping corpus exactly as before.
+  const a = mem();
+  createDraft(
+    a,
+    { title: 'Note', body: 'text', includedInDigitalMe: true },
+    { now: () => '2026-06-23T00:00:00.000Z', createId: () => 'd-y' },
+  );
+  assert.equal(withIncludedDraftArtifacts(null, a), null);
+});
+
+test('withIncludedDraftArtifacts returns the profile unchanged when no draft adapter is available', () => {
+  // SSR / no localStorage → browserDraftStorage() is null. The profile must pass
+  // through intact rather than throw.
+  const base = normalizeBeginnerProfile({ home: { name: 'Ada', headline: 'Engineer' } });
+  const askProfile = withIncludedDraftArtifacts(base, null);
+  assert.deepEqual(askProfile, base);
+});
+
+test('withIncludedDraftArtifacts is non-clobbering: a real upload wins over a same-id draft', () => {
+  const a = mem();
+  createDraft(
+    a,
+    { title: 'Draft copy', body: 'text', includedInDigitalMe: true },
+    { now: () => '2026-06-23T00:00:00.000Z', createId: () => 'd1' },
+  );
+  const base = normalizeBeginnerProfile({
+    home: { name: 'Ada', headline: 'Engineer' },
+    artifacts: [{ id: 'draft-d1', name: 'real upload', kind: 'pdf' }],
+  });
+
+  const askProfile = withIncludedDraftArtifacts(base, a);
+  const refs = askProfile!.artifacts ?? [];
+  assert.equal(refs.length, 1, 'no duplicate id');
+  assert.equal(refs[0]?.name, 'real upload', 'the existing uploaded artifact wins');
+});
