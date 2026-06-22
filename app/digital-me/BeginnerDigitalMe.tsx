@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { AskYiping } from '../../components/verified-dossier/AskYiping';
 import { CapabilityMap } from '../../components/CapabilityMap';
-import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import { LandingNav } from '../LandingNav';
 import { type BeginnerCapability } from '../../lib/capability/capability-graph';
 import { buildCapabilities } from '../../lib/capability/derive-capabilities';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
@@ -56,6 +56,18 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   /** Count of capabilities whose status is 'strong' (backed by real proof). */
   const strongCount = caps.filter((c) => c.status === 'strong').length;
 
+  // A brand-new / thin profile (nothing proof-backed yet) should be guided to
+  // ENRICH first — sharing a near-empty postcard is premature. So when thin,
+  // "Keep building" takes the primary (cyan) slot and the postcard drops to the
+  // secondary (ghost) slot; once there's proof, the postcard leads again.
+  const thin = strongCount === 0;
+  const primaryCta = thin
+    ? { href: '/onboarding/profile', label: 'Keep building' }
+    : { href: '/card', label: 'Get your digital postcard' };
+  const secondaryCta = thin
+    ? { href: '/card', label: 'Get your digital postcard' }
+    : { href: '/onboarding/profile', label: 'Keep building' };
+
   async function handleBuildCapabilities() {
     if (building) return;
     setBuilding(true);
@@ -106,7 +118,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   return (
     <main ref={rootRef} className={shell.page} aria-labelledby="digital-me-title">
       <div className="loom-cosmic-field" aria-hidden="true" />
-      <LoomGlobalNav activeHref="/digital-me" ariaLabel="Digital Me navigation" />
+      <LandingNav />
 
       <div className={`${shell.shell} ${styles.shell}`}>
         {/* Identity header */}
@@ -139,10 +151,12 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             </nav>
           )}
 
-          {/* Entry point to the shareable digital postcard (pillar 3). Lives on
-              the beginner Digital Me surface, never in the owner's shared top nav. */}
-          <a href="/card" className={styles.postcard}>
-            <span>Get your digital postcard</span>
+          {/* Primary action (cyan): "Keep building" for a thin profile, the
+              shareable digital postcard (pillar 3) once there's proof to show.
+              Both always render — only the emphasis/order swaps. The postcard
+              lives on the beginner surface, never in the owner's shared top nav. */}
+          <a href={primaryCta.href} className={styles.postcard}>
+            <span>{primaryCta.label}</span>
             <ArrowUpRight
               className={styles.postcardIcon}
               aria-hidden="true"
@@ -151,11 +165,10 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             />
           </a>
 
-          {/* The returning user's forward path: /onboarding/profile preloads the
-              stored profile and returns here on save, so this is "add more"
-              rather than "start over". */}
-          <a href="/onboarding/profile" className={styles.keepBuilding}>
-            <span>Keep building</span>
+          {/* Secondary action (ghost). /onboarding/profile preloads the stored
+              profile and returns here on save — "add more", not "start over". */}
+          <a href={secondaryCta.href} className={styles.keepBuilding}>
+            <span>{secondaryCta.label}</span>
             <ArrowUpRight
               className={styles.keepBuildingIcon}
               aria-hidden="true"

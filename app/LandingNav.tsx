@@ -10,20 +10,28 @@
 import Link from 'next/link';
 import styles from './LandingNav.module.css';
 
-export function LandingNav({ onBegin }: { onBegin?: () => void }) {
+export function LandingNav({
+  onBegin,
+  cta,
+}: {
+  onBegin?: () => void;
+  /** Optional link CTA (e.g. on the Digital Me). Falls back to the Begin button
+   *  when onBegin is given; renders no CTA when neither is provided. */
+  cta?: { label: string; href: string };
+}) {
   return (
     <nav className={styles.nav} aria-label="LOOM">
-      <span className={styles.brand}>
+      <Link href="/" className={styles.brand} aria-label="LOOM home">
         <img
           className={styles.brandMoon}
-          src="/brand/loom_lunar_orb.png"
+          src="/loom/history/moon-orb.webp"
           alt=""
           draggable={false}
           width={24}
           height={24}
         />
         <span className={styles.wordmark}>LOOM</span>
-      </span>
+      </Link>
       <span className={styles.links}>
         <Link href="/product-history" className={styles.link}>
           History
@@ -31,9 +39,15 @@ export function LandingNav({ onBegin }: { onBegin?: () => void }) {
         <Link href="/example" className={styles.link}>
           Example
         </Link>
-        <button type="button" className={styles.begin} onClick={onBegin}>
-          Begin
-        </button>
+        {cta ? (
+          <Link href={cta.href} className={styles.begin}>
+            {cta.label}
+          </Link>
+        ) : onBegin ? (
+          <button type="button" className={styles.begin} onClick={onBegin}>
+            Begin
+          </button>
+        ) : null}
       </span>
     </nav>
   );

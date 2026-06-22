@@ -45,6 +45,13 @@
   overflow: hidden;
 }
 
+/* Sparse profile (≤3 capabilities) → cap the field width so one capability reads
+   as a small, deliberate constellation instead of a lone dot on a full-width
+   band. The adaptive viewBox (geometryFor) keeps the cluster filling this box. */
+.starRiverCompact {
+  max-width: 30rem;
+}
+
 .starRiverSvg {
   display: block;
   width: 100%;
