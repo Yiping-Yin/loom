@@ -4,13 +4,24 @@
 **Date:** 2026-06-22
 **Owner direction:** Fuse "writing work" and "development work" into one workbench ("工作台"). Chosen unit of fusion: a **block canvas** (text / code / artifact / source-cite are all first-class blocks). Phasing approved. This spec is **Phase 1 only**.
 
+## Positioning (decided 2026-06-22 — the load-bearing strategic call)
+
+The Studio is **NOT** an authoring/dev tool competing with VSCode. A web block-editor can never beat VSCode/Jupyter/Quarto as an editor or runtime, and "write text in a `.py`" already serves the dev who likes that. We do not fight for *where you write or run code* — we lose that fight.
+
+The Studio is the **grounding / representation layer that sits ON TOP of your real work.** VSCode produces *artifacts* (code + private notes); LOOM turns those artifacts into a *represented self* — grounded in your sources, citable, and answerable by your Digital Me. The differentiator is **ingest + ground + represent**, not edit + run. Tagline: *"keep coding in VSCode — bring the result here to become represented."*
+
+Consequences for the design:
+- **Import is the killer move**, not authoring: bring in real work (a pasted snippet / a code or text file now; a repo / notebook / QBook later) and wrap it in grounded narrative + citations.
+- The **`code` block = evidence-and-explanation** (shown, attributed, narrated) — *not* a place to do serious dev.
+- **Live code execution is deprioritized** (you already ran it in VSCode/QBook). Representation doesn't need execution; embedding the already-running artifact (Phase 2) matters more than running code in-app (was Phase 3).
+
 ---
 
 ## Goal
 
-Evolve the existing `/draft` "Evidence Desk" from a single-`<textarea>` writing surface into a **block document**: an ordered list of typed blocks the author creates and reorders. Phase 1 ships three block types — **text**, **code** (highlighted, not executed), and **source-cite** — while preserving everything Draft already does (source grounding, references, provenance, AI compose/inline-edit, output types, save-as-evidence). No code execution, no embedded live artifacts, no Digital Me re-housing — those are later phases.
+Evolve the existing `/draft` "Evidence Desk" from a single-`<textarea>` writing surface into a **block document** — the surface for grounding + representing work. Phase 1 ships three block types — **text** (grounded prose), **code** (pasted/imported, attributed, highlighted-or-mono, **not executed** — code *as evidence*), and **source-cite** — plus a basic **import path** (paste or upload a code/text file into a `code`/`text` block with optional source attribution). Everything Draft already does is preserved (source grounding, references, provenance, AI compose/inline-edit, output types, save-as-evidence). No live execution, no embedded live artifacts, no Digital Me re-housing — those are later phases.
 
-**Success:** an author can build a draft as a sequence of text + code + cite blocks, reorder/add/delete them, and the draft still saves, grounds in sources, shows provenance, and round-trips losslessly. All existing draft features keep working; all contract tests pass (with the deliberately-updated ones noted below).
+**Success:** an author can **bring in a piece of real work** (paste/upload code) and build a grounded document around it as text + code + cite blocks — reorder/add/delete — and it still saves, grounds in sources, shows provenance, and round-trips losslessly. All existing draft features keep working; all contract tests pass (with the deliberately-updated ones noted below).
 
 ---
 
@@ -67,7 +78,8 @@ Keep the contract-locked **3-column shell** (identity rail · main · inspector)
   - Renders `blocks[]` in order. Each block is an editable row with a left "kind" affordance + a hover/focus toolbar (move up / move down / delete / change type).
   - **Add-block control** between/after blocks: text · code · cite (a `+` menu).
   - **text block:** an auto-growing `<textarea>`/contenteditable line(s) (markdown-ish; keeps Draft's serif reading measure from the document refinement). Enter at the end of a text block can split into a new text block (P1: a simple add-block is enough; smart splitting optional).
-  - **code block:** a monospace `<textarea>` + a language tag. Phase-1 decision: render **plain monospace** (no syntax highlighting) to avoid any dependency question; adopt highlighting only if a highlighter already exists in the dependency tree, otherwise it is deferred. No new highlighting dependency in Phase 1.
+  - **code block (= evidence):** a monospace `<textarea>` + a language tag + an optional **source attribution** caption (repo URL / file path / "from QBook"), so the code reads as *cited evidence of work done elsewhere*, not as a dev scratchpad. Filled by **paste or file upload** (the Phase-1 import path), or typed. Render **plain monospace** (no syntax highlighting) to avoid any dependency question; adopt highlighting only if a highlighter already exists in the dependency tree, else deferred. Not executed.
+  - **import path (Phase-1 slice of the killer move):** an "add code/text from a file" control (upload a `.py`/`.ts`/`.md`/`.txt` → its text fills a `code` or `text` block, with the filename captured as attribution) and paste. Repo / notebook / QBook ingest is later; Phase 1 proves the *bring-your-real-work-in* motion with the simplest version.
   - **cite block:** rendered from a chosen reference (reuses the `@`-reference picker — selecting a source inserts a `cite` block instead of an inline token). Shows label + excerpt, links to the source.
   - Reorder in P1 = up/down buttons (keyboard-accessible). Drag-and-drop is deferred (polish).
 - **Reuse, don't rebuild:**
@@ -106,9 +118,11 @@ edit a block → update `blocks[]` (React state) → `blocksToBody(blocks)` → 
 
 ## Out of scope (later phases — do NOT build now)
 
-- **Phase 2:** `artifact` block — embed a live running thing (QBook `/optibook` iframe first, then any artifact) inside the document.
-- **Phase 3:** live code execution (sandbox, e.g. JS / Pyodide) so `code` blocks run with captured output.
-- **Phase 4:** house the Studio as a first-class app under Digital Me (Role-OS); documents flow to evidence/Ask; rename/IA.
+Re-prioritized after the representation/import positioning call:
+
+- **Phase 2 — deeper ingest (the differentiator):** richer import — a repo / notebook / QBook reference that pulls real work in as attributed evidence; and the `artifact` block — embed a live running thing (QBook `/optibook` iframe first, then any artifact) inside the document so "the build" is *represented live*.
+- **Phase 3 — Digital Me housing:** Studio surfaced as a first-class app under Digital Me (Role-OS); documents flow to evidence / Ask; rename/IA.
+- **Phase 4 (low priority / maybe never):** live in-app code execution (sandbox). Deprioritized — representation doesn't need execution; the user already ran it in VSCode/QBook. Revisit only if a concrete need appears.
 - Drag-and-drop block reordering (P1 = up/down buttons), per-block AI, collaborative/multi-doc.
 
 ---
