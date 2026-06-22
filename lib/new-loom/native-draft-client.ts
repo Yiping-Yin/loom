@@ -9,7 +9,9 @@ export type NativeDraftStorage = {
   }): Promise<NewLoomDraftRecord>;
   update(
     id: string,
-    patch: Partial<Pick<NewLoomDraftRecord, 'title' | 'body' | 'references'>>,
+    patch: Partial<
+      Pick<NewLoomDraftRecord, 'title' | 'body' | 'references' | 'includedInDigitalMe'>
+    >,
   ): Promise<NewLoomDraftRecord>;
 };
 
@@ -60,6 +62,7 @@ export function nativeDraftStorage(): NativeDraftStorage | null {
         title: patch.title,
         body: patch.body,
         references: patch.references,
+        includedInDigitalMe: patch.includedInDigitalMe,
       });
       return reply as NewLoomDraftRecord;
     },

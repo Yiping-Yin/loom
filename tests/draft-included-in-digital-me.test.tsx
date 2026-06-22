@@ -7,7 +7,9 @@ import {
   updateDraft,
   listDrafts,
   type DraftStorageAdapter,
+  type NewLoomDraftRecord,
 } from '../lib/new-loom/draft-storage';
+import { nativeDraftStorage } from '../lib/new-loom/native-draft-client';
 
 // Task 1 (the moat): a draft the user explicitly marks `includedInDigitalMe`
 // is the curation gate that later exposes it to BOTH the Ask corpus and
@@ -94,6 +96,84 @@ test('readDrafts drops a record with a non-boolean includedInDigitalMe but keeps
   assert.equal(drafts.length, 1);
   assert.equal(drafts[0]?.id, 'good');
   assert.equal(drafts[0]?.includedInDigitalMe, true);
+});
+
+// Native-store path (the production macOS target): in the installed app the
+// draft is loaded from and saved through the `loomDrafts` WebKit bridge, NOT
+// localStorage. The curation flag (the heart of the moat gate) must ride that
+// same bridge or it silently fails to persist while the UI shows 'Included'.
+function installNativeBridge() {
+  const posted: Array<Record<string, unknown>> = [];
+  const win = {
+    webkit: {
+      messageHandlers: {
+        loomDrafts: {
+          postMessage(msg: unknown) {
+            posted.push(msg as Record<string, unknown>);
+            const m = msg as Record<string, unknown>;
+            // Echo a record back so update() resolves like the real bridge.
+            const record: NewLoomDraftRecord = {
+              id: (m.id as string) ?? 'native-1',
+              title: (m.title as string) ?? 'Native draft',
+              body: (m.body as string) ?? '',
+              references: [],
+              includedInDigitalMe: m.includedInDigitalMe as boolean | undefined,
+              createdAt: '2026-06-23T00:00:00.000Z',
+              updatedAt: '2026-06-23T00:00:00.000Z',
+            };
+            return Promise.resolve(record);
+          },
+        },
+      },
+    },
+  };
+  Object.assign(globalThis, { window: win });
+  return posted;
+}
+
+function removeWindow() {
+  delete (globalThis as { window?: unknown }).window;
+}
+
+test('native draft bridge update() forwards includedInDigitalMe so the curation flag persists in the macOS app', async () => {
+  const posted = installNativeBridge();
+  try {
+    const store = nativeDraftStorage();
+    assert.ok(store, 'native store should be available when the loomDrafts bridge is present');
+
+    const updated = await store!.update('native-1', { includedInDigitalMe: true });
+    assert.equal(updated.includedInDigitalMe, true);
+
+    // The contract gap was that the bridge message excluded includedInDigitalMe;
+    // assert it now rides the same update message as title/body/references.
+    const updateMsg = posted.find((m) => m.action === 'update');
+    assert.ok(updateMsg, 'an update message should be posted to the bridge');
+    assert.equal(updateMsg!.includedInDigitalMe, true);
+
+    // Clearing the flag must also propagate (false, not just truthy set).
+    const cleared = await store!.update('native-1', { includedInDigitalMe: false });
+    assert.equal(cleared.includedInDigitalMe, false);
+    const clearMsg = posted.filter((m) => m.action === 'update').at(-1);
+    assert.equal(clearMsg!.includedInDigitalMe, false);
+  } finally {
+    removeWindow();
+  }
+});
+
+test('DraftClient toggle persists through the native-aware persist path (not the browser-only adapter)', () => {
+  const repoRoot = path.resolve(__dirname, '..');
+  const src = fs.readFileSync(path.join(repoRoot, 'app/draft/DraftClient.tsx'), 'utf8');
+
+  // The toggle handler must route through persistDraft (which forwards to the
+  // native bridge in the macOS app), carrying the new flag. A browser-only
+  // updateDraft(...) call inside the toggle would re-open the native blocker.
+  const toggle = src.slice(
+    src.indexOf('function toggleIncludedInDigitalMe'),
+    src.indexOf('const ensureReferencePickerDocs'),
+  );
+  assert.ok(toggle.length > 0, 'toggleIncludedInDigitalMe should be present');
+  assert.match(toggle, /persistDraft\(/);
+  assert.doesNotMatch(toggle, /updateDraft\(/);
 });
 
 test('DraftClient renders an Include in Digital Me toggle wired to updateDraft', () => {

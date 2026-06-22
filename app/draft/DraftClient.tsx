@@ -644,16 +644,19 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
     nextBody: string,
     nextReferences = currentDraft.references,
     nextBlocks?: NewLoomDraftDocBlock[],
+    nextIncludedInDigitalMe = currentDraft.includedInDigitalMe,
   ) => {
     const nativeStore = nativeDraftStorage();
     if (nativeStore) {
       // The native bridge persists body-only (blocks land in a later phase); the
       // body is already the kept-in-sync serialization of the blocks, so native
-      // readers stay correct.
+      // readers stay correct. The curation flag (the moat gate) must ride the
+      // same bridge so it survives in the native macOS app, not just localStorage.
       return await nativeStore.update(currentDraft.id, {
         title: nextTitle,
         body: nextBody,
         references: nextReferences,
+        includedInDigitalMe: nextIncludedInDigitalMe,
       });
     }
 
@@ -665,6 +668,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
       title: nextTitle,
       body: nextBody,
       references: nextReferences,
+      includedInDigitalMe: nextIncludedInDigitalMe,
       ...(nextBlocks ? { blocks: nextBlocks } : {}),
     });
   };
@@ -781,26 +785,23 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
 
   // The moat's curation gate: opting this draft into Digital Me maps it to an
   // ArtifactRef downstream, so it can feed BOTH the Ask corpus and capability
-  // derivation. Persist the flag on the draft record via the localStorage
-  // fallback (the native store persists body-only today), mirroring the
-  // optimistic setDraft pattern used elsewhere.
+  // derivation. Persist through the SAME native-aware path as every other draft
+  // mutation (persistDraft → native bridge in the macOS app, localStorage in
+  // plain browser) so the flag survives in the production target instead of
+  // diverging from the optimistic UI.
   function toggleIncludedInDigitalMe() {
     if (!draft) return;
     const next = !draft.includedInDigitalMe;
     setDraft({ ...draft, includedInDigitalMe: next });
     setSaveState('idle');
-    const fallbackStorage = browserDraftStorage();
-    if (!fallbackStorage) {
-      setSaveState('unavailable');
-      return;
-    }
-    try {
-      const updated = updateDraft(fallbackStorage, draft.id, { includedInDigitalMe: next });
-      setDraft(updated);
-      setSaveState('saved');
-    } catch {
-      setSaveState('unavailable');
-    }
+    void persistDraft(draft, title, body, draft.references, undefined, next)
+      .then((updated) => {
+        setDraft(updated);
+        setSaveState('saved');
+      })
+      .catch(() => {
+        setSaveState('unavailable');
+      });
   }
 
   const ensureReferencePickerDocs = async () => {
