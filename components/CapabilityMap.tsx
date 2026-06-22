@@ -102,6 +102,61 @@ const RIVER_SCATTER = 34; // per-star vertical scatter around the band
 const HORIZON_Y = 224;
 const MAX_COMETS = 3;
 
+type RiverGeo = {
+  vw: number;
+  vh: number;
+  x0: number;
+  x1: number;
+  yMid: number;
+  amp: number;
+  scatter: number;
+  horizonY: number;
+  moonCx: number;
+  moonR: number;
+  moonGlowR: number;
+  compact: boolean;
+};
+
+/**
+ * River geometry adapts to capability count. A rich profile (>3) keeps the full
+ * wide band, byte-for-byte as before. A sparse profile (≤3) gets a small,
+ * contained constellation — so one capability reads as a deliberate seed, not a
+ * lone dot stranded on a full-width void.
+ */
+function geometryFor(n: number): RiverGeo {
+  if (n > 3) {
+    return {
+      vw: STAR_VIEW_W,
+      vh: STAR_VIEW_H,
+      x0: RIVER_X0,
+      x1: RIVER_X1,
+      yMid: RIVER_Y_MID,
+      amp: RIVER_AMP,
+      scatter: RIVER_SCATTER,
+      horizonY: HORIZON_Y,
+      moonCx: 44,
+      moonR: 26,
+      moonGlowR: 46,
+      compact: false,
+    };
+  }
+  const vw = 92 + n * 150 + 80; // n1→322, n2→472, n3→622
+  return {
+    vw,
+    vh: 188,
+    x0: 92,
+    x1: vw - 46,
+    yMid: 100,
+    amp: 18,
+    scatter: 22,
+    horizonY: 158,
+    moonCx: 36,
+    moonR: 21,
+    moonGlowR: 36,
+    compact: true,
+  };
+}
+
 /** Deterministic 32-bit hash of a string (FNV-1a). No Math.random. */
 function hashId(id: string): number {
   let h = 0x811c9dc5;
@@ -161,21 +216,22 @@ function pickComets(capabilities: BeginnerCapability[]): Set<string> {
   return new Set(chosen.map((c) => c.id));
 }
 
-function layoutStars(capabilities: BeginnerCapability[]): StarLayout[] {
+function layoutStars(capabilities: BeginnerCapability[], geo: RiverGeo): StarLayout[] {
   const comets = pickComets(capabilities);
   const n = capabilities.length;
+  const span = geo.x1 - geo.x0;
 
   return capabilities.map((cap, i) => {
     // Even spread along the band, nudged by a stable per-id hash so the field
     // feels scattered rather than gridded — deterministic, SSR-stable.
     const h = hashId(cap.id);
     const t = n === 1 ? 0.5 : (i + 0.5) / n; // 0..1 along the river
-    const jitterX = (h - 0.5) * ((RIVER_X1 - RIVER_X0) / Math.max(n, 1)) * 0.45;
-    const cx = RIVER_X0 + t * (RIVER_X1 - RIVER_X0) + jitterX;
+    const jitterX = (h - 0.5) * (span / Math.max(n, 1)) * 0.45;
+    const cx = geo.x0 + t * span + jitterX;
 
     // Band centerline sweeps gently; each star scatters around it by its hash.
-    const bandY = RIVER_Y_MID - Math.sin(t * Math.PI) * RIVER_AMP;
-    const scatter = (hashId(cap.id + '~y') - 0.5) * 2 * RIVER_SCATTER;
+    const bandY = geo.yMid - Math.sin(t * Math.PI) * geo.amp;
+    const scatter = (hashId(cap.id + '~y') - 0.5) * 2 * geo.scatter;
     const cy = bandY + scatter;
 
     const mag = magnitude(cap);
@@ -183,9 +239,9 @@ function layoutStars(capabilities: BeginnerCapability[]): StarLayout[] {
     const glow = r + 6 + mag * 14;
 
     // Local band direction (derivative of the sweep) for the comet tail.
-    const dDir = -Math.cos(t * Math.PI) * RIVER_AMP * Math.PI;
-    const len = Math.hypot(RIVER_X1 - RIVER_X0, dDir) || 1;
-    const tailDx = (RIVER_X1 - RIVER_X0) / len;
+    const dDir = -Math.cos(t * Math.PI) * geo.amp * Math.PI;
+    const len = Math.hypot(span, dDir) || 1;
+    const tailDx = span / len;
     const tailDy = dDir / len;
 
     return {
@@ -213,13 +269,19 @@ function StarRiver({
   activeId: string | null;
   onSelect: (id: string) => void;
 }) {
-  const stars = layoutStars(capabilities);
+  const geo = geometryFor(capabilities.length);
+  const stars = layoutStars(capabilities, geo);
 
   return (
-    <div className={styles.starRiver} data-star-river="" aria-hidden={false}>
+    <div
+      className={`${styles.starRiver}${geo.compact ? ` ${styles.starRiverCompact}` : ''}`}
+      data-star-river=""
+      data-compact={geo.compact ? '' : undefined}
+      aria-hidden={false}
+    >
       <svg
         className={styles.starRiverSvg}
-        viewBox={`0 0 ${STAR_VIEW_W} ${STAR_VIEW_H}`}
+        viewBox={`0 0 ${geo.vw} ${geo.vh}`}
         preserveAspectRatio="xMidYMid meet"
         role="group"
         aria-label="Capability star-river — each star is a capability; brighter stars and comets are your most proven."
@@ -266,19 +328,19 @@ function StarRiver({
           className={styles.horizon}
           data-horizon=""
           x1={0}
-          y1={HORIZON_Y}
-          x2={STAR_VIEW_W}
-          y2={HORIZON_Y}
+          y1={geo.horizonY}
+          x2={geo.vw}
+          y2={geo.horizonY}
         />
 
         {/* Moon (Memory) anchor at the left end. */}
         <g className={styles.moonAnchor} data-moon-anchor="" aria-hidden="true">
-          <circle className={styles.moonGlow} cx={44} cy={RIVER_Y_MID} r={46} />
-          <circle cx={44} cy={RIVER_Y_MID} r={26} fill="url(#cmMoon)" />
+          <circle className={styles.moonGlow} cx={geo.moonCx} cy={geo.yMid} r={geo.moonGlowR} />
+          <circle cx={geo.moonCx} cy={geo.yMid} r={geo.moonR} fill="url(#cmMoon)" />
         </g>
 
         {/* Faint band guide the stars rest along. */}
-        <RiverBand />
+        <RiverBand geo={geo} />
 
         {/* Comet tails first (behind the heads). */}
         {stars
@@ -302,11 +364,11 @@ function StarRiver({
 }
 
 /** Faint flowing band the stars sit along (decorative). */
-function RiverBand() {
+function RiverBand({ geo }: { geo: RiverGeo }) {
   // A quadratic sweep matching the centerline used in layoutStars.
-  const midX = (RIVER_X0 + RIVER_X1) / 2;
-  const peakY = RIVER_Y_MID - RIVER_AMP;
-  const d = `M ${RIVER_X0} ${RIVER_Y_MID} Q ${midX} ${peakY - 30} ${RIVER_X1} ${RIVER_Y_MID}`;
+  const midX = (geo.x0 + geo.x1) / 2;
+  const peakY = geo.yMid - geo.amp;
+  const d = `M ${geo.x0} ${geo.yMid} Q ${midX} ${peakY - 30} ${geo.x1} ${geo.yMid}`;
   return <path className={styles.riverBand} d={d} fill="none" aria-hidden="true" />;
 }
 
