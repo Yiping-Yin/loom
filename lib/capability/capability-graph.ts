@@ -8,6 +8,16 @@ export type CapabilityEvidence = {
   kind: 'education' | 'experience' | 'work' | 'artifact';
   refId: string;
   label: string;
+  /**
+   * A short, grounded quote from the source text — the window around the matched
+   * keyword, control-stripped + whitespace-collapsed + bounded (~120-160 chars,
+   * ellipsized). Present only when the evidence was matched against meaningful
+   * text (an artifact/draft excerpt, an experience bullet, a work description, an
+   * education line); a bare label-only source carries none. This is what makes
+   * the capability map "inspectable elevation": a viewer SEES the proof, not just
+   * that proof exists.
+   */
+  excerpt?: string;
 };
 
 export type BeginnerCapability = {
@@ -124,6 +134,99 @@ function matchesTokens(text: string, tokens: readonly string[]): boolean {
   return tokens.some((t) => text.includes(t));
 }
 
+// Excerpt window bounds. A grounded quote is the slice of source text around the
+// matched keyword: long enough to read as a real sentence-window, short enough to
+// stay a glanceable chip. The upper cap mirrors the storage-seam discipline used
+// elsewhere — bounded + control-stripped so a tampered/huge field can never blow
+// up the card.
+const EXCERPT_MAX = 160;
+const EXCERPT_PAD = 60; // chars of context kept on each side of the keyword
+
+/**
+ * Strip ASCII control characters (keeping ordinary whitespace) and collapse
+ * whitespace runs to single spaces. Same discipline as the artifact storage seam,
+ * so an excerpt never carries garbage from an extracted PDF.
+ */
+function cleanText(raw: string): string {
+  return raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Build a short, grounded excerpt: the window of `source` around the first
+ * matched token, control-stripped + collapsed + bounded to EXCERPT_MAX, with a
+ * leading/trailing ellipsis when the window is clipped. Matching is
+ * case-insensitive against the lower-cased source, but the returned text
+ * preserves the ORIGINAL casing.
+ *
+ * Returns undefined when there's no meaningful text or no token matches — a
+ * label-only source (e.g. a bare role title with no bullets) never invents a
+ * quote.
+ */
+function buildExcerpt(source: string | undefined, tokens: readonly string[]): string | undefined {
+  if (!source) return undefined;
+  const cleaned = cleanText(source);
+  if (!cleaned) return undefined;
+
+  const lower = cleaned.toLowerCase();
+  let hit = -1;
+  let hitLen = 0;
+  for (const t of tokens) {
+    const idx = lower.indexOf(t);
+    if (idx !== -1 && (hit === -1 || idx < hit)) {
+      hit = idx;
+      hitLen = t.length;
+    }
+  }
+  if (hit === -1) return undefined;
+
+  // Window the keyword: pad on both sides, clamped to the string bounds.
+  let start = Math.max(0, hit - EXCERPT_PAD);
+  let end = Math.min(cleaned.length, hit + hitLen + EXCERPT_PAD);
+
+  // Snap the start to a word boundary so we don't begin mid-word (only when we
+  // actually clipped the head).
+  if (start > 0) {
+    const space = cleaned.indexOf(' ', start);
+    if (space !== -1 && space < hit) start = space + 1;
+  }
+  if (end < cleaned.length) {
+    const space = cleaned.lastIndexOf(' ', end);
+    if (space !== -1 && space > hit + hitLen) end = space;
+  }
+
+  let window = cleaned.slice(start, end).trim();
+  const clippedHead = start > 0;
+  let clippedTail = end < cleaned.length;
+
+  // Hard-cap the final length, leaving room for the ellipses.
+  if (window.length > EXCERPT_MAX - 2) {
+    window = window.slice(0, EXCERPT_MAX - 2).trim();
+    clippedTail = true;
+  }
+
+  return `${clippedHead ? '…' : ''}${window}${clippedTail ? '…' : ''}`;
+}
+
+/**
+ * Attach a grounded excerpt to an evidence item if it doesn't already carry one.
+ * First meaningful excerpt wins: the same evidence object is shared across the
+ * candidates it backs, so we set it once (the earliest matched-text source) and
+ * leave it stable thereafter.
+ */
+function attachExcerpt(
+  ev: CapabilityEvidence,
+  source: string | undefined,
+  tokens: readonly string[],
+): void {
+  if (ev.excerpt) return;
+  const excerpt = buildExcerpt(source, tokens);
+  if (excerpt) ev.excerpt = excerpt;
+}
+
 /**
  * Derive 1–8 capabilities from a `BeginnerProfile` using a deterministic,
  * offline-safe heuristic (no Math.random, no network/LLM).
@@ -194,11 +297,15 @@ export function deriveCapabilitiesHeuristic(profile: BeginnerProfile): BeginnerC
   profile.works?.forEach((work, i) => {
     if (!work.title) return;
     const workText = textTokens([work.title, work.description, work.role]);
+    // Grounded quote comes from the prose (description/role), never the title —
+    // the title is the chip label, so quoting it would just echo the label.
+    const workProse = [work.description, work.role].filter(Boolean).join(' ');
     let mapped = false;
     for (const entry of KEYWORD_MAP) {
       if (matchesTokens(workText, entry.tokens)) {
         ensure(entry.label);
         candidateMap.get(entry.label)!.add(workEvidence[i]);
+        attachExcerpt(workEvidence[i], workProse, entry.tokens);
         mapped = true;
       }
     }
@@ -210,22 +317,26 @@ export function deriveCapabilitiesHeuristic(profile: BeginnerProfile): BeginnerC
 
   // 1c. Keyword scan of experience bullets.
   profile.experience?.forEach((exp, i) => {
-    const bulletText = textTokens(exp.bullets ?? []);
+    const bulletProse = (exp.bullets ?? []).filter(Boolean).join(' ');
+    const bulletText = bulletProse.toLowerCase();
     for (const entry of KEYWORD_MAP) {
       if (matchesTokens(bulletText, entry.tokens)) {
         ensure(entry.label);
         candidateMap.get(entry.label)!.add(expEvidence[i]);
+        attachExcerpt(expEvidence[i], bulletProse, entry.tokens);
       }
     }
   });
 
   // 1d. Keyword scan of works descriptions.
   profile.works?.forEach((work, i) => {
-    const descText = textTokens([work.description, work.role]);
+    const workProse = [work.description, work.role].filter(Boolean).join(' ');
+    const descText = workProse.toLowerCase();
     for (const entry of KEYWORD_MAP) {
       if (matchesTokens(descText, entry.tokens)) {
         ensure(entry.label);
         candidateMap.get(entry.label)!.add(workEvidence[i]);
+        attachExcerpt(workEvidence[i], workProse, entry.tokens);
       }
     }
   });
@@ -248,6 +359,10 @@ export function deriveCapabilitiesHeuristic(profile: BeginnerProfile): BeginnerC
     for (const entry of KEYWORD_MAP) {
       if (matchesTokens(artText, entry.tokens) && candidateMap.has(entry.label)) {
         candidateMap.get(entry.label)!.add(ev);
+        // Grounded quote comes from the document body only — the label/name are
+        // the chip's own text, so quoting them would echo the label. A bare-label
+        // artifact (no extractedText) carries no excerpt.
+        attachExcerpt(ev, art.extractedText, entry.tokens);
       }
     }
     // Also match against education/experience/works for the artifact.
@@ -266,10 +381,14 @@ export function deriveCapabilitiesHeuristic(profile: BeginnerProfile): BeginnerC
   // backed only by a degree should still surface, not be silently dropped.
   profile.education?.forEach((edu, i) => {
     const eduText = textTokens([edu.institution, edu.qualification, edu.field, edu.notes]);
+    // Grounded quote comes from the field of study / notes / qualification — the
+    // institution is the chip label, so it's excluded from the quote.
+    const eduProse = [edu.field, edu.notes, edu.qualification].filter(Boolean).join(' ');
     for (const entry of KEYWORD_MAP) {
       if (matchesTokens(eduText, entry.tokens)) {
         ensure(entry.label);
         candidateMap.get(entry.label)!.add(eduEvidence[i]);
+        attachExcerpt(eduEvidence[i], eduProse, entry.tokens);
       }
     }
   });
@@ -359,11 +478,21 @@ export function normalizeCapabilities(raw: unknown): BeginnerCapability[] {
           if (!VALID_KINDS.has(evObj.kind as string)) return null;
           if (typeof evObj.refId !== 'string') return null;
           if (typeof evObj.label !== 'string') return null;
-          return {
+          const out: CapabilityEvidence = {
             kind: evObj.kind as CapabilityEvidence['kind'],
             refId: evObj.refId,
             label: evObj.label,
           };
+          // Carry the optional grounded excerpt through, sanitized at the seam:
+          // a non-string is dropped, and an oversized/garbage value is
+          // control-stripped + collapsed + bounded (mirrors the heuristic's own
+          // discipline), so untrusted LLM/old-storage input can't smuggle a huge
+          // or control-laden quote onto the card.
+          if (typeof evObj.excerpt === 'string') {
+            const cleaned = cleanText(evObj.excerpt);
+            if (cleaned) out.excerpt = cleaned.length > EXCERPT_MAX ? cleaned.slice(0, EXCERPT_MAX) : cleaned;
+          }
+          return out;
         })
         .filter((ev): ev is CapabilityEvidence => ev !== null);
 
