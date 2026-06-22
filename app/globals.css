@@ -175,6 +175,18 @@ a[class*="loom-"] {
     0 0 0 0.5px rgba(29, 32, 35, 0.06),
     inset 0 -0.5px 0 rgba(70, 76, 82, 0.1);
 
+  /* Owner-page glass — ONE source of truth for the dark-scene panels that
+     were each re-rolling their own recipe. Composes on --mat-*; the blur is
+     tuned slightly softer than the full system glass for the lit dark scenes.
+     Bespoke scenes (Role-OS lit room, the ledger cover) keep their own optics. */
+  --loom-glass-bg: var(--mat-reg-bg);
+  --loom-glass-blur: saturate(140%) blur(20px);
+  --loom-glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 36px rgba(0, 0, 0, 0.5);
+  --signature-cyan-soft: color-mix(in srgb, var(--signature-cyan) 35%, transparent);
+
   /* Categorical highlights — cool, low-area identity tints. Question,
      source, and relation chips now live in the same cyan/silver field as
      the global Loom chrome; no gold/sage/indigo legacy palette. */
@@ -23770,7 +23782,6 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --lcv-glass:rgba(18,20,22,0.58);
   --lcv-glass-nav:rgba(7,8,9,0.72);
   --lcv-glass-border:var(--line);
-  --lcv-glass-shadow:var(--keylight),var(--float-2),inset 0 -1px 0 rgba(0,0,0,0.35);
   --lcv-shell-max:1440px;
   /* the shared horizontal inset of the body content column: the rail's left
      text-column padding and the ledger's right panel padding are this same
@@ -23900,10 +23911,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
     linear-gradient(180deg,rgba(34,38,42,0.48),rgba(20,23,26,0.94));
   -webkit-backdrop-filter:blur(28px) saturate(110%);
   backdrop-filter:blur(28px) saturate(110%);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.06),
-    inset 0 -1px 0 rgba(0,0,0,0.4),
-    0 14px 36px rgba(0,0,0,0.5);
+  box-shadow:var(--loom-glass-shadow);
   overflow:hidden}
 
 /* ============================================================
@@ -24052,10 +24060,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   background:
     linear-gradient(135deg,rgba(238,241,242,0.075),rgba(180,187,191,0.028) 32%,transparent 58%),
     linear-gradient(180deg,rgba(34,38,42,0.48),rgba(20,23,26,0.94));
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.06),
-    inset 0 -1px 0 rgba(0,0,0,0.4),
-    0 14px 36px rgba(0,0,0,0.5);
+  box-shadow:var(--loom-glass-shadow);
   padding:20px 22px;display:flex;flex-direction:column;gap:4px;min-height:150px}
 /* fixed head height + centered lockups so both card bodies start on one
    baseline regardless of wordmark vs crest cap-height */

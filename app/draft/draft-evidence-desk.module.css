@@ -43,14 +43,15 @@
   --draft-accent-strong: var(--signature-cyan-hi);
   --draft-accent-soft: color-mix(in srgb, var(--signature-cyan) 10%, transparent);
 
-  /* Reusable lit-glass material recipes (single key light, top-left). */
+  /* Reusable lit-glass material recipes (single key light, top-left). The
+     bespoke single-key-light gradient is this scene's core optic, so it is
+     kept as-is. Only the generic elevation shadow is consolidated: it is
+     byte-identical to the shared --loom-glass-shadow, so this composes on the
+     one source of truth with no render change. */
   --draft-glass-bg:
     linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
     linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
-  --draft-glass-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.40),
-    0 14px 36px rgba(0, 0, 0, 0.50);
+  --draft-glass-shadow: var(--loom-glass-shadow);
   --draft-raised-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45),
@@ -210,9 +211,11 @@
 /* Proof strip — a lit instrument cluster, luminance-separated tiles. */
 .surface :global(.new-loom-draft__proof-strip) {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-2);
   background: var(--draft-glass-bg);
   box-shadow: var(--draft-glass-shadow);
+  -webkit-backdrop-filter: var(--loom-glass-blur);
+  backdrop-filter: var(--loom-glass-blur);
   overflow: hidden;
   gap: 1px;
 }
@@ -239,9 +242,11 @@
   gap: 1rem;
   padding: 1.1rem;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-2);
   background: var(--draft-glass-bg);
   box-shadow: var(--draft-glass-shadow);
+  -webkit-backdrop-filter: var(--loom-glass-blur);
+  backdrop-filter: var(--loom-glass-blur);
 }
 .surface :global(.new-loom-draft__type-copy h2) {
   color: var(--text-1);
@@ -259,15 +264,15 @@
 .surface :global(.new-loom-draft__type-button) {
   min-height: 3rem;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-1);
   background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
   box-shadow: var(--keylight);
   color: var(--text-2);
   transition:
-    background 0.18s var(--ease),
-    border-color 0.18s var(--ease),
-    box-shadow 0.18s var(--ease),
-    transform 0.18s var(--ease);
+    background var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
 }
 .surface :global(.new-loom-draft__type-button span) {
   color: var(--text-1);
@@ -297,7 +302,7 @@
    ====================================================================== */
 .surface :global(.new-loom-draft__editor-shell) {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-3);
   background: var(--draft-glass-bg);
   box-shadow: var(--draft-raised-shadow);
 }
@@ -342,17 +347,17 @@
 .surface :global(.new-loom-draft .new-loom-shell__action),
 .surface :global(.new-loom-draft__reference-action) {
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--r-1);
   background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
   box-shadow: var(--keylight);
   color: var(--text-1);
   font-weight: 500;
   transition:
-    background 0.18s var(--ease),
-    border-color 0.18s var(--ease),
-    box-shadow 0.18s var(--ease),
-    color 0.18s var(--ease),
-    transform 0.18s var(--ease);
+    background var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease),
+    color var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
 }
 .surface :global(.new-loom-draft .new-loom-shell__action:hover:not(:disabled)),
 .surface :global(.new-loom-draft__reference-action:hover:not(:disabled)) {
@@ -388,9 +393,11 @@
    ====================================================================== */
 .surface :global(.new-loom-draft__reference-picker) {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-2);
   background: var(--draft-glass-bg);
   box-shadow: var(--draft-glass-shadow);
+  -webkit-backdrop-filter: var(--loom-glass-blur);
+  backdrop-filter: var(--loom-glass-blur);
 }
 .surface :global(.new-loom-draft__reference-picker-head h2),
 .surface :global(.new-loom-draft__source-tiles h2),
@@ -415,13 +422,13 @@
 }
 .surface :global(.new-loom-draft__reference-results) {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-1);
   background: var(--ink-3);
 }
 .surface :global(.new-loom-draft__reference-result) {
   border-bottom: 1px solid var(--line);
   color: var(--text-1);
-  transition: background 0.18s var(--ease);
+  transition: background var(--dur-2) var(--ease);
 }
 .surface :global(.new-loom-draft__reference-result:hover),
 .surface :global(.new-loom-draft__reference-result:focus-visible) {
@@ -469,7 +476,7 @@
 .surface :global(.new-loom-draft__inspector-tab) {
   color: var(--text-3);
   font-weight: 500;
-  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+  transition: background var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
 }
 .surface :global(.new-loom-draft__inspector-tab:hover) { color: var(--text-1); }
 .surface :global(.new-loom-draft__inspector-tab:focus-visible) {
@@ -523,11 +530,13 @@
   gap: 0.7rem;
   padding: 1rem;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--r-2);
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--signature-cyan) 10%, transparent), transparent 70%),
     var(--draft-glass-bg);
   box-shadow: var(--draft-glass-shadow);
+  -webkit-backdrop-filter: var(--loom-glass-blur);
+  backdrop-filter: var(--loom-glass-blur);
   position: relative;
 }
 .surface :global(.new-loom-draft__answer-flow ol) {
@@ -546,7 +555,7 @@
 }
 .surface :global(.new-loom-draft__answer-flow li) {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-1);
   background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
   box-shadow: var(--keylight);
 }
@@ -606,10 +615,12 @@
 .surface :global(.new-loom-draft__source-tile) {
   padding: 0.95rem;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-2);
   background: var(--draft-glass-bg);
   box-shadow: var(--draft-glass-shadow);
-  transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  -webkit-backdrop-filter: var(--loom-glass-blur);
+  backdrop-filter: var(--loom-glass-blur);
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
 }
 .surface :global(.new-loom-draft__source-tile:hover) {
   border-color: color-mix(in srgb, var(--signature-cyan) 40%, transparent);
@@ -661,9 +672,11 @@
 .surface :global(.new-loom-draft__provenance) {
   padding: 1.1rem;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--r-2);
   background: var(--draft-glass-bg);
   box-shadow: var(--draft-glass-shadow);
+  -webkit-backdrop-filter: var(--loom-glass-blur);
+  backdrop-filter: var(--loom-glass-blur);
 }
 .surface :global(.new-loom-draft__provenance li) {
   border-top: 1px solid var(--line);
