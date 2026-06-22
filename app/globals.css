@@ -19101,7 +19101,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    quiet evidence-first Archive); a short card no longer gets stretched to the
    tallest sibling with large trailing dead space. */
 .vd-section-page__list {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Credential ledger: a single vertical column the eye scans top-to-bottom,
+     not a 3-up tile board. */
+  grid-template-columns: 1fr;
   grid-auto-rows: auto;
   /* cards align to the top of their row and size to their own content (the
      band-label keeps its own align-self:start), so a short card no longer
@@ -19110,11 +19112,11 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__list--work {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .vd-section-page__list--projects {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 /* deliberate gap between two adjacent evidence groups (work vs projects) so
