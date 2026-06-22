@@ -16,7 +16,9 @@
  */
 
 import type { ArtifactRef, BeginnerProfile } from '../profile/beginner-profile';
+import { readBeginnerProfileLocal } from '../profile/profile-storage';
 import {
+  browserDraftStorage,
   listDrafts,
   type DraftStorageAdapter,
   type NewLoomDraftRecord,
@@ -143,4 +145,47 @@ export function mergeDraftArtifactsForDerivation(
   const seen = new Set(own.map((a) => a.id));
   const additions = draftArtifacts.filter((ref) => !seen.has(ref.id));
   return { ...profile, artifacts: [...own, ...additions] };
+}
+
+/**
+ * Fold the user's INCLUDED Studio drafts into a profile for the Ask path — the
+ * Ask half of the moat. PURE + testable: takes the profile and a draft adapter,
+ * no globals.
+ *
+ * This is the shared seam the Ask CLIENT calls before sending its profile to
+ * /api/ask. The persisted beginner profile (read from localStorage) carries NO
+ * draft artifacts — drafts live in separate draft-storage — so without this the
+ * corpus never sees a curated draft and the me-artifact-* draft source + its
+ * openable citation are unreachable at runtime. Folding the drafts in here makes
+ * an included draft genuinely reach the corpus, count toward the grounding floor,
+ * and resolve to a /digital-me?edit=<draftId> citation.
+ *
+ * Discipline mirrors handleBuildCapabilities exactly (capability-derivation path):
+ *   - NULL profile → null. forceOwnerCorpus, or no local profile, passes null so
+ *     /api/ask falls back to the Yiping corpus exactly as before.
+ *   - NULL adapter (SSR / no localStorage) → the profile unchanged, never throws.
+ *   - NON-CLOBBERING + TRANSIENT: real uploaded artifacts win on id collision and
+ *     the input profile is never mutated. The result is sent, never persisted, so
+ *     the user's real profile.artifacts are preserved.
+ */
+export function withIncludedDraftArtifacts(
+  profile: BeginnerProfile | null,
+  adapter: DraftStorageAdapter | null,
+): BeginnerProfile | null {
+  if (!profile) return null;
+  if (!adapter) return profile;
+  return mergeDraftArtifactsForDerivation(profile, includedDraftArtifacts(adapter));
+}
+
+/**
+ * Browser wrapper around `withIncludedDraftArtifacts`: reads the persisted
+ * beginner profile and the live draft storage, then folds the user's included
+ * drafts into the profile the Ask widget posts to /api/ask. Returns null when
+ * there is no usable local profile (the Yiping-corpus fallback).
+ *
+ * SSR-safe: both reads return null outside a browser, so this returns null and
+ * the caller posts only the question.
+ */
+export function readBeginnerProfileForAsk(): BeginnerProfile | null {
+  return withIncludedDraftArtifacts(readBeginnerProfileLocal(), browserDraftStorage());
 }

@@ -9,7 +9,7 @@ import {
   type VerifiedDossierArtifactId,
 } from '../../lib/new-loom/verified-dossier-home';
 import { buildAskRequestBody } from '../../lib/new-loom/ask-yiping-body';
-import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
+import { readBeginnerProfileForAsk } from '../../lib/new-loom/draft-artifacts';
 import { safeHref } from '../../lib/profile/safe-href';
 import { getArtifactObjectUrl } from '../../lib/artifact/artifact-store';
 import { FileBadge } from './FileBadge';
@@ -244,7 +244,15 @@ export function AskYiping({
     try {
       // forceOwnerCorpus (owner showcase) → never read the visitor's local
       // profile, so the demo always answers from the Yiping corpus.
-      const profile = forceOwnerCorpus ? null : readBeginnerProfileLocal();
+      //
+      // Otherwise read the persisted beginner profile AND fold in the user's
+      // INCLUDED Studio drafts (the Ask half of the moat): the persisted profile
+      // has no draft artifacts — drafts live in separate draft-storage — so
+      // readBeginnerProfileForAsk merges includedDraftArtifacts into it (the same
+      // non-clobbering, transient, NOT-persisted merge handleBuildCapabilities
+      // uses for derivation). Without this an included draft never reaches the
+      // corpus, so it can't ground/cite an answer.
+      const profile = forceOwnerCorpus ? null : readBeginnerProfileForAsk();
       const response = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
