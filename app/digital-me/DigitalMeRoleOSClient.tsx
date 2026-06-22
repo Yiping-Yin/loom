@@ -466,11 +466,15 @@ export default function DigitalMeRoleOSClient() {
           <p className={styles.marketRoomLede}>
             Market-making simulator. Order book, leaderboard, ticker, local runtime.
           </p>
+          <div className={styles.marketRoomStatus} role="status">
+            <span className={styles.marketRoomDot} aria-hidden="true" />
+            <span className={styles.marketRoomConn}>Connected · local runtime</span>
+            <span className={styles.marketRoomTick}>Last tick 2026-06-10 · 17:42:08</span>
+          </div>
           <div className={styles.marketRoomMeta}>
-            <span>44 teams</span>
-            <span>26 instruments</span>
-            <span>Zero remote dependencies</span>
-            <span>Snapshot 2026-06-10</span>
+            <span><b>44</b> teams</span>
+            <span><b>26</b> instruments</span>
+            <span><b>0</b> remote deps</span>
           </div>
           <a
             className={styles.marketRoomLaunch}
