@@ -327,13 +327,38 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  /* Column stack: each evidence is a chip with its grounded quote beneath, so the
+     two read as one unit. (A wrapping row would orphan the quote from its chip.) */
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .evidenceItem {
-  /* passthrough — styling lives on the link/button */
+  /* The chip sits on top; the grounded excerpt (when present) sits beneath it. */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+/* Grounded supporting line — the corpus/quote register: muted, with a hairline
+   cyan rule, line-clamped so a long quote never breaks the card. Shows WHAT
+   proof backs the capability. */
+.evidenceExcerpt {
+  margin: 0;
+  padding-left: var(--space-3);
+  border-left: 1px solid color-mix(in srgb, var(--signature-cyan) 22%, transparent);
+  font-size: var(--fs-small);
+  font-style: italic;
+  line-height: var(--lh-body);
+  color: var(--text-3, rgba(255, 255, 255, 0.38));
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
 }
 
 .evidenceLink,
