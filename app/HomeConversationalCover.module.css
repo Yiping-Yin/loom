@@ -129,6 +129,25 @@
 
 .typingBubble {
   align-self: flex-start;
+  /* Reserve one line's height so the thread + input don't jump when LOOM
+     starts/stops "typing". */
+  display: flex;
+  align-items: center;
+  min-height: 1.5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .typingBubble {
+    animation: coverTypingIn var(--dur-2) var(--ease) both;
+  }
+  @keyframes coverTypingIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 .typingDots {
