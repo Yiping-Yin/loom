@@ -1,21 +1,14 @@
-import { DraftClient } from './DraftClient';
+'use client';
 
-export const metadata = {
-  title: 'Draft · Loom',
-  description: 'Write source-grounded drafts from verified Loom evidence.',
-};
+import { useEffect } from 'react';
+import { draftStubTarget } from '../../lib/new-loom/draft-routing';
 
-type DraftPageSearchParams = {
-  draftType?: string | string[];
-};
-
-type DraftPageProps = {
-  searchParams?: Promise<DraftPageSearchParams>;
-};
-
-export default async function DraftPage({ searchParams }: DraftPageProps) {
-  const params = (await searchParams) ?? {};
-  const draftType = Array.isArray(params.draftType) ? params.draftType[0] : params.draftType;
-
-  return <DraftClient initialDraftTypeId={draftType} />;
+// /draft is no longer a surface — the Studio editor lives inside /digital-me.
+// This stub forwards legacy links (bookmarks, the native app's remembered path,
+// alias routes) to /digital-me?edit=… so nothing breaks.
+export default function DraftRedirect() {
+  useEffect(() => {
+    window.location.replace(draftStubTarget(window.location.search));
+  }, []);
+  return <div className="loom-cosmic-field" aria-hidden />;
 }
