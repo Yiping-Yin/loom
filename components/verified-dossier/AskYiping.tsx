@@ -145,8 +145,7 @@ type AskStreamEvent = {
 const READ_ONLY_NOTE =
   "Live answers need an AI key — this deploy is read-only; the verified sources below are what Yiping's answer draws from.";
 
-const NO_SOURCES_NOTE =
-  'No inspectable sources yet — add your experience, education, or work to get cited answers about you.';
+const NO_SOURCES_NOTE = 'Add your experience, education, or work to get cited answers.';
 
 /**
  * The canned grounded Q&A (VERIFIED_DOSSIER_AI_PROMPT) seeds the panel before the

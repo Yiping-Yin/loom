@@ -279,7 +279,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
                 yet, point at the next action instead of leaving a bare "0". */}
             {caps.length > 0 && strongCount === 0 && (
               <p className={styles.capabilitiesNudge}>
-                Add proof below to turn these into evidence-backed strengths.
+                Add proof to back these with evidence.
               </p>
             )}
 

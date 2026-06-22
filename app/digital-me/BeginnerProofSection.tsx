@@ -173,7 +173,7 @@ export function BeginnerProofSection({ initialArtifacts = [] }: { initialArtifac
           ))}
         </ul>
       ) : (
-        <p className={styles.empty}>No documents yet — add one above to make your proof inspectable.</p>
+        <p className={styles.empty}>No documents yet.</p>
       )}
     </section>
   );
