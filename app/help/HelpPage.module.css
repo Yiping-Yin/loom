@@ -82,7 +82,7 @@
   color: var(--fg);
   font-family: var(--display);
   font-size: clamp(2.55rem, 5.2vw, 5.2rem);
-  font-weight: 510;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 0.96;
   text-shadow: 0 0 2.4rem rgba(255, 255, 255, 0.08);
@@ -166,7 +166,7 @@
   color: var(--fg);
   font-family: var(--display);
   font-size: 1.08rem;
-  font-weight: 520;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.1;
 }
@@ -216,7 +216,7 @@
   margin: 0;
   color: var(--fg);
   font-family: var(--display);
-  font-weight: 520;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.1;
 }
@@ -280,7 +280,7 @@
   color: var(--fg);
   font-family: var(--display);
   font-size: clamp(1.55rem, 2.3vw, 2.25rem);
-  font-weight: 520;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.04;
 }

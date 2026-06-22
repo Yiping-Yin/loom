@@ -99,7 +99,7 @@
   color: var(--fg);
   font-family: var(--display);
   font-size: clamp(2.55rem, 5.2vw, 5.4rem);
-  font-weight: 510;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 0.96;
   text-shadow: 0 0 2.4rem rgba(255, 255, 255, 0.08);
@@ -161,7 +161,7 @@
   color: var(--fg);
   font-family: var(--display);
   font-size: 1.28rem;
-  font-weight: 520;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1;
 }
@@ -232,7 +232,7 @@
   color: var(--fg);
   font-family: var(--display);
   font-size: 1.1rem;
-  font-weight: 520;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.12;
   text-overflow: ellipsis;
