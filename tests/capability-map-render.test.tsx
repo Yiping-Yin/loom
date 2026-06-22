@@ -220,7 +220,7 @@ test('CapabilityMap with empty capabilities renders the empty-state prompt, no c
   const text = visibleText(html);
 
   assert.match(text, /Build your capability map/);
-  assert.match(text, /Loom reads your experience/);
+  assert.match(text, /LOOM reads your experience/);
 
   // No card elements should be rendered.
   assert.doesNotMatch(html, /data-status=/);

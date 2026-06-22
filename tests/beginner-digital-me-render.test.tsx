@@ -310,8 +310,9 @@ test('BeginnerDigitalMe with capabilities renders CAPABILITIES eyebrow and headi
   const html = render(<BeginnerDigitalMe profile={PROFILE_WITH_CAPS} />);
   const text = visibleText(html);
 
-  // Capabilities section eyebrow and heading must appear.
-  assert.match(text, /CAPABILITIES/);
+  // Capabilities section eyebrow and heading must appear (eyebrow is Title-case
+  // in source; CSS uppercases it for display).
+  assert.match(text, /Capabilities/);
   assert.match(text, /What I can do/);
 });
 

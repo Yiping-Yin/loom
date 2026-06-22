@@ -34,7 +34,7 @@ export function IdentityEmptyState({
           <p>{section}</p>
           <h1 id={titleId}>This is your {section} page.</h1>
           <span>
-            Build your Loom to fill it with your own evidence — or see a finished
+            Build your LOOM to fill it with your own evidence — or see a finished
             example first.
           </span>
         </div>

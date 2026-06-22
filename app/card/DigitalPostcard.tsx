@@ -252,7 +252,7 @@ export function DigitalPostcard({
             <a href="/" className={styles.visitorSecondaryLink}>Home</a>
           </p>
           <p className={styles.makeOwn}>
-            <a href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>Make your own Loom →</a>
+            <a href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>Make your own LOOM →</a>
           </p>
         </div>
       )}
