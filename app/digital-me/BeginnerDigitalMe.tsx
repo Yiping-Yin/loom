@@ -165,31 +165,47 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             </nav>
           )}
 
-          {/* Primary action (cyan): "Keep building" for a thin profile, the
-              shareable digital postcard (pillar 3) once there's proof to show.
-              Both always render — only the emphasis/order swaps. The postcard
-              lives on the beginner surface, never in the owner's shared top nav. */}
-          <a href={primaryCta.href} className={styles.postcard}>
-            <span>{primaryCta.label}</span>
-            <ArrowUpRight
-              className={styles.postcardIcon}
-              aria-hidden="true"
-              size={13}
-              strokeWidth={1.8}
-            />
-          </a>
-
-          {/* Secondary action (ghost). /onboarding/profile preloads the stored
-              profile and returns here on save — "add more", not "start over". */}
-          <a href={secondaryCta.href} className={styles.keepBuilding}>
-            <span>{secondaryCta.label}</span>
-            <ArrowUpRight
-              className={styles.keepBuildingIcon}
-              aria-hidden="true"
-              size={13}
-              strokeWidth={1.8}
-            />
-          </a>
+          {established ? (
+            <>
+              {/* Established: the shareable postcard leads; "Keep building" is the
+                  ghost secondary. */}
+              <a href={primaryCta.href} className={styles.postcard}>
+                <span>{primaryCta.label}</span>
+                <ArrowUpRight
+                  className={styles.postcardIcon}
+                  aria-hidden="true"
+                  size={13}
+                  strokeWidth={1.8}
+                />
+              </a>
+              <a href={secondaryCta.href} className={styles.keepBuilding}>
+                <span>{secondaryCta.label}</span>
+                <ArrowUpRight
+                  className={styles.keepBuildingIcon}
+                  aria-hidden="true"
+                  size={13}
+                  strokeWidth={1.8}
+                />
+              </a>
+            </>
+          ) : (
+            <>
+              {/* Thin / new profile → ONE guided next step (coach). One reason,
+                  one action; everything else appears once there's real content. */}
+              <p className={styles.nextWhy}>
+                Add your work or a CV and your Digital Me can answer for you — with citations.
+              </p>
+              <a href="/onboarding/profile" className={styles.nextCta}>
+                <span>Keep building</span>
+                <ArrowUpRight
+                  className={styles.nextCtaIcon}
+                  aria-hidden="true"
+                  size={16}
+                  strokeWidth={1.8}
+                />
+              </a>
+            </>
+          )}
         </header>
 
         {/* Capabilities — centerpiece section showing what this person can do,
@@ -257,17 +273,22 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
         </div>
 
         {/* Proof & documents — uploaded artifacts as inspectable, verified proof.
-            Additive moat slice M2a: blobs in IndexedDB, citeable meta in the
-            profile (localStorage). M2b wires the cited-answer engine to these. */}
-        <div data-reveal="">
-          <BeginnerProofSection initialArtifacts={profile.artifacts ?? []} />
-        </div>
+            Progressive disclosure: appears once the profile is established; a thin
+            profile's single next step (Keep building) leads here via the chat. */}
+        {established && (
+          <div data-reveal="">
+            <BeginnerProofSection initialArtifacts={profile.artifacts ?? []} />
+          </div>
+        )}
 
         {/* Ask widget — centrepiece: answers are grounded in the beginner's
             localStorage profile which /api/ask receives automatically.
             All owner-specific copy is overridden here with generic text so
             the visitor sees prompts about this person, not Yiping's topics.
-            example={null} starts in a neutral idle state (no owner seed). */}
+            example={null} starts in a neutral idle state (no owner seed).
+            Progressive disclosure: appears once established — asking a near-empty
+            profile returns nothing useful, so a thin profile sees one next step. */}
+        {established && (
         <div data-reveal="">
           <AskYiping
             eyebrow="Ask me"
@@ -284,6 +305,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             placeholder="Ask me anything…"
           />
         </div>
+        )}
       </div>
     </main>
   );

@@ -206,6 +206,56 @@
   transform: translate(1px, -1px);
 }
 
+/* ── Thin-profile coach: one reason + one prominent next action ───────────────
+   A brand-new profile shows only identity + this single guided step. */
+.nextWhy {
+  margin: var(--space-3) 0 0;
+  max-width: 46ch;
+  font-family: var(--serif);
+  font-size: var(--fs-body-lg);
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.nextCta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-6);
+  border-radius: 999px;
+  font-family: var(--display);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  color: var(--ink-0);
+  background: var(--signature-cyan-hi);
+  text-decoration: none;
+  transition:
+    transform var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease);
+}
+
+.nextCta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature-cyan-hi) 18%, transparent);
+}
+
+.nextCta:focus-visible {
+  outline: 2px solid var(--signature-cyan-hi);
+  outline-offset: 3px;
+}
+
+.nextCtaIcon {
+  flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nextCta {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chip,
   .chipIcon,

@@ -267,9 +267,12 @@ test('artifact-store functions are SSR-safe: no IndexedDB call at import time', 
 
 test('BeginnerDigitalMe renders the Proof & documents section', () => {
   const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
+  // An artifact makes the profile "established" — the Proof section is part of the
+  // progressively-disclosed body that appears once there's real content.
   const profile: BeginnerProfile = {
     ...emptyBeginnerProfile(),
     home: { name: 'Alex Chen', headline: 'Engineer' },
+    artifacts: [{ id: 'af_seed', name: 'CV.pdf', kind: 'pdf' }],
   };
   const html = render(<BeginnerDigitalMe profile={profile} />);
   const text = visibleText(html);
