@@ -28,6 +28,14 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.match(draftClient, /new-loom-draft__document-header/);
   assert.match(draftClient, /new-loom-draft__editor-shell/);
   assert.match(draftClient, /new-loom-draft__editor-toolbar/);
+  // The center editor is a block document, not a single textarea: the
+  // editor-shell now hosts DraftBlockEditor wired to the canonical blocks[].
+  // (The raw `body` textarea is kept as a collapsed serialization bridge.)
+  assert.match(draftClient, /import \{ DraftBlockEditor \} from '\.\/DraftBlockEditor'/);
+  assert.match(
+    draftClient,
+    /<DraftBlockEditor\s+blocks=\{blocks\}\s+onChange=\{handleBlocksChange\}\s*\/>/,
+  );
   assert.match(draftClient, /new-loom-draft__proof-strip/);
   assert.match(draftClient, /Answer grounded by/);
   assert.match(draftClient, /Publish answer preview/);
