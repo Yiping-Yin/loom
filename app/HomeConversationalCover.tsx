@@ -23,7 +23,6 @@ import Link from 'next/link';
 import { useConversation } from '../lib/onboarding/useConversation';
 import { constellationFor } from '../lib/onboarding/constellation';
 import { ConstellationField } from './ConstellationField';
-import { LandingNav } from './LandingNav';
 import { LandingShowcase } from './LandingShowcase';
 import { LandingFooter } from './LandingFooter';
 import styles from './HomeConversationalCover.module.css';
@@ -147,7 +146,8 @@ export function HomeConversationalCover() {
         <div className="loom-cosmic-field" aria-hidden />
         <ConstellationField data={constellation} />
 
-        <LandingNav onBegin={() => c.inputRef.current?.focus()} />
+        {/* No top nav before the visitor is "in" — a new user is driven purely by
+            the conversation to fill in their profile (owner direction). */}
 
         <section className={styles.hero} aria-label="Start your LOOM">
           <img
