@@ -7337,6 +7337,18 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   text-underline-offset: 3px;
 }
 
+/* Home link interaction states — kept consistent with the module copy
+   (draft-evidence-desk.module.css .new-loom-draft__home:focus-visible). */
+.new-loom-draft__home:focus-visible {
+  outline: 2px solid var(--signature-cyan);
+  outline-offset: 3px;
+  border-radius: var(--r-1);
+}
+
+.new-loom-draft__home:active {
+  color: var(--draft-accent-strong);
+}
+
 .new-loom-draft__identity-rail {
   display: grid;
   align-content: start;
