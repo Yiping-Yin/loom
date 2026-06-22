@@ -71,16 +71,46 @@ function slug(label: string): string {
  * Order matters: more specific entries first.
  */
 const KEYWORD_MAP: ReadonlyArray<{ tokens: readonly string[]; label: string }> = [
-  { tokens: ['machine learning', 'ml', 'deep learning', 'neural'], label: 'Machine Learning' },
+  // Multi-word / specific entries first so granular capabilities are seeded
+  // alongside the generic ones (matching no longer stops at the first hit, so a
+  // single line like "led the design system" can yield Leadership + Design
+  // Systems + Product Design rather than collapsing to one bucket).
+  { tokens: ['machine learning', 'deep learning', 'neural network'], label: 'Machine Learning' },
+  { tokens: ['design system', 'component library', 'design token'], label: 'Design Systems' },
+  {
+    tokens: ['user research', 'usability', 'user testing', 'user interview', 'hci', 'human-computer'],
+    label: 'User Research',
+  },
+  { tokens: ['prototyp'], label: 'Prototyping' },
+  {
+    tokens: [
+      'product design',
+      'product designer',
+      'ux design',
+      'ui design',
+      'ui/ux',
+      'user experience',
+      'user interface',
+      'interaction design',
+      'figma',
+      'wireframe',
+      'design',
+    ],
+    label: 'Product Design',
+  },
   { tokens: ['optimis', 'optimiz', 'convex', 'linear programming'], label: 'Optimisation' },
   { tokens: ['p&l', 'pnl', 'profit', 'trading', 'market making', 'quant', 'options', 'greeks'], label: 'Trading & Markets' },
-  { tokens: ['python'], label: 'Python Programming' },
   { tokens: ['data analysis', 'data analyst', 'analytics', 'dashboard', 'visualis', 'visualiz'], label: 'Data Analysis' },
+  { tokens: ['financial model', 'modelling', 'modeling'], label: 'Financial Modelling' },
+  { tokens: ['python'], label: 'Python Programming' },
+  {
+    tokens: ['front-end', 'frontend', 'react', 'css', 'html', 'typescript', 'javascript'],
+    label: 'Front-end Engineering',
+  },
+  { tokens: ['led ', 'leading', 'leadership', 'managed', 'manager', 'mentored'], label: 'Leadership' },
   { tokens: ['research'], label: 'Research' },
-  { tokens: ['modelling', 'modeling', 'financial model'], label: 'Financial Modelling' },
   { tokens: ['math', 'maths', 'mathematics', 'calculus', 'statistics', 'probability'], label: 'Mathematics' },
-  { tokens: ['writing', 'documentation', 'report', 'communication'], label: 'Technical Writing' },
-  { tokens: ['design', 'ui', 'ux', 'figma'], label: 'Design' },
+  { tokens: ['writing', 'documentation', 'communication'], label: 'Technical Writing' },
   { tokens: ['programming', 'software', 'engineering', 'code', 'coding', 'developer', 'development'], label: 'Software Engineering' },
 ];
 
@@ -150,7 +180,6 @@ export function deriveCapabilitiesHeuristic(profile: BeginnerProfile): BeginnerC
         ensure(entry.label);
         candidateMap.get(entry.label)!.add(expEvidence[i]);
         mapped = true;
-        break;
       }
     }
     if (!mapped) {
@@ -171,7 +200,6 @@ export function deriveCapabilitiesHeuristic(profile: BeginnerProfile): BeginnerC
         ensure(entry.label);
         candidateMap.get(entry.label)!.add(workEvidence[i]);
         mapped = true;
-        break;
       }
     }
     if (!mapped) {
@@ -233,11 +261,14 @@ export function deriveCapabilitiesHeuristic(profile: BeginnerProfile): BeginnerC
     });
   });
 
-  // 1g. Education contributes evidence to keyword-matched candidates.
+  // 1g. Education keyword hits both CREATE candidates and contribute evidence —
+  // a field of study (e.g. HCI → User Research) is real signal, so a capability
+  // backed only by a degree should still surface, not be silently dropped.
   profile.education?.forEach((edu, i) => {
     const eduText = textTokens([edu.institution, edu.qualification, edu.field, edu.notes]);
     for (const entry of KEYWORD_MAP) {
-      if (matchesTokens(eduText, entry.tokens) && candidateMap.has(entry.label)) {
+      if (matchesTokens(eduText, entry.tokens)) {
+        ensure(entry.label);
         candidateMap.get(entry.label)!.add(eduEvidence[i]);
       }
     }
