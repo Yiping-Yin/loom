@@ -16,6 +16,8 @@ import shell from '../about/AboutClient.module.css';
 import styles from './BeginnerDigitalMe.module.css';
 import { BeginnerJourney } from './BeginnerJourney';
 import { BeginnerProofSection } from './BeginnerProofSection';
+import { BeginnerDocuments, toStudioDocumentSummary, type StudioDocumentSummary } from './BeginnerDocuments';
+import { browserDraftStorage, listDrafts } from '../../lib/new-loom/draft-storage';
 
 /**
  * Beginner-profile Digital Me view.
@@ -52,6 +54,17 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   // is set synchronously before the async build resolves — preventing a second
   // run if the effect re-fires before `caps` updates.
   const autoBuiltRef = useRef(false);
+
+  // Studio documents — the user's working block-documents, read from localStorage
+  // after mount (SSR-safe; the section renders its empty state until this fills).
+  const [studioDocuments, setStudioDocuments] = useState<StudioDocumentSummary[]>([]);
+  useEffect(() => {
+    const adapter = browserDraftStorage();
+    if (!adapter) return;
+    // listDrafts is already sorted newest-first; cap the rendered list (the rest
+    // remain openable from the Studio itself).
+    setStudioDocuments(listDrafts(adapter).slice(0, 6).map(toStudioDocumentSummary));
+  }, []);
 
   /** Count of capabilities whose status is 'strong' (backed by real proof). */
   const strongCount = caps.filter((c) => c.status === 'strong').length;
@@ -280,6 +293,13 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             <BeginnerProofSection initialArtifacts={profile.artifacts ?? []} />
           </div>
         )}
+
+        {/* Studio — the user's working documents; always present as an entry
+            point (not gated), so the editor is reachable from home and the empty
+            state nudges a first document. */}
+        <div data-reveal="">
+          <BeginnerDocuments documents={studioDocuments} />
+        </div>
 
         {/* Ask widget — centrepiece: answers are grounded in the beginner's
             localStorage profile which /api/ask receives automatically.
