@@ -366,6 +366,10 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  /* Cap at the card width and let a long label wrap rather than overflow the
+     chip's column container (align-items: flex-start gives it no implicit cap). */
+  max-width: 100%;
+  min-width: 0;
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
   border-radius: var(--r-1);
@@ -373,12 +377,22 @@
   font: inherit;
   font-size: var(--fs-small);
   color: var(--text-2, rgba(255, 255, 255, 0.65));
+  text-align: left;
   text-decoration: none;
+  overflow-wrap: anywhere;
   cursor: pointer;
   transition:
     color var(--dur-2) var(--ease),
     border-color var(--dur-2) var(--ease),
     background var(--dur-2) var(--ease);
+}
+
+/* Inside the chip the label flexes (and may wrap) while the trailing "Open ↗"
+   affordance never shrinks or splits. */
+.evidenceLink > span:first-child,
+.evidenceButton > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .evidenceLink:hover,
@@ -407,6 +421,7 @@
 }
 
 .openArrow {
+  flex: none;
   font-size: var(--fs-caption);
   color: var(--signature-cyan, #4bc5de);
   letter-spacing: 0;
