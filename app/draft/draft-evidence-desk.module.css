@@ -29,7 +29,8 @@
 
 /* ---- Token re-point: light palette -> fixed cool-black --------------- */
 .surface:global(.new-loom-draft) {
-  --draft-nav-clearance: clamp(5.75rem, 7vw, 6.5rem);
+  /* No floating global nav on /draft — this is now just the page's top padding. */
+  --draft-nav-clearance: clamp(2rem, 4vw, 3rem);
   --draft-ink: var(--text-1);          /* #E7E9EA primary text */
   --draft-muted: var(--text-2);        /* #A4A9AD secondary */
   --draft-subtle: var(--text-3);       /* #666D72 tertiary / captions */
@@ -210,6 +211,7 @@
 
 /* Proof strip — a lit instrument cluster, luminance-separated tiles. */
 .surface :global(.new-loom-draft__proof-strip) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   border: 1px solid var(--line);
   border-radius: var(--r-2);
   background: var(--draft-glass-bg);
@@ -220,7 +222,7 @@
   gap: 1px;
 }
 .surface :global(.new-loom-draft__proof-strip span) {
-  padding: 0.85rem 1rem;
+  padding: 0.7rem 0.95rem;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent);
 }
 .surface :global(.new-loom-draft__proof-strip span + span) {
@@ -239,14 +241,25 @@
 
 /* Type rail — glass shelf. */
 .surface :global(.new-loom-draft__type-rail) {
-  gap: 1rem;
-  padding: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  padding: 0.7rem 0.9rem;
   border: 1px solid var(--line);
   border-radius: var(--r-2);
   background: var(--draft-glass-bg);
   box-shadow: var(--draft-glass-shadow);
   -webkit-backdrop-filter: var(--loom-glass-blur);
   backdrop-filter: var(--loom-glass-blur);
+}
+.surface :global(.new-loom-draft__type-label) {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
 }
 .surface :global(.new-loom-draft__type-copy h2) {
   color: var(--text-1);
@@ -256,15 +269,20 @@
 }
 .surface :global(.new-loom-draft__type-copy p) { color: var(--text-2); }
 
-/* Known-N set: explicit responsive ramp, never auto-fit orphan rows. */
+/* Compact inline pill row: the type pills size to content and wrap, with
+   "Use outline" trailing in the same flex row. */
 .surface :global(.new-loom-draft__type-buttons) {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  grid-template-columns: none;
+  flex: 1 1 16rem;
+  gap: 0.4rem;
 }
 .surface :global(.new-loom-draft__type-button) {
-  min-height: 3rem;
+  min-height: 2.1rem;
+  padding: 0.3rem 0.72rem;
   border: 1px solid var(--line);
-  border-radius: var(--r-1);
+  border-radius: 999px;
   background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
   box-shadow: var(--keylight);
   color: var(--text-2);
@@ -807,6 +825,231 @@
 }
 
 /* ======================================================================
+   BLOCK EDITOR — the authored document surface inside the editor-shell.
+   Each block is a lit row (rail | body | tools | add) on the same desk
+   page as the legacy body field; tokens mirror .new-loom-draft__body and
+   the source-tile chips. Additive — no contract pins these names.
+   ====================================================================== */
+.surface :global(.new-loom-draft__blocks) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: clamp(1.1rem, 2.2vw, 1.8rem);
+}
+.surface :global(.new-loom-draft__block) {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  grid-template-areas:
+    'rail body tools'
+    '.    add  add';
+  align-items: start;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--r-2);
+  transition: border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block:hover),
+.surface :global(.new-loom-draft__block:focus-within) {
+  border-color: var(--line-soft);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent);
+}
+.surface :global(.new-loom-draft__block-rail) {
+  grid-area: rail;
+  padding-top: 0.3rem;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+.surface :global(.new-loom-draft__block-body) { grid-area: body; min-width: 0; }
+
+/* text block — the typeset reading column, mirrors __body */
+.surface :global(.new-loom-draft__block-text) {
+  width: 100%;
+  max-width: min(72ch, 100%);
+  min-height: 4.5rem;
+  resize: vertical;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.025), transparent 50%),
+    var(--ink-3);
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 1.35vw, 1.18rem);
+  line-height: 1.72;
+}
+.surface :global(.new-loom-draft__block-text::placeholder) { color: var(--text-3); }
+
+/* code block — attributed evidence, plain mono (no highlighter) */
+.surface :global(.new-loom-draft__block-codemeta) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.surface :global(.new-loom-draft__block-lang),
+.surface :global(.new-loom-draft__block-source) {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-4);
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.surface :global(.new-loom-draft__block-lang) { width: 7rem; }
+.surface :global(.new-loom-draft__block-source) { flex: 1 1 12rem; min-width: 0; }
+.surface :global(.new-loom-draft__block-lang::placeholder),
+.surface :global(.new-loom-draft__block-source::placeholder) { color: var(--text-3); }
+.surface :global(.new-loom-draft__block-code) {
+  width: 100%;
+  min-height: 5rem;
+  resize: vertical;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-2);
+  color: var(--text-1);
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* cite block — the cyan citation chip, mirrors the source tile */
+.surface :global(.new-loom-draft__block-cite) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 28%, var(--line));
+  border-left: 3px solid var(--signature-cyan);
+  border-radius: var(--r-2);
+  background: var(--draft-glass-bg);
+  box-shadow: var(--draft-glass-shadow);
+  text-decoration: none;
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block-cite:hover) {
+  border-color: color-mix(in srgb, var(--signature-cyan) 55%, transparent);
+  box-shadow: var(--draft-raised-shadow);
+}
+.surface :global(.new-loom-draft__block-cite-label) {
+  color: var(--cyan);
+  font-weight: 600;
+}
+.surface :global(.new-loom-draft__block-cite:hover .new-loom-draft__block-cite-label) {
+  color: var(--signature-cyan-hi);
+}
+.surface :global(.new-loom-draft__block-cite-excerpt) {
+  color: var(--text-2);
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* per-block controls — quiet, revealed on hover/focus-within */
+.surface :global(.new-loom-draft__block-tools) {
+  grid-area: tools;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block:hover .new-loom-draft__block-tools),
+.surface :global(.new-loom-draft__block:focus-within .new-loom-draft__block-tools) {
+  opacity: 1;
+}
+.surface :global(.new-loom-draft__block-tools button) {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-4);
+  color: var(--text-2);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block-tools button:hover) {
+  border-color: color-mix(in srgb, var(--signature-cyan) 50%, transparent);
+  color: var(--signature-cyan-hi);
+}
+.surface :global(.new-loom-draft__block-add) {
+  grid-area: add;
+  display: flex;
+  gap: var(--space-2);
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block:hover .new-loom-draft__block-add),
+.surface :global(.new-loom-draft__block:focus-within .new-loom-draft__block-add) {
+  opacity: 1;
+}
+.surface :global(.new-loom-draft__block-add button) {
+  padding: 0.3rem 0.7rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block-add button:hover) {
+  border-color: color-mix(in srgb, var(--signature-cyan) 45%, transparent);
+  color: var(--cyan);
+}
+/* the empty-document starter is a standalone add button (not inside a block) */
+.surface :global(.new-loom-draft__blocks > .new-loom-draft__block-add) {
+  opacity: 1;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+/* ----------------------------------------------------------------------
+   RAW BODY — a quiet, collapsed serialization bridge under the block
+   editor. It hosts the body-based machinery Phase 1 preserves (inline
+   edit selection, Cmd-K, @-mention picker); the block editor above is
+   the primary authored surface, so this reads as a secondary tool.
+   ---------------------------------------------------------------------- */
+.surface :global(.new-loom-draft__raw) {
+  margin-block-start: var(--space-3, 1rem);
+  border-top: 1px solid var(--line);
+  padding-block-start: var(--space-2, 0.75rem);
+}
+.surface :global(.new-loom-draft__raw > summary) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.surface :global(.new-loom-draft__raw > summary:hover) { color: var(--cyan); }
+.surface :global(.new-loom-draft__raw > summary:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--signature-cyan) 55%, transparent);
+  outline-offset: 2px;
+}
+.surface :global(.new-loom-draft__body--raw) {
+  margin-block-start: var(--space-2, 0.75rem);
+  min-height: 9rem;
+}
+
+/* ======================================================================
    A11y — honour reduced-motion: drop the hover/press transitions on the
    animated controls (additive; existing :focus-visible rings are kept).
    ====================================================================== */
@@ -815,7 +1058,13 @@
   .surface :global(.new-loom-draft .new-loom-shell__action),
   .surface :global(.new-loom-draft__reference-action),
   .surface :global(.new-loom-draft__source-tile),
-  .surface :global(.new-loom-draft__inspector-tab) {
+  .surface :global(.new-loom-draft__inspector-tab),
+  .surface :global(.new-loom-draft__block),
+  .surface :global(.new-loom-draft__block-cite),
+  .surface :global(.new-loom-draft__block-tools),
+  .surface :global(.new-loom-draft__block-tools button),
+  .surface :global(.new-loom-draft__block-add),
+  .surface :global(.new-loom-draft__block-add button) {
     transition: none;
   }
 }

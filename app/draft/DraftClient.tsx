@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { callAiPrompt } from '../../lib/ai/runtime';
 import { loadSoanPayload } from '../../lib/loom-soan-records';
 import { fetchSearchIndex } from '../../lib/search-index-client';
+import { safeHref } from '../../lib/profile/safe-href';
 import {
   loadReferenceCitationDraftCorpusDocs,
   mergeDraftCorpusDocs,
@@ -28,6 +29,7 @@ import {
   draftReferenceMentionToken,
   draftReferencesChanged,
   draftProvenanceMatches,
+  draftReferenceFromCorpusDoc,
   draftSourceTilesFromReferences,
   draftWordCount,
   importWorkbenchDraft,
@@ -72,7 +74,14 @@ import {
   browserPublicWorkingStorage,
   isNewLoomPublicWorkingMode,
 } from '../../lib/new-loom/public-working-mode';
-import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
+import {
+  blocksToBody,
+  bodyToBlocks,
+  citeBlockFromReference,
+  fileToDocBlock,
+  type NewLoomDraftDocBlock,
+} from '../../lib/new-loom/draft-blocks';
+import { DraftBlockEditor } from './DraftBlockEditor';
 import DraftBoardClient from './DraftBoardClient';
 import draftDeskStyles from './draft-evidence-desk.module.css';
 
@@ -397,6 +406,15 @@ function cardsFromSoanPayload(payload: unknown): NewLoomDraftTaggedCard[] {
   });
 }
 
+// Mirror of DraftBlockEditor's id factory so blocks seeded/imported here share
+// the same stable-id contract as blocks created inside the editor.
+function makeId(): string {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  } catch {}
+  return `b-${Math.round(performance?.now?.() ?? 0)}-${Math.floor(Math.random() * 1e6)}`;
+}
+
 type DraftClientProps = {
   initialDraftTypeId?: string;
 };
@@ -405,6 +423,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
   const [draft, setDraft] = useState<NewLoomDraftRecord | null>(null);
   const [title, setTitle] = useState('Untitled draft');
   const [body, setBody] = useState('');
+  const [blocks, setBlocks] = useState<NewLoomDraftDocBlock[]>([]);
   const [saveState, setSaveState] = useState<'idle' | 'saved' | 'unavailable'>('idle');
   const [aiState, setAiState] = useState<DraftAIState>('idle');
   const [aiSuggestion, setAiSuggestion] = useState('');
@@ -492,6 +511,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
   const bodyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const aiAbortRef = useRef<AbortController | null>(null);
   const inlineEditAbortRef = useRef<AbortController | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setPublicWorkingMode(isNewLoomPublicWorkingMode(
@@ -514,6 +534,10 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
           setDraft(nativeDraft);
           setTitle(nativeDraft.title);
           setBody(nativeDraft.body);
+          setBlocks(
+            nativeDraft.blocks ??
+              bodyToBlocks(nativeDraft.body, nativeDraft.references ?? [], makeId),
+          );
           setSaveState('saved');
         } catch {
           if (!cancelled) setSaveState('unavailable');
@@ -539,6 +563,9 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
       setDraft(imported);
       setTitle(imported.title);
       setBody(imported.body);
+      setBlocks(
+        imported.blocks ?? bodyToBlocks(imported.body, imported.references ?? [], makeId),
+      );
       setSaveState('saved');
     };
 
@@ -605,9 +632,13 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     nextTitle: string,
     nextBody: string,
     nextReferences = currentDraft.references,
+    nextBlocks?: NewLoomDraftDocBlock[],
   ) => {
     const nativeStore = nativeDraftStorage();
     if (nativeStore) {
+      // The native bridge persists body-only (blocks land in a later phase); the
+      // body is already the kept-in-sync serialization of the blocks, so native
+      // readers stay correct.
       return await nativeStore.update(currentDraft.id, {
         title: nextTitle,
         body: nextBody,
@@ -623,6 +654,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
       title: nextTitle,
       body: nextBody,
       references: nextReferences,
+      ...(nextBlocks ? { blocks: nextBlocks } : {}),
     });
   };
 
@@ -631,20 +663,21 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     nextTitle: string,
     nextBody: string,
     nextReferences = currentDraft.references,
+    nextBlocks?: NewLoomDraftDocBlock[],
   ) => {
-    if (nextReferences === currentDraft.references) {
-      const next = await persistDraft(currentDraft, nextTitle, nextBody);
-      setDraft(next);
-      setSaveState('saved');
-      return next;
-    }
-    const next = await persistDraft(currentDraft, nextTitle, nextBody, nextReferences);
+    const next = await persistDraft(
+      currentDraft,
+      nextTitle,
+      nextBody,
+      nextReferences,
+      nextBlocks,
+    );
     setDraft(next);
     setSaveState('saved');
     return next;
   };
 
-  const save = (nextTitle = title, nextBody = body) => {
+  const save = (nextTitle = title, nextBody = body, nextBlocks = blocks) => {
     if (saveTimer.current != null) {
       window.clearTimeout(saveTimer.current);
       saveTimer.current = null;
@@ -653,12 +686,12 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
       setSaveState('unavailable');
       return;
     }
-    void commitDraft(draft, nextTitle, nextBody).catch(() => {
+    void commitDraft(draft, nextTitle, nextBody, draft.references, nextBlocks).catch(() => {
       setSaveState('unavailable');
     });
   };
 
-  const scheduleSave = (nextTitle: string, nextBody: string) => {
+  const scheduleSave = (nextTitle: string, nextBody: string, nextBlocks?: NewLoomDraftDocBlock[]) => {
     if (saveTimer.current != null) window.clearTimeout(saveTimer.current);
     const currentDraft = draft;
     saveTimer.current = window.setTimeout(() => {
@@ -666,7 +699,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
         setSaveState('unavailable');
         return;
       }
-      void commitDraft(currentDraft, nextTitle, nextBody)
+      void commitDraft(currentDraft, nextTitle, nextBody, currentDraft.references, nextBlocks)
         .catch(() => {
           setSaveState('unavailable');
         })
@@ -675,6 +708,40 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
         });
     }, SAVE_DEBOUNCE_MS);
   };
+
+  // Blocks are the canonical edit model; body is the kept-in-sync serialization.
+  function handleBlocksChange(next: NewLoomDraftDocBlock[]) {
+    setBlocks(next);
+    const nextBody = blocksToBody(next);
+    setBody(nextBody);
+    setSaveState('idle');
+    scheduleSave(title, nextBody, next);
+  }
+
+  // Import path (Phase-1 slice of bring-your-real-work-in): read an uploaded
+  // code/text file and append it as an attributed block. Paste already works
+  // inside any block textarea.
+  async function handleImportFile(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      handleBlocksChange([...blocks, fileToDocBlock(file.name, text, makeId)]);
+    } finally {
+      // Reset so re-importing the same file fires another change event.
+      input.value = '';
+    }
+  }
+
+  // Body-only mutations (quote insert, AI insert/edit, outline, block ops) keep
+  // body as their source of truth; re-derive blocks from the new body so the
+  // block editor stays in sync and a later block edit cannot clobber them.
+  function syncBlocksFromBody(nextBody: string): NewLoomDraftDocBlock[] {
+    const nextBlocks = bodyToBlocks(nextBody, references, makeId);
+    setBlocks(nextBlocks);
+    return nextBlocks;
+  }
 
   const insertReferenceExcerpt = (reference: NewLoomDraftReference) => {
     const nextBody = appendReferenceExcerptToDraft(body, reference);
@@ -685,8 +752,9 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
       references,
     });
     setBody(inserted.body);
+    const nextBlocks = syncBlocksFromBody(inserted.body);
     setSaveState('idle');
-    scheduleSave(title, inserted.body);
+    scheduleSave(title, inserted.body, nextBlocks);
   };
 
   function removeDraftReference(reference: NewLoomDraftReference) {
@@ -724,8 +792,9 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
 
     setTitle(nextTitle);
     setBody(nextBody);
+    const nextBlocks = syncBlocksFromBody(nextBody);
     setSaveState('idle');
-    scheduleSave(nextTitle, nextBody);
+    scheduleSave(nextTitle, nextBody, nextBlocks);
     window.requestAnimationFrame(() => bodyTextareaRef.current?.focus());
   }
 
@@ -769,14 +838,42 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
       doc,
     });
     setBody(inserted.body);
+    const nextBlocks = syncBlocksFromBody(inserted.body);
     setDraft({ ...draft, body: inserted.body, references: inserted.references });
     setSaveState('idle');
     setReferencePickerOpen(false);
     setReferencePickerSource(null);
-    void commitDraft(draft, title, inserted.body, inserted.references).catch(() => {
+    void commitDraft(draft, title, inserted.body, inserted.references, nextBlocks).catch(() => {
       setSaveState('unavailable');
     });
     window.requestAnimationFrame(() => bodyTextareaRef.current?.focus());
+  };
+
+  const closeReferencePicker = () => {
+    setReferencePickerOpen(false);
+    setReferencePickerSource(null);
+    setReferencePickerQuery('');
+  };
+
+  // The manual "@ Reference" picker inserts the chosen source as a first-class
+  // cite block (blocks are canonical). The source is also merged into the draft
+  // references so it stays grounded and shows in the Sources inspector; the
+  // cite block serializes to a quote + link, so provenance still matches.
+  const insertCiteBlock = (doc: NewLoomDraftCorpusDoc) => {
+    if (publicWorkingMode) return;
+    if (!draft) return;
+    const reference = draftReferenceFromCorpusDoc(doc);
+    const nextBlocks = [...blocks, citeBlockFromReference(reference, makeId)];
+    const nextBody = blocksToBody(nextBlocks);
+    const nextReferences = mergeDraftReferences(references, [reference]);
+    setBlocks(nextBlocks);
+    setBody(nextBody);
+    setDraft({ ...draft, body: nextBody, references: nextReferences });
+    setSaveState('idle');
+    closeReferencePicker();
+    void commitDraft(draft, title, nextBody, nextReferences, nextBlocks).catch(() => {
+      setSaveState('unavailable');
+    });
   };
 
   const continueWithAI = async () => {
@@ -907,8 +1004,9 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     const nextBody = appendAISuggestionToBody(body, aiSuggestion);
     if (nextBody !== body) {
       setBody(nextBody);
+      const nextBlocks = syncBlocksFromBody(nextBody);
       setSaveState('idle');
-      scheduleSave(title, nextBody);
+      scheduleSave(title, nextBody, nextBlocks);
     }
     discardAISuggestion();
   };
@@ -997,8 +1095,9 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     }
 
     setBody(nextBody);
+    const nextBlocks = syncBlocksFromBody(nextBody);
     setSaveState('idle');
-    scheduleSave(title, nextBody);
+    scheduleSave(title, nextBody, nextBlocks);
     discardInlineEdit();
   }
 
@@ -1035,15 +1134,14 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
     }
 
     setBody(nextBody);
+    const nextBlocks = syncBlocksFromBody(nextBody);
     setSaveState('idle');
-    scheduleSave(title, nextBody);
+    scheduleSave(title, nextBody, nextBlocks);
     clearBlockOperation();
   }
 
   return (
-    <>
-      <LoomGlobalNav activeHref="/draft" ariaLabel="Draft navigation" />
-      <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
+    <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
       <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
         <section className="new-loom-draft__profile-card" aria-label="Profile">
           <img src="/profile/yiping-profile-white-shirt.png" alt="Yiping Yin" />
@@ -1109,18 +1207,10 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
               <strong>{wordCount} {wordCount === 1 ? 'word' : 'words'}</strong>
               <small>{displayReferences.length} attached reference{displayReferences.length === 1 ? '' : 's'}</small>
             </span>
-            <span>
-              <strong>{selectedOutputType.label}</strong>
-              <small>Current output type</small>
-            </span>
           </div>
         </section>
         <section className="new-loom-draft__type-rail" aria-label="Draft type">
-          <div className="new-loom-draft__type-copy">
-            <p className="new-loom-draft__eyebrow">Output type</p>
-            <h2>{selectedOutputType.label}</h2>
-            <p>{selectedOutputType.goal}</p>
-          </div>
+          <span className="new-loom-draft__type-label">Output</span>
           <div className="new-loom-draft__type-buttons">
             {NEW_LOOM_DRAFT_OUTPUT_TYPES.map((outputType) => (
               <button
@@ -1156,40 +1246,71 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                   @ Reference
                 </button>
               ) : null}
+              <button
+                type="button"
+                className="new-loom-shell__action"
+                onClick={() => importInputRef.current?.click()}
+              >
+                Import
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".py,.ts,.tsx,.js,.jsx,.go,.rs,.java,.c,.cpp,.sql,.sh,.json,.css,.html,.md,.markdown,.txt"
+                style={{ display: 'none' }}
+                aria-hidden="true"
+                tabIndex={-1}
+                onChange={(event) => void handleImportFile(event)}
+              />
               <button type="button" className="new-loom-shell__action" onClick={() => save()}>
                 Save draft
               </button>
             </div>
           </div>
-          <textarea
-            ref={bodyTextareaRef}
-            aria-label="Draft body"
-            className="new-loom-draft__body"
-            placeholder="Write from source material."
-            value={body}
-            onChange={(event) => {
-              const nextBody = event.target.value;
-              setBody(nextBody);
-              setSaveState('idle');
-              scheduleSave(title, nextBody);
-              syncReferencePickerWithMention(nextBody, event.target.selectionStart);
-            }}
-            onClick={(event) => {
-              syncReferencePickerWithMention(body, event.currentTarget.selectionStart);
-            }}
-            onKeyDown={(event) => {
-              if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-                event.preventDefault();
-                void startInlineEdit();
-              }
-            }}
-            onKeyUp={(event) => {
-              syncReferencePickerWithMention(body, event.currentTarget.selectionStart);
-            }}
-            onSelect={(event) => {
-              syncReferencePickerWithMention(body, event.currentTarget.selectionStart);
-            }}
-          />
+          <DraftBlockEditor blocks={blocks} onChange={handleBlocksChange} />
+          {/*
+            The block editor is the authored surface; the canonical `body` is its
+            kept-in-sync markdown serialization. This raw-body field is a
+            secondary (collapsed) bridge for the body-based machinery Phase 1
+            preserves: it carries `bodyTextareaRef` (the inline-edit selection +
+            the reference-candidate insertion point), the Cmd-K inline-edit
+            trigger, and the inline `@`-mention reference picker. Editing it keeps
+            blocks in sync via the same serialization seam; the picker is re-homed
+            onto blocks in a later task.
+          */}
+          <details className="new-loom-draft__raw">
+            <summary>Raw body</summary>
+            <textarea
+              ref={bodyTextareaRef}
+              aria-label="Draft body"
+              className="new-loom-draft__body new-loom-draft__body--raw"
+              placeholder="Write from source material."
+              value={body}
+              onChange={(event) => {
+                const nextBody = event.target.value;
+                setBody(nextBody);
+                const nextBlocks = syncBlocksFromBody(nextBody);
+                setSaveState('idle');
+                scheduleSave(title, nextBody, nextBlocks);
+                syncReferencePickerWithMention(nextBody, event.target.selectionStart);
+              }}
+              onClick={(event) => {
+                syncReferencePickerWithMention(body, event.currentTarget.selectionStart);
+              }}
+              onKeyDown={(event) => {
+                if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+                  event.preventDefault();
+                  void startInlineEdit();
+                }
+              }}
+              onKeyUp={(event) => {
+                syncReferencePickerWithMention(body, event.currentTarget.selectionStart);
+              }}
+              onSelect={(event) => {
+                syncReferencePickerWithMention(body, event.currentTarget.selectionStart);
+              }}
+            />
+          </details>
         </section>
         {!publicWorkingMode && referencePickerOpen ? (
           <section className="new-loom-draft__reference-picker" aria-label="Reference search">
@@ -1221,7 +1342,13 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                     type="button"
                     className="new-loom-draft__reference-result"
                     key={doc.href}
-                    onClick={() => insertReferenceCandidate(doc)}
+                    onClick={() =>
+                      // Inline @-mention (typed into the focused raw body) stays
+                      // inline; the manual picker inserts a first-class cite block.
+                      referencePickerSource === 'mention'
+                        ? insertReferenceCandidate(doc)
+                        : insertCiteBlock(doc)
+                    }
                   >
                     <span>{doc.title}</span>
                     <small>
@@ -1431,7 +1558,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                       >
                         <span>{tile.kindLabel}</span>
                         {!publicWorkingMode ? (
-                          <a href={tile.href} onClick={(event) => openDraftReference(event, tile)}>
+                          <a href={safeHref(tile.href) || undefined} onClick={(event) => openDraftReference(event, tile)}>
                             {tile.label}
                           </a>
                         ) : (
@@ -1441,7 +1568,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                         {tile.excerpt ? <p>{tile.excerpt}</p> : null}
                         <div className="new-loom-draft__source-tile-actions">
                           {!publicWorkingMode ? (
-                            <a href={tile.href} onClick={(event) => openDraftReference(event, tile)}>
+                            <a href={safeHref(tile.href) || undefined} onClick={(event) => openDraftReference(event, tile)}>
                               Open
                             </a>
                           ) : null}
@@ -1487,7 +1614,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                         </span>
                         {!publicWorkingMode && realReference ? (
                           <a
-                            href={realReference.href}
+                            href={safeHref(realReference.href) || undefined}
                             onClick={(event) => openDraftReference(event, realReference)}
                           >
                             {reference.label}
@@ -1565,7 +1692,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                     <li key={`${match.href}:${match.n}`}>
                       <span className="new-loom-draft__provenance-n">{match.n}</span>
                       <span>{match.phrase}</span>
-                      <a href={match.href} onClick={(event) => openDraftReference(event, match)}>
+                      <a href={safeHref(match.href) || undefined} onClick={(event) => openDraftReference(event, match)}>
                         {match.label}
                       </a>
                       {match.artifactState ? (
@@ -1764,7 +1891,6 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
           </section>
         ) : null}
       </aside>
-      </main>
-    </>
+    </main>
   );
 }

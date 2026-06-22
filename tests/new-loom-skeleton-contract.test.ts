@@ -2895,7 +2895,7 @@ test('Draft absorbs Workbench writing behavior instead of leaving it on the lega
   assert.match(draftClient, /draftWordCount\(body\)/);
   assert.match(draftClient, /const saveTimer = useRef<number \| null>\(null\)/);
   assert.match(draftClient, /window\.setTimeout\(\(\) => \{/);
-  assert.match(draftClient, /const next = await persistDraft\(currentDraft, nextTitle, nextBody\)/);
+  assert.match(draftClient, /const next = await persistDraft\(\s*currentDraft,\s*nextTitle,\s*nextBody/);
   assert.match(draftClient, /nativeStore\.update\(currentDraft\.id/);
   assert.match(draftClient, /updateDraft\(fallbackStorage, currentDraft\.id/);
   assert.match(draftClient, /wordCount === 1 \? 'word' : 'words'/);
@@ -2998,7 +2998,9 @@ test('Draft composes with AI through the installed-app stream bridge', () => {
   );
   assert.match(draftClient, /onDelta: \(_delta, full\) => setAiSuggestion\(full\)/);
   assert.match(draftClient, /setBody\(nextBody\)/);
-  assert.match(draftClient, /scheduleSave\(title, nextBody\)/);
+  // Body-mutating saves now also thread the re-derived blocks so the canonical
+  // block document never diverges from the synced body (Studio Phase 1, Task 4).
+  assert.match(draftClient, /scheduleSave\(title, nextBody(?:, nextBlocks)?\)/);
   assert.match(draftClient, /Continue with AI/);
   assert.match(draftClient, /AI draft/);
   assert.match(draftClient, /Insert AI text/);
