@@ -15,32 +15,32 @@
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--text-3, #8a9099);
+  color: var(--text-3);
 }
 .title {
   margin: 0.15rem 0 0;
-  font-family: var(--serif, Georgia, serif);
+  font-family: var(--serif);
   font-weight: 600;
   font-size: 1.3rem;
-  color: var(--text-1, #f3f5f7);
+  color: var(--text-1);
 }
 .newAction {
   flex: none;
   padding: 0.45rem 0.85rem;
-  border: 1px solid var(--line, rgba(255, 255, 255, 0.14));
+  border: 1px solid var(--line);
   border-radius: 999px;
   font-size: 0.82rem;
-  color: var(--text-1, #f3f5f7);
-  background: var(--loom-glass-bg, rgba(255, 255, 255, 0.04));
-  -webkit-backdrop-filter: var(--loom-glass-blur, blur(20px));
-  backdrop-filter: var(--loom-glass-blur, blur(20px));
+  color: var(--text-1);
+  background: var(--loom-glass-bg);
+  -webkit-backdrop-filter: var(--loom-glass-blur);
+  backdrop-filter: var(--loom-glass-blur);
   transition:
     border-color 200ms ease,
     background 200ms ease;
 }
 .newAction:hover,
 .newAction:focus-visible {
-  border-color: var(--signature-cyan, #4bc5de);
+  border-color: var(--signature-cyan);
 }
 .list {
   display: grid;
@@ -53,17 +53,17 @@
   display: grid;
   gap: 0.3rem;
   padding: 0.9rem 1.05rem;
-  border: 1px solid var(--line, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--line);
   border-radius: 14px;
-  background: var(--loom-glass-bg, rgba(255, 255, 255, 0.04));
-  box-shadow: var(--loom-glass-shadow, 0 1px 0 rgba(255, 255, 255, 0.06) inset);
+  background: var(--loom-glass-bg);
+  box-shadow: var(--loom-glass-shadow);
   transition:
     border-color 200ms ease,
     transform 200ms ease;
 }
 .card:hover,
 .card:focus-visible {
-  border-color: var(--signature-cyan, #4bc5de);
+  border-color: var(--signature-cyan);
   transform: translateY(-1px);
 }
 .cardTitleRow {
@@ -73,24 +73,24 @@
   gap: 0.6rem;
 }
 .cardTitle {
-  color: var(--text-1, #f3f5f7);
+  color: var(--text-1);
   font-weight: 600;
   font-size: 1rem;
 }
 .chip {
   flex: none;
   padding: 0.12rem 0.5rem;
-  border: 1px solid var(--signature-cyan, #4bc5de);
+  border: 1px solid var(--signature-cyan);
   border-radius: 999px;
   font-family: var(--mono);
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--signature-cyan, #4bc5de);
+  color: var(--signature-cyan);
 }
 .cardMeta {
-  color: var(--text-3, #8a9099);
+  color: var(--text-3);
   font-family: var(--mono);
   font-size: 0.76rem;
   letter-spacing: 0.02em;
@@ -100,21 +100,17 @@
   gap: 0.4rem;
   padding: 1.4rem 1.2rem;
   text-align: left;
-  border: 1px dashed var(--line, rgba(255, 255, 255, 0.16));
+  border: 1px dashed var(--line);
   border-radius: 14px;
-  background: var(--loom-glass-bg, rgba(255, 255, 255, 0.03));
+  background: var(--loom-glass-bg);
   transition: border-color 200ms ease;
 }
 .empty:hover,
 .empty:focus-visible {
-  border-color: var(--signature-cyan, #4bc5de);
-}
-.emptyTitle {
-  color: var(--text-1, #f3f5f7);
-  font-size: 0.98rem;
+  border-color: var(--signature-cyan);
 }
 .emptyCta {
-  color: var(--signature-cyan, #4bc5de);
+  color: var(--signature-cyan);
   font-family: var(--mono);
   font-size: 0.82rem;
   letter-spacing: 0.04em;
