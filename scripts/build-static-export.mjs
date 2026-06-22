@@ -52,10 +52,11 @@ const SHELVED = [
   'app/wiki/[slug]',
   'app/knowledge/unsw/econ3202/[problemSet]',
   // Pages that opt into dynamic rendering (searchParams / dynamic='error')
-  // and so cannot be prerendered by `output: 'export'`. /draft is the live
-  // writing workspace; loom-render/* are internal capture utilities. None are
-  // part of the static identity dossier the bundle ships.
-  'app/draft',
+  // and so cannot be prerendered by `output: 'export'`. loom-render/* are
+  // internal capture utilities, not part of the static identity dossier.
+  // NOTE: app/draft is intentionally NOT shelved — /draft is now a trivial
+  // client redirect stub (prerenderable), and /digital-me imports DraftClient
+  // from app/draft to host the editor in-place, so the directory must stay put.
   'app/loom-render/capture',
   'app/loom-render/snapshot',
   // /sources reads `await searchParams` (capture handoff / filters), so it is
