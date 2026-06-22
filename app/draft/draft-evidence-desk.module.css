@@ -807,6 +807,200 @@
 }
 
 /* ======================================================================
+   BLOCK EDITOR — the authored document surface inside the editor-shell.
+   Each block is a lit row (rail | body | tools | add) on the same desk
+   page as the legacy body field; tokens mirror .new-loom-draft__body and
+   the source-tile chips. Additive — no contract pins these names.
+   ====================================================================== */
+.surface :global(.new-loom-draft__blocks) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: clamp(1.1rem, 2.2vw, 1.8rem);
+}
+.surface :global(.new-loom-draft__block) {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  grid-template-areas:
+    'rail body tools'
+    '.    add  add';
+  align-items: start;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--r-2);
+  transition: border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block:hover),
+.surface :global(.new-loom-draft__block:focus-within) {
+  border-color: var(--line-soft);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent);
+}
+.surface :global(.new-loom-draft__block-rail) {
+  grid-area: rail;
+  padding-top: 0.3rem;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+.surface :global(.new-loom-draft__block-body) { grid-area: body; min-width: 0; }
+
+/* text block — the typeset reading column, mirrors __body */
+.surface :global(.new-loom-draft__block-text) {
+  width: 100%;
+  max-width: min(72ch, 100%);
+  min-height: 4.5rem;
+  resize: vertical;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.025), transparent 50%),
+    var(--ink-3);
+  color: var(--text-1);
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 1.35vw, 1.18rem);
+  line-height: 1.72;
+}
+.surface :global(.new-loom-draft__block-text::placeholder) { color: var(--text-3); }
+
+/* code block — attributed evidence, plain mono (no highlighter) */
+.surface :global(.new-loom-draft__block-codemeta) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.surface :global(.new-loom-draft__block-lang),
+.surface :global(.new-loom-draft__block-source) {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-4);
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.surface :global(.new-loom-draft__block-lang) { width: 7rem; }
+.surface :global(.new-loom-draft__block-source) { flex: 1 1 12rem; min-width: 0; }
+.surface :global(.new-loom-draft__block-lang::placeholder),
+.surface :global(.new-loom-draft__block-source::placeholder) { color: var(--text-3); }
+.surface :global(.new-loom-draft__block-code) {
+  width: 100%;
+  min-height: 5rem;
+  resize: vertical;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-2);
+  color: var(--text-1);
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* cite block — the cyan citation chip, mirrors the source tile */
+.surface :global(.new-loom-draft__block-cite) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 28%, var(--line));
+  border-left: 3px solid var(--signature-cyan);
+  border-radius: var(--r-2);
+  background: var(--draft-glass-bg);
+  box-shadow: var(--draft-glass-shadow);
+  text-decoration: none;
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block-cite:hover) {
+  border-color: color-mix(in srgb, var(--signature-cyan) 55%, transparent);
+  box-shadow: var(--draft-raised-shadow);
+}
+.surface :global(.new-loom-draft__block-cite-label) {
+  color: var(--cyan);
+  font-weight: 600;
+}
+.surface :global(.new-loom-draft__block-cite:hover .new-loom-draft__block-cite-label) {
+  color: var(--signature-cyan-hi);
+}
+.surface :global(.new-loom-draft__block-cite-excerpt) {
+  color: var(--text-2);
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* per-block controls — quiet, revealed on hover/focus-within */
+.surface :global(.new-loom-draft__block-tools) {
+  grid-area: tools;
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block:hover .new-loom-draft__block-tools),
+.surface :global(.new-loom-draft__block:focus-within .new-loom-draft__block-tools) {
+  opacity: 1;
+}
+.surface :global(.new-loom-draft__block-tools button) {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--ink-4);
+  color: var(--text-2);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block-tools button:hover) {
+  border-color: color-mix(in srgb, var(--signature-cyan) 50%, transparent);
+  color: var(--signature-cyan-hi);
+}
+.surface :global(.new-loom-draft__block-add) {
+  grid-area: add;
+  display: flex;
+  gap: var(--space-2);
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block:hover .new-loom-draft__block-add),
+.surface :global(.new-loom-draft__block:focus-within .new-loom-draft__block-add) {
+  opacity: 1;
+}
+.surface :global(.new-loom-draft__block-add button) {
+  padding: 0.3rem 0.7rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block-add button:hover) {
+  border-color: color-mix(in srgb, var(--signature-cyan) 45%, transparent);
+  color: var(--cyan);
+}
+/* the empty-document starter is a standalone add button (not inside a block) */
+.surface :global(.new-loom-draft__blocks > .new-loom-draft__block-add) {
+  opacity: 1;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+/* ======================================================================
    A11y — honour reduced-motion: drop the hover/press transitions on the
    animated controls (additive; existing :focus-visible rings are kept).
    ====================================================================== */
@@ -815,7 +1009,13 @@
   .surface :global(.new-loom-draft .new-loom-shell__action),
   .surface :global(.new-loom-draft__reference-action),
   .surface :global(.new-loom-draft__source-tile),
-  .surface :global(.new-loom-draft__inspector-tab) {
+  .surface :global(.new-loom-draft__inspector-tab),
+  .surface :global(.new-loom-draft__block),
+  .surface :global(.new-loom-draft__block-cite),
+  .surface :global(.new-loom-draft__block-tools),
+  .surface :global(.new-loom-draft__block-tools button),
+  .surface :global(.new-loom-draft__block-add),
+  .surface :global(.new-loom-draft__block-add button) {
     transition: none;
   }
 }
