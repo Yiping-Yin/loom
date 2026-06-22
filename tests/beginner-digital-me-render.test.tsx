@@ -49,6 +49,16 @@ const SAMPLE_PROFILE: BeginnerProfile = {
   works: [],
 };
 
+// An "established" profile (has journey substance) — used by the tests that
+// assert the progressively-disclosed sections (Ask, capabilities, proof), which
+// only render once the profile is established.
+const ESTABLISHED_PROFILE: BeginnerProfile = {
+  ...SAMPLE_PROFILE,
+  experience: [
+    { role: 'Senior Engineer', organization: 'Acme', start: '2020', bullets: ['Led the platform team.'] },
+  ],
+};
+
 test('BeginnerDigitalMe renders name and headline', () => {
   const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
   const html = render(<BeginnerDigitalMe profile={SAMPLE_PROFILE} />);
@@ -79,7 +89,7 @@ test('BeginnerDigitalMe renders profile link labels with _blank and noreferrer',
 
 test('BeginnerDigitalMe renders the Ask widget section', () => {
   const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
-  const html = render(<BeginnerDigitalMe profile={SAMPLE_PROFILE} />);
+  const html = render(<BeginnerDigitalMe profile={ESTABLISHED_PROFILE} />);
 
   // AskYiping renders a <section aria-labelledby="ask-yiping-title"> at minimum.
   assert.match(html, /ask-yiping/i);
@@ -177,7 +187,7 @@ test('AskYiping renders owner default placeholder when no placeholder prop is gi
 
 test('BeginnerDigitalMe passes generic chips and placeholder to AskYiping', () => {
   const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
-  const html = render(<BeginnerDigitalMe profile={SAMPLE_PROFILE} />);
+  const html = render(<BeginnerDigitalMe profile={ESTABLISHED_PROFILE} />);
   const text = visibleText(html);
 
   // Generic chips must be present.
@@ -371,7 +381,7 @@ test('BeginnerDigitalMe capability compounding summary counts correctly', () => 
 
 test('BeginnerDigitalMe renders no "Ask Yiping" text and no owner example Q&A', () => {
   const { BeginnerDigitalMe } = require('../app/digital-me/BeginnerDigitalMe') as typeof import('../app/digital-me/BeginnerDigitalMe');
-  const html = render(<BeginnerDigitalMe profile={SAMPLE_PROFILE} />);
+  const html = render(<BeginnerDigitalMe profile={ESTABLISHED_PROFILE} />);
   const text = visibleText(html);
 
   // Must NOT contain "Ask Yiping" anywhere (eyebrow, title, aria-label, error heading).
