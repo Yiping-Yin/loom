@@ -1470,7 +1470,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                   })}
                 </div>
               ) : (
-                <p>No source tiles yet.</p>
+                <p className="new-loom-draft__ai-empty">No source tiles yet.</p>
               )}
             </section>
 
@@ -1532,7 +1532,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                   })}
                 </ul>
               ) : (
-                <p>No references attached yet.</p>
+                <p className="new-loom-draft__ai-empty">No references attached yet.</p>
               )}
             </section>
 
@@ -1699,7 +1699,7 @@ export function DraftClient({ initialDraftTypeId }: DraftClientProps = {}) {
                   })}
                 </ol>
               ) : (
-                <p>No draft blocks yet.</p>
+                <p className="new-loom-draft__ai-empty">No draft blocks yet.</p>
               )}
               <section className="new-loom-draft__block-operation" aria-label="Block operation">
                 <h3>Block operation</h3>
