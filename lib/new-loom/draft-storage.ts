@@ -298,6 +298,11 @@ export type NewLoomDraftRecord = {
   body: string;
   references: NewLoomDraftReference[];
   blocks?: NewLoomDraftDocBlock[];
+  // Curation gate for the moat: when the user explicitly opts a draft in, it is
+  // mapped to an ArtifactRef and routed through the artifact pipeline so it
+  // feeds BOTH the Ask corpus and capability derivation. Absent/undefined =
+  // not exposed (opt-in only).
+  includedInDigitalMe?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -387,6 +392,8 @@ function isDraftRecord(value: unknown): value is NewLoomDraftRecord {
     typeof record.body === 'string' &&
     Array.isArray(record.references) &&
     record.references.every(isDraftReference) &&
+    (record.includedInDigitalMe === undefined ||
+      typeof record.includedInDigitalMe === 'boolean') &&
     typeof record.createdAt === 'string' &&
     typeof record.updatedAt === 'string'
   );
@@ -2031,6 +2038,7 @@ export function createDraft(
     body?: string;
     references?: NewLoomDraftReference[];
     blocks?: NewLoomDraftDocBlock[];
+    includedInDigitalMe?: boolean;
   } = {},
   options: {
     key?: string;
@@ -2047,6 +2055,11 @@ export function createDraft(
     body: input.blocks ? (input.body ?? blocksToBody(input.blocks)) : (input.body ?? ''),
     references: input.references ?? [],
     blocks: input.blocks,
+    // Opt-in only: omit the key unless the caller explicitly set it so an
+    // un-curated draft stays absent (not a falsey `false`) on the record.
+    ...(input.includedInDigitalMe === undefined
+      ? {}
+      : { includedInDigitalMe: input.includedInDigitalMe }),
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -2058,7 +2071,9 @@ export function createDraft(
 export function updateDraft(
   adapter: DraftStorageAdapter,
   id: string,
-  patch: Partial<Pick<NewLoomDraftRecord, 'title' | 'body' | 'references' | 'blocks'>>,
+  patch: Partial<
+    Pick<NewLoomDraftRecord, 'title' | 'body' | 'references' | 'blocks' | 'includedInDigitalMe'>
+  >,
   options: {
     key?: string;
     now?: DraftClock;
@@ -2075,6 +2090,10 @@ export function updateDraft(
     blocks: patch.blocks ?? existing.blocks,
     body: patch.blocks ? blocksToBody(patch.blocks) : (patch.body ?? existing.body),
     references: patch.references ?? existing.references,
+    // Only mutate the curation flag when the patch carries it (so an unrelated
+    // patch can't silently clear an opt-in); `false` is a real, persisted value.
+    includedInDigitalMe:
+      patch.includedInDigitalMe ?? existing.includedInDigitalMe,
     updatedAt: (options.now ?? defaultClock)(),
   };
   drafts[index] = next;

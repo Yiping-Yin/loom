@@ -779,6 +779,30 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
     });
   }
 
+  // The moat's curation gate: opting this draft into Digital Me maps it to an
+  // ArtifactRef downstream, so it can feed BOTH the Ask corpus and capability
+  // derivation. Persist the flag on the draft record via the localStorage
+  // fallback (the native store persists body-only today), mirroring the
+  // optimistic setDraft pattern used elsewhere.
+  function toggleIncludedInDigitalMe() {
+    if (!draft) return;
+    const next = !draft.includedInDigitalMe;
+    setDraft({ ...draft, includedInDigitalMe: next });
+    setSaveState('idle');
+    const fallbackStorage = browserDraftStorage();
+    if (!fallbackStorage) {
+      setSaveState('unavailable');
+      return;
+    }
+    try {
+      const updated = updateDraft(fallbackStorage, draft.id, { includedInDigitalMe: next });
+      setDraft(updated);
+      setSaveState('saved');
+    } catch {
+      setSaveState('unavailable');
+    }
+  }
+
   const ensureReferencePickerDocs = async () => {
     if (referencePickerDocs.length > 0 || referencePickerState === 'loading') return;
     setReferencePickerState('loading');
@@ -1252,6 +1276,18 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
           <div className="new-loom-draft__editor-toolbar" aria-label="Editor toolbar">
             <span>Source-grounded writing</span>
             <div className="new-loom-draft__editor-actions">
+              <button
+                type="button"
+                className="new-loom-draft__reference-action"
+                aria-pressed={Boolean(draft?.includedInDigitalMe)}
+                aria-label="纳入 Digital Me / Include in Digital Me"
+                disabled={!draft}
+                onClick={toggleIncludedInDigitalMe}
+              >
+                {draft?.includedInDigitalMe
+                  ? '已纳入 Digital Me · Included'
+                  : '纳入 Digital Me · Include in Digital Me'}
+              </button>
               {!publicWorkingMode ? (
                 <button
                   type="button"
