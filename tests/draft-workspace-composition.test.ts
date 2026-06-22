@@ -15,13 +15,18 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   const globals = read('app/globals.css');
   const draftDeskCss = read('app/draft/draft-evidence-desk.module.css');
 
-  assert.match(draftPage, /title: 'Draft · Loom'/);
-  assert.match(draftPage, /description: 'Write source-grounded drafts from verified Loom evidence\.'/);
+  // /draft is now a redirect stub — the editor lives inside /digital-me (?edit mode).
+  assert.match(draftPage, /'use client'/);
+  assert.match(draftPage, /draftStubTarget/);
+  assert.doesNotMatch(draftPage, /title: 'Draft · Loom'/);
   // /draft is a focused workbench, not a browsable page — it carries NO global nav,
   // but it must still offer a quiet way home to Digital Me.
   assert.doesNotMatch(draftClient, /LoomGlobalNav/);
   assert.match(draftClient, /<a className="new-loom-draft__home" href="\/digital-me">/);
   assert.match(draftDeskCss, /\.surface :global\(\.new-loom-draft__home\)/);
+  // DraftClient accepts an editId so /digital-me can drive which doc opens (by-id).
+  assert.match(draftClient, /editId\??:\s*string/);
+  assert.match(draftClient, /selectDraftById\(/);
   assert.match(draftClient, /<h1 className="new-loom-draft__sr-title">Draft evidence desk<\/h1>/);
   assert.doesNotMatch(draftClient, /new-loom-draft__wordmark/);
   assert.doesNotMatch(globals, /new-loom-draft__wordmark/);
