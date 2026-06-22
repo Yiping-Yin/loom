@@ -199,16 +199,16 @@ test('HomeConversationalCover: offers a quiet résumé-import affordance before 
   assert.doesNotMatch(html, /aria-expanded/);
 });
 
-// ── Landing mode: the full product page (nav + hero + showcase + footer) ──────
+// ── Landing mode: hero + showcase + footer, but NO top nav ────────────────────
 
-test('HomeConversationalCover: landing shows nav chrome with a Begin CTA', () => {
+test('HomeConversationalCover: a new visitor sees no top nav — conversation only', () => {
   const { HomeConversationalCover } = getCover();
-  const text = visibleText(render(<HomeConversationalCover />));
+  const html = render(<HomeConversationalCover />);
 
-  // Real product chrome, not a lone widget: a Begin CTA + links to real pages.
-  assert.match(text, /Begin/);
-  assert.match(text, /History/);
-  assert.match(text, /Example/);
+  // A new user (no profile) is driven purely by the conversation to complete
+  // their profile — no top nav bar (no Begin CTA, no nav links) before they're in.
+  assert.doesNotMatch(html, /class="nav"/);
+  assert.doesNotMatch(visibleText(html), /\bBegin\b/);
 });
 
 test('HomeConversationalCover: landing shows the product showcase (sample LOOM)', () => {
