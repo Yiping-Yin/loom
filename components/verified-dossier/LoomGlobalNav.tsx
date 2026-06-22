@@ -405,7 +405,7 @@ export function LoomGlobalNav({
               draggable={false}
             />
           </span>
-          <span>Loom</span>
+          <span style={{ letterSpacing: '0.16em' }}>LOOM</span>
         </a>
         <details
           ref={menuRef}
