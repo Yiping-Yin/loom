@@ -36,3 +36,11 @@ test('/me page renders the loader and sets a title', () => {
   assert.match(pageSrc, /MeLoader/);
   assert.match(pageSrc, /metadata/);
 });
+
+test('the identity empty state exposes a reachable /me owner entry (app has no address bar)', () => {
+  const emptySrc = readFileSync(
+    fileURLToPath(new URL('../app/IdentityEmptyState.tsx', import.meta.url)),
+    'utf8',
+  );
+  assert.match(emptySrc, /href="\/me"/);
+});
