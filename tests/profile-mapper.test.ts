@@ -28,7 +28,7 @@ test('rowToProfile normalizes (drops an unsafe href) and parses updatedAt', () =
 });
 
 test('rowToProfile on garbage data returns an empty-but-valid profile', () => {
-  const { profile: out } = rowToProfile({ user_id: 'u', updated_at: new Date(0).toISOString(), data: 42 });
+  const { profile: out } = rowToProfile({ updated_at: new Date(0).toISOString(), data: 42 });
   assert.equal(out.version, 1);
   assert.equal(out.home.name, '');
 });

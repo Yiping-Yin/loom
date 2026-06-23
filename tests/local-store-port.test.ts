@@ -11,7 +11,11 @@ class MemStorage implements Storage {
   clear() { this.store.clear(); }
 }
 let mem: MemStorage;
-before(() => { mem = new MemStorage(); /* @ts-ignore */ globalThis.window = { localStorage: mem, dispatchEvent: () => true }; });
+before(() => {
+  mem = new MemStorage();
+  // @ts-ignore test environment
+  globalThis.window = { localStorage: mem, dispatchEvent: () => true };
+});
 beforeEach(() => mem.clear());
 
 test('port reads/writes the profile and the local version clock', async () => {

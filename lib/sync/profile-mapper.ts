@@ -11,7 +11,7 @@ export function profileToRow(profile: BeginnerProfile, userId: string, updatedAt
   return { user_id: userId, data: profile, updated_at: new Date(updatedAtMs).toISOString() };
 }
 
-export function rowToProfile(row: ProfileRow): { profile: BeginnerProfile; updatedAt: number } {
+export function rowToProfile(row: { data: unknown; updated_at: string }): { profile: BeginnerProfile; updatedAt: number } {
   const updatedAt = Date.parse(row.updated_at);
   return {
     profile: normalizeBeginnerProfile(row.data),
