@@ -26,3 +26,8 @@ test('/account is classified as an internal route', () => {
   const shell = read('../lib/new-loom/product-shell.ts');
   assert.match(shell, /'\/account'/);
 });
+
+test('the identity empty state links to /account', () => {
+  const empty = read('../app/IdentityEmptyState.tsx');
+  assert.match(empty, /href="\/account"/);
+});

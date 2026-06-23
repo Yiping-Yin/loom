@@ -53,6 +53,11 @@ export function IdentityEmptyState({
             Owner? Load your profile →
           </a>
         </p>
+        <p style={{ marginTop: 'var(--space-3)', fontSize: '0.8rem' }}>
+          <a href="/account" style={{ color: 'var(--muted)' }}>
+            Sign in to sync →
+          </a>
+        </p>
       </section>
     </main>
   );
