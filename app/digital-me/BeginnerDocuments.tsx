@@ -47,7 +47,9 @@ export function BeginnerDocuments({ documents }: { documents: StudioDocumentSumm
                   ) : null}
                 </span>
                 <span className={styles.cardMeta}>
-                  Grounded by {doc.sourceCount} {doc.sourceCount === 1 ? 'source' : 'sources'}
+                  {doc.sourceCount > 0
+                    ? `Grounded by ${doc.sourceCount} ${doc.sourceCount === 1 ? 'source' : 'sources'}`
+                    : 'No sources yet'}
                   {' · '}
                   {doc.wordCount} {doc.wordCount === 1 ? 'word' : 'words'}
                   {' · '}
@@ -59,6 +61,7 @@ export function BeginnerDocuments({ documents }: { documents: StudioDocumentSumm
         </ul>
       ) : (
         <a className={styles.empty} href="/digital-me?edit=new">
+          <span className={styles.emptyTitle}>Turn your work into a document your Digital Me can speak from.</span>
           <span className={styles.emptyCta}>Start a document →</span>
         </a>
       )}

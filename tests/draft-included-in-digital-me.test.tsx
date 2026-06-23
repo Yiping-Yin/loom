@@ -180,10 +180,11 @@ test('DraftClient renders an Include in Digital Me toggle wired to updateDraft',
   const repoRoot = path.resolve(__dirname, '..');
   const src = fs.readFileSync(path.join(repoRoot, 'app/draft/DraftClient.tsx'), 'utf8');
 
-  // The toggle control exists and is labelled (bilingual, consistent with the
-  // editor's existing copy register).
-  assert.match(src, /纳入 Digital Me/);
+  // The toggle control exists and is labelled in English (the product UI is
+  // English — no bilingual leakage from the build conversation).
   assert.match(src, /Include in Digital Me/);
+  assert.match(src, /Included in Digital Me/);
+  assert.doesNotMatch(src, /纳入 Digital Me/);
 
   // It reflects current state via aria-pressed bound to the flag.
   assert.match(src, /aria-pressed=\{[^}]*includedInDigitalMe/);

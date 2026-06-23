@@ -116,6 +116,10 @@
 .empty:focus-visible {
   border-color: var(--signature-cyan);
 }
+.emptyTitle {
+  color: var(--text-1);
+  font-size: 0.98rem;
+}
 .emptyCta {
   color: var(--signature-cyan);
   font-family: var(--mono);

@@ -1281,13 +1281,13 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
                 type="button"
                 className="new-loom-draft__reference-action"
                 aria-pressed={Boolean(draft?.includedInDigitalMe)}
-                aria-label="纳入 Digital Me / Include in Digital Me"
+                aria-label="Include this document in your Digital Me"
                 disabled={!draft}
                 onClick={toggleIncludedInDigitalMe}
               >
                 {draft?.includedInDigitalMe
-                  ? '已纳入 Digital Me · Included'
-                  : '纳入 Digital Me · Include in Digital Me'}
+                  ? 'Included in Digital Me'
+                  : 'Include in Digital Me'}
               </button>
               {!publicWorkingMode ? (
                 <button
