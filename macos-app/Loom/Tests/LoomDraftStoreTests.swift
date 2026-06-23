@@ -1593,6 +1593,175 @@ final class LoomDraftStoreTests: XCTestCase {
         XCTAssertTrue(prompt.contains("Tagged draft cards:\n1. Unclear: Ambiguous claim"))
         XCTAssertTrue(prompt.contains("Return only draft text that can be inserted into the body."))
     }
+
+    // MARK: - includedInDigitalMe curation gate (moat opt-in)
+    // The web `/draft` "Include in Digital Me" toggle posts the flag through the
+    // `loomDrafts` bridge. These prove the native half persists + echoes it so
+    // the gate does not silently reset on reload in the installed app.
+
+    func testUpdatePersistsIncludedInDigitalMeFlagToJSONIndex() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let store = LoomDraftStore(rootURL: root, fileManager: fm)
+        let created = try store.create(title: "Curated", body: "Body", now: Date(timeIntervalSince1970: 1))
+        XCTAssertNil(created.includedInDigitalMe)
+
+        let updated = try store.update(
+            created,
+            title: "Curated",
+            body: "Body",
+            includedInDigitalMe: true,
+            now: Date(timeIntervalSince1970: 2)
+        )
+        XCTAssertEqual(updated.includedInDigitalMe, true)
+
+        // Survives the on-disk JSON index round-trip.
+        let reopened = try LoomDraftStore(rootURL: root, fileManager: fm).list().first
+        XCTAssertEqual(reopened?.includedInDigitalMe, true)
+    }
+
+    func testUpdateWithoutFlagPreservesExistingCurationOptIn() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let store = LoomDraftStore(rootURL: root, fileManager: fm)
+        let created = try store.create(title: "Curated", body: "Body", now: Date(timeIntervalSince1970: 1))
+        _ = try store.update(created, title: "Curated", body: "Body", includedInDigitalMe: true, now: Date(timeIntervalSince1970: 2))
+
+        // A later title/body-only save (e.g. the native editor's save()) must NOT wipe the opt-in.
+        let reloaded = try XCTUnwrap(try store.list().first)
+        let edited = try store.update(reloaded, title: "Curated v2", body: "Body v2", now: Date(timeIntervalSince1970: 3))
+        XCTAssertEqual(edited.includedInDigitalMe, true)
+
+        let reopened = try LoomDraftStore(rootURL: root, fileManager: fm).list().first
+        XCTAssertEqual(reopened?.includedInDigitalMe, true)
+        XCTAssertEqual(reopened?.title, "Curated v2")
+    }
+
+    func testUpdateOptsOutWhenExplicitFalse() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let store = LoomDraftStore(rootURL: root, fileManager: fm)
+        let created = try store.create(title: "Curated", body: "Body", now: Date(timeIntervalSince1970: 1))
+        _ = try store.update(created, title: "Curated", body: "Body", includedInDigitalMe: true, now: Date(timeIntervalSince1970: 2))
+
+        let reloaded = try XCTUnwrap(try store.list().first)
+        let optedOut = try store.update(reloaded, title: "Curated", body: "Body", includedInDigitalMe: false, now: Date(timeIntervalSince1970: 3))
+        XCTAssertEqual(optedOut.includedInDigitalMe, false)
+
+        let reopened = try LoomDraftStore(rootURL: root, fileManager: fm).list().first
+        XCTAssertEqual(reopened?.includedInDigitalMe, false)
+    }
+
+    @MainActor
+    func testDraftBridgeDecodesAndEchoesIncludedInDigitalMe() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let store = LoomDraftStore(rootURL: root, fileManager: fm)
+        let created = try store.create(title: "Curated", body: "Body", now: Date(timeIntervalSince1970: 1))
+        let handler = DraftBridgeHandler(store: store)
+
+        // (a) the inbound `update` message's flag is decoded and persisted.
+        let updated = try handler.applyUpdate([
+            "action": "update",
+            "id": created.id.uuidString.lowercased(),
+            "title": "Curated",
+            "body": "Body",
+            "includedInDigitalMe": true
+        ])
+        XCTAssertEqual(updated.includedInDigitalMe, true)
+
+        // (b) the reply record the web awaits echoes the flag back.
+        let encoded = handler.encode(updated)
+        XCTAssertEqual(encoded["includedInDigitalMe"] as? Bool, true)
+
+        // …and it is on disk for the next list().
+        let reopened = try LoomDraftStore(rootURL: root, fileManager: fm).list().first
+        XCTAssertEqual(reopened?.includedInDigitalMe, true)
+    }
+
+    @MainActor
+    func testDraftBridgeOmitsIncludedInDigitalMeWhenNotCurated() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let store = LoomDraftStore(rootURL: root, fileManager: fm)
+        let created = try store.create(title: "Plain", body: "Body", now: Date(timeIntervalSince1970: 1))
+        let handler = DraftBridgeHandler(store: store)
+
+        // Absent key === not opted in (mirrors the optional web `NewLoomDraftRecord` shape).
+        XCTAssertNil(handler.encode(created)["includedInDigitalMe"])
+
+        // A body-only patch (no includedInDigitalMe key) must not fabricate one.
+        let updated = try handler.applyUpdate([
+            "action": "update",
+            "id": created.id.uuidString.lowercased(),
+            "body": "Body edited"
+        ])
+        XCTAssertNil(updated.includedInDigitalMe)
+        XCTAssertNil(handler.encode(updated)["includedInDigitalMe"])
+    }
+
+    func testCurationOptInSurvivesMarkdownSidecarRecovery() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let store = LoomDraftStore(rootURL: root, fileManager: fm)
+        let created = try store.create(title: "Curated", body: "Body", now: Date(timeIntervalSince1970: 1))
+        _ = try store.update(created, title: "Curated", body: "Body", includedInDigitalMe: true, now: Date(timeIntervalSince1970: 2))
+
+        // The human-editable sidecar must carry the gate too, so a rebuild from
+        // markdown (drafts.json lost) doesn't silently drop the opt-in.
+        let draftsDir = root.appendingPathComponent("Drafts", isDirectory: true)
+        let markdownURL = draftsDir.appendingPathComponent("\(created.id.uuidString).md", isDirectory: false)
+        let markdown = try String(contentsOf: markdownURL, encoding: .utf8)
+        XCTAssertTrue(markdown.contains("includedInDigitalMe: true"))
+
+        try fm.removeItem(at: draftsDir.appendingPathComponent("drafts.json", isDirectory: false))
+        let recovered = try LoomDraftStore(rootURL: root, fileManager: fm).list().first
+        XCTAssertEqual(recovered?.includedInDigitalMe, true)
+    }
+
+    func testCurationOptInSurvivesNewerMarkdownSidecarMerge() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let store = LoomDraftStore(rootURL: root, fileManager: fm)
+        let created = try store.create(title: "Curated", body: "Original body.", now: Date(timeIntervalSince1970: 1))
+        _ = try store.update(created, title: "Curated", body: "Original body.", includedInDigitalMe: true, now: Date(timeIntervalSince1970: 2))
+
+        // An external markdown edit (body changed) newer than the index triggers a
+        // rebuild-from-sidecar; the rebuilt record must keep the opt-in.
+        let draftsDir = root.appendingPathComponent("Drafts", isDirectory: true)
+        let indexURL = draftsDir.appendingPathComponent("drafts.json", isDirectory: false)
+        let markdownURL = draftsDir.appendingPathComponent("\(created.id.uuidString).md", isDirectory: false)
+        let indexModifiedAt = Date()
+        try fm.setAttributes([.modificationDate: indexModifiedAt], ofItemAtPath: indexURL.path)
+        try """
+        ---
+        includedInDigitalMe: true
+        ---
+
+        # Curated
+
+        Edited body from the markdown file.
+        """.write(to: markdownURL, atomically: true, encoding: .utf8)
+        try fm.setAttributes([.modificationDate: indexModifiedAt.addingTimeInterval(5)], ofItemAtPath: markdownURL.path)
+
+        let reopened = try LoomDraftStore(rootURL: root, fileManager: fm).list().first
+        XCTAssertEqual(reopened?.body, "Edited body from the markdown file.")
+        XCTAssertEqual(reopened?.includedInDigitalMe, true)
+    }
 }
 
 final class LoomCompilePipelineTests: XCTestCase {
