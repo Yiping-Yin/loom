@@ -82,11 +82,7 @@ export function assessAnswer(field: AnswerField, raw: string): AnswerAssessment 
   if (field === 'headline') {
     const chatty =
       text.includes('?') ||
-      /\b(do you|can you|could you|recommend|i'?m doing|i am doing)\b/i.test(text) ||
-      // Matches conversational Chinese USER INPUT (e.g. "can you / recommend / how / help me").
-      // This is a content-matching pattern against what people type, not UI copy, so the
-      // CJK keywords must stay to detect chatty Chinese answers (see assess-answer.test.ts).
-      /你能|推荐|怎么|帮我/.test(text);
+      /\b(do you|can you|could you|recommend|i'?m doing|i am doing)\b/i.test(text);
     if (chatty) {
       return {
         level: 'weak',

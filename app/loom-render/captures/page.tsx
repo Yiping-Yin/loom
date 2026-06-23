@@ -118,7 +118,7 @@ const STOPWORDS = new Set([
 function tokenizeFor(text: string): string[] {
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9À-ɏ一-鿿\s'-]/g, ' ')
+    .replace(/[^a-z0-9À-ɏ\s'-]/g, ' ')
     .split(/\s+/)
     .map((t) => t.replace(/^[-']|[-']$/g, ''))
     .filter((t) => t.length >= 3 && !STOPWORDS.has(t));

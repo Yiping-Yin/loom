@@ -90,13 +90,13 @@ function inferThoughtType(turns: Turn[]): ThoughtType {
   const allQuestions = turns.map((t) => t.q.toLowerCase()).join(' ');
 
   // Objection signals
-  if (/不对|错|wrong|disagree|但是|however|反驳|问题是|可是/.test(allQuestions)) return 'objection';
+  if (/wrong|disagree|however|but actually|that's not/.test(allQuestions)) return 'objection';
   // Question signals (unresolved)
-  if (/为什么|why|how come|怎么回事|什么原因/.test(allQuestions) && turns.length === 1) return 'question';
+  if (/why|how come|what causes/.test(allQuestions) && turns.length === 1) return 'question';
   // Hypothesis signals
-  if (/如果|假设|suppose|what if|是不是可以|会不会/.test(allQuestions)) return 'hypothesis';
+  if (/suppose|what if|could it be|maybe/.test(allQuestions)) return 'hypothesis';
   // Inference signals
-  if (/所以|因此|说明|意味着|therefore|implies|推出/.test(allQuestions)) return 'inference';
+  if (/so |therefore|implies|which means|hence/.test(allQuestions)) return 'inference';
   // Citation/quote-heavy (single short question like "explain" on a formula)
   if (turns.length === 1 && allQuestions.length < 10) return 'explanation';
 
