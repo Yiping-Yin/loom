@@ -68,7 +68,10 @@ final class DraftBridgeHandler: NSObject, WKScriptMessageHandlerWithReply {
     /// `update` carries a patch: only the supplied fields change. Title / body
     /// default to the stored draft's current values so a references-only patch
     /// doesn't blank the body and vice versa.
-    private func applyUpdate(_ payload: [String: Any]) throws -> LoomDraftRecord {
+    ///
+    /// Internal (not private) so `LoomDraftStoreTests` can verify the inbound
+    /// `includedInDigitalMe` decode without constructing a `WKScriptMessage`.
+    func applyUpdate(_ payload: [String: Any]) throws -> LoomDraftRecord {
         guard let id = payload["id"] as? String, let uuid = UUID(uuidString: id) else {
             throw error("update missing draft id")
         }
@@ -110,7 +113,9 @@ final class DraftBridgeHandler: NSObject, WKScriptMessageHandlerWithReply {
 
     // MARK: - Serialization to the web NewLoomDraftRecord shape
 
-    private func encode(_ record: LoomDraftRecord) -> [String: Any] {
+    /// Internal (not private) so `LoomDraftStoreTests` can verify that the reply
+    /// record echoes `includedInDigitalMe` back to the web bridge.
+    func encode(_ record: LoomDraftRecord) -> [String: Any] {
         var dict: [String: Any] = [
             "id": record.id.uuidString.lowercased(),
             "title": record.title,

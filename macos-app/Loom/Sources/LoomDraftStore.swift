@@ -244,7 +244,8 @@ final class LoomDraftStore {
         let sidecarDraft = try draftRecord(fromMarkdownSidecar: markdownURL, id: draft.id)
         guard sidecarDraft.title != draft.title
             || sidecarDraft.body != draft.body
-            || sidecarDraft.references != draft.references else {
+            || sidecarDraft.references != draft.references
+            || sidecarDraft.includedInDigitalMe != draft.includedInDigitalMe else {
             return draft
         }
 
@@ -254,7 +255,8 @@ final class LoomDraftStore {
             body: sidecarDraft.body,
             references: sidecarDraft.references,
             createdAt: draft.createdAt,
-            updatedAt: max(draft.updatedAt, sidecarModifiedAt)
+            updatedAt: max(draft.updatedAt, sidecarModifiedAt),
+            includedInDigitalMe: sidecarDraft.includedInDigitalMe
         )
     }
 
@@ -300,6 +302,12 @@ final class LoomDraftStore {
         let references = referencesIndex.map { referenceMarkdownRecords(from: lines, startIndex: $0 + 1) } ?? []
         let modifiedAt = (try? markdownURL.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
             ?? Date.distantPast
+        // Read the curation gate from the pre-title frontmatter region only, so a
+        // body line that happens to read "includedInDigitalMe: true" can't spoof it.
+        let frontmatterEnd = lines.firstIndex(where: { $0.hasPrefix("# ") }) ?? lines.startIndex
+        let includedInDigitalMe: Bool? = lines[..<frontmatterEnd].contains {
+            Self.metadataValue($0, prefix: "includedInDigitalMe:") == "true"
+        } ? true : nil
 
         return LoomDraftRecord(
             id: id,
@@ -307,7 +315,8 @@ final class LoomDraftStore {
             body: body,
             references: references,
             createdAt: modifiedAt,
-            updatedAt: modifiedAt
+            updatedAt: modifiedAt,
+            includedInDigitalMe: includedInDigitalMe
         )
     }
 
@@ -402,7 +411,16 @@ final class LoomDraftStore {
     }
 
     private func markdown(for draft: LoomDraftRecord) -> String {
-        var sections: [String] = ["# \(draft.title)", draft.body.trimmingCharacters(in: .whitespacesAndNewlines)]
+        var sections: [String] = []
+        // Curation gate: ride a YAML-style frontmatter block ahead of the title
+        // (only when opted in, so non-curated drafts keep clean markdown). The
+        // title scan below stays anchored on the `# ` line, so the block is
+        // excluded from the parsed body.
+        if draft.includedInDigitalMe == true {
+            sections.append("---\nincludedInDigitalMe: true\n---")
+        }
+        sections.append("# \(draft.title)")
+        sections.append(draft.body.trimmingCharacters(in: .whitespacesAndNewlines))
         if !draft.references.isEmpty {
             sections.append(referenceMarkdown(for: draft.references))
         }
