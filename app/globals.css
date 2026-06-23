@@ -6115,7 +6115,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .loom-weaves {
   min-height: 100vh;
   /* 2026-04-25: was hardcoded #13110D / #ECE2C9 (always-night). Per
-     user "白天的时候,所有页面都是浅色主题,晚上都是深色主题。不搞特殊"
+     user "During the day every page uses a light theme; at night every
+     page uses a dark theme. No special cases."
      — Weaves now follows system theme via tokens. The night ambience
      remains intact under prefers-color-scheme: dark and the noise
      overlay below stays scoped, just no longer forced on light users. */

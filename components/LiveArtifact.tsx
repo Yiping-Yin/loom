@@ -644,7 +644,7 @@ export function LiveArtifact({ docId }: { docId: string }) {
       }}
     >
       {/* Hairline meta strip — version + accent thread.
-          §1 · 润物细无声 — only present when there is content. */}
+          §1 · quiet, unobtrusive presence — only present when there is content. */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
         marginBottom: 12,

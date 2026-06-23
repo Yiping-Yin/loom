@@ -1,55 +1,16 @@
 import XCTest
 @testable import Loom
 
+// NOTE: This file once also covered "partial web clip placement" —
+// `CaptureWriter.placementOptions(in:)` + `insertPartialEntry(entry:to:placementID:)`,
+// which let a clip be inserted after a chosen heading (falling back to
+// `## Notes` when the placement was stale). That feature was dropped in
+// the minimal Loom shell rewrite (492c004); the only surviving insertion
+// path is the unconditional, private `CaptureWriter.appendUnderNotes`.
+// Those two tests were removed rather than ported because there is no
+// current API to exercise. What remains is capture deletion, which still
+// ships via `CapturesIndex.delete`.
 final class CapturePlacementTests: XCTestCase {
-    func testPartialWebClipCanBeInsertedAfterChosenHeading() throws {
-        let existing = """
-        # Topic
-
-        Intro.
-
-        ## First
-
-        Old first.
-
-        ## Target
-
-        Old target.
-
-        ## Next
-
-        Old next.
-        """
-
-        let target = try XCTUnwrap(
-            CaptureWriter.placementOptions(in: existing).first { $0.label == "After Target" }
-        )
-        let updated = CaptureWriter.insertPartialEntry(
-            entry: "### Clip\n\nCaptured block.",
-            to: existing,
-            placementID: target.id
-        )
-
-        XCTAssertTrue(updated.contains("## Target\n\nOld target.\n\n### Clip\n\nCaptured block.\n\n## Next"))
-        XCTAssertFalse(updated.contains("## Notes\n\n### Clip\n\nCaptured block."))
-    }
-
-    func testPartialWebClipFallsBackToNotesWhenPlacementIsStale() {
-        let existing = """
-        # Topic
-
-        Body.
-        """
-
-        let updated = CaptureWriter.insertPartialEntry(
-            entry: "### Clip\n\nCaptured block.",
-            to: existing,
-            placementID: "after-heading:999"
-        )
-
-        XCTAssertTrue(updated.contains("## Notes\n\n### Clip\n\nCaptured block."))
-    }
-
     func testDeletingCaptureRemovesOnlyOwnedSidecarFiles() throws {
         let fileManager = FileManager.default
         let directory = fileManager.temporaryDirectory
@@ -98,8 +59,7 @@ final class CapturePlacementTests: XCTestCase {
             snippet: "Flipdiscs are a display type...",
             timestamp: nil,
             fileURL: markdownURL,
-            snapshotFilename: ownedSnapshot,
-            captureASTFilename: ownedAST
+            snapshotFilename: ownedSnapshot
         )
 
         XCTAssertTrue(try CapturesIndex.delete(entry))

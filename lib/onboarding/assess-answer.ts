@@ -82,8 +82,7 @@ export function assessAnswer(field: AnswerField, raw: string): AnswerAssessment 
   if (field === 'headline') {
     const chatty =
       text.includes('?') ||
-      /\b(do you|can you|could you|recommend|i'?m doing|i am doing)\b/i.test(text) ||
-      /你能|推荐|怎么|帮我/.test(text);
+      /\b(do you|can you|could you|recommend|i'?m doing|i am doing)\b/i.test(text);
     if (chatty) {
       return {
         level: 'weak',

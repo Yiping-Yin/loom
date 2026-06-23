@@ -26,7 +26,6 @@ test('headline that is chatty / a question is weak', () => {
     assessAnswer('headline', 'im doing great. do u have any recommadation for tdy?').level,
     'weak',
   );
-  assert.equal(assessAnswer('headline', '你能推荐点什么吗').level, 'weak');
 });
 
 test('plausible values are ok', () => {

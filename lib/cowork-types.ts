@@ -1,7 +1,7 @@
 /**
  * Loom Cowork — rehearsal workspace types.
  *
- * North Star: "为人的思考服务" — serve human thinking.
+ * North Star: "serve human thinking."
  *
  * A cowork is a goal-scoped rehearsal surface where the user dumps their
  * thinking into a scratch pad, drops material references inline, and then

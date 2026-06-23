@@ -1475,7 +1475,7 @@ function WideThoughtCard({
             opacity: 0.66,
           }}
         >
-          这一纬还没织完 — {expanded ? '写下你的第一版理解…' : '展开继续'}
+          This thread isn't woven yet — {expanded ? 'write your first reading…' : 'expand to continue'}
         </div>
       )}
 
@@ -1586,8 +1586,8 @@ function WideThoughtCard({
             }}
             placeholder={
               thought.versionCount === 0 || !hasContent
-                ? '写下这一段在你心里的意思…'
-                : `追加第 v${thought.versionCount + 1} 版…`
+                ? 'Write what this passage means to you…'
+                : `Add version v${thought.versionCount + 1}…`
             }
             style={{
               width: '100%',
@@ -1618,7 +1618,7 @@ function WideThoughtCard({
               color: 'var(--muted)',
             }}
           >
-            <span>⌘↩ 保存 · Esc 取消</span>
+            <span>⌘↩ Save · Esc Cancel</span>
             <button
               type="button"
               onClick={() => void save()}

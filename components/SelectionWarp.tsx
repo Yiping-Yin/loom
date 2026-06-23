@@ -438,7 +438,7 @@ export function SelectionWarp() {
       detail: {
         anchorId: captured.anchorId,
         quote: captured.quote,
-        reviewHint: '⌘/ 打开 reader notes 延伸',
+        reviewHint: '⌘/ Reader notes',
         viewport: { x: spot.left, y: spot.top, height: spot.height },
       },
     }));

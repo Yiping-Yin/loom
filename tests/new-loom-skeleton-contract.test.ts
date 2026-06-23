@@ -3819,12 +3819,12 @@ test('/discipline is an in-app support document for the six product refusals', (
   assert.match(supportCss, /\.refusalList\s*\{/);
 
   for (const refusal of [
-    '不监视你',
-    '不打断你',
-    '不假装比你懂',
-    '不把你的东西拍平成 feed',
-    '不假装一切都该被永久保存',
-    '不主动上传本地文件全文',
+    'We don’t watch you',
+    'We don’t interrupt you',
+    'We don’t pretend to know better',
+    'We don’t flatten your work into a feed',
+    'We don’t pretend everything must be kept forever',
+    'We don’t auto-upload your local files',
   ]) {
     assert.match(disciplinePage, new RegExp(escapeRegExp(refusal)));
   }
