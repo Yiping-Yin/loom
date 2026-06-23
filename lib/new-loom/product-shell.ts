@@ -102,6 +102,7 @@ export const NEW_LOOM_INTERNAL_ROUTES = [
   '/graph',
   '/kesi',
   '/llm-wiki',
+  '/me',
   '/quizzes',
 ] as const;
 
