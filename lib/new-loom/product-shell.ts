@@ -95,6 +95,7 @@ export const NEW_LOOM_SUPPORT_ROUTES = [
 ] as const;
 
 export const NEW_LOOM_INTERNAL_ROUTES = [
+  '/account',
   '/demo',
   '/dev/principles',
   '/dev/traces',
