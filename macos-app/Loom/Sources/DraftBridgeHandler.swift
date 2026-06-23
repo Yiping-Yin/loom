@@ -81,11 +81,13 @@ final class DraftBridgeHandler: NSObject, WKScriptMessageHandlerWithReply {
         let nextReferences = payload.keys.contains("references")
             ? decodeReferences(payload["references"])
             : current.references
+        let nextIncluded = payload["includedInDigitalMe"] as? Bool ?? current.includedInDigitalMe
         return try store.update(
             current,
             title: nextTitle,
             body: nextBody,
-            references: nextReferences
+            references: nextReferences,
+            includedInDigitalMe: nextIncluded
         )
     }
 
@@ -109,7 +111,7 @@ final class DraftBridgeHandler: NSObject, WKScriptMessageHandlerWithReply {
     // MARK: - Serialization to the web NewLoomDraftRecord shape
 
     private func encode(_ record: LoomDraftRecord) -> [String: Any] {
-        [
+        var dict: [String: Any] = [
             "id": record.id.uuidString.lowercased(),
             "title": record.title,
             "body": record.body,
@@ -117,6 +119,8 @@ final class DraftBridgeHandler: NSObject, WKScriptMessageHandlerWithReply {
             "createdAt": isoFormatter.string(from: record.createdAt),
             "updatedAt": isoFormatter.string(from: record.updatedAt),
         ]
+        if let included = record.includedInDigitalMe { dict["includedInDigitalMe"] = included }
+        return dict
     }
 
     private func encode(_ reference: LoomDraftReference) -> [String: Any] {

@@ -1197,7 +1197,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
               <strong>{sourceTiles.length}</strong>
             </li>
             <li>
-              <span>Draft</span>
+              <span>Words</span>
               <strong>{wordCount}</strong>
             </li>
             <li>
@@ -1216,11 +1216,11 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
         className="new-loom-draft__main"
         aria-labelledby="new-loom-draft-title"
       >
-        <h1 className="new-loom-draft__sr-title">Draft evidence desk</h1>
-        <section className="new-loom-draft__document-header new-loom-draft__workspace" aria-label="Draft document">
-          <p className="new-loom-draft__eyebrow">Evidence desk · Draft</p>
+        <h1 className="new-loom-draft__sr-title">Studio</h1>
+        <section className="new-loom-draft__document-header new-loom-draft__workspace" aria-label="Studio document">
+          <p className="new-loom-draft__eyebrow">Studio</p>
           <div className="new-loom-draft__document-meta">
-            <span>Draft</span>
+            <span>Studio</span>
             <strong>{selectedOutputType.label}</strong>
             <small>{saveState === 'saved' ? 'Saved' : saveState === 'unavailable' ? 'Storage unavailable' : 'Unsaved'}</small>
           </div>
