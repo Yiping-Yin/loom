@@ -187,7 +187,7 @@ export const AnchorCard = forwardRef<HTMLDivElement, Props>(function AnchorCard(
               lineHeight: 1.5,
             }}
           >
-            这条笔记还没写完 · ⌘/ 进入 reader notes 继续
+            This note isn&rsquo;t finished · ⌘/ to continue in reader notes
           </div>
         ) : null}
 

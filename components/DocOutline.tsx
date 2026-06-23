@@ -28,7 +28,7 @@ export function DocOutline() {
 
     const collect = () => {
       const headings = Array.from(main.querySelectorAll('h2, h3')) as HTMLElement[];
-      // Deduplicate ids — repeated headings (e.g., two "在文中的意义" sections)
+      // Deduplicate ids — repeated headings (e.g., two "Meaning in Context" sections)
       // would collide on slug alone. Suffix -2, -3, … to keep them unique.
       const usedIds = new Set<string>();
       headings.forEach((h) => {

@@ -131,8 +131,8 @@ export function collectHeadingItems(root: ParentNode = document): HeadingItem[] 
   ) as HTMLElement[];
 
   // Deduplicate heading ids — two headings with identical slug (e.g. two
-  // "在文中的意义" sections in the same doc) would collide as React keys and
-  // break anchor matching. Suffix -2, -3, ... on collision. Same fix as
+  // "Significance in the text" sections in the same doc) would collide as React
+  // keys and break anchor matching. Suffix -2, -3, ... on collision. Same fix as
   // TableOfContents / DocOutline.
   const usedIds = new Set<string>();
   headings.forEach((h) => {

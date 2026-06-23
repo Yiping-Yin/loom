@@ -23,7 +23,7 @@
 
 /* ── Star-river (Task 5) ─────────────────────────────────────────────────────
    The cosmic centerpiece: identity (moon = Memory) → capabilities (stars /
-   银河) → standout capabilities (comets / 彗星) → grounded on the horizon
+   galaxy) → standout capabilities (comets) → grounded on the horizon
    (Library). Magnitude (radius + glow) maps to evidence strength; cyan is the
    only colour. Idle motion (twinkle/drift) is gated entirely behind
    prefers-reduced-motion: no-preference — reduced motion gets a static field. */
@@ -65,7 +65,7 @@
   stroke-dasharray: 2 7;
 }
 
-/* Flowing galactic band — modestly luminous so the 银河 reads as a real river. */
+/* Flowing galactic band — modestly luminous so the galaxy reads as a real river. */
 .riverBand {
   stroke: color-mix(in srgb, var(--cyan) 18%, transparent);
   stroke-width: 36;

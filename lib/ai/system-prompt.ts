@@ -5,15 +5,15 @@
  * whole-note recomposition, future agent flows — MUST build its prompt
  * from this module.
  * Do not inline rule strings anywhere else. The single source of truth lives
- * here so that DESIGN_MEMORY §2 (润物细无声) is enforced project-wide.
+ * here so that DESIGN_MEMORY §2 (work quietly and imperceptibly) is enforced project-wide.
  */
 
 /**
  * The absolute behavioral rules for any AI output inside Loom.
- * Derived from DESIGN_MEMORY.md §2 · AI like Siri · 润物细无声.
+ * Derived from DESIGN_MEMORY.md §2 · AI like Siri · work quietly and imperceptibly.
  */
 export const LOOM_AI_RULES = [
-  `RULES — these are absolute (Loom design memory §2 · 润物细无声):`,
+  `RULES — these are absolute (Loom design memory §2 · work quietly and imperceptibly):`,
   `- Start with the first content word of the answer. No preamble.`,
   `- No "Sure", "Of course", "Great question", "Let me…", "I'll…", "I'd be happy to…".`,
   `- No trailing recap, no "Hope this helps", no "Let me know if…".`,

@@ -4,40 +4,40 @@ import { LoomSupportNav } from '../LoomSupportNav';
 
 /**
  * /discipline — the six product refusals, written down as an in-app
- * document. Each refusal pairs the original Chinese commitment with
- * the English practice that enforces it in the product.
+ * document. Each refusal pairs the plain-language commitment with
+ * the practice that enforces it in the product.
  */
 
 export const metadata = { title: 'Discipline · Loom' };
 
 const REFUSALS = [
   {
-    refusal: '不监视你',
+    refusal: 'We don’t watch you',
     practice: 'No telemetry',
     body: 'Loom records nothing about how you use it. There is no analytics pipeline, no usage beacon, no behavioral profile.',
   },
   {
-    refusal: '不打断你',
+    refusal: 'We don’t interrupt you',
     practice: 'No notifications',
     body: 'Nothing pings, badges, or interrupts. The Hour shows the present quietly; it never demands you look.',
   },
   {
-    refusal: '不假装比你懂',
+    refusal: 'We don’t pretend to know better',
     practice: 'AI only appears when you ask',
     body: 'AI never speaks first, never summarizes uninvited, never rewrites your judgment. It answers when called and then steps back.',
   },
   {
-    refusal: '不把你的东西拍平成 feed',
+    refusal: 'We don’t flatten your work into a feed',
     practice: 'No home feed',
     body: 'Your material keeps its shape — sources, notes, drafts. There is no ranked stream, no engagement ordering, no infinite scroll.',
   },
   {
-    refusal: '不假装一切都该被永久保存',
+    refusal: 'We don’t pretend everything must be kept forever',
     practice: 'flow can fade',
     body: 'Hold what matters; flow can fade. Untouched material winters and settles into the archive instead of pretending everything is forever-urgent.',
   },
   {
-    refusal: '不主动上传本地文件全文',
+    refusal: 'We don’t auto-upload your local files',
     practice: 'No automatic full-file upload',
     body: 'Local files are read in place. Full text leaves your machine only when you explicitly send a passage somewhere yourself.',
   },

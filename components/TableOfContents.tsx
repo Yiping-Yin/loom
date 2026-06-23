@@ -17,7 +17,7 @@ export function TableOfContents({ docId, docTitle }: { docId?: string; docTitle?
     const collect = () => {
       const headings = Array.from(main.querySelectorAll('h2, h3')) as HTMLElement[];
       // ensure each heading has an id so anchors work even when content was rendered without one.
-      // Repeated headings (e.g., two "在文中的意义" sections) would collide on slug alone —
+      // Repeated headings (e.g., two "Meaning in context" sections) would collide on slug alone —
       // deduplicate by suffixing -2, -3, … so anchors and React keys stay unique.
       const usedIds = new Set<string>();
       headings.forEach((h) => {
@@ -68,7 +68,7 @@ export function TableOfContents({ docId, docTitle }: { docId?: string; docTitle?
     };
   }, []);
 
-  // §1 沉浸式 — no labels, no cards, no chrome. Just the heading
+  // §1 Immersive — no labels, no cards, no chrome. Just the heading
   // links, nothing else. The TOC is hidden by default (CSS opacity 0)
   // and only appears when the user hovers the right margin.
   if (items.length === 0) return <aside className="toc" />;

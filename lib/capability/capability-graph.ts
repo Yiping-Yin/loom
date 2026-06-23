@@ -63,9 +63,10 @@ function hashToken(s: string): string {
 
 /**
  * Normalise a label into a URL-slug-style id segment. Falls back to a stable
- * hash token when the label has no ASCII alphanumerics (e.g. '数据分析'), so two
- * distinct non-Latin labels never both collapse to the same empty slug (which
- * would silently drop one and collide React keys / card focus downstream).
+ * hash token when the label has no ASCII alphanumerics (e.g. an all-CJK label
+ * such as "data analysis" written in Chinese), so two distinct non-Latin labels
+ * never both collapse to the same empty slug (which would silently drop one and
+ * collide React keys / card focus downstream).
  */
 function slug(label: string): string {
   const base = label

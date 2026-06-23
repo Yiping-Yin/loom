@@ -14,8 +14,8 @@ import styles from './CapabilityMap.module.css';
  * capability cards.
  *
  * Brand cosmology (ties to /product-history): the Digital Me tells one cosmic
- * story — identity (moon = Memory) → capabilities (the star-river / 银河) →
- * standout capabilities (comets / 彗星) → grounded on the library/horizon
+ * story — identity (moon = Memory) → capabilities (the star-river / galaxy) →
+ * standout capabilities (comets) → grounded on the library/horizon
  * (Earth-horizon = the evidence base). Each capability is a STAR in a flowing
  * galactic band; its magnitude (radius + glow) = evidence strength, so the
  * river literally brightens as proof compounds. The strongest capabilities
