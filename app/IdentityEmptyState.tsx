@@ -45,6 +45,14 @@ export function IdentityEmptyState({
           <a href="/onboarding/profile">Build your LOOM →</a>
           <a href={exampleHref}>See an example →</a>
         </nav>
+        {/* Discreet owner entry: the macOS app has no address bar, so this is the
+            only way to reach the URL-only /me loader from inside the app. Muted so
+            it reads as a utility, not a stranger-facing CTA. */}
+        <p style={{ marginTop: 'var(--space-5)', fontSize: '0.8rem' }}>
+          <a href="/me" style={{ color: 'var(--muted)' }}>
+            Owner? Load your profile →
+          </a>
+        </p>
       </section>
     </main>
   );
