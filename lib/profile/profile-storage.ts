@@ -1,4 +1,5 @@
 import { normalizeBeginnerProfile, type BeginnerProfile } from './beginner-profile';
+import { notifyBeginnerProfileChanged } from './profile-events';
 
 /**
  * localStorage key for the single-tenant beginner profile.
@@ -58,6 +59,7 @@ export function writeBeginnerProfileLocal(profile: BeginnerProfile): boolean {
   const normalized = normalizeBeginnerProfile(profile);
   try {
     store.setItem(BEGINNER_PROFILE_KEY, JSON.stringify(normalized));
+    notifyBeginnerProfileChanged();
     return true;
   } catch {
     // Quota / privacy mode — the write failed; the wizard keeps in-memory state
