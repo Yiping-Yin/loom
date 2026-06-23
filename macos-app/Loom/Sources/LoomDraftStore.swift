@@ -50,6 +50,10 @@ struct LoomDraftRecord: Codable, Equatable, Identifiable {
     var references: [LoomDraftReference]
     let createdAt: Date
     var updatedAt: Date
+    // Curation flag for the web "Include in Digital Me" toggle. Optional with a
+    // default so existing drafts.json (without the key) decodes cleanly and the
+    // memberwise init stays backward-compatible.
+    var includedInDigitalMe: Bool? = nil
 }
 
 final class LoomDraftStore {
@@ -115,6 +119,7 @@ final class LoomDraftStore {
         title: String,
         body: String,
         references: [LoomDraftReference]? = nil,
+        includedInDigitalMe: Bool? = nil,
         now: Date = Date()
     ) throws -> LoomDraftRecord {
         var drafts = try list()
@@ -125,6 +130,7 @@ final class LoomDraftStore {
         next.title = normalizedTitle(title)
         next.body = body
         next.references = references ?? draft.references
+        next.includedInDigitalMe = includedInDigitalMe ?? draft.includedInDigitalMe
         next.updatedAt = now
         drafts[index] = next
         try saveAll(drafts)
