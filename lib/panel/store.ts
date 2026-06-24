@@ -2,6 +2,8 @@
 
 import type { Panel } from './types';
 import { canonicalizePanels } from './selectors';
+import { notifyLearningChanged } from '../sync/learning-events';
+import { appendTombstone, PANEL_TOMBSTONES_KEY } from '../sync/tombstone-log';
 
 const DB_NAME = 'loom';
 const DB_VERSION = 3;
@@ -132,6 +134,15 @@ export const panelStore = {
   },
 
   async delete(id: string): Promise<void> {
+    await this.deleteSilent(id);
+    if (isClient()) {
+      appendTombstone(PANEL_TOMBSTONES_KEY, id, Date.now());
+      notifyLearningChanged();
+    }
+  },
+
+  /** Silent delete (no tombstone / no change-event) — used by cloud-sync to apply a remote delete. */
+  async deleteSilent(id: string): Promise<void> {
     if (!isClient()) return;
     await tx<void>('readwrite', (s) => {
       s.delete(id);

@@ -22,16 +22,30 @@ export function mergeTraceEvents(a: TraceEvent[], b: TraceEvent[]): TraceEvent[]
   return out;
 }
 
+/** Effective metadata stamp: a metadata-only edit advances metaUpdatedAt (not the
+ * event-derived updatedAt), so LWW resolves on the max of the two. */
+function metaStamp(t: Trace): number {
+  return Math.max(t.updatedAt, t.metaUpdatedAt ?? 0);
+}
+
 export function mergeTrace(local: Trace, remote: Trace): Trace {
-  // Mutable metadata: last-write-wins by updatedAt, tie -> local. childIds is
-  // mutable membership (a child can be removed), so it follows the LWW winner via
-  // the spread below — NOT a blind union, which would resurrect a child removed on
-  // the other device as a dangling pointer.
-  const meta = remote.updatedAt > local.updatedAt ? remote : local;
+  // Mutable metadata: last-write-wins by the effective stamp, tie -> local. childIds
+  // is mutable membership (a child can be removed), so it follows the LWW winner via
+  // the spread below — NOT a blind union, which would resurrect a removed child.
+  const meta = metaStamp(remote) > metaStamp(local) ? remote : local;
+  // Event tombstones union across devices, so a deletion made on either side sticks.
+  const deletedEventKeys = Array.from(new Set([
+    ...(local.deletedEventKeys ?? []),
+    ...(remote.deletedEventKeys ?? []),
+  ]));
+  const tombstoned = new Set(deletedEventKeys);
+  const events = mergeTraceEvents(local.events, remote.events)
+    .filter((event) => !tombstoned.has(stableStringify(event)));
   const merged: Trace = {
     ...meta,
     id: local.id,
-    events: mergeTraceEvents(local.events, remote.events),
+    deletedEventKeys: deletedEventKeys.length ? deletedEventKeys : undefined,
+    events,
   };
   // Derived fields (createdAt/updatedAt/visitCount/mastery/...) from the merged events.
   return recomputeTrace(merged);

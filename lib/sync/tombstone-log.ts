@@ -5,9 +5,22 @@
  */
 import type { AsyncCollectionTombstone } from './async-collection-sync';
 
+export const TRACE_TOMBSTONES_KEY = 'loom.traces.tombstones.v1';
+export const PANEL_TOMBSTONES_KEY = 'loom.panels.tombstones.v1';
+export const WEAVE_TOMBSTONES_KEY = 'loom.weaves.tombstones.v1';
+
 function ls(): Storage | null {
   if (typeof window === 'undefined') return null;
   try { return window.localStorage ?? null; } catch { return null; }
+}
+
+/** Record a local delete so it propagates on the next sync. Dedup by id (max deletedAt). */
+export function appendTombstone(key: string, id: string, deletedAt: number): void {
+  try {
+    const rest = readTombstones(key).filter((t) => t.id !== id);
+    rest.push({ id, deletedAt });
+    ls()?.setItem(key, JSON.stringify(rest));
+  } catch { /* quota / SSR */ }
 }
 
 export function readTombstones(key: string): AsyncCollectionTombstone[] {

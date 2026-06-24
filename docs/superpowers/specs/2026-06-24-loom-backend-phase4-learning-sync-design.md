@@ -134,32 +134,31 @@ engine always fetch+merges (event-union), so a stale `updated_at` never loses ev
   derived, recomputed locally — not synced.
 - Real-time/multiplayer; Phase 5 public signup.
 
-## Known limitations — deferred to the fine-optimization round
+## Adversarial review (2026-06-25) — all findings resolved
 
-Adversarial review (2026-06-25) confirmed the merge is structurally sound but found
-three gaps where the event-union model collides with the **existing** trace store's
-behavior. They are **latent** (Phase 4 is inert until Supabase is configured) and need
-trace-store behavior changes / new data, so they are scheduled for the optimization
-round rather than rushed here. Fixed in this pass: mastery-drift non-convergence (the
-engine now uses a `keyOf` that excludes wall-clock-derived fields via `traceSyncKey`)
-and `childIds` resurrection (now LWW, not union).
+Review confirmed the merge is structurally sound and found 5 distinct gaps where the
+event-union model collided with the **existing** trace store's behavior. All are now
+fixed (hardening round):
 
-1. **Event resurrection via `removeEvents`.** The trace store has a destructive,
-   UI-used `removeEvents()`; event-union has no per-event tombstone (events have no
-   id), so a deleted event re-enters on the next merge. Fix: a per-trace event
-   tombstone set keyed by `stableStringify(event)`, synced alongside events and
-   subtracted after union — or convert `removeEvents` flows to append a revert marker.
-2. **Metadata-only edits invisible to LWW.** `updatedAt` is event-derived
-   (`recomputeTrace` = `max(updatedAt, lastEventAt)`), so a pin/title/spec edit via
-   `traceStore.update()` doesn't advance it and LWW can't see it. Fix: a
-   metadata-edit stamp (bump `updatedAt = now` in `update()`, or a separate
-   `metaUpdatedAt`) and LWW the metadata on that.
-3. **Record tombstones never written.** `tombstone-log` only reads/clears; no writer,
-   so a delete (deleteTree / panel·weave delete) records no tombstone → on next sync
-   the absent-local + present-remote row is re-pulled (resurrected) and the delete
-   never propagates. Fix: an `appendTombstone` writer called from the store delete
-   paths (engine-applied removes clear their own tombstone, so writing in the store
-   delete is safe for both origins). Same "delete wiring" class deferred in Phase 3.
+1. **Mastery-drift non-convergence** — `recomputeTrace`'s `Date.now()` mastery decay
+   made every sync look dirty. Fixed: the engine takes a pluggable `keyOf`; traces use
+   `traceSyncKey`, which excludes wall-clock-derived fields. Default `keyOf` =
+   `stableStringify` (also kills key-order false positives).
+2. **`childIds` resurrection** — blind union re-added a removed child. Fixed: `childIds`
+   now follows the LWW winner (mutable membership), not a union.
+3. **Event resurrection via `removeEvents`** — destructive `removeEvents` had no
+   per-event tombstone. Fixed: `Trace.deletedEventKeys` (a `stableStringify`-keyed set)
+   is recorded by `removeEvents`, unioned across devices in `mergeTrace`, and subtracted
+   after the event union — so a deleted event stays deleted.
+4. **Metadata-only edits invisible to LWW** — `updatedAt` is event-derived. Fixed:
+   `Trace.metaUpdatedAt` is stamped by `traceStore.update()`; `mergeTrace` LWWs metadata
+   on `max(updatedAt, metaUpdatedAt)`, and `traceSyncKey` includes it (a metadata edit is
+   a real change, but it's edit-triggered so it still converges).
+5. **Record tombstones never written** — `tombstone-log` had no writer. Fixed:
+   `appendTombstone` is called from the user-facing deletes (`traceStore.deleteTree`,
+   `panelStore.delete`, `weaveStore.delete`); the engine applies remote deletes through
+   **silent** methods (`traceStore.deleteOne`, `panel/weaveStore.deleteSilent`) that
+   neither tombstone nor emit, so there's no resurrection and no self-trigger loop.
 
 ## File plan
 New: `lib/sync/{async-collection-sync,stable-stringify,trace-merge,trace-local-port,

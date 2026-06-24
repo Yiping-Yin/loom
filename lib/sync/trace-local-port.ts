@@ -6,9 +6,7 @@
 import { traceStore } from '../trace/store';
 import type { Trace } from '../trace/types';
 import type { AsyncCollectionLocalPort } from './async-collection-sync';
-import { readTombstones, clearTombstone } from './tombstone-log';
-
-export const TRACE_TOMBSTONES_KEY = 'loom.traces.tombstones.v1';
+import { readTombstones, clearTombstone, TRACE_TOMBSTONES_KEY } from './tombstone-log';
 
 export function traceLocalPort(): AsyncCollectionLocalPort<Trace> {
   return {
