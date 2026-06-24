@@ -73,3 +73,40 @@ This is a one-time owner setup. Nothing here changes the product for visitors.
   of the product is unchanged — sync is purely additive.
 - `@supabase/supabase-js` is client-safe and works in the static export; no
   server runtime is required.
+
+## Optional — Phase 4: learning engine sync (run once, owner)
+
+Run this to sync your learning corpus — traces (reading sessions), panels
+(thought judgments), and weaves (connections) — across devices. Traces merge by
+append-only event union; panels/weaves by last-write-wins. Same per-user RLS model.
+
+```sql
+create table public.traces (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  trace_id text not null, data jsonb, deleted boolean not null default false,
+  updated_at timestamptz not null, primary key (user_id, trace_id));
+create table public.panels (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  panel_id text not null, data jsonb, deleted boolean not null default false,
+  updated_at timestamptz not null, primary key (user_id, panel_id));
+create table public.weaves (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  weave_id text not null, data jsonb, deleted boolean not null default false,
+  updated_at timestamptz not null, primary key (user_id, weave_id));
+-- Per-user RLS on each (repeat the 4 policies per table, swapping the table name):
+alter table public.traces enable row level security;
+create policy "own traces - select" on public.traces for select using (auth.uid() = user_id);
+create policy "own traces - insert" on public.traces for insert with check (auth.uid() = user_id);
+create policy "own traces - update" on public.traces for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own traces - delete" on public.traces for delete using (auth.uid() = user_id);
+alter table public.panels enable row level security;
+create policy "own panels - select" on public.panels for select using (auth.uid() = user_id);
+create policy "own panels - insert" on public.panels for insert with check (auth.uid() = user_id);
+create policy "own panels - update" on public.panels for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own panels - delete" on public.panels for delete using (auth.uid() = user_id);
+alter table public.weaves enable row level security;
+create policy "own weaves - select" on public.weaves for select using (auth.uid() = user_id);
+create policy "own weaves - insert" on public.weaves for insert with check (auth.uid() = user_id);
+create policy "own weaves - update" on public.weaves for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own weaves - delete" on public.weaves for delete using (auth.uid() = user_id);
+```

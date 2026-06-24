@@ -15,6 +15,7 @@
 import type { Trace, TraceCreateInput, TraceEvent } from './types';
 import { newTraceId } from './types';
 import { tracePanelLifecycle } from './panel-lifecycle';
+import { notifyLearningChanged } from '../sync/learning-events';
 
 const DB_NAME = 'loom';
 const DB_VERSION = 3;
@@ -226,6 +227,7 @@ export const traceStore = {
         await this.update(parent.id, { childIds: [...parent.childIds, recomputed.id] });
       }
     }
+    notifyLearningChanged();
     return recomputed;
   },
 
@@ -236,6 +238,7 @@ export const traceStore = {
     if (!t) return null;
     const updated = recomputeTrace({ ...t, events: [...t.events, event] });
     await tx<IDBValidKey>('readwrite', (s) => s.put(updated));
+    notifyLearningChanged();
     return updated;
   },
 
@@ -295,6 +298,7 @@ export const traceStore = {
         });
       }
     }
+    notifyLearningChanged();
   },
 
   /** Substring + token search across title, summary, and message content. */
@@ -324,6 +328,21 @@ export const traceStore = {
   async clear(): Promise<void> {
     if (!isClient()) return;
     await tx<void>('readwrite', (s) => s.clear() as any);
+  },
+
+  /** Silent low-level put of a full trace (used by the Phase 4 cloud-sync merge). No event emit. */
+  async put(trace: Trace): Promise<void> {
+    if (!isClient()) return;
+    await tx<IDBValidKey>('readwrite', (s) => s.put(trace));
+  },
+
+  /** Delete a single trace record by id (NOT its descendants). Used by sync remove. */
+  async deleteOne(id: string): Promise<void> {
+    if (!isClient()) return;
+    await tx<void>('readwrite', (s) => {
+      s.delete(id);
+      return Promise.resolve();
+    });
   },
 
   /** Stats for the dev inspector / Library view. */
