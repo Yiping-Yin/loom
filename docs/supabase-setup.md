@@ -28,6 +28,10 @@ This is a one-time owner setup. Nothing here changes the product for visitors.
    create policy "own profile - select" on public.profiles for select using (auth.uid() = user_id);
    create policy "own profile - insert" on public.profiles for insert with check (auth.uid() = user_id);
    create policy "own profile - update" on public.profiles for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+   -- RLS filters rows, but the signed-in role still needs table-level grants.
+   -- Supabase cloud auto-grants via default privileges; this is explicit so a
+   -- self-hosted / raw-migration setup doesn't 403 ("permission denied for table").
+   grant select, insert, update, delete on public.profiles to authenticated;
    ```
 
 3. **Enable Email auth + DISABLE public sign-ups.** Under
@@ -131,6 +135,7 @@ create policy "own draft_records - select" on public.draft_records for select us
 create policy "own draft_records - insert" on public.draft_records for insert with check (auth.uid() = user_id);
 create policy "own draft_records - update" on public.draft_records for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own draft_records - delete" on public.draft_records for delete using (auth.uid() = user_id);
+grant select, insert, update, delete on public.drafts, public.draft_records to authenticated;
 ```
 
 ## Optional — Phase 4: learning engine sync (run once, owner)
@@ -168,4 +173,5 @@ create policy "own weaves - select" on public.weaves for select using (auth.uid(
 create policy "own weaves - insert" on public.weaves for insert with check (auth.uid() = user_id);
 create policy "own weaves - update" on public.weaves for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own weaves - delete" on public.weaves for delete using (auth.uid() = user_id);
+grant select, insert, update, delete on public.traces, public.panels, public.weaves to authenticated;
 ```
