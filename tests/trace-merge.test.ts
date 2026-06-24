@@ -22,14 +22,22 @@ test('mergeTrace unions events from both devices', () => {
   assert.equal(m.events.length, 2);
 });
 
-test('metadata LWW by updatedAt (higher wins), tie -> local', () => {
-  assert.equal(mergeTrace(base({ title: 'L', updatedAt: 5 }), base({ title: 'R', updatedAt: 9 })).title, 'R');
-  assert.equal(mergeTrace(base({ title: 'L', updatedAt: 5 }), base({ title: 'R', updatedAt: 5 })).title, 'L');
+test('metadata LWW by metaUpdatedAt (edit recency, not event recency); tie -> local', () => {
+  assert.equal(mergeTrace(base({ title: 'L', metaUpdatedAt: 5 }), base({ title: 'R', metaUpdatedAt: 9 })).title, 'R');
+  assert.equal(mergeTrace(base({ title: 'L', metaUpdatedAt: 5 }), base({ title: 'R', metaUpdatedAt: 5 })).title, 'L');
+});
+
+test('a pure event append does NOT revert a metadata edit made on the other device', () => {
+  const local = base({ title: 'Renamed', metaUpdatedAt: 1010, events: [ev(1000, 'old')] });
+  const remote = base({ title: 'Untitled', events: [ev(2000, 'new')] }); // newer EVENT, no metadata edit
+  const m = mergeTrace(local, remote);
+  assert.equal(m.title, 'Renamed'); // the metadata edit wins despite remote's newer event
+  assert.equal(m.events.length, 2); // events still union
 });
 
 test('childIds follows the LWW winner (not a blind union — avoids resurrecting a removed child)', () => {
-  const m = mergeTrace(base({ childIds: ['a'], updatedAt: 5 }), base({ childIds: ['b', 'c'], updatedAt: 9 }));
-  assert.deepEqual(m.childIds, ['b', 'c']); // remote newer -> its childIds win
+  const m = mergeTrace(base({ childIds: ['a'], metaUpdatedAt: 5 }), base({ childIds: ['b', 'c'], metaUpdatedAt: 9 }));
+  assert.deepEqual(m.childIds, ['b', 'c']); // remote's metadata edit is newer -> its childIds win
 });
 
 test('traceSyncKey ignores volatile mastery but reflects real (event) changes', () => {

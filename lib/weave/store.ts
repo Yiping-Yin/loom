@@ -157,13 +157,11 @@ export const weaveStore = {
     }
   },
 
-  /** Silent delete (no tombstone / no change-event) — used by cloud-sync to apply a remote delete. */
+  /** Silent delete (no tombstone / no change-event) — used by cloud-sync to apply a remote delete.
+   * Awaits the IDBRequest so a failed/aborted delete rejects instead of silently succeeding. */
   async deleteSilent(id: string): Promise<void> {
     if (!isClient()) return;
-    await tx<void>('readwrite', (s) => {
-      s.delete(id);
-      return Promise.resolve();
-    });
+    await tx<undefined>('readwrite', (s) => s.delete(id) as IDBRequest<undefined>);
   },
 
   async deleteMany(ids: string[]): Promise<void> {
