@@ -14,7 +14,7 @@ import { traceMapper, panelMapper, weaveMapper } from './learning-mappers';
 import { traceLocalPort } from './trace-local-port';
 import { panelLocalPort } from './panel-local-port';
 import { weaveLocalPort } from './weave-local-port';
-import { mergeTrace } from './trace-merge';
+import { mergeTrace, traceSyncKey } from './trace-merge';
 import type { Trace } from '../trace/types';
 
 type Engine = { syncOnce(userId: string): Promise<SyncStatus> };
@@ -37,7 +37,7 @@ const traceRecordMerge: RecordMerge<Trace> = (local, remote) => {
 function buildEngines(): Engine[] {
   const engines: Engine[] = [];
   const tg = tracesGateway();
-  if (tg) engines.push(new AsyncCollectionSync<Trace>(tg, traceLocalPort(), traceMapper, traceRecordMerge));
+  if (tg) engines.push(new AsyncCollectionSync<Trace>(tg, traceLocalPort(), traceMapper, traceRecordMerge, traceSyncKey));
   const pg = panelsGateway();
   if (pg) engines.push(new AsyncCollectionSync(pg, panelLocalPort(), panelMapper, lwwMerge()));
   const wg = weavesGateway();

@@ -23,14 +23,30 @@ export function mergeTraceEvents(a: TraceEvent[], b: TraceEvent[]): TraceEvent[]
 }
 
 export function mergeTrace(local: Trace, remote: Trace): Trace {
-  // Mutable metadata: last-write-wins by updatedAt, tie -> local.
+  // Mutable metadata: last-write-wins by updatedAt, tie -> local. childIds is
+  // mutable membership (a child can be removed), so it follows the LWW winner via
+  // the spread below — NOT a blind union, which would resurrect a child removed on
+  // the other device as a dangling pointer.
   const meta = remote.updatedAt > local.updatedAt ? remote : local;
   const merged: Trace = {
     ...meta,
     id: local.id,
-    childIds: Array.from(new Set([...local.childIds, ...remote.childIds])),
     events: mergeTraceEvents(local.events, remote.events),
   };
   // Derived fields (createdAt/updatedAt/visitCount/mastery/...) from the merged events.
   return recomputeTrace(merged);
+}
+
+/**
+ * Stable change-detection key for a trace's SYNC-canonical state. Excludes derived
+ * fields — especially `mastery`, which recomputeTrace decays by wall-clock Date.now()
+ * and would otherwise make every sync see a "change" and re-push forever. updatedAt
+ * is compared separately by the engine, so it's excluded too.
+ */
+export function traceSyncKey(t: Trace): string {
+  const {
+    mastery: _m, visitCount: _v, totalDurationMs: _d, createdAt: _c, updatedAt: _u,
+    crystallizedSummary: _cs, crystallizedAt: _ca, ...canonical
+  } = t;
+  return stableStringify(canonical);
 }

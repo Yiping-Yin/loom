@@ -134,6 +134,33 @@ engine always fetch+merges (event-union), so a stale `updated_at` never loses ev
   derived, recomputed locally — not synced.
 - Real-time/multiplayer; Phase 5 public signup.
 
+## Known limitations — deferred to the fine-optimization round
+
+Adversarial review (2026-06-25) confirmed the merge is structurally sound but found
+three gaps where the event-union model collides with the **existing** trace store's
+behavior. They are **latent** (Phase 4 is inert until Supabase is configured) and need
+trace-store behavior changes / new data, so they are scheduled for the optimization
+round rather than rushed here. Fixed in this pass: mastery-drift non-convergence (the
+engine now uses a `keyOf` that excludes wall-clock-derived fields via `traceSyncKey`)
+and `childIds` resurrection (now LWW, not union).
+
+1. **Event resurrection via `removeEvents`.** The trace store has a destructive,
+   UI-used `removeEvents()`; event-union has no per-event tombstone (events have no
+   id), so a deleted event re-enters on the next merge. Fix: a per-trace event
+   tombstone set keyed by `stableStringify(event)`, synced alongside events and
+   subtracted after union — or convert `removeEvents` flows to append a revert marker.
+2. **Metadata-only edits invisible to LWW.** `updatedAt` is event-derived
+   (`recomputeTrace` = `max(updatedAt, lastEventAt)`), so a pin/title/spec edit via
+   `traceStore.update()` doesn't advance it and LWW can't see it. Fix: a
+   metadata-edit stamp (bump `updatedAt = now` in `update()`, or a separate
+   `metaUpdatedAt`) and LWW the metadata on that.
+3. **Record tombstones never written.** `tombstone-log` only reads/clears; no writer,
+   so a delete (deleteTree / panel·weave delete) records no tombstone → on next sync
+   the absent-local + present-remote row is re-pulled (resurrected) and the delete
+   never propagates. Fix: an `appendTombstone` writer called from the store delete
+   paths (engine-applied removes clear their own tombstone, so writing in the store
+   delete is safe for both origins). Same "delete wiring" class deferred in Phase 3.
+
 ## File plan
 New: `lib/sync/{async-collection-sync,stable-stringify,trace-merge,trace-local-port,
 panel-local-port,weave-local-port,traces-gateway,panels-gateway,weaves-gateway,

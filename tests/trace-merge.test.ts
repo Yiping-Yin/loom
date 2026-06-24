@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mergeTrace, mergeTraceEvents } from '../lib/sync/trace-merge';
+import { mergeTrace, mergeTraceEvents, traceSyncKey } from '../lib/sync/trace-merge';
 import type { Trace, TraceEvent } from '../lib/trace/types';
 
 const ev = (at: number, content: string): TraceEvent => ({ kind: 'note', content, at });
@@ -26,9 +26,17 @@ test('metadata LWW by updatedAt (higher wins), tie -> local', () => {
   assert.equal(mergeTrace(base({ title: 'L', updatedAt: 5 }), base({ title: 'R', updatedAt: 5 })).title, 'L');
 });
 
-test('childIds union', () => {
-  const m = mergeTrace(base({ childIds: ['a', 'b'] }), base({ childIds: ['b', 'c'] }));
-  assert.deepEqual([...m.childIds].sort(), ['a', 'b', 'c']);
+test('childIds follows the LWW winner (not a blind union — avoids resurrecting a removed child)', () => {
+  const m = mergeTrace(base({ childIds: ['a'], updatedAt: 5 }), base({ childIds: ['b', 'c'], updatedAt: 9 }));
+  assert.deepEqual(m.childIds, ['b', 'c']); // remote newer -> its childIds win
+});
+
+test('traceSyncKey ignores volatile mastery but reflects real (event) changes', () => {
+  const a = base({ events: [ev(1, 'x')], mastery: 0.5 });
+  const b = base({ events: [ev(1, 'x')], mastery: 0.1 });
+  assert.equal(traceSyncKey(a), traceSyncKey(b)); // mastery drift is NOT a change
+  const c = base({ events: [ev(1, 'x'), ev(2, 'y')] });
+  assert.notEqual(traceSyncKey(a), traceSyncKey(c)); // a real event change IS
 });
 
 test('derived recompute: updatedAt = max event at, createdAt = min', () => {

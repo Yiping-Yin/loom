@@ -74,6 +74,17 @@ test('local tombstone pushes remote tombstone', async () => {
   assert.equal(g.rows.get('a')?.deleted, true);
 });
 
+test('keyOf controls the dirty-check: a volatile field ignored by keyOf -> no redundant write/push', async () => {
+  const p = fakePort([{ id: 'a', value: { id: 'a', n: 1 }, updatedAt: 5 }]);
+  const g = fakeGw([{ id: 'a', data: { id: 'a', n: 2 }, deleted: false, updatedAt: 5 }]);
+  // merge changes n every call (like recomputeTrace's mastery drift), updatedAt stable
+  const driftMerge: RecordMerge<Doc> = (l, r) => ({ value: { id: 'a', n: (l!.value.n + r!.value.n) }, updatedAt: 5 });
+  const constKey = () => 'same'; // ignores n entirely (like traceSyncKey ignoring mastery)
+  await new AsyncCollectionSync(g, p, mapper, driftMerge, constKey).syncOnce('u');
+  assert.deepEqual(g.upserts, []); // converged per keyOf -> no remote push
+  assert.deepEqual(p.writes, []); // and no local re-write
+});
+
 test('error path: upsert throw -> status error, local untouched', async () => {
   const p = fakePort([{ id: 'a', value: { id: 'a', n: 1 }, updatedAt: 5 }]);
   const g = fakeGw([], { throwOnUpsert: true });

@@ -7,6 +7,7 @@
  * Phase 1/2/3 sync code is untouched; this is a separate engine.
  */
 import { pickWinner, type Stamped } from './merge';
+import { stableStringify } from './stable-stringify';
 import type { SyncStatus } from './profile-sync';
 
 export type { SyncStatus } from './profile-sync';
@@ -55,6 +56,12 @@ export class AsyncCollectionSync<T> {
     private port: AsyncCollectionLocalPort<T>,
     private mapper: AsyncCollectionMapper<T>,
     private mergeRecord: RecordMerge<T>,
+    // Change-detection key. Default = stableStringify of the whole value (order-
+    // independent). Traces pass a key that EXCLUDES wall-clock-derived fields
+    // (mastery) so a converged trace stops re-pushing every sync.
+    private keyOf: (value: T) => string = (value) => {
+      try { return stableStringify(value); } catch { return ''; }
+    },
   ) {}
 
   async syncOnce(userId: string): Promise<SyncStatus> {
@@ -107,11 +114,11 @@ export class AsyncCollectionSync<T> {
         { value: remote.value, updatedAt: remote.updatedAt },
       );
       if (!merged) return;
-      const mergedKey = this.toKey(merged.value);
-      if (remote.updatedAt !== merged.updatedAt || this.toKey(remote.value) !== mergedKey) {
+      const mergedKey = this.keyOf(merged.value);
+      if (remote.updatedAt !== merged.updatedAt || this.keyOf(remote.value) !== mergedKey) {
         await this.gateway.upsert(userId, id, this.mapper.toData(merged.value), false, merged.updatedAt);
       }
-      if (local.updatedAt !== merged.updatedAt || this.toKey(local.value) !== mergedKey) {
+      if (local.updatedAt !== merged.updatedAt || this.keyOf(local.value) !== mergedKey) {
         await this.port.upsert(id, merged.value, merged.updatedAt);
       }
       await this.port.clearTombstone(id);
@@ -139,9 +146,5 @@ export class AsyncCollectionSync<T> {
       if (local.kind === 'present') await this.port.remove(id);
     }
     await this.port.clearTombstone(id);
-  }
-
-  private toKey(value: T): string {
-    try { return JSON.stringify(value); } catch { return ''; }
   }
 }
