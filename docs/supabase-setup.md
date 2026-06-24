@@ -73,3 +73,41 @@ This is a one-time owner setup. Nothing here changes the product for visitors.
   of the product is unchanged — sync is purely additive.
 - `@supabase/supabase-js` is client-safe and works in the static export; no
   server runtime is required.
+
+## Optional — Phase 3: Studio drafts sync (run once, owner)
+
+Run this in the SQL editor to also sync your Studio drafts and AI answer records
+across devices. Until the tables exist, drafts simply stay local — the rest of
+LOOM is unaffected. Same per-user RLS model as `profiles`.
+
+```sql
+-- Studio block documents (loom.new.drafts.v1): one soft-deletable row per draft.
+create table public.drafts (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  draft_id   text not null,
+  data       jsonb,
+  deleted    boolean not null default false,
+  updated_at timestamptz not null,
+  primary key (user_id, draft_id)
+);
+alter table public.drafts enable row level security;
+create policy "own drafts - select" on public.drafts for select using (auth.uid() = user_id);
+create policy "own drafts - insert" on public.drafts for insert with check (auth.uid() = user_id);
+create policy "own drafts - update" on public.drafts for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own drafts - delete" on public.drafts for delete using (auth.uid() = user_id);
+
+-- AI answer records (loom.new.draft-records.v1): same shape, separate collection.
+create table public.draft_records (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  record_id  text not null,
+  data       jsonb,
+  deleted    boolean not null default false,
+  updated_at timestamptz not null,
+  primary key (user_id, record_id)
+);
+alter table public.draft_records enable row level security;
+create policy "own draft_records - select" on public.draft_records for select using (auth.uid() = user_id);
+create policy "own draft_records - insert" on public.draft_records for insert with check (auth.uid() = user_id);
+create policy "own draft_records - update" on public.draft_records for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own draft_records - delete" on public.draft_records for delete using (auth.uid() = user_id);
+```
