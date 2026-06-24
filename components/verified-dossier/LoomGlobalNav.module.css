@@ -114,11 +114,8 @@
   opacity: 0.56;
 }
 
-.nav.navHidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, calc(-100% - 1.6rem));
-}
+/* The nav no longer hides on scroll — the hidden-on-scroll state was removed so the
+   bar stays consistently present (see LoomGlobalNav.tsx). */
 
 .searchForm,
 .searchButton,
