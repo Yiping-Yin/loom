@@ -65,7 +65,7 @@ export function loadDraftRecords(input: { storage?: BrowserStorageAdapter | null
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isDraftRecord).sort(compareDraftRecordsByUpdatedAt);
+    return parsed.filter(isDraftAnswerRecord).sort(compareDraftRecordsByUpdatedAt);
   } catch (_) {
     return [];
   }
@@ -88,7 +88,19 @@ export function draftRecordDetailHref(record: Pick<NewLoomDraftRecord, 'id'>) {
   return `${DIGITAL_ME_ANSWER_ROUTE}?draftRecord=${encodeURIComponent(record.id)}${DIGITAL_ME_ANSWER_ANCHOR}`;
 }
 
-function isDraftRecord(value: unknown): value is NewLoomDraftRecord {
+/** Remove an answer record by id. No-op when there is no storage (SSR). */
+export function removeDraftRecordById(
+  id: string,
+  input: { storage?: BrowserStorageAdapter | null } = {},
+) {
+  const storage = input.storage ?? browserLocalStorage();
+  const cleanId = cleanDraftRecordText(id);
+  if (!cleanId) return;
+  const records = loadDraftRecords({ storage }).filter((record) => record.id !== cleanId);
+  safeStorageSetItem(storage, NEW_LOOM_DRAFT_RECORDS_KEY, JSON.stringify(records));
+}
+
+export function isDraftAnswerRecord(value: unknown): value is NewLoomDraftRecord {
   if (!value || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
 

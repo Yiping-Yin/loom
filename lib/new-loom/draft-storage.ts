@@ -383,7 +383,7 @@ function isDraftArtifactState(value: unknown): value is NewLoomDraftArtifactStat
   );
 }
 
-function isDraftRecord(value: unknown): value is NewLoomDraftRecord {
+export function isDraftRecord(value: unknown): value is NewLoomDraftRecord {
   if (!value || typeof value !== 'object') return false;
   const record = value as Record<string, unknown>;
   return (
@@ -413,6 +413,34 @@ export function listDrafts(
   key = NEW_LOOM_DRAFTS_KEY,
 ): NewLoomDraftRecord[] {
   return readDrafts(adapter, key).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/**
+ * Insert-or-replace a full draft record by id. Used by the sync layer when a
+ * remote-winning draft must be written into the local store verbatim. No-op when
+ * there is no storage (SSR) or the record is malformed.
+ */
+export function upsertDraftRecordById(
+  record: NewLoomDraftRecord,
+  options: { adapter?: DraftStorageAdapter | null; key?: string } = {},
+): void {
+  const adapter = options.adapter ?? browserDraftStorage();
+  if (!adapter) return;
+  if (!isDraftRecord(record)) return;
+  const key = options.key ?? NEW_LOOM_DRAFTS_KEY;
+  const rest = readDrafts(adapter, key).filter((draft) => draft.id !== record.id);
+  writeDrafts(adapter, [record, ...rest], key);
+}
+
+/** Remove a draft by id. No-op when there is no storage (SSR). */
+export function removeDraftById(
+  id: string,
+  options: { adapter?: DraftStorageAdapter | null; key?: string } = {},
+): void {
+  const adapter = options.adapter ?? browserDraftStorage();
+  if (!adapter) return;
+  const key = options.key ?? NEW_LOOM_DRAFTS_KEY;
+  writeDrafts(adapter, readDrafts(adapter, key).filter((draft) => draft.id !== id), key);
 }
 
 export function mergeDraftReferences(
