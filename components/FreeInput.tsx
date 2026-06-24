@@ -153,7 +153,16 @@ export function FreeInput() {
           : '0 max(1rem, calc((100vw - 760px) / 2)) 0.8rem',
       }}>
         <div
+          role="button"
+          tabIndex={0}
+          aria-label="Open free-mode input"
           onClick={activate}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              activate();
+            }
+          }}
           style={{
             padding: '12px 0',
             cursor: 'pointer',
