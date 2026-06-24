@@ -14,8 +14,6 @@ type LoomGlobalNavProps = {
   brandCurrent?: boolean;
 };
 
-const HIDE_AFTER_PX = 96;
-const DELTA_PX = 8;
 const LOOM_WORKSPACE_NAV = [
   { label: 'Sources', href: '/sources' },
   // Draft is no longer a peer workspace — it lives inside Digital Me (open it
@@ -31,81 +29,17 @@ export function LoomGlobalNav({
 }: LoomGlobalNavProps) {
   const currentPathname = usePathname();
   const activeHref = activeHrefProp ?? currentPathname ?? undefined;
-  const [hidden, setHidden] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const navMotionFrameRef = useRef<number | null>(null);
-  const navScrollFrameRef = useRef<number | null>(null);
-  const previousScrollYRef = useRef(0);
-  const hiddenRef = useRef(false);
   const menuRef = useRef<HTMLDetailsElement>(null);
   const searchOpenRef = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    previousScrollYRef.current = window.scrollY;
-
-    const setNavHidden = (nextHidden: boolean) => {
-      if (hiddenRef.current === nextHidden) return;
-
-      hiddenRef.current = nextHidden;
-      setHidden(nextHidden);
-    };
-
-    const updateFromScroll = () => {
-      const currentY = window.scrollY;
-      const delta = currentY - previousScrollYRef.current;
-
-      if (currentY <= HIDE_AFTER_PX / 2) {
-        setNavHidden(false);
-        previousScrollYRef.current = currentY;
-        return;
-      }
-
-      if (Math.abs(delta) >= DELTA_PX) {
-        setNavHidden(delta > 0 && currentY > HIDE_AFTER_PX);
-        previousScrollYRef.current = currentY;
-      }
-    };
-
-    const queueScrollUpdate = (event?: Event) => {
-      if (event && 'deltaY' in event && typeof event.deltaY === 'number') {
-        const currentY = window.scrollY;
-        const projectedY = Math.max(0, currentY + event.deltaY);
-
-        if (Math.abs(event.deltaY) >= DELTA_PX) {
-          setNavHidden(event.deltaY > 0 && projectedY > HIDE_AFTER_PX);
-        }
-      }
-
-      if (navScrollFrameRef.current !== null) {
-        window.cancelAnimationFrame(navScrollFrameRef.current);
-      }
-
-      navScrollFrameRef.current = window.requestAnimationFrame(() => {
-        navScrollFrameRef.current = null;
-        updateFromScroll();
-      });
-    };
-    const interval = window.setInterval(updateFromScroll, 90);
-
-    window.addEventListener('scroll', queueScrollUpdate, { passive: true });
-    window.addEventListener('wheel', queueScrollUpdate, { passive: true });
-    document.addEventListener('wheel', queueScrollUpdate, { capture: true, passive: true });
-    return () => {
-      if (navScrollFrameRef.current !== null) {
-        window.cancelAnimationFrame(navScrollFrameRef.current);
-        navScrollFrameRef.current = null;
-      }
-
-      window.clearInterval(interval);
-      document.removeEventListener('wheel', queueScrollUpdate, { capture: true });
-      window.removeEventListener('wheel', queueScrollUpdate);
-      window.removeEventListener('scroll', queueScrollUpdate);
-    };
-  }, []);
+  // The nav is a stable, always-present global bar — no scroll-driven hide/show
+  // (that machinery caused it to repeatedly hide-and-reappear). It stays put.
 
   useEffect(() => {
     searchOpenRef.current = searchOpen;
@@ -212,7 +146,7 @@ export function LoomGlobalNav({
   }
 
   function onNavPointerMove(event: React.PointerEvent<HTMLElement>) {
-    if (event.pointerType === 'touch' || hidden) return;
+    if (event.pointerType === 'touch') return;
     // Respect reduced-motion: skip the JS-driven 3D tilt/glint entirely (CSS
     // media queries can't reach this handler, so guard it here).
     if (
@@ -344,26 +278,16 @@ export function LoomGlobalNav({
     <div className={`${styles.slot} loom-global-nav-slot`}>
       <nav
         ref={navRef}
-        className={`${styles.nav} loom-global-nav ${hidden ? `${styles.navHidden} loom-global-nav--hidden` : ''} ${
+        className={`${styles.nav} loom-global-nav ${
           searchOpen ? `${styles.navSearching} loom-global-nav--searching` : ''
         } ${
           menuOpen ? `${styles.navMenuOpen} loom-global-nav--menu-open` : ''
         }`}
         aria-label={ariaLabel}
-        data-hidden={hidden ? 'true' : 'false'}
         onBlur={onNavBlur}
         onKeyDown={onNavKeyDown}
         onPointerMove={onNavPointerMove}
         onPointerLeave={resetNavOptics}
-        style={
-          hidden
-            ? {
-                opacity: 0,
-                pointerEvents: 'none',
-                transform: 'translate(-50%, calc(-100% - 1.6rem))',
-              }
-            : undefined
-        }
       >
         <form
           className={`${styles.searchForm} loom-global-nav__search`}
