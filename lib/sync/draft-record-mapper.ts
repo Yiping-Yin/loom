@@ -12,9 +12,19 @@ export const draftRecordMapper: CollectionMapper<AnswerRecord> = {
   toData: (value) => value,
   fromData: (data) => {
     if (!isDraftAnswerRecord(data)) return null;
-    return {
-      ...data,
-      sourceHrefs: data.sourceHrefs.filter((href) => safeHref(href) !== ''),
-    };
+    // sourceLabels[i] and sourceHrefs[i] are positionally paired (the UI renders
+    // them by index). Drop an unsafe-href pair WHOLE so the surviving labels stay
+    // aligned with their hrefs — filtering only one array would misattribute
+    // citations (a high-severity provenance bug).
+    const labels: string[] = [];
+    const hrefs: string[] = [];
+    const count = Math.max(data.sourceLabels.length, data.sourceHrefs.length);
+    for (let i = 0; i < count; i += 1) {
+      const href = data.sourceHrefs[i];
+      if (href !== undefined && safeHref(href) === '') continue;
+      if (i < data.sourceLabels.length) labels.push(data.sourceLabels[i]!);
+      if (href !== undefined) hrefs.push(href);
+    }
+    return { ...data, sourceLabels: labels, sourceHrefs: hrefs };
   },
 };

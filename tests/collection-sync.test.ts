@@ -138,3 +138,20 @@ test('garbage remote row (maps to null) is treated as absent', async () => {
   await new CollectionSync<Doc>(gw, port, mapper).syncOnce('u1');
   assert.equal(port.items.has('a'), false);
 });
+
+test('dominant tombstone over a present local item removes it and never resurrects', async () => {
+  // id 'a' has BOTH a live local item (updatedAt=10) and a tombstone (deletedAt=30).
+  const port = fakePort(
+    [{ id: 'a', value: { id: 'a', text: 'x' }, updatedAt: 10 }],
+    [{ id: 'a', deletedAt: 30 }],
+  );
+  const gw = fakeGateway([{ id: 'a', data: { id: 'a', text: 'x' }, deleted: false, updatedAt: 10 }]);
+  await new CollectionSync<Doc>(gw, port, mapper).syncOnce('u1');
+  assert.equal(port.items.has('a'), false); // underlying item actually removed
+  assert.equal(port.tombstones.has('a'), false);
+  assert.equal(gw.rows.get('a')?.deleted, true); // remote tombstoned
+  // A second sync must NOT resurrect the draft.
+  await new CollectionSync<Doc>(gw, port, mapper).syncOnce('u1');
+  assert.equal(port.items.has('a'), false);
+  assert.equal(gw.rows.get('a')?.deleted, true);
+});

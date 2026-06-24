@@ -41,7 +41,11 @@ export function draftRecordsLocalPort(): CollectionLocalPort<AnswerRecord> {
         value: record,
         updatedAt: Date.parse(record.updatedAt) || 0,
       })),
-    upsert: (_id, value) => { putDraftRecord(value); },
+    upsert: (_id, value, updatedAt) => {
+      // Stamp the engine-resolved timestamp so embedded updatedAt and the remote
+      // column can't drift apart after a pull.
+      putDraftRecord({ ...value, updatedAt: new Date(updatedAt).toISOString() });
+    },
     remove: (id) => { removeDraftRecordById(id); },
     listTombstones: () => readTombstones(DRAFT_RECORDS_TOMBSTONES_KEY),
     clearTombstone: (id) =>

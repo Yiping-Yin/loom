@@ -114,7 +114,10 @@ export class CollectionSync<T> {
       const localMatches = local.kind === 'present' && local.updatedAt === truth.updatedAt;
       if (!localMatches) this.port.upsert(id, truth.value, truth.updatedAt);
     } else if (truth.kind === 'deleted') {
-      if (local.kind === 'present') this.port.remove(id);
+      // Remove unconditionally: a winning delete must clear the underlying item
+      // even when localSide already collapsed a coexisting item+tombstone to
+      // 'deleted'. port.remove is a safe no-op when the item is already absent.
+      this.port.remove(id);
     }
 
     this.port.clearTombstone(id);

@@ -47,6 +47,15 @@ test('drafts port: tombstone log round-trips and clears', () => {
   });
 });
 
+test('drafts port: upsert persists the engine-supplied timestamp (no dual-source drift)', () => {
+  withWindow(() => {
+    const port = draftsLocalPort();
+    const engineMs = Date.parse('2026-06-01T00:00:00.000Z');
+    port.upsert('a', draft('a'), engineMs); // draft('a') has embedded updatedAt 2026-01-02
+    assert.equal(port.list()[0]?.updatedAt, engineMs);
+  });
+});
+
 test('drafts port: SSR-safe (no window) — empty + no throw', () => {
   const port = draftsLocalPort();
   assert.deepEqual(port.list(), []);

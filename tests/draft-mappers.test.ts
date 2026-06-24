@@ -64,3 +64,20 @@ test('answer-record mapper drops an unsafe sourceHref', () => {
   const out = draftRecordMapper.fromData(dirty)!;
   assert.deepEqual(out.sourceHrefs, ['/sources/ok']);
 });
+
+test('answer-record mapper keeps label/href pairs aligned when a middle href is dropped', () => {
+  const dirty = {
+    id: 'r3',
+    title: 'T',
+    answer: 'A',
+    sourceLabels: ['Spec PDF', 'Evil link', 'Notes'],
+    sourceHrefs: ['/spec.pdf', 'javascript:alert(1)', '/notes.md'],
+    draftUrl: '/digital-me',
+    status: 'drafting' as const,
+    updatedAt: '2026-01-02T00:00:00.000Z',
+  };
+  const out = draftRecordMapper.fromData(dirty)!;
+  // The unsafe pair ("Evil link") is dropped whole; the rest stay index-aligned.
+  assert.deepEqual(out.sourceHrefs, ['/spec.pdf', '/notes.md']);
+  assert.deepEqual(out.sourceLabels, ['Spec PDF', 'Notes']);
+});

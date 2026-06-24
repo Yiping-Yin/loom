@@ -38,13 +38,20 @@ export function draftsLocalPort(): CollectionLocalPort<StudioDraft> {
     list: (): CollectionItem<StudioDraft>[] => {
       const adapter = browserDraftStorage();
       if (!adapter) return [];
+      // NOTE: a non-ISO/corrupt updatedAt parses to NaN -> 0; only pre-corrupted
+      // local storage can reach this (normal writes emit valid ISO), accepted as
+      // a low-risk edge. Synced writes below stamp a valid ISO, so they converge.
       return listDrafts(adapter).map((draft) => ({
         id: draft.id,
         value: draft,
         updatedAt: Date.parse(draft.updatedAt) || 0,
       }));
     },
-    upsert: (_id, value) => { upsertDraftRecordById(value); },
+    upsert: (_id, value, updatedAt) => {
+      // Persist the engine-resolved timestamp as the record's own stamp so the
+      // embedded updatedAt and the remote column can't drift apart after a pull.
+      upsertDraftRecordById({ ...value, updatedAt: new Date(updatedAt).toISOString() });
+    },
     remove: (id) => { removeDraftById(id); },
     listTombstones: () => readTombstones(DRAFTS_TOMBSTONES_KEY),
     clearTombstone: (id) =>
