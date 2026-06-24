@@ -127,10 +127,12 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(globalNavSource, /inputMode="search"/);
   assert.match(globalNavSource, /enterKeyHint="search"/);
   assert.match(globalNavSource, /window\.location\.assign\(`\/sources\?\$\{params\.toString\(\)\}`\)/);
-  assert.match(globalNavSource, /window\.addEventListener\('wheel', queueScrollUpdate, \{ passive: true \}\)/);
-  assert.match(globalNavSource, /document\.addEventListener\('wheel', queueScrollUpdate, \{ capture: true, passive: true \}\)/);
-  assert.match(globalNavSource, /pointerEvents: 'none'/);
-  assert.match(globalNavSource, /transform: 'translate\(-50%, calc\(-100% - 1\.6rem\)\)'/);
+  // Stable nav contract: the scroll-driven hide/show (wheel listeners + interval
+  // polling + the hidden transform/state) was removed so the top bar no longer
+  // repeatedly hides and reappears — it is always present.
+  assert.doesNotMatch(globalNavSource, /queueScrollUpdate/);
+  assert.doesNotMatch(globalNavSource, /addEventListener\('wheel'/);
+  assert.doesNotMatch(globalNavSource, /navHidden/);
   assert.doesNotMatch(globalNavSource, /if \(!searchQuery\.trim\(\)\)/);
   assert.match(globalNavSource, /const LOOM_WORKSPACE_NAV = \[/);
   assert.match(globalNavSource, /\{ label: 'Sources', href: '\/sources' \}/);
@@ -182,7 +184,7 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.doesNotMatch(globalNavCss, /html\[data-loom-ai-key-banner='visible'\]/);
   assert.doesNotMatch(globalNavCss, /--loom-nav-banner-offset/);
   assert.match(globalNavCss, /top: var\(--loom-nav-base-top\);/);
-  assert.match(globalNavCss, /\.nav\.navHidden\s*{[^}]*opacity: 0;[^}]*transform: translate\(-50%, calc\(-100% - 1\.6rem\)\);/s);
+  assert.doesNotMatch(globalNavCss, /\.nav\.navHidden/);
   assert.match(globalNavCss, /\.slot\s*{[^}]*--loom-nav-clearance: clamp\(5\.05rem, 6vw, 5\.85rem\);/s);
   assert.match(globalNavCss, /\.slot\s*{[^}]*z-index: 1000;[^}]*min-height: var\(--loom-nav-clearance\);[^}]*pointer-events: none;/s);
   assert.match(globalNavCss, /\.nav\s*{[^}]*z-index: 1000;[^}]*width: min\(calc\(100vw - clamp\(1\.25rem, 20vw, 21rem\)\), 23\.25rem\);/s);
@@ -431,7 +433,7 @@ test('white dashboard homepage is retired into the hybrid evidence cover design'
   assert.match(navCssSource, /\.nav\b/);
   assert.match(navCssSource, /23\.25rem/);
   assert.match(navCssSource, /position:\s*fixed/);
-  assert.match(navCssSource, /\.navHidden/);
+  assert.doesNotMatch(navCssSource, /\.navHidden/);
   assert.match(navCssSource, /backdrop-filter:\s*blur\(38px\) saturate\(112%\) brightness\(1\.04\)/);
   assert.match(navCssSource, /radial-gradient/);
   assert.doesNotMatch(cssSource, /vd-home-asset-grid/);

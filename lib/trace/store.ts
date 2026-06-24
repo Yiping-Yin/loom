@@ -266,6 +266,7 @@ export const traceStore = {
     ]));
     const updated = recomputeTrace({ ...t, events, deletedEventKeys });
     await tx<IDBValidKey>('readwrite', (s) => s.put(updated));
+    notifyLearningChanged();
     return updated;
   },
 
@@ -351,13 +352,12 @@ export const traceStore = {
     await tx<IDBValidKey>('readwrite', (s) => s.put(trace));
   },
 
-  /** Delete a single trace record by id (NOT its descendants). Used by sync remove. */
+  /** Delete a single trace record by id (NOT its descendants). Used by sync remove.
+   * Awaits the IDBRequest so a failed/aborted delete rejects (the sync engine then
+   * reports 'error' and keeps the tombstone for retry) instead of silently succeeding. */
   async deleteOne(id: string): Promise<void> {
     if (!isClient()) return;
-    await tx<void>('readwrite', (s) => {
-      s.delete(id);
-      return Promise.resolve();
-    });
+    await tx<undefined>('readwrite', (s) => s.delete(id) as IDBRequest<undefined>);
   },
 
   /** Stats for the dev inspector / Library view. */

@@ -525,7 +525,7 @@ test('visible support surfaces use approved personal-identity and local-app posi
   // The duplicated `.loom-global-nav*` clone was removed from globals.css — the
   // CSS module (imported in layout.tsx) is the single source of truth for the
   // nav, so the brand colour is asserted against the module copy above only.
-  assert.match(cssBlock(globalNavCss, '.navHidden'), /translate\(-50%,\s*calc\(-100% - 1\.6rem\)\)/);
+  // (.navHidden removed — the nav no longer hides on scroll; it is always present.)
   assert.match(cssBlock(globalNavCss, '.searchInput'), /caret-color:\s*var\(--signature-cyan-hi,\s*#8AF7E6\)/);
   assert.match(cssBlock(globalNavCss, '.searchInput::placeholder'), /rgba\(232,\s*236,\s*238,\s*0\.68\)/);
   assert.match(cssBlock(globalNavCss, '.icon'), /object-fit:\s*cover/);

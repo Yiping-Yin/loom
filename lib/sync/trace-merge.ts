@@ -22,10 +22,12 @@ export function mergeTraceEvents(a: TraceEvent[], b: TraceEvent[]): TraceEvent[]
   return out;
 }
 
-/** Effective metadata stamp: a metadata-only edit advances metaUpdatedAt (not the
- * event-derived updatedAt), so LWW resolves on the max of the two. */
+/** Metadata-edit recency. Uses the explicit metaUpdatedAt (set by traceStore.update),
+ * falling back to createdAt — NOT the event-derived updatedAt. Folding in updatedAt
+ * would let a pure event append on one device outrank (and silently revert) a real
+ * title/pin/spec edit made on another. */
 function metaStamp(t: Trace): number {
-  return Math.max(t.updatedAt, t.metaUpdatedAt ?? 0);
+  return t.metaUpdatedAt ?? t.createdAt;
 }
 
 export function mergeTrace(local: Trace, remote: Trace): Trace {
