@@ -71,7 +71,7 @@ function tx<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBReque
 
 /* ─────────── Helpers ─────────── */
 
-function recompute(t: Trace): Trace {
+export function recomputeTrace(t: Trace): Trace {
   let createdAt = t.createdAt;
   let updatedAt = t.updatedAt;
   let visitCount = 0;
@@ -217,7 +217,7 @@ export const traceStore = {
       problem: input.problem,
       concept: input.concept,
     };
-    const recomputed = recompute(trace);
+    const recomputed = recomputeTrace(trace);
     await tx<IDBValidKey>('readwrite', (s) => s.put(recomputed));
     // If this trace has a parent, append its id to the parent's childIds
     if (recomputed.parentId) {
@@ -234,7 +234,7 @@ export const traceStore = {
     if (!isClient()) return null;
     const t = await this.get(traceId);
     if (!t) return null;
-    const updated = recompute({ ...t, events: [...t.events, event] });
+    const updated = recomputeTrace({ ...t, events: [...t.events, event] });
     await tx<IDBValidKey>('readwrite', (s) => s.put(updated));
     return updated;
   },
@@ -252,7 +252,7 @@ export const traceStore = {
     if (!t) return null;
     const events = t.events.filter((e, i) => !predicate(e, i));
     if (events.length === t.events.length) return t;
-    const updated = recompute({ ...t, events });
+    const updated = recomputeTrace({ ...t, events });
     await tx<IDBValidKey>('readwrite', (s) => s.put(updated));
     return updated;
   },
@@ -264,7 +264,7 @@ export const traceStore = {
     if (!t) return null;
     // Never let `update` rewrite events array — that's appendEvent's job
     const { events: _ignored, ...safe } = partial as any;
-    const updated = recompute({ ...t, ...safe });
+    const updated = recomputeTrace({ ...t, ...safe });
     await tx<IDBValidKey>('readwrite', (s) => s.put(updated));
     return updated;
   },
