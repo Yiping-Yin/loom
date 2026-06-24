@@ -30,6 +30,18 @@
  *   deleteArtifact(id)         → void
  */
 
+import { notifyArtifactAdded, notifyArtifactDeleted } from './artifact-events';
+
+let remoteFallback: ((id: string) => Promise<boolean>) | null = null;
+/**
+ * Install/clear the remote lazy-pull fallback consulted by getArtifactObjectUrl on a
+ * local miss (Phase 2). Just a function pointer — no supabase/profile import here, so
+ * artifact-store stays dependency-clean and SSR/static-app-safe.
+ */
+export function setArtifactRemoteFallback(fn: ((id: string) => Promise<boolean>) | null): void {
+  remoteFallback = fn;
+}
+
 export type ArtifactKind = 'pdf' | 'image' | 'doc' | 'other';
 
 /**
@@ -370,6 +382,7 @@ export async function putArtifact(file: File): Promise<ArtifactMeta> {
   } finally {
     db.close();
   }
+  notifyArtifactAdded(meta.id);
   return meta;
 }
 
@@ -389,12 +402,79 @@ export async function getArtifactObjectUrl(id: string): Promise<string | null> {
       req.onsuccess = () => resolve(req.result as ArtifactRecord | undefined);
       req.onerror = () => resolve(undefined);
     });
-    if (!record?.blob) return null;
+    if (!record?.blob) {
+      // Lazy-pull (Phase 2): if a remote fallback is installed, let it download +
+      // cache the blob, then retry the read once on this open connection.
+      if (remoteFallback) {
+        let pulled = false;
+        try { pulled = await remoteFallback(id); } catch { pulled = false; }
+        if (pulled) {
+          const again = await new Promise<ArtifactRecord | undefined>((resolve) => {
+            const retryReq = db.transaction(STORE, 'readonly').objectStore(STORE).get(id);
+            retryReq.onsuccess = () => resolve(retryReq.result as ArtifactRecord | undefined);
+            retryReq.onerror = () => resolve(undefined);
+          });
+          if (again?.blob) {
+            try { return URL.createObjectURL(again.blob); } catch { return null; }
+          }
+        }
+      }
+      return null;
+    }
     try {
       return URL.createObjectURL(record.blob);
     } catch {
       return null;
     }
+  } finally {
+    db.close();
+  }
+}
+
+/** True when a blob for this id is present in the local store. */
+export async function hasArtifact(id: string): Promise<boolean> {
+  const db = await openDb();
+  if (!db) return false;
+  try {
+    return await new Promise<boolean>((resolve) => {
+      const req = db.transaction(STORE, 'readonly').objectStore(STORE).getKey(id);
+      req.onsuccess = () => resolve(req.result !== undefined);
+      req.onerror = () => resolve(false);
+    });
+  } finally {
+    db.close();
+  }
+}
+
+/** Raw stored blob for an id, or null. Used by the sync layer to read bytes to upload. */
+export async function getArtifactBlob(id: string): Promise<Blob | null> {
+  const db = await openDb();
+  if (!db) return null;
+  try {
+    const record = await new Promise<ArtifactRecord | undefined>((resolve) => {
+      const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(id);
+      req.onsuccess = () => resolve(req.result as ArtifactRecord | undefined);
+      req.onerror = () => resolve(undefined);
+    });
+    return record?.blob ?? null;
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Cache a record verbatim (NO thumbnail/excerpt recompute) — used to store a blob
+ * pulled from Storage, with meta supplied by the caller (from the synced ArtifactRef).
+ */
+export async function putArtifactRecord(meta: ArtifactMeta, blob: Blob): Promise<void> {
+  const db = await openDb();
+  if (!db) return;
+  try {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put({ ...meta, blob } as ArtifactRecord);
+    await txDone(tx);
+  } catch {
+    /* best-effort cache */
   } finally {
     db.close();
   }
@@ -432,4 +512,5 @@ export async function deleteArtifact(id: string): Promise<void> {
   } finally {
     db.close();
   }
+  notifyArtifactDeleted(id);
 }
