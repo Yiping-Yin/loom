@@ -77,15 +77,6 @@ export function useArtifactSync(): { session: AuthSession } {
         ensureArtifactLocal(userId, id, artifactMetaHintFor(readBeginnerProfileLocal(), id), gateway, port));
     };
 
-    const pruneRemoteOrphans = async (userId: string) => {
-      if (!gateway) return;
-      const remote = await gateway.listRemoteIds(userId).catch(() => [] as string[]);
-      const local = new Set((await listArtifactMeta()).map((meta) => meta.id));
-      for (const id of remote) {
-        if (!local.has(id)) await gateway.remove(userId, id).catch(() => {});
-      }
-    };
-
     getSession().then((s) => { if (active) { setSession(s); if (s) { install(s.userId); pushAll(s.userId); } } });
 
     const offAuth = onAuthChange((s) => {
@@ -94,7 +85,12 @@ export function useArtifactSync(): { session: AuthSession } {
       if (s) { install(s.userId); pushAll(s.userId); } else setArtifactRemoteFallback(null);
     });
     const offAdd = onArtifactAdded(() => { getSession().then((s) => { if (s) pushAll(s.userId); }); });
-    const offDel = onArtifactDeleted(() => { getSession().then((s) => { if (s) void pruneRemoteOrphans(s.userId); }); });
+    // Delete is id-specific: remove EXACTLY the deleted blob from Storage. Never
+    // reconcile by local-cache absence — under lazy-pull the local cache is a
+    // partial subset, so absence is the normal cold-device state, not a delete.
+    const offDel = onArtifactDeleted((id) => {
+      getSession().then((s) => { if (s && gateway) void gateway.remove(s.userId, id).catch(() => {}); });
+    });
     const onFocus = () => { getSession().then((s) => { if (s) pushAll(s.userId); }); };
     if (typeof window !== 'undefined') window.addEventListener('focus', onFocus);
 

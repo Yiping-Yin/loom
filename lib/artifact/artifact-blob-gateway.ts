@@ -21,9 +21,18 @@ export function artifactBlobGateway(): ArtifactBlobGateway | null {
   const path = (userId: string, id: string) => `${userId}/${id}`;
   return {
     async listRemoteIds(userId) {
-      const { data, error } = await sb.storage.from(BUCKET).list(userId);
-      if (error) throw error;
-      return (data ?? []).map((object: { name: string }) => object.name);
+      // Storage list() defaults to a 100-object page; paginate so libraries larger
+      // than one page still reconcile completely.
+      const ids: string[] = [];
+      const pageSize = 1000;
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await sb.storage.from(BUCKET).list(userId, { limit: pageSize, offset });
+        if (error) throw error;
+        const page = data ?? [];
+        for (const object of page) ids.push(object.name);
+        if (page.length < pageSize) break;
+      }
+      return ids;
     },
     async upload(userId, id, blob) {
       const { error } = await sb.storage.from(BUCKET).upload(path(userId, id), blob, { upsert: true });

@@ -14,22 +14,22 @@ function withWindow(fn: () => void) {
   try { fn(); } finally { delete (globalThis as Record<string, unknown>).window; }
 }
 
-test('added/deleted events fire and unsubscribe; distinct channels', () => {
+test('added/deleted events fire with the affected id, and unsubscribe; distinct channels', () => {
   withWindow(() => {
-    let added = 0;
-    let deleted = 0;
-    const offA = onArtifactAdded(() => { added += 1; });
-    const offD = onArtifactDeleted(() => { deleted += 1; });
+    const addedIds: string[] = [];
+    const deletedIds: string[] = [];
+    const offA = onArtifactAdded((id) => { addedIds.push(id); });
+    const offD = onArtifactDeleted((id) => { deletedIds.push(id); });
     notifyArtifactAdded('a');
     notifyArtifactDeleted('b');
-    assert.equal(added, 1);
-    assert.equal(deleted, 1);
+    assert.deepEqual(addedIds, ['a']);
+    assert.deepEqual(deletedIds, ['b']); // the deleted id is delivered (id-specific remove)
     offA();
     offD();
     notifyArtifactAdded('a');
     notifyArtifactDeleted('b');
-    assert.equal(added, 1);
-    assert.equal(deleted, 1);
+    assert.deepEqual(addedIds, ['a']);
+    assert.deepEqual(deletedIds, ['b']);
   });
 });
 
