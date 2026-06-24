@@ -74,6 +74,27 @@ This is a one-time owner setup. Nothing here changes the product for visitors.
 - `@supabase/supabase-js` is client-safe and works in the static export; no
   server runtime is required.
 
+## Optional — Phase 2: artifact file sync (run once, owner)
+
+Run this to sync uploaded proof files (the *bytes*) across devices via Supabase
+Storage; the artifact metadata already syncs inside your profile. Until the bucket
+exists, files stay local and "Open" only works on the device that uploaded them.
+
+```sql
+-- private bucket; one folder per user
+insert into storage.buckets (id, name, public) values ('artifacts', 'artifacts', false)
+  on conflict (id) do nothing;
+-- RLS: a user may only touch objects under their own {userId}/ folder
+create policy "own artifact objects - select" on storage.objects
+  for select using (bucket_id = 'artifacts' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "own artifact objects - insert" on storage.objects
+  for insert with check (bucket_id = 'artifacts' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "own artifact objects - update" on storage.objects
+  for update using (bucket_id = 'artifacts' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "own artifact objects - delete" on storage.objects
+  for delete using (bucket_id = 'artifacts' and (storage.foldername(name))[1] = auth.uid()::text);
+```
+
 ## Optional — Phase 3: Studio drafts sync (run once, owner)
 
 Run this in the SQL editor to also sync your Studio drafts and AI answer records
