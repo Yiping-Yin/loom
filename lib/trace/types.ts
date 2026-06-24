@@ -222,6 +222,22 @@ export type Trace = {
   /** Mastery score 0..1 — derived heuristic. */
   mastery: number;
 
+  /**
+   * Wall-clock stamp of the last METADATA-only edit (title/problem/concept/tree
+   * pointers/pinnedAt) made via traceStore.update. Distinct from the event-derived
+   * `updatedAt`, which a metadata edit does NOT advance — so cloud-sync LWW resolves
+   * metadata on max(updatedAt, metaUpdatedAt). Absent until the first metadata edit.
+   */
+  metaUpdatedAt?: number;
+
+  /**
+   * Stable keys (stableStringify) of events the user destructively removed via
+   * removeEvents. Carried so cloud-sync's event-UNION merge subtracts them — without
+   * this, a deleted event held by another device would resurrect on every merge.
+   * Append-only set; unioned across devices.
+   */
+  deletedEventKeys?: string[];
+
   /* ── Problem-kind specific ── */
   problem?: {
     decomposition?: Prereq[];

@@ -15,6 +15,9 @@
 import type { Trace, TraceCreateInput, TraceEvent } from './types';
 import { newTraceId } from './types';
 import { tracePanelLifecycle } from './panel-lifecycle';
+import { notifyLearningChanged } from '../sync/learning-events';
+import { stableStringify } from '../sync/stable-stringify';
+import { appendTombstone, TRACE_TOMBSTONES_KEY } from '../sync/tombstone-log';
 
 const DB_NAME = 'loom';
 const DB_VERSION = 3;
@@ -71,7 +74,7 @@ function tx<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBReque
 
 /* ─────────── Helpers ─────────── */
 
-function recompute(t: Trace): Trace {
+export function recomputeTrace(t: Trace): Trace {
   let createdAt = t.createdAt;
   let updatedAt = t.updatedAt;
   let visitCount = 0;
@@ -217,7 +220,7 @@ export const traceStore = {
       problem: input.problem,
       concept: input.concept,
     };
-    const recomputed = recompute(trace);
+    const recomputed = recomputeTrace(trace);
     await tx<IDBValidKey>('readwrite', (s) => s.put(recomputed));
     // If this trace has a parent, append its id to the parent's childIds
     if (recomputed.parentId) {
@@ -226,6 +229,7 @@ export const traceStore = {
         await this.update(parent.id, { childIds: [...parent.childIds, recomputed.id] });
       }
     }
+    notifyLearningChanged();
     return recomputed;
   },
 
@@ -234,8 +238,9 @@ export const traceStore = {
     if (!isClient()) return null;
     const t = await this.get(traceId);
     if (!t) return null;
-    const updated = recompute({ ...t, events: [...t.events, event] });
+    const updated = recomputeTrace({ ...t, events: [...t.events, event] });
     await tx<IDBValidKey>('readwrite', (s) => s.put(updated));
+    notifyLearningChanged();
     return updated;
   },
 
@@ -250,9 +255,16 @@ export const traceStore = {
     if (!isClient()) return null;
     const t = await this.get(traceId);
     if (!t) return null;
+    const removed = t.events.filter((e, i) => predicate(e, i));
     const events = t.events.filter((e, i) => !predicate(e, i));
     if (events.length === t.events.length) return t;
-    const updated = recompute({ ...t, events });
+    // Record the removed events' keys so cloud-sync's event-union merge subtracts
+    // them instead of resurrecting them from another device's copy.
+    const deletedEventKeys = Array.from(new Set([
+      ...(t.deletedEventKeys ?? []),
+      ...removed.map((e) => stableStringify(e)),
+    ]));
+    const updated = recomputeTrace({ ...t, events, deletedEventKeys });
     await tx<IDBValidKey>('readwrite', (s) => s.put(updated));
     return updated;
   },
@@ -262,9 +274,11 @@ export const traceStore = {
     if (!isClient()) return null;
     const t = await this.get(traceId);
     if (!t) return null;
-    // Never let `update` rewrite events array — that's appendEvent's job
+    // Never let `update` rewrite events array — that's appendEvent's job.
+    // Stamp metaUpdatedAt so a metadata-only edit is visible to cloud-sync LWW
+    // (the event-derived updatedAt does not advance on a metadata change).
     const { events: _ignored, ...safe } = partial as any;
-    const updated = recompute({ ...t, ...safe });
+    const updated = recomputeTrace({ ...t, ...safe, metaUpdatedAt: Date.now() });
     await tx<IDBValidKey>('readwrite', (s) => s.put(updated));
     return updated;
   },
@@ -285,6 +299,10 @@ export const traceStore = {
         }
       }) as any;
     });
+    // Record tombstones so the deletes propagate cross-device (the sync engine
+    // clears each after pushing the remote delete). deleteOne (engine-applied
+    // removes) intentionally does NOT tombstone — only this user-facing delete does.
+    for (const id of ids) appendTombstone(TRACE_TOMBSTONES_KEY, id, Date.now());
     // Also remove this trace from its parent's childIds
     const root = tree[0];
     if (root?.parentId) {
@@ -295,6 +313,7 @@ export const traceStore = {
         });
       }
     }
+    notifyLearningChanged();
   },
 
   /** Substring + token search across title, summary, and message content. */
@@ -324,6 +343,21 @@ export const traceStore = {
   async clear(): Promise<void> {
     if (!isClient()) return;
     await tx<void>('readwrite', (s) => s.clear() as any);
+  },
+
+  /** Silent low-level put of a full trace (used by the Phase 4 cloud-sync merge). No event emit. */
+  async put(trace: Trace): Promise<void> {
+    if (!isClient()) return;
+    await tx<IDBValidKey>('readwrite', (s) => s.put(trace));
+  },
+
+  /** Delete a single trace record by id (NOT its descendants). Used by sync remove. */
+  async deleteOne(id: string): Promise<void> {
+    if (!isClient()) return;
+    await tx<void>('readwrite', (s) => {
+      s.delete(id);
+      return Promise.resolve();
+    });
   },
 
   /** Stats for the dev inspector / Library view. */

@@ -2,6 +2,8 @@
 
 import { applyWeaveContract, syncWeaveContractStatus } from './contract';
 import type { Weave } from './types';
+import { notifyLearningChanged } from '../sync/learning-events';
+import { appendTombstone, WEAVE_TOMBSTONES_KEY } from '../sync/tombstone-log';
 
 const DB_NAME = 'loom-weaves';
 const DB_VERSION = 1;
@@ -148,6 +150,15 @@ export const weaveStore = {
   },
 
   async delete(id: string): Promise<void> {
+    await this.deleteSilent(id);
+    if (isClient()) {
+      appendTombstone(WEAVE_TOMBSTONES_KEY, id, Date.now());
+      notifyLearningChanged();
+    }
+  },
+
+  /** Silent delete (no tombstone / no change-event) — used by cloud-sync to apply a remote delete. */
+  async deleteSilent(id: string): Promise<void> {
     if (!isClient()) return;
     await tx<void>('readwrite', (s) => {
       s.delete(id);
