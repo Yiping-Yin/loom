@@ -4,7 +4,7 @@
  * quota-safe, mirroring local-store-port.ts.
  */
 import type { CollectionLocalPort, CollectionItem, CollectionTombstone } from './collection-sync';
-import { loadDraftRecords, saveDraftRecord, removeDraftRecordById } from '../new-loom/draft-records';
+import { loadDraftRecords, putDraftRecord, removeDraftRecordById } from '../new-loom/draft-records';
 import type { AnswerRecord } from './draft-record-mapper';
 
 export const DRAFT_RECORDS_TOMBSTONES_KEY = 'loom.new.draft-records.tombstones.v1';
@@ -41,7 +41,7 @@ export function draftRecordsLocalPort(): CollectionLocalPort<AnswerRecord> {
         value: record,
         updatedAt: Date.parse(record.updatedAt) || 0,
       })),
-    upsert: (_id, value) => { saveDraftRecord(value); },
+    upsert: (_id, value) => { putDraftRecord(value); },
     remove: (id) => { removeDraftRecordById(id); },
     listTombstones: () => readTombstones(DRAFT_RECORDS_TOMBSTONES_KEY),
     clearTombstone: (id) =>

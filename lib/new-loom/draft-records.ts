@@ -4,6 +4,7 @@ import {
   safeStorageSetItem,
   type BrowserStorageAdapter,
 } from '../browser-storage';
+import { notifyDraftsChanged } from '../sync/draft-events';
 
 export const NEW_LOOM_DRAFT_RECORDS_KEY = 'loom.new.draft-records.v1';
 const DIGITAL_ME_ANSWER_ROUTE = '/digital-me';
@@ -46,7 +47,9 @@ export function buildDraftRecord(input: {
   };
 }
 
-export function saveDraftRecord(
+/** Silent insert-or-replace by id. Used by the sync engine so its own writes do
+ * NOT emit a change event (which would re-trigger sync). */
+export function putDraftRecord(
   record: NewLoomDraftRecord,
   input: { storage?: BrowserStorageAdapter | null } = {},
 ) {
@@ -55,6 +58,16 @@ export function saveDraftRecord(
   records.unshift(record);
 
   return safeStorageSetItem(storage, NEW_LOOM_DRAFT_RECORDS_KEY, JSON.stringify(records));
+}
+
+/** User-facing save: persists then emits a draft-change event for the sync hook. */
+export function saveDraftRecord(
+  record: NewLoomDraftRecord,
+  input: { storage?: BrowserStorageAdapter | null } = {},
+) {
+  const result = putDraftRecord(record, input);
+  notifyDraftsChanged();
+  return result;
 }
 
 export function loadDraftRecords(input: { storage?: BrowserStorageAdapter | null } = {}) {

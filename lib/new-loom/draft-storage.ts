@@ -1,4 +1,5 @@
 import { type NewLoomDraftDocBlock, blocksToBody } from './draft-blocks';
+import { notifyDraftsChanged } from '../sync/draft-events';
 
 export type NewLoomDraftArtifactState = {
   targetId: string;
@@ -2093,6 +2094,7 @@ export function createDraft(
   };
   const drafts = readDrafts(adapter, options.key);
   writeDrafts(adapter, [draft, ...drafts], options.key);
+  notifyDraftsChanged();
   return draft;
 }
 
@@ -2126,6 +2128,7 @@ export function updateDraft(
   };
   drafts[index] = next;
   writeDrafts(adapter, drafts, options.key);
+  notifyDraftsChanged();
   return next;
 }
 
