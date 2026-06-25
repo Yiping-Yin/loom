@@ -40,6 +40,11 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   // duplicate-"STUDIO" header regression.
   assert.match(draftClient, /<p className="new-loom-draft__eyebrow">Studio<\/p>/);
   assert.doesNotMatch(draftClient, /<span>Studio<\/span>/);
+  // The calm empty-state entry (StudioStarters) is wired in and shown when the draft
+  // is empty, so a normal user lands on "Add to your Digital Me", not the full editor.
+  assert.match(draftClient, /from '\.\/StudioStarters'/);
+  assert.match(draftClient, /isEmptyDraft/);
+  assert.match(draftClient, /<StudioStarters\b/);
   assert.doesNotMatch(draftClient, /new-loom-draft__wordmark/);
   assert.doesNotMatch(globals, /new-loom-draft__wordmark/);
   assert.match(draftClient, /new-loom-draft__identity-rail/);

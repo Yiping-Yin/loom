@@ -85,6 +85,7 @@ import {
 } from '../../lib/new-loom/draft-blocks';
 import { selectDraftById } from '../../lib/new-loom/draft-routing';
 import { DraftBlockEditor } from './DraftBlockEditor';
+import { StudioStarters, type StudioStarterChoice } from './StudioStarters';
 import DraftBoardClient from './DraftBoardClient';
 import draftDeskStyles from './draft-evidence-desk.module.css';
 
@@ -1176,8 +1177,38 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
     clearBlockOperation();
   }
 
+  const isEmptyDraft = useMemo(
+    () =>
+      body.trim().length === 0 &&
+      blocks.every((b) => !('text' in b) || !String((b as { text?: string }).text ?? '').trim()) &&
+      (title.trim().length === 0 || title.trim() === 'Untitled draft'),
+    [body, blocks, title],
+  );
+
+  const onStartFromStarter = (choice: StudioStarterChoice) => {
+    setSelectedOutputTypeId(choice.outputTypeId);
+    if (!choice.blank) {
+      const outputType = NEW_LOOM_DRAFT_OUTPUT_TYPES.find((t) => t.id === choice.outputTypeId);
+      if (outputType) {
+        const nextBlocks = syncBlocksFromBody(outputType.starterBody);
+        setTitle(outputType.starterTitle);
+        setBody(outputType.starterBody);
+        setBlocks(nextBlocks);
+        setSaveState('idle');
+        scheduleSave(outputType.starterTitle, outputType.starterBody, nextBlocks);
+      }
+    }
+  };
+
   return (
     <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
+      {isEmptyDraft ? (
+        <StudioStarters
+          userInitial={(identityProfile?.home.name?.trim() || 'You').charAt(0).toUpperCase()}
+          onStart={onStartFromStarter}
+        />
+      ) : (
+        <>
       <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
         <a className="new-loom-draft__home" href="/digital-me">← Digital Me</a>
         <section className="new-loom-draft__profile-card" aria-label="Profile">
@@ -1942,6 +1973,8 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
           </section>
         ) : null}
       </aside>
+        </>
+      )}
     </main>
   );
 }
