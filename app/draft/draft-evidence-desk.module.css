@@ -109,78 +109,6 @@
 }
 
 /* ======================================================================
-   IDENTITY RAIL — left column
-   ====================================================================== */
-.surface :global(.new-loom-draft__identity-rail) {
-  gap: 1.5rem;
-  padding: clamp(1.25rem, 1.9vw, 1.9rem) clamp(1.1rem, 1.7vw, 1.6rem);
-  background:
-    radial-gradient(130% 70% at 0% 0%, rgba(255, 255, 255, 0.03), transparent 52%),
-    linear-gradient(180deg, var(--ink-2), var(--ink-1));
-  border-right: 1px solid var(--line);
-}
-.surface :global(.new-loom-draft__profile-card) {
-  gap: 0.5rem;
-  padding-bottom: 1.4rem;
-  border-bottom: 1px solid var(--line);
-}
-.surface :global(.new-loom-draft__profile-card img) {
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 16px 38px rgba(0, 0, 0, 0.55);
-}
-/* Neutral monogram avatar — the editor lives in everyone's Digital Me, so it
-   shows the current user's initial, not the owner's photo. */
-.surface :global(.new-loom-draft__avatar) {
-  display: grid;
-  place-items: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--draft-glass-bg, rgba(255, 255, 255, 0.04));
-  color: var(--text-1);
-  font-family: var(--serif);
-  font-size: 1.25rem;
-  font-weight: 600;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 10px 26px rgba(0, 0, 0, 0.4);
-}
-.surface :global(.new-loom-draft__profile-card h2) {
-  font-family: var(--serif);
-  font-weight: 600;
-  color: var(--text-1);
-}
-.surface :global(.new-loom-draft__profile-card p),
-.surface :global(.new-loom-draft__profile-card span),
-.surface :global(.new-loom-draft__rail-section p) {
-  color: var(--text-2);
-}
-.surface :global(.new-loom-draft__rail-section) {
-  gap: 0.7rem;
-  padding-bottom: 1.4rem;
-  border-bottom: 1px solid var(--line);
-}
-.surface :global(.new-loom-draft__rail-section h3) {
-  color: var(--text-3);
-  font-family: var(--mono);
-  font-weight: 600;
-  font-size: 0.72rem;
-  letter-spacing: var(--tracking-eyebrow);
-}
-.surface :global(.new-loom-draft__rail-section li) {
-  padding: 0.6rem 0;
-  border-top: 1px solid var(--line-soft);
-}
-.surface :global(.new-loom-draft__rail-section li span) { color: var(--text-2); }
-.surface :global(.new-loom-draft__rail-section li strong) {
-  color: var(--text-1);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ======================================================================
    MAIN / WORKSPACE — centre column
    ====================================================================== */
 .surface :global(.new-loom-draft__main) {
@@ -204,18 +132,6 @@
 .surface :global(.new-loom-draft__document-header) {
   gap: 0.85rem;
   padding-bottom: 0.3rem;
-}
-.surface :global(.new-loom-draft__document-meta) { color: var(--text-2); }
-.surface :global(.new-loom-draft__document-meta span),
-.surface :global(.new-loom-draft__document-meta small) {
-  font-family: var(--mono);
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: var(--text-3);
-}
-.surface :global(.new-loom-draft__document-meta strong) {
-  color: var(--text-1);
-  font-weight: 600;
 }
 
 /* Details drawer — the power surface (Inspector) slides in only on demand, so the
@@ -313,112 +229,6 @@
 }
 .surface :global(.new-loom-draft__title::placeholder) { color: var(--text-3); }
 .surface :global(.new-loom-draft__title:focus) { border-color: var(--signature-cyan); }
-
-/* Proof strip — a lit instrument cluster, luminance-separated tiles. */
-.surface :global(.new-loom-draft__proof-strip) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border: 1px solid var(--line);
-  border-radius: var(--r-2);
-  background: var(--draft-glass-bg);
-  box-shadow: var(--draft-glass-shadow);
-  -webkit-backdrop-filter: var(--loom-glass-blur);
-  backdrop-filter: var(--loom-glass-blur);
-  overflow: hidden;
-  gap: 1px;
-}
-.surface :global(.new-loom-draft__proof-strip span) {
-  padding: 0.7rem 0.95rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent);
-}
-.surface :global(.new-loom-draft__proof-strip span + span) {
-  box-shadow: inset 1px 0 0 var(--line);
-}
-.surface :global(.new-loom-draft__proof-strip strong) {
-  color: var(--text-1);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.surface :global(.new-loom-draft__proof-strip small) {
-  color: var(--text-3);
-  font-family: var(--mono);
-  letter-spacing: 0.04em;
-}
-
-/* Type rail — glass shelf. */
-.surface :global(.new-loom-draft__type-rail) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem 0.75rem;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid var(--line);
-  border-radius: var(--r-2);
-  background: var(--draft-glass-bg);
-  box-shadow: var(--draft-glass-shadow);
-  -webkit-backdrop-filter: var(--loom-glass-blur);
-  backdrop-filter: var(--loom-glass-blur);
-}
-.surface :global(.new-loom-draft__type-label) {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-.surface :global(.new-loom-draft__type-copy h2) {
-  color: var(--text-1);
-  font-family: var(--serif);
-  font-weight: 600;
-  font-size: 1.18rem;
-}
-.surface :global(.new-loom-draft__type-copy p) { color: var(--text-2); }
-
-/* Compact inline pill row: the type pills size to content and wrap, with
-   "Use outline" trailing in the same flex row. */
-.surface :global(.new-loom-draft__type-buttons) {
-  display: flex;
-  flex-wrap: wrap;
-  grid-template-columns: none;
-  flex: 1 1 16rem;
-  gap: 0.4rem;
-}
-.surface :global(.new-loom-draft__type-button) {
-  min-height: 2.1rem;
-  padding: 0.3rem 0.72rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: linear-gradient(180deg, var(--ink-4), var(--ink-3));
-  box-shadow: var(--keylight);
-  color: var(--text-2);
-  transition:
-    background var(--dur-2) var(--ease),
-    border-color var(--dur-2) var(--ease),
-    box-shadow var(--dur-2) var(--ease),
-    transform var(--dur-2) var(--ease);
-}
-.surface :global(.new-loom-draft__type-button span) {
-  color: var(--text-1);
-  font-weight: 500;
-}
-.surface :global(.new-loom-draft__type-button small) { color: var(--text-3); }
-.surface :global(.new-loom-draft__type-button:hover),
-.surface :global(.new-loom-draft__type-button:focus-visible) {
-  border-color: #2E3742;
-  background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
-  box-shadow: var(--keylight), 0 8px 22px rgba(0, 0, 0, 0.4);
-}
-.surface :global(.new-loom-draft__type-button[aria-pressed="true"]) {
-  border-color: color-mix(in srgb, var(--signature-cyan) 55%, transparent);
-  background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
-  box-shadow:
-    var(--keylight),
-    inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent),
-    0 10px 26px rgba(0, 0, 0, 0.45);
-}
-.surface :global(.new-loom-draft__type-button[aria-pressed="true"] span) {
-  color: var(--signature-cyan-hi);
-}
 
 /* ======================================================================
    EDITOR — the lit page on the desk
@@ -892,56 +702,16 @@
 /* ======================================================================
    RESPONSIVE — keep the type ramp clean, never orphan a row
    ====================================================================== */
-@media (max-width: 1280px) {
-  .surface :global(.new-loom-draft__identity-rail) {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-}
 @media (max-width: 1080px) {
   .surface :global(.new-loom-draft__inspector) {
     border-left: 0;
     border-top: 1px solid var(--line);
   }
-  .surface :global(.new-loom-draft__type-buttons) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .surface :global(.new-loom-draft__rail-section li) {
-    background: var(--ink-3);
-  }
 }
 @media (max-width: 680px) {
-  /* When the proof strip stacks to one column, switch its separators from a
-     left vertical line to a top horizontal divider so stacked rows stay divided. */
-  .surface :global(.new-loom-draft__proof-strip span + span) {
-    box-shadow: inset 0 1px 0 var(--line);
-  }
-  .surface :global(.new-loom-draft__type-buttons) {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .surface :global(.new-loom-draft__main) {
     padding-block-start: clamp(5.15rem, 18vw, 5.75rem);
     padding-inline: 1.1rem;
-  }
-  .surface :global(.new-loom-draft__rail-section[aria-label="Workspace status"] ol) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    border-radius: 12px;
-  }
-  .surface :global(.new-loom-draft__rail-section[aria-label="Workspace status"] li) {
-    min-height: 4.6rem;
-    padding: 0.7rem 0.72rem;
-    align-content: space-between;
-    border-top: 0;
-  }
-  .surface :global(.new-loom-draft__rail-section[aria-label="Workspace status"] li span) {
-    font-family: var(--mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .surface :global(.new-loom-draft__rail-section[aria-label="Workspace status"] li strong) {
-    font-size: 1rem;
-    color: var(--text-1);
   }
 }
 
@@ -1175,7 +945,6 @@
    animated controls (additive; existing :focus-visible rings are kept).
    ====================================================================== */
 @media (prefers-reduced-motion: reduce) {
-  .surface :global(.new-loom-draft__type-button),
   .surface :global(.new-loom-draft .new-loom-shell__action),
   .surface :global(.new-loom-draft__reference-action),
   .surface :global(.new-loom-draft__source-tile),
