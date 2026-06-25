@@ -30,35 +30,6 @@ function readRepo(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-function cssBlock(css: string, selector: string, requiredContent?: string) {
-  const selectorPattern = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const selectorRegex = new RegExp(`${selectorPattern}\\s*\\{`, 'g');
-  let match = selectorRegex.exec(css);
-
-  while (match) {
-    const start = match.index;
-    const openBrace = css.indexOf('{', start);
-    let depth = 0;
-    for (let index = openBrace; index < css.length; index += 1) {
-      if (css[index] === '{') depth += 1;
-      if (css[index] === '}') {
-        depth -= 1;
-        if (depth === 0) {
-          const block = css.slice(start, index + 1);
-          if (!requiredContent || block.includes(requiredContent)) {
-            return block;
-          }
-          match = selectorRegex.exec(css);
-          break;
-        }
-      }
-    }
-    if (!match) assert.fail(`${selector} block should include ${requiredContent}`);
-  }
-
-  assert.fail(`${selector} block should include ${requiredContent}`);
-}
-
 function renderHomeClientHtml() {
   Object.assign(globalThis, { React });
   const { renderToStaticMarkup } = require('react-dom/server') as {
@@ -231,64 +202,10 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.doesNotMatch(html, /students, researchers, editors, and anyone/i);
 });
 
-test('homepage CSS protects balanced evidence portal layout', () => {
-  const css = readRepo('app/globals.css');
-  const coverNav = cssBlock(css, '.vd-home--cover > .vd-nav', 'height: 68px');
-  const coverComposition = cssBlock(
-    css,
-    '.vd-home--cover .vd-personal-stage.vd-cover-composition.vd-hybrid-grid',
-    'minmax(20rem, 0.46fr) minmax(0, 1.54fr)',
-  );
-  const portraitCover = cssBlock(css, '.vd-home--cover .vd-portrait-cover', 'display: grid');
-  const headshot = cssBlock(css, '.vd-home--cover .vd-portrait-cover__headshot', 'object-position: center 34%');
-  const coverLinks = cssBlock(css, '.vd-home--cover .vd-cover-links', 'repeat(3, minmax(0, 1fr))');
-  const coverLink = cssBlock(css, '.vd-home--cover .vd-cover-link', 'justify-content: space-between');
-  const linkedinIcon = cssBlock(css, '.vd-home--cover .vd-cover-link__icon--linkedin', 'background: currentColor');
-  const proofCovers = cssBlock(
-    css,
-    '.vd-home--cover .vd-proof-covers.vd-hybrid-covers',
-    'display: grid',
-  );
-  const educationVisual = cssBlock(
-    css,
-    '.vd-home--cover .vd-proof-cover--education .vd-cover-art--education-hybrid',
-    'background:',
-  );
-  const experienceVisual = cssBlock(
-    css,
-    '.vd-home--cover .vd-proof-cover--experience .vd-cover-art--experience-hybrid',
-    'display: grid',
-  );
-  const digitalVisual = cssBlock(
-    css,
-    '.vd-home--cover .vd-proof-cover--digital-me .vd-cover-art--digital-me',
-    'display: grid',
-  );
-
-  assert.match(coverNav, /display:\s*grid/);
-  assert.match(coverNav, /grid-template-columns:\s*auto minmax\(0,\s*1fr\) auto/);
-  assert.match(coverNav, /background:\s*#030404/);
-  assert.match(coverComposition, /grid-template-columns:\s*minmax\(20rem,\s*0\.46fr\) minmax\(0,\s*1\.54fr\)/);
-  assert.match(coverComposition, /min-height:\s*calc\(100vh - 5\.1rem\)/);
-  assert.match(portraitCover, /display:\s*grid/);
-  assert.doesNotMatch(portraitCover, /grid-template-rows:\s*auto auto auto auto minmax\(0,\s*1fr\)/);
-  assert.match(headshot, /position:\s*relative/);
-  assert.doesNotMatch(headshot, /inset:\s*0/);
-  assert.match(headshot, /width:\s*clamp\(5\.2rem,\s*6\.2vw,\s*7\.4rem\)/);
-  assert.match(headshot, /aspect-ratio:\s*0\.78/);
-  assert.match(headshot, /object-fit:\s*cover/);
-  assert.match(headshot, /object-position:\s*center 34%/);
-  assert.match(coverLinks, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
-  assert.match(coverLink, /justify-content:\s*space-between/);
-  assert.match(linkedinIcon, /background:\s*currentColor/);
-  assert.match(linkedinIcon, /color:\s*#000/);
-  assert.match(proofCovers, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
-  assert.match(proofCovers, /grid-template-rows:\s*repeat\(2,\s*minmax\(15rem,\s*1fr\)\)/);
-  assert.match(educationVisual, /background:/);
-  assert.match(experienceVisual, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
-  assert.match(digitalVisual, /display:\s*grid/);
-  assert.doesNotMatch(css, /vd-home-asset-grid/);
-});
+// Removed: 'homepage CSS protects balanced evidence portal layout' — it pinned the
+// retired .vd-home--cover cover CSS, which was removed as dead code (no component
+// applies that class; the live home renders .vd-home .lcv). The rendered-HTML guard
+// asserting the dead class is never emitted remains in home-client-first-paint.
 
 test('repo homepage exposes the personal knowledge identity evidence model', () => {
   const html = renderHomeClientHtml();

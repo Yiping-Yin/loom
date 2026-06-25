@@ -225,65 +225,10 @@ test('verified dossier data contract keeps the approved short definition', () =>
   );
 });
 
-test('personal positioning CSS keeps the Home cover visual and non-operational', () => {
-  const css = read('app/globals.css');
-  const coverNav = cssBlock(css, '.vd-home--cover > .vd-nav', 'height: 68px');
-  const coverComposition = cssBlock(
-    css,
-    '.vd-home--cover .vd-personal-stage.vd-cover-composition.vd-hybrid-grid',
-    'minmax(20rem, 0.46fr) minmax(0, 1.54fr)',
-  );
-  const portraitCover = cssBlock(css, '.vd-home--cover .vd-portrait-cover', 'display: grid');
-  const headshot = cssBlock(css, '.vd-home--cover .vd-portrait-cover__headshot', 'object-position: center 34%');
-  const coverLinks = cssBlock(css, '.vd-home--cover .vd-cover-links', 'repeat(3, minmax(0, 1fr))');
-  const coverLink = cssBlock(css, '.vd-home--cover .vd-cover-link', 'justify-content: space-between');
-  const linkedinIcon = cssBlock(css, '.vd-home--cover .vd-cover-link__icon--linkedin', 'background: currentColor');
-  const proofCovers = cssBlock(
-    css,
-    '.vd-home--cover .vd-proof-covers.vd-hybrid-covers',
-    'display: grid',
-  );
-  const educationVisual = cssBlock(
-    css,
-    '.vd-home--cover .vd-proof-cover--education .vd-cover-art--education-hybrid',
-    'background:',
-  );
-  const experienceVisual = cssBlock(
-    css,
-    '.vd-home--cover .vd-proof-cover--experience .vd-cover-art--experience-hybrid',
-    'display: grid',
-  );
-  const digitalVisual = cssBlock(
-    css,
-    '.vd-home--cover .vd-proof-cover--digital-me .vd-cover-art--digital-me',
-    'display: grid',
-  );
-
-  assert.match(coverNav, /display:\s*grid/);
-  assert.match(coverNav, /grid-template-columns:\s*auto minmax\(0,\s*1fr\) auto/);
-  assert.match(coverNav, /background:\s*#030404/);
-  assert.match(coverComposition, /grid-template-columns:\s*minmax\(20rem,\s*0\.46fr\) minmax\(0,\s*1\.54fr\)/);
-  assert.match(coverComposition, /width:\s*100%/);
-  assert.match(coverComposition, /min-height:\s*calc\(100vh - 5\.1rem\)/);
-  assert.match(portraitCover, /display:\s*grid/);
-  assert.doesNotMatch(portraitCover, /url\(/);
-  assert.match(headshot, /position:\s*relative/);
-  assert.match(headshot, /width:\s*clamp\(5\.2rem,\s*6\.2vw,\s*7\.4rem\)/);
-  assert.match(headshot, /aspect-ratio:\s*0\.78/);
-  assert.match(headshot, /object-fit:\s*cover/);
-  assert.match(headshot, /object-position:\s*center 34%/);
-  assert.doesNotMatch(headshot, /inset:\s*0/);
-  assert.match(coverLinks, /position:\s*relative/);
-  assert.match(coverLink, /justify-content:\s*space-between/);
-  assert.match(linkedinIcon, /background:\s*currentColor/);
-  assert.match(proofCovers, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
-  assert.match(proofCovers, /grid-template-rows:\s*repeat\(2,\s*minmax\(15rem,\s*1fr\)\)/);
-  assert.match(educationVisual, /background:/);
-  assert.match(experienceVisual, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
-  assert.match(digitalVisual, /display:\s*grid/);
-  assert.doesNotMatch(`${coverNav}\n${coverComposition}\n${portraitCover}\n${proofCovers}`, /#9fcbb6|#a8d5bf|#bfe4d0|rgba\(106,\s*145,\s*126|rgba\(126,\s*166,\s*146/);
-  assert.doesNotMatch(css, /vd-home-asset-grid/);
-});
+// Removed: 'personal positioning CSS keeps the Home cover visual and non-operational'
+// — it pinned the retired .vd-home--cover cover CSS, removed as dead code (no
+// component applies that class). The rendered-HTML guard that the dead class is never
+// emitted remains in home-client-first-paint.
 
 test('Sources and Draft descriptions serve personal learning paths, resources, portfolio, and process work', () => {
   const productShell = read('lib/new-loom/product-shell.ts');
