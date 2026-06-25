@@ -7,6 +7,7 @@ import {
   newDocBlock,
 } from '../../lib/new-loom/draft-blocks';
 import { safeHref } from '../../lib/profile/safe-href';
+import { NoteRenderer } from '../../components/NoteRenderer';
 
 function makeId(): string {
   try {
@@ -37,6 +38,10 @@ export function DraftBlockEditor({
     copy.splice(i + 1, 0, newDocBlock(kind, makeId));
     onChange(copy);
   };
+  // A text block reads as typeset prose (rendered markdown) and only becomes a raw
+  // textarea while you're editing it — so the page is a manuscript, not a form of
+  // boxes with `#` showing.
+  const [editingId, setEditingId] = React.useState<string | null>(null);
 
   return (
     <div className="new-loom-draft__blocks" role="list" aria-label="Document blocks">
@@ -44,14 +49,32 @@ export function DraftBlockEditor({
         <article key={b.id} className={`new-loom-draft__block new-loom-draft__block--${b.kind}`} role="listitem">
           <div className="new-loom-draft__block-rail" aria-hidden="true">{b.kind}</div>
           <div className="new-loom-draft__block-body">
-            {b.kind === 'text' && (
-              <textarea
-                className="new-loom-draft__block-text"
-                aria-label="Text block"
-                value={b.text}
-                onChange={(e) => replace(b.id, { text: e.target.value })}
-              />
-            )}
+            {b.kind === 'text' &&
+              (editingId === b.id ? (
+                <textarea
+                  className="new-loom-draft__block-text"
+                  aria-label="Text block"
+                  autoFocus
+                  value={b.text}
+                  onChange={(e) => replace(b.id, { text: e.target.value })}
+                  onBlur={() => setEditingId(null)}
+                />
+              ) : (
+                <div
+                  className="new-loom-draft__block-rendered"
+                  role="textbox"
+                  tabIndex={0}
+                  aria-label="Text block — click to edit"
+                  onClick={() => setEditingId(b.id)}
+                  onFocus={() => setEditingId(b.id)}
+                >
+                  {b.text.trim() ? (
+                    <NoteRenderer source={b.text} />
+                  ) : (
+                    <span className="new-loom-draft__block-placeholder">Write…</span>
+                  )}
+                </div>
+              ))}
             {b.kind === 'code' && (
               <>
                 <div className="new-loom-draft__block-codemeta">

@@ -1023,3 +1023,164 @@
 .surface :global(.new-loom-draft__theme-toggle:hover) {
   color: var(--text-1);
 }
+
+/* ============================================================================
+   MANUSCRIPT — make the Studio read as one continuous lit sheet of writing on the
+   deep desk, not a form of labelled boxes. (Overrides the rules above; same
+   selector specificity, later in the cascade.) The craft bar is the cosmic pages:
+   depth + light + typographic focus, not flat grey rectangles.
+   ============================================================================ */
+
+/* A softly lit page on the desk — a gentle top light gives depth (no hard card). */
+.surface :global(.new-loom-draft__main) {
+  background:
+    radial-gradient(120% 46% at 50% -10%, rgba(238, 241, 242, 0.055), transparent 62%),
+    linear-gradient(135deg, rgba(232, 236, 238, 0.04), rgba(90, 96, 101, 0.015) 38%, transparent 68%),
+    var(--ink-1);
+}
+/* Drop the inner editor card entirely — the writing sits on the lit page itself. */
+.surface :global(.new-loom-draft__editor-shell) {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.surface :global(.new-loom-draft__editor-toolbar) {
+  background: none;
+}
+/* The title is the focal line — no boxed underline. */
+.surface :global(.new-loom-draft__title) {
+  border-bottom: 0;
+}
+
+/* Continuous column; per-block chrome lives in the margins, revealed on hover. */
+.surface :global(.new-loom-draft__blocks) {
+  gap: 0;
+}
+.surface :global(.new-loom-draft__block) {
+  display: block;
+  position: relative;
+  padding: 0.1rem 0;
+  border: 0;
+  border-radius: 0;
+}
+.surface :global(.new-loom-draft__block:hover),
+.surface :global(.new-loom-draft__block:focus-within) {
+  background: none;
+}
+/* the block-kind tag → a faint margin marker, only on hover */
+.surface :global(.new-loom-draft__block-rail) {
+  position: absolute;
+  left: -3.7rem;
+  top: 0.5rem;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-2) var(--ease);
+}
+.surface :global(.new-loom-draft__block:hover .new-loom-draft__block-rail),
+.surface :global(.new-loom-draft__block:focus-within .new-loom-draft__block-rail) {
+  opacity: 0.4;
+}
+/* text → seamless flowing manuscript that auto-grows to its content (no empty box) */
+.surface :global(.new-loom-draft__block-text) {
+  min-height: 1.9rem;
+  field-sizing: content;
+  resize: none;
+  padding: 0.1rem 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+/* move/delete → right margin gutter, hover-only */
+.surface :global(.new-loom-draft__block-tools) {
+  position: absolute;
+  right: -2.9rem;
+  top: 0.35rem;
+}
+/* + Text / + Code → a quiet affordance just below the block, hover-only */
+.surface :global(.new-loom-draft__block-add) {
+  position: absolute;
+  left: 0;
+  bottom: -1.25rem;
+}
+
+/* Text blocks read as TYPESET PROSE (rendered markdown) — no raw `#`. Clicking
+   swaps to the raw textarea; blur returns to prose. */
+.surface :global(.new-loom-draft__block-rendered) {
+  max-width: 68ch;
+  color: var(--text-1);
+  cursor: text;
+  outline: none;
+}
+.surface :global(.new-loom-draft__block-rendered:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--signature-cyan) 55%, transparent);
+  outline-offset: 4px;
+  border-radius: var(--r-1);
+}
+.surface :global(.new-loom-draft__block-rendered :global(h1)) {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(1.65rem, 3vw, 2.2rem);
+  line-height: 1.16;
+  letter-spacing: -0.012em;
+  margin: 0.15em 0;
+}
+.surface :global(.new-loom-draft__block-rendered :global(h2)) {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  line-height: 1.26;
+  margin: 0.3em 0 0.15em;
+}
+.surface :global(.new-loom-draft__block-rendered :global(h3)) {
+  font-family: var(--sans);
+  font-weight: 650;
+  font-size: 1.04rem;
+  letter-spacing: 0.01em;
+  margin: 0.35em 0 0.1em;
+}
+.surface :global(.new-loom-draft__block-rendered :global(p)),
+.surface :global(.new-loom-draft__block-rendered :global(li)) {
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 1.35vw, 1.18rem);
+  line-height: 1.78;
+  margin: 0.35em 0;
+}
+.surface :global(.new-loom-draft__block-rendered :global(a)) {
+  color: var(--cyan);
+  text-underline-offset: 2px;
+}
+.surface :global(.new-loom-draft__block-rendered :global(code)) {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: color-mix(in srgb, var(--text-1) 8%, transparent);
+  padding: 0.1em 0.32em;
+  border-radius: 5px;
+}
+.surface :global(.new-loom-draft__block-rendered :global(blockquote)) {
+  margin: 0.5em 0;
+  padding-inline-start: 1rem;
+  border-inline-start: 2px solid var(--line);
+  color: var(--text-2);
+}
+.surface :global(.new-loom-draft__block-placeholder) {
+  color: var(--text-3);
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 1.35vw, 1.18rem);
+  cursor: text;
+}
+
+/* The raw-body bridge is technical — keep it for the AI/mention machinery, but make
+   it a whisper at the foot of the page, not a labelled section. */
+.surface :global(.new-loom-draft__raw) {
+  margin-block-start: 3rem;
+  border-top: 0;
+  padding-block-start: 0;
+}
+.surface :global(.new-loom-draft__raw > summary) {
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  opacity: 0.4;
+}
+.surface :global(.new-loom-draft__raw > summary:hover) { opacity: 0.85; }
