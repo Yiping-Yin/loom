@@ -1220,7 +1220,6 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
         <section className="new-loom-draft__document-header new-loom-draft__workspace" aria-label="Studio document">
           <p className="new-loom-draft__eyebrow">Studio</p>
           <div className="new-loom-draft__document-meta">
-            <span>Studio</span>
             <strong>{selectedOutputType.label}</strong>
             <small>{saveState === 'saved' ? 'Saved' : saveState === 'unavailable' ? 'Storage unavailable' : 'Unsaved'}</small>
           </div>

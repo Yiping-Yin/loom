@@ -34,6 +34,12 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.match(draftClient, /readBeginnerProfileLocal/);
   assert.match(draftClient, /Your name/);
   assert.match(draftClient, /<h1 className="new-loom-draft__sr-title">Studio<\/h1>/);
+  // The header names the section ONCE: the visible eyebrow kicker (+ the hidden
+  // sr-title above for a11y). The document-meta status row carries output type +
+  // save state, so it must NOT repeat "Studio" as a redundant crumb — guards the
+  // duplicate-"STUDIO" header regression.
+  assert.match(draftClient, /<p className="new-loom-draft__eyebrow">Studio<\/p>/);
+  assert.doesNotMatch(draftClient, /<span>Studio<\/span>/);
   assert.doesNotMatch(draftClient, /new-loom-draft__wordmark/);
   assert.doesNotMatch(globals, /new-loom-draft__wordmark/);
   assert.match(draftClient, /new-loom-draft__identity-rail/);
