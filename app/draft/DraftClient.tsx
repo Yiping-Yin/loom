@@ -1250,19 +1250,22 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
       >
         <h1 className="new-loom-draft__sr-title">Studio</h1>
         <section className="new-loom-draft__document-header new-loom-draft__workspace" aria-label="Studio document">
-          <p className="new-loom-draft__eyebrow">Studio</p>
-          <div className="new-loom-draft__document-meta">
-            <strong>{selectedOutputType.label}</strong>
-            <small>{saveState === 'saved' ? 'Saved' : saveState === 'unavailable' ? 'Storage unavailable' : 'Unsaved'}</small>
-            <button
-              type="button"
-              className="new-loom-draft__details-toggle"
-              aria-expanded={detailsOpen}
-              aria-controls="new-loom-draft-details"
-              onClick={() => setDetailsOpen((open) => !open)}
-            >
-              Details
-            </button>
+          <div className="new-loom-draft__topbar">
+            <a className="new-loom-draft__home" href="/digital-me">← Digital Me</a>
+            <div className="new-loom-draft__topbar-right">
+              <span className="new-loom-draft__save">
+                {saveState === 'saved' ? 'Saved' : saveState === 'unavailable' ? 'Storage unavailable' : 'Unsaved'}
+              </span>
+              <button
+                type="button"
+                className="new-loom-draft__details-toggle"
+                aria-expanded={detailsOpen}
+                aria-controls="new-loom-draft-details"
+                onClick={() => setDetailsOpen((open) => !open)}
+              >
+                Details
+              </button>
+            </div>
           </div>
           <input
             aria-label="Draft title"
@@ -1276,46 +1279,32 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
               scheduleSave(nextTitle, body);
             }}
           />
-          <div className="new-loom-draft__proof-strip" aria-label="Draft proof status">
-            <span>
-              <strong>
-                Answer grounded by {sourceTiles.length} {sourceTiles.length === 1 ? 'source' : 'sources'}
-              </strong>
-              <small>{provenanceMatches.length} provenance match{provenanceMatches.length === 1 ? '' : 'es'}</small>
-            </span>
-            <span>
-              <strong>{wordCount} {wordCount === 1 ? 'word' : 'words'}</strong>
-              <small>{displayReferences.length} attached reference{displayReferences.length === 1 ? '' : 's'}</small>
-            </span>
-          </div>
-        </section>
-        <section className="new-loom-draft__type-rail" aria-label="Draft type">
-          <span className="new-loom-draft__type-label">Output</span>
-          <div className="new-loom-draft__type-buttons">
-            {NEW_LOOM_DRAFT_OUTPUT_TYPES.map((outputType) => (
-              <button
-                type="button"
-                key={outputType.id}
-                className="new-loom-draft__type-button"
-                aria-pressed={selectedOutputTypeId === outputType.id}
-                aria-label={`${outputType.label}: ${outputType.goal}`}
-                onClick={() => setSelectedOutputTypeId(outputType.id)}
-              >
-                <span>{outputType.label}</span>
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="new-loom-draft__reference-action"
-            onClick={useSelectedOutputOutline}
-          >
-            Use outline
-          </button>
+          {sourceTiles.length > 0 ? (
+            <button
+              type="button"
+              className="new-loom-draft__grounding"
+              onClick={() => {
+                setInspectorMode('sources');
+                setDetailsOpen(true);
+              }}
+            >
+              Backed by {sourceTiles.length} of your source{sourceTiles.length === 1 ? '' : 's'}
+            </button>
+          ) : null}
         </section>
         <section className="new-loom-draft__editor-shell" aria-label="Source-grounded editor">
           <div className="new-loom-draft__editor-toolbar" aria-label="Editor toolbar">
-            <span>Source-grounded writing</span>
+            <button
+              type="button"
+              className="new-loom-draft__help"
+              onClick={() => {
+                setInspectorMode('sources');
+                setDetailsOpen(true);
+                void continueWithAI();
+              }}
+            >
+              Help me write
+            </button>
             <div className="new-loom-draft__editor-actions">
               <button
                 type="button"

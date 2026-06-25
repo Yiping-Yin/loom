@@ -34,11 +34,9 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.match(draftClient, /readBeginnerProfileLocal/);
   assert.match(draftClient, /Your name/);
   assert.match(draftClient, /<h1 className="new-loom-draft__sr-title">Studio<\/h1>/);
-  // The header names the section ONCE: the visible eyebrow kicker (+ the hidden
-  // sr-title above for a11y). The document-meta status row carries output type +
-  // save state, so it must NOT repeat "Studio" as a redundant crumb — guards the
-  // duplicate-"STUDIO" header regression.
-  assert.match(draftClient, /<p className="new-loom-draft__eyebrow">Studio<\/p>/);
+  // The calm header carries no "Studio" labels: the eyebrow kicker + meta row were
+  // dropped; the back link + title carry context. The hidden sr-title h1 stays (a11y).
+  assert.doesNotMatch(draftClient, /__eyebrow">Studio/);
   assert.doesNotMatch(draftClient, /<span>Studio<\/span>/);
   // The calm empty-state entry (StudioStarters) is wired in and shown when the draft
   // is empty, so a normal user lands on "Add to your Digital Me", not the full editor.
@@ -66,8 +64,16 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
     draftClient,
     /<DraftBlockEditor\s+blocks=\{blocks\}\s+onChange=\{handleBlocksChange\}\s*\/>/,
   );
-  assert.match(draftClient, /new-loom-draft__proof-strip/);
-  assert.match(draftClient, /Answer grounded by/);
+  // The dense default header (OUTPUT chips + proof strip + jargon) is gone; the calm
+  // header is a slim top bar + a quiet grounding line + a soft "Help me write".
+  assert.match(draftClient, /new-loom-draft__topbar/);
+  assert.match(draftClient, /Help me write/);
+  assert.match(draftClient, /new-loom-draft__grounding/);
+  assert.match(draftClient, /Backed by/);
+  assert.doesNotMatch(draftClient, /new-loom-draft__type-rail/);
+  assert.doesNotMatch(draftClient, /new-loom-draft__proof-strip/);
+  assert.doesNotMatch(draftClient, /Source-grounded writing/);
+  // The power features (answer publishing, provenance) still exist — in Details.
   assert.match(draftClient, /Publish answer preview/);
   assert.match(draftClient, /Provenance/);
 
