@@ -1,24 +1,22 @@
 'use client';
 
-import { ProfileGate } from '../profile/ProfileGate';
-import { EducationProfileView } from './EducationViews';
-import { IdentityEmptyState } from '../IdentityEmptyState';
+import { useSearchParams } from 'next/navigation';
+import { CourseEditor } from './CourseEditor';
+import { EducationCoursesClient } from './EducationCoursesClient';
+import './education.module.css';
 
 /**
- * Client gate for /education. Wraps ProfileGate (which takes a `renderProfile`
- * function prop) so the page can stay a server component and keep its
- * `export const metadata`. Views live in ./EducationViews so importing them here
- * never pulls page.tsx into the client graph.
- *
- * F2 step 2: SSR / first paint and the no-profile STRANGER get a neutral
- * IdentityEmptyState — NOT the owner DossierEducationView (which now renders
- * only at /example). After mount, ProfileGate swaps to EducationProfileView when
- * a beginner profile is present in localStorage.
+ * Client gate for /education. With `?edit=<id|new>` it opens the full-screen course
+ * editor (mirroring the Studio's /digital-me?edit= pattern); otherwise it shows the
+ * schools & courses authoring home. The read-only profile Education view still ships
+ * as `EducationProfileView` (re-exported from page.tsx) for the dossier/showcase.
  */
 export function EducationGate() {
-  return (
-    <ProfileGate renderProfile={(profile) => <EducationProfileView profile={profile} />}>
-      <IdentityEmptyState section="Education" activeHref="/education" titleId="education-title" />
-    </ProfileGate>
-  );
+  const params = useSearchParams();
+  if (params.has('edit')) {
+    return (
+      <CourseEditor editId={params.get('edit') || 'new'} schoolId={params.get('school') ?? undefined} />
+    );
+  }
+  return <EducationCoursesClient />;
 }

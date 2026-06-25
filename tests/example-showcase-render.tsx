@@ -279,7 +279,7 @@ test('default /digital-me first paint is a neutral cosmic skeleton, not the owne
   assert.doesNotMatch(html, /ask-yiping/i);
 });
 
-test('default /education and /experience (no profile) render neutral empty states, not owner dossiers', () => {
+test('default /education (courses authoring) and /experience (no profile) do not leak owner dossiers', () => {
   const { default: EducationPage } = require('../app/education/page') as {
     default: React.ComponentType;
   };
@@ -287,12 +287,13 @@ test('default /education and /experience (no profile) render neutral empty state
     default: React.ComponentType;
   };
 
+  // /education is now the schools & courses authoring home; it mounts client-side
+  // (useSearchParams → CSR bailout), so the static render is a neutral Suspense
+  // fallback. The guarantee that matters: it must NOT leak the owner's dossier.
   const eduHtml = render(<EducationPage />);
   const eduText = visibleText(eduHtml);
-  assert.match(eduText, /This is your Education page/);
-  assert.match(eduHtml, /href="\/onboarding\/profile"/);
-  assert.match(eduHtml, /href="\/example"/);
-  // Owner education evidence strips must be absent.
+  assert.match(eduHtml, /edu-loading/);
+  assert.doesNotMatch(eduText, /This is your Education page/);
   assert.doesNotMatch(eduText, /Evidence files/);
   assert.doesNotMatch(eduText, /UNSW courses/);
 

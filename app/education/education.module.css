@@ -1,0 +1,325 @@
+/* Education authoring + course page. Restraint discipline: LOOM's own dark ground,
+   hairline rules, generous whitespace, clean sans, tabular numerals, a single cyan
+   accent. No glow, no decorative gradient, no heavy/stacked shadow, no breathing. */
+
+:global(body:has(.edu-home)),
+:global(body:has(.edu-editor)),
+:global(body:has(.edu-course)) {
+  background: var(--ink-0);
+}
+
+:global(.edu-home),
+:global(.edu-editor) {
+  min-height: 100vh;
+  max-width: 56rem;
+  margin-inline: auto;
+  padding: clamp(2.2rem, 5vw, 4rem) clamp(1.25rem, 4vw, 2.5rem) 6rem;
+  color: var(--text-1);
+  font-family: var(--sans);
+  font-variant-numeric: tabular-nums;
+}
+
+:global(.edu-home__eyebrow),
+:global(.edu-editor__label),
+:global(.edu-home__add-label) {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+:global(.edu-home__eyebrow) { margin: 0; }
+:global(.edu-home__title) {
+  margin: 0.35rem 0 2.2rem;
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+:global(.edu-home__add-school) { display: flex; gap: 0.6rem; margin-bottom: 2.4rem; }
+:global(.edu-home__school-input) {
+  flex: 1; min-width: 0; padding: 0.6rem 0.85rem;
+  background: transparent; border: 1px solid var(--line); border-radius: 9px;
+  color: var(--text-1); font: inherit;
+}
+:global(.edu-home__school-input:focus) { outline: none; border-color: var(--signature-cyan); }
+:global(.edu-home__school-input::placeholder) { color: var(--text-3); }
+
+:global(.edu-home__add-school-btn),
+:global(.edu-home__add-course),
+:global(.edu-editor__done) {
+  padding: 0.55rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 40%, var(--line));
+  border-radius: 999px; background: transparent;
+  color: var(--signature-cyan-hi); font: inherit; font-weight: 600;
+  cursor: pointer; white-space: nowrap; text-decoration: none;
+}
+:global(.edu-home__add-school-btn:hover),
+:global(.edu-home__add-course:hover),
+:global(.edu-editor__done:hover) { border-color: var(--signature-cyan); }
+
+:global(.edu-home__schools) { display: flex; flex-direction: column; gap: 2rem; }
+:global(.edu-home__school) { border-top: 1px solid var(--line); padding-top: 1.1rem; }
+:global(.edu-home__school-head) {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;
+}
+:global(.edu-home__school-name) { margin: 0; font-size: 1.15rem; font-weight: 600; }
+:global(.edu-home__school-tools) { display: inline-flex; gap: 0.8rem; align-items: center; }
+
+:global(.edu-home__remove-school),
+:global(.edu-home__course-remove),
+:global(.edu-home__course-edit) {
+  background: transparent; border: 0; padding: 0;
+  color: var(--text-3); font: inherit; font-size: 0.84rem; cursor: pointer; text-decoration: none;
+}
+:global(.edu-home__course-edit:hover) { color: var(--signature-cyan-hi); }
+:global(.edu-home__remove-school:hover),
+:global(.edu-home__course-remove:hover) { color: var(--role-down, #e2536c); }
+
+:global(.edu-home__empty),
+:global(.edu-home__school-empty),
+:global(.edu-editor__empty) { color: var(--text-3); font-size: 0.92rem; }
+
+:global(.edu-home__course-list) { list-style: none; margin: 0; padding: 0; }
+:global(.edu-home__course) {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.7rem 0; border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+:global(.edu-home__course:first-child) { border-top: 0; }
+:global(.edu-home__course-name) { color: var(--text-1); text-decoration: none; font-weight: 500; }
+:global(.edu-home__course-name:hover) { color: var(--signature-cyan-hi); }
+:global(.edu-home__course-code) { color: var(--text-3); font-family: var(--mono); font-size: 0.82rem; }
+:global(.edu-home__course-tools) { display: inline-flex; gap: 0.9rem; }
+
+:global(.edu-editor__topbar) { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.6rem; }
+:global(.edu-editor__home) {
+  color: var(--text-3); text-decoration: none; font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.06em;
+}
+:global(.edu-editor__home:hover) { color: var(--text-1); }
+:global(.edu-editor__topbar-right) { display: inline-flex; align-items: center; gap: 1.1rem; }
+:global(.edu-editor__save) {
+  color: var(--text-3); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+:global(.edu-editor__name) {
+  width: 100%; margin: 0; padding: 0.2rem 0; background: transparent; border: 0;
+  color: var(--text-1); font-family: var(--sans); font-size: 1.85rem; font-weight: 600; letter-spacing: -0.01em;
+}
+:global(.edu-editor__code) {
+  width: 100%; margin: 0.1rem 0 1.6rem; padding: 0.25rem 0; background: transparent;
+  border: 0; border-bottom: 1px solid var(--line);
+  color: var(--text-2); font-family: var(--mono); font-size: 0.86rem;
+}
+:global(.edu-editor__name:focus), :global(.edu-editor__code:focus) { outline: none; }
+:global(.edu-editor__name::placeholder), :global(.edu-editor__code::placeholder) { color: var(--text-3); }
+
+:global(.edu-editor__block) { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.8rem; }
+:global(.edu-editor__textarea) {
+  width: 100%; min-height: 5.5rem; resize: vertical; padding: 0.8rem 0.9rem;
+  background: var(--ink-1); border: 1px solid var(--line); border-radius: 10px;
+  color: var(--text-1); font: inherit; line-height: 1.65;
+}
+:global(.edu-editor__textarea:focus) { outline: none; border-color: var(--signature-cyan); }
+:global(.edu-editor__textarea::placeholder) { color: var(--text-3); }
+
+:global(.edu-editor__sections) { display: flex; flex-direction: column; gap: 1.2rem; }
+:global(.edu-editor__section) { display: flex; flex-direction: column; gap: 0.5rem; }
+:global(.edu-editor__section-head) { display: flex; align-items: center; gap: 0.6rem; }
+:global(.edu-editor__section-title) {
+  flex: 1; min-width: 0; padding: 0.3rem 0; background: transparent;
+  border: 0; border-bottom: 1px solid var(--line);
+  color: var(--text-1); font: inherit; font-weight: 600; font-size: 1rem;
+}
+:global(.edu-editor__section-title:focus) { outline: none; border-color: var(--signature-cyan); }
+:global(.edu-editor__section-tools) { display: inline-flex; gap: 0.3rem; }
+:global(.edu-editor__section-tools button) {
+  width: 1.9rem; height: 1.9rem; display: grid; place-items: center;
+  background: transparent; border: 1px solid var(--line); border-radius: 7px;
+  color: var(--text-3); cursor: pointer; font-size: 0.85rem;
+}
+:global(.edu-editor__section-tools button:hover) { color: var(--text-1); border-color: var(--text-3); }
+
+:global(.edu-editor__add) { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.6rem; }
+:global(.edu-editor__add button) {
+  padding: 0.4rem 0.8rem; background: transparent;
+  border: 1px dashed var(--line); border-radius: 999px;
+  color: var(--text-2); font: inherit; font-size: 0.86rem; cursor: pointer;
+}
+:global(.edu-editor__add button:hover) { color: var(--text-1); border-color: var(--text-3); }
+
+/* ---- auto-build: drop files → the woven evidence chain ---- */
+:global(.edu-build) { margin: 1.8rem 0; display: flex; flex-direction: column; gap: 0.7rem; }
+:global(.edu-build__head) { display: flex; align-items: center; justify-content: space-between; }
+:global(.edu-build__reweave) {
+  background: transparent; border: 0; padding: 0;
+  color: var(--text-3); font: inherit; font-size: 0.82rem; cursor: pointer;
+}
+:global(.edu-build__reweave:hover) { color: var(--signature-cyan-hi); }
+
+:global(.edu-build__drop) {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem;
+  width: 100%; padding: 2.6rem 1.5rem; text-align: center;
+  background: transparent; border: 1px dashed var(--line); border-radius: 12px;
+  color: var(--text-2); cursor: pointer;
+  transition: border-color 0.15s var(--ease, ease), background 0.15s var(--ease, ease);
+}
+:global(.edu-build__drop:hover),
+:global(.edu-build__drop[data-over='true']) {
+  border-color: var(--signature-cyan);
+  background: color-mix(in srgb, var(--signature-cyan) 5%, transparent);
+}
+:global(.edu-build__drop-title) { color: var(--text-1); font-size: 1rem; font-weight: 600; }
+:global(.edu-build__drop-sub) { color: var(--text-3); font-size: 0.86rem; }
+
+:global(.edu-build__chain) { display: flex; flex-direction: column; gap: 1.5rem; }
+:global(.edu-build__group) { display: flex; flex-direction: column; gap: 0.5rem; }
+:global(.edu-build__group-title) {
+  margin: 0; display: flex; align-items: center; gap: 0.5rem;
+  color: var(--text-1); font-size: 0.95rem; font-weight: 600;
+}
+:global(.edu-build__group-title span) {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-3);
+  border: 1px solid var(--line); border-radius: 999px; padding: 0.04rem 0.5rem;
+}
+:global(.edu-build__rows) { list-style: none; margin: 0; padding: 0; }
+:global(.edu-build__row) {
+  display: grid; grid-template-columns: 3rem 1fr; gap: 0.8rem; align-items: start;
+  padding: 0.7rem 0; border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+:global(.edu-build__row:first-child) { border-top: 0; }
+:global(.edu-build__marker) {
+  font-family: var(--mono); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--signature-cyan-hi); padding-top: 0.25rem;
+}
+:global(.edu-build__files) { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+:global(.edu-build__file) {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.28rem 0.6rem; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--ink-1); font-size: 0.82rem;
+}
+:global(.edu-build__file-name) { color: var(--text-1); }
+:global(.edu-build__role) {
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3);
+}
+:global(.edu-build__boundary) {
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase;
+}
+:global(.edu-build__boundary[data-boundary='official']) { color: var(--text-3); }
+:global(.edu-build__boundary[data-boundary='private']) { color: var(--signature-cyan-hi); }
+:global(.edu-build__boundary[data-boundary='ai']) { color: #d8a44a; }
+
+/* ---- course page: the rendered, interactive evidence chain ---- */
+:global(.edu-course) {
+  min-height: 100vh; max-width: 52rem; margin-inline: auto;
+  padding: clamp(2.2rem, 5vw, 4rem) clamp(1.25rem, 4vw, 2.5rem) 6rem;
+  color: var(--text-1); font-family: var(--sans); font-variant-numeric: tabular-nums;
+}
+:global(.edu-course__topbar) { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+:global(.edu-course__home),
+:global(.edu-course__edit) {
+  color: var(--text-3); text-decoration: none; font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.06em;
+}
+:global(.edu-course__home:hover),
+:global(.edu-course__edit:hover) { color: var(--signature-cyan-hi); }
+:global(.edu-course__header) { margin-bottom: 2rem; }
+:global(.edu-course__code) {
+  margin: 0 0 0.5rem; color: var(--text-3); font-family: var(--mono); font-size: 0.74rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+:global(.edu-course__title) { margin: 0; font-size: 2.1rem; font-weight: 600; letter-spacing: -0.015em; }
+:global(.edu-course__overview) { margin: 0.9rem 0 0; color: var(--text-2); font-size: 1.02rem; line-height: 1.65; max-width: 42rem; }
+
+:global(.edu-course__nav) { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2.4rem; }
+:global(.edu-course__nav a) {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.35rem 0.8rem; border: 1px solid var(--line); border-radius: 999px;
+  color: var(--text-2); text-decoration: none; font-size: 0.84rem;
+}
+:global(.edu-course__nav a:hover) { border-color: var(--text-3); color: var(--text-1); }
+:global(.edu-course__nav a span) { font-family: var(--mono); font-size: 0.72rem; color: var(--text-3); }
+
+:global(.edu-course__section) { margin-bottom: 2.6rem; }
+:global(.edu-course__section-title) {
+  margin: 0 0 0.6rem; font-size: 0.78rem; font-family: var(--mono); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-3);
+}
+:global(.edu-course__items) { display: flex; flex-direction: column; }
+:global(.edu-course__item) { border-top: 1px solid var(--line); }
+:global(.edu-course__summary) {
+  display: flex; align-items: center; gap: 0.9rem; padding: 0.85rem 0;
+  cursor: pointer; list-style: none; user-select: none;
+}
+:global(.edu-course__summary::-webkit-details-marker) { display: none; }
+:global(.edu-course__marker) {
+  font-family: var(--mono); font-size: 0.82rem; font-weight: 600; color: var(--signature-cyan-hi);
+}
+:global(.edu-course__topic) { flex: 1; min-width: 0; color: var(--text-1); font-weight: 500; }
+:global(.edu-course__count) { color: var(--text-3); font-family: var(--mono); font-size: 0.74rem; }
+
+:global(.edu-course__files) {
+  list-style: none; margin: 0 0 0.9rem; padding: 0 0 0 1.7rem;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+:global(.edu-course__file) { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+:global(.edu-course__file-name) { color: var(--text-2); font-size: 0.9rem; }
+:global(.edu-course__role) {
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3);
+}
+:global(.edu-course__boundary) { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; }
+:global(.edu-course__boundary[data-boundary='official']) { color: var(--text-3); }
+:global(.edu-course__boundary[data-boundary='private']) { color: var(--signature-cyan-hi); }
+:global(.edu-course__boundary[data-boundary='ai']) { color: #d8a44a; }
+:global(.edu-course__empty) { color: var(--text-3); }
+:global(.edu-course__empty a) { color: var(--signature-cyan-hi); }
+
+/* ---- theme toggle ---- */
+:global(.edu-theme-toggle) {
+  background: transparent; border: 0; padding: 0;
+  color: var(--text-3); font: inherit; font-family: var(--mono);
+  font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+}
+:global(.edu-theme-toggle:hover) { color: var(--signature-cyan-hi); }
+:global(.edu-home__topbar) { display: flex; justify-content: flex-end; margin-bottom: 0.4rem; }
+:global(.edu-course__topbar-right) { display: inline-flex; align-items: center; gap: 1.1rem; }
+
+/* ---- the "high-end white": a premium light theme, scoped to Education ----
+   Warm off-white (not pure #fff), near-black text, soft hairlines, a deepened teal
+   accent so it reads on white. Leaving Education removes data-edu-theme (see toggle),
+   so the dark cosmic surfaces are never affected. */
+:global(body[data-edu-theme='light']) {
+  /* "Spacesuit white": a warm-neutral, matte fabric white — not cool, not glowy. The
+     premium read comes from material + soft diffuse shadow depth, not luminance. */
+  --ink-0: #edeae3;
+  --ink-1: #f7f5ef;
+  --ink-2: #e4e1d8;
+  --ink-3: #e4e1d8;
+  --ink-4: #f7f5ef;
+  --text-1: #302d28;
+  --text-2: #635f57;
+  --text-3: #9a968d;
+  --line: rgba(40, 36, 30, 0.1);
+  --signature-cyan: #0e7c8c;
+  --signature-cyan-hi: #126872;
+  background: #edeae3;
+}
+/* a touch deeper amber so the AI-layer label reads on the warm white */
+:global(body[data-edu-theme='light'] .edu-build__boundary[data-boundary='ai']),
+:global(body[data-edu-theme='light'] .edu-course__boundary[data-boundary='ai']) {
+  color: #b5791e;
+}
+/* Soft, diffuse, warm-tinted shadows — the matte fabric depth of the suit, not a
+   sharp or glowing lift. */
+:global(body[data-edu-theme='light'] .edu-editor__textarea),
+:global(body[data-edu-theme='light'] .edu-build__file),
+:global(body[data-edu-theme='light'] .edu-build__drop),
+:global(body[data-edu-theme='light'] .edu-course__nav a) {
+  box-shadow: 0 2px 10px rgba(50, 44, 36, 0.05), 0 1px 2px rgba(50, 44, 36, 0.04);
+}
+/* The cosmic dark grain + edge vignette are for the black theme — they dirty the
+   white, so switch them off in light mode for a clean matte bone surface. */
+:global(body[data-edu-theme='light'] .loom-grain),
+:global(body[data-edu-theme='light'] .loom-vignette) {
+  display: none;
+}
