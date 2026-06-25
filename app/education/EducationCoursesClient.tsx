@@ -12,6 +12,7 @@ import {
   type CourseRecord,
   type SchoolRecord,
 } from '../../lib/education/course-storage';
+import { EduThemeToggle } from './EduThemeToggle';
 
 /**
  * The Education authoring home: create schools, add courses under them, open a
@@ -52,6 +53,9 @@ export function EducationCoursesClient() {
 
   return (
     <main className="edu-home">
+      <div className="edu-home__topbar">
+        <EduThemeToggle />
+      </div>
       <header className="edu-home__head">
         <p className="edu-home__eyebrow">Education</p>
         <h1 className="edu-home__title">Schools &amp; courses</h1>

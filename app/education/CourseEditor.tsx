@@ -12,6 +12,7 @@ import {
 } from '../../lib/education/course-storage';
 import { type WovenProblemSet, type WovenWeek } from '../../lib/education/auto-weave';
 import { CourseAutoBuild } from './CourseAutoBuild';
+import { EduThemeToggle } from './EduThemeToggle';
 
 const SECTION_KINDS: { kind: CourseSectionKind; label: string }[] = [
   { kind: 'week', label: 'Week' },
@@ -119,6 +120,7 @@ export function CourseEditor({ editId, schoolId }: { editId: string; schoolId?: 
       <div className="edu-editor__topbar">
         <a className="edu-editor__home" href="/education">← Education</a>
         <div className="edu-editor__topbar-right">
+          <EduThemeToggle />
           <span className="edu-editor__save">{saved ? 'Saved' : 'Saving…'}</span>
           <a className="edu-editor__done" href={coursePath}>Done</a>
         </div>

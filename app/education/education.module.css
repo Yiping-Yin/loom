@@ -273,3 +273,41 @@
 :global(.edu-course__boundary[data-boundary='ai']) { color: #d8a44a; }
 :global(.edu-course__empty) { color: var(--text-3); }
 :global(.edu-course__empty a) { color: var(--signature-cyan-hi); }
+
+/* ---- theme toggle ---- */
+:global(.edu-theme-toggle) {
+  background: transparent; border: 0; padding: 0;
+  color: var(--text-3); font: inherit; font-family: var(--mono);
+  font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+}
+:global(.edu-theme-toggle:hover) { color: var(--signature-cyan-hi); }
+:global(.edu-home__topbar) { display: flex; justify-content: flex-end; margin-bottom: 0.4rem; }
+:global(.edu-course__topbar-right) { display: inline-flex; align-items: center; gap: 1.1rem; }
+
+/* ---- the "high-end white": a premium light theme, scoped to Education ----
+   Warm off-white (not pure #fff), near-black text, soft hairlines, a deepened teal
+   accent so it reads on white. Leaving Education removes data-edu-theme (see toggle),
+   so the dark cosmic surfaces are never affected. */
+:global(body[data-edu-theme='light']) {
+  --ink-0: #faf9f6;
+  --ink-1: #ffffff;
+  --ink-2: #f1f0ea;
+  --ink-3: #f1f0ea;
+  --ink-4: #ffffff;
+  --text-1: #1a1a18;
+  --text-2: #56544c;
+  --text-3: #8e8c82;
+  --line: rgba(26, 26, 24, 0.12);
+  --signature-cyan: #0e7c8c;
+  --signature-cyan-hi: #0a6675;
+}
+/* a touch deeper amber so the AI-layer label reads on white */
+:global(body[data-edu-theme='light'] .edu-build__boundary[data-boundary='ai']),
+:global(body[data-edu-theme='light'] .edu-course__boundary[data-boundary='ai']) {
+  color: #b5791e;
+}
+/* lift cards just slightly with a whisper of shadow (premium depth, not heavy) */
+:global(body[data-edu-theme='light'] .edu-editor__textarea),
+:global(body[data-edu-theme='light'] .edu-build__file) {
+  box-shadow: 0 1px 2px rgba(26, 26, 24, 0.04);
+}

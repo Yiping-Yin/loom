@@ -12,6 +12,7 @@ import {
   type SourceBoundary,
   type WovenFile,
 } from '../../../lib/education/auto-weave';
+import { EduThemeToggle } from '../EduThemeToggle';
 import '../education.module.css';
 
 const ROLE_LABEL: Record<FileRole, string> = {
@@ -104,7 +105,10 @@ export function CourseView() {
     <main className="edu-course" aria-labelledby="edu-course-title">
       <div className="edu-course__topbar">
         <a className="edu-course__home" href="/education">← Education</a>
-        <a className="edu-course__edit" href={`/education?edit=${course.id}`}>Edit</a>
+        <span className="edu-course__topbar-right">
+          <EduThemeToggle />
+          <a className="edu-course__edit" href={`/education?edit=${course.id}`}>Edit</a>
+        </span>
       </div>
 
       <header className="edu-course__header">

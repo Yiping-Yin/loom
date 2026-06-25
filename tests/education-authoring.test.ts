@@ -51,4 +51,11 @@ test('Education authoring: gate, schools/courses home, and the course editor', (
   assert.match(view, /Problem-set trail/);
   assert.match(view, /<details/);
   assert.match(view, /boundary/);
+
+  // Premium light theme: a scoped toggle + a warm off-white (not pure-white) override.
+  const toggle = read('app/education/EduThemeToggle.tsx');
+  const themeCss = read('app/education/education.module.css');
+  assert.match(toggle, /eduTheme/);
+  assert.match(themeCss, /\[data-edu-theme='light'\]/);
+  assert.match(themeCss, /#faf9f6/i);
 });
