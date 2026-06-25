@@ -5,6 +5,8 @@
  * collections behind a small adapter, SSR-safe, never throws.
  */
 
+import { type WovenWeek, type WovenProblemSet } from './auto-weave';
+
 export type CourseSectionKind = 'overview' | 'week' | 'assessment' | 'structure' | 'custom';
 
 /** One labelled region of the course body (e.g. "Week 1", "Assessment"). Markdown body. */
@@ -22,6 +24,10 @@ export type CourseRecord = {
   code?: string;
   overview: string;
   sections: CourseSection[];
+  // The Learning Evidence Chain spine, populated by auto-weave (or by hand):
+  // weeks and problem sets, each holding its roled, provenance-labelled files.
+  weeks?: WovenWeek[];
+  problemSets?: WovenProblemSet[];
   createdAt: string;
   updatedAt: string;
 };

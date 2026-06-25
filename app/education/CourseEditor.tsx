@@ -10,6 +10,8 @@ import {
   type CourseSection,
   type CourseSectionKind,
 } from '../../lib/education/course-storage';
+import { type WovenProblemSet, type WovenWeek } from '../../lib/education/auto-weave';
+import { CourseAutoBuild } from './CourseAutoBuild';
 
 const SECTION_KINDS: { kind: CourseSectionKind; label: string }[] = [
   { kind: 'week', label: 'Week' },
@@ -65,6 +67,8 @@ export function CourseEditor({ editId, schoolId }: { editId: string; schoolId?: 
         code: next.code,
         overview: next.overview,
         sections: next.sections,
+        weeks: next.weeks,
+        problemSets: next.problemSets,
       });
       setSaved(true);
     }, 400);
@@ -145,6 +149,12 @@ export function CourseEditor({ editId, schoolId }: { editId: string; schoolId?: 
           onChange={(event) => patch({ overview: event.target.value })}
         />
       </section>
+
+      <CourseAutoBuild
+        weeks={course.weeks ?? []}
+        problemSets={course.problemSets ?? []}
+        onWeave={(weeks: WovenWeek[], problemSets: WovenProblemSet[]) => patch({ weeks, problemSets })}
+      />
 
       <div className="edu-editor__sections">
         {course.sections.map((section, index) => (

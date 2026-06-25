@@ -33,4 +33,13 @@ test('Education authoring: gate, schools/courses home, and the course editor', (
   assert.match(editor, /structure/);
   assert.match(editor, />Done<|>\s*Done\s*</);
   assert.match(editor, /\/education\/course\//);
+
+  // Auto-weave: the editor hosts the drop-files → evidence-chain build, which weaves
+  // raw files into weeks/problem-sets and labels each file's source boundary.
+  const build = read('app/education/CourseAutoBuild.tsx');
+  assert.match(editor, /<CourseAutoBuild\b/);
+  assert.match(build, /weaveCourse/);
+  assert.match(build, /webkitdirectory/);
+  assert.match(build, /onWeave/);
+  assert.match(build, /boundary/);
 });
