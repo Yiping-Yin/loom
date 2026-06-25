@@ -1031,12 +1031,22 @@
    depth + light + typographic focus, not flat grey rectangles.
    ============================================================================ */
 
-/* A softly lit page on the desk — a gentle top light gives depth (no hard card). */
+/* No centred page panel — it read as a "box" floating on a lopsided field. The
+   writing sits directly on a calm, FULL-BLEED, left-right-symmetric ground. */
 .surface :global(.new-loom-draft__main) {
-  background:
-    radial-gradient(120% 46% at 50% -10%, rgba(238, 241, 242, 0.055), transparent 62%),
-    linear-gradient(135deg, rgba(232, 236, 238, 0.04), rgba(90, 96, 101, 0.015) 38%, transparent 68%),
-    var(--ink-1);
+  background: none;
+}
+/* Calm even writing ground: a single soft SYMMETRIC overhead light over an even
+   dark, full-bleed — replacing the directional deep-space field (bright upper-left,
+   black lower-right) that looked jarring behind a writing column. */
+.surface:global(.new-loom-draft) {
+  background-color: var(--ink-0);
+  background-image: radial-gradient(94% 60% at 50% -8%, rgba(238, 241, 242, 0.06) 0%, rgba(238, 241, 242, 0.014) 36%, transparent 66%);
+  background-attachment: fixed;
+}
+/* In light, the even spacesuit bone carries it — no glow needed. */
+:global(body[data-surface-theme='light']) .surface:global(.new-loom-draft) {
+  background-image: none;
 }
 /* Drop the inner editor card entirely — the writing sits on the lit page itself. */
 .surface :global(.new-loom-draft__editor-shell) {
