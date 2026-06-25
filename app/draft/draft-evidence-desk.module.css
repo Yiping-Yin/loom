@@ -217,6 +217,45 @@
   color: var(--text-1);
   font-weight: 600;
 }
+
+/* Details drawer — the power surface (Inspector) slides in only on demand, so the
+   writing surface stays calm by default. */
+.surface :global(.new-loom-draft__details) {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 60;
+  width: min(28rem, 92vw);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--ink-1);
+  border-inline-start: 1px solid var(--line);
+  box-shadow: -1.4rem 0 3rem rgba(0, 0, 0, 0.5);
+  transform: translateX(100%);
+  transition: transform var(--dur-3) var(--ease);
+}
+.surface :global(.new-loom-draft__details[data-open='true']) {
+  transform: translateX(0);
+}
+.surface :global(.new-loom-draft__details-toggle) {
+  margin-inline-start: auto;
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.surface :global(.new-loom-draft__details-toggle:hover) {
+  color: var(--text-1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .surface :global(.new-loom-draft__details) {
+    transition: none;
+  }
+}
 .surface :global(.new-loom-draft__title) {
   border-bottom: 1px solid var(--line);
   color: var(--text-1);

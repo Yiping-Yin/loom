@@ -45,6 +45,12 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.match(draftClient, /from '\.\/StudioStarters'/);
   assert.match(draftClient, /isEmptyDraft/);
   assert.match(draftClient, /<StudioStarters\b/);
+  // The power surface (Inspector) lives in a closed-by-default Details drawer, so the
+  // writing surface stays calm until the user asks for the details.
+  assert.match(draftClient, /const \[detailsOpen, setDetailsOpen\] = useState\(false\)/);
+  assert.match(draftClient, /new-loom-draft__details/);
+  assert.match(draftClient, /aria-expanded=\{detailsOpen\}/);
+  assert.match(draftDeskCss, /\.surface :global\(\.new-loom-draft__details\)/);
   assert.doesNotMatch(draftClient, /new-loom-draft__wordmark/);
   assert.doesNotMatch(globals, /new-loom-draft__wordmark/);
   assert.match(draftClient, /new-loom-draft__identity-rail/);

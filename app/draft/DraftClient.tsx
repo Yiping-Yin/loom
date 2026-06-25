@@ -433,6 +433,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
   // reflect the CURRENT user (read after mount; null until then → neutral fallback).
   const [identityProfile, setIdentityProfile] = useState<BeginnerProfile | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saved' | 'unavailable'>('idle');
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [aiState, setAiState] = useState<DraftAIState>('idle');
   const [aiSuggestion, setAiSuggestion] = useState('');
   const [aiError, setAiError] = useState('');
@@ -1253,6 +1254,15 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
           <div className="new-loom-draft__document-meta">
             <strong>{selectedOutputType.label}</strong>
             <small>{saveState === 'saved' ? 'Saved' : saveState === 'unavailable' ? 'Storage unavailable' : 'Unsaved'}</small>
+            <button
+              type="button"
+              className="new-loom-draft__details-toggle"
+              aria-expanded={detailsOpen}
+              aria-controls="new-loom-draft-details"
+              onClick={() => setDetailsOpen((open) => !open)}
+            >
+              Details
+            </button>
           </div>
           <input
             aria-label="Draft title"
@@ -1461,6 +1471,12 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
         </div>
       </section>
 
+      <div
+        id="new-loom-draft-details"
+        className="new-loom-draft__details"
+        data-open={detailsOpen}
+        aria-hidden={!detailsOpen}
+      >
       <aside className="new-loom-draft__inspector" aria-label="Draft references">
         <div className="new-loom-draft__inspector-header">
           <span>Inspector</span>
@@ -1973,6 +1989,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
           </section>
         ) : null}
       </aside>
+      </div>
         </>
       )}
     </main>
