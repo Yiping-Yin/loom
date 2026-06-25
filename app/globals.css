@@ -7348,9 +7348,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --draft-accent: var(--signature-cyan);
   --draft-accent-strong: var(--signature-cyan-hi);
   --draft-accent-soft: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
-  display: grid;
-  grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr) minmax(21rem, 27rem);
-  gap: 1px;
+  display: block;
   min-height: calc(100vh - 3.25rem);
   background: var(--draft-line);
   color: var(--draft-ink);

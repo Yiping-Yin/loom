@@ -85,6 +85,7 @@ import {
 } from '../../lib/new-loom/draft-blocks';
 import { selectDraftById } from '../../lib/new-loom/draft-routing';
 import { DraftBlockEditor } from './DraftBlockEditor';
+import { StudioStarters, type StudioStarterChoice } from './StudioStarters';
 import DraftBoardClient from './DraftBoardClient';
 import draftDeskStyles from './draft-evidence-desk.module.css';
 
@@ -432,6 +433,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
   // reflect the CURRENT user (read after mount; null until then → neutral fallback).
   const [identityProfile, setIdentityProfile] = useState<BeginnerProfile | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saved' | 'unavailable'>('idle');
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [aiState, setAiState] = useState<DraftAIState>('idle');
   const [aiSuggestion, setAiSuggestion] = useState('');
   const [aiError, setAiError] = useState('');
@@ -1176,41 +1178,41 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
     clearBlockOperation();
   }
 
+  const isEmptyDraft = useMemo(
+    () =>
+      body.trim().length === 0 &&
+      blocks.every((b) => !('text' in b) || !String((b as { text?: string }).text ?? '').trim()) &&
+      (title.trim().length === 0 || title.trim() === 'Untitled draft'),
+    [body, blocks, title],
+  );
+
+  const onStartFromStarter = (choice: StudioStarterChoice) => {
+    setSelectedOutputTypeId(choice.outputTypeId);
+    if (!choice.blank) {
+      const outputType = NEW_LOOM_DRAFT_OUTPUT_TYPES.find((t) => t.id === choice.outputTypeId);
+      if (outputType) {
+        const nextBlocks = syncBlocksFromBody(outputType.starterBody);
+        setTitle(outputType.starterTitle);
+        setBody(outputType.starterBody);
+        setBlocks(nextBlocks);
+        setSaveState('idle');
+        scheduleSave(outputType.starterTitle, outputType.starterBody, nextBlocks);
+      }
+    }
+  };
+
   return (
     <main className={`new-loom-draft ${draftDeskStyles.surface}`}>
-      <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
-        <a className="new-loom-draft__home" href="/digital-me">← Digital Me</a>
-        <section className="new-loom-draft__profile-card" aria-label="Profile">
-          <span className="new-loom-draft__avatar" aria-hidden="true">
-            {(identityProfile?.home.name?.trim() || 'Your name').charAt(0).toUpperCase()}
-          </span>
-          <h2>{identityProfile?.home.name?.trim() || 'Your name'}</h2>
-          {identityProfile?.home.headline?.trim() ? (
-            <p>{identityProfile.home.headline.trim()}</p>
-          ) : null}
-        </section>
-        <section className="new-loom-draft__rail-section" aria-label="Workspace status">
-          <h3>Workspace</h3>
-          <ol>
-            <li>
-              <span>Sources</span>
-              <strong>{sourceTiles.length}</strong>
-            </li>
-            <li>
-              <span>Words</span>
-              <strong>{wordCount}</strong>
-            </li>
-            <li>
-              <span>Provenance</span>
-              <strong>{provenanceMatches.length}</strong>
-            </li>
-          </ol>
-        </section>
-        <section className="new-loom-draft__rail-section" aria-label="Active source">
-          <h3>Active source</h3>
-          <p>{sourceTiles[0]?.label ?? 'No source selected'}</p>
-        </section>
-      </aside>
+      {isEmptyDraft ? (
+        <StudioStarters
+          userInitial={(identityProfile?.home.name?.trim() || 'You').charAt(0).toUpperCase()}
+          onStart={onStartFromStarter}
+        />
+      ) : (
+        <>
+      {/* The always-on identity rail was removed for a calm single column — the back
+          link lives in the top bar, and sources / provenance live in the Details
+          drawer. Workspace counters were dropped as redundant with Details. */}
 
       <section
         className="new-loom-draft__main"
@@ -1218,10 +1220,22 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
       >
         <h1 className="new-loom-draft__sr-title">Studio</h1>
         <section className="new-loom-draft__document-header new-loom-draft__workspace" aria-label="Studio document">
-          <p className="new-loom-draft__eyebrow">Studio</p>
-          <div className="new-loom-draft__document-meta">
-            <strong>{selectedOutputType.label}</strong>
-            <small>{saveState === 'saved' ? 'Saved' : saveState === 'unavailable' ? 'Storage unavailable' : 'Unsaved'}</small>
+          <div className="new-loom-draft__topbar">
+            <a className="new-loom-draft__home" href="/digital-me">← Digital Me</a>
+            <div className="new-loom-draft__topbar-right">
+              <span className="new-loom-draft__save">
+                {saveState === 'saved' ? 'Saved' : saveState === 'unavailable' ? 'Storage unavailable' : 'Unsaved'}
+              </span>
+              <button
+                type="button"
+                className="new-loom-draft__details-toggle"
+                aria-expanded={detailsOpen}
+                aria-controls="new-loom-draft-details"
+                onClick={() => setDetailsOpen((open) => !open)}
+              >
+                Details
+              </button>
+            </div>
           </div>
           <input
             aria-label="Draft title"
@@ -1235,46 +1249,32 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
               scheduleSave(nextTitle, body);
             }}
           />
-          <div className="new-loom-draft__proof-strip" aria-label="Draft proof status">
-            <span>
-              <strong>
-                Answer grounded by {sourceTiles.length} {sourceTiles.length === 1 ? 'source' : 'sources'}
-              </strong>
-              <small>{provenanceMatches.length} provenance match{provenanceMatches.length === 1 ? '' : 'es'}</small>
-            </span>
-            <span>
-              <strong>{wordCount} {wordCount === 1 ? 'word' : 'words'}</strong>
-              <small>{displayReferences.length} attached reference{displayReferences.length === 1 ? '' : 's'}</small>
-            </span>
-          </div>
-        </section>
-        <section className="new-loom-draft__type-rail" aria-label="Draft type">
-          <span className="new-loom-draft__type-label">Output</span>
-          <div className="new-loom-draft__type-buttons">
-            {NEW_LOOM_DRAFT_OUTPUT_TYPES.map((outputType) => (
-              <button
-                type="button"
-                key={outputType.id}
-                className="new-loom-draft__type-button"
-                aria-pressed={selectedOutputTypeId === outputType.id}
-                aria-label={`${outputType.label}: ${outputType.goal}`}
-                onClick={() => setSelectedOutputTypeId(outputType.id)}
-              >
-                <span>{outputType.label}</span>
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="new-loom-draft__reference-action"
-            onClick={useSelectedOutputOutline}
-          >
-            Use outline
-          </button>
+          {sourceTiles.length > 0 ? (
+            <button
+              type="button"
+              className="new-loom-draft__grounding"
+              onClick={() => {
+                setInspectorMode('sources');
+                setDetailsOpen(true);
+              }}
+            >
+              Backed by {sourceTiles.length} of your source{sourceTiles.length === 1 ? '' : 's'}
+            </button>
+          ) : null}
         </section>
         <section className="new-loom-draft__editor-shell" aria-label="Source-grounded editor">
           <div className="new-loom-draft__editor-toolbar" aria-label="Editor toolbar">
-            <span>Source-grounded writing</span>
+            <button
+              type="button"
+              className="new-loom-draft__help"
+              onClick={() => {
+                setInspectorMode('sources');
+                setDetailsOpen(true);
+                void continueWithAI();
+              }}
+            >
+              Help me write
+            </button>
             <div className="new-loom-draft__editor-actions">
               <button
                 type="button"
@@ -1430,6 +1430,12 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
         </div>
       </section>
 
+      <div
+        id="new-loom-draft-details"
+        className="new-loom-draft__details"
+        data-open={detailsOpen}
+        aria-hidden={!detailsOpen}
+      >
       <aside className="new-loom-draft__inspector" aria-label="Draft references">
         <div className="new-loom-draft__inspector-header">
           <span>Inspector</span>
@@ -1942,6 +1948,9 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
           </section>
         ) : null}
       </aside>
+      </div>
+        </>
+      )}
     </main>
   );
 }
