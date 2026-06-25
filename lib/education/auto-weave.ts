@@ -30,8 +30,21 @@ export type WovenFile = {
   boundary?: SourceBoundary;
 };
 
-export type WovenWeek = { n: number; label: string; files: WovenFile[] };
-export type WovenProblemSet = { n: number; label: string; files: WovenFile[] };
+export type WovenWeek = {
+  n: number;
+  label: string;
+  files: WovenFile[];
+  // Prose drafted from the files (the "you only edit" layer); optional until drafted.
+  focus?: string;
+  question?: string;
+  output?: string;
+};
+export type WovenProblemSet = {
+  n: number;
+  label: string;
+  files: WovenFile[];
+  claim?: string;
+};
 
 export type WovenCourse = {
   weeks: WovenWeek[];

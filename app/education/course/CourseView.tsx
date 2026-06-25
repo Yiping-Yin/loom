@@ -132,9 +132,15 @@ export function CourseView() {
               <details className="edu-course__item" key={week.label} open={index === 0}>
                 <summary className="edu-course__summary">
                   <span className="edu-course__marker">{week.label}</span>
-                  <span className="edu-course__topic">{deriveTopic(week.files)}</span>
+                  <span className="edu-course__topic">{week.focus || deriveTopic(week.files)}</span>
                   <span className="edu-course__count">{week.files.length} file{week.files.length === 1 ? '' : 's'}</span>
                 </summary>
+                {week.question || week.output ? (
+                  <div className="edu-course__prose">
+                    {week.question ? <p className="edu-course__question">{week.question}</p> : null}
+                    {week.output ? <p className="edu-course__output">{week.output}</p> : null}
+                  </div>
+                ) : null}
                 <FileList files={week.files} />
               </details>
             ))}
@@ -153,6 +159,7 @@ export function CourseView() {
                   <span className="edu-course__topic">{deriveTopic(set.files)}</span>
                   <span className="edu-course__count">{set.files.length} file{set.files.length === 1 ? '' : 's'}</span>
                 </summary>
+                {set.claim ? <p className="edu-course__claim">{set.claim}</p> : null}
                 <FileList files={set.files} />
               </details>
             ))}
