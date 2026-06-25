@@ -291,18 +291,18 @@
 :global(body[data-edu-theme='light']) {
   /* "Spacesuit white": a warm-neutral, matte fabric white — not cool, not glowy. The
      premium read comes from material + soft diffuse shadow depth, not luminance. */
-  --ink-0: #f2f0ea;
-  --ink-1: #fcfbf8;
-  --ink-2: #eae7df;
-  --ink-3: #eae7df;
-  --ink-4: #fcfbf8;
-  --text-1: #20201c;
-  --text-2: #57544c;
-  --text-3: #918d83;
-  --line: rgba(40, 36, 30, 0.11);
+  --ink-0: #edeae3;
+  --ink-1: #f7f5ef;
+  --ink-2: #e4e1d8;
+  --ink-3: #e4e1d8;
+  --ink-4: #f7f5ef;
+  --text-1: #302d28;
+  --text-2: #635f57;
+  --text-3: #9a968d;
+  --line: rgba(40, 36, 30, 0.1);
   --signature-cyan: #0e7c8c;
-  --signature-cyan-hi: #0b6675;
-  background: #f2f0ea;
+  --signature-cyan-hi: #126872;
+  background: #edeae3;
 }
 /* a touch deeper amber so the AI-layer label reads on the warm white */
 :global(body[data-edu-theme='light'] .edu-build__boundary[data-boundary='ai']),

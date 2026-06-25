@@ -58,6 +58,6 @@ test('Education authoring: gate, schools/courses home, and the course editor', (
   assert.match(toggle, /eduTheme/);
   assert.match(themeCss, /\[data-edu-theme='light'\]/);
   // A warm-neutral "spacesuit" matte white — not pure #fff — with soft diffuse shadow depth.
-  assert.match(themeCss, /#f2f0ea/i);
+  assert.match(themeCss, /#edeae3/i);
   assert.doesNotMatch(themeCss, /--ink-0:\s*#ffffff/i);
 });
