@@ -87,6 +87,7 @@ import { selectDraftById } from '../../lib/new-loom/draft-routing';
 import { DraftBlockEditor } from './DraftBlockEditor';
 import { StudioStarters, type StudioStarterChoice } from './StudioStarters';
 import DraftBoardClient from './DraftBoardClient';
+import { SurfaceThemeToggle } from '../../components/SurfaceThemeToggle';
 import draftDeskStyles from './draft-evidence-desk.module.css';
 
 const SAVE_DEBOUNCE_MS = 400;
@@ -1223,6 +1224,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
           <div className="new-loom-draft__topbar">
             <a className="new-loom-draft__home" href="/digital-me">← Digital Me</a>
             <div className="new-loom-draft__topbar-right">
+              <SurfaceThemeToggle className="new-loom-draft__theme-toggle" />
               <span className="new-loom-draft__save">
                 {saveState === 'saved' ? 'Saved' : saveState === 'unavailable' ? 'Storage unavailable' : 'Unsaved'}
               </span>
