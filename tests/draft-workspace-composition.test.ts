@@ -78,14 +78,9 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.match(draftClient, /Provenance/);
 
   assert.doesNotMatch(globals, /grid-template-columns:\s*minmax\(14rem,\s*17rem\)/);
-  assert.match(globals, /\.new-loom-draft__identity-rail\s*\{/);
   assert.match(globals, /\.new-loom-draft__document-header\s*\{/);
   assert.match(globals, /\.new-loom-draft__editor-shell\s*\{/);
-  assert.match(globals, /\.new-loom-draft__proof-strip\s*\{/);
   assert.match(draftDeskCss, /\.surface :global\(\.new-loom-draft__sr-title\)/);
-  assert.match(
-    draftDeskCss,
-    /new-loom-draft__rail-section\[aria-label="Workspace status"\]\s+ol\)[\s\S]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/,
-  );
-  assert.match(draftDeskCss, /new-loom-draft__rail-section\[aria-label="Workspace status"\]\s+li\)[\s\S]*min-height:\s*4\.6rem/);
+  // The Details drawer (relocated power surface) has its off-canvas CSS.
+  assert.match(draftDeskCss, /\.surface :global\(\.new-loom-draft__details\)/);
 });
