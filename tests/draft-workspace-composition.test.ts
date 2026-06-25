@@ -27,12 +27,11 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   // DraftClient accepts an editId so /digital-me can drive which doc opens (by-id).
   assert.match(draftClient, /editId\??:\s*string/);
   assert.match(draftClient, /selectDraftById\(/);
-  // The editor identity rail reflects the CURRENT user (the editor lives inside
-  // everyone's Digital Me), not the hardcoded owner.
+  // The editor reads the CURRENT user's profile (for the starters' avatar), not the
+  // hardcoded owner — the editor lives inside everyone's Digital Me.
   assert.doesNotMatch(draftClient, /Yiping Yin/);
   assert.doesNotMatch(draftClient, /yiping-profile-white-shirt/);
   assert.match(draftClient, /readBeginnerProfileLocal/);
-  assert.match(draftClient, /Your name/);
   assert.match(draftClient, /<h1 className="new-loom-draft__sr-title">Studio<\/h1>/);
   // The calm header carries no "Studio" labels: the eyebrow kicker + meta row were
   // dropped; the back link + title carry context. The hidden sr-title h1 stays (a11y).
@@ -51,7 +50,8 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.match(draftDeskCss, /\.surface :global\(\.new-loom-draft__details\)/);
   assert.doesNotMatch(draftClient, /new-loom-draft__wordmark/);
   assert.doesNotMatch(globals, /new-loom-draft__wordmark/);
-  assert.match(draftClient, /new-loom-draft__identity-rail/);
+  // The always-on identity rail is gone — a calm single column, no 3-panel grid.
+  assert.doesNotMatch(draftClient, /new-loom-draft__identity-rail/);
   assert.match(draftClient, /new-loom-draft__workspace/);
   assert.match(draftClient, /new-loom-draft__document-header/);
   assert.match(draftClient, /new-loom-draft__editor-shell/);
@@ -77,10 +77,7 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.match(draftClient, /Publish answer preview/);
   assert.match(draftClient, /Provenance/);
 
-  assert.match(
-    globals,
-    /\.new-loom-draft\s*\{[\s\S]*grid-template-columns:\s*minmax\(14rem,\s*17rem\)\s+minmax\(0,\s*1fr\)\s+minmax\(21rem,\s*27rem\)/,
-  );
+  assert.doesNotMatch(globals, /grid-template-columns:\s*minmax\(14rem,\s*17rem\)/);
   assert.match(globals, /\.new-loom-draft__identity-rail\s*\{/);
   assert.match(globals, /\.new-loom-draft__document-header\s*\{/);
   assert.match(globals, /\.new-loom-draft__editor-shell\s*\{/);

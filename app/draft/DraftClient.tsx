@@ -1210,39 +1210,9 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
         />
       ) : (
         <>
-      <aside className="new-loom-draft__identity-rail" aria-label="Profile and workflow">
-        <a className="new-loom-draft__home" href="/digital-me">← Digital Me</a>
-        <section className="new-loom-draft__profile-card" aria-label="Profile">
-          <span className="new-loom-draft__avatar" aria-hidden="true">
-            {(identityProfile?.home.name?.trim() || 'Your name').charAt(0).toUpperCase()}
-          </span>
-          <h2>{identityProfile?.home.name?.trim() || 'Your name'}</h2>
-          {identityProfile?.home.headline?.trim() ? (
-            <p>{identityProfile.home.headline.trim()}</p>
-          ) : null}
-        </section>
-        <section className="new-loom-draft__rail-section" aria-label="Workspace status">
-          <h3>Workspace</h3>
-          <ol>
-            <li>
-              <span>Sources</span>
-              <strong>{sourceTiles.length}</strong>
-            </li>
-            <li>
-              <span>Words</span>
-              <strong>{wordCount}</strong>
-            </li>
-            <li>
-              <span>Provenance</span>
-              <strong>{provenanceMatches.length}</strong>
-            </li>
-          </ol>
-        </section>
-        <section className="new-loom-draft__rail-section" aria-label="Active source">
-          <h3>Active source</h3>
-          <p>{sourceTiles[0]?.label ?? 'No source selected'}</p>
-        </section>
-      </aside>
+      {/* The always-on identity rail was removed for a calm single column — the back
+          link lives in the top bar, and sources / provenance live in the Details
+          drawer. Workspace counters were dropped as redundant with Details. */}
 
       <section
         className="new-loom-draft__main"
