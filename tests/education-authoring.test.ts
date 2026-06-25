@@ -43,7 +43,12 @@ test('Education authoring: gate, schools/courses home, and the course editor', (
   assert.match(build, /onWeave/);
   assert.match(build, /boundary/);
 
-  // The course page renders the woven chain as an interactive (collapsible) page.
+  // Auto-write: the editor drafts the prose layer from the woven files.
+  assert.match(editor, /draftCourse/);
+  assert.match(editor, /Auto-write from files/);
+
+  // The course page renders the woven chain as an interactive (collapsible) page,
+  // including the drafted prose (driving question / output / claim).
   const view = read('app/education/course/CourseView.tsx');
   assert.match(view, /useSearchParams/);
   assert.match(view, /selectCourseById/);
@@ -51,6 +56,8 @@ test('Education authoring: gate, schools/courses home, and the course editor', (
   assert.match(view, /Problem-set trail/);
   assert.match(view, /<details/);
   assert.match(view, /boundary/);
+  assert.match(view, /week\.question/);
+  assert.match(view, /set\.claim/);
 
   // Premium light theme: a scoped toggle + a warm off-white (not pure-white) override.
   const toggle = read('app/education/EduThemeToggle.tsx');

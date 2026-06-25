@@ -11,6 +11,7 @@ import {
   type CourseSectionKind,
 } from '../../lib/education/course-storage';
 import { type WovenProblemSet, type WovenWeek } from '../../lib/education/auto-weave';
+import { draftCourse } from '../../lib/education/draft-prose';
 import { CourseAutoBuild } from './CourseAutoBuild';
 import { EduThemeToggle } from './EduThemeToggle';
 
@@ -157,6 +158,17 @@ export function CourseEditor({ editId, schoolId }: { editId: string; schoolId?: 
         problemSets={course.problemSets ?? []}
         onWeave={(weeks: WovenWeek[], problemSets: WovenProblemSet[]) => patch({ weeks, problemSets })}
       />
+
+      {(course.weeks?.length || course.problemSets?.length) ? (
+        <div className="edu-editor__autowrite">
+          <button type="button" className="edu-editor__autowrite-btn" onClick={() => scheduleSave(draftCourse(course))}>
+            Auto-write from files
+          </button>
+          <span className="edu-editor__autowrite-hint">
+            Draft each week’s focus, a driving question, and every problem set’s claim from your files. You edit from there.
+          </span>
+        </div>
+      ) : null}
 
       <div className="edu-editor__sections">
         {course.sections.map((section, index) => (
