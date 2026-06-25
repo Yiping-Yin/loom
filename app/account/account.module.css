@@ -1,18 +1,117 @@
-.shell { min-height: 100dvh; display: grid; place-items: center; padding: var(--space-6); }
-.card {
-  width: min(28rem, 100%); display: flex; flex-direction: column; gap: var(--space-4);
-  padding: var(--space-8); border: 1px solid var(--line); border-radius: 14px; background: var(--bg-elevated);
+/* Account — a calm, LIT settings surface: a dimensional panel on an even full-bleed
+   ground (not a flat bordered card stranded in the lopsided deep-space void), with the
+   account state shown as confident labelled fields + a live sync indicator. */
+.shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(2rem, 8vh, 6rem) var(--space-6);
+  /* even, full-bleed, symmetric overhead light over the desk — no lopsided field */
+  background:
+    radial-gradient(86% 52% at 50% -8%, rgba(238, 241, 242, 0.05) 0%, transparent 60%),
+    var(--ink-0, #070809);
+  background-attachment: fixed;
 }
-.eyebrow { margin: 0; font-size: 0.72rem; letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--muted); }
-.title { margin: 0; font-family: var(--font-cormorant), serif; font-size: clamp(1.8rem, 4vw, 2.3rem); font-weight: 500; color: var(--fg); }
+.card {
+  width: min(30rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: clamp(2rem, 4vw, 2.85rem);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  /* dimensional lit material — a top specular sheen + a soft float shadow */
+  background:
+    linear-gradient(158deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012) 38%, transparent 70%),
+    var(--bg-elevated);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 64px rgba(0, 0, 0, 0.5);
+}
+.eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: var(--tracking-eyebrow, 0.14em);
+  text-transform: uppercase;
+  color: var(--signature-cyan);
+}
+.title {
+  margin: 0;
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(2rem, 4.5vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
 .lede { margin: 0; font-size: 0.95rem; line-height: 1.55; color: var(--fg-secondary); }
+
+/* Account state as confident labelled fields — data, not gray runs of text. */
+.fields { margin: var(--space-2) 0 0; display: flex; flex-direction: column; }
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+.field:first-child { border-top: 0; padding-block-start: 0; }
+.fieldLabel {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fieldValue {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 1.02rem;
+  color: var(--fg);
+}
+.syncDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  flex: none;
+  background: var(--muted);
+}
+.syncDot[data-status='synced'] { background: #4ade80; box-shadow: 0 0 10px rgba(74, 222, 128, 0.45); }
+.syncDot[data-status='syncing'] { background: var(--signature-cyan); box-shadow: 0 0 10px color-mix(in srgb, var(--signature-cyan) 50%, transparent); }
+.syncDot[data-status='error'] { background: #e0654f; }
+.syncDot[data-status='offline'], .syncDot[data-status='idle'] { background: var(--muted); }
+
 .status { margin: 0; font-size: 0.8rem; color: var(--muted); }
 .form { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
-.input { font: inherit; padding: 0.7em 0.9em; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--fg); }
-.input:focus-visible { outline: 2px solid var(--signature-cyan); outline-offset: 1px; }
-.primary, .ghost { font: inherit; font-size: 0.95rem; padding: 0.7em 1.3em; border-radius: 10px; cursor: pointer; }
+.input {
+  font: inherit;
+  padding: 0.78em 0.95em;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--fg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input::placeholder { color: var(--muted); }
+.input:focus-visible {
+  outline: none;
+  border-color: var(--signature-cyan);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 16%, transparent);
+}
+.primary, .ghost {
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.74em 1.4em;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
 .primary { border: 1px solid var(--signature-cyan); background: var(--signature-cyan); color: #0b1416; font-weight: 600; }
+.primary:hover:not(:disabled) { box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature-cyan) 16%, transparent); }
 .primary:disabled { opacity: 0.6; cursor: default; }
 .ghost { border: 1px solid var(--line); background: transparent; color: var(--fg-secondary); align-self: flex-start; }
 .ghost:hover { color: var(--fg); border-color: var(--fg-secondary); }
-.error { margin: 0; font-size: 0.85rem; color: #b4453a; }
+.primary:focus-visible, .ghost:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 22%, transparent); }
+.error { margin: 0; font-size: 0.85rem; color: #e0654f; }

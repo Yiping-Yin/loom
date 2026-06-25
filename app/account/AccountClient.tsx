@@ -48,8 +48,19 @@ export function AccountClient() {
         {session ? (
           <>
             <h1 id="account-title" className={styles.title}>Signed in</h1>
-            <p className={styles.lede}>{session.email}</p>
-            <p className={styles.status} role="status">{STATUS_LABEL[status] ?? status}</p>
+            <dl className={styles.fields}>
+              <div className={styles.field}>
+                <dt className={styles.fieldLabel}>Account</dt>
+                <dd className={styles.fieldValue}>{session.email}</dd>
+              </div>
+              <div className={styles.field}>
+                <dt className={styles.fieldLabel}>Sync</dt>
+                <dd className={styles.fieldValue} role="status">
+                  <span className={styles.syncDot} data-status={status} aria-hidden="true" />
+                  {STATUS_LABEL[status] ?? status}
+                </dd>
+              </div>
+            </dl>
             <button type="button" className={styles.ghost} onClick={() => signOut()}>Sign out</button>
           </>
         ) : (
