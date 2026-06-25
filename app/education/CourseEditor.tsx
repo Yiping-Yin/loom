@@ -74,7 +74,7 @@ export function CourseEditor({ editId, schoolId }: { editId: string; schoolId?: 
     }, 400);
   };
 
-  const coursePath = useMemo(() => (course ? `/education/course/${course.id}` : '/education'), [course]);
+  const coursePath = useMemo(() => (course ? `/education/course?id=${course.id}` : '/education'), [course]);
 
   if (missing) {
     return (

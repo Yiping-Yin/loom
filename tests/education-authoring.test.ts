@@ -21,7 +21,7 @@ test('Education authoring: gate, schools/courses home, and the course editor', (
   assert.match(home, /createCourse/);
   assert.match(home, /Add school/);
   assert.match(home, /\?edit=/);
-  assert.match(home, /\/education\/course\//);
+  assert.match(home, /\/education\/course\?id=/);
 
   // Editor: a Head (course name), an Overview, typed sections, and Done.
   assert.match(editor, /updateCourse/);
@@ -32,7 +32,7 @@ test('Education authoring: gate, schools/courses home, and the course editor', (
   assert.match(editor, /assessment/);
   assert.match(editor, /structure/);
   assert.match(editor, />Done<|>\s*Done\s*</);
-  assert.match(editor, /\/education\/course\//);
+  assert.match(editor, /\/education\/course\?id=/);
 
   // Auto-weave: the editor hosts the drop-files → evidence-chain build, which weaves
   // raw files into weeks/problem-sets and labels each file's source boundary.
@@ -42,4 +42,13 @@ test('Education authoring: gate, schools/courses home, and the course editor', (
   assert.match(build, /webkitdirectory/);
   assert.match(build, /onWeave/);
   assert.match(build, /boundary/);
+
+  // The course page renders the woven chain as an interactive (collapsible) page.
+  const view = read('app/education/course/CourseView.tsx');
+  assert.match(view, /useSearchParams/);
+  assert.match(view, /selectCourseById/);
+  assert.match(view, /Weekly trail/);
+  assert.match(view, /Problem-set trail/);
+  assert.match(view, /<details/);
+  assert.match(view, /boundary/);
 });

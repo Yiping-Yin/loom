@@ -106,7 +106,7 @@ export function EducationCoursesClient() {
                   <ul className="edu-home__course-list">
                     {courses.map((course) => (
                       <li className="edu-home__course" key={course.id}>
-                        <a className="edu-home__course-name" href={`/education/course/${course.id}`}>
+                        <a className="edu-home__course-name" href={`/education/course?id=${course.id}`}>
                           {course.name}
                           {course.code ? <span className="edu-home__course-code"> · {course.code}</span> : null}
                         </a>
