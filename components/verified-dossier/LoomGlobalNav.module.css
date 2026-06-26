@@ -33,8 +33,11 @@
     radial-gradient(92% 150% at 15% -44%, rgba(235, 240, 241, 0.11), transparent 47%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.022) 47%, rgba(0, 0, 0, 0.12) 100%),
     rgba(13, 15, 16, 0.5);
-  -webkit-backdrop-filter: blur(38px) saturate(112%) brightness(1.04);
-  backdrop-filter: blur(38px) saturate(112%) brightness(1.04);
+  /* Safari fallback: plain frosted blur (no url() refraction support). */
+  -webkit-backdrop-filter: blur(34px) saturate(115%) brightness(1.04);
+  /* Real liquid-glass: blur the backdrop, then REFRACT it (displacement last) so the
+     frosted pane lenses/ripples like real glass. Chrome renders the url() filter. */
+  backdrop-filter: blur(28px) saturate(118%) brightness(1.04) url(#loomGlassRefract);
   isolation: isolate;
   overflow: visible;
   pointer-events: auto;
@@ -781,6 +784,10 @@
   .nav {
     transform: translateX(-50%);
     transition: none;
+    /* Drop the heavy url() displacement-refraction for reduced-motion / low-power
+       users (it also re-rasterizes on scroll in Chrome/Edge); plain frosted blur. */
+    -webkit-backdrop-filter: blur(34px) saturate(115%) brightness(1.04);
+    backdrop-filter: blur(34px) saturate(115%) brightness(1.04);
   }
 
   .nav,

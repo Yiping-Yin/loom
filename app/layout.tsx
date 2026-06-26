@@ -63,6 +63,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
+        {/* Liquid-glass refraction filter — signature glass uses this via
+            backdrop-filter: url(#loomGlassRefract) to lens/bend the backdrop like real
+            glass (Apple Liquid Glass core). Hidden def; Safari falls back to plain blur. */}
+        <svg aria-hidden="true" focusable="false" width="0" height="0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+          <defs>
+            <filter id="loomGlassRefract" x="-12%" y="-12%" width="124%" height="124%" colorInterpolationFilters="sRGB">
+              <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves={2} seed={7} result="n" />
+              <feGaussianBlur in="n" stdDeviation="1.1" result="ns" />
+              <feDisplacementMap in="SourceGraphic" in2="ns" scale={11} xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+          </defs>
+        </svg>
         <FocusLayerProvider>
         <div className="loom-grain" />
         <div className="loom-vignette" />

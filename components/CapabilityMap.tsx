@@ -327,6 +327,28 @@ function StarRiver({
           </radialGradient>
         </defs>
 
+        {/* 青芒 sparkle field — fine drifting light-particles that give the river the
+            luminous-material quality (the cyan as lit material). Sparse + faint so it
+            reads as light-dust, never competing with the clickable capability stars.
+            Deterministic (seeded sin) so SSR + client agree. */}
+        {Array.from({ length: 24 }, (_, i) => {
+          const hx = Math.sin(i * 12.9898) * 43758.5453;
+          const hy = Math.sin(i * 78.233) * 43758.5453;
+          const rx = hx - Math.floor(hx);
+          const ry = hy - Math.floor(hy);
+          return (
+            <circle
+              key={`cm-spark-${i}`}
+              cx={(rx * geo.vw).toFixed(1)}
+              cy={(geo.vh * 0.16 + ry * geo.vh * 0.66).toFixed(1)}
+              r={(0.6 + rx * 1.5).toFixed(2)}
+              fill="#dffafd"
+              opacity={(0.18 + ry * 0.46).toFixed(2)}
+              style={{ mixBlendMode: 'screen' }}
+            />
+          );
+        })}
+
         {/* Horizon / library baseline — quiet, grounding the river. */}
         <line
           className={styles.horizon}
@@ -345,6 +367,44 @@ function StarRiver({
 
         {/* Faint band guide the stars rest along. */}
         <RiverBand geo={geo} />
+
+        {/* 青芒光帘 — fine luminous light-strands flowing FROM the moon (Memory) rightward
+            along the river: the cyan-light-curtain material brought into the river's
+            horizontal form (deep-teal → bright-cyan → white). Sits behind the capability
+            stars; deterministic (seeded sin) so SSR + client agree. */}
+        <g style={{ mixBlendMode: 'screen' }} fill="none" strokeLinecap="round">
+          {Array.from({ length: 60 }, (_, i) => {
+            const base = i / 59;
+            const off = base - 0.5;
+            const center = 1 - Math.min(1, Math.abs(off) * 2);
+            const h1 = Math.sin(i * 91.3) * 43758.5453;
+            const h2 = Math.sin(i * 14.74) * 43758.5453;
+            const j1 = h1 - Math.floor(h1);
+            const j2 = h2 - Math.floor(h2);
+            const x0 = geo.moonCx + geo.moonR * 0.5;
+            const y0 = geo.yMid + off * geo.moonR * 1.1 + (j1 - 0.5) * 5;
+            const yEnd = geo.yMid + off * geo.vh * 0.42 + (j2 - 0.5) * 12;
+            const cx1 = x0 + (geo.vw - x0) * 0.42;
+            const cx2 = x0 + (geo.vw - x0) * 0.8;
+            const d = `M ${x0.toFixed(1)} ${y0.toFixed(1)} C ${cx1.toFixed(1)} ${(y0 + (yEnd - y0) * 0.32).toFixed(1)}, ${cx2.toFixed(1)} ${(yEnd - (yEnd - y0) * 0.08).toFixed(1)}, ${(geo.vw + 8).toFixed(1)} ${yEnd.toFixed(1)}`;
+            const bright = Math.min(1, center * 0.58 + j1 * 0.62);
+            const stroke =
+              bright > 0.82 ? '#eafcfb'
+              : bright > 0.6 ? '#a6eef3'
+              : bright > 0.4 ? '#5fd2e2'
+              : bright > 0.24 ? '#34a6bd'
+              : '#1f6f7e';
+            return (
+              <path
+                key={`cm-strand-${i}`}
+                d={d}
+                stroke={stroke}
+                strokeWidth={(0.32 + j2 * (0.5 + center)).toFixed(2)}
+                opacity={(0.07 + bright * 0.46).toFixed(2)}
+              />
+            );
+          })}
+        </g>
 
         {/* Comet tails first (behind the heads). */}
         {stars

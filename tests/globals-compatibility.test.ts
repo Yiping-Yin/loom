@@ -162,7 +162,9 @@ test('global liquid glass tokens stay neutral silver instead of paper-warm bronz
   assert.match(globalsCss, /--mat-thin-bg:\s+rgba\(232,\s*236,\s*238,\s*0\.36\)/);
   assert.match(globalsCss, /--mat-reg-bg:\s+rgba\(232,\s*236,\s*238,\s*0\.62\)/);
   assert.match(globalsCss, /--mat-thick-bg:\s+rgba\(232,\s*236,\s*238,\s*0\.9\)/);
-  assert.match(globalsCss, /--mat-hi:\s*[\s\S]*rgba\(246,\s*249,\s*250,\s*0\.56\)[\s\S]*rgba\(70,\s*76,\s*82,\s*0\.1\)/);
+  // Realistic glass optics (2026-06-26): a bright white top lip + cool-gray inner
+  // thickness — still NEUTRAL silver (the silver --mat-*-bg + no-warm guard below hold).
+  assert.match(globalsCss, /--mat-hi:\s*[\s\S]*rgba\(255,\s*255,\s*255,\s*0\.66\)[\s\S]*rgba\(38,\s*44,\s*50,\s*0\.16\)/);
   assert.match(globalsCss, /Scrollbars — thin, signature-cyan, quiet/);
   assert.match(globalsCss, /Keyboard focus ring — signature cyan/);
   assert.doesNotMatch(globalsCss, /rgba\(255,\s*245,\s*220,\s*0\.62\)/);

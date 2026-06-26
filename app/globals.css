@@ -165,26 +165,36 @@ a[class*="loom-"] {
   --mat-thin-bg:    rgba(232, 236, 238, 0.36);   /* thin silver film */
   --mat-reg-bg:     rgba(232, 236, 238, 0.62);   /* standard glass */
   --mat-thick-bg:   rgba(232, 236, 238, 0.9);    /* near-opaque pane */
-  --mat-blur:       saturate(180%) blur(25px);
-  --mat-blur-thick: saturate(200%) blur(45px);
+  /* Refractive blur — the brightness lift makes the pane read as REAL glass
+     catching light (it lenses + brightens the backdrop), not a flat frost. */
+  --mat-blur:       saturate(185%) brightness(1.06) blur(22px);
+  --mat-blur-thick: saturate(205%) brightness(1.05) blur(40px);
 
-  /* Specular highlight — cool silver on the top edge of glass panels,
-     with graphite thickness below. */
+  /* Realistic glass optics — a bright top LIP (light entering the bevel), a faint
+     full-perimeter FRESNEL rim (edges catch more light), a soft bottom rim (light
+     leaving), inner THICKNESS occlusion, and a hairline contact edge. */
   --mat-hi:
-    inset 0 0.5px 0 rgba(246, 249, 250, 0.56),
-    0 0 0 0.5px rgba(29, 32, 35, 0.06),
-    inset 0 -0.5px 0 rgba(70, 76, 82, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.66),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -11px 20px -11px rgba(38, 44, 50, 0.16),
+    0 0 0 0.5px rgba(22, 26, 30, 0.07);
 
-  /* Owner-page glass — ONE source of truth for the dark-scene panels that
-     were each re-rolling their own recipe. Composes on --mat-*; the blur is
-     tuned slightly softer than the full system glass for the lit dark scenes.
-     Bespoke scenes (Role-OS lit room, the ledger cover) keep their own optics. */
-  --loom-glass-bg: var(--mat-reg-bg);
-  --loom-glass-blur: saturate(140%) blur(20px);
+  /* Owner-page glass — ONE source of truth for the dark-scene panels. Now a real
+     liquid-glass material: a diagonal SPECULAR SHEEN sweeping the surface over the
+     translucent pane, a refractive bright blur, a bright lip + Fresnel rim + inner
+     thickness, and a soft directional float. Bespoke scenes keep their own optics. */
+  --loom-glass-bg:
+    linear-gradient(133deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.025) 40%, rgba(255, 255, 255, 0) 62%),
+    var(--mat-reg-bg);
+  --loom-glass-blur: saturate(150%) brightness(1.05) blur(20px);
   --loom-glass-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 14px 36px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -13px 28px -15px rgba(0, 0, 0, 0.55),
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 52px -14px rgba(0, 0, 0, 0.62);
   --signature-cyan-soft: color-mix(in srgb, var(--signature-cyan) 35%, transparent);
 
   /* Categorical highlights — cool, low-area identity tints. Question,
