@@ -99,6 +99,13 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   const hasBackedCaps = caps.some((c) => c.evidence.length > 0);
   const established = hasJourney || hasProof || hasBackedCaps;
 
+  // Has real substance (journey / capabilities) but NO uploaded proof yet — the exact
+  // state a user lands in right after form onboarding. Proof (a CV / transcript /
+  // certificate) is what unlocks the verified-source citations that make a LOOM read
+  // "finished" like the example, so the guided next step here is ADD PROOF — not a
+  // return trip into the text form, which can never produce a verified source.
+  const needsProof = established && !hasProof;
+
   async function handleBuildCapabilities() {
     if (building) return;
     setBuilding(true);
@@ -194,28 +201,57 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
           )}
 
           {established ? (
-            <>
-              {/* Established: the shareable postcard leads; "Keep building" is the
-                  ghost secondary. */}
-              <a href={primaryCta.href} className={styles.postcard}>
-                <span>{primaryCta.label}</span>
-                <ArrowUpRight
-                  className={styles.postcardIcon}
-                  aria-hidden="true"
-                  size={13}
-                  strokeWidth={1.8}
-                />
-              </a>
-              <a href={secondaryCta.href} className={styles.keepBuilding}>
-                <span>{secondaryCta.label}</span>
-                <ArrowUpRight
-                  className={styles.keepBuildingIcon}
-                  aria-hidden="true"
-                  size={13}
-                  strokeWidth={1.8}
-                />
-              </a>
-            </>
+            needsProof ? (
+              <>
+                {/* Has substance but no proof yet → lead to the real unlock: add a
+                    document, so the Digital Me can cite verified sources like the
+                    example. "Keep building" (more form text) drops to the ghost slot. */}
+                <p className={styles.nextWhy}>
+                  Add a CV, transcript, or certificate — then your Digital Me answers with verified, cited sources.
+                </p>
+                <a href="#proof" className={styles.nextCta}>
+                  <span>Add proof</span>
+                  <ArrowUpRight
+                    className={styles.nextCtaIcon}
+                    aria-hidden="true"
+                    size={16}
+                    strokeWidth={1.8}
+                  />
+                </a>
+                <a href="/onboarding/profile/form" className={styles.keepBuilding}>
+                  <span>Keep building</span>
+                  <ArrowUpRight
+                    className={styles.keepBuildingIcon}
+                    aria-hidden="true"
+                    size={13}
+                    strokeWidth={1.8}
+                  />
+                </a>
+              </>
+            ) : (
+              <>
+                {/* Established + proof-backed: the shareable postcard leads; "Keep
+                    building" is the ghost secondary. */}
+                <a href={primaryCta.href} className={styles.postcard}>
+                  <span>{primaryCta.label}</span>
+                  <ArrowUpRight
+                    className={styles.postcardIcon}
+                    aria-hidden="true"
+                    size={13}
+                    strokeWidth={1.8}
+                  />
+                </a>
+                <a href={secondaryCta.href} className={styles.keepBuilding}>
+                  <span>{secondaryCta.label}</span>
+                  <ArrowUpRight
+                    className={styles.keepBuildingIcon}
+                    aria-hidden="true"
+                    size={13}
+                    strokeWidth={1.8}
+                  />
+                </a>
+              </>
+            )
           ) : (
             <>
               {/* Thin / new profile → ONE guided next step (coach). One reason,
@@ -304,7 +340,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             Progressive disclosure: appears once the profile is established; a thin
             profile's single next step (Keep building) leads here via the chat. */}
         {established && (
-          <div data-reveal="">
+          <div id="proof" data-reveal="">
             <BeginnerProofSection initialArtifacts={profile.artifacts ?? []} />
           </div>
         )}
