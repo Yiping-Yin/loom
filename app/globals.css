@@ -468,15 +468,6 @@ body {
   background-repeat: no-repeat;
 }
 
-/* In the native macOS shell (marked .loom-native on <html>), the dark cosmic body
-   goes slightly translucent so the real window vibrancy (NSVisualEffectView behind
-   the transparent webview) blurs the desktop through the deep-space field —
-   Codex-style real glass. Pure-web keeps the opaque body; light content surfaces
-   stay their opaque bone-white. */
-html.loom-native body:not([data-surface-theme='light']):not([data-edu-theme='light']) {
-  background-color: color-mix(in srgb, var(--ink-0) 88%, transparent);
-}
-
 /* The layout shell stays transparent — it sits on the lit desk. */
 .layout {
   background: transparent;
