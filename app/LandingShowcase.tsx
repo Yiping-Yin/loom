@@ -114,8 +114,9 @@ export function LandingShowcase() {
               >
                 <defs>
                   <radialGradient id="lsStar" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#eafdff" />
-                    <stop offset="50%" stopColor="var(--signature-cyan-hi)" />
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.96" />
+                    <stop offset="22%" stopColor="var(--signature-cyan-hi)" />
+                    <stop offset="58%" stopColor="var(--signature-cyan)" stopOpacity="0.85" />
                     <stop offset="100%" stopColor="var(--signature-cyan)" stopOpacity="0" />
                   </radialGradient>
                   <radialGradient id="lsGlow" cx="50%" cy="50%" r="50%">
@@ -128,8 +129,9 @@ export function LandingShowcase() {
                     <stop offset="100%" stopColor="#8aa0ac" />
                   </radialGradient>
                   <linearGradient id="lsComet" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="var(--signature-cyan-hi)" stopOpacity="0" />
-                    <stop offset="100%" stopColor="var(--signature-cyan-hi)" stopOpacity="0.85" />
+                    <stop offset="0%" stopColor="var(--signature-cyan)" stopOpacity="0" />
+                    <stop offset="70%" stopColor="var(--signature-cyan-hi)" stopOpacity="0.7" />
+                    <stop offset="100%" stopColor="#eafcfb" stopOpacity="0.9" />
                   </linearGradient>
                 </defs>
 
@@ -160,32 +162,42 @@ export function LandingShowcase() {
                 {/* moon anchor (Memory) at the river's source */}
                 <circle cx="44" cy={P0.y} r="24" fill="url(#lsMoon)" />
 
-                {/* comets — the standout strong capabilities */}
-                {comets.map((s) => (
-                  <path
-                    key={`comet-${s.cap.id}`}
-                    d={`M${s.x - 130} ${s.y - 30} Q ${s.x - 55} ${s.y - 10} ${s.x} ${s.y}`}
-                    fill="none"
-                    stroke="url(#lsComet)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-                ))}
+                {/* comets + star bodies — luminous layers screen-blended so cyan
+                    accumulates as a jewel rising from the dark, mirroring the real
+                    capability star-river. Labels are kept OUT of the blend below. */}
+                <g style={{ mixBlendMode: 'screen' }}>
+                  {/* comets — the standout strong capabilities */}
+                  {comets.map((s) => (
+                    <path
+                      key={`comet-${s.cap.id}`}
+                      d={`M${s.x - 130} ${s.y - 30} Q ${s.x - 55} ${s.y - 10} ${s.x} ${s.y}`}
+                      fill="none"
+                      stroke="url(#lsComet)"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                  ))}
 
-                {/* stars + alternating labels */}
+                  {/* star glow + core */}
+                  {stars.map((s) => (
+                    <g key={s.cap.id} className={styles.star}>
+                      <circle cx={s.x} cy={s.y} r={s.r * 3.4} fill="url(#lsGlow)" />
+                      <circle cx={s.x} cy={s.y} r={s.r} fill="url(#lsStar)" />
+                    </g>
+                  ))}
+                </g>
+
+                {/* labels — normal blend so the mono text stays crisp + legible */}
                 {stars.map((s) => (
-                  <g key={s.cap.id} className={styles.star}>
-                    <circle cx={s.x} cy={s.y} r={s.r * 3.4} fill="url(#lsGlow)" />
-                    <circle cx={s.x} cy={s.y} r={s.r} fill="url(#lsStar)" />
-                    <text
-                      x={s.x}
-                      y={s.above ? s.y - s.r - 12 : s.y + s.r + 22}
-                      textAnchor="middle"
-                      className={styles.starLabel}
-                    >
-                      {s.cap.label}
-                    </text>
-                  </g>
+                  <text
+                    key={`label-${s.cap.id}`}
+                    x={s.x}
+                    y={s.above ? s.y - s.r - 12 : s.y + s.r + 22}
+                    textAnchor="middle"
+                    className={styles.starLabel}
+                  >
+                    {s.cap.label}
+                  </text>
                 ))}
               </svg>
             </div>

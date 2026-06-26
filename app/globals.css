@@ -382,8 +382,9 @@ body[data-surface-theme='light'] {
   --text-3: #9a968d;
   --line: rgba(40, 36, 30, 0.1);
   --signature-cyan: #0e7c8c;
-  --signature-cyan-hi: #126872;
+  --signature-cyan-hi: #2a9fb0; /* light-mode highlight must be BRIGHTER than the base (was #126872 — inverted/duller, read muddy on the bone-white) */
   --cyan: #0e7c8c;
+  --accent-text: #2f7384; /* cyan-as-text on light = deep legible teal; re-anchor so it can't leak the pale dark-mode #8AF7E6 (invisible on the bone-white) */
   /* Re-skin the dark material law: a soft light bevel + warm matte-fabric shadows. */
   --keylight: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   --float-1: 0 1px 2px rgba(50, 44, 36, 0.04), 0 8px 22px rgba(50, 44, 36, 0.06);
@@ -13248,7 +13249,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   font-size: 1.1rem;
   font-weight: 620;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 18px rgba(75, 197, 222, 0.12);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--signature-cyan) 12%, transparent);
 }
 
 .vd-section-page--experience .vd-section-page__hero {
@@ -13433,7 +13434,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(75, 197, 222, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent),
     0 18px 44px rgba(0, 0, 0, 0.55);
   transform: translateY(-2px);
 }
@@ -13443,7 +13444,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__grid a:focus-visible {
   outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 4px;
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 18%, transparent);
 }
 
 /* organisation / institution = primary luminance tier */
@@ -13524,7 +13525,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__list .vd-entry-notes summary::after {
   content: " +";
-  color: var(--signature-cyan);
+  /* a disclosure affordance, not an identity/data mark — quiet muted ink, not loud signature cyan */
+  color: var(--text-3);
 }
 
 .vd-section-page__list .vd-entry-notes[open] summary::after {
@@ -13574,7 +13576,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 4px;
   border-radius: 8px;
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 18%, transparent);
 }
 
 .vd-section-page__foundations {
@@ -13776,7 +13778,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(75, 197, 222, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent),
     0 18px 44px rgba(0, 0, 0, 0.55);
   transform: translateY(-2px);
 }
@@ -13784,7 +13786,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__course-strip a:focus-visible {
   outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 4px;
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 18%, transparent);
 }
 
 .vd-section-page__course-strip strong {
@@ -13824,7 +13826,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(75, 197, 222, 0.22);
+    inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent);
 }
 
 .vd-section-page__artifact-strip > a:hover {
@@ -13834,7 +13836,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__artifact-strip > a:focus-visible {
   outline: 1.5px solid var(--signature-cyan-hi);
   outline-offset: 4px;
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 18%, transparent);
 }
 
 /* named band eyebrow — same standard as the hero eyebrow (mono, 0.72rem,
@@ -14041,7 +14043,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__grid a:hover{box-shadow:
   inset 0 1px 0 rgba(255,255,255,0.09),
   inset 0 -1px 0 rgba(0,0,0,0.46),
-  inset 0 0 0 1px rgba(75,197,222,0.22),
+  inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent),
   0 34px 62px -16px rgba(0,0,0,0.68),
   0 8px 18px rgba(0,0,0,0.46)}
 
@@ -14900,7 +14902,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .home-profile-section-nav a:focus-visible {
-  outline: 1.5px solid var(--signature-cyan-hi, #6ce7f2);
+  outline: 1.5px solid var(--signature-cyan-hi, #8af7e6);
   outline-offset: 4px;
   border-radius: 2px;
 }
@@ -14927,7 +14929,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--signature-cyan, #4bc5de) 38%, transparent);
   background: color-mix(in srgb, var(--signature-cyan, #4bc5de) 12%, transparent);
-  color: var(--signature-cyan-hi, #6ce7f2);
+  color: var(--signature-cyan-hi, #8af7e6);
   font-size: 0.88rem;
   font-weight: 500;
   text-decoration: none;
@@ -14939,8 +14941,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 .vd-section-page__list .home-profile-section-nav a:hover {
   background: color-mix(in srgb, var(--signature-cyan, #4bc5de) 18%, transparent);
-  border-color: var(--signature-cyan-hi, #6ce7f2);
-  color: var(--signature-cyan-hi, #6ce7f2);
+  border-color: var(--signature-cyan-hi, #8af7e6);
+  color: var(--signature-cyan-hi, #8af7e6);
   transform: translateY(-1px);
 }
 
@@ -14950,7 +14952,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 }
 
 .vd-section-page__list .home-profile-section-nav a:focus-visible {
-  outline: 1.5px solid var(--signature-cyan-hi, #6ce7f2);
+  outline: 1.5px solid var(--signature-cyan-hi, #8af7e6);
   outline-offset: 3px;
 }
 
@@ -15010,16 +15012,16 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
     inset 0 -1px 0 rgba(0, 0, 0, 0.46),
-    inset 0 0 0 1px rgba(75, 197, 222, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent),
     0 34px 62px -16px rgba(0, 0, 0, 0.68),
     0 8px 18px rgba(0, 0, 0, 0.46);
 }
 
 /* Focus-within for linked Works cards (the inner <a> receives focus) */
 .vd-section-page__list .vd-section-page__card:focus-within {
-  outline: 1.5px solid var(--signature-cyan-hi, #6ce7f2);
+  outline: 1.5px solid var(--signature-cyan-hi, #8af7e6);
   outline-offset: 4px;
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 18%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

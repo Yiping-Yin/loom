@@ -35,7 +35,7 @@
   overflow-x: clip;
   background:
     radial-gradient(66rem 42rem at 50% -18%, rgba(232, 236, 238, 0.13), rgba(118, 128, 130, 0.04) 42%, transparent 70%),
-    radial-gradient(42rem 28rem at 68% 18%, rgba(75, 197, 222, 0.04), transparent 68%),
+    radial-gradient(42rem 28rem at 68% 18%, color-mix(in srgb, var(--signature-cyan) 4%, transparent), transparent 68%),
     linear-gradient(180deg, rgba(25, 28, 29, 0.78), rgba(8, 10, 11, 0.94) 44%, #020303 100%);
   color: var(--fg);
   font-family: var(--serif);
@@ -99,14 +99,14 @@
 .inlineBtn {
   border: 0;
   background: transparent;
-  color: rgba(75, 197, 222, 0.82);
+  color: color-mix(in srgb, var(--signature-cyan) 82%, transparent);
   cursor: pointer;
   font-family: var(--serif);
   font-size: inherit;
   font-style: italic;
   padding: 0;
   text-decoration: underline;
-  text-decoration-color: rgba(75, 197, 222, 0.38);
+  text-decoration-color: color-mix(in srgb, var(--signature-cyan) 38%, transparent);
   transition: color 150ms ease;
 }
 
@@ -131,7 +131,13 @@
 .progressFill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(75, 197, 222, 0.6), rgba(138, 247, 230, 0.85));
+  /* a luminous bar rising from a deep-teal foot, not a flat candy gradient; token-driven */
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--signature-cyan) 55%, transparent),
+    var(--signature-cyan),
+    var(--signature-cyan-hi)
+  );
   transition: width 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -170,7 +176,7 @@
 }
 
 .chatThread::-webkit-scrollbar-thumb {
-  background: rgba(75, 197, 222, 0.22);
+  background: color-mix(in srgb, var(--signature-cyan) 22%, transparent);
   border-radius: 999px;
 }
 
@@ -236,7 +242,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: rgba(75, 197, 222, 0.7);
+  background: color-mix(in srgb, var(--signature-cyan) 70%, transparent);
   animation: typingPulse 1.2s ease-in-out infinite;
 }
 
@@ -258,7 +264,7 @@
   align-items: center;
   justify-content: center;
   padding: 0.8rem 1.2rem;
-  color: rgba(75, 197, 222, 0.88);
+  color: color-mix(in srgb, var(--signature-cyan) 88%, transparent);
   font-family: var(--serif);
   font-size: 0.9rem;
   font-style: italic;
@@ -295,9 +301,9 @@
 
 .bubbleUser .bubbleText {
   background:
-    radial-gradient(110% 130% at 80% -10%, rgba(75, 197, 222, 0.18), transparent 56%),
+    radial-gradient(110% 130% at 80% -10%, color-mix(in srgb, var(--signature-cyan) 18%, transparent), transparent 56%),
     rgba(14, 17, 18, 0.68);
-  border: 1px solid rgba(75, 197, 222, 0.22);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 22%, transparent);
   border-bottom-right-radius: 0.3rem;
   color: rgba(200, 228, 234, 0.96);
   font-style: italic;
@@ -334,9 +340,9 @@
 }
 
 .chatInput:focus {
-  border-color: rgba(75, 197, 222, 0.46);
+  border-color: color-mix(in srgb, var(--signature-cyan) 46%, transparent);
   background: rgba(14, 17, 18, 0.78);
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.07);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 7%, transparent);
 }
 
 .sendBtn {
@@ -346,18 +352,18 @@
   width: 2.6rem;
   height: 2.6rem;
   flex-shrink: 0;
-  border: 1px solid rgba(75, 197, 222, 0.3);
+  border: 1px solid color-mix(in srgb, var(--signature-cyan) 30%, transparent);
   border-radius: 50%;
   background: rgba(14, 17, 18, 0.64);
-  color: rgba(75, 197, 222, 0.82);
+  color: color-mix(in srgb, var(--signature-cyan) 82%, transparent);
   cursor: pointer;
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
 
 .sendBtn:hover:not(:disabled),
 .sendBtn:focus-visible {
-  border-color: rgba(138, 247, 230, 0.52);
-  background: rgba(75, 197, 222, 0.12);
+  border-color: color-mix(in srgb, var(--signature-cyan-hi) 52%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 12%, transparent);
   color: var(--signature-cyan-hi, #8AF7E6);
   transform: translateY(-1px);
 }
@@ -368,7 +374,7 @@
 }
 
 .sendBtn:focus-visible {
-  outline: 1px solid rgba(138, 247, 230, 0.58);
+  outline: 1px solid color-mix(in srgb, var(--signature-cyan-hi) 58%, transparent);
   outline-offset: 3px;
 }
 
@@ -429,7 +435,7 @@
 }
 
 .pasteTextarea:focus {
-  border-color: rgba(75, 197, 222, 0.44);
+  border-color: color-mix(in srgb, var(--signature-cyan) 44%, transparent);
 }
 
 .pasteActions {
@@ -452,7 +458,7 @@
   align-items: center;
   gap: 0.3rem;
   padding: 1.6rem 1rem;
-  border: 1px dashed rgba(75, 197, 222, 0.28);
+  border: 1px dashed color-mix(in srgb, var(--signature-cyan) 28%, transparent);
   border-radius: var(--r-2, 10px);
   background: rgba(8, 10, 11, 0.5);
   color: var(--fg-secondary);
@@ -462,14 +468,14 @@
 }
 
 .dropZoneDragging {
-  border-color: rgba(75, 197, 222, 0.62);
-  background: rgba(75, 197, 222, 0.06);
+  border-color: color-mix(in srgb, var(--signature-cyan) 62%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan) 6%, transparent);
 }
 
 .uploadIcon {
   font-size: 1.4rem;
   line-height: 1;
-  color: rgba(75, 197, 222, 0.6);
+  color: color-mix(in srgb, var(--signature-cyan) 60%, transparent);
 }
 
 .dropZoneText {
@@ -597,10 +603,10 @@
 
 .primaryBtn:hover:not(:disabled),
 .primaryBtn:focus-visible {
-  border-color: rgba(138, 247, 230, 0.34);
+  border-color: color-mix(in srgb, var(--signature-cyan-hi) 34%, transparent);
   background:
     radial-gradient(110% 140% at 22% -18%, rgba(255, 255, 255, 0.14), transparent 48%),
-    linear-gradient(145deg, rgba(75, 197, 222, 0.08), rgba(232, 236, 238, 0.018)),
+    linear-gradient(145deg, color-mix(in srgb, var(--signature-cyan) 8%, transparent), rgba(232, 236, 238, 0.018)),
     rgba(14, 17, 18, 0.7);
   transform: translateY(-1px);
 }
@@ -611,7 +617,7 @@
 }
 
 .primaryBtn:focus-visible {
-  outline: 1px solid rgba(138, 247, 230, 0.58);
+  outline: 1px solid color-mix(in srgb, var(--signature-cyan-hi) 58%, transparent);
   outline-offset: 3px;
 }
 

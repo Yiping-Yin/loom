@@ -191,13 +191,17 @@ async function loadSoanStore(): Promise<SoanStore> {
  *  color is surfaced via the `--draft-board-group-color` custom property so the
  *  rail group label echoes each card's accent without duplicating the
  *  palette in JS. */
+// Cyan kinds are driven from the canonical tokens (resolved via the
+// --draft-board-group-color custom property) so they follow the light/dark
+// theme instead of freezing bright-cyan-on-white. Non-cyan category colours
+// stay literal — they are their own deliberate hues.
 const KIND_META: Record<Card['kind'], { label: string; color: string }> = {
-  thesis: { label: 'Thesis', color: '#4BC5DE' },
+  thesis: { label: 'Thesis', color: 'var(--signature-cyan)' },
   instance: { label: 'Instance', color: '#8FA3A6' },
   counter: { label: 'Counter', color: '#A35F73' },
-  question: { label: 'Question', color: '#6CE7F2' },
+  question: { label: 'Question', color: 'var(--cyan)' },
   fog: { label: 'Unclear', color: '#A4A9AD' },
-  weft: { label: 'Connection', color: '#8AF7E6' },
+  weft: { label: 'Connection', color: 'var(--signature-cyan-hi)' },
   sketch: { label: 'Sketch', color: '#666D72' },
 };
 
@@ -756,19 +760,21 @@ export default function DraftBoardClient() {
                 if (!from || !to) return null;
                 const { d, tx, ty } = edgePath(from, to);
                 const isSupport = e.kind === 'support';
-                const stroke = isSupport ? '#4BC5DE' : '#A4A9AD';
+                // token (theme-following) for the support/cyan edge, via style so the
+                // var() resolves — an SVG stroke/fill presentation attribute can't.
+                const stroke = isSupport ? 'var(--signature-cyan)' : '#A4A9AD';
                 const dash = isSupport ? undefined : '2 4';
                 const opacity = isSupport ? 0.55 : 0.45;
                 return (
                   <g key={i} opacity={opacity}>
                     <path
                       d={d}
-                      stroke={stroke}
+                      style={{ stroke }}
                       strokeWidth={0.8}
                       fill="none"
                       strokeDasharray={dash}
                     />
-                    <circle cx={tx} cy={ty} r={1.8} fill={stroke} />
+                    <circle cx={tx} cy={ty} r={1.8} style={{ fill: stroke }} />
                   </g>
                 );
               })}

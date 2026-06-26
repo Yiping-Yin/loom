@@ -51,7 +51,7 @@
   border: 1px solid var(--ask-border);
   border-radius: 14px;
   background:
-    radial-gradient(54% 90% at 82% 12%, rgba(75, 197, 222, 0.075) 0%, rgba(75, 197, 222, 0) 62%),
+    radial-gradient(54% 90% at 82% 12%, color-mix(in srgb, var(--signature-cyan) 7.5%, transparent) 0%, transparent 62%),
     radial-gradient(84% 110% at 10% 0%, rgba(230, 233, 234, 0.045) 0%, rgba(230, 233, 234, 0) 55%),
     var(--ask-glass);
   -webkit-backdrop-filter: blur(28px) saturate(110%);
@@ -195,7 +195,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 var(--ask-accent-strong),
     inset 0 -2px 0 rgba(0, 0, 0, 0.4),
-    0 0 18px rgba(75, 197, 222, 0.12);
+    0 0 18px color-mix(in srgb, var(--signature-cyan) 12%, transparent);
 }
 
 .submit:disabled {
@@ -283,12 +283,12 @@
      to its cited sources, not a painted rule. */
   background: linear-gradient(
     180deg,
-    rgba(75, 197, 222, 0) 0%,
-    rgba(75, 197, 222, 0.7) 16%,
-    rgba(75, 197, 222, 0.7) 84%,
-    rgba(75, 197, 222, 0) 100%
+    transparent 0%,
+    color-mix(in srgb, var(--signature-cyan) 70%, transparent) 16%,
+    color-mix(in srgb, var(--signature-cyan) 70%, transparent) 84%,
+    transparent 100%
   );
-  box-shadow: 0 0 9px rgba(75, 197, 222, 0.35);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--signature-cyan) 35%, transparent);
   pointer-events: none;
 }
 
@@ -308,7 +308,7 @@
   height: 6px;
   border-radius: 999px;
   background: var(--ask-signal);
-  box-shadow: 0 0 9px rgba(75, 197, 222, 0.6);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--signature-cyan) 60%, transparent);
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -363,7 +363,7 @@
   height: 1.05em;
   margin-left: 1px;
   background: var(--ask-signal);
-  box-shadow: 0 0 10px rgba(75, 197, 222, 0.45);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--signature-cyan) 45%, transparent);
   vertical-align: -0.16em;
   animation: askCaret 1s steps(1) infinite;
 }
@@ -470,7 +470,7 @@
   border-color: color-mix(in srgb, var(--ask-signal) 45%, var(--ask-border-strong));
   box-shadow:
     var(--ask-glass-inset-shadow),
-    0 0 18px rgba(75, 197, 222, 0.1);
+    0 0 18px color-mix(in srgb, var(--signature-cyan) 10%, transparent);
 }
 
 .sourceRow:focus-visible {
