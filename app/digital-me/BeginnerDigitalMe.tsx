@@ -79,11 +79,11 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   // secondary (ghost) slot; once there's proof, the postcard leads again.
   const thin = strongCount === 0;
   const primaryCta = thin
-    ? { href: '/onboarding/profile', label: 'Keep building' }
+    ? { href: '/onboarding/profile/form', label: 'Keep building' }
     : { href: '/card', label: 'Get your digital postcard' };
   const secondaryCta = thin
     ? { href: '/card', label: 'Get your digital postcard' }
-    : { href: '/onboarding/profile', label: 'Keep building' };
+    : { href: '/onboarding/profile/form', label: 'Keep building' };
 
   // Progressive disclosure: a brand-new profile (just name/headline/bio + an
   // auto-derived "direction") is shown as identity + the next step only. The
@@ -223,7 +223,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
               <p className={styles.nextWhy}>
                 Add your work or a CV and your Digital Me can answer for you — with citations.
               </p>
-              <a href="/onboarding/profile" className={styles.nextCta}>
+              <a href="/onboarding/profile/form" className={styles.nextCta}>
                 <span>Keep building</span>
                 <ArrowUpRight
                   className={styles.nextCtaIcon}

@@ -194,17 +194,20 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
           {/* Step progress */}
           <nav aria-label="Wizard steps" className={styles.progress}>
             {STEPS.map((step, i) => (
-              <div
+              <button
                 key={step}
+                type="button"
+                onClick={() => setStepIndex(i)}
                 className={[
                   styles.progressStep,
                   i === stepIndex ? styles.progressStepActive : '',
                   i < stepIndex ? styles.progressStepDone : '',
                 ].join(' ')}
                 aria-current={i === stepIndex ? 'step' : undefined}
+                aria-label={`Go to ${STEP_LABELS[step]}`}
               >
                 {STEP_LABELS[step]}
-              </div>
+              </button>
             ))}
           </nav>
 
