@@ -788,6 +788,11 @@ struct ContentView: View {
             switch server.status {
             case .ready:
                 ZStack {
+                    // Real macOS window vibrancy behind the (transparent) webview. The web
+                    // cosmic body is now slightly translucent, so the desktop blurs through
+                    // the deep-space field — Codex-style real glass, not a flat opaque pane.
+                    WindowVibrancyBackdrop()
+                        .ignoresSafeArea()
                     LoomWebView(url: server.webviewURL, debugState: webState, forcedTheme: webThemeMode)
                         .id(webviewEpoch)
                         .ignoresSafeArea()
@@ -1362,6 +1367,24 @@ struct DevHUD: View {
     }
 }
 
+/// Real macOS window vibrancy that sits BEHIND the transparent webview, so the
+/// slightly-translucent cosmic web body lets the desktop blur through (Codex-style
+/// glass). `.underWindowBackground` + `.behindWindow` is the canonical window material.
+struct WindowVibrancyBackdrop: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .underWindowBackground
+        view.blendingMode = .behindWindow
+        view.state = .active
+        view.wantsLayer = true
+        return view
+    }
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = .underWindowBackground
+        nsView.state = .active
+    }
+}
+
 /// Makes the title bar transparent and lets the web surface occupy the full content view.
 struct WindowConfigurator: NSViewRepresentable {
     let title: String
@@ -1400,7 +1423,11 @@ struct WindowConfigurator: NSViewRepresentable {
         // Window > Enter Full Screen stays available for Draft.
         window.collectionBehavior.insert(.fullScreenPrimary)
         window.isMovableByWindowBackground = true
-        window.backgroundColor = NSColor.windowBackgroundColor
+        // Translucent window so the WindowVibrancyBackdrop's real macOS vibrancy
+        // (and the desktop blurring behind it) shows through the slightly-translucent
+        // cosmic web body. Was the opaque system window background.
+        window.backgroundColor = .clear
+        window.isOpaque = false
         window.title = "Loom"  // keep the system window title stable; page title stays in the chrome
         // Remember window size and position across launches
         window.setFrameAutosaveName("LoomMainWindow")
@@ -1685,6 +1712,7 @@ struct LoomWebView: NSViewRepresentable {
               root.dataset.loomTheme = mode;
               root.classList.toggle('dark', mode === 'dark');
               root.classList.toggle('light', mode === 'light');
+              root.classList.add('loom-native');  // marks the native shell so CSS can opt into real window vibrancy (translucent cosmic body)
               root.style.colorScheme = mode;
               root.style.setProperty('--bg', palette.bg);
               root.style.setProperty('--fg', palette.fg);
