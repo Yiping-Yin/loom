@@ -324,7 +324,13 @@
   padding: 0.7rem 1rem;
   border: 1px solid rgba(232, 236, 238, 0.14);
   border-radius: 999px;
-  background: rgba(12, 14, 15, 0.6);
+  /* Codex-style frosted glass: blurred pane + inner top light + a grounded float. */
+  background: var(--mat-reg-bg, rgba(12, 14, 15, 0.6));
+  -webkit-backdrop-filter: var(--mat-blur);
+  backdrop-filter: var(--mat-blur);
+  box-shadow:
+    var(--mat-hi),
+    0 14px 36px rgba(0, 0, 0, 0.4);
   color: var(--fg);
   font-family: var(--serif);
   font-size: 0.92rem;

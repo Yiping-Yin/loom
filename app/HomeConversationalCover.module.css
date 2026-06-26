@@ -195,14 +195,17 @@
   font-family: inherit;
   font-size: clamp(1rem, 1.6vw, 1.1rem);
   color: var(--text-1);
-  /* Restrained liquid glass — a thin frosted field over the cosmos. */
-  background: var(--mat-thin-bg);
+  /* Codex-style frosted glass: a PRESENT (not whisper-thin) translucent pane that
+     floats off the cosmos — frosted fill + inner top light + a grounded float shadow. */
+  background: var(--mat-reg-bg);
   -webkit-backdrop-filter: var(--mat-blur);
   backdrop-filter: var(--mat-blur);
-  border: 1px solid var(--mat-border);
-  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, #ffffff 10%, transparent);
+  border-radius: 16px;
   outline: none;
-  box-shadow: var(--mat-hi);
+  box-shadow:
+    var(--mat-hi),
+    0 18px 44px rgba(0, 0, 0, 0.44);
   transition:
     border-color var(--dur-2) var(--ease),
     box-shadow var(--dur-2) var(--ease);
@@ -216,6 +219,7 @@
   border-color: color-mix(in srgb, var(--signature-cyan-hi) 55%, var(--mat-border));
   box-shadow:
     var(--mat-hi),
+    0 18px 44px rgba(0, 0, 0, 0.44),
     0 0 0 3px color-mix(in srgb, var(--signature-cyan-hi) 14%, transparent);
 }
 
