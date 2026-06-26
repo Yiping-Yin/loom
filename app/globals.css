@@ -12988,6 +12988,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   --vd-section-subtle: var(--text-3);
   --vd-section-border: var(--line);
   --vd-section-hairline: var(--line-soft);
+  /* faded section divider (adopts the /product-history hairline): fades to
+     transparent at both ends so band seams never read as a hard edge-to-edge rule */
+  --vd-section-divider: linear-gradient(to right, transparent 2%, var(--line-soft) 26%, var(--line-soft) 74%, transparent 98%) 1;
   --vd-section-paper: var(--ink-3);
   --vd-section-soft: var(--ink-4);
   --vd-section-accent: var(--signature-cyan);
@@ -13152,7 +13155,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
      the descriptive line opens wider (1rem) so coupling reads correctly; a
      single uniform gap flattened the hierarchy */
   padding: clamp(5.7rem, 7vw, 6.7rem) 0 clamp(1.15rem, 2.6vw, 2rem);
-  border-bottom: 1px solid var(--vd-section-hairline);
+  border-bottom: 1px solid transparent;
+  border-image: var(--vd-section-divider);
 }
 
 .vd-section-page__hero-copy {
@@ -13249,6 +13253,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   font-size: 1.1rem;
   font-weight: 620;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 1;
   text-shadow: 0 0 18px color-mix(in srgb, var(--signature-cyan) 12%, transparent);
 }
 
@@ -13482,6 +13487,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   font-size: 0.72rem;
   letter-spacing: 0.1em;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 1;
   overflow-wrap: anywhere;
 }
 
