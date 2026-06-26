@@ -157,9 +157,9 @@
 }
 
 .input:focus-visible {
-  /* The ask flow lights up as a comet signal. */
-  outline: 1px solid var(--ask-signal);
-  outline-offset: 0;
+  /* The ask flow lights up as a comet signal — a soft glow, not a hard ring. */
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ask-signal) 22%, transparent);
   border-color: var(--ask-signal);
 }
 
@@ -196,6 +196,7 @@
     inset 0 -1px 0 var(--ask-accent-strong),
     inset 0 -2px 0 rgba(0, 0, 0, 0.4),
     0 0 18px color-mix(in srgb, var(--signature-cyan) 12%, transparent);
+  transform: translateY(-2px);
 }
 
 .submit:disabled {
@@ -244,8 +245,8 @@
 }
 
 .chip:focus-visible {
-  outline: 1px solid var(--ask-signal);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ask-signal) 22%, transparent);
 }
 
 /* Answer surface */
@@ -471,11 +472,12 @@
   box-shadow:
     var(--ask-glass-inset-shadow),
     0 0 18px color-mix(in srgb, var(--signature-cyan) 10%, transparent);
+  transform: translateY(-1px);
 }
 
 .sourceRow:focus-visible {
-  outline: 1px solid var(--ask-signal);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ask-signal) 22%, transparent);
 }
 
 .sourceHref {
@@ -550,5 +552,17 @@
 
   .sourceHref {
     text-align: left;
+  }
+}
+
+/* Honour reduced-motion: keep the luminance/colour shifts, drop the lift. */
+@media (prefers-reduced-motion: reduce) {
+  .submit,
+  .sourceRow {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .submit:hover:not(:disabled),
+  .sourceRow:hover {
+    transform: none;
   }
 }
