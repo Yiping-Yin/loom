@@ -40,7 +40,12 @@
 :global(.edu-home__add-school) { display: flex; gap: 0.6rem; margin-bottom: 2.4rem; }
 :global(.edu-home__school-input) {
   flex: 1; min-width: 0; padding: 0.6rem 0.85rem;
-  background: transparent; border: 1px solid var(--line); border-radius: 9px;
+  /* Codex-style frosted glass field (light-mode --mat-* resolve to silver film). */
+  background: var(--mat-reg-bg);
+  -webkit-backdrop-filter: var(--mat-blur);
+  backdrop-filter: var(--mat-blur);
+  border: 1px solid var(--mat-border); border-radius: 9px;
+  box-shadow: var(--mat-hi), 0 8px 22px rgba(50, 44, 36, 0.08);
   color: var(--text-1); font: inherit;
 }
 :global(.edu-home__school-input:focus) { outline: none; border-color: var(--signature-cyan); }
@@ -326,6 +331,15 @@
   --signature-cyan: #0e7c8c;
   --signature-cyan-hi: #2a9fb0; /* highlight must be BRIGHTER than the base (was #126872 — inverted; hover/link/marker states read muddy on the white) */
   --accent-text: #2f7384; /* cyan-as-text on white = deep legible teal; re-anchor so it can't leak the pale dark-mode #8AF7E6 */
+  /* Light-mode glass tokens so frosted inputs read correctly on the white (not dark). */
+  --mat-border: rgba(26, 23, 18, 0.08);
+  --mat-thin-bg: rgba(232, 236, 238, 0.36);
+  --mat-reg-bg: rgba(232, 236, 238, 0.62);
+  --mat-hi:
+    inset 0 1px 0 rgba(255, 255, 255, 0.66),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+    inset 0 -11px 20px -11px rgba(38, 44, 50, 0.16),
+    0 0 0 0.5px rgba(22, 26, 30, 0.07);
   background: #edeae3;
 }
 /* a touch deeper amber so the AI-layer label reads on the warm white */
