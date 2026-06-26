@@ -86,7 +86,7 @@
 
 /* ---- Links: signal cyan, signature-cyan lift on hover ---------------- */
 .surface :global(.new-loom-draft a) { color: var(--cyan); }
-.surface :global(.new-loom-draft a:hover) { color: var(--signature-cyan-hi); }
+.surface :global(.new-loom-draft a:hover) { color: var(--accent-text); }
 .surface :global(.new-loom-draft a:focus-visible),
 .surface :global(.new-loom-draft button:focus-visible),
 .surface :global(.new-loom-draft input:focus-visible),
@@ -205,13 +205,13 @@
   cursor: pointer;
 }
 .surface :global(.new-loom-draft__grounding:hover) {
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
 }
 .surface :global(.new-loom-draft__help) {
   border: 1px solid color-mix(in srgb, var(--signature-cyan) 35%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--signature-cyan) 10%, transparent);
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
   font-size: 0.82rem;
   font-weight: 600;
   padding: 0.36rem 0.85rem;
@@ -306,7 +306,7 @@
   border-color: color-mix(in srgb, var(--signature-cyan) 50%, transparent);
   background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
   box-shadow: var(--keylight), 0 8px 22px rgba(0, 0, 0, 0.42);
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
 }
 .surface :global(.new-loom-draft .new-loom-shell__action:disabled),
 .surface :global(.new-loom-draft__reference-action:disabled) {
@@ -323,7 +323,7 @@
 .surface :global(.new-loom-draft__reference-action[aria-pressed="true"]) {
   border-color: color-mix(in srgb, var(--signature-cyan) 55%, transparent);
   background: linear-gradient(180deg, var(--ink-5), var(--ink-4));
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
   box-shadow:
     var(--keylight),
     inset 0 0 0 1px color-mix(in srgb, var(--signature-cyan) 22%, transparent),
@@ -450,7 +450,7 @@
 .surface :global(.new-loom-draft__public-mode) {
   border: 1px solid color-mix(in srgb, var(--signature-cyan) 32%, transparent);
   background: color-mix(in srgb, var(--signature-cyan) 8%, transparent);
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
 }
 
 /* Inspector section frames */
@@ -540,7 +540,7 @@
   color: var(--cyan);
   font-weight: 500;
 }
-.surface :global(.new-loom-draft__answer-flow-link:hover) { color: var(--signature-cyan-hi); }
+.surface :global(.new-loom-draft__answer-flow-link:hover) { color: var(--accent-text); }
 
 .surface :global(.new-loom-draft__ai-suggestion),
 .surface :global(.new-loom-draft__ai-empty) {
@@ -601,7 +601,7 @@
 }
 .surface :global(.new-loom-draft__source-tile a:hover),
 .surface :global(.new-loom-draft__reference-list li > a:hover) {
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
 }
 .surface :global(.new-loom-draft__source-tile small),
 .surface :global(.new-loom-draft__reference-meta) {
@@ -618,7 +618,7 @@
   color: var(--cyan);
   font-weight: 500;
 }
-.surface :global(.new-loom-draft__source-tile-actions a:hover) { color: var(--signature-cyan-hi); }
+.surface :global(.new-loom-draft__source-tile-actions a:hover) { color: var(--accent-text); }
 .surface :global(.new-loom-draft__reference-list li) {
   padding: 0.95rem 0;
   border-top: 1px solid var(--line);
@@ -643,7 +643,7 @@
 .surface :global(.new-loom-draft__provenance-n) {
   border: 1px solid color-mix(in srgb, var(--signature-cyan) 45%, transparent);
   background: transparent;
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
 }
@@ -837,7 +837,7 @@
   font-weight: 600;
 }
 .surface :global(.new-loom-draft__block-cite:hover .new-loom-draft__block-cite-label) {
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
 }
 .surface :global(.new-loom-draft__block-cite-excerpt) {
   color: var(--text-2);
@@ -874,7 +874,7 @@
 }
 .surface :global(.new-loom-draft__block-tools button:hover) {
   border-color: color-mix(in srgb, var(--signature-cyan) 50%, transparent);
-  color: var(--signature-cyan-hi);
+  color: var(--accent-text);
 }
 .surface :global(.new-loom-draft__block-add) {
   grid-area: add;
