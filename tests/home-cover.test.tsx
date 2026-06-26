@@ -216,10 +216,11 @@ test('HomeConversationalCover: landing shows the product showcase (sample LOOM)'
   const text = visibleText(render(<HomeConversationalCover />));
 
   // Substance via SHOWING a finished LOOM through a fictional persona — never
-  // the owner's data.
+  // the owner's data. (The capability star-river viz was removed; the persona
+  // card + its proof chips carry the "finished LOOM" substance.)
   assert.match(text, /weaving/i);
   assert.match(text, /Maya Chen/);
-  assert.match(text, /star-river/i);
+  assert.match(text, /artifacts verified/i);
 });
 
 test('HomeConversationalCover: landing grounds the page with a real footer', () => {
