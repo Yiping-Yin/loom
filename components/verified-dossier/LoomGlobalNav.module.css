@@ -784,6 +784,10 @@
   .nav {
     transform: translateX(-50%);
     transition: none;
+    /* Drop the heavy url() displacement-refraction for reduced-motion / low-power
+       users (it also re-rasterizes on scroll in Chrome/Edge); plain frosted blur. */
+    -webkit-backdrop-filter: blur(34px) saturate(115%) brightness(1.04);
+    backdrop-filter: blur(34px) saturate(115%) brightness(1.04);
   }
 
   .nav,
