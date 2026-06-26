@@ -189,7 +189,9 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(globalNavCss, /\.slot\s*{[^}]*z-index: 1000;[^}]*min-height: var\(--loom-nav-clearance\);[^}]*pointer-events: none;/s);
   assert.match(globalNavCss, /\.nav\s*{[^}]*z-index: 1000;[^}]*width: min\(calc\(100vw - clamp\(1\.25rem, 20vw, 21rem\)\), 23\.25rem\);/s);
   assert.match(globalNavCss, /rgba\(13, 15, 16, 0\.5\)/);
-  assert.match(globalNavCss, /backdrop-filter: blur\(38px\) saturate\(112%\) brightness\(1\.04\);/);
+  // Real liquid-glass (2026-06-26): the pill blurs then REFRACTS the backdrop via the
+  // SVG displacement filter; Safari keeps the plain -webkit- frosted blur fallback.
+  assert.match(globalNavCss, /backdrop-filter:\s*blur\(28px\) saturate\(118%\) brightness\(1\.04\) url\(#loomGlassRefract\);/);
   assert.match(globalNavCss, /\.searchInput\s*{[^}]*opacity: 0;[^}]*pointer-events: none;/s);
   assert.match(globalNavCss, /\.searchInput\s*{[^}]*caret-color: var\(--signature-cyan-hi, #8AF7E6\);/s);
   assert.match(globalNavCss, /\.searchInput::placeholder\s*{[^}]*rgba\(232, 236, 238, 0\.68\);/s);
@@ -434,7 +436,7 @@ test('white dashboard homepage is retired into the hybrid evidence cover design'
   assert.match(navCssSource, /23\.25rem/);
   assert.match(navCssSource, /position:\s*fixed/);
   assert.doesNotMatch(navCssSource, /\.navHidden/);
-  assert.match(navCssSource, /backdrop-filter:\s*blur\(38px\) saturate\(112%\) brightness\(1\.04\)/);
+  assert.match(navCssSource, /backdrop-filter:\s*blur\(28px\) saturate\(118%\) brightness\(1\.04\) url\(#loomGlassRefract\)/);
   assert.match(navCssSource, /radial-gradient/);
   assert.doesNotMatch(cssSource, /vd-home-asset-grid/);
   assert.doesNotMatch(cssSource, /vd-profile-asset/);
