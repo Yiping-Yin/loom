@@ -8,6 +8,7 @@ import {
   resolveVerifiedDossierArtifact,
   type VerifiedDossierArtifactId,
 } from '../../lib/new-loom/verified-dossier-home';
+import { AddSourceCard } from '../../components/knowledge/AddSourceCard';
 import { DocumentPreviewCard } from '../../components/verified-dossier/DocumentPreviewCard';
 import { FileBadge } from '../../components/verified-dossier/FileBadge';
 import { InstitutionMark } from '../../components/verified-dossier/InstitutionMark';
@@ -215,6 +216,8 @@ export function KnowledgeHomeStatic({
           </div>
         </aside>
       </section>
+
+      <AddSourceCard />
 
       <section className={styles.featuredSection} aria-labelledby="sources-proof-title">
         <div className={styles.sectionHeader}>
