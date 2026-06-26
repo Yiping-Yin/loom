@@ -474,7 +474,7 @@ body {
    Codex-style real glass. Pure-web keeps the opaque body; light content surfaces
    stay their opaque bone-white. */
 html.loom-native body:not([data-surface-theme='light']):not([data-edu-theme='light']) {
-  background-color: color-mix(in srgb, var(--ink-0) 82%, transparent);
+  background-color: color-mix(in srgb, var(--ink-0) 88%, transparent);
 }
 
 /* The layout shell stays transparent — it sits on the lit desk. */
