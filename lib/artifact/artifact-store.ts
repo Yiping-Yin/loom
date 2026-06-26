@@ -318,10 +318,38 @@ async function pdfText(file: File): Promise<string | undefined> {
   }
 }
 
-/** Best-effort text excerpt for a File based on its kind. Never throws. PDFs only. */
+/** True for files that ARE plain text (.txt / .md) — readable directly, no parser. */
+function isPlainText(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return (
+    file.type === 'text/plain' ||
+    file.type === 'text/markdown' ||
+    name.endsWith('.txt') ||
+    name.endsWith('.md') ||
+    name.endsWith('.markdown')
+  );
+}
+
+/**
+ * Bounded excerpt from a plain-text file. Unlike a PDF these need no parser — the
+ * bytes already ARE the text — so a `.txt`/`.md` CV or notes file grounds the cited
+ * answer engine + capabilities directly. `sanitizeExcerpt` hard-caps the length.
+ */
+async function plainText(file: File): Promise<string | undefined> {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const excerpt = sanitizeExcerpt(await file.text());
+    return excerpt.length > 0 ? excerpt : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Best-effort text excerpt for a File. Never throws. PDFs (parsed) + plain text. */
 async function makeExtractedText(file: File, kind: ArtifactKind): Promise<string | undefined> {
   try {
     if (kind === 'pdf') return await pdfText(file);
+    if (isPlainText(file)) return await plainText(file);
   } catch {
     // A missing excerpt is fine — the artifact still grounds on its name + label.
   }

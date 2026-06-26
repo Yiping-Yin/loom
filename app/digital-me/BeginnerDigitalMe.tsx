@@ -54,6 +54,10 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   const [caps, setCaps] = useState<BeginnerCapability[]>(profile.capabilities ?? []);
   const [building, setBuilding] = useState(false);
   const [buildError, setBuildError] = useState('');
+  // Flips true the moment proof is uploaded this session, so the header's
+  // proof-coaching next step retires immediately (the `profile` prop's artifact
+  // count is captured at mount and would otherwise stay stale until reload).
+  const [proofAddedThisSession, setProofAddedThisSession] = useState(false);
   // Once-only guard for the on-entry auto-build (CE-T5). A ref (not state) so it
   // is set synchronously before the async build resolves — preventing a second
   // run if the effect re-fires before `caps` updates.
@@ -70,14 +74,20 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
     setStudioDocuments(listDrafts(adapter).slice(0, 6).map(toStudioDocumentSummary));
   }, []);
 
-  /** Count of capabilities whose status is 'strong' (backed by real proof). */
-  const strongCount = caps.filter((c) => c.status === 'strong').length;
+  /** Capabilities backed by at least one uploaded document (artifact evidence) — the
+   *  honest meaning of "backed by proof". Counting 'strong' status undercounted it: a
+   *  freshly uploaded CV makes a capability 'partial', not 'strong', so the headline
+   *  read "0 backed by proof" even with proof clearly backing it. Self-reported
+   *  experience/education entries are claims, not proof, so they don't count here. */
+  const proofBackedCount = caps.filter((c) =>
+    (c.evidence ?? []).some((e) => e.kind === 'artifact'),
+  ).length;
 
   // A brand-new / thin profile (nothing proof-backed yet) should be guided to
   // ENRICH first — sharing a near-empty postcard is premature. So when thin,
   // "Keep building" takes the primary (cyan) slot and the postcard drops to the
   // secondary (ghost) slot; once there's proof, the postcard leads again.
-  const thin = strongCount === 0;
+  const thin = proofBackedCount === 0;
   const primaryCta = thin
     ? { href: '/onboarding/profile/form', label: 'Keep building' }
     : { href: '/card', label: 'Get your digital postcard' };
@@ -104,7 +114,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   // certificate) is what unlocks the verified-source citations that make a LOOM read
   // "finished" like the example, so the guided next step here is ADD PROOF — not a
   // return trip into the text form, which can never produce a verified source.
-  const needsProof = established && !hasProof;
+  const needsProof = established && !hasProof && !proofAddedThisSession;
 
   async function handleBuildCapabilities() {
     if (building) return;
@@ -139,6 +149,15 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
     } finally {
       setBuilding(false);
     }
+  }
+
+  // Proof was just added/removed in the Proof section. Retire the header's
+  // proof-coaching next step and re-derive capabilities right away, so uploading a
+  // CV immediately lights up "backed by proof" — the moat payoff — instead of leaving
+  // a stale "0 backed by proof" until the next manual refresh or reload.
+  function handleArtifactsChanged() {
+    setProofAddedThisSession(true);
+    void handleBuildCapabilities();
   }
 
   // CE-T5 — auto-build the star-river ONCE on first entry when the profile has no
@@ -307,13 +326,13 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
               <p className={styles.capabilitiesSummary} aria-live="polite">
                 {caps.length} {caps.length === 1 ? 'capability' : 'capabilities'}
                 {' · '}
-                {strongCount} backed by proof
+                {proofBackedCount} backed by proof
               </p>
             )}
 
             {/* Sparse profile → guide, don't strand: when nothing is proof-backed
                 yet, point at the next action instead of leaving a bare "0". */}
-            {caps.length > 0 && strongCount === 0 && (
+            {caps.length > 0 && proofBackedCount === 0 && (
               <p className={styles.capabilitiesNudge}>
                 Add proof to back these with evidence.
               </p>
@@ -341,7 +360,10 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
             profile's single next step (Keep building) leads here via the chat. */}
         {established && (
           <div id="proof" data-reveal="">
-            <BeginnerProofSection initialArtifacts={profile.artifacts ?? []} />
+            <BeginnerProofSection
+              initialArtifacts={profile.artifacts ?? []}
+              onArtifactsChanged={handleArtifactsChanged}
+            />
           </div>
         )}
 

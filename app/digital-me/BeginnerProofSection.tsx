@@ -34,7 +34,16 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB per file.
 const ACCEPT =
   '.pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,application/pdf,image/*';
 
-export function BeginnerProofSection({ initialArtifacts = [] }: { initialArtifacts?: ArtifactRef[] }) {
+export function BeginnerProofSection({
+  initialArtifacts = [],
+  onArtifactsChanged,
+}: {
+  initialArtifacts?: ArtifactRef[];
+  /** Fired after the artifact set changes (upload or remove) so the parent can
+      re-derive capabilities against the new proof — the moat payoff ("0 backed by
+      proof" → backed) then lands immediately instead of waiting for a manual refresh. */
+  onArtifactsChanged?: () => void;
+}) {
   const [artifacts, setArtifacts] = useState<ArtifactRef[]>(initialArtifacts);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -93,6 +102,10 @@ export function BeginnerProofSection({ initialArtifacts = [] }: { initialArtifac
         const saved = writeBeginnerProfileLocal({ ...current, artifacts: next });
         if (saved) {
           setArtifacts(next);
+          // New proof landed — let the parent re-derive capabilities now, so the
+          // "backed by proof" payoff is immediate (the new artifact's extractedText
+          // is already in the saved profile for grounding).
+          onArtifactsChanged?.();
         } else {
           // Write failed (quota / private mode) — roll back the blobs we just
           // stored so IndexedDB doesn't drift from the profile.
@@ -122,6 +135,8 @@ export function BeginnerProofSection({ initialArtifacts = [] }: { initialArtifac
       setArtifacts(next);
       await deleteArtifact(id);
       setMessage(null);
+      // Proof set changed — re-derive so capabilities reflect the removal too.
+      onArtifactsChanged?.();
     } else {
       setMessage('Could not remove the document right now.');
     }
