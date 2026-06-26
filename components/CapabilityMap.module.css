@@ -113,12 +113,12 @@
 }
 
 .starNode:focus-visible .starCore {
-  filter: drop-shadow(0 0 10px var(--signature-cyan-hi, #6ce7f2)) drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
+  filter: drop-shadow(0 0 10px var(--signature-cyan-hi, #8af7e6)) drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
 }
 
 /* Keyboard focus ring drawn around the star (SVG can't use outline reliably). */
 .starNode:focus-visible {
-  outline: 2px solid var(--signature-cyan-hi, #6ce7f2);
+  outline: 2px solid var(--signature-cyan-hi, #8af7e6);
   outline-offset: 2px;
 }
 
@@ -397,14 +397,14 @@
 
 .evidenceLink:hover,
 .evidenceButton:hover:not(:disabled) {
-  color: var(--signature-cyan-hi, #6ce7f2);
+  color: var(--signature-cyan-hi, #8af7e6);
   border-color: color-mix(in srgb, var(--signature-cyan) 40%, transparent);
   background: color-mix(in srgb, var(--signature-cyan) 6%, transparent);
 }
 
 .evidenceLink:focus-visible,
 .evidenceButton:focus-visible {
-  outline: 2px solid var(--signature-cyan-hi, #6ce7f2);
+  outline: 2px solid var(--signature-cyan-hi, #8af7e6);
   outline-offset: 2px;
   border-radius: var(--r-1);
 }

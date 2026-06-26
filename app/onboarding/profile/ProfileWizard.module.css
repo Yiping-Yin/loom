@@ -81,12 +81,12 @@
 }
 
 .progressStepActive {
-  background: rgba(75, 197, 222, 0.18);
-  color: var(--signature-cyan-hi, #8AF7E6);
+  background: color-mix(in srgb, var(--signature-cyan) 18%, transparent);
+  color: var(--signature-cyan-hi, #8af7e6);
 }
 
 .progressStepDone {
-  color: rgba(75, 197, 222, 0.55);
+  color: color-mix(in srgb, var(--signature-cyan) 55%, transparent);
 }
 
 /* ── Step content ── */

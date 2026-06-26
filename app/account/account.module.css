@@ -108,7 +108,7 @@
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
-.primary { border: 1px solid var(--signature-cyan); background: var(--signature-cyan); color: #0b1416; font-weight: 600; }
+.primary { border: 1px solid var(--signature-cyan); background: linear-gradient(180deg, var(--signature-cyan-hi), var(--signature-cyan)); color: #0b1416; font-weight: 600; }
 .primary:hover:not(:disabled) { box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature-cyan) 16%, transparent); }
 .primary:disabled { opacity: 0.6; cursor: default; }
 .ghost { border: 1px solid var(--line); background: transparent; color: var(--fg-secondary); align-self: flex-start; }

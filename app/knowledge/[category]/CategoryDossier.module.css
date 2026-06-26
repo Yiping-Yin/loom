@@ -163,7 +163,7 @@
 }
 
 .page :global(.vd-inspector-card__header span) {
-  border-color: rgba(75, 197, 222, 0.35);
+  border-color: color-mix(in srgb, var(--signature-cyan) 35%, transparent);
   color: var(--cyan);
 }
 
@@ -573,7 +573,7 @@
 }
 
 .flowCard > span {
-  color: var(--signature-cyan);
+  color: var(--cyan);
   font-family: var(--mono);
   font-size: 0.7rem;
   font-weight: 600;

@@ -92,7 +92,8 @@
 .jotTextarea:focus-visible {
   outline: none;
   border-bottom-color: var(--signature-cyan);
-  box-shadow: 0 1px 0 0 var(--signature-cyan);
+  /* a lit focus, not a hard 1px bar: the crisp line + a soft cyan falloff under it */
+  box-shadow: 0 1px 0 0 var(--signature-cyan), 0 2px 8px color-mix(in srgb, var(--signature-cyan) 30%, transparent);
 }
 
 /* ── Recent jot rows ─────────────────────────────────────────────────────── */

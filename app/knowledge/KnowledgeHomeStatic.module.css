@@ -185,7 +185,7 @@
   border: 1px solid rgba(224, 229, 232, 0.16);
   border-radius: 12px;
   background:
-    radial-gradient(82% 140% at 4% 0%, rgba(138, 247, 230, 0.08), transparent 42%),
+    radial-gradient(82% 140% at 4% 0%, color-mix(in srgb, var(--signature-cyan-hi) 8%, transparent), transparent 42%),
     linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 36%, transparent 62%),
     rgba(17, 19, 22, 0.72);
   box-shadow:
@@ -262,8 +262,8 @@
 
 .searchCallout a:hover,
 .searchCallout button:hover {
-  border-color: rgba(138, 247, 230, 0.32);
-  background: rgba(138, 247, 230, 0.065);
+  border-color: color-mix(in srgb, var(--signature-cyan-hi) 32%, transparent);
+  background: color-mix(in srgb, var(--signature-cyan-hi) 6.5%, transparent);
   color: var(--text-1);
 }
 

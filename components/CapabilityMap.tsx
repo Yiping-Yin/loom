@@ -294,13 +294,13 @@ function StarRiver({
           {/* Star core: bright white-cyan centre fading outward */}
           <radialGradient id="cmStarCore" cx="50%" cy="50%" r="50%">
             <stop offset="0" stopColor="#ffffff" stopOpacity="0.96" />
-            <stop offset="0.22" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="1" />
+            <stop offset="0.22" stopColor="var(--signature-cyan-hi, #8af7e6)" stopOpacity="1" />
             <stop offset="0.58" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.85" />
             <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
           </radialGradient>
           {/* Star glow halo: more luminous than before */}
           <radialGradient id="cmStarGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.55" />
+            <stop offset="0" stopColor="var(--signature-cyan-hi, #8af7e6)" stopOpacity="0.55" />
             <stop offset="0.45" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.22" />
             <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
           </radialGradient>
@@ -312,17 +312,27 @@ function StarRiver({
           </radialGradient>
           {/* Comet tail: head-end bright, tip fully transparent, along local band direction */}
           <linearGradient id="cmCometTail" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.0" />
+            <stop offset="0" stopColor="var(--signature-cyan-hi, #8af7e6)" stopOpacity="0.0" />
             <stop offset="0.55" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.28" />
-            <stop offset="0.82" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.72" />
+            <stop offset="0.82" stopColor="var(--signature-cyan-hi, #8af7e6)" stopOpacity="0.72" />
             <stop offset="1" stopColor="#ffffff" stopOpacity="0.55" />
           </linearGradient>
-          {/* Comet head glow: bright core + wide soft halo */}
+          {/* Comet head halo: a clean cyan glow — NO white plateau. The single
+              white hot-point comes from cmCometCore below, so the head reads as a
+              luminous jewel nucleus instead of a flat white disc. */}
           <radialGradient id="cmCometHead" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stopColor="var(--signature-cyan-hi, #8af7e6)" stopOpacity="0.92" />
+            <stop offset="0.4" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.5" />
+            <stop offset="0.72" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.18" />
+            <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
+          </radialGradient>
+          {/* Comet nucleus: a small hot point with a soft cyan falloff — replaces the
+              old flat #fff disc that read as a white blob. White only at the very
+              centre, fading fast through cyan-hi to transparent (no hard edge). */}
+          <radialGradient id="cmCometCore" cx="50%" cy="50%" r="50%">
             <stop offset="0" stopColor="#ffffff" stopOpacity="1" />
-            <stop offset="0.18" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="1" />
-            <stop offset="0.48" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.75" />
-            <stop offset="0.72" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.28" />
+            <stop offset="0.32" stopColor="#eafcfb" stopOpacity="0.92" />
+            <stop offset="0.62" stopColor="var(--signature-cyan-hi, #8af7e6)" stopOpacity="0.72" />
             <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
           </radialGradient>
         </defs>
@@ -478,7 +488,7 @@ function CometTail({ star }: { star: StarLayout }) {
         >
           <stop offset="0" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
           <stop offset="0.45" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0.22" />
-          <stop offset="0.78" stopColor="var(--signature-cyan-hi, #6ce7f2)" stopOpacity="0.62" />
+          <stop offset="0.78" stopColor="var(--signature-cyan-hi, #8af7e6)" stopOpacity="0.62" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0.42" />
         </linearGradient>
       </defs>
@@ -553,21 +563,20 @@ function StarNode({
             opacity={0}
             aria-hidden="true"
           />
-          {/* Wide soft halo */}
+          {/* Wide soft cyan halo */}
           <circle
             cx={star.cx}
             cy={star.cy}
-            r={Math.max(star.r + 10, 18)}
+            r={Math.max(star.r + 8, 16)}
             fill="url(#cmCometHead)"
-            opacity={0.7}
+            opacity={0.66}
           />
-          {/* Bright inner core */}
+          {/* Hot nucleus — a small soft jewel point, no hard white edge */}
           <circle
             cx={star.cx}
             cy={star.cy}
-            r={Math.max(star.r * 0.55, 4.5)}
-            fill="#ffffff"
-            opacity={0.92}
+            r={Math.max(star.r * 0.46, 3.4)}
+            fill="url(#cmCometCore)"
           />
         </g>
       ) : null}
