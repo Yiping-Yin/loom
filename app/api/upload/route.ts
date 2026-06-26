@@ -66,7 +66,10 @@ export async function POST(req: Request) {
       ? categoryName.replace(' · ', path.sep)
       : categoryName;
     const catDir = path.join(KNOWLEDGE_ROOT, dirName);
-    if (!catDir.startsWith(KNOWLEDGE_ROOT)) {
+    // Defense-in-depth: a bare startsWith(ROOT) also accepts sibling escapes like
+    // "<ROOT>-evil"; require an exact match or a real path-separator boundary. The
+    // `..` reject above already guards this, but containment shouldn't lean on one check.
+    if (catDir !== KNOWLEDGE_ROOT && !catDir.startsWith(KNOWLEDGE_ROOT + path.sep)) {
       return new Response('Invalid category path', { status: 400 });
     }
     await fs.mkdir(catDir, { recursive: true });
