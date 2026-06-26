@@ -13156,11 +13156,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .vd-section-page__list,
 .vd-section-page__grid,
 .vd-section-page__course-strip,
-.vd-section-page__artifact-strip,
-.vd-section-page__foundations,
-.vd-section-page__canvas,
-.vd-section-page__answer,
-.vd-section-page__loom-layer {
+.vd-section-page__artifact-strip {
   width: min(100%, var(--vd-section-shell));
   margin-right: auto;
   margin-left: auto;
@@ -13185,8 +13181,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   min-width: 0;
 }
 
-.vd-section-page__hero p,
-.vd-section-page__canvas > p {
+.vd-section-page__hero p {
   margin: 0;
   color: var(--vd-section-subtle);
   font-family: var(--vd-section-mono);
@@ -13542,7 +13537,6 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--signature-cyan) 18%, transparent);
 }
 
-.vd-section-page__answer > div,
 .vd-section-page__artifact-strip {
   display: flex;
   flex-wrap: wrap;
@@ -13734,28 +13728,6 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   text-underline-offset: 0.2em;
 }
 
-/* Archive scene: lit-glass material (validated recipe) at a CALM float so the
-   documents/evidence carried inside still read first. Each bordered
-   container/card gets the top-left specular sheen + ink-4→ink-3 surface
-   gradient, a 1px specular top edge, inner bottom thickness, and the softer
-   directional float (0 14px 36px) matching the Cover scene's restraint.
-   Layout (grid, padding, radius) unchanged. */
-.vd-section-page__modes > div:last-child,
-.vd-section-page__foundations > div,
-.vd-section-page__canvas article,
-.vd-section-page__loom-layer li {
-  border-color: var(--line);
-  background:
-    linear-gradient(135deg, rgba(238, 241, 242, 0.07), rgba(176, 184, 188, 0.025) 34%, transparent 62%),
-    linear-gradient(180deg, rgba(34, 38, 42, 0.58), rgba(20, 23, 26, 0.94));
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 14px 36px rgba(0, 0, 0, 0.5);
-}
-
 /* file-badge insets read as quiet nested chips: same lit-glass surface but no
    float (they sit recessed inside the cards above, not floating on the desk) */
 .vd-section-page .vd-file-badge {
@@ -13860,11 +13832,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   /* __list projects stay 3-up until the 760px breakpoint so the third entry
      does not orphan into a 2+1 row. __grid (4 institutions) → 2+2 reflows
      cleanly, so it does collapse. */
-  .vd-section-page__modes,
   .vd-section-page__grid,
-  .vd-section-page__course-strip,
-  .vd-section-page__canvas > div,
-  .vd-section-page__loom-layer ol {
+  .vd-section-page__course-strip {
     grid-template-columns: repeat(2, minmax(0,1fr));
   }
 }
@@ -13947,11 +13916,8 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   }
 
   .vd-section-page__list,
-  .vd-section-page__modes,
   .vd-section-page__grid,
-  .vd-section-page__course-strip,
-  .vd-section-page__canvas > div,
-  .vd-section-page__loom-layer ol {
+  .vd-section-page__course-strip {
     grid-template-columns: minmax(0, 1fr);
   }
 

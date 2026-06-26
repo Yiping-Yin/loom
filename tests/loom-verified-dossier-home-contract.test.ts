@@ -572,11 +572,6 @@ test('Digital Me page ships professional section-page layout styles', () => {
     '.vd-section-page__hero-copy',
     '.vd-section-page__hero-proof',
     '.vd-section-page__list',
-    '.vd-section-page__modes',
-    '.vd-section-page__foundations',
-    '.vd-section-page__canvas',
-    '.vd-section-page__answer',
-    '.vd-section-page__loom-layer',
   ]) {
     assert.match(css, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
@@ -598,8 +593,6 @@ test('Digital Me page ships professional section-page layout styles', () => {
     assert.match(roleCss, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
-  assert.match(css, /\.vd-section-page__canvas[\s\S]*grid-template-columns/);
-  assert.match(css, /\.vd-section-page__foundations[\s\S]*grid-template-columns/);
   assert.match(css, /\.vd-section-page__hero\s*{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(15rem, 21rem\)/);
   assert.match(css, /\.vd-section-page__hero h1\s*{[\s\S]*font-size:\s*clamp\(2\.45rem, 4\.55vw, 4\.35rem\)/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page__hero\s*{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
