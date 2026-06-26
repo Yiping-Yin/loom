@@ -153,7 +153,13 @@
   padding: 0.6rem 0.85rem;
   border: 1px solid rgba(232, 236, 238, 0.14);
   border-radius: var(--r-1, 6px);
-  background: rgba(12, 14, 15, 0.52);
+  /* Codex-style frosted glass field: blurred pane + inner top light + gentle float. */
+  background: var(--mat-reg-bg, rgba(12, 14, 15, 0.52));
+  -webkit-backdrop-filter: var(--mat-blur);
+  backdrop-filter: var(--mat-blur);
+  box-shadow:
+    var(--mat-hi),
+    0 8px 22px rgba(0, 0, 0, 0.3);
   color: var(--fg);
   font-family: var(--serif);
   font-size: 0.95rem;
@@ -172,7 +178,10 @@
   outline: none;
   border-color: rgba(75, 197, 222, 0.46);
   background: rgba(14, 17, 18, 0.7);
-  box-shadow: 0 0 0 3px rgba(75, 197, 222, 0.08);
+  box-shadow:
+    var(--mat-hi),
+    0 8px 22px rgba(0, 0, 0, 0.3),
+    0 0 0 3px rgba(75, 197, 222, 0.08);
 }
 
 /* Quiet, advisory floor hint under a HOME field. Muted + italic guidance —
