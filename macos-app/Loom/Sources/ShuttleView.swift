@@ -69,11 +69,9 @@ struct ShuttleView: View {
 
     private let commands: [Command] = [
         .init(label: "Home",            subtitle: "Where you left off",       path: "/",            keywords: ["home", "focus", "entry"]),
-        .init(label: "Desk",            subtitle: "Between readings",         path: "/desk",        keywords: ["desk", "today", "queue", "resume"]),
-        .init(label: "Workbench",       subtitle: "Writing with the loom visible", path: "/workbench", keywords: ["workbench", "writing", "draft", "compose", "desk"]),
-        .init(label: "Sōan",            subtitle: "The thinking draft",       path: "/soan",        keywords: ["soan", "sōan", "thinking", "draft", "canvas", "pieces", "sheet"]),
-        .init(label: "Pursuits",        subtitle: "Questions you are holding", path: "/pursuits",   keywords: ["pursuits", "questions", "mind", "inquiry", "held"]),
-        .init(label: "Add Question…", subtitle: "Open the add-question dialog (⌘⇧P)", path: "", keywords: ["hold", "question", "pursuit", "new", "mint", "ask", "wonder", "capture"], notificationName: .loomShowHoldQuestionDialog),
+        .init(label: "Knowledge",       subtitle: "Your sources",             path: "/knowledge",   keywords: ["knowledge", "sources", "files", "library", "docs"]),
+        .init(label: "Digital Me",      subtitle: "Your cited identity",      path: "/digital-me",  keywords: ["digital", "me", "profile", "identity", "capabilities", "ask"]),
+        .init(label: "Draft",           subtitle: "Writing with the loom visible", path: "/draft", keywords: ["draft", "studio", "writing", "compose", "document"]),
         .init(label: "Add Draft Card…", subtitle: "Open the add-card dialog (⌘⇧D)", path: "", keywords: ["soan", "sōan", "card", "add", "new", "thesis", "counter", "instance", "question", "fog", "weft", "sketch", "draft"], notificationName: .loomShowAddSoanCardDialog),
         .init(label: "Connect Draft Cards… · ⌘⇧L", subtitle: "Open the connect-cards dialog", path: "", keywords: ["soan", "sōan", "connect", "edge", "relation", "link", "support", "echo", "draw", "relate", "join"], notificationName: .loomShowConnectSoanCardsDialog),
         .init(label: "Connect Reader Notes… · ⌘⇧W", subtitle: "Open the connect-notes dialog", path: "", keywords: ["weave", "panels", "relation", "connect", "supports", "contradicts", "elaborates", "echoes", "link", "tie"], notificationName: .loomShowWeavePanelsDialog),
