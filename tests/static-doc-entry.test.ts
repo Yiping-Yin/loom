@@ -13,8 +13,6 @@ function read(relativePath: string) {
 test('static-export-safe doc route exists for native source reading', () => {
   assert.ok(fs.existsSync(path.join(repoRoot, 'app/doc/page.tsx')));
   assert.ok(fs.existsSync(path.join(repoRoot, 'app/DocClient.tsx')));
-  assert.ok(fs.existsSync(path.join(repoRoot, 'app/collection/page.tsx')));
-  assert.ok(fs.existsSync(path.join(repoRoot, 'app/CollectionClient.tsx')));
 });
 
 test('native ContentView rewrites source-doc bundle navigations onto /doc?href=', () => {
@@ -40,36 +38,3 @@ test('native ContentView keeps static-export fallback shells for path-based pane
   assert.match(exportScript, /'app\/pursuit\/\[id\]'/);
 });
 
-test('native ContentView rewrites source collection routes onto /collection?slug=', () => {
-  const source = read('macos-app/Loom/Sources/ContentView.swift');
-
-  assert.match(source, /if path\.hasPrefix\("\/knowledge\/"\)/);
-  assert.match(source, /if parts\.count == 2 \{/);
-  assert.match(source, /components\.path = "\/collection"/);
-  assert.match(source, /URLQueryItem\(name: "slug", value: parts\[1\]\)/);
-  assert.match(source, /if parts\[2\] == "cowork" \{/);
-});
-
-test('collection route reads manifests directly from loom://content and not mirrored native web state', () => {
-  const collectionClient = read('app/CollectionClient.tsx');
-  const contentView = read('macos-app/Loom/Sources/ContentView.swift');
-
-  assert.match(collectionClient, /const NAV_URL = 'loom:\/\/content\/knowledge\/\.cache\/manifest\/knowledge-nav\.json'/);
-  assert.match(collectionClient, /const MANIFEST_URL = 'loom:\/\/content\/knowledge\/\.cache\/manifest\/knowledge-manifest\.json'/);
-  assert.doesNotMatch(collectionClient, /readLoomMirror|subscribeLoomMirror|loom\.knowledge\.nav\.v1|loom\.knowledge\.manifest\.v1/);
-  assert.doesNotMatch(contentView, /knowledgeNavStorageKey|knowledgeManifestStorageKey|knowledgeMirrorEventName|mirrorKnowledgeToWebview|handleKnowledgeMirrorChanged/);
-});
-
-test('native collection route mirrors local folders instead of dumping every source flat', () => {
-  const collectionClient = read('app/CollectionClient.tsx');
-
-  assert.match(collectionClient, /sourcePath: string;/);
-  assert.match(collectionClient, /function sourceFolderPath\(doc: KnowledgeDoc, category: KnowledgeCategory\)/);
-  assert.match(collectionClient, /function buildFolderTree\(docs: KnowledgeDoc\[\], category: KnowledgeCategory\): FolderNode\[\]/);
-  assert.match(collectionClient, /const tree = useMemo\(/);
-  assert.match(collectionClient, /const \[expandedFolders, setExpandedFolders\]/);
-  assert.match(collectionClient, /function FolderRow\(/);
-  assert.match(collectionClient, /aria-expanded=\{open\}/);
-  assert.match(collectionClient, /<FileRow key=\{child\.doc\.id\} doc=\{child\.doc\} \/>/);
-  assert.doesNotMatch(collectionClient, /docs\.map\(\(doc\) => \(\s*<Link/);
-});

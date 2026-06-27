@@ -62,16 +62,6 @@ function renderHomeClientHtml() {
   return renderToStaticMarkup(<HomeClient />);
 }
 
-function renderColophonClientHtml() {
-  Object.assign(globalThis, { React });
-  const { renderToStaticMarkup } = require('react-dom/server') as {
-    renderToStaticMarkup: (node: React.ReactElement) => string;
-  };
-  const ColophonClient = require('../app/ColophonClient').default as React.ComponentType;
-
-  return renderToStaticMarkup(<ColophonClient />);
-}
-
 function globalNavHtml(html: string, ariaLabel = 'Verified dossier navigation') {
   return html.match(new RegExp(`<nav[^>]+aria-label="${ariaLabel}"[\\s\\S]*?<\\/nav>`))?.[0] ?? '';
 }
@@ -261,11 +251,9 @@ test('visible support surfaces use approved personal-identity and local-app posi
   const designCanon = read('docs/design/CURRENT_DESIGN_CANON.md');
   const visualSpec = read('docs/superpowers/specs/2026-06-11-loom-visual-system-design.md');
   const supportClients = [
-    read('app/hour/HourClient.tsx'),
     read('app/connections/ConnectionsClient.tsx'),
     read('app/SystemClient.tsx'),
     read('app/discipline/page.tsx'),
-    read('app/year/page.tsx'),
   ].join('\n');
   const privacy = read('public/privacy.html');
   const support = read('public/support.html');
@@ -532,30 +520,6 @@ test('visible support surfaces use approved personal-identity and local-app posi
   // sediment in the tagline lineage, so it is excluded from this guard.
   assert.doesNotMatch([help, privacy, support].join('\n'), /personal knowledge display platform/i);
   assert.match(productHistory, /personal knowledge display platform/i);
-});
-
-test('colophon keeps line-broken closing sentences readable as text', () => {
-  const html = renderColophonClientHtml();
-  const colophon = read('app/ColophonClient.tsx');
-  const supportCss = read('app/loom-support-page.module.css');
-  const text = html
-    .replace(/<br\s*\/?>/g, '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/\s+/g, ' ');
-
-  assert.match(text, /Graphite canon/);
-  assert.doesNotMatch(text, /Vellum II/);
-  assert.match(text, /Built by one hand\. With thanks to anyone who waited\./);
-  assert.doesNotMatch(text, /hand\.With/);
-  assert.match(colophon, /LoomSupportNav active="\/colophon"/);
-  assert.match(colophon, /styles\.colophonMain/);
-  assert.match(colophon, /styles\.colophonCard/);
-  assert.match(colophon, /styles\.colophonBody/);
-  assert.match(colophon, /styles\.swatchDot/);
-  assert.doesNotMatch(colophon, /const bodyStyle|padding:\s*'clamp\(7\.2rem|fontSize:\s*'64px'/);
-  assert.match(supportCss, /\.colophonMain\s*\{/);
-  assert.match(supportCss, /\.colophonCard\s*\{/);
-  assert.match(supportCss, /\.swatchDot\s*\{/);
 });
 
 test('Loom product history evolution assets are curated under Loom folders', () => {

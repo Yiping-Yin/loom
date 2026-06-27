@@ -38,26 +38,3 @@ test('quiet-scene CSS stays page-neutral and keeps a viewport-height floor', () 
   assert.match(css, /\.loom-quiet-scene::before[\s\S]*radial-gradient/);
   assert.doesNotMatch(css, /--quiet-scene-tint/);
 });
-
-test('today and patterns keep their current route-level shells', () => {
-  const todaySource = read('app/today/TodayClient.tsx');
-  const patternsSource = read('app/PatternsClient.tsx');
-
-  // /today now uses styles.page (lit scene) for the standalone route and
-  // loom-today--embedded only in the embedded variant.
-  assert.match(todaySource, /styles\.page/);
-  assert.match(todaySource, /loom-today--embedded/);
-  assert.match(patternsSource, /className="loom-patterns"/);
-});
-
-test('atlas uses the shared quiet column and route clients avoid page-level guide cards', () => {
-  const todaySource = read('app/today/TodayClient.tsx');
-  const atlasSource = read('app/knowledge/KnowledgeHomeStatic.tsx');
-  const quietSceneSource = read('components/QuietScene.tsx');
-  const patternsSource = read('app/PatternsClient.tsx');
-
-  assert.match(quietSceneSource, /QuietSceneColumn/);
-  for (const source of [todaySource, atlasSource, patternsSource]) {
-    assert.doesNotMatch(source, /guide-card|GuideCard/);
-  }
-});

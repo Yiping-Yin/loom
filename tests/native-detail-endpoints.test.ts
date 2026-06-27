@@ -41,48 +41,17 @@ test('native url scheme exposes direct panel and pursuit detail endpoints', () =
 
 test('detail clients prefer direct native endpoints and keep mirror fallback', () => {
   const panelDetail = read('app/PanelDetailClient.tsx');
-  const pursuitDetail = read('app/PursuitDetailClient.tsx');
-  const patterns = read('app/PatternsClient.tsx');
-  const pursuits = read('app/PursuitsClient.tsx');
-  const soan = read('app/SoanClient.tsx');
-  const weaves = read('app/WeavesClient.tsx');
   const recents = read('lib/loom-recent-records.ts');
   const panels = read('lib/loom-panel-records.ts');
   const pursuitRecords = read('lib/loom-pursuit-records.ts');
   const weaveRecords = read('lib/loom-weave-records.ts');
   const soanRecords = read('lib/loom-soan-records.ts');
-  const home = read('app/HomeClient.tsx');
-  const atelier = read('app/AtelierClient.tsx');
-  const letter = read('app/LetterClient.tsx');
-  const branching = read('app/BranchingClient.tsx');
-  const constellation = read('app/ConstellationClient.tsx');
-  const palimpsest = read('app/PalimpsestClient.tsx');
 
   assert.match(panelDetail, /loom:\/\/native\/panel\/\$\{encodeURIComponent\(id\)\}\.json/);
   assert.match(panelDetail, /async function loadPanelDetail\(id: string\): Promise<PanelDetail \| null>/);
   assert.match(panelDetail, /return loadStoredPanelById\(id\);/);
-
-  assert.match(pursuitDetail, /loom:\/\/native\/pursuit\/\$\{encodeURIComponent\(id\)\}\.json/);
-  assert.match(pursuitDetail, /async function loadPursuitById\(id: string\): Promise<Pursuit \| null>/);
-  assert.match(pursuitDetail, /return loadStoredPursuitById\(id\);/);
-
-  assert.match(patterns, /async function loadPanels\(\): Promise<SeedPanel\[]>/);
-  assert.match(patterns, /loadPanelRecords/);
-  assert.doesNotMatch(patterns, /readLoomMirror/);
-
-  assert.match(pursuits, /async function loadPursuits\(\): Promise<Pursuit\[]>/);
-  assert.match(pursuits, /loadPursuitRecords/);
-  assert.doesNotMatch(pursuits, /readLoomMirror/);
-
-  assert.match(soan, /async function loadSoanStore\(\): Promise<SoanStore>/);
-  assert.match(soan, /loadSoanPayload/);
-  assert.doesNotMatch(soan, /readLoomMirror/);
-
-  assert.match(weaves, /async function loadPanels\(\): Promise<WeavePanel\[]>/);
-  assert.match(weaves, /async function loadWeaves\(\): Promise<ExplicitWeave\[]>/);
-  assert.match(weaves, /loadPanelRecords/);
-  assert.match(weaves, /loadWeaveRecords/);
-  assert.doesNotMatch(weaves, /readLoomMirror/);
+  assert.match(panelDetail, /loadPanelRecords/);
+  assert.doesNotMatch(panelDetail, /readLoomMirror/);
 
   assert.match(recents, /loom:\/\/native\/recents\.json/);
   assert.match(recents, /async function loadRecentRecords\(\): Promise<LoomRecentRecord\[]>/);
@@ -103,14 +72,4 @@ test('detail clients prefer direct native endpoints and keep mirror fallback', (
   assert.match(soanRecords, /loom:\/\/native\/soan\.json/);
   assert.match(soanRecords, /async function loadSoanPayload\(\): Promise<LoomSoanPayload>/);
   assert.match(soanRecords, /return readStoredSoanPayload\(\);/);
-
-  for (const source of [panelDetail, home, atelier, letter, branching, constellation, palimpsest]) {
-    assert.match(source, /loadPanelRecords/);
-    assert.doesNotMatch(source, /readLoomMirror/);
-  }
-
-  for (const source of [pursuitDetail, home]) {
-    assert.match(source, /loadPursuitRecords/);
-    assert.doesNotMatch(source, /readLoomMirror/);
-  }
 });

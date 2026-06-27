@@ -74,40 +74,6 @@ test('new Loom web shell exposes the two primary workspaces', () => {
   }
 });
 
-test('/collect is a compatibility alias into Sources', () => {
-  const productShell = read('lib/new-loom/product-shell.ts');
-  const primaryRoutes = new Set<string>(NEW_LOOM_PRIMARY_ROUTES);
-  const collectPage = read('app/collect/page.tsx');
-  const collectionPage = read('app/collection/page.tsx');
-
-  assert.ok(
-    fs.existsSync(path.join(repoRoot, 'app/collect/page.tsx')),
-    'app/collect/page.tsx should remain as a compatibility route',
-  );
-  assert.equal(
-    fs.existsSync(path.join(repoRoot, 'app/collect/page 2.tsx')),
-    false,
-    'stale duplicate Collect pages should not keep the old three-surface product model alive',
-  );
-  assert.equal(
-    fs.existsSync(path.join(repoRoot, 'app/help/page 2.tsx')),
-    false,
-    'ignored numbered page copies should not preserve stale IA evidence or old product copy',
-  );
-  assert.doesNotMatch(productShell, /id:\s*'collect'[\s\S]{0,180}href:\s*'\/collect'/);
-  assert.match(collectPage, /redirect\('\/sources'\)/);
-  assert.match(collectionPage, /redirect\('\/sources'\)/);
-  assert.doesNotMatch(collectionPage, /CollectionClient|CollectionPage/);
-  assert.ok(primaryRoutes.has('/sources'), '/sources should be the primary source workspace');
-  assert.ok(!primaryRoutes.has('/collect'), '/collect should not be a primary route');
-  assert.ok(!primaryRoutes.has('/collection'), '/collection should not be a primary route');
-  assert.ok(NEW_LOOM_LEGACY_ROUTES.includes('/collect'), '/collect should remain classified as legacy compatibility');
-  assert.ok(
-    NEW_LOOM_LEGACY_ROUTES.includes('/collection'),
-    '/collection should remain classified as legacy compatibility',
-  );
-});
-
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
   const numberedDuplicateArtifacts = [
     'app/collect/page 2.tsx',
@@ -240,11 +206,8 @@ test('learning status copy uses literal reader note language', () => {
 });
 
 test('Sources owns capture handoff instead of a separate Collect surface', () => {
-  const page = read('app/collect/page.tsx');
   const library = read('macos-app/Loom/Sources/LoomLibraryView.swift');
 
-  assert.match(page, /redirect\('\/sources'\)/);
-  assert.doesNotMatch(page, /['"]\/loom-render\/captures['"]/);
   assert.match(library, /WorkColumn\(title: "Incoming material"\)/);
   assert.match(library, /WorkGroup\(title: "Recent captures"/);
   assert.match(library, /\.onReceive\(NotificationCenter\.default\.publisher\(for: \.loomSourcesAddFiles\)\)/);
@@ -265,11 +228,9 @@ test('native Draft inspector is a writing tool with separate context', () => {
   assert.match(draftView, /private let draftDocumentMeasureWidth: CGFloat = 820/);
 });
 
-test('Sources absorbs legacy file intake before uploads becomes a compatibility route', () => {
-  const uploadsPage = read('app/uploads/page.tsx');
+test('Sources absorbs legacy file intake natively after uploads surface removal', () => {
   const globals = read('app/globals.css');
   const nativeSources = read('macos-app/Loom/Sources/LoomLibraryView.swift');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
 
   assert.equal(
     fs.existsSync(path.join(repoRoot, 'app/uploads/UploadButton.tsx')),
@@ -292,11 +253,6 @@ test('Sources absorbs legacy file intake before uploads becomes a compatibility 
   assert.match(nativeSources, /panel\.prompt = "Add files"/);
   assert.match(nativeSources, /name: \.loomShowInspectorTab/);
   assert.match(nativeSources, /userInfo: \["surface": "ingestion"\]/);
-
-  assert.match(uploadsPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(uploadsPage, /redirect\('\/sources'\)/);
-  assert.doesNotMatch(uploadsPage, /UploadsClient|knowledgeUploadRoot|resolveContentRoot/);
-  assert.match(plan, /\| `\/uploads` \| Compatibility \| Sources \| Redirect to `\/sources`/);
 });
 
 test('native Sources Add files opens a local-file importer instead of a static ingestion shortcut', () => {
@@ -1794,45 +1750,6 @@ test('AppDelegate reasserts main-window hidden chrome when presenting existing w
   );
 });
 
-test('legacy top-level routes remain files but are not primary home links', () => {
-  const home = read('app/HomeClient.tsx');
-  const legacyRoutes = [
-    'app/atlas/page.tsx',
-    'app/weaves/page.tsx',
-    'app/patterns/page.tsx',
-    'app/pursuits/page.tsx',
-    'app/workbench/page.tsx',
-    'app/atelier/page.tsx',
-    'app/collection/page.tsx',
-    'app/constellation/page.tsx',
-    'app/soan/page.tsx',
-  ];
-
-  for (const route of legacyRoutes) {
-    assert.ok(
-      fs.existsSync(path.join(repoRoot, route)),
-      `${route} should remain available for legacy/internal access`,
-    );
-  }
-
-  for (const href of [
-    '/atlas',
-    '/weaves',
-    '/patterns',
-    '/pursuits',
-    '/workbench',
-    '/atelier',
-    '/collection',
-    '/constellation',
-    '/soan',
-  ]) {
-    assert.doesNotMatch(
-      home,
-      new RegExp(`href=["']${href}["']|window\\.location\\.href\\s*=\\s*["']${href}["']`),
-    );
-  }
-});
-
 test('legacy migration plan covers the product route classification map', () => {
   const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
   const productShell = read('lib/new-loom/product-shell.ts');
@@ -2032,7 +1949,6 @@ test('runtime capture readers return to Sources instead of promoting the capture
 test('primary product surfaces do not route users back into legacy or internal destinations', () => {
   const primarySurfaceFiles = [
     'app/HomeClient.tsx',
-    'app/collect/page.tsx',
     'app/sources/page.tsx',
     'app/knowledge/KnowledgeHomeClient.tsx',
     'app/knowledge/KnowledgeHomeStatic.tsx',
@@ -2070,16 +1986,8 @@ test('/knowledge is classified as a Sources compatibility alias, not a primary p
   assert.match(plan, /\| `\/knowledge` \| Compatibility \| Sources \| Redirect to `\/sources`/);
 });
 
-test('notes and highlights are compatibility redirects into Sources reader notes', () => {
-  const notesPage = read('app/notes/page.tsx');
-  const highlightsPage = read('app/highlights/page.tsx');
+test('Sources reader notes block anchors reader-note redirects', () => {
   const sourceIndex = read('app/knowledge/KnowledgeHomeStatic.tsx');
-
-  for (const page of [notesPage, highlightsPage]) {
-    assert.match(page, /import \{ redirect \} from 'next\/navigation'/);
-    assert.match(page, /redirect\('\/sources#reader-notes'\)/);
-    assert.doesNotMatch(page, /useAllTraces|fetchSearchIndex|PageFrame|openPanelReview/);
-  }
 
   assert.match(
     sourceIndex,
@@ -2087,212 +1995,10 @@ test('notes and highlights are compatibility redirects into Sources reader notes
   );
   assert.match(sourceIndex, /id\?: string/);
   assert.match(sourceIndex, /<section id=\{id\} className="loom-source-block">/);
-});
-
-test('today is a live capture surface — not a redirect — with client-side jot persistence', () => {
-  const todayPage = read('app/today/page.tsx');
-  const todayClient = read('app/today/TodayClient.tsx');
-  const jotStorage = read('lib/jot/jot-storage.ts');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  // /today renders TodayClient, does not redirect to /sources or /desk.
-  assert.doesNotMatch(todayPage, /redirect\('\/sources'\)/);
-  assert.doesNotMatch(todayPage, /redirect\('\/desk'\)/);
-  assert.match(todayPage, /TodayClient/);
-
-  // Jot storage is localStorage-backed and exports the required API.
-  assert.match(jotStorage, /JOTS_KEY/);
-  assert.match(jotStorage, /export function readJots/);
-  assert.match(jotStorage, /export function appendJot/);
-  assert.match(jotStorage, /localStorage/);
-  // No server / IndexedDB dependency — stays client-safe.
-  assert.doesNotMatch(jotStorage, /appendEventForDoc|IndexedDB|indexedDB/);
-
-  // TodayClient wires the jot store into the capture surface.
-  assert.match(todayClient, /readJots/);
-  assert.match(todayClient, /appendJot/);
-  assert.match(todayClient, /jot-storage/);
-
-  // Route is still classified (legacy, not primary) so no sidebar link
-  // and the migration plan reflects the new role.
-  assert.match(plan, /`\/today`/);
-  assert.match(plan, /capture surface|jot|quick.jot|daily capture/i);
-});
-
-test('contents compatibility route lands in Sources instead of the legacy surface map', () => {
-  const contentsPage = read('app/contents/page.tsx');
-  const globals = read('app/globals.css');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  assert.match(contentsPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(contentsPage, /redirect\('\/sources'\)/);
-  assert.doesNotMatch(contentsPage, /ContentsClient|reader's table of contents|reader’s map/);
-  assert.equal(
-    fs.existsSync(path.join(repoRoot, 'app/ContentsClient.tsx')),
-    false,
-    'app/ContentsClient.tsx should be removed once /contents redirects to /sources',
-  );
-  assert.doesNotMatch(globals, /\.loom-contents\b/);
-  assert.match(plan, /\| `\/contents` \| Compatibility \| Sources \| Redirect to `\/sources`/);
-});
-
-test('atlas and browse compatibility routes land in Sources without passing through Desk', () => {
-  const atlasPage = read('app/atlas/page.tsx');
-  const atlasShelfPage = read('app/atlas/shelf/page.tsx');
-  const browsePage = read('app/browse/page.tsx');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  for (const page of [atlasPage, atlasShelfPage, browsePage]) {
-    assert.match(page, /import \{ redirect \} from 'next\/navigation'/);
-    assert.match(page, /redirect\('\/sources'\)/);
-    assert.doesNotMatch(page, /redirect\('\/desk'\)/);
-  }
-
-  assert.match(plan, /\| `\/atlas`, `\/atlas\/shelf`, `\/browse` \| Compatibility \| Sources/);
-});
-
-test('desk compatibility route lands in Sources after its remaining jobs moved out', () => {
-  const deskPage = read('app/desk/page.tsx');
-  const screenshotScript = read('scripts/app-store-screenshots.mjs');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  assert.match(deskPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(deskPage, /redirect\('\/sources'\)/);
-  assert.doesNotMatch(deskPage, /DeskPage|TodayClient|AtlasClient/);
-
-  assert.match(screenshotScript, /slug: '01-sources',\s+url: '\/sources'/);
-  assert.doesNotMatch(screenshotScript, /slug: '01-library',\s+url: '\/desk'/);
-  assert.match(plan, /\| `\/desk` \| Compatibility \| Sources \| Redirect to `\/sources`/);
-});
-
-test('collection detail fallback is retired into Sources', () => {
-  const collectionPage = read('app/collection/page.tsx');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  assert.equal(fs.existsSync(path.join(repoRoot, 'app/CollectionClient.tsx')), false);
-  assert.match(collectionPage, /redirect\('\/sources'\)/);
-  assert.doesNotMatch(collectionPage, /CollectionClient|Desk|Organize/);
-  assert.match(plan, /\/collection` detail fallback uses Sources breadcrumbs|Redirect to `\/sources`/);
-});
-
-test('retired visual and social compatibility routes land in Sources or Draft', () => {
-  const constellationPage = read('app/constellation/page.tsx');
-  const branchingPage = read('app/branching/page.tsx');
-  const palimpsestPage = read('app/palimpsest/page.tsx');
-  const salonPage = read('app/salon/page.tsx');
-  const globals = read('app/globals.css');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  for (const page of [constellationPage, branchingPage, palimpsestPage, salonPage]) {
-    assert.match(page, /import \{ redirect \} from 'next\/navigation'/);
-    assert.doesNotMatch(
-      page,
-      /M1[36]|Design reference|loom-(thinking|constellation|salon)\.jsx|Surface/,
-    );
-  }
-
-  assert.match(constellationPage, /redirect\('\/sources#reader-notes'\)/);
-  assert.match(branchingPage, /redirect\('\/sources#reader-notes'\)/);
-  assert.match(palimpsestPage, /redirect\('\/draft'\)/);
-  assert.match(salonPage, /redirect\('\/sources'\)/);
-
-  assert.doesNotMatch(constellationPage, /ConstellationClient|Constellation · Loom/);
-  assert.doesNotMatch(branchingPage, /BranchingClient|Branching · Loom/);
-  assert.doesNotMatch(palimpsestPage, /PalimpsestClient|Palimpsest · Loom/);
-  assert.doesNotMatch(salonPage, /SalonClient|Salon · Loom/);
-  for (const retiredClient of [
-    'app/ConstellationClient.tsx',
-    'app/BranchingClient.tsx',
-    'app/PalimpsestClient.tsx',
-    'app/SalonClient.tsx',
-  ]) {
-    assert.equal(
-      fs.existsSync(path.join(repoRoot, retiredClient)),
-      false,
-      `${retiredClient} should not remain as an orphan implementation after its route redirects`,
-    );
-  }
-  assert.doesNotMatch(globals, /\.loom-(constellation|branching|palimpsest|salon)\b/);
-
-  assert.match(
-    plan,
-    /\| `\/constellation`, `\/branching` \| Compatibility \| Sources \| Redirect to `\/sources#reader-notes`/,
-  );
-  assert.match(plan, /\| `\/palimpsest` \| Compatibility \| Draft \| Redirect to `\/draft`/);
-  assert.match(plan, /\| `\/salon` \| Compatibility \| Sources \| Redirect to `\/sources`/);
-});
-
-test('retired correspondence and cowork routes land in Draft', () => {
-  const productShell = read('lib/new-loom/product-shell.ts');
-  const coworkPage = read('app/coworks/page.tsx');
-  const letterPage = read('app/letter/page.tsx');
-  const globals = read('app/globals.css');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-  const legacyRoutes = new Set<string>(NEW_LOOM_LEGACY_ROUTES);
-  const internalRoutes = new Set<string>(NEW_LOOM_INTERNAL_ROUTES);
-
-  assert.ok(legacyRoutes.has('/coworks'), '/coworks should be a legacy compatibility route');
-  assert.ok(legacyRoutes.has('/letter'), '/letter should be a legacy compatibility route');
-  assert.ok(
-    !internalRoutes.has('/coworks'),
-    '/coworks should not remain classified as an internal sample route',
-  );
-  assert.ok(
-    !internalRoutes.has('/letter'),
-    '/letter should not remain classified as an internal sample route',
-  );
-
-  for (const page of [coworkPage, letterPage]) {
-    assert.match(page, /import \{ redirect \} from 'next\/navigation'/);
-    assert.match(page, /redirect\('\/draft'\)/);
-    assert.doesNotMatch(page, /M13|Design reference|loom-actions\.jsx|LetterSurface/);
-  }
-
-  assert.doesNotMatch(
-    coworkPage,
-    /CoworksIndexClient|listCoworksWithSearchable|getSourceLibraryCategories|Coworks · Loom/,
-  );
-  assert.doesNotMatch(letterPage, /LetterClient|Letter · Loom/);
-  for (const retiredClient of ['app/coworks/CoworksIndexClient.tsx', 'app/LetterClient.tsx']) {
-    assert.equal(
-      fs.existsSync(path.join(repoRoot, retiredClient)),
-      false,
-      `${retiredClient} should not remain as an orphan implementation after its route redirects`,
-    );
-  }
-  assert.doesNotMatch(globals, /\.loom-(coworks|letter)\b/);
-
-  assert.match(productShell, /NEW_LOOM_LEGACY_ROUTES[\s\S]*'\/coworks'[\s\S]*'\/letter'/);
-  assert.match(
-    plan,
-    /\| `\/coworks`, `\/letter` \| Compatibility \| Draft \| Redirect to `\/draft`/,
-  );
-});
-
-test('retired diagramming route lands in Draft instead of owning a thinking surface', () => {
-  const productShell = read('lib/new-loom/product-shell.ts');
-  const diagramsPage = read('app/diagrams/page.tsx');
-  const globals = read('app/globals.css');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-  const legacyRoutes = new Set<string>(NEW_LOOM_LEGACY_ROUTES);
-  const internalRoutes = new Set<string>(NEW_LOOM_INTERNAL_ROUTES);
-
-  assert.ok(legacyRoutes.has('/diagrams'), '/diagrams should be a legacy compatibility route');
-  assert.ok(
-    !internalRoutes.has('/diagrams'),
-    '/diagrams should not remain classified as an internal sample route',
-  );
-  assert.match(diagramsPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(diagramsPage, /redirect\('\/draft'\)/);
-  assert.doesNotMatch(diagramsPage, /DiagramsClient|Diagrams · Loom|Five ways to draw a thought/);
-  assert.equal(
-    fs.existsSync(path.join(repoRoot, 'app/DiagramsClient.tsx')),
-    false,
-    'DiagramsClient should not remain as an orphan implementation after /diagrams redirects',
-  );
-  assert.doesNotMatch(globals, /\.loom-diagrams\b/);
-  assert.match(productShell, /NEW_LOOM_LEGACY_ROUTES[\s\S]*'\/diagrams'/);
-  assert.match(plan, /\| `\/diagrams` \| Compatibility \| Draft \| Redirect to `\/draft`/);
+  assert.match(sourceIndex, /New group/);
+  assert.match(sourceIndex, /Move this source group/);
+  assert.match(sourceIndex, /function sourceStateTags/);
+  assert.match(sourceIndex, /Has draft/);
 });
 
 test('source document fallback uses Sources instead of Desk-era breadcrumbs', () => {
@@ -2321,54 +2027,10 @@ test('active detail fallbacks do not link back to retired writing routes', () =>
   );
 });
 
-test('retired detail and empty-state clients route readers back to new Loom homes', () => {
-  const pursuitDetail = read('app/PursuitDetailClient.tsx');
-
-  assert.match(pursuitDetail, /href="\/sources"/);
-  assert.match(pursuitDetail, /Return to Sources/);
-  assert.doesNotMatch(
-    pursuitDetail,
-    /href="\/pursuits"|href="\/patterns"|Return to Pursuits|Panels formed within|Remove this pursuit|Patterns →|Open Patterns/,
-  );
-});
-
-test('pursuits top-level route lands in Sources now that source groups own project context', () => {
-  const pursuitsPage = read('app/pursuits/page.tsx');
-  const sourceIndex = read('app/knowledge/KnowledgeHomeStatic.tsx');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  assert.match(sourceIndex, /New group/);
-  assert.match(sourceIndex, /Move this source group/);
-  assert.match(sourceIndex, /function sourceStateTags/);
-  assert.match(sourceIndex, /Has draft/);
-
-  assert.match(pursuitsPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(pursuitsPage, /redirect\('\/sources'\)/);
-  assert.doesNotMatch(
-    pursuitsPage,
-    /PursuitsClient|loom:\/\/native\/pursuits\.json|top-level mind-object/,
-  );
-  assert.match(plan, /\| `\/pursuits` \| Compatibility \| Sources \| Redirect to `\/sources`/);
-});
-
-test('patterns and weaves top-level routes land in Sources reader notes after panel migration', () => {
-  const patternsPage = read('app/patterns/page.tsx');
-  const weavesPage = read('app/weaves/page.tsx');
-  const kesiPage = read('app/kesi/page.tsx');
-  const graphPage = read('app/graph/page.tsx');
+test('panel and component reader-note links point at Sources, not legacy routes', () => {
   const reviewThoughtMap = read('components/ReviewThoughtMap.tsx');
   const refreshCoach = read('components/RefreshCoach.tsx');
   const liveArtifact = read('components/LiveArtifact.tsx');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  for (const page of [patternsPage, weavesPage, kesiPage, graphPage]) {
-    assert.match(page, /import \{ redirect \} from 'next\/navigation'/);
-    assert.match(page, /redirect\('\/sources#reader-notes'\)/);
-    assert.doesNotMatch(
-      page,
-      /PatternsClient|WeavesClient|permanentRedirect\('\/patterns'\)|router\.replace\([^)]*\/weaves/,
-    );
-  }
 
   assert.doesNotMatch(
     reviewThoughtMap,
@@ -2387,10 +2049,6 @@ test('patterns and weaves top-level routes land in Sources reader notes after pa
   assert.match(liveArtifact, /\/sources#reader-notes/);
   assert.match(read('macos-app/Loom/Sources/ShuttleView.swift'), /userInfo: \["path": "\/sources#reader-notes"\]/);
   assert.doesNotMatch(read('macos-app/Loom/Sources/ShuttleView.swift'), /\/weaves\?weaveId/);
-  assert.match(
-    plan,
-    /\| `\/patterns`, `\/weaves` \| Compatibility \| Sources \| Redirect to `\/sources#reader-notes`/,
-  );
 });
 
 test('learning-target relation work enters Reader notes instead of legacy Graph', () => {
@@ -2466,47 +2124,11 @@ test('first-run and native shortcuts land on new Loom product capabilities', () 
 });
 
 test('support and detail fallback routes share the global Loom navigation', () => {
-  const llmWiki = read('app/llm-wiki/page.tsx');
-  const llmWikiCss = read('app/llm-wiki/LLMWikiPage.module.css');
-  const quizzesPage = read('app/quizzes/page.tsx');
-  const quizzes = read('app/quizzes/QuizzesClient.tsx');
-  const quizzesCss = read('app/quizzes/QuizzesPage.module.css');
   const docClient = read('app/DocClient.tsx');
   const panelPage = read('app/panel/page.tsx');
   const panelDetail = read('app/PanelDetailClient.tsx');
-  const pursuitPage = read('app/pursuit/page.tsx');
-  const pursuitDetail = read('app/PursuitDetailClient.tsx');
   const globals = read('app/globals.css');
 
-  assert.ok(NEW_LOOM_INTERNAL_ROUTES.includes('/llm-wiki'), '/llm-wiki should stay an internal reference route');
-  assert.ok(NEW_LOOM_INTERNAL_ROUTES.includes('/quizzes'), '/quizzes should stay an internal source-check route');
-  assert.match(llmWiki, /LoomGlobalNav/);
-  assert.match(llmWiki, /activeHref="\/sources"/);
-  assert.match(llmWiki, /import styles from '\.\/LLMWikiPage\.module\.css'/);
-  assert.match(llmWiki, /<main className=\{styles\.page\}>/);
-  assert.match(llmWiki, /href="\/sources"[\s\S]{0,160}Sources/);
-  assert.match(llmWiki, /Reference atlas/);
-  assert.match(llmWiki, /read-only reference constellation/);
-  assert.match(llmWiki, /Sources \/[\s\S]{0,80}Draft product loop/);
-  assert.doesNotMatch(llmWiki, /href="\/desk"[\s\S]{0,120}Desk/);
-  assert.doesNotMatch(llmWiki, /<StageShell|<PageFrame|<WorkSurface|<main style=\{\{/);
-  assert.match(llmWikiCss, /radial-gradient\(72rem 44rem at 50% -18%, rgba\(232, 236, 238, 0\.145\)/);
-  assert.match(llmWikiCss, /backdrop-filter:\s*blur\(30px\) saturate\(108%\)/);
-  assert.match(llmWikiCss, /\.sectionGrid\s*\{/);
-  assert.doesNotMatch(llmWikiCss, /content-visibility:\s*auto/);
-  assert.match(quizzes, /LoomGlobalNav/);
-  assert.match(quizzesPage, /metadata = \{ title: 'Source checks · Loom' \}/);
-  assert.match(quizzesPage, /<QuizzesClient \/>/);
-  assert.match(quizzes, /Source checks/);
-  assert.match(quizzes, /import styles from '\.\/QuizzesPage\.module\.css'/);
-  assert.match(quizzes, /<main className=\{styles\.page\}>/);
-  assert.match(quizzes, /Open Sources/);
-  assert.match(quizzes, /href="\/llm-wiki"/);
-  assert.match(quizzes, /Newest first/);
-  assert.doesNotMatch(quizzes, /<PageFrame|className="prose-notion"|<main style=\{\{/);
-  assert.match(quizzesCss, /radial-gradient\(68rem 42rem at 50% -18%, rgba\(232, 236, 238, 0\.14\)/);
-  assert.match(quizzesCss, /backdrop-filter:\s*blur\(30px\) saturate\(108%\)/);
-  assert.match(quizzesCss, /\.statRail\s*\{/);
   assert.match(docClient, /LoomGlobalNav/);
   assert.match(docClient, /ariaLabel="Source document navigation"/);
   assert.match(panelPage, /metadata = \{ title: 'Reader note · Loom' \}/);
@@ -2517,11 +2139,6 @@ test('support and detail fallback routes share the global Loom navigation', () =
   assert.match(panelDetail, /<div className="loom-panel-detail-back">/);
   assert.doesNotMatch(panelDetail, /<nav className="loom-panel-detail-back">/);
   assert.doesNotMatch(panelDetail, /#9E7C3E/);
-  assert.match(pursuitPage, /metadata = \{ title: 'Question · Loom' \}/);
-  assert.match(pursuitPage, /<PursuitPageClient \/>/);
-  assert.match(pursuitPage, /import PursuitPageClient from '\.\/PursuitPageClient'/);
-  assert.match(pursuitDetail, /LoomGlobalNav/);
-  assert.match(pursuitDetail, /ariaLabel="Pursuit navigation"/);
   assert.match(globals, /\.loom-panel-detail\s*\{[\s\S]*padding-top:\s*5rem/);
   assert.match(globals, /@media \(max-width:\s*760px\)\s*\{[\s\S]*\.loom-panel-detail\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   assert.match(globals, /\.loom-panel-detail-title\s*\{[\s\S]*overflow-wrap:\s*anywhere/);
@@ -2627,8 +2244,6 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
       read('app/product-history/page.tsx'),
       read('components/product-history/ProductHistoryPage.tsx'),
     ].join('\n'),
-    'app/cover/page.tsx': read('app/cover/page.tsx'),
-    'app/frontispiece/page.tsx': read('app/frontispiece/page.tsx'),
     'app/draft/DraftClient.tsx': read('app/draft/DraftClient.tsx'),
     'components/KeyboardShortcuts.tsx': read('components/KeyboardShortcuts.tsx'),
     'components/RehearseThisButton.tsx': read('components/RehearseThisButton.tsx'),
@@ -2639,7 +2254,6 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
     'components/AnchorCard.tsx': read('components/AnchorCard.tsx'),
     'components/SelectionWarp.tsx': read('components/SelectionWarp.tsx'),
     'app/about/AboutClient.tsx': read('app/about/AboutClient.tsx'),
-    'app/ColophonClient.tsx': read('app/ColophonClient.tsx'),
     'lib/ai/stage-model.ts': read('lib/ai/stage-model.ts'),
     'lib/new-loom/product-shell.ts': read('lib/new-loom/product-shell.ts'),
     'macos-app/Loom/Sources/RehearsalView.swift': read('macos-app/Loom/Sources/RehearsalView.swift'),
@@ -2712,10 +2326,6 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
 
   assert.match(files['app/layout.tsx'], /Add sources and draft clear writing from them\./);
   assert.match(files['app/onboarding/OnboardingClient.tsx'], /<Eyebrow>Setup · Sources<\/Eyebrow>/);
-  assert.match(files['app/cover/page.tsx'], /redirect\('\/sources'\)/);
-  assert.doesNotMatch(files['app/cover/page.tsx'], /CoverClient/);
-  assert.match(files['app/frontispiece/page.tsx'], /redirect\('\/sources'\)/);
-  assert.doesNotMatch(files['app/frontispiece/page.tsx'], /FrontispieceClient/);
   assert.match(files['app/about/AboutClient.tsx'], /personal knowledge identity platform/);
   assert.match(files['app/about/AboutClient.tsx'], /How Loom serves the archive/);
   assert.match(files['app/about/AboutClient.tsx'], /Product story/);
@@ -3445,23 +3055,6 @@ test('Draft ThinkingDraft block operations review multiple blocks before rewriti
   );
 });
 
-test('workbench compatibility route lands in Draft after prose migration', () => {
-  const workbenchPage = read('app/workbench/page.tsx');
-  const globals = read('app/globals.css');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  assert.match(workbenchPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(workbenchPage, /redirect\('\/draft'\)/);
-  assert.doesNotMatch(workbenchPage, /WorkbenchClient|loom\.workbench\.current|localStorage/);
-  assert.equal(
-    fs.existsSync(path.join(repoRoot, 'app/WorkbenchClient.tsx')),
-    false,
-    'app/WorkbenchClient.tsx should be removed once /workbench redirects to /draft',
-  );
-  assert.doesNotMatch(globals, /\.loom-workbench\b/);
-  assert.match(plan, /\| `\/workbench` \| Compatibility \| Draft \| Redirect to `\/draft`/);
-});
-
 test('Draft owns reference excerpt insertion and provenance instead of leaving it in Atelier', () => {
   const draftClient = read('app/draft/DraftClient.tsx');
   const draftStorage = read('lib/new-loom/draft-storage.ts');
@@ -3479,7 +3072,6 @@ test('Draft owns Atelier multi-source tiling beside the writing surface', () => 
   const draftStorage = read('lib/new-loom/draft-storage.ts');
   const nativeDraftView = read('macos-app/Loom/Sources/LoomDraftView.swift');
   const swiftTests = read('macos-app/Loom/Tests/LoomDraftStoreTests.swift');
-  const atelierPage = read('app/atelier/page.tsx');
   const globals = read('app/globals.css');
   const loomDoc = read('docs/loom.md');
 
@@ -3518,8 +3110,6 @@ test('Draft owns Atelier multi-source tiling beside the writing surface', () => 
   );
   assert.match(swiftTests, /testDraftSourceTilesPrepareFourSourceNativeSurface/);
 
-  assert.match(atelierPage, /redirect\('\/draft'\)/);
-  assert.doesNotMatch(atelierPage, /AtelierClient|multi-source|source tiles/);
   assert.match(loomDoc, /Atelier 多 source 平铺[\s\S]{0,220}Draft/i);
 });
 
@@ -3556,39 +3146,12 @@ test('Draft public working mode masks reference tiles without mutating the draft
   assert.match(loomDoc, /Draft references are masked/i);
 });
 
-test('atelier compatibility route lands in Draft after quote and provenance migration', () => {
-  const atelierPage = read('app/atelier/page.tsx');
-  const globals = read('app/globals.css');
-  const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
-
-  assert.match(atelierPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(atelierPage, /redirect\('\/draft'\)/);
-  assert.doesNotMatch(atelierPage, /AtelierClient|loom\.atelier\.current|provenance ledger/);
-  assert.equal(
-    fs.existsSync(path.join(repoRoot, 'app/AtelierClient.tsx')),
-    false,
-    'app/AtelierClient.tsx should be removed once /atelier redirects to /draft',
-  );
-  assert.doesNotMatch(globals, /\.loom-atelier\b/);
-  assert.match(plan, /\| `\/atelier` \| Compatibility \| Draft \| Redirect to `\/draft`/);
-});
-
-test('Sōan compatibility route lands in Draft after card board migration', () => {
-  const soanPage = read('app/soan/page.tsx');
+test('Draft owns the card board runtime migrated out of Sōan', () => {
   const draftBoardClient = read('app/draft/DraftBoardClient.tsx');
   const draftClient = read('app/draft/DraftClient.tsx');
   const nativeDraftView = read('macos-app/Loom/Sources/LoomDraftView.swift');
   const plan = read('docs/projects/active/2026-05-09-legacy-surface-migration-plan.md');
   const globals = read('app/globals.css');
-
-  assert.match(soanPage, /import \{ redirect \} from 'next\/navigation'/);
-  assert.match(soanPage, /redirect\('\/draft\?view=board'\)/);
-  assert.doesNotMatch(soanPage, /SoanClient|DraftBoardClient|return <SoanClient|title: 'Sōan/);
-  assert.equal(
-    fs.existsSync(path.join(repoRoot, 'app/SoanClient.tsx')),
-    false,
-    'app/SoanClient.tsx should be removed once Draft owns the board runtime',
-  );
 
   assert.match(draftClient, /import DraftBoardClient from '\.\/DraftBoardClient'/);
   assert.match(draftClient, /const boardRef = useRef<HTMLElement \| null>\(null\)/);
@@ -3844,246 +3407,6 @@ test('/discipline is an in-app support document for the six product refusals', (
   assert.match(disciplinePage, /href="\/sources"/);
   assert.match(systemClient, /href="\/discipline"/);
   assert.match(helpPage, /href="\/discipline"/);
-});
-
-test('/year is a support surface for the annual wintering view, not a primary route', () => {
-  const productShell = read('lib/new-loom/product-shell.ts');
-  const yearPath = path.join(repoRoot, 'app/year/page.tsx');
-  const yearClientPath = path.join(repoRoot, 'app/year/YearClient.tsx');
-
-  assert.ok(NEW_LOOM_SUPPORT_ROUTES.includes('/year'), '/year should be a support route');
-  assert.ok(
-    !new Set<string>(NEW_LOOM_PRIMARY_ROUTES).has('/year'),
-    '/year should not become a primary work route',
-  );
-  assert.ok(
-    !new Set<string>(NEW_LOOM_LEGACY_ROUTES).has('/year'),
-    '/year should not be classified as legacy',
-  );
-  assert.match(productShell, /NEW_LOOM_SUPPORT_ROUTES[\s\S]*'\/year'/);
-
-  assert.ok(fs.existsSync(yearPath), 'app/year/page.tsx should define The Year support page');
-  assert.ok(
-    fs.existsSync(yearClientPath),
-    'The Year needs a client view so real captures, local files, and question containers can hydrate',
-  );
-  const yearPage = fs.readFileSync(yearPath, 'utf8');
-  const yearClient = fs.readFileSync(yearClientPath, 'utf8');
-  const yearSurfaceText = `${yearPage}\n${yearClient}`;
-  const supportCss = read('app/loom-support-page.module.css');
-  const systemClient = read('app/SystemClient.tsx');
-  const helpPage = read('app/help/page.tsx');
-  const loomDoc = read('docs/loom.md');
-  const winteringState = read('lib/new-loom/wintering-state.ts');
-  const yearSurface = read('lib/new-loom/year-surface.ts');
-
-  assert.match(yearPage, /title:\s*'The Year · Loom'/);
-  assert.match(yearPage, /import \{ YearClient \} from '\.\/YearClient'/);
-  assert.match(yearPage, /<YearClient \/>/);
-  assert.match(yearSurfaceText, /The Year/);
-  assert.match(yearSurfaceText, /twelve months/i);
-  assert.match(yearSurfaceText, /wintering ribbon/i);
-  assert.match(yearSurfaceText, /Question\s+containers/);
-  assert.match(yearSurfaceText, /Sources/);
-  assert.match(yearSurfaceText, /Draft/);
-  assert.doesNotMatch(yearSurfaceText, /padding:\s*'var\(--support-main-padding\)'|gridTemplateColumns:\s*'repeat\(12/);
-  assert.match(yearPage, /className=\{styles\.main\}/);
-  assert.match(yearClient, /styles\.yearChart/);
-  assert.match(yearClient, /styles\.monthBar/);
-  assert.match(yearClient, /styles\.bucketHeader/);
-  assert.match(yearClient, /styles\.emptyCopy/);
-  assert.match(supportCss, /\.yearChart\s*\{/);
-  assert.match(supportCss, /\.monthBar\s*\{/);
-  assert.doesNotMatch(yearSurfaceText, /Source Index|Collect|Organize/);
-
-  for (const month of [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]) {
-    assert.match(yearSurface, new RegExp(`\\b${month}\\b`));
-  }
-
-  assert.match(yearPage, /href="\/sources"/);
-  assert.match(yearPage, /href="\/digital-me\?edit=new"/);
-  assert.match(yearPage, /href="\/discipline"/);
-  assert.match(yearClient, /'use client'/);
-  assert.match(yearClient, /useAllTraces/);
-  assert.match(yearClient, /loadPursuitRecords/);
-  assert.match(yearClient, /fetch\('loom:\/\/native\/captures-list\.json'\)/);
-  assert.match(yearClient, /buildNewLoomYearOverview/);
-  assert.match(yearClient, /yearItemDraftHref/);
-  assert.match(yearClient, /Draft this item/);
-  assert.match(yearClient, /!\s*publicWorkingMode[\s\S]{0,160}yearItemDraftHref\(item\)/);
-  assert.match(yearClient, /aria-label="The Year material by month"/);
-  assert.match(yearClient, /aria-label="The Year wintering buckets"/);
-  assert.match(yearSurface, /buildNewLoomYearOverview/);
-  assert.match(yearSurface, /export function yearItemDraftHref/);
-  assert.match(yearSurface, /bucketNewLoomWinteringItems/);
-  assert.match(winteringState, /deriveNewLoomWinteringState/);
-  assert.match(winteringState, /bucketNewLoomWinteringItems/);
-  assert.match(winteringState, /winteringAfter:\s*45/);
-  assert.match(winteringState, /archivedAfter:\s*365/);
-  assert.match(systemClient, /href="\/year"/);
-  assert.match(helpPage, /href="\/year"/);
-  assert.match(loomDoc, /The Year[\s\S]{0,220}first support surface/i);
-});
-
-test('/hour is a support surface for the current thinking window, not a primary route', () => {
-  const productShell = read('lib/new-loom/product-shell.ts');
-  const hourPath = path.join(repoRoot, 'app/hour/page.tsx');
-  const hourClientPath = path.join(repoRoot, 'app/hour/HourClient.tsx');
-
-  assert.ok(NEW_LOOM_SUPPORT_ROUTES.includes('/hour'), '/hour should be a support route');
-  assert.ok(
-    !new Set<string>(NEW_LOOM_PRIMARY_ROUTES).has('/hour'),
-    '/hour should not become a primary work route',
-  );
-  assert.ok(
-    !new Set<string>(NEW_LOOM_LEGACY_ROUTES).has('/hour'),
-    '/hour should not be classified as legacy',
-  );
-  assert.match(productShell, /NEW_LOOM_SUPPORT_ROUTES[\s\S]*'\/hour'/);
-
-  assert.ok(fs.existsSync(hourPath), 'app/hour/page.tsx should define The Hour support page');
-  assert.ok(
-    fs.existsSync(hourClientPath),
-    'The Hour needs a client view so the current minute can tick',
-  );
-
-  const hourPage = fs.readFileSync(hourPath, 'utf8');
-  const hourClient = fs.readFileSync(hourClientPath, 'utf8');
-  const supportCss = read('app/loom-support-page.module.css');
-  const systemClient = read('app/SystemClient.tsx');
-  const helpPage = read('app/help/page.tsx');
-  const yearPage = read('app/year/page.tsx');
-  const loomDoc = read('docs/loom.md');
-
-  assert.match(hourPage, /title:\s*'The Hour · Loom'/);
-  assert.match(hourPage, /import HourClient from '\.\/HourClient'/);
-  assert.match(hourPage, /<HourClient \/>/);
-  assert.doesNotMatch(hourClient, /padding:\s*'var\(--support-main-padding\)'|background:\s*'color-mix/);
-  assert.match(hourClient, /className=\{styles\.main\}/);
-  assert.match(hourClient, /styles\.breathBar/);
-  assert.match(hourClient, /styles\.breathFill/);
-  assert.match(hourClient, /styles\.emptyCopy/);
-  assert.match(supportCss, /\.breathBar\s*\{/);
-  assert.match(supportCss, /\.breathFill\s*\{/);
-
-  assert.match(hourClient, /'use client'/);
-  assert.match(hourClient, /useAllTraces/);
-  assert.match(hourClient, /loadPursuitRecords/);
-  assert.match(hourClient, /fetch\('loom:\/\/native\/captures-list\.json'\)/);
-  assert.match(hourClient, /buildNewLoomYearOverview/);
-  assert.match(hourClient, /currentHourItemsFromYearOverview/);
-  assert.match(hourClient, /hourItemDraftHref/);
-  assert.match(hourClient, /isNewLoomPublicWorkingMode/);
-  assert.match(hourClient, /publicWorkingYearOverview/);
-  assert.match(hourClient, /Draft this current item/);
-  assert.match(hourClient, /!\s*publicWorkingMode[\s\S]{0,180}hourItemDraftHref\(item\)/);
-  assert.match(hourClient, /useState<Date \| null>\(null\)/);
-  assert.match(hourClient, /setNow\(currentDate\(\)\)/);
-  assert.match(hourClient, /setInterval/);
-  assert.match(hourClient, /Current hour/);
-  assert.match(hourClient, /second:\s*'2-digit'/);
-  assert.match(hourClient, /toFixed\(1\)/);
-  assert.match(hourClient, /minute progress/i);
-  assert.match(hourClient, /breath bar/i);
-  assert.match(hourClient, /No alerts/);
-  assert.match(hourClient, /href="\/sources"/);
-  assert.match(hourClient, /href="\/digital-me\?edit=new"/);
-  assert.match(hourClient, /href="\/year"/);
-  assert.match(hourClient, /href="\/discipline"/);
-
-  assert.match(systemClient, /href="\/hour"/);
-  assert.match(helpPage, /href="\/hour"/);
-  assert.match(yearPage, /href="\/hour"/);
-  assert.match(loomDoc, /The Hour[\s\S]{0,260}current material/i);
-  assert.match(loomDoc, /The Hour[\s\S]{0,260}first support surface/i);
-});
-
-test('/connections is a support surface for source connections and correspondents', () => {
-  const productShell = read('lib/new-loom/product-shell.ts');
-  const connectionsPath = path.join(repoRoot, 'app/connections/page.tsx');
-  const connectionsClientPath = path.join(repoRoot, 'app/connections/ConnectionsClient.tsx');
-  const sourceConnectionsPath = path.join(repoRoot, 'lib/new-loom/source-connections.ts');
-
-  assert.ok(
-    NEW_LOOM_SUPPORT_ROUTES.includes('/connections'),
-    '/connections should be a support route',
-  );
-  assert.ok(
-    !new Set<string>(NEW_LOOM_PRIMARY_ROUTES).has('/connections'),
-    '/connections should not become a primary work route',
-  );
-  assert.ok(
-    !new Set<string>(NEW_LOOM_LEGACY_ROUTES).has('/connections'),
-    '/connections should not be classified as legacy',
-  );
-  assert.match(productShell, /NEW_LOOM_SUPPORT_ROUTES[\s\S]*'\/connections'/);
-
-  assert.ok(
-    fs.existsSync(sourceConnectionsPath),
-    'source connection derivation should be a tested pure helper',
-  );
-  assert.ok(
-    fs.existsSync(connectionsPath),
-    'app/connections/page.tsx should define the Connections support page',
-  );
-  assert.ok(
-    fs.existsSync(connectionsClientPath),
-    'Connections needs a client view so trace links can render',
-  );
-
-  const sourceConnections = fs.readFileSync(sourceConnectionsPath, 'utf8');
-  const connectionsPage = fs.readFileSync(connectionsPath, 'utf8');
-  const connectionsClient = fs.readFileSync(connectionsClientPath, 'utf8');
-  const supportCss = read('app/loom-support-page.module.css');
-  const systemClient = read('app/SystemClient.tsx');
-  const helpPage = read('app/help/page.tsx');
-  const hourClient = read('app/hour/HourClient.tsx');
-  const loomDoc = read('docs/loom.md');
-
-  assert.match(sourceConnections, /deriveNewLoomSourceConnections/);
-  assert.match(sourceConnections, /sourceConnectionDraftHref/);
-  assert.match(sourceConnections, /crossOriginConnections/);
-  assert.match(sourceConnections, /correspondents/);
-
-  assert.match(connectionsPage, /title:\s*'Connections · Loom'/);
-  assert.match(connectionsPage, /import ConnectionsClient from '\.\/ConnectionsClient'/);
-  assert.match(connectionsPage, /<ConnectionsClient \/>/);
-
-  assert.match(connectionsClient, /'use client'/);
-  assert.match(connectionsClient, /useAllTraces/);
-  assert.match(connectionsClient, /deriveNewLoomSourceConnections/);
-  assert.match(connectionsClient, /sourceConnectionDraftHref/);
-  assert.match(connectionsClient, /Connections \/ Correspondents/);
-  assert.match(connectionsClient, /cross-origin/);
-  assert.match(connectionsClient, /Draft this connection/);
-  assert.match(connectionsClient, /!\s*publicWorkingMode[\s\S]{0,120}sourceConnectionDraftHref\(link\)/);
-  assert.match(connectionsClient, /href="\/sources"/);
-  assert.match(connectionsClient, /href="\/digital-me\?edit=new"/);
-  assert.doesNotMatch(connectionsClient, /padding:\s*'var\(--support-main-padding\)'|style=\{\{ marginTop/);
-  assert.match(connectionsClient, /className=\{styles\.main\}/);
-  assert.match(connectionsClient, /styles\.connectionsSection/);
-  assert.match(connectionsClient, /styles\.connectionMetaRow/);
-  assert.match(connectionsClient, /styles\.emptyCopy/);
-  assert.match(supportCss, /\.connectionsSection\s*\{/);
-  assert.match(supportCss, /\.connectionMetaRow\s*\{/);
-
-  assert.match(systemClient, /href="\/connections"/);
-  assert.match(helpPage, /href="\/connections"/);
-  assert.match(hourClient, /href="\/connections"/);
-  assert.match(loomDoc, /Connections \/ Correspondents[\s\S]{0,260}first support surface/i);
 });
 
 test('native shell can open installed support bundle routes such as /hour', () => {

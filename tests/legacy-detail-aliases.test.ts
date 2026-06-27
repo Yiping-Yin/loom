@@ -10,13 +10,10 @@ function read(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, ...relativePath.split('/')), 'utf8');
 }
 
-test('legacy panel and pursuit detail routes are compatibility aliases, not placeholder shell generators', () => {
+test('legacy panel detail route is a compatibility alias, not a placeholder shell generator', () => {
   const legacyPanel = read('app/panels/[id]/page.tsx');
-  const legacyPursuit = read('app/pursuits/[id]/page.tsx');
 
   assert.doesNotMatch(legacyPanel, /export function generateStaticParams/);
-  assert.doesNotMatch(legacyPursuit, /export function generateStaticParams/);
 
   assert.match(legacyPanel, /router\.replace\(`\/panel\/\$\{encodeURIComponent\(id\)\}`\)/);
-  assert.match(legacyPursuit, /router\.replace\(`\/pursuit\/\$\{encodeURIComponent\(id\)\}`\)/);
 });

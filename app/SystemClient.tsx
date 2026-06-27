@@ -82,18 +82,6 @@ export default function SystemClient() {
                   <span className={styles.supportNote}>six refusals</span>
                 </li>
                 <li className={styles.row}>
-                  <Link href="/year" className={styles.supportLink}>
-                    The Year
-                  </Link>
-                  <span className={styles.supportNote}>twelve months</span>
-                </li>
-                <li className={styles.row}>
-                  <Link href="/hour" className={styles.supportLink}>
-                    The Hour
-                  </Link>
-                  <span className={styles.supportNote}>current window</span>
-                </li>
-                <li className={styles.row}>
                   <Link href="/connections" className={styles.supportLink}>
                     Connections
                   </Link>

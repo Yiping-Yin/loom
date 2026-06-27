@@ -1215,9 +1215,7 @@ export function CategoryLandingClient({
           className="t-caption2"
           style={{ color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
         >
-          <Link href="/desk" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Desk</Link>
-          <span aria-hidden>›</span>
-          <span>Sources</span>
+          <Link href="/sources" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Sources</Link>
           <span aria-hidden>›</span>
           <span>{category.label}</span>
         </div>

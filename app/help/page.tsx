@@ -157,8 +157,6 @@ export default function HelpPage() {
             items={[
               <><Link href="/system">/system</Link> - how Sources and Draft fit together.</>,
               <><Link href="/discipline">/discipline</Link> - the six product refusals.</>,
-              <><Link href="/year">/year</Link> - the annual review by material weight.</>,
-              <><Link href="/hour">/hour</Link> - the current thinking window.</>,
               <><Link href="/connections">/connections</Link> - correspondents and source links.</>,
             ]}
           />

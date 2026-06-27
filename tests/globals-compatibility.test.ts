@@ -18,10 +18,7 @@ const knowledgeSurfaceCss = [
 const coldInterfacePaletteSource = [
   'app/globals.css',
   'lib/loom-design-system.ts',
-  'app/AtlasClient.tsx',
   'app/PanelDetailClient.tsx',
-  'app/PatternsClient.tsx',
-  'app/WeavesClient.tsx',
   'app/draft/DraftBoardClient.tsx',
   'components/BPETokenizer.tsx',
   'components/LoomDiagram.tsx',
