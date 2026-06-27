@@ -9,23 +9,23 @@ function parse(url: string) {
   return { path: pathname, params: new URLSearchParams(query) };
 }
 
-test('draftStubTarget maps ?d=<id> to /digital-me?edit=<id>', () => {
+test('draftStubTarget maps ?d=<id> to /studio?edit=<id>', () => {
   const { path: pathname, params } = parse(draftStubTarget('?d=doc1'));
-  assert.equal(pathname, '/digital-me');
+  assert.equal(pathname, '/studio');
   assert.equal(params.get('edit'), 'doc1');
   assert.equal(params.get('d'), null);
 });
 
 test('draftStubTarget defaults to edit=new when no d, preserving other params', () => {
   const { path: pathname, params } = parse(draftStubTarget('?draftType=ai-answer&ref=lecture'));
-  assert.equal(pathname, '/digital-me');
+  assert.equal(pathname, '/studio');
   assert.equal(params.get('edit'), 'new');
   assert.equal(params.get('draftType'), 'ai-answer');
   assert.equal(params.get('ref'), 'lecture');
 });
 
 test('draftStubTarget handles empty search', () => {
-  assert.equal(draftStubTarget(''), '/digital-me?edit=new');
+  assert.equal(draftStubTarget(''), '/studio?edit=new');
 });
 
 test('selectDraftById finds by id, returns null for new/missing', () => {
@@ -44,4 +44,14 @@ test('/draft page.tsx is a client redirect stub using draftStubTarget', () => {
   assert.match(stub, /'use client'/);
   assert.match(stub, /draftStubTarget/);
   assert.doesNotMatch(stub, /DraftClient/);
+});
+
+test('/studio page.tsx is the first-class Studio editor route', () => {
+  const page = fs.readFileSync(path.resolve(__dirname, '../app/studio/page.tsx'), 'utf8');
+  const gate = fs.readFileSync(path.resolve(__dirname, '../app/studio/StudioGate.tsx'), 'utf8');
+  assert.match(page, /StudioGate/);
+  assert.match(page, /Suspense/);
+  assert.match(gate, /useSearchParams/);
+  assert.match(gate, /DraftClient/);
+  assert.match(gate, /searchParams\.get\('edit'\).*searchParams\.get\('d'\).*'new'/s);
 });

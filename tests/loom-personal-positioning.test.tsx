@@ -186,7 +186,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.doesNotMatch(html, />Live system</);
   assert.doesNotMatch(html, /Sources → Reasoning → Artifact/);
   // The Digital Me preview frames the concavity question as the inspectable
-  // Sources → Draft → Answer flow, so the prompt is expected to render.
+  // Sources → Studio → Digital Me flow, so the prompt is expected to render.
   assert.match(html, /How does concavity connect to optimisation/);
   assert.doesNotMatch(html, /Problem Set 02\.pdf/);
   assert.doesNotMatch(html, /W8 A Concave-Functions\.pdf/);
@@ -220,7 +220,7 @@ test('verified dossier data contract keeps the approved short definition', () =>
 // component applies that class). The rendered-HTML guard that the dead class is never
 // emitted remains in home-client-first-paint.
 
-test('Sources and Draft descriptions serve personal learning paths, resources, portfolio, and process work', () => {
+test('Sources Studio and Digital Me descriptions serve learning paths, resources, portfolio, and process work', () => {
   const productShell = read('lib/new-loom/product-shell.ts');
 
   assert.match(productShell, /learning paths/i);
@@ -302,8 +302,8 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.doesNotMatch(about, /Yiping's Loom/);
   assert.doesNotMatch(about, /[\u3400-\u9fff]/);
 
-  assert.match(help, /reading-and-thinking environment/i);
-  assert.match(help, /source-bound understanding/i);
+  assert.match(help, /context-to-form workspace/i);
+  assert.match(help, /Sources resolve real material/i);
   assert.match(help, /\/about/);
 
   assert.match(loomRoute, /Loom · Product System/);
@@ -375,7 +375,7 @@ test('visible support surfaces use approved personal-identity and local-app posi
   assert.match(productHistory, /Question/);
   assert.match(productHistory, /Judgment/);
   assert.match(productHistory, /Practice/);
-  assert.match(productHistory, /Draft/);
+  assert.match(productHistory, /Studio/);
   assert.match(productHistory, /Output/);
   assert.match(productHistory, /Identity/);
   assert.match(productHistory, /Next source/);
@@ -553,12 +553,14 @@ test('canonical docs no longer present Loom as a generic public product', () => 
   const appStoreCopy = read('docs/app-store-copy.md');
   const canonicalDocs = [readme, productDefinition, productRules].join('\n');
 
-  assert.match(readme, /living knowledge identity/i);
-  assert.match(readme, /dossier anyone can inspect/i);
-  assert.match(readme, /source-backed self/i);
-  assert.match(productDefinition, /personal knowledge\s*>?\s*identity platform/i);
-  assert.match(productDefinition, /Yiping's Loom is the first reference instance/i);
-  assert.match(productRules, /personal knowledge identity platform/i);
+  assert.match(readme, /local context-to-form workspace/i);
+  assert.match(readme, /Studio documents/i);
+  assert.match(readme, /Digital Me/i);
+  assert.match(productDefinition, /local[\s>]+context-to-form workspace/i);
+  assert.match(productDefinition, /source-backed forms/i);
+  assert.match(productDefinition, /Yiping's Loom is[\s>]+the first reference instance/i);
+  assert.match(productRules, /local context-to-form workspace/i);
+  assert.match(productRules, /Digital Me that answers from the real archive/i);
   assert.match(productRules, /reference instance, not the product boundary/i);
   assert.match(appStoreCopy, /Canonical metadata for the first Mac App Store submission/i);
   assert.match(appStoreCopy, /Your files stay on your Mac/i);

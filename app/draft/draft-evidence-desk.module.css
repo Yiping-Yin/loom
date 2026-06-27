@@ -482,7 +482,7 @@
 }
 
 /* ======================================================================
-   ANSWER FLOW — the Sources -> Draft -> Answer thread of light (cyan)
+   ANSWER FLOW — the Sources -> Studio -> Digital Me thread of light (cyan)
    ====================================================================== */
 .surface :global(.new-loom-draft__answer-flow) {
   gap: 0.7rem;

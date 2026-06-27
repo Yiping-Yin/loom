@@ -108,7 +108,7 @@ test('verified dossier home data preserves approved evidence workbench definitio
   ]);
   assert.deepEqual(
     VERIFIED_DOSSIER_WORKBENCH.provenanceSteps.map((step) => step.title),
-    ['Sources', 'Draft', 'Answer'],
+    ['Sources', 'Studio', 'Digital Me'],
   );
   assert.ok(VERIFIED_DOSSIER_WORKBENCH.sourceGraph.nodes.length >= 4);
   assert.ok(VERIFIED_DOSSIER_WORKBENCH.sourceGraph.edges.length >= 3);
@@ -158,7 +158,7 @@ test('verified dossier home explains Loom as the underlying trust mechanism', ()
   assert.match(VERIFIED_DOSSIER_LOOM_INTRO.summary, /underlying trust mechanism/i);
   assert.deepEqual(
     VERIFIED_DOSSIER_LOOM_INTRO.steps.map((step) => step.label),
-    ['Sources', 'Draft', 'Digital Me'],
+    ['Sources', 'Studio', 'Digital Me'],
   );
   assert.equal(VERIFIED_DOSSIER_LOOM_INTRO.blocking, false);
 });

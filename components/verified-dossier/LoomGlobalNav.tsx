@@ -16,9 +16,9 @@ type LoomGlobalNavProps = {
 
 const LOOM_WORKSPACE_NAV = [
   { label: 'Sources', href: '/sources' },
-  // Draft is no longer a peer workspace — it lives inside Digital Me (open it
-  // from the Studio section there). Reached via /digital-me?edit; /draft stays a
-  // redirect stub for legacy links.
+  { label: 'Studio', href: '/studio' },
+  // /draft stays a redirect stub for legacy links; Studio is the user-facing
+  // form workbench.
   { label: 'Today', href: '/today' },
 ];
 

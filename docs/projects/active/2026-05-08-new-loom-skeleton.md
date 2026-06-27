@@ -6,10 +6,11 @@
 **Target surface:** installed macOS app first, exported web runtime second
 **Decision:** build the new Loom skeleton inside the existing repository and isolate legacy surfaces instead of deleting them in the first pass.
 
-> **Current vocabulary note (2026-05-15):** This is a historical Phase 1 plan.
+> **Current vocabulary note (2026-06-27):** This is a historical Phase 1 plan.
 > Do not implement `Collect` or `Organize` as first-level product destinations
-> from this file. The current first-level product model is `Sources` and
-> `Draft`; `/collect` remains compatibility into Sources.
+> from this file. The current first-level product model is `Sources`, `Studio`,
+> and `Digital Me`; `/collect` remains compatibility into Sources, and `/draft`
+> remains compatibility into the Studio document engine.
 
 ## 1. Objective
 
@@ -56,9 +57,9 @@ Phase 1 must not delete old routes. It must classify and hide them.
 | Current surface | Phase 1 disposition |
 |---|---|
 | `/`, `app/HomeClient.tsx` | Reframe as new Loom shell or redirect into it after onboarding |
-| `/sources`, `KnowledgeHomeClient` | Keep as the primary Sources surface; align copy and navigation with Sources/Draft |
+| `/sources`, `KnowledgeHomeClient` | Keep as the primary Sources surface; align copy and navigation with Sources / Studio / Digital Me |
 | `/loom-render/capture`, `/loom-render/captures`, `/loom-render/snapshot` | Keep as capture runtime. Mark as internal runtime routes, never a primary nav category |
-| `LoomMinimalRootView.swift` | Make it the product root for Sources / Draft |
+| `LoomMinimalRootView.swift` | Historical native product root for Sources / Draft; now a migration source until the native strategy is chosen |
 | `ContentView.swift`, `KnowledgeSidebarView.swift` | Freeze behind a legacy flag or internal route until replaced |
 | `/atlas`, `/weaves`, `/patterns`, `/pursuits`, `/workbench`, `/atelier`, `/collection`, `/constellation`, `/soan`, `/panel`, `/salon`, `/palimpsest`, `/branching` | Hide from default navigation; keep reachable through Legacy/Internal for migration and comparison |
 | Tests and docs for old surfaces | Keep if they guard retained behavior; annotate stale product-language assumptions |
@@ -137,7 +138,7 @@ The specific current risk is that `segmentDiagramArtifactHtml()` emits a class n
 
 1. **Contracts and route inventory**
    - Add tests that classify default, runtime, and legacy routes.
-   - Assert the main product surface exposes Sources / Draft.
+   - Assert the main product surface exposes Sources / Studio / Digital Me.
 
 2. **Web shell**
    - Reframe `/` around the three capabilities.
@@ -145,7 +146,7 @@ The specific current risk is that `segmentDiagramArtifactHtml()` emits a class n
    - Keep direct route availability for regression and migration.
 
 3. **Native shell**
-   - Refactor `LoomMinimalRootView.swift` selection into Sources / Draft.
+   - Treat `LoomMinimalRootView.swift` selection as historical Sources / Draft migration evidence.
    - Keep existing source, capture, folder, and file views behind those destinations.
 
 4. **Sources aggregation**
@@ -169,7 +170,7 @@ The specific current risk is that `segmentDiagramArtifactHtml()` emits a class n
 
 Phase 1 is acceptable only when all of these are true:
 
-- Fresh installed app opens to a surface organized around Sources / Draft.
+- Fresh installed app opens to a surface organized around Sources / Studio / Digital Me, with Draft only as a compatibility engine.
 - The default sidebar or top-level navigation does not expose legacy names as primary product categories.
 - A web capture can be saved into Sources, opened in the reader, and traced to its saved files.
 - A local source or page can be opened through Sources without writing into the user's source folder.
@@ -247,7 +248,7 @@ Verified on 2026-05-08 and 2026-05-09:
 - Computer Use was attempted first for installed-app visual verification but macOS rejected it with `Apple event error -10000: Sender process is not authenticated`.
 - Historical terminal screenshot fallback verified the then-current installed
   app sidebar. This evidence is superseded for current acceptance: fresh visual
-  verification must use Computer Use where possible and confirm Sources / Draft,
+  verification must use Computer Use where possible and confirm Sources / Studio / Digital Me,
   not Collect / Organize / Draft.
 - Installed Draft was opened, edited through accessibility automation, saved, app relaunched, and the saved body was reloaded from `Drafts/drafts.json`.
 - Follow-up feedback: do not repeat the screenshot fallback by default. The current Computer Use issue is a tooling/authentication blocker to resolve, not permission to take over the desktop with screenshots.

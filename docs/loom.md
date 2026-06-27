@@ -1,11 +1,11 @@
 # Loom — 完整讲述
 
-**版本** 1.1
-**日期** 2026-05-08
-**状态** 经四次澄清后定调（三能力 / flipdisc / Cursor for thought / 本地文件）
+**版本** 1.2
+**日期** 2026-06-27
+**状态** 当前产品定义修正：Sources / Studio / Digital Me；旧 `Sources / Draft` 和更早 `Collect / Organize / Draft` 只作为历史/兼容语境
 
 > 本文档是 Loom 所有未来产品决策的引用基准。任何新 feature PR 必须能用本文档的语言 declare：
-> 1. 它服务三能力中的哪一个？
+> 1. 它服务当前产品循环中的哪一层？
 > 2. 它对应哪个 surface？
 > 3. 它通过 5 条 Discipline 检查吗？
 > 4. 它经过 flipdisc + Moodle 试金石吗？
@@ -14,15 +14,41 @@
 
 ## Frontispiece — 一句话
 
-**Loom 是一座你的私人档案室，你在外部世界遇到的东西被完整带回家；它们在屋子里被整理、被照看；最后你在一张空白页上、和 AI 一起、用这些素材写下真正属于你的东西。**
+**Loom 是一个本地 context-to-form 工作台：你把外部世界的材料完整带回来，在 Sources 里把 context 解析成可用判断，在 Studio 里把判断塑造成形式，最后让其中最强的形式通过 Digital Me 代表你。**
 
 它不是 RSS 阅读器，不是稍后读，不是笔记软件，不是 Notion 的山寨版，也不是又一个 ChatGPT 包装。
 
-它是上面那句话里描述的**一个动作的循环**：**收集 → 整理 → 写**。三件事彼此咬合，循环往复。
+它是上面那句话里描述的**一个动作的循环**：**Sources → Studio → Digital Me → Feedback**。材料不是为了生成一条笔记；材料要变成可检查、可继续、可代表你的形式。
 
 最简短的产品比喻：
 
 > **Cursor for thought, on your captured world.**
+
+2026-06-27 当前产品定义：
+
+- **Sources**：把文件、网页、笔记、AI 对话、项目证据和过程记录带入 Loom，并解析成 claims、quotes、examples、contradictions、gaps、questions。
+- **Studio**：把 Sources 解析出的 pieces 塑造成 block documents、cited answers、process pages、proof artifacts、portfolio explanations。`/draft` 和 Draft storage 仍是兼容/实现名；用户心智里的工作台叫 Studio。
+- **Digital Me**：把被选择的 Studio forms 和 source-backed claims 呈现为 living representation，并能用 citations 回答。
+- **Feedback**：Digital Me 的问答、外部使用、写作缺口和现实反馈，会回到 Sources，改变下一轮收集和解析。
+
+旧 Plate I 的 Gathering / Organizing / Drafting 仍解释了能力来源，但不再是当前产品导航和 user story 的主模型。
+
+### 2026-06-27 Theory Basis
+
+Loom 当前理论底座不是一个单独学科，而是四条权威脉络的交叉：
+
+`context-driven design + sensemaking workflow + external cognition + attributable generation`
+
+- **Context-driven design / situated action**：Christopher Alexander、Henrik Karlsson、Donald Schon、Lucy Suchman 支撑 Loom 的核心判断：好形式不是先画完蓝图，而是在真实 context 里小步展开。Studio 应该从 Sources 的 material response 里长出来。
+- **Sensemaking**：Russell / Stefik / Pirolli / Card 与 Klein 的 Data-Frame Theory 支撑 Loom 的工作流判断：重点不是存笔记，而是降低从材料到 representation、schema、判断和输出的成本。Sources 是 foraging + evidence triage，Studio 是 schema/output construction。
+- **External cognition / epistemic action**：Clark & Chalmers、Kirsh & Maglio 支撑 Loom 的操作判断：source、mark、quote、gap、form 不是元数据杂活，而是让问题更容易思考的外部认知动作。
+- **RAG / source attribution / co-writing**：Lewis RAG、Rashkin AIS、Self-RAG、CoAuthor 支撑 Loom 的 AI 判断：Studio AI 必须可追溯到 Sources；AI 是 summoned collaborator，不是自主作者；Digital Me 的回答必须来自 archive，而不是模型记忆。
+
+只读 3 个最能定产品方向的 reference：
+
+1. Schon, "Designing as Reflective Conversation with the Materials of a Design Situation" - 写作/设计是和材料对话。
+2. Pirolli & Card, "The Sensemaking Process and Leverage Points for Analyst Technology" - Loom 是 sensemaking workflow，不是 note-taking。
+3. Lewis RAG + Rashkin AIS - Studio/Digital Me 的生成必须 grounding + attribution。
 
 ---
 
@@ -273,13 +299,14 @@ Yiping 在 2026-05-11 (PR #20 review 现场) 正式 ratify 第七条 Discipline�
 
 **结论：UI vocabulary 用直译动作词，不用 *kesi* 隐喻。**
 
-Current shipped vocab (2026-06-01 canonical visible model):
-- **Surface vocabulary**：`Sources / Draft`
-- **Supporting labels**：`Capture / Question / Folder / Recent Reading / Continue Writing / Add files / ADDED / No files added yet.`
-- **Superseded historical vocabulary**：`Collect / Organize / Draft` was the 2026-05-11 running-app vocabulary and must not be presented as the current shipped surface model.
+Current shipped vocab (2026-06-27 canonical visible model):
+- **Surface vocabulary**：`Sources / Studio / Digital Me`
+- **Supporting labels**：`Capture / Question / Folder / Recent Reading / Help me write / Add files / ADDED / No files added yet.`
+- **Compatibility vocabulary**：`Draft` may remain in route names, storage APIs, tests, and older docs when it means the Studio-compatible document engine. It should not be the primary user-facing product noun.
+- **Superseded historical vocabulary**：`Sources / Draft` was the 2026-05 running-app vocabulary; `Collect / Organize / Draft` was the 2026-05-11 transitional vocabulary. Both must be translated into the current `Sources / Studio / Digital Me` model before new product decisions.
 
 Historical shipped vocab (2026-05-11 在 running app 现场验证, superseded):
-- **三大 surface**：`Collect / Organize / Draft`（即 Plate I 三能力的直译；现已由 `Sources / Draft` 取代）
+- **三大 surface**：`Collect / Organize / Draft`（即 Plate I 三能力的直译；先由 `Sources / Draft` 取代，现由 `Sources / Studio / Digital Me` 取代）
 - **名词**：`Capture / Source / Folder / Question / Recent Reading / Unorganized / Local Files / Reader Notes / Question Containers / Continue Writing`
 - **动作**：`Add files / Add Folder / Add Question / Capture to Loom`
 
@@ -344,11 +371,11 @@ Historical shipped vocab (2026-05-11 在 running app 现场验证, superseded):
 
 - **The Year** —— `/year` 已作为 first support surface 上线：twelve columns, one ribbon；wintering ribbon 显示冷却的素材，Question containers 收住未决的问题。
 - **The Hour, ticking** —— `/hour` 已作为 first support surface 上线，承载 current material：live watch、minute progress、breath bar，No alerts。
-- **Connections / Correspondents** —— `/connections` 已作为 first support surface 上线：correspondents 与 cross-origin 连接 first-class，可直接从连接进入 Draft。
+- **Connections / Correspondents** —— `/connections` 已作为 first support surface 上线：correspondents 与 cross-origin 连接 first-class，可直接从连接进入 Studio。
 
 ### Superseded historical entries (not current inventory)
 
-`Pursuits`, `Shuttle`, and `Interlace` are preserved as historical Plate IV names only. They must not be treated as current visible surfaces; current visible copy follows the `Sources / Draft` rule above.
+`Pursuits`, `Shuttle`, and `Interlace` are preserved as historical Plate IV names only. They must not be treated as current visible surfaces; current visible copy follows the `Sources / Studio / Digital Me` rule above.
 
 ---
 
@@ -414,11 +441,11 @@ Loom 是不是真做对了，**不看代码，看两个真实场景**。
 - ✅ 选 Floyd-Steinberg slider 在 0.4 位置时**那一帧** → 保存为 quote
 - ✅ tag 这条 capture 为 `#dithering` `#hardware-display`
 - ✅ link 它跟另一条 dithering 教程 capture 为 `connection`
-- ✅ 把它归入 pursuit `2026-flipdisc-display`
+- ✅ 把它关联到 process `2026-flipdisc-display`
 
 #### 草稿环节
 
-用户打开 Pursuit `2026-flipdisc-display` 的草稿页，写：
+用户打开 Studio process `2026-flipdisc-display`，写：
 
 ```
 我考虑用 flipdisc 做办公桌上的环境显示器。
@@ -449,11 +476,11 @@ Bayer 在中间调时几乎全部塌成方块阵列，
 - ✅ tag PDF 为 `#problem-set-due-friday` `#econ-101-spring-2026`
 - ✅ tag PPT 为 `#production-functions` `#econ-101-spring-2026`
 - ✅ 已有 web capture：`@cobb-douglas-explainer`（一篇 medium 文章）
-- ✅ 三个 source 都归入 pursuit `2026-spring-econ`
+- ✅ 三个 source 都关联到 process `2026-spring-econ`
 
 #### 草稿（异质源协作）
 
-进入 Pursuit `2026-spring-econ` 草稿页，写：
+进入 Studio process `2026-spring-econ`，写：
 
 ```
 教授在第 4 周强调 Cobb-Douglas 函数的长期均衡有几个反直觉的特性...
@@ -562,7 +589,7 @@ Loom 不是 chrome-style SaaS dashboard。它的视觉宪法在 `Material Audit.
 
 参考样本：
 
-- ✅ Draft：foreground is the writing surface。右栏 Sources/Edit/Board = secondary。toolbar = chrome。
+- ✅ Studio：foreground is the writing surface。右栏 Sources/Edit/Board = secondary。toolbar = chrome。
 - ❌ Superseded historical Collect surface：6 张同等视觉权重的卡片，foreground 答不出。
 - ❌ Superseded historical Organize surface：5 个 stats badges + 5 columns of cards，foreground 答不出。
 
@@ -582,11 +609,11 @@ Loom 不是 chrome-style SaaS dashboard。它的视觉宪法在 `Material Audit.
 
 - **First-run**（用户第一次打开 Loom）：一次性 welcome overlay 覆盖主 pane，dismiss 后**永不再现**。
 - **Cold-start with non-empty corpus**：current surfaces resume 到上次状态：
-  - Draft opens the last draft.
+  - Studio opens the last Studio document.
   - Sources opens the last viewed source（或 source list top）。
 - **Cold-start with empty corpus**：每个 current surface 显示 1-line prompt + 1 primary action，不分卡片。例如：
   - Sources shows "Drop a file or click L on a webpage." with [Add files].
-  - Draft opens the writing surface directly, with no helper text.
+  - Studio opens the writing surface directly, with no helper text.
 
 #### §VII.bis.4 Per-surface 迁移清单（codebase-grounded, 2026-05-13 投影）
 
@@ -603,7 +630,7 @@ Loom 不是 chrome-style SaaS dashboard。它的视觉宪法在 `Material Audit.
 - 1 张配置卡 (storageCard) + 1 张状态卡 (pipelineStatusCard) → Settings 第 4 个 tab "Capture" (`CaptureSettingsView`)
 - WebCaptureSetupView 本体 struct + sidebar `Web Capture` entry 删除
 
-**Draft vocabulary / implementation maturity** — 当前 visible model 已使用 **Sources / Draft**：Draft 是写作、延续、编辑、source grounding、Board context 的可见词。先前 spec (2026-05-13 早版) 误把概念稿截图当作完整 shipped editor；这里改为实现成熟度说明，而不是否认 Draft。接下来的工程应把现有 Draft copy 和 source-backed output 逐步收敛到 §VII.bis.1 (single foreground = textarea) + §VII.bis.3 (cold-start = last draft) 的成熟写作 surface。
+**Studio vocabulary / implementation maturity** — 当前 visible model 使用 **Sources / Studio / Digital Me**：Studio 是写作、延续、编辑、source grounding、Board context、answer publishing、proof artifact shaping 的可见词。`Draft` 仍可作为 storage、route compatibility、historical test wording 出现，但默认 copy 应逐步收敛到 Studio。先前 spec (2026-05-13 早版) 误把概念稿截图当作完整 shipped editor；这里改为实现成熟度说明，而不是否认文档引擎。接下来的工程应把现有 Draft copy 和 source-backed output 逐步收敛到 §VII.bis.1 (single foreground = block document) + §VII.bis.3 (cold-start = last Studio document or calm starter) 的成熟 Studio surface。
 
 **其余 16 个 Plate IV surface** — 每个 PR 单独按 §VII.bis.1–3 declare，本计划不覆盖。
 
@@ -664,15 +691,15 @@ Loom 不是 chrome-style SaaS dashboard。它的视觉宪法在 `Material Audit.
 5. **`/draft from #tag`** streaming
 6. **Drag-to-import**：把 PDF / PPT / MD / 图片直接拖进 main Loom window 即入库（P0 格式）——文件落进 Sources 的 Add files 流程，与 NSOpenPanel 选档共用同一条 ingestion 管线
 
-##### Draft 层现状（web + native 已落地）
+##### Studio 层现状（Draft compatibility engine 已落地）
 
-**草稿层已进入新 Loom 主线**：web 与 native 共享同一个 **ThinkingDraft** block 模型；live AI composer 的整稿生成仍 **approval-bound**，等人工确认后才落盘。`draftBlocksFromBody` 把 markdown 切成可逐个 review 的 block（heading / paragraph / quote / list / code），写作面不再只是一条 body string。block 之上有 single-block 编辑与 **multi-block operation**（`applyDraftBlockOperation` / `draftBlockOperationDiffHunks`）：选中多个 block，先看 reviewable diff，再决定是否一次性改写。
+**Studio 已进入新 Loom 主线**：web 与 native 共享同一个 **ThinkingDraft** block 模型；live AI composer 的整稿生成仍 **approval-bound**，等人工确认后才落盘。`draftBlocksFromBody` 把 markdown 切成可逐个 review 的 block（heading / paragraph / quote / list / code），写作面不再只是一条 body string。block 之上有 single-block 编辑与 **multi-block operation**（`applyDraftBlockOperation` / `draftBlockOperationDiffHunks`）：选中多个 block，先看 reviewable diff，再决定是否一次性改写。
 
-- **AI 默认整库上下文 + `@` 引用 origin-agnostic**：内联 `@source:p7` / `@slides:slide3` / `@notes#heading` 带 page / slide / heading / artifact-state 锚点，由 `parseDraftInlineReferences` 解析、`draftInlineReferencePromptLines` 渲染进 **Draft AI prompt**；`buildBoundedDraftAIPrompt` 先 `selectDraftCorpusHits` 取整个 corpus 的近邻命中，把 `Corpus context:` 注入后再 compose。
+- **AI 默认整库上下文 + `@` 引用 origin-agnostic**：内联 `@source:p7` / `@slides:slide3` / `@notes#heading` 带 page / slide / heading / artifact-state 锚点，由 `parseDraftInlineReferences` 解析、`draftInlineReferencePromptLines` 渲染进 **Studio AI prompt**；`buildBoundedDraftAIPrompt` 先 `selectDraftCorpusHits` 取整个 corpus 的近邻命中，把 `Corpus context:` 注入后再 compose。
 - **⌘K inline edit**：在写作面选段后按 ⌘K，把 selected passage 交给 AI；返回结果以 Diff preview 呈现，用户显式 **Accept** 或 Discard，只替换被选中的那一段，不动其余正文。
 - **`/draft from #tag`** streaming：在正文里写 `/draft from #unclear` 之类命令，`parseDraftFromTagCommand` 从 draft-board 匹配卡片，`buildDraftFromTagPrompt` 把第一批命中（first slice）喂给 AI 流式起稿。
-- **Atelier 多 source 平铺**已并入 Draft：source tiles（最多 4 个）贴在写作面旁边，支持 Insert quote 与 Provenance 回链，引用 excerpt 与出处都由 Draft 拥有，不再留在 Atelier。
-- **Working mode（公开版屏蔽私密）**：开启 public working mode 后，`publicWorkingDraftReferences` 只做展示层 masking——Draft references are masked，但底层草稿与引用不被改写。
+- **Atelier 多 source 平铺**已并入 Studio：source tiles（最多 4 个）贴在写作面旁边，支持 Insert quote 与 Provenance 回链，引用 excerpt 与出处都由 Studio 拥有，不再留在 Atelier。
+- **Working mode（公开版屏蔽私密）**：开启 public working mode 后，`publicWorkingDraftReferences` 只做展示层 masking——Studio references are masked，但底层草稿与引用不被改写。
 
 #### Phase 7 —— Process / long-running questions 容器
 

@@ -2,8 +2,8 @@
 /**
  * /help · Loom's usage guide.
  *
- * Explains the two primary workspaces — Sources and Draft — and the
- * support surfaces around them.
+ * Explains the product loop — Sources, Studio, and Digital Me — and the support
+ * surfaces around it.
  *
  * Access paths:
  *   - /help (direct URL)
@@ -35,13 +35,18 @@ const LOOP_STEPS = [
   },
   {
     label: '02',
-    title: 'Read and mark.',
-    copy: 'Select a passage to keep a note, question, or source-backed reference in place.',
+    title: 'Resolve the context.',
+    copy: 'Mark claims, quotes, examples, contradictions, gaps, and questions so the material can shape the next form.',
   },
   {
     label: '03',
-    title: 'Write in Draft.',
-    copy: 'Draft keeps attached references beside the text so claims can point back to exact passages.',
+    title: 'Shape it in Studio.',
+    copy: 'Studio keeps attached references beside the block document so claims can point back to exact passages.',
+  },
+  {
+    label: '04',
+    title: 'Represent the result.',
+    copy: 'Digital Me presents selected forms and source-backed claims as a living representation that can answer with citations.',
   },
 ];
 
@@ -71,8 +76,9 @@ export default function HelpPage() {
               <p className={styles.eyebrow}>Help</p>
               <h1 className={styles.title}>Usage guide.</h1>
               <p className={styles.lead}>
-                Loom is a local reading-and-thinking environment. Source-bound understanding
-                becomes durable memory, then moves into Draft with exact references.
+                Loom is a local context-to-form workspace. Sources resolve real material,
+                Studio shapes it into cited forms, and Digital Me represents the parts
+                you choose to stand behind.
               </p>
             </div>
 
@@ -81,17 +87,23 @@ export default function HelpPage() {
                 href="/sources"
                 icon={<BookOpenCheck size={18} strokeWidth={1.65} />}
                 title="Sources"
-                copy="Add, capture, read, and review source material."
+                copy="Resolve source material into claims, questions, and reusable evidence."
               />
               <JumpLink
-                href="/digital-me?edit=new"
+                href="/studio"
                 icon={<FileText size={18} strokeWidth={1.65} />}
-                title="Draft"
-                copy="Write with attached references beside the text."
+                title="Studio"
+                copy="Shape blocks, answers, process pages, and proof artifacts."
+              />
+              <JumpLink
+                href="/digital-me"
+                icon={<ShieldCheck size={18} strokeWidth={1.65} />}
+                title="Digital Me"
+                copy="Present selected source-backed forms as a living representation."
               />
               <JumpLink
                 href="/about"
-                icon={<ShieldCheck size={18} strokeWidth={1.65} />}
+                icon={<Map size={18} strokeWidth={1.65} />}
                 title="About"
                 copy="See the source-backed identity layer behind this Loom."
               />
@@ -113,22 +125,33 @@ export default function HelpPage() {
               href="/sources"
               title="Sources"
               meta="/sources"
-              copy="Add, capture, and review source material. Web captures and local files sit on the same shelf, and originals stay read-only."
+              copy="Resolve source material into usable context. Web captures and local files sit on the same shelf, and originals stay read-only."
               items={[
                 'Open a local file or captured page.',
-                'Mark exact passages for later use.',
-                'Run source checks when a chapter is ready.',
+                'Mark claims, quotes, examples, contradictions, gaps, and questions.',
+                'Send resolved pieces into Studio when a form is ready.',
               ]}
             />
             <WorkspaceCard
-              href="/digital-me?edit=new"
-              title="Draft"
-              meta="/draft"
-              copy="Write with your sources beside you. Marked passages attach as references, and citations point back to exact passages."
+              href="/studio"
+              title="Studio"
+              meta="/studio"
+              copy="Shape a block document with your sources beside you. Marked passages attach as references, and citations point back to exact passages."
               items={[
-                'Start from a blank draft or attached source.',
+                'Start from a blank form or an attached source.',
                 'Insert references without losing provenance.',
-                'Use the board when a draft needs structure.',
+                'Use Details only when the form needs structure, provenance, or publishing controls.',
+              ]}
+            />
+            <WorkspaceCard
+              href="/digital-me"
+              title="Digital Me"
+              meta="/digital-me"
+              copy="Represent selected Studio forms and source-backed claims as a living identity surface that can answer with citations."
+              items={[
+                'Show only claims with real support.',
+                'Keep thin profiles quiet until there is enough evidence.',
+                'Let cited answers point back to the source and Studio form behind them.',
               ]}
             />
           </section>
@@ -155,7 +178,7 @@ export default function HelpPage() {
             title="Support surfaces"
             copy="Support pages explain the product loop without becoming new workspaces."
             items={[
-              <><Link href="/system">/system</Link> - how Sources and Draft fit together.</>,
+              <><Link href="/system">/system</Link> - how Sources, Studio, and Digital Me fit together.</>,
               <><Link href="/discipline">/discipline</Link> - the six product refusals.</>,
               <><Link href="/connections">/connections</Link> - correspondents and source links.</>,
             ]}
@@ -190,10 +213,10 @@ export default function HelpPage() {
 
           <section className={styles.northStar} aria-label="North star">
             <span className={styles.label}>North star</span>
-            <h2 className={styles.northTitle}>Read, mark, write.</h2>
+            <h2 className={styles.northTitle}>Bring in, shape, represent.</h2>
             <p className={styles.northCopy}>
               Notes are a byproduct of learning, not the object of learning. Your job is
-              to read carefully, mark evidence, and write from it.
+              to let source context become a form, then let the strongest forms represent you.
             </p>
           </section>
         </div>

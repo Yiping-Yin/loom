@@ -46,12 +46,12 @@ export function DraftDetailClient({ recordId }: { recordId: string }) {
 
   return (
     <main className="vd-home vd-draft-detail-page" aria-labelledby="draft-detail-title">
-      <LoomGlobalNav ariaLabel="Draft artifact navigation" />
+      <LoomGlobalNav ariaLabel="Studio artifact navigation" />
 
       {record ? (
-        <article className="vd-draft-artifact" aria-label="Published Draft artifact">
+        <article className="vd-draft-artifact" aria-label="Published Studio artifact">
           <header className="vd-draft-artifact__header">
-            <a href="/drafts">Back to Draft Library</a>
+            <a href="/drafts">Back to Studio Library</a>
             <p>Published Artifact</p>
             <h1 id="draft-detail-title">{record.title}</h1>
             <div className="vd-draft-artifact__meta">
@@ -84,20 +84,20 @@ export function DraftDetailClient({ recordId }: { recordId: string }) {
 
           <footer className="vd-draft-artifact__actions">
             <a href={record.draftUrl}>
-              Open Draft <ArrowIcon />
+              Open Studio <ArrowIcon />
             </a>
           </footer>
         </article>
       ) : (
         <section className="vd-draft-artifact vd-draft-artifact--empty" aria-label="Record not found">
           <header className="vd-draft-artifact__header">
-            <a href="/drafts">Back to Draft Library</a>
+            <a href="/drafts">Back to Studio Library</a>
             <p>Published Artifact</p>
             <h1 id="draft-detail-title">Record not found</h1>
           </header>
-          <p>This Draft Record is not available in local browser storage.</p>
+          <p>This Studio record is not available in local browser storage.</p>
           <a href="/drafts">
-            Back to Draft Library <ArrowIcon />
+            Back to Studio Library <ArrowIcon />
           </a>
         </section>
       )}
@@ -108,7 +108,7 @@ export function DraftDetailClient({ recordId }: { recordId: string }) {
 function formatDraftRecordStatus(status: NewLoomDraftRecord['status']) {
   if (status === 'previewed') return 'Previewed';
   if (status === 'published') return 'Published';
-  return 'Drafting';
+  return 'In progress';
 }
 
 function formatDraftRecordDate(value: string) {

@@ -3,7 +3,7 @@
 > **Read this BEFORE starting any work on Loom.**
 > This document captures the accumulated product decisions, hard vetoes, and design rules made over many design sessions with the product owner. It exists so any AI assistant (Codex, GPT, Gemini, etc.) — and any human collaborator — can pick up the work without re-litigating settled questions.
 >
-> ⚠️ **Vocabulary status (2026-06-01 · v1.1 §III.7):** For **user-visible UI copy** the canonical naming source is now [`docs/loom.md`](docs/loom.md) §III.7 (直译 over metaphor) and Plate IV. The current shipped user-visible model uses `Sources` and `Draft`, plus literal supporting labels such as `Capture`, `Question`, `Folder`, `Recent Reading`, and `Continue Writing`. Superseded 2026-05 vocabulary such as `Collect / Organize / Draft` is historical only, and the *kesi* metaphor (`Shuttle / Weaves / Sōan / Pursuits / Patterns / weaver / panel`) is not user-visible copy. V12 below has been amended to retract the prior grandfathering of `weave / panel`. Architecture and engineering protocol in this file remain authoritative; only feature-naming has shifted.
+> ⚠️ **Vocabulary status (2026-06-27 · v1.2 §III.7):** For **user-visible UI copy** the canonical naming source is now [`docs/loom.md`](docs/loom.md) §III.7 and the active product-definition note. The current shipped user-visible model uses `Sources`, `Studio`, and `Digital Me`. `Draft` may remain in route names, storage APIs, tests, and older docs when it means the Studio-compatible document engine, but it is not the primary user-facing product noun. Superseded 2026-05 vocabulary such as `Sources / Draft` and `Collect / Organize / Draft` is historical only, and the *kesi* metaphor (`Shuttle / Weaves / Sōan / Pursuits / Patterns / weaver / panel`) is not user-visible copy. V12 below has been amended to retract the prior grandfathering of `weave / panel`. Architecture and engineering protocol in this file remain authoritative; only feature-naming has shifted.
 >
 > **This is a living document.** Update it after every session in which a meaningful decision is made or a recurring feedback pattern emerges. Do not delete past entries; mark them superseded.
 >
@@ -13,11 +13,11 @@
 
 ## 1. What Loom Is — In One Paragraph
 
-Loom is a personal knowledge identity platform. It helps anyone turn scattered
-sources, learning paths, projects, drafts, and AI conversations into a living
-knowledge identity: a portfolio people can inspect, a knowledge base people can
-trust, and a personal AI people can talk to. Yiping's Loom is the first
-reference instance, not the product boundary.
+Loom is a local context-to-form workspace. It helps anyone turn scattered
+sources, learning paths, projects, drafts, and AI conversations into
+source-backed forms: portfolio explanations people can inspect, knowledge
+artifacts people can trust, and a Digital Me that answers from the real archive.
+Yiping's Loom is the first reference instance, not the product boundary.
 
 Loom is a macOS-native thinking surface that treats the **screen as a replacement for paper** wherever source-grounded work needs to become durable identity. University-level study is Yiping's first reference use case, not the product boundary. The user picks folders or creates pages; Loom shows source files (PDFs, etc.) natively, lets the user select passages and respond in writing or via AI dialogue, and stores everything in portable Markdown the user owns. The app's job is to remove operation friction (no syncing, no organizing) and concept friction (AI summoned for explanation, translation, dialogue) so the user spends time *thinking* rather than *managing*.
 
@@ -35,7 +35,7 @@ Each principle is load-bearing. When a feature contradicts a principle, the feat
 
 3. **Loom = pages.** The page (a `ContentRoot`) is the primary unit of meaning. Pages contain notes. Notes are anchored fragments. Pages are addressable, notes are not (until promoted).
 
-4. **AI as Aladdin's lamp.** AI is summoned, never always-visible chrome. Curiosity-led — the user asks AI; AI never quizzes the user (until a Panel is provisional+ with ≥3 anchors, which is a separate feature).
+4. **AI is summoned.** AI is summoned, never always-visible chrome. Curiosity-led - the user asks AI; AI never quizzes the user. Any future review, practice, or testing surface needs an explicit product contract before it can appear.
 
 5. **One primitive over many.** When two surfaces overlap functionally, collapse to one with progressive paths inside, even if it costs an extra click. Mental clarity > click count.
 
@@ -60,7 +60,7 @@ These are absolute. If you find yourself building one of these, stop and re-read
 | V1 | **Never write to user-picked folders.** | Source is authority; user's files are read-only. All Loom data lives in `LoomFileStore` (`~/Library/Containers/com.yinyiping.loom/Data/Documents/Loom Data/`). |
 | V2 | **No keyboard shortcuts for low-frequency operations.** | Visible buttons or menu items beat invisible shortcuts. ⌘[ / ⌘] for back/forward and ⌘↩ for save-in-popover are the only acceptable shortcuts as of 2026-04-26. |
 | V3 | **No always-visible AI chrome.** | AI is summoned per action, never sitting in the UI waiting. |
-| V4 | **No quizzing the user.** | Direction is user→AI, not AI→user. Quiz/SRS modes are reserved for a far-later "Panel" feature with strict prerequisites. |
+| V4 | **No quizzing the user.** | Direction is user→AI, not AI→user. Quiz/SRS modes are reserved for a future practice/review feature with an explicit product contract. |
 | V5 | **No automatic clustering, tagging, or smart folders.** | The user's manual organization IS the organization. |
 | V6 | **No proprietary file formats or databases.** | Markdown only, in plain files. |
 | V7 | **No silent failures.** | Every action shows a toast, error, or visible state change. Empty quiet failure is forbidden. |

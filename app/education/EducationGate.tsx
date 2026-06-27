@@ -7,7 +7,7 @@ import './education.module.css';
 
 /**
  * Client gate for /education. With `?edit=<id|new>` it opens the full-screen course
- * editor (mirroring the Studio's /digital-me?edit= pattern); otherwise it shows the
+ * editor (mirroring the Studio's /studio?edit= pattern); otherwise it shows the
  * schools & courses authoring home. The read-only profile Education view still ships
  * as `EducationProfileView` (re-exported from page.tsx) for the dossier/showcase.
  */

@@ -7,7 +7,7 @@
  * a quiet compatibility note for old links and keeps the loop record folded
  * away unless someone explicitly opens it:
  *
- *   Source workspace → Reader notes → Draft references
+ *   Sources → Studio → Digital Me
  */
 
 import Link from 'next/link';
@@ -16,19 +16,19 @@ import { LoomSupportNav } from './LoomSupportNav';
 
 const LOOP_STEPS = [
   {
-    label: 'Source workspace',
+    label: 'Sources',
     href: '/sources',
-    body: 'Sources hold files. Original files stay read-only.',
+    body: 'Bring in real files, captures, notes, and evidence. Original files stay read-only.',
   },
   {
-    label: 'Reader notes',
-    href: '/sources',
-    body: 'Mark passages. Keep the anchor.',
+    label: 'Studio',
+    href: '/studio',
+    body: 'Shape resolved context into cited forms with references attached.',
   },
   {
-    label: 'Draft references',
-    href: '/draft',
-    body: 'Write with references beside the text.',
+    label: 'Digital Me',
+    href: '/digital-me',
+    body: 'Represent selected forms and answer with citations to the real archive.',
   },
 ] as const;
 
@@ -51,7 +51,7 @@ export default function SystemClient() {
           </header>
 
           <details className={styles.archiveDetails}>
-            <summary>Show archived Source / Reader notes / Draft note</summary>
+            <summary>Show archived Sources / Studio / Digital Me note</summary>
 
             <section aria-label="How material moved through the old system note">
               <ol className={styles.orderedList}>

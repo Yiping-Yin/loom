@@ -1,7 +1,7 @@
 import { type NewLoomDraftRecord } from './draft-storage';
 
 /**
- * Map a legacy /draft search string to the equivalent /digital-me editor URL.
+ * Map a legacy /draft search string to the equivalent /studio editor URL.
  * `?d=<id>` → `edit=<id>`; absent → `edit=new`. All other params (draftType,
  * draftRecord, view, ref/label/quote/…) are preserved so deep links keep working.
  */
@@ -10,7 +10,7 @@ export function draftStubTarget(search: string): string {
   const d = params.get('d');
   params.delete('d');
   params.set('edit', d && d.trim() ? d.trim() : 'new');
-  return `/digital-me?${params.toString()}`;
+  return `/studio?${params.toString()}`;
 }
 
 /**

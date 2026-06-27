@@ -1,7 +1,6 @@
 import type { VerifiedDossierArtifact } from './verified-dossier-home';
 
-const DIGITAL_ME_ANSWER_ROUTE = '/digital-me';
-const DIGITAL_ME_ANSWER_ANCHOR = '#digital-me-answer-title';
+const STUDIO_ROUTE = '/studio';
 
 export function buildDraftUrlFromArtifacts(
   artifacts: readonly VerifiedDossierArtifact[],
@@ -27,9 +26,7 @@ export function buildDraftUrlFromArtifacts(
   }
 
   const query = params.toString();
-  return query
-    ? `${DIGITAL_ME_ANSWER_ROUTE}?${query}${DIGITAL_ME_ANSWER_ANCHOR}`
-    : `${DIGITAL_ME_ANSWER_ROUTE}${DIGITAL_ME_ANSWER_ANCHOR}`;
+  return query ? `${STUDIO_ROUTE}?${query}` : STUDIO_ROUTE;
 }
 
 function artifactDraftHref(artifact: VerifiedDossierArtifact) {

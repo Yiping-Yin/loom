@@ -49,12 +49,12 @@ export function DraftsClient() {
 
   return (
     <main className="vd-home vd-drafts-page" aria-labelledby="draft-library-title">
-      <LoomGlobalNav ariaLabel="Draft Library navigation" />
+      <LoomGlobalNav ariaLabel="Studio Library navigation" />
 
-      <section className="vd-draft-library" aria-label="Draft records">
+      <section className="vd-draft-library" aria-label="Studio records">
         <header className="vd-draft-library__hero">
-          <p>Sources → Draft → Answer</p>
-          <h1 id="draft-library-title">Draft Library</h1>
+          <p>Sources → Studio → Digital Me</p>
+          <h1 id="draft-library-title">Studio Library</h1>
           <span>
             {recordCount} {recordCount === 1 ? 'record' : 'records'} / {sourceCount}{' '}
             {sourceCount === 1 ? 'source' : 'sources'}
@@ -88,7 +88,7 @@ export function DraftsClient() {
                       View Artifact <ArrowIcon />
                     </a>
                     <a href={record.draftUrl}>
-                      Open Draft <ArrowIcon />
+                      Open Studio <ArrowIcon />
                     </a>
                   </span>
                 </footer>
@@ -96,11 +96,11 @@ export function DraftsClient() {
             ))}
           </div>
         ) : (
-          <section className="vd-draft-library__empty" aria-label="No Draft records">
-            <h2>No Draft records yet</h2>
-            <p>Publish an AI Answer preview from Draft to create the first library record.</p>
-            <a href="/digital-me?edit=new&draftType=ai-answer">
-              Open Draft <ArrowIcon />
+          <section className="vd-draft-library__empty" aria-label="No Studio records">
+            <h2>No Studio records yet</h2>
+            <p>Publish an AI Answer preview from Studio to create the first library record.</p>
+            <a href="/studio?edit=new&draftType=ai-answer">
+              Open Studio <ArrowIcon />
             </a>
           </section>
         )}
@@ -112,7 +112,7 @@ export function DraftsClient() {
 function formatDraftRecordStatus(status: NewLoomDraftRecord['status']) {
   if (status === 'previewed') return 'Previewed';
   if (status === 'published') return 'Published';
-  return 'Drafting';
+  return 'In progress';
 }
 
 function formatDraftRecordDate(value: string) {

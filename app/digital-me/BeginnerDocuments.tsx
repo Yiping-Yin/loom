@@ -32,14 +32,14 @@ export function BeginnerDocuments({ documents }: { documents: StudioDocumentSumm
           <p className={styles.eyebrow}>Studio</p>
           <h2 id="beginner-documents-title" className={styles.title}>Your documents</h2>
         </div>
-        <a className={styles.newAction} href="/digital-me?edit=new">New document</a>
+        <a className={styles.newAction} href="/studio?edit=new">New document</a>
       </header>
 
       {documents.length > 0 ? (
         <ul className={styles.list}>
           {documents.map((doc) => (
             <li key={doc.id}>
-              <a className={styles.card} href={`/digital-me?edit=${doc.id}`}>
+              <a className={styles.card} href={`/studio?edit=${doc.id}`}>
                 <span className={styles.cardTitleRow}>
                   <span className={styles.cardTitle}>{doc.title}</span>
                   {doc.includedInDigitalMe ? (
@@ -60,7 +60,7 @@ export function BeginnerDocuments({ documents }: { documents: StudioDocumentSumm
           ))}
         </ul>
       ) : (
-        <a className={styles.empty} href="/digital-me?edit=new">
+        <a className={styles.empty} href="/studio?edit=new">
           <span className={styles.emptyCta}>Start a document →</span>
         </a>
       )}

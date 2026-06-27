@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
-import { BeginnerDigitalMe } from './BeginnerDigitalMe';
+import { BeginnerDossier } from './BeginnerDossier';
 import { IdentityEmptyState } from '../IdentityEmptyState';
 import { DraftClient } from '../draft/DraftClient';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
@@ -36,9 +36,8 @@ export function DigitalMeGate() {
     setMounted(true);
   }, []);
 
-  // Edit mode: /digital-me?edit=<id|new> renders the Studio editor full-screen
-  // (no cosmic field, no nav) — mutually exclusive with the identity view. The
-  // Studio editor IS Digital Me here; there is no separate /draft surface.
+  // Compatibility edit mode: /studio is the first-class Studio route, while old
+  // /digital-me?edit=<id|new> links still render the editor full-screen.
   if (searchParams.has('edit')) {
     return (
       <EditorErrorBoundary>
@@ -58,7 +57,7 @@ export function DigitalMeGate() {
   }
 
   if (profile) {
-    return <BeginnerDigitalMe profile={profile} />;
+    return <BeginnerDossier profile={profile} />;
   }
 
   return (

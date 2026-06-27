@@ -487,7 +487,7 @@ test('new Loom product gates are executable and approval-safe', () => {
 
   assert.match(activeReadme, /Current new Loom continuation reading order/);
   assert.match(activeReadme, /2026-05-15-new-loom-acceptance-status\.md/);
-  assert.match(activeReadme, /Sources \/ Draft/);
+  assert.match(activeReadme, /Sources \/ Studio \/ Digital Me/);
   assert.match(activeReadme, /historical reference only/);
   assert.match(activeReadme, /Real user-file installed-app importer acceptance/);
   assert.match(activeReadme, /Live provider-output Compile\/Draft acceptance/);

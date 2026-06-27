@@ -49,14 +49,18 @@ function listPageRoutes(dir: string = path.join(repoRoot, 'app')): string[] {
   return routes.sort();
 }
 
-test('new Loom web shell exposes the two primary workspaces', () => {
+test('new Loom web shell exposes the Sources Studio Digital Me product loop', () => {
   const home = read('app/HomeClient.tsx');
   const productShell = read('lib/new-loom/product-shell.ts');
 
-  for (const label of ['Sources', 'Draft']) {
+  for (const label of ['Sources', 'Studio', 'Digital Me']) {
     assert.match(productShell, new RegExp(`label:\\s*'${label}'`));
   }
+  assert.match(productShell, /href:\s*'\/studio'/);
+  assert.match(productShell, /href:\s*'\/digital-me'/);
+  assert.match(productShell, /NEW_LOOM_SUPPORT_ROUTES[\s\S]*'\/draft'/);
   assert.doesNotMatch(productShell, /label:\s*'Collect'|label:\s*'Organize'/);
+  assert.doesNotMatch(productShell, /label:\s*'Draft'/);
   assert.match(home, /NEW_LOOM_CAPABILITIES/);
   assert.match(home, /data-capability=\{capability\.id\}/);
 
@@ -2198,7 +2202,7 @@ test('native menus and shortcut help do not expose old thinking product labels',
   assert.match(app, /Button\("Add Question…"\)/);
   assert.match(app, /Button\("Add Draft Card…"\)/);
   assert.match(app, /Button\("Connect Draft Cards…"\)/);
-  assert.match(app, /Button\("Connect Reader Notes…"\)/);
+  assert.doesNotMatch(app, /Button\("Connect Reader Notes…"\)/);
   assert.match(app, /Button\("Ask Selection"\)/);
 
   assert.match(contentView, /Text\("Add Question"\)/);
@@ -2212,13 +2216,13 @@ test('native menus and shortcut help do not expose old thinking product labels',
   assert.doesNotMatch(askAIWindow, /Send to Rehearsal|citeIntoRehearsal|RehearsalContext\.shared/);
   assert.doesNotMatch(contentView, /Text\("Connect Two Cards"\)/);
   assert.doesNotMatch(contentView, /support \(solid bronze\)/);
-  assert.match(contentView, /Text\("Connect Reader Notes"\)/);
-  assert.match(contentView, /Text\("\(choose a reader note\)"\)\.tag\(""\)/);
+  assert.doesNotMatch(contentView, /Text\("Connect Reader Notes"\)/);
+  assert.doesNotMatch(contentView, /Text\("\(choose a reader note\)"\)\.tag\(""\)/);
   assert.doesNotMatch(contentView, /Text\("\(choose a panel\)"\)/);
-  assert.match(contentView, /Text\("Supports"\)\.tag\("supports"\)/);
-  assert.match(contentView, /Text\("Contradicts"\)\.tag\("contradicts"\)/);
-  assert.match(contentView, /Text\("Adds detail"\)\.tag\("elaborates"\)/);
-  assert.match(contentView, /Text\("Related"\)\.tag\("echoes"\)/);
+  assert.doesNotMatch(contentView, /Text\("Supports"\)\.tag\("supports"\)/);
+  assert.doesNotMatch(contentView, /Text\("Contradicts"\)\.tag\("contradicts"\)/);
+  assert.doesNotMatch(contentView, /Text\("Adds detail"\)\.tag\("elaborates"\)/);
+  assert.doesNotMatch(contentView, /Text\("Related"\)\.tag\("echoes"\)/);
   assert.doesNotMatch(
     contentView,
     /Text\("supports"\)|Text\("contradicts"\)|Text\("elaborates"\)|Text\("echoes"\)/,
@@ -2234,7 +2238,7 @@ test('native menus and shortcut help do not expose old thinking product labels',
   assert.doesNotMatch(keyboardHelp, /scratch/i);
 });
 
-test('default-visible product copy uses literal Sources and Draft vocabulary', () => {
+test('default-visible product copy uses literal Sources Studio and Digital Me vocabulary', () => {
   const files = {
     'app/layout.tsx': read('app/layout.tsx'),
     'public/support.html': read('public/support.html'),
@@ -2358,7 +2362,7 @@ test('default-visible product copy uses literal Sources and Draft vocabulary', (
   assert.match(files['lib/ai/stage-model.ts'], /title: 'Add one source'/);
   assert.match(files['lib/ai/stage-model.ts'], /launcherTitle: 'Add source'/);
   assert.match(files['lib/ai/stage-model.ts'], /One source page · one reader note/);
-  assert.match(files['lib/new-loom/product-shell.ts'], /Add learning paths/);
+  assert.match(files['lib/new-loom/product-shell.ts'], /resources for learning paths/);
   assert.doesNotMatch(files['lib/new-loom/product-shell.ts'], /Collect learning paths/);
   assert.match(files['public/support.html'], /source questions, drafting help, or rewrite suggestions/);
   assert.match(files['public/privacy.html'], /reader notes, source connections, drafts/);
@@ -2612,7 +2616,7 @@ test('Draft composes with AI through the installed-app stream bridge', () => {
   // block document never diverges from the synced body (Studio Phase 1, Task 4).
   assert.match(draftClient, /scheduleSave\(title, nextBody(?:, nextBlocks)?\)/);
   assert.match(draftClient, /Continue with AI/);
-  assert.match(draftClient, /AI draft/);
+  assert.match(draftClient, /AI writing/);
   assert.match(draftClient, /Insert AI text/);
   assert.match(draftClient, /Discard/);
 
@@ -2860,7 +2864,7 @@ test('Draft AI prompt carries inline @references with page slide and heading anc
   assert.match(swiftTests, /@thesis-draft\.pdf:p23-25/);
   assert.match(swiftTests, /@meeting-notes-mar-15\.md#decisions/);
   assert.match(swiftTests, /@flipdisc-tutorial#floyd-bayer-slider:0\.4/);
-  assert.match(loomDoc, /`@` 引用 origin-agnostic[\s\S]{0,320}Draft AI prompt/);
+  assert.match(loomDoc, /`@` 引用 origin-agnostic[\s\S]{0,320}Studio AI prompt/);
 });
 
 test('Draft AI uses whole-corpus context by default before composing', () => {
@@ -2984,7 +2988,7 @@ test('Draft has a ThinkingDraft block structure model instead of only one body s
 
   assert.match(draftClient, /draftBlocksFromBody\(body, references\)/);
   assert.match(draftClient, /draftBlockReferenceLabels\(block, displayReferences\)/);
-  assert.match(draftClient, /Draft structure/);
+  assert.match(draftClient, /Studio structure/);
   assert.match(draftClient, /new-loom-draft__structure/);
   assert.match(draftClient, /new-loom-draft__block-refs/);
 
@@ -3006,8 +3010,8 @@ test('Draft has a ThinkingDraft block structure model instead of only one body s
   );
   assert.match(
     loomDoc,
-    /草稿层已进入新 Loom 主线[\s\S]{0,220}ThinkingDraft[\s\S]{0,220}approval-bound/,
-    'docs/loom.md should summarize the current Draft layer without closing approval-bound gates',
+    /Studio 已进入新 Loom 主线[\s\S]{0,220}ThinkingDraft[\s\S]{0,220}approval-bound/,
+    'docs/loom.md should summarize the current Studio layer without closing approval-bound gates',
   );
 });
 
@@ -3132,7 +3136,7 @@ test('Draft public working mode masks reference tiles without mutating the draft
   );
   assert.match(draftClient, /draftSourceTilesFromReferences\(displayReferences/);
   assert.match(draftClient, /displayReferences\.map/);
-  assert.match(draftClient, /Public working mode is on\. Draft references are masked\./);
+  assert.match(draftClient, /Public working mode is on\. Studio references are masked\./);
   assert.match(draftClient, /!\s*publicWorkingMode && predictedReferenceHits\.length > 0/);
   assert.match(draftClient, /!\s*publicWorkingMode \? \(/);
   assert.match(draftClient, /!\s*publicWorkingMode && tile\.canInsertQuote/);
@@ -3143,7 +3147,7 @@ test('Draft public working mode masks reference tiles without mutating the draft
   assert.match(draftStorage, /Source reference/);
   assert.match(draftStorage, /Capture reference/);
   assert.match(draftStorage, /Artifact state reference/);
-  assert.match(loomDoc, /Draft references are masked/i);
+  assert.match(loomDoc, /Studio references are masked/i);
 });
 
 test('Draft owns the card board runtime migrated out of Sōan', () => {
@@ -3157,15 +3161,15 @@ test('Draft owns the card board runtime migrated out of Sōan', () => {
   assert.match(draftClient, /const boardRef = useRef<HTMLElement \| null>\(null\)/);
   assert.match(draftClient, /get\('view'\) === 'board'/);
   assert.match(draftClient, /boardRef\.current\?\.scrollIntoView/);
-  assert.match(draftClient, /aria-label="Draft card board"/);
+  assert.match(draftClient, /aria-label="Studio card board"/);
   assert.match(draftClient, /<DraftBoardClient \/>/);
 
   assert.match(draftBoardClient, /export default function DraftBoardClient/);
-  assert.match(draftBoardClient, /aria-label="Draft card index"/);
-  assert.match(draftBoardClient, /Draft board · thinking draft/);
-  assert.match(draftBoardClient, /Draft board\./);
-  assert.match(draftBoardClient, /Draft board holds the cards/);
-  assert.match(draftBoardClient, /aria-label="Draft board shortcuts"/);
+  assert.match(draftBoardClient, /aria-label="Studio card index"/);
+  assert.match(draftBoardClient, /Studio board · thinking space/);
+  assert.match(draftBoardClient, /Studio board\./);
+  assert.match(draftBoardClient, /Studio board holds the cards/);
+  assert.match(draftBoardClient, /aria-label="Studio board shortcuts"/);
   assert.match(draftBoardClient, /className="draft-board"/);
   assert.match(globals, /\.draft-board\b/);
   assert.doesNotMatch(draftBoardClient, /className=\{?`?[^`"\n]*loom-soan|closest\('\.loom-soan/);
@@ -3194,7 +3198,7 @@ test('Draft owns the card board runtime migrated out of Sōan', () => {
     nativeDraftView,
     /NotificationCenter\.default\.post\(name: \.loomShowConnectSoanCardsDialog/,
   );
-  assert.match(plan, /\| `\/soan` \| Compatibility \| Draft \| Redirect to `\/draft\?view=board`/);
+  assert.match(plan, /\| `\/soan` \| Compatibility \| Studio \| Redirect to `\/studio\?edit=new`/);
 });
 
 test('Draft board uses literal visible card labels while preserving internal storage tags', () => {
@@ -3251,7 +3255,7 @@ test('Draft streams /draft from #tag from matching draft-board cards', () => {
     draftClient,
     /callAiPrompt\([\s\S]{0,120}'draft-compose'[\s\S]{0,120}buildDraftFromTagPrompt\(\{ title, body, command, cards \}\)/,
   );
-  assert.match(draftClient, />\s*Draft from tag\s*<\/button>/);
+  assert.match(draftClient, />\s*Start from tag\s*<\/button>/);
 
   assert.match(nativeDraftView, /enum LoomDraftFromTag/);
   assert.match(nativeDraftView, /static func parseCommand\(body: String\)/);
@@ -3265,23 +3269,23 @@ test('Draft streams /draft from #tag from matching draft-board cards', () => {
   assert.match(loomDoc, /`\/draft from #tag`[\s\S]{0,360}first slice/i);
 });
 
-test('Help explains Sources and Draft without reviving legacy product labels', () => {
+test('Help explains Sources Studio and Digital Me without reviving legacy product labels', () => {
   const helpPage = read('app/help/page.tsx');
   const helpCss = read('app/help/HelpPage.module.css');
 
-  for (const label of ['Sources', 'Draft']) {
+  for (const label of ['Sources', 'Studio', 'Digital Me']) {
     assert.match(helpPage, new RegExp(`\\b${label}\\b`));
   }
 
   assert.match(helpPage, /import styles from '\.\/HelpPage\.module\.css'/);
   assert.match(helpPage, /<main className=\{styles\.page\}>/);
   assert.doesNotMatch(helpPage, /<PageFrame|className="prose-notion"|style=\{\{/);
-  assert.match(helpPage, /reading-and-thinking environment/);
+  assert.match(helpPage, /context-to-form workspace/);
   assert.doesNotMatch(helpPage, /\bCollect\b|\bOrganize\b|\borganize\b|href="\/collect"/);
-  assert.match(helpPage, /Add, capture, and review source material/);
-  assert.match(helpPage, /Read, mark, write\./);
+  assert.match(helpPage, /Resolve source material into claims/);
+  assert.match(helpPage, /Bring in, shape, represent\./);
 
-  for (const href of ['/sources', '/digital-me?edit=new']) {
+  for (const href of ['/sources', '/studio', '/digital-me']) {
     assert.match(helpPage, new RegExp(`href="${escapeRegExp(href)}"`));
   }
 
@@ -3326,12 +3330,12 @@ test('/system explains the new Loom loop instead of the retired product map', ()
   assert.match(systemClient, /styles\.archiveSupportSection/);
   assert.match(supportCss, /radial-gradient\(76rem 44rem at 50% -18%, rgba\(232, 236, 238, 0\.145\)/);
 
-  for (const label of ['Sources', 'Draft']) {
+  for (const label of ['Sources', 'Studio', 'Digital Me']) {
     assert.match(systemClient, new RegExp(`\\b${label}\\b`));
   }
   assert.doesNotMatch(systemClient, /\bCollect\b|\bOrganize\b/);
 
-  for (const label of ['Source workspace', 'Reader notes', 'Draft references']) {
+  for (const label of ['Sources', 'Studio', 'Digital Me']) {
     assert.match(systemClient, new RegExp(escapeRegExp(label)));
   }
 

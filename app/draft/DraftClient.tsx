@@ -425,9 +425,16 @@ type DraftClientProps = {
   editId?: string;
 };
 
+const DEFAULT_STUDIO_TITLE = 'Untitled document';
+
+function isDefaultStudioTitle(value: string) {
+  const clean = value.trim();
+  return clean.length === 0 || clean === DEFAULT_STUDIO_TITLE || clean === 'Untitled draft';
+}
+
 export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {}) {
   const [draft, setDraft] = useState<NewLoomDraftRecord | null>(null);
-  const [title, setTitle] = useState('Untitled draft');
+  const [title, setTitle] = useState(DEFAULT_STUDIO_TITLE);
   const [body, setBody] = useState('');
   const [blocks, setBlocks] = useState<NewLoomDraftDocBlock[]>([]);
   // The editor lives inside everyone's Digital Me, so its identity rail must
@@ -825,8 +832,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
 
   function useSelectedOutputOutline() {
     const outline = selectedOutputType.starterBody;
-    const nextTitle =
-      title.trim() && title.trim() !== 'Untitled draft' ? title : selectedOutputType.starterTitle;
+    const nextTitle = !isDefaultStudioTitle(title) ? title : selectedOutputType.starterTitle;
     const nextBody = body.trim() ? `${body.trimEnd()}\n\n${outline}` : outline;
 
     setTitle(nextTitle);
@@ -970,7 +976,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
       const cards = cardsFromSoanPayload(await loadSoanPayload());
       if (draftFromTagPromptLines(command, cards).length === 0) {
         setAiState('error');
-        setAiError(`No draft cards matched ${command.label}.`);
+        setAiError(`No Studio cards matched ${command.label}.`);
         return;
       }
       const result = await callAiPrompt(
@@ -1159,7 +1165,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
 
   function applySelectedBlockOperation() {
     if (!draft || selectedBlocks.length === 0) {
-      setBlockOperationError('Select draft blocks first.');
+      setBlockOperationError('Select Studio blocks first.');
       return;
     }
     const nextBody = applyDraftBlockOperation(body, {
@@ -1183,7 +1189,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
     () =>
       body.trim().length === 0 &&
       blocks.every((b) => !('text' in b) || !String((b as { text?: string }).text ?? '').trim()) &&
-      (title.trim().length === 0 || title.trim() === 'Untitled draft'),
+      isDefaultStudioTitle(title),
     [body, blocks, title],
   );
 
@@ -1240,7 +1246,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
             </div>
           </div>
           <input
-            aria-label="Draft title"
+            aria-label="Studio title"
             className="new-loom-draft__title"
             id="new-loom-draft-title"
             value={title}
@@ -1316,7 +1322,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
                 onChange={(event) => void handleImportFile(event)}
               />
               <button type="button" className="new-loom-shell__action" onClick={() => save()}>
-                Save draft
+                Save document
               </button>
             </div>
           </div>
@@ -1335,7 +1341,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
             <summary>Raw body</summary>
             <textarea
               ref={bodyTextareaRef}
-              aria-label="Draft body"
+              aria-label="Studio body"
               className="new-loom-draft__body new-loom-draft__body--raw"
               placeholder="Write from source material."
               value={body}
@@ -1438,13 +1444,13 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
         data-open={detailsOpen}
         aria-hidden={!detailsOpen}
       >
-      <aside className="new-loom-draft__inspector" aria-label="Draft references">
+      <aside className="new-loom-draft__inspector" aria-label="Studio references">
         <div className="new-loom-draft__inspector-header">
           <span>Inspector</span>
           <h2>Sources, Edit, Board</h2>
           <p>Review source tiles, provenance, and answer publication state.</p>
         </div>
-        <div className="new-loom-draft__inspector-tabs" role="tablist" aria-label="Draft inspector">
+        <div className="new-loom-draft__inspector-tabs" role="tablist" aria-label="Studio inspector">
           {(['sources', 'edit', 'board'] as const).map((mode) => (
             <button
               type="button"
@@ -1459,17 +1465,17 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
         </div>
         {publicWorkingMode ? (
           <p className="new-loom-draft__public-mode">
-            Public working mode is on. Draft references are masked.
+            Public working mode is on. Studio references are masked.
           </p>
         ) : null}
         {inspectorMode === 'sources' ? (
           <>
-            <section className="new-loom-draft__next" aria-label="AI draft">
+            <section className="new-loom-draft__next" aria-label="AI writing">
               <p className="new-loom-shell__eyebrow">Next</p>
               <h2>Keep writing from this point</h2>
-              <p>Continue with the same source context and preserve the current draft.</p>
+              <p>Continue with the same source context and preserve the current document.</p>
               {selectedOutputTypeId === 'ai-answer' ? (
-                <section className="new-loom-draft__answer-flow" aria-label="Sources to Draft to Answer handoff">
+                <section className="new-loom-draft__answer-flow" aria-label="Sources to Studio to Digital Me handoff">
                   <p className="new-loom-draft__eyebrow">Thread of light</p>
                   <ol>
                     <li data-state={sourceTiles.length > 0 ? 'complete' : 'pending'}>
@@ -1481,17 +1487,17 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
                       </strong>
                     </li>
                     <li data-state={aiSuggestion ? 'complete' : aiState === 'streaming' ? 'active' : 'pending'}>
-                      <span>Draft</span>
+                      <span>Studio</span>
                       <strong>
                         {aiSuggestion
-                          ? 'Answer draft ready'
+                          ? 'Studio answer ready'
                           : aiState === 'streaming'
                             ? 'Writing answer'
                             : 'Continue with AI'}
                       </strong>
                     </li>
                     <li data-state={answerPreviewState === 'saved' ? 'complete' : 'pending'}>
-                      <span>Answer</span>
+                      <span>Digital Me</span>
                       <strong>
                         {answerPreviewState === 'saved'
                           ? 'Published to Digital Me'
@@ -1529,7 +1535,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
                   onClick={() => void startTaggedDraft()}
                   disabled={aiState === 'streaming'}
                 >
-                  Draft from tag
+                  Start from tag
                 </button>
               </div>
               {aiSuggestion ? (
@@ -1540,7 +1546,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
                     ? 'Writing.'
                     : aiState === 'error'
                       ? aiError
-                      : 'AI draft is ready when you are.'}
+                      : 'AI writing is ready when you are.'}
                 </p>
               )}
               {aiState === 'streaming' || aiSuggestion ? (
@@ -1585,7 +1591,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
                   </button>
                   {answerPreviewState === 'saved' ? (
                     <a className="new-loom-draft__answer-flow-link" href="/drafts">
-                      View Draft artifact
+                      View Studio artifact
                     </a>
                   ) : null}
                 </div>
@@ -1849,8 +1855,8 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
               ) : null}
             </section>
 
-            <section className="new-loom-draft__structure" aria-label="Draft structure">
-              <h2>Draft structure</h2>
+            <section className="new-loom-draft__structure" aria-label="Studio structure">
+              <h2>Studio structure</h2>
               {draftBlocks.length > 0 ? (
                 <ol>
                   {draftBlocks.slice(0, 8).map((block) => {
@@ -1885,7 +1891,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
                   })}
                 </ol>
               ) : (
-                <p className="new-loom-draft__ai-empty">No draft blocks yet.</p>
+                <p className="new-loom-draft__ai-empty">No Studio blocks yet.</p>
               )}
               <section className="new-loom-draft__block-operation" aria-label="Block operation">
                 <h3>Block operation</h3>
@@ -1945,7 +1951,7 @@ export function DraftClient({ initialDraftTypeId, editId }: DraftClientProps = {
         ) : null}
 
         {inspectorMode === 'board' ? (
-          <section ref={boardRef} className="new-loom-draft__board" aria-label="Draft card board">
+          <section ref={boardRef} className="new-loom-draft__board" aria-label="Studio card board">
             <DraftBoardClient />
           </section>
         ) : null}

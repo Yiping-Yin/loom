@@ -64,7 +64,7 @@
 ### What the user does NOT do
 - Highlight 100+ passages per session for later review (Readwise-style hoarding) — the user has explicitly rejected "collection-as-an-end" patterns.
 - Build elaborate note hierarchies, tags, or knowledge graphs.
-- Use spaced-repetition / Anki-style review (not yet — possibly future "Panel" feature).
+- Use spaced-repetition / Anki-style review (not yet - possibly future practice/review feature with an explicit product contract).
 
 ---
 

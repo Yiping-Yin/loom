@@ -51,10 +51,12 @@ const approvalVerifier = read('scripts/verify-approval-gates-ready.mjs');
 assertCheck(
   includesAll(activeReadme, [
     'Current new Loom continuation reading order',
+    '2026-06-27-loom-product-definition-user-stories.md',
+    '2026-06-27-loom-remake-audit.md',
     '2026-05-15-new-loom-acceptance-status.md',
     '2026-05-09-new-loom-completion-audit.md',
     '2026-05-09-legacy-surface-migration-plan.md',
-    'Sources / Draft',
+    'Sources / Studio / Digital Me',
     'historical reference only',
     'Collect / Organize',
     'Real user-file installed-app importer acceptance',
@@ -65,13 +67,14 @@ assertCheck(
 
 assertCheck(
   includesAll(activeStatus, [
-    'Primary information architecture is `Sources` and `Draft`',
+    'Primary information architecture is now `Sources`, `Studio`, and `Digital Me`',
+    '`Draft` remains a route',
     '`npm run verify:product` as the safe',
     'Real user-file installed-app importer acceptance',
     'Live provider-output Compile/Draft acceptance',
     'Do not mark the new Loom objective complete',
   ]),
-  'acceptance status must keep Sources/Draft, safe verify:product, and both open gates explicit',
+  'acceptance status must keep Sources/Studio/Digital Me, safe verify:product, and both open gates explicit',
 );
 
 assertCheck(
@@ -89,12 +92,14 @@ assertCheck(
 assertCheck(
   includesAll(productShell, [
     "label: 'Sources'",
-    "label: 'Draft'",
+    "label: 'Studio'",
+    "label: 'Digital Me'",
     "href: '/sources'",
-    "href: '/draft'",
+    "href: '/studio'",
+    "href: '/digital-me'",
   ]) &&
-    !/label:\s*'Collect'|label:\s*'Organize'/.test(productShell),
-  'product shell must keep Sources and Draft as the primary workspaces',
+    !/label:\s*'Collect'|label:\s*'Organize'|label:\s*'Draft'/.test(productShell),
+  'product shell must keep Sources, Studio, and Digital Me as the primary product loop',
 );
 
 const numberedArtifacts = [

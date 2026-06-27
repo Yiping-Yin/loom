@@ -960,10 +960,10 @@ export function buildBoundedDraftAIPrompt(input: {
   const limits = resolveDraftAIPromptLimits(input.limits);
   const outputType = newLoomDraftOutputTypeForId(input.outputTypeId);
   const title = truncateForProviderContext(
-    input.title.trim() || 'Untitled draft',
+    input.title.trim() || 'Untitled document',
     limits.titleChars,
   );
-  const body = truncateForProviderContext(input.body.trim() || '(empty draft)', limits.bodyChars);
+  const body = truncateForProviderContext(input.body.trim() || '(empty document)', limits.bodyChars);
   const references = boundedPromptLines(draftReferencePromptLines(input.references), {
     empty: 'No references attached.',
     lineChars: limits.referenceLineChars,
@@ -972,7 +972,7 @@ export function buildBoundedDraftAIPrompt(input: {
   const inlineReferences = boundedPromptLines(
     draftInlineReferencePromptLines(input.body, input.references, input.corpusHits ?? []),
     {
-      empty: 'No inline @references in the draft.',
+      empty: 'No inline @references in the document.',
       lineChars: limits.inlineLineChars,
       totalChars: limits.inlineTotalChars,
     },
@@ -986,16 +986,16 @@ export function buildBoundedDraftAIPrompt(input: {
   return boundedPromptWithFinalInstruction({
     maxChars: limits.maxPromptChars,
     sections: [
-      'You are Loom Draft, a writing partner inside a personal source-grounded drafting surface.',
-      "Continue the current draft in the user's voice. Use attached references and corpus context only when they are relevant. Do not invent source claims.",
+      'You are Loom Studio, a writing partner inside a personal source-grounded form workbench.',
+      "Continue the current document in the user's voice. Use attached references and corpus context only when they are relevant. Do not invent source claims.",
       `Output type:\n${outputType.label}\nGoal: ${outputType.goal}\nInstruction: ${outputType.promptInstruction}`,
       `Title:\n${title}`,
-      `Current draft:\n${body}`,
+      `Current document:\n${body}`,
       `Attached references:\n${references}`,
       `Inline @references:\n${inlineReferences}`,
       `Corpus context:\n${corpusContext}`,
     ],
-    finalInstruction: 'Return only draft text that can be inserted into the body.',
+    finalInstruction: 'Return only document text that can be inserted into the body.',
   });
 }
 
@@ -1011,10 +1011,10 @@ export function buildBoundedDraftInlineEditPrompt(input: {
   const limits = resolveDraftAIPromptLimits(input.limits);
   const outputType = newLoomDraftOutputTypeForId(input.outputTypeId);
   const title = truncateForProviderContext(
-    input.title.trim() || 'Untitled draft',
+    input.title.trim() || 'Untitled document',
     limits.titleChars,
   );
-  const body = truncateForProviderContext(input.body.trim() || '(empty draft)', limits.bodyChars);
+  const body = truncateForProviderContext(input.body.trim() || '(empty document)', limits.bodyChars);
   const selectedText = truncateForProviderContext(
     input.selectedText.trim() || '(empty selection)',
     limits.selectedTextChars,
@@ -1027,7 +1027,7 @@ export function buildBoundedDraftInlineEditPrompt(input: {
   const inlineReferences = boundedPromptLines(
     draftInlineReferencePromptLines(input.body, input.references, input.corpusHits ?? []),
     {
-      empty: 'No inline @references in the draft.',
+      empty: 'No inline @references in the document.',
       lineChars: limits.inlineLineChars,
       totalChars: limits.inlineTotalChars,
     },
@@ -1041,7 +1041,7 @@ export function buildBoundedDraftInlineEditPrompt(input: {
   return boundedPromptWithFinalInstruction({
     maxChars: limits.maxPromptChars,
     sections: [
-      'You are Loom Draft, a writing partner inside a personal source-grounded drafting surface.',
+      'You are Loom Studio, a writing partner inside a personal source-grounded form workbench.',
       'Inline edit request:',
       'Rewrite only the selected passage. Preserve the user voice. Use attached references and corpus context only when relevant. Do not invent source claims.',
       `Output type:\n${outputType.label}\nInstruction: ${outputType.promptInstruction}`,
@@ -1404,19 +1404,19 @@ export function buildDraftFromTagPrompt(input: {
   command: NewLoomDraftFromTagCommand;
   cards: NewLoomDraftTaggedCard[];
 }) {
-  const title = input.title.trim() || 'Untitled draft';
-  const body = input.body.trim() || '(empty draft)';
+  const title = input.title.trim() || 'Untitled document';
+  const body = input.body.trim() || '(empty document)';
   const lines = draftFromTagPromptLines(input.command, input.cards);
-  const taggedCards = lines.length > 0 ? lines.join('\n') : `No draft cards matched ${input.command.label}.`;
+  const taggedCards = lines.length > 0 ? lines.join('\n') : `No Studio cards matched ${input.command.label}.`;
 
   return [
-    'You are Loom Draft, a writing partner inside a personal source-grounded drafting surface.',
-    `Draft from tag: ${input.command.label}`,
-    'Use the tagged draft cards as source material. Preserve the user voice. Do not invent source claims.',
+    'You are Loom Studio, a writing partner inside a personal source-grounded form workbench.',
+    `Studio from tag: ${input.command.label}`,
+    'Use the tagged Studio cards as source material. Preserve the user voice. Do not invent source claims.',
     `Title:\n${title}`,
-    `Current draft:\n${body}`,
-    `Tagged draft cards:\n${taggedCards}`,
-    'Return only draft text that can be inserted into the body.',
+    `Current document:\n${body}`,
+    `Tagged Studio cards:\n${taggedCards}`,
+    'Return only document text that can be inserted into the body.',
   ].join('\n\n');
 }
 
@@ -2080,7 +2080,7 @@ export function createDraft(
   const timestamp = now();
   const draft: NewLoomDraftRecord = {
     id: createId(),
-    title: input.title?.trim() || 'Untitled draft',
+    title: input.title?.trim() || 'Untitled document',
     body: input.blocks ? (input.body ?? blocksToBody(input.blocks)) : (input.body ?? ''),
     references: input.references ?? [],
     blocks: input.blocks,

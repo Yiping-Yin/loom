@@ -9,17 +9,17 @@ function read(relativePath: string) {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-test('Draft Library route loads persistent Draft Records', () => {
+test('Studio Library route loads persistent Studio records', () => {
   const page = read('app/drafts/page.tsx');
   const client = read('app/drafts/DraftsClient.tsx');
 
   assert.match(page, /DraftsClient/);
   assert.match(client, /loadDraftRecords/);
   assert.match(client, /NEW_LOOM_DRAFT_RECORDS_KEY/);
-  assert.match(client, /Draft Library/);
-  assert.match(client, /Sources\s*→\s*Draft\s*→\s*Answer/);
-  assert.match(client, /No Draft records yet/);
-  assert.match(client, /Open Draft/);
+  assert.match(client, /Studio Library/);
+  assert.match(client, /Sources\s*→\s*Studio\s*→\s*Digital Me/);
+  assert.match(client, /No Studio records yet/);
+  assert.match(client, /Open Studio/);
 });
 
 test('Draft Detail route renders a persistent Draft Record as a published artifact', () => {
@@ -31,12 +31,12 @@ test('Draft Detail route renders a persistent Draft Record as a published artifa
   assert.match(client, /loadDraftRecordById/);
   assert.match(client, /Published Artifact/);
   assert.match(client, /Source trail/);
-  assert.match(client, /Back to Draft Library/);
-  assert.match(client, /Open Draft/);
+  assert.match(client, /Back to Studio Library/);
+  assert.match(client, /Open Studio/);
   assert.match(client, /Record not found/);
 });
 
-test('Draft Library is the canonical entrypoint for Draft Records', () => {
+test('Studio Library is the canonical entrypoint for Studio records', () => {
   const homeData = read('lib/new-loom/verified-dossier-home.ts');
   const home = read('components/verified-dossier/VerifiedDossierHome.tsx');
   const answerInspector = read('components/verified-dossier/AnswerInspector.tsx');
@@ -45,7 +45,7 @@ test('Draft Library is the canonical entrypoint for Draft Records', () => {
 
   assert.doesNotMatch(homeData, /\{\s*label:\s*'Draft',\s*href:\s*'\/drafts'\s*\}/);
   assert.match(homeData, /Digital Me/);
-  assert.match(draftLibrary, /Draft Library/);
+  assert.match(draftLibrary, /Studio Library/);
   assert.doesNotMatch(home, /draftRecordDetailHref\(recentDraftRecord\)/);
   assert.doesNotMatch(home, /recentDraftRecord/);
   assert.match(answerInspector, /draftRecordDetailHref\(draftRecord\)/);

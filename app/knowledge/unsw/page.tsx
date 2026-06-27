@@ -203,7 +203,7 @@ export default function UnswShelfPage() {
             />
           ))}
         </div>
-        <div className={styles.chain} aria-label="Sources to Draft to Answer">
+        <div className={styles.chain} aria-label="Sources to Studio to Digital Me">
           <article className={styles.chainStep}>
             <span>01</span>
             <h3>Sources</h3>
@@ -211,13 +211,13 @@ export default function UnswShelfPage() {
           </article>
           <article className={styles.chainStep}>
             <span>02</span>
-            <h3>Draft</h3>
-            <p>Private notes and worked answers remain labeled as synthesis.</p>
+            <h3>Studio</h3>
+            <p>Private notes and worked answers become cited forms with provenance attached.</p>
           </article>
           <article className={styles.chainStep}>
             <span>03</span>
-            <h3>Answer</h3>
-            <p>Public explanations cite the source objects people can inspect.</p>
+            <h3>Digital Me</h3>
+            <p>Public explanations and answers cite the source objects people can inspect.</p>
           </article>
         </div>
       </SplitSection>

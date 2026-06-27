@@ -1,8 +1,7 @@
 import SystemClient from '../SystemClient';
 
-// /system — how Loom works, on one quiet sheet. Explains the loop
-// between the two primary workspaces (Sources → notes → Draft) and
-// links the support surfaces that sit around it.
+// /system — how Loom works, on one quiet sheet. Explains the current
+// Sources → Studio → Digital Me loop and links the support surfaces around it.
 
 export const metadata = { title: 'System · Loom' };
 

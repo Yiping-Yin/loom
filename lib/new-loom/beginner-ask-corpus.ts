@@ -257,7 +257,7 @@ export function resolveBeginnerSource(
     const label = artifact.label?.trim() || artifact.name;
     // Draft-derived artifact (id `draft-<draftId>`): a curated Studio draft has
     // NO IndexedDB blob, so its citation must NAVIGATE the Studio editor
-    // (/digital-me?edit=<draftId>) rather than open a blob by id. Build that href
+    // (/studio?edit=<draftId>) rather than open a blob by id. Build that href
     // and run it through the URL-scheme allowlist (it is always a kept relative
     // route, but route it through safeHref for the same discipline as every other
     // user-facing href). Returning an `href` (and no `artifactId`/`kind`) makes

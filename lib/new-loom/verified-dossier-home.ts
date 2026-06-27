@@ -355,7 +355,7 @@ export type VerifiedDossierExperienceEntry = {
 };
 
 export type VerifiedDossierLoomIntroStep = {
-  label: 'Sources' | 'Draft' | 'Digital Me';
+  label: 'Sources' | 'Studio' | 'Digital Me';
   text: string;
 };
 
@@ -394,7 +394,7 @@ export type VerifiedDossierAiPrompt = {
 
 export type VerifiedDossierWorkbenchStep = {
   number: string;
-  title: 'Sources' | 'Draft' | 'Answer';
+  title: 'Sources' | 'Studio' | 'Digital Me';
   summary: string;
   detail: string;
 };
@@ -528,7 +528,7 @@ export const VERIFIED_DOSSIER_SECTIONS: VerifiedDossierSection[] = [
 export const VERIFIED_DOSSIER_LOOM_INTRO = {
   title: 'Built with Loom',
   summary:
-    'Loom is the underlying trust mechanism for this profile: real sources become drafts, and Digital Me answers from the same archive.',
+    'Loom is the underlying trust mechanism for this profile: real sources become Studio forms, and Digital Me answers from the same archive.',
   blocking: false,
   steps: [
     {
@@ -536,8 +536,8 @@ export const VERIFIED_DOSSIER_LOOM_INTRO = {
       text: 'Real files, courses, credentials, projects, and evidence stay inspectable.',
     },
     {
-      label: 'Draft',
-      text: 'Source material turns into cited notes, answers, and portfolio-ready work.',
+      label: 'Studio',
+      text: 'Source material turns into cited forms, answers, and portfolio-ready work.',
     },
     {
       label: 'Digital Me',
@@ -725,7 +725,7 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
       'Topic-to-canvas routing',
       'Process replay',
       'Knowledge and experience display',
-      'Draft-backed output generation',
+      'Studio-backed output generation',
     ],
     foundationCategoryIds: ['about', 'education', 'experience'],
   },
@@ -835,7 +835,7 @@ export const VERIFIED_DOSSIER_DIGITAL_ME_CANVASES = [
           {
             label: 'Source-to-answer workflow',
             detail:
-              'Sources are transformed into Draft-backed explanations before they appear in Digital Me.',
+              'Sources are transformed into Studio-backed explanations before they appear in Digital Me.',
             artifactIds: ['econ-slides', 'econ-tutorial'],
             assetIds: ['econ-slides', 'econ-tutorial'],
           },
@@ -1082,7 +1082,7 @@ export const VERIFIED_DOSSIER_WORKBENCH = {
       {
         id: 'draft-summary',
         label: 'Concavity and optimisation summary.md',
-        eyebrow: 'Draft',
+        eyebrow: 'Studio',
         kind: 'draft',
       },
       {
@@ -1096,7 +1096,7 @@ export const VERIFIED_DOSSIER_WORKBENCH = {
     edges: [
       { from: 'problem-set-source', to: 'draft-summary', label: 'Problem context' },
       { from: 'lecture-source', to: 'draft-summary', label: 'Concept source' },
-      { from: 'draft-summary', to: 'grounded-answer', label: 'Cited output' },
+      { from: 'draft-summary', to: 'grounded-answer', label: 'Represented answer' },
     ],
   },
   provenanceSteps: [
@@ -1109,13 +1109,13 @@ export const VERIFIED_DOSSIER_WORKBENCH = {
     },
     {
       number: '02',
-      title: 'Draft',
+      title: 'Studio',
       summary: 'Concavity and optimisation summary.md',
       detail: 'A working note created from lecture, exercise, and answer evidence.',
     },
     {
       number: '03',
-      title: 'Answer',
+      title: 'Digital Me',
       summary: 'Grounded explanation',
       detail: 'Cited back to source artifacts people can inspect from this shelf.',
     },

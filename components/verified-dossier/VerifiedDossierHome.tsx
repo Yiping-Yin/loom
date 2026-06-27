@@ -207,7 +207,7 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
     );
   }
 
-  // Digital Me — Sources → Draft → Answer flow + reasoning artifact.
+  // Digital Me — Sources → Studio → Digital Me flow + reasoning artifact.
   const steps = VERIFIED_DOSSIER_WORKBENCH.provenanceSteps;
   return (
     <div className="lcv-panel lcv-dm">
@@ -224,13 +224,13 @@ function CoverAsset({ category: cat }: { category: VerifiedDossierPresentationCa
                   <path d="M7.6 7.6l3 8M16.4 7.6l-3 8" />
                 </svg>
               )}
-              {step.title === 'Draft' && (
+              {step.title === 'Studio' && (
                 <svg viewBox="0 0 24 24" fill="none">
                   <path d="M5 4h10l4 4v12H5z" />
                   <path d="M9 12h6M9 16h6" />
                 </svg>
               )}
-              {step.title === 'Answer' && (
+              {step.title === 'Digital Me' && (
                 <svg viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="9" />
                   <path d="M8.5 12.5l2.4 2.4 4.6-5" />

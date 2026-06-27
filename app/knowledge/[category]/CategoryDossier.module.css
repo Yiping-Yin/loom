@@ -1,6 +1,6 @@
 /* Category dossier (/knowledge/[category]) — Evidence Desk, Archive scene.
    Cool-black luminance ramp consuming the locked globals; quiet, evidence
-   first, with the cyan Sources -> Draft -> Answer thread on the Ask panel. */
+   first, with the cyan Sources -> Studio -> Digital Me thread on the Ask panel. */
 .page {
   /* Local aliases point at the locked globals — never private copies. */
   --shelf-ink: var(--text-1);
@@ -155,7 +155,7 @@
   color: var(--text-3);
 }
 
-/* Ask panel — Sources -> Draft -> Answer thread of light (cyan = signal). */
+/* Ask panel — Sources -> Studio -> Digital Me thread of light (cyan = signal). */
 .page :global(.vd-inspector-card) {
   border: 1px solid var(--line);
   background: var(--shelf-glass);

@@ -354,7 +354,7 @@ test('retrieve over an artifact-grounded corpus surfaces the me-artifact source 
 // ArtifactRef (id `draft-<id>`) and folded into profile.artifacts. The corpus
 // must then (a) emit it as a resolvable me-artifact-* source grounded in the
 // draft's own text, (b) count it toward the grounding floor, and (c) resolve its
-// citation to OPEN the Studio editor at /digital-me?edit=<draftId> (NOT a blob —
+// citation to OPEN the Studio editor at /studio?edit=<draftId> (NOT a blob -
 // a draft has no IndexedDB blob), with the href run through safeHref.
 
 // A profile whose only proof is an INCLUDED Studio draft, folded in exactly as
@@ -411,13 +411,13 @@ test('(b) the included-draft source counts toward the grounding floor', () => {
   );
 });
 
-test('(c) the draft citation resolves to open the Studio editor at /digital-me?edit=<draftId>', () => {
+test('(c) the draft citation resolves to open the Studio editor at /studio?edit=<draftId>', () => {
   const resolved = resolveBeginnerSource('me-artifact-0', draftBackedProfile);
   assert.ok(resolved, 'the draft artifact id resolves');
   assert.equal(resolved!.label, 'Phillips Curve note');
   // A draft has NO IndexedDB blob — its citation must NAVIGATE the editor href,
   // not carry a blob artifactId for the blob-open path.
-  assert.equal(resolved!.href, '/digital-me?edit=draft123', 'navigates the Studio editor by draft id');
+  assert.equal(resolved!.href, '/studio?edit=draft123', 'navigates the Studio editor by draft id');
   assert.equal(resolved!.artifactId, undefined, 'no blob artifactId — a draft is not a stored blob');
 });
 
@@ -426,7 +426,7 @@ test('(c) beginnerCitationResolver maps the draft to a navigable (non-blob) cita
   const cite = resolve('me-artifact-0');
   assert.ok(cite, 'the draft artifact resolves to a citation');
   assert.equal(cite!.title, 'Phillips Curve note');
-  assert.equal(cite!.href, '/digital-me?edit=draft123', 'citation opens the editor href');
+  assert.equal(cite!.href, '/studio?edit=draft123', 'citation opens the editor href');
   // It is a navigable citation, not a blob-open one: artifactId is the corpus id
   // (the section seam), and there is no file `kind` that would route it to the
   // blob-open path on the client.
@@ -435,11 +435,11 @@ test('(c) beginnerCitationResolver maps the draft to a navigable (non-blob) cita
 });
 
 test('(c) a draft edit href survives the URL-scheme allowlist (safeHref)', () => {
-  // The editor href is relative (/digital-me?edit=…), which safeHref always keeps;
+  // The editor href is relative (/studio?edit=...), which safeHref always keeps;
   // assert the resolved href is the kept, navigable form rather than dropped to ''.
   const resolve = beginnerCitationResolver(draftBackedProfile);
   const cite = resolve('me-artifact-0');
-  assert.ok(cite!.href.startsWith('/digital-me?edit='), 'href is the relative editor route safeHref keeps');
+  assert.ok(cite!.href.startsWith('/studio?edit='), 'href is the relative editor route safeHref keeps');
 });
 
 test('an end-to-end answer can cite the included draft, and the citation opens the editor', () => {
@@ -456,5 +456,5 @@ test('an end-to-end answer can cite the included draft, and the citation opens t
   const { answer, citations } = parseAskYipingCitations(answerText, sources, context.resolveCitation);
   assert.doesNotMatch(answer, /SOURCES:/);
   assert.equal(citations.length, 1, 'only the real draft citation survives');
-  assert.equal(citations[0].href, '/digital-me?edit=draft123');
+  assert.equal(citations[0].href, '/studio?edit=draft123');
 });

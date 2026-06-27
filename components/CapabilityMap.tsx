@@ -32,7 +32,7 @@ import styles from './CapabilityMap.module.css';
  *   work       → /works
  *   artifact   → uploaded: button, IndexedDB blob open-in-new-tab (mirrors
  *                VerifiedArtifactCard); draft-derived (refId `draft-<id>`): a
- *                same-tab link to the Studio editor (/digital-me?edit=<id>) since
+ *                same-tab link to the Studio editor (/studio?edit=<id>) since
  *                a draft has no blob (mirrors the Ask-side citation path)
  *
  * SSR-safe: layout is deterministic (no Math.random at render — positions derive
@@ -710,7 +710,7 @@ function EvidenceExcerpt({ excerpt }: { excerpt?: string }) {
  *
  *  - DRAFT-DERIVED (refId `draft-<id>`): a curated Studio draft has NO IndexedDB
  *    blob, so opening it as a blob would always go "file unavailable". Instead it
- *    cross-refs the Studio editor (/digital-me?edit=<id>) as a same-tab link —
+ *    cross-refs the Studio editor (/studio?edit=<id>) as a same-tab link —
  *    mirroring the Ask-side citation path (resolveBeginnerSource +
  *    draftArtifactEditHref). The href is run through safeHref for the same
  *    URL-scheme discipline as every other user-facing href.

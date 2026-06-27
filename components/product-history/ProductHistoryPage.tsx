@@ -51,16 +51,16 @@ const GROWTH_LOOP = [
   'Question',
   'Judgment',
   'Practice',
-  'Draft',
+  'Studio',
   'Output',
   'Identity',
   'Next source',
 ] as const;
 
 const SYSTEM_LOOP_STEPS = [
-  { label: 'Source workspace', text: 'Add files.' },
+  { label: 'Sources', text: 'Add files.' },
   { label: 'Reader notes', text: 'Mark passages.' },
-  { label: 'Draft references', text: 'Write with references.' },
+  { label: 'Studio references', text: 'Write with references.' },
 ] as const;
 
 const PRODUCT_LAYERS = [
@@ -75,7 +75,7 @@ const FUNCTION_REUSE = [
   { old: 'source shelf', current: 'evidence shelf' },
   { old: 'anchors', current: 'cited answers', legacyCurrent: 'citation-backed Digital Me answers' },
   { old: 'Ask AI on passages', current: 'grounded answers' },
-  { old: 'Sources to Draft', current: 'replay to output', legacyCurrent: 'process replay and output production' },
+  { old: 'Sources to Studio', current: 'replay to representation', legacyCurrent: 'process replay and output production' },
   { old: 'panel / weave / pattern', current: 'private ontology' },
   { old: 'web capture and native importer', current: 'acquisition' },
   { old: 'command palette role split', current: 'AI architecture' },

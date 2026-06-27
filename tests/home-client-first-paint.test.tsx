@@ -98,7 +98,8 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(html, /\/brand\/loom_lunar_orb\.png/);
   assert.match(html, /class="new-loom-home-capabilities"/);
   assert.match(html, /data-capability="sources"/);
-  assert.match(html, /data-capability="draft"/);
+  assert.match(html, /data-capability="studio"/);
+  assert.match(html, /data-capability="digital-me"/);
   assert.doesNotMatch(html, /<nav class="new-loom-home-capabilities"/);
   assert.doesNotMatch(html, /aria-label="Loom workspaces"/);
 
@@ -394,7 +395,7 @@ test('white dashboard homepage is retired into the hybrid evidence cover design'
   assert.match(homeSource, /VERIFIED_DOSSIER_PRESENTATION_CATEGORIES/);
   assert.match(homeSource, /VERIFIED_DOSSIER_UNSW_COURSES/);
   assert.match(homeSource, /LoomGlobalNav/);
-  // Digital Me preview now reuses the canonical Sources → Draft → Answer
+  // Digital Me preview now reuses the canonical Sources → Studio → Digital Me
   // workbench provenance steps, so the import is expected (was forbidden in v11).
   assert.match(homeSource, /VERIFIED_DOSSIER_WORKBENCH/);
   assert.match(homeSource, /lcv-shell/);

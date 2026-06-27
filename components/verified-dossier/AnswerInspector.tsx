@@ -34,7 +34,7 @@ export function AnswerInspector({
         }))
     : [];
   const hasDraftContext = Boolean(draftAnswerPreview || draftRecord);
-  const statusLabel = draftRecord ? 'Draft saved' : draftAnswerPreview ? 'Draft preview' : 'Grounded';
+  const statusLabel = draftRecord ? 'Studio saved' : draftAnswerPreview ? 'Studio preview' : 'Grounded';
   const sourceCount = hasDraftContext ? draftSources.length : citedArtifacts.length;
   const sourceCountLabel = `${sourceCount} ${sourceCount === 1 ? 'source' : 'sources'}`;
 
@@ -45,13 +45,13 @@ export function AnswerInspector({
         <span>{statusLabel}</span>
       </div>
       <article className="vd-answer-snapshot" aria-label="Grounded cited answer">
-        <small>{hasDraftContext ? 'Latest Draft' : 'UNSW'}</small>
+        <small>{hasDraftContext ? 'Latest Studio' : 'UNSW'}</small>
         <strong>{question}</strong>
         <p>{answer}</p>
       </article>
       {draftRecord ? (
         <a className="vd-draft-record-link" href={draftRecordDetailHref(draftRecord)}>
-          <span>Draft record</span>
+          <span>Studio record</span>
           <strong>{draftRecord.title}</strong>
           <small>{formatDraftRecordStatus(draftRecord.status)}</small>
         </a>
@@ -59,7 +59,7 @@ export function AnswerInspector({
       <div className="vd-grounding-strip vd-grounding-strip--compact" aria-label="Grounding status">
         <span>
           <strong>{sourceCountLabel}</strong>
-          <small>{hasDraftContext ? 'Draft sources' : 'Cited PDFs'}</small>
+          <small>{hasDraftContext ? 'Studio sources' : 'Cited PDFs'}</small>
         </span>
         <span>
           <strong>{citationRegistryCount}</strong>
@@ -69,7 +69,7 @@ export function AnswerInspector({
       {hasDraftContext ? (
         <>
           <h3 className="vd-citation-heading">Sources</h3>
-          <div className="vd-draft-answer-sources vd-draft-answer-sources--compact" aria-label="Draft sources">
+          <div className="vd-draft-answer-sources vd-draft-answer-sources--compact" aria-label="Studio sources">
             {draftSources.length > 0 ? (
               draftSources.slice(0, 2).map((source) => (
                 <a key={`${source.href}:${source.label}`} className="vd-draft-answer-source" href={source.href}>
@@ -78,7 +78,7 @@ export function AnswerInspector({
                 </a>
               ))
             ) : (
-              <p>No Draft sources published.</p>
+              <p>No Studio sources published.</p>
             )}
             {draftSources.length > 2 ? (
               <span className="vd-citation-row__more">+{draftSources.length - 2} sources</span>
@@ -121,5 +121,5 @@ export function AnswerInspector({
 function formatDraftRecordStatus(status: NewLoomDraftRecord['status']) {
   if (status === 'previewed') return 'Previewed';
   if (status === 'published') return 'Published';
-  return 'Drafting';
+  return 'In progress';
 }

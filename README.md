@@ -2,10 +2,10 @@
 
 # Loom
 
-### Build a digital extension of yourself.
+### Let your work unfold from the sources you actually have.
 
-**A living knowledge identity for the AI era** — your learning, projects, work, and AI
-conversations woven into one source-backed self that grows over time and can answer for you.
+**A local context-to-form workspace for the AI era** — your files, captures, notes, projects,
+and AI conversations become source-backed forms, and the strongest forms can represent you.
 
 </div>
 
@@ -20,32 +20,45 @@ of that knowledge fragments across documents, notes, chats, certificates, and pl
 losing context about who we are and what we can do — and every interview, collaboration, or
 introduction means **reconstructing our story from scratch**.
 
-Loom solves this by creating a **living knowledge identity**. It connects a person's learning
-journey, projects, experiences, and AI conversations into a searchable knowledge base that grows
-with them — and eventually becomes a **personalised AI that can represent and communicate their
-knowledge and expertise.**
+Loom solves this by giving source material a place to become form. It connects a person's learning
+journey, projects, experiences, and AI conversations into a local workspace where sources are
+resolved, shaped into Studio documents, and then selectively represented as a living Digital Me.
 
-> In the AI era, your most valuable asset isn't your résumé or portfolio — it's your **accumulated
-> knowledge**. Loom helps you preserve it, showcase it, and unlock its value.
+> In the AI era, your most valuable asset isn't your résumé or portfolio — it's the source-backed
+> record of what you have learned, made, tested, and understood. Loom helps that record become
+> usable form.
 
-The loop, in four moves:
+The loop, in three product surfaces:
 
-| Preserve | Connect | Showcase | Represent |
-|----------|---------|----------|-----------|
-| Capture sources — docs, slides, notes, certificates, AI chats — into one place. | Link them into an evidence graph: claims, sources, and the proof between them. | A dossier anyone can inspect — source-backed, never just asserted. | A personalised AI that answers for you, with citations to your real work. |
+| Sources | Studio | Digital Me |
+|---------|--------|------------|
+| Bring in files, captures, notes, and prior work; resolve them into claims, quotes, examples, contradictions, gaps, and questions. | Shape resolved source pieces into block documents, cited answers, process pages, proofs, and artifacts. | Present selected forms and source-backed claims as a living representation that can answer with citations. |
 
 ---
 
 ## The product
 
-### A source-backed dossier — not a résumé
+### Sources — context before conclusions
 
-Every claim resolves to a real file. About · Education · Experience · Digital Me form one coherent,
-inspectable identity; visitors open the source behind any statement instead of taking it on trust.
+Sources is where real material enters Loom: local files, rich web captures, notes, AI chats,
+coursework, certificates, project evidence, and process records. It is not a dumping ground.
+Its job is to help the user resolve context into usable pieces: claims, quotes, examples,
+contradictions, gaps, and questions.
+
+### Studio — form from evidence
+
+Studio is the workbench where those pieces become something durable: a block document, cited answer,
+process page, proof artifact, portfolio explanation, or public writeup. The old `/draft` route and
+Draft storage language remain compatibility/implementation details; the user-facing product surface
+is Studio.
+
+### Digital Me — representation, not the starting point
+
+Every claim resolves to a real file or Studio form. About · Education · Experience · Digital Me form
+one coherent, inspectable identity; visitors open the source behind any statement instead of taking
+it on trust.
 
 ![Education and Experience](docs/images/product/experience-hero.png)
-
-### Digital Me — ask my knowledge, get cited answers
 
 Digital Me turns the dossier into a conversational interface. **Ask Yiping** anything; answers are
 drawn only from verified evidence, with citations back to the underlying sources. A Role OS maps
@@ -88,15 +101,15 @@ Your files stay on your Mac. Bring your own API key for Anthropic or OpenAI, or 
 
 ## What this is
 
-Loom is a thinking tool. Not a note app, not a chat app, not a generic AI assistant floating outside your sources — a source-backed workspace for turning scattered material into inspectable knowledge.
+Loom is a thinking tool. Not a note app, not a chat app, not a generic AI assistant floating outside your sources — a source-backed workspace for turning scattered material into inspectable form.
 
 Its core jobs are to:
 
+- resolve source material before asking AI to write from it;
+- shape resolved context into Studio forms with explicit provenance;
 - show finished work as portfolio with proof;
-- keep the source material behind every learning path or project;
-- preserve decisions, notes, drafts, and process history;
-- let a grounded personal AI answer from the archive instead of from a generic prompt;
-- keep files, notes, references, and decisions owned by the user.
+- let a grounded personal AI answer from selected forms and sources instead of from a generic prompt;
+- keep files, notes, references, forms, and decisions owned by the user.
 
 In the AI era, two things matter that no chat tool gives you at the same time: **speed** (your brain never stops, ideas leap, you talk to AI continuously) and **permanence** (the trail of that thinking doesn't disappear when you close the tab). Loom gives you both.
 
@@ -117,7 +130,7 @@ In the AI era, two things matter that no chat tool gives you at the same time: *
 
 <br>
 
-This origin story explains the name and early design language. It is not the current product navigation model; current visible product language is Sources and Draft.
+This origin story explains the name and early design language. It is not the current product navigation model; current visible product language is Sources, Studio, and Digital Me.
 
 Not because the interface draws warp and weft. Because the product **does what a loom does**.
 
@@ -168,6 +181,6 @@ rename the fork.
 
 <div align="center">
 
-*Think from Sources. Build in Draft.*
+*Resolve in Sources. Shape in Studio. Represent through Digital Me.*
 
 </div>

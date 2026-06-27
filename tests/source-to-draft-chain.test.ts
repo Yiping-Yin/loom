@@ -35,7 +35,7 @@ test('verified source artifacts build a Draft URL with source context and AI Ans
     resolveVerifiedDossierArtifact('econ-tutorial'),
   ], { type: 'ai-answer' });
 
-  assert.ok(url.startsWith('/digital-me?'), url);
+  assert.ok(url.startsWith('/studio?'), url);
   const params = new URLSearchParams(url.slice(url.indexOf('?') + 1));
 
   assert.equal(params.get('draftType'), 'ai-answer');
@@ -56,20 +56,18 @@ test('verified source artifacts build a Draft URL with source context and AI Ans
   assert.match(params.getAll('artifactTargetId')[0] ?? '', /econ-slides/);
 });
 
-test('home active evidence story exposes a direct source to Draft action', () => {
+test('home active evidence story exposes a direct source to Studio action', () => {
   const evidenceWorkbench = read('components/verified-dossier/EvidenceWorkbench.tsx');
 
   assert.match(evidenceWorkbench, /buildDraftUrlFromArtifacts/);
-  assert.match(evidenceWorkbench, /Draft with sources/);
+  assert.match(evidenceWorkbench, /Studio with sources/);
 });
 
-test('home active evidence story can show Draft records created from its sources', () => {
-  const home = read('components/verified-dossier/VerifiedDossierHome.tsx');
+test('home active evidence story can show Studio records created from its sources', () => {
   const evidenceWorkbench = read('components/verified-dossier/EvidenceWorkbench.tsx');
 
-  assert.match(home, /draftRecords=\{recentDraftRecord \? \[recentDraftRecord\] : \[\]\}/);
   assert.match(evidenceWorkbench, /draftRecords/);
-  assert.match(evidenceWorkbench, /Draft records/);
+  assert.match(evidenceWorkbench, /Studio records/);
   assert.match(evidenceWorkbench, /draftRecordDetailHref\(record\)/);
 });
 

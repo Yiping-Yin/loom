@@ -96,7 +96,7 @@ test('Draft publish writes a persistent Draft record next to the answer preview'
   assert.match(draftClient, /draftUrl:\s*currentDraftUrl/);
 });
 
-test('Draft AI Answer exposes the complete Sources to Draft to Answer handoff state', () => {
+test('Draft AI Answer exposes the complete Sources to Studio to Digital Me handoff state', () => {
   const draftClient = read('app/draft/DraftClient.tsx');
   const draftPage = read('app/draft/page.tsx');
 
@@ -107,11 +107,11 @@ test('Draft AI Answer exposes the complete Sources to Draft to Answer handoff st
     draftClient,
     /useState<NewLoomDraftOutputTypeId>\(\(\) =>[\s\S]*initialDraftOutputTypeIdFromLocation\(initialDraftTypeId\)/,
   );
-  assert.match(draftPage, /searchParams/);
-  assert.match(draftPage, /initialDraftTypeId=\{draftType\}/);
+  assert.match(draftPage, /draftStubTarget/);
+  assert.match(draftPage, /window\.location\.replace\(draftStubTarget\(window\.location\.search\)\)/);
   assert.match(draftClient, />\s*Sources\s*</);
-  assert.match(draftClient, />\s*Draft\s*</);
-  assert.match(draftClient, />\s*Answer\s*</);
+  assert.match(draftClient, />\s*Studio\s*</);
+  assert.match(draftClient, />\s*Digital Me\s*</);
   assert.match(draftClient, /Open Digital Me answer/);
   assert.match(draftClient, /href="\/digital-me#digital-me-answer-title"/);
   assert.doesNotMatch(draftClient, /href="\/#cited-answer"/);
@@ -138,14 +138,14 @@ test('Digital Me owns the cited answer surface while Draft preview remains publi
   assert.doesNotMatch(home, /draftAnswerPreview=\{draftAnswerPreview\}/);
   assert.doesNotMatch(home, /AnswerInspector/);
   assert.doesNotMatch(digitalMePage, /VERIFIED_DOSSIER_AI_PROMPT/);
-  assert.match(digitalMePage, /DIGITAL_ME_PROOF_PATH/);
-  assert.match(digitalMePage, /DigitalMeRoleOSClient/);
+  assert.match(digitalMePage, /DigitalMeGate/);
+  assert.match(digitalMePage, /Suspense/);
   assert.match(digitalMeClient, /digital-me-answer-title/);
   assert.match(digitalMeClient, /FileBadge/);
   assert.match(digitalMeClient, /resolveDigitalMeEvidenceArtifact/);
   assert.match(answerInspector, /draftAnswerPreview/);
-  assert.match(answerInspector, /Draft preview/);
-  assert.match(answerInspector, /Draft sources/);
+  assert.match(answerInspector, /Studio preview/);
+  assert.match(answerInspector, /Studio sources/);
 });
 
 test('Draft and inspector handoff keep persistent records outside the static homepage cover', () => {
@@ -165,5 +165,5 @@ test('Draft and inspector handoff keep persistent records outside the static hom
   assert.match(draftClient, /\/digital-me#digital-me-answer-title/);
   assert.match(answerInspector, /draftRecord/);
   assert.match(answerInspector, /draftRecordDetailHref/);
-  assert.match(answerInspector, /Draft record/);
+  assert.match(answerInspector, /Studio record/);
 });

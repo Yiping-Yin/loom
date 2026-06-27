@@ -162,7 +162,7 @@ export function yearItemDraftHref(item: NewLoomYearItem) {
   params.set('label', item.title);
   params.set('source', item.title);
   params.set('kind', 'source');
-  return `/digital-me?edit=new&${params.toString()}`;
+  return `/studio?edit=new&${params.toString()}`;
 }
 
 export function hourItemDraftHref(item: NewLoomYearItem) {
@@ -172,7 +172,7 @@ export function hourItemDraftHref(item: NewLoomYearItem) {
   params.set('source', item.title);
   params.set('kind', 'source');
   params.set('excerpt', 'Carried over from the current hour.');
-  return `/digital-me?edit=new&${params.toString()}`;
+  return `/studio?edit=new&${params.toString()}`;
 }
 
 /* ── Input adapters · shared by the /year and /hour clients ── */

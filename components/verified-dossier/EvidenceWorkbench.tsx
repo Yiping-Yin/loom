@@ -67,7 +67,7 @@ export function ActiveEvidenceStory({
       </div>
       <div className="vd-active-story__actions">
         <a className="vd-active-story__link vd-active-story__draft-link" href={draftUrl}>
-          Draft with sources <ArrowIcon />
+          Studio with sources <ArrowIcon />
         </a>
         <a className="vd-active-story__link" href={section.href}>
           Open source shelf <ArrowIcon />
@@ -97,8 +97,8 @@ export function ActiveEvidenceStory({
         </div>
 
         {linkedDraftRecords.length > 0 ? (
-          <div className="vd-active-story__draft-records" aria-label="Draft records">
-            <h3>Draft records</h3>
+          <div className="vd-active-story__draft-records" aria-label="Studio records">
+            <h3>Studio records</h3>
             <div>
               {linkedDraftRecords.map((record) => (
                 <a key={record.id} href={draftRecordDetailHref(record)}>
@@ -118,7 +118,7 @@ export function ActiveEvidenceStory({
 function formatDraftRecordStatus(status: NewLoomDraftRecord['status']) {
   if (status === 'previewed') return 'Previewed';
   if (status === 'published') return 'Published';
-  return 'Drafting';
+  return 'In progress';
 }
 
 export function SourceGraph({
@@ -168,8 +168,8 @@ function SourceGraphNode({ node }: { node: VerifiedDossierGraphNode }) {
 export function ProvenanceChain({ steps }: { steps: readonly VerifiedDossierWorkbenchStep[] }) {
   return (
     <section className="vd-provenance-section vd-provenance-section--rail" aria-labelledby="provenance-title">
-      <h2 id="provenance-title">Sources <span>→</span> Draft <span>→</span> Answer</h2>
-      <ol className="vd-provenance-chain" aria-label="Sources to Draft to Answer chain">
+      <h2 id="provenance-title">Sources <span>→</span> Studio <span>→</span> Digital Me</h2>
+      <ol className="vd-provenance-chain" aria-label="Sources to Studio to Digital Me chain">
         {steps.map((step, index) => (
           <li key={step.number} className="vd-provenance-chain__item">
             <article className="vd-provenance-step" aria-label={`${step.title}: ${step.summary}. ${step.detail}`}>

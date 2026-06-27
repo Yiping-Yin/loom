@@ -32,7 +32,7 @@ import {
  * Exported because the Ask corpus needs it to tell a draft-derived artifact
  * apart from an uploaded one: an uploaded artifact's citation opens its
  * IndexedDB blob by id, but a draft has NO blob — its citation must instead
- * navigate to the Studio editor (`/digital-me?edit=<draftId>`). See
+ * navigate to the Studio editor (`/studio?edit=<draftId>`). See
  * `resolveBeginnerSource` in beginner-ask-corpus.ts.
  */
 export const DRAFT_ARTIFACT_ID_PREFIX = 'draft-';
@@ -40,15 +40,14 @@ export const DRAFT_ARTIFACT_ID_PREFIX = 'draft-';
 /**
  * Build the Studio editor href for a draft-derived artifact id. Strips the
  * `draft-` prefix back to the raw draft id and points at the edit-mode route
- * (`/digital-me?edit=<draftId>`) that DigitalMeGate renders as the full-screen
- * DraftClient. Returns null when the id is not a draft artifact id, so callers
+ * (`/studio?edit=<draftId>`). Returns null when the id is not a draft artifact id, so callers
  * can fall back to the uploaded-artifact (blob-open) path.
  */
 export function draftArtifactEditHref(artifactId: string): string | null {
   if (!artifactId.startsWith(DRAFT_ARTIFACT_ID_PREFIX)) return null;
   const draftId = artifactId.slice(DRAFT_ARTIFACT_ID_PREFIX.length);
   if (!draftId) return null;
-  return `/digital-me?edit=${encodeURIComponent(draftId)}`;
+  return `/studio?edit=${encodeURIComponent(draftId)}`;
 }
 
 /**
@@ -158,7 +157,7 @@ export function mergeDraftArtifactsForDerivation(
  * corpus never sees a curated draft and the me-artifact-* draft source + its
  * openable citation are unreachable at runtime. Folding the drafts in here makes
  * an included draft genuinely reach the corpus, count toward the grounding floor,
- * and resolve to a /digital-me?edit=<draftId> citation.
+ * and resolve to a /studio?edit=<draftId> citation.
  *
  * Discipline mirrors handleBuildCapabilities exactly (capability-derivation path):
  *   - NULL profile → null. forceOwnerCorpus, or no local profile, passes null so

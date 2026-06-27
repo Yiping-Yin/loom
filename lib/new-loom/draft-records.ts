@@ -33,7 +33,7 @@ export function buildDraftRecord(input: {
   now?: () => string;
 }): NewLoomDraftRecord {
   const updatedAt = (input.now ?? (() => new Date().toISOString()))();
-  const title = cleanDraftRecordText(input.title) || 'Untitled draft';
+  const title = cleanDraftRecordText(input.title) || 'Untitled document';
 
   return {
     id: buildDraftRecordId(title, updatedAt),
@@ -98,7 +98,7 @@ export function loadDraftRecordById(
 }
 
 export function draftRecordDetailHref(record: Pick<NewLoomDraftRecord, 'id'>) {
-  return `${DIGITAL_ME_ANSWER_ROUTE}?draftRecord=${encodeURIComponent(record.id)}${DIGITAL_ME_ANSWER_ANCHOR}`;
+  return `/drafts/${encodeURIComponent(record.id)}`;
 }
 
 /** Remove an answer record by id. No-op when there is no storage (SSR). */

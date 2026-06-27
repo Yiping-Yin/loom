@@ -48,7 +48,7 @@ test('toStudioDocumentSummary carries the includedInDigitalMe curation flag', ()
   assert.equal(included.includedInDigitalMe, true);
 });
 
-test('BeginnerDocuments renders document cards that open /draft?d=<id>', () => {
+test('BeginnerDocuments renders document cards that open Studio by id', () => {
   const { BeginnerDocuments } = require('../app/digital-me/BeginnerDocuments');
   const html = render(
     <BeginnerDocuments
@@ -57,8 +57,8 @@ test('BeginnerDocuments renders document cards that open /draft?d=<id>', () => {
       ]}
     />,
   );
-  assert.match(html, /href="\/digital-me\?edit=d1"/);
-  assert.match(html, /href="\/digital-me\?edit=new"/); // the "New document" header action
+  assert.match(html, /href="\/studio\?edit=d1"/);
+  assert.match(html, /href="\/studio\?edit=new"/); // the "New document" header action
   const text = visibleText(html);
   assert.match(text, /Studio/);
   assert.match(text, /Quant note/);
@@ -85,6 +85,6 @@ test('BeginnerDocuments marks included docs with a quiet "In Digital Me" chip', 
 test('BeginnerDocuments shows an empty-state CTA when there are no documents', () => {
   const { BeginnerDocuments } = require('../app/digital-me/BeginnerDocuments');
   const html = render(<BeginnerDocuments documents={[]} />);
-  assert.match(html, /href="\/digital-me\?edit=new"/);
+  assert.match(html, /href="\/studio\?edit=new"/);
   assert.match(visibleText(html), /Start a document/);
 });

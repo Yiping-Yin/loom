@@ -84,7 +84,7 @@ export default function ConnectionsClient() {
               file — are shown first. Material comes in through{' '}
               <Link href="/sources" className={styles.textLink}>Sources</Link> and a
               connection worth keeping continues in{' '}
-              <Link href="/digital-me?edit=new" className={styles.textLink}>Draft</Link>.
+              <Link href="/studio" className={styles.textLink}>Studio</Link>.
             </p>
           </div>
           <div className={styles.heroPanel} aria-hidden="true">

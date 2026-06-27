@@ -174,11 +174,11 @@ only proves the final gates are explicit and ready; it does not close them.
     from the current acceptance status, then the completion audit, then the
     legacy-surface migration map. The older 2026-05-08 skeleton docs are
     explicitly historical reference only, and old Phase 1 / Collect / Organize
-    snippets must be translated into the current Sources / Draft model before
-    acting.
+    snippets must now be translated into the current Sources / Studio / Digital Me
+    model before acting.
   - `scripts/verify-new-loom-completion-audit.mjs` now reads that active README
     and fails if the continuation reading order, historical skeleton boundary,
-    Sources / Draft translation rule, or either approval-bound gate name is
+    Sources / Studio / Digital Me translation rule, or either approval-bound gate name is
     missing.
   - `scripts/verify-approval-gates-ready.mjs --json` now emits a
     machine-readable evidence checklist for the two approval-bound gates. It
@@ -231,8 +231,9 @@ only proves the final gates are explicit and ready; it does not close them.
 
 Current terminology note: updates below this line are a historical evidence log.
 Older entries may quote then-current UI labels such as Collect, Organize, or
-Source Index; the current product contract is Sources / Draft, with old routes
-kept only as compatibility aliases.
+Source Index; the current product contract is Sources / Studio / Digital Me.
+`Draft` remains a route/storage/test compatibility name for the Studio document
+engine, and old routes are kept only as compatibility aliases.
 
 - Update at 2026-05-12 23:25 AEST:
   - `npm run app:user` rebuilt the static export and installed the latest native app to `/Users/yinyiping/Applications/Loom.app`.

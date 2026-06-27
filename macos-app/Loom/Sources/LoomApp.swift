@@ -159,7 +159,6 @@ struct LoomApp: App {
                 HoldQuestionMenuItem()
                 AddSoanCardMenuItem()
                 ConnectSoanCardsMenuItem()
-                WeavePanelsMenuItem()
                 RehearsalMenuItem()
                 ExaminerMenuItem()
                 ReconstructionsMenuItem()
@@ -861,21 +860,6 @@ struct ConnectSoanCardsMenuItem: View {
     }
 }
 
-/// ⌘⇧W — "Weave Two Panels…". Mints a `LoomWeave` — an explicit,
-/// directed relation (supports / contradicts / elaborates / echoes)
-/// between two crystallized panels. Sibling of `ConnectSoanCardsMenuItem`
-/// on the Edit menu; the sheet lists qualifying reading traces and lets
-/// the learner pick `from` / `to` / kind / rationale. Posts
-/// `.loomShowWeavePanelsDialog`; ContentView owns the `.sheet` binding.
-struct WeavePanelsMenuItem: View {
-    var body: some View {
-        Button("Connect Reader Notes…") {
-            NotificationCenter.default.post(name: .loomShowWeavePanelsDialog, object: nil)
-        }
-        .keyboardShortcut("w", modifiers: [.command, .shift])
-    }
-}
-
 /// ⌘⇧X — opens Inspector to Examiner tab. Single-window consolidation.
 struct ExaminerMenuItem: View {
     var body: some View {
@@ -1140,10 +1124,6 @@ extension Notification.Name {
     /// matching Shuttle command. ContentView observes and flips a
     /// local @State binding to present the ConnectSoanCardsSheet.
     static let loomShowConnectSoanCardsDialog = Notification.Name("loomShowConnectSoanCardsDialog")
-    /// Posted by the "Weave Two Panels…" menu item (⌘⇧W) and the
-    /// matching Shuttle command. ContentView observes and flips a
-    /// local @State binding to present the WeavePanelsSheet.
-    static let loomShowWeavePanelsDialog = Notification.Name("loomShowWeavePanelsDialog")
     /// Posted by the Shuttle's "Export Loom" / "Import Loom" action
     /// rows. WindowOpener handles these by invoking LoomExport directly
     /// — no web surface to hop through.

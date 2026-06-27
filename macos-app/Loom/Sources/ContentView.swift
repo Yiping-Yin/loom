@@ -72,12 +72,6 @@ struct ContentView: View {
     /// the matching Shuttle command). Pairs with `AddSoanCardSheet` —
     /// add mints cards, connect mints the edges that relate them.
     @State private var connectSoanCardsSheetVisible = false
-    /// Presentation state for the "Weave Two Panels…" sheet (⌘⇧W or
-    /// the matching Shuttle command). Mints a `LoomWeave` — an
-    /// explicit directed relation (supports / contradicts /
-    /// elaborates / echoes) between two panels. Same dispatch pattern
-    /// as the sibling sheets.
-    @State private var weavePanelsSheetVisible = false
     // Bumped when the user re-picks the content folder in the first-run
     // wizard or Settings → Data. Used as a `.id()` on LoomWebView so the
     // NSViewRepresentable rebuilds with the freshly-activated host root
@@ -875,9 +869,6 @@ struct ContentView: View {
         .sheet(isPresented: $connectSoanCardsSheetVisible) {
             ConnectSoanCardsSheet(isPresented: $connectSoanCardsSheetVisible)
         }
-        .sheet(isPresented: $weavePanelsSheetVisible) {
-            WeavePanelsSheet(isPresented: $weavePanelsSheetVisible)
-        }
         .onReceive(NotificationCenter.default.publisher(for: .loomShowHoldQuestionDialog)) { _ in
             holdQuestionSheetVisible = true
         }
@@ -886,9 +877,6 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomShowConnectSoanCardsDialog)) { _ in
             connectSoanCardsSheetVisible = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .loomShowWeavePanelsDialog)) { _ in
-            weavePanelsSheetVisible = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomContentRootChanged)) { _ in
             webState.didFirstLoad = false
@@ -1158,99 +1146,6 @@ struct ConnectSoanCardsSheet: View {
                 let label = c.title.isEmpty ? "\(c.kind) · \(snippet)" : "\(c.kind) · \(c.title)"
                 return (c.id, label)
             }
-        }
-    }
-}
-
-/// Sheet for weaving two panels together — an explicit, directed
-/// relation the learner asserts between crystallized pieces of their
-/// understanding. Opened via ⌘⇧W / Edit-menu "Weave Two Panels…" /
-/// Shuttle. Loads qualifying reading-kind traces on appear as the
-/// panel list, lets the learner pick a `from` + `to` + kind
-/// (supports / contradicts / elaborates / echoes) + optional
-/// rationale, then mints a `LoomWeave` via
-/// `LoomWeaveWriter.createWeave`. The coordinator picks up
-/// `.loomWeaveChanged` and wakes `WeavesClient` so it re-fetches the
-/// constellation projection without a reload.
-struct WeavePanelsSheet: View {
-    @Binding var isPresented: Bool
-    @State private var fromPanelId: String = ""
-    @State private var toPanelId: String = ""
-    @State private var kind: String = "supports"
-    @State private var rationale: String = ""
-    @State private var panels: [(id: String, title: String)] = []
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Connect Reader Notes")
-                .font(.custom("Cormorant Garamond", size: 22).italic())
-
-            if panels.count < 2 {
-                Text("Connecting needs at least two reader notes. Save a couple of readings first — a reader note is a reading trace that has grown at least one thought or summary.")
-                    .font(.custom("EB Garamond", size: 13))
-                    .foregroundStyle(LoomTokens.muted)
-            } else {
-                Picker("From", selection: $fromPanelId) {
-                    Text("(choose a reader note)").tag("")
-                    ForEach(panels, id: \.id) { p in
-                        Text(p.title).tag(p.id)
-                    }
-                }
-
-                Picker("To", selection: $toPanelId) {
-                    Text("(choose a reader note)").tag("")
-                    ForEach(panels, id: \.id) { p in
-                        Text(p.title).tag(p.id)
-                    }
-                }
-
-                Picker("Relation", selection: $kind) {
-                    Text("Supports").tag("supports")
-                    Text("Contradicts").tag("contradicts")
-                    Text("Adds detail").tag("elaborates")
-                    Text("Related").tag("echoes")
-                }
-
-                TextField("Rationale (optional)", text: $rationale, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(2...5)
-                    .font(.custom("EB Garamond", size: 13))
-            }
-
-            HStack {
-                Spacer()
-                Button("Cancel") { isPresented = false }
-                Button("Weave") {
-                    let trimmed = rationale.trimmingCharacters(in: .whitespaces)
-                    _ = try? LoomWeaveWriter.createWeave(
-                        fromPanelId: fromPanelId,
-                        toPanelId: toPanelId,
-                        kind: kind,
-                        rationale: trimmed
-                    )
-                    isPresented = false
-                }
-                .disabled(panels.count < 2 || fromPanelId.isEmpty || toPanelId.isEmpty || fromPanelId == toPanelId)
-                .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding(20)
-        .frame(width: 520)
-        .background(LoomTokens.paper)
-        .onAppear {
-            // Load panel list from SwiftData traces. Only reading-kind
-            // traces with a non-empty source title qualify — matches the
-            // mirror's `buildPanelsPayload` gate well enough for picker
-            // purposes. Cap at 100 so the dropdown stays sane.
-            let traces = (try? LoomTraceWriter.allTraces()) ?? []
-            panels = traces
-                .filter { $0.kind == "reading" }
-                .compactMap { t -> (String, String)? in
-                    guard let title = t.sourceTitle, !title.isEmpty else { return nil }
-                    return (t.id, title)
-                }
-                .prefix(100)
-                .map { ($0.0, $0.1) }
         }
     }
 }
@@ -2040,6 +1935,7 @@ struct LoomWebView: NSViewRepresentable {
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         context.coordinator.fallbackURL = url
         // Transparent background — the SwiftUI parent paints Vellum
         // paper/night behind the webview, so between page unload and
@@ -2214,8 +2110,26 @@ struct LoomWebView: NSViewRepresentable {
         #endif
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, NSGestureRecognizerDelegate {
+    class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler, NSGestureRecognizerDelegate {
         weak var webView: WKWebView?
+
+        /// WKWebView shows the native file picker for `<input type="file">` ONLY when a
+        /// uiDelegate implements this. Without it, "Add documents" (proof upload) and every
+        /// other file input silently no-op inside the app. Mirrors the standard AppKit panel;
+        /// createWebViewWith is deliberately NOT implemented, so target=_blank stays handled
+        /// by the navigation delegate's desiredURL path.
+        func webView(_ webView: WKWebView,
+                     runOpenPanelWith parameters: WKOpenPanelParameters,
+                     initiatedByFrame frame: WKFrameInfo,
+                     completionHandler: @escaping ([URL]?) -> Void) {
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = true
+            panel.canChooseDirectories = parameters.allowsDirectories
+            panel.allowsMultipleSelection = parameters.allowsMultipleSelection
+            panel.begin { result in
+                completionHandler(result == .OK ? panel.urls : nil)
+            }
+        }
         var loomSchemeHandler: LoomURLSchemeHandler?
         var aiBridge: AIBridgeHandler?
         var aiStreamBridge: AIStreamBridgeHandler?

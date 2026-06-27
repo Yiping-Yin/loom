@@ -20,10 +20,12 @@ reads the installed `~/Applications/Loom.app` Source Index and sees per-row
 because it is destructive. The broader "complete new Loom" objective still
 remains open.
 
-> **Current vocabulary note (2026-05-15):** This handoff preserves historical
-> installed-app evidence that used `Collect` / `Organize`. Do not treat those
-> labels as current product evidence. The current first-level product model is
-> `Sources` and `Draft`; `/collect` remains compatibility into Sources.
+> **Current vocabulary note (2026-06-27):** This handoff preserves historical
+> installed-app evidence that used `Collect`, `Organize`, and `Draft` as product
+> destinations. Do not treat those labels as current product evidence. The
+> current first-level product model is `Sources`, `Studio`, and `Digital Me`;
+> `/collect` remains compatibility into Sources and `/draft` remains the
+> Studio-compatible route/storage engine.
 
 **Latest compact-shell status at 2026-05-12 08:05 AEST:** the source-level shell constraints are current and green (`npx tsx --test tests/new-loom-skeleton-contract.test.ts tests/loom-app-scripts.test.ts` 118/118, `npm run typecheck` exit 0, `npm run test:contracts` 572/572, `npm run verify:new-loom-audit` still reporting exactly two approval-bound gates, and `npm run verify:approval-gates-ready` passed). `npm run app:smoke` passed against `/Users/yinyiping/Applications/Loom.app` with bundle id `com.yinyiping.loom` and 639 static web files, but warned that running process `90082` is stale relative to the installed executable. `npm run app:check-project -- --require-tracked`, `npm run clean:generated`, `npm run build`, and `npm run smoke` also passed after generated-artifact cleanup, so the non-UI packaging/build path is current. The installed-app visual gate is not closed for the latest compact-sidebar polish because the macOS console is locked; `LOOM_DRAFT_CHROME_KEEP_SCREENSHOT=1 npm run verify:installed-draft-chrome` stops at `IOConsoleLocked/CGSessionScreenIsLocked`. After unlock, relaunch the latest installed app so the visible process is fresh, rerun that strict verifier, then inspect Sources and Draft through Computer Use before accepting the shell visually.
 
@@ -41,7 +43,7 @@ Complete the new Loom inside the existing repo as a new skeleton plus legacy iso
   understanding, and writing into one clear thinking process without operating
   a complex tool.
 - Historical Phase 1 used Collect / Organize / Draft language; the current
-  first-level product loop is Sources / Draft.
+  first-level product loop is Sources / Studio / Digital Me.
 - Legacy surfaces stay classified and hidden from the default path.
 - Capture, source organization, and Draft must connect as one loop.
 - Flipdisc capture must preserve the frame structure, not flatten it into text.

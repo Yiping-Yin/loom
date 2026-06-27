@@ -2,14 +2,14 @@
 
 > **READ THIS FIRST** if you are an AI assistant or human collaborator newly arrived on Loom. This is the canonical product document — what Loom is, why it exists, and how its parts fit together.
 >
-> **Current operating definition (2026-06-01)**: Loom is a personal knowledge
-> identity platform. It helps anyone turn scattered sources, learning paths,
-> projects, drafts, and AI conversations into a living knowledge identity: a
-> portfolio people can inspect, a knowledge base people can trust, and a
-> personal AI people can talk to. Yiping's Loom is the first reference instance,
-> not the product boundary.
+> **Current operating definition (2026-06-27)**: Loom is a local
+> context-to-form workspace. It helps anyone turn scattered sources, learning
+> paths, projects, drafts, and AI conversations into source-backed forms:
+> portfolio explanations people can inspect, knowledge artifacts people can
+> trust, and a Digital Me that answers from the real archive. Yiping's Loom is
+> the first reference instance, not the product boundary.
 >
-> ⚠️ **Vocabulary status (2026-06-01 · v1.1 §III.7):** For **user-visible UI copy** — surface names, button labels, menu items, status text — the canonical source is now [`docs/loom.md`](docs/loom.md) (v1.1 spec) Plate III §III.7 (直译 over metaphor) and Plate IV (current surface inventory). The current shipped user-visible model uses `Sources` and `Draft`, plus literal supporting labels such as `Capture`, `Question`, `Folder`, `Recent Reading`, and `Continue Writing`. Superseded 2026-05 vocabulary such as `Collect / Organize / Draft` is historical only, and the *kesi*-metaphor names (`Shuttle / Weaves / Sōan / Pursuits / Patterns / weaver / panel`) that appear throughout this file are not user-visible copy. The product reasoning, architecture, and engineering decisions captured below remain valid; only the surface vocabulary has shifted. When this file disagrees with `docs/loom.md` on naming, `docs/loom.md` wins.
+> ⚠️ **Vocabulary status (2026-06-27 · v1.2 §III.7):** For **user-visible UI copy** — surface names, button labels, menu items, status text — the canonical source is now [`docs/loom.md`](docs/loom.md) (v1.2 spec) Plate III §III.7 (直译 over metaphor) and the active product-definition note. The current shipped user-visible model uses `Sources`, `Studio`, and `Digital Me`. `Draft` may remain in route names, storage APIs, tests, and older docs when it means the Studio-compatible document engine, but it is not the primary user-facing product noun. Superseded 2026-05 vocabulary such as `Sources / Draft` and `Collect / Organize / Draft` is historical only, and the *kesi*-metaphor names (`Shuttle / Weaves / Sōan / Pursuits / Patterns / weaver / panel`) that appear throughout this file are not user-visible copy. The product reasoning, architecture, and engineering decisions captured below remain valid; only the surface vocabulary has shifted. When this file disagrees with `docs/loom.md` on naming, `docs/loom.md` wins.
 >
 > **Status**: v4.1 filed 2026-05-02 (Option ε v2 — Loom as unimodal substrate with 3 AI surfaces by role: ⌘K quick-invocation, AskAIWindow threaded chat, background passes structural-only. Cursor-pattern adapted to prose. v4.0 "no panel anywhere" was over-推generalized — corrected per `tmp/loom-correction-log.md` entry-009/010/011.)
 >

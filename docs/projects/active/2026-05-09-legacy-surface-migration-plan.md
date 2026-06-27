@@ -3,14 +3,17 @@
 **Date:** 2026-05-09
 **Status:** Classification and compatibility redirects enforced; no legacy deletion yet
 **Owner:** current Codex thread
-**Purpose:** Turn the old route and surface sprawl into a controlled migration map for the new Sources / Draft Loom.
+**Purpose:** Turn the old route and surface sprawl into a controlled migration map for the current Sources / Studio / Digital Me Loom.
 
 ## Rule
 
 Legacy surfaces are not first-level product concepts. They can remain as files and direct routes while they are useful for migration, comparison, or regression testing, but they must not compete with:
 
 1. **Sources** - add files, capture web pages, review, and preserve source material with provenance.
-2. **Draft** - write from source material with durable references.
+2. **Studio** - shape source material into block documents, cited answers, proof artifacts, and process pages with durable references.
+3. **Digital Me** - represent selected source-backed forms and answer from them with citations.
+
+`Draft` remains a route/storage/test compatibility name for the Studio document engine. It is not the primary user-facing product noun.
 
 ## Surface Classes
 
@@ -19,34 +22,36 @@ Legacy surfaces are not first-level product concepts. They can remain as files a
 | Primary | The new Loom default path | First-level sidebar/home |
 | Runtime | Required implementation surface, not a product destination | Direct/internal only |
 | Compatibility | Old route kept for inbound links or regression comparison | Direct/internal only |
-| Migration source | Old experiment whose useful behavior should move into Sources / Draft | Direct/internal until replaced |
+| Migration source | Old experiment whose useful behavior should move into Sources / Studio / Digital Me | Direct/internal until replaced |
 | Sample/content | Static content, demo, or docs route | Not product navigation |
 
 ## Route Migration Map
 
 | Route / surface | Class | Target | Action |
 |---|---|---|---|
-| `/` / `HomeClient` | Primary | Sources / Draft | Keep as new shell. No legacy links. |
+| `/` / `HomeClient` | Primary | Sources / Studio / Digital Me | Keep as new shell. No legacy links. |
 | `/collect` | Compatibility | Sources | Redirect to `/sources`; file intake, captures, source folders, and review now live in one Sources workbench. |
-| Native `LoomMinimalRootView` | Primary | Sources / Draft | Keep as installed app root. |
+| Native `LoomMinimalRootView` | Migration source | Native shell strategy | Retain as old native workbench evidence until the app chooses web-first wrapper or native-first workbench. Do not let it define the current web product contract. |
 | `/sources` | Primary/Sources | Sources | Keep. Align copy around one source workbench and collected captures. |
+| `/studio` | Primary/Studio | Studio | Keep as the first-class source-grounded form workbench. Old Draft storage and route names remain compatibility internals only. |
+| `/digital-me` | Primary/Digital Me + compatibility edit mode | Digital Me / Studio | Keep. Default view is source-backed representation; old `?edit=...` links still open Studio for compatibility, but new product entry points use `/studio`. |
 | `/knowledge` | Compatibility | Sources | Redirect to `/sources` because Sources is the only primary source-material entry. Keep detail routes buildable for source-reader compatibility, but do not let the old top-level Atlas/Knowledge name compete with `/sources`. |
-| `/draft` | Primary/Draft | Draft | Keep. Move toward native-backed ThinkingDraft later. |
+| `/draft` | Support | Studio compatibility | Keep as a compatibility redirect/stub into `/studio?edit=...`; do not promote as first-level product navigation. |
 | `/loom-render/capture` | Runtime | Sources reader | Keep as reader runtime only. Never promote to nav. |
 | `/loom-render/captures` | Runtime | Sources capture index | Keep while native/web capture list convergence is unfinished. |
 | `/loom-render/snapshot` | Runtime | Capture evidence layer | Keep as snapshot/evidence runtime only. |
-| `/atelier` | Compatibility | Draft | Redirect to `/draft` because reference excerpts and provenance now live in Draft. |
-| `/workbench` | Compatibility | Draft | Redirect to `/draft` because simple prose editing, Workbench localStorage import, word count, and debounced saves now live in Draft. |
-| `/coworks`, `/letter` | Compatibility | Draft | Redirect to `/draft` because cowork rehearsal output and correspondence-style writing now belong inside Draft, not separate collaboration or letter chapters. |
-| `/diagrams` | Compatibility | Draft | Redirect to `/draft` because diagramming is a draft-thinking aid, not a separate top-level thinking product. |
-| `/soan` | Compatibility | Draft | Redirect to `/draft?view=board` because Draft now owns the card board for draft cards and their relations. |
-| `/patterns`, `/weaves` | Compatibility | Sources | Redirect to `/sources#reader-notes` because saved reader notes and Draft references now carry the user-facing panel/relation handoff. |
-| `/panel`, `/panel/[id]`, `/panels/[id]` | Migration source | Sources + Draft references | Keep only as hidden direct/native/static-export detail fallbacks until remaining panel deep links stop depending on panel detail data. Their fallback and back links now use Reader notes instead of Patterns/Panel labels, the singular dynamic route keeps ordinary direct links buildable, the plural dynamic route is a compatibility alias, and static export shelves unbounded ids. |
+| `/atelier` | Compatibility | Studio | Redirect to `/studio?edit=new` because reference excerpts and provenance now live in Studio. |
+| `/workbench` | Compatibility | Studio | Redirect to `/studio?edit=new` because simple prose editing, Workbench localStorage import, word count, and debounced saves now live in Studio. |
+| `/coworks`, `/letter` | Compatibility | Studio | Redirect to `/studio?edit=new` because cowork rehearsal output and correspondence-style writing now belong inside Studio, not separate collaboration or letter chapters. |
+| `/diagrams` | Compatibility | Studio | Redirect to `/studio?edit=new` because diagramming is a form-thinking aid, not a separate top-level thinking product. |
+| `/soan` | Compatibility | Studio | Redirect to `/studio?edit=new` because Studio now owns the card/block board for draft cards and their relations. |
+| `/patterns`, `/weaves` | Compatibility | Sources | Redirect to `/sources#reader-notes` because saved reader notes and Studio references now carry the user-facing panel/relation handoff. |
+| `/panel`, `/panel/[id]`, `/panels/[id]` | Migration source | Sources + Studio references | Keep only as hidden direct/native/static-export detail fallbacks until remaining panel deep links stop depending on panel detail data. Their fallback and back links now use Reader notes instead of Patterns/Panel labels, the singular dynamic route keeps ordinary direct links buildable, the plural dynamic route is a compatibility alias, and static export shelves unbounded ids. |
 | `/pursuits` | Compatibility | Sources | Redirect to `/sources` because source groups and source-state chips now carry project context without a first-level Pursuits product. |
 | `/pursuit`, `/pursuit/[id]`, `/pursuits/[id]` | Migration source | Sources | Keep only as hidden direct/native/static-export detail fallbacks until remaining deep links stop depending on pursuit detail data. Their fallback returns to Sources and uses question / reader-note vocabulary instead of Pursuits / Panels, the singular dynamic route keeps ordinary direct links buildable, the plural dynamic route is a compatibility alias, and static export shelves unbounded ids. |
 | `/collection` | Compatibility | Sources | Redirect to `/sources`; source-category detail browsing has been folded into the Sources workspace and source documents open through `/doc?href=...`. |
 | `/constellation`, `/branching` | Compatibility | Sources | Redirect to `/sources#reader-notes` because visual panel/relation exploration now belongs under Reader notes instead of separate product chapters. |
-| `/palimpsest` | Compatibility | Draft | Redirect to `/draft` because revision and sentence-history work belongs in Draft rather than a separate chapter. |
+| `/palimpsest` | Compatibility | Studio | Redirect to `/studio?edit=new` because revision and sentence-history work belongs in Studio rather than a separate chapter. |
 | `/salon` | Compatibility | Sources | Redirect to `/sources` until real shared-reading sessions exist; do not expose Coworks as the empty-state escape hatch. |
 | `/atlas`, `/atlas/shelf`, `/browse` | Compatibility | Sources | Redirect to `/sources`; do not pass old source-shelf aliases through Desk or expose "Atlas" as a product category. |
 | `/notes`, `/highlights` | Compatibility | Sources | Fold trace-backed and capture-reader note/highlight review into Sources; redirect these old routes to `/sources#reader-notes` until compatibility deletion is safe. |
@@ -62,7 +67,7 @@ Legacy surfaces are not first-level product concepts. They can remain as files a
 
 ### Batch 1: Default Path Lock
 
-Goal: users entering Loom see only Sources and Draft.
+Goal: users entering Loom see only Sources, Studio, and Digital Me.
 
 Evidence:
 
@@ -72,14 +77,14 @@ Evidence:
 - `NEW_LOOM_ROUTE_CLASSIFICATION`, which classifies every current web
   `page.tsx` / `page.mdx` route as primary, runtime, legacy, support, or
   internal. New routes must enter the map before they can pass contracts.
-- Primary product surfaces (`/`, `/sources`, `/draft`) cannot
+- Primary product surfaces (`/`, `/sources`, `/studio`, `/digital-me`) cannot
   link users back into hidden legacy or internal destinations. The first
   enforced fixes were `/sources` writing continuation moving from `/workbench`
-  to `/draft`, the empty-state writing action moving from `/coworks` to
-  `/draft`, and the source workspace copy moving away from old Archive,
+  to the Studio compatibility entry, the empty-state writing action moving from `/coworks` to
+  Studio, and the source workspace copy moving away from old Archive,
   Collect, and Organize page names.
-- Native product command surfaces use the same literal vocabulary. The Shuttle
-  command palette now exposes Sources and Draft as the product commands; old
+- Native product command surfaces should use the same literal vocabulary. The Shuttle
+  command palette should expose Sources, Studio, and Digital Me as product commands; old
   route names remain only as hidden search keywords that resolve into those
   commands.
 - Native Shuttle search-result sections also use literal new-Loom vocabulary:
@@ -108,12 +113,12 @@ Evidence:
   Sources behavior rather than a separate upload surface. The old `/uploads`
   route is only a compatibility redirect to `/sources`.
 - `/sources` writing continuation now carries readable source context into
-  `/draft` through paired `ref`, `label`, `kind=source`, and `source` query
-  values, and `/draft` merges those references into an existing draft instead
-  of dropping them or showing internal-only path labels.
-- The public App Store submission surface now follows the same loop:
+  Studio through paired `ref`, `label`, `kind=source`, and `source` query
+  values; `/draft` remains the compatibility stub that forwards into
+  `/studio?edit=...`.
+- The public App Store submission surface should follow the same loop:
   `docs/app-store-copy.md`, `scripts/app-store-screenshots.mjs`, and
-  `scripts/app-store-preflight.mjs` use Sources / Draft / Reader notes instead
+  `scripts/app-store-preflight.mjs` use Sources / Studio / Digital Me / Reader notes instead
   of Collect, Organize, Sōan, Patterns, Pursuits, or their legacy routes.
 - Source reader and upload-derived source meta now use Sources labels:
   `/doc`, `/collection`, `/llm-wiki`, `UploadButton`, and `panelSourceMeta` no
@@ -177,7 +182,7 @@ Required work:
   the source reference carries a `draftExcerpt` into Draft.
 - Draft-card board migration step: `/draft` renders the native-backed card
   board for draft cards and relations, while `/soan` redirects to
-  `/draft?view=board` instead of exposing a separate writing product.
+  `/studio?edit=new&view=board` instead of exposing a separate writing product.
 - Native Draft board alignment step: installed-app `LoomDraftView` now reads
   `LoomSoanWriter.allCards()` / `allEdges()`, shows a Draft board panel beside
   references, listens for `.loomSoanChanged`, and exposes Add draft card /
@@ -610,7 +615,7 @@ Deletion candidates must pass this checklist:
 
 - Not linked from `/`, native root, Source Index, Draft, or capture reader.
 - Not required by tests, build, app store, or docs.
-- Replacement behavior exists in Sources / Draft or is explicitly declared obsolete.
+- Replacement behavior exists in Sources / Studio / Digital Me or is explicitly declared obsolete.
 - One release cycle has shipped with the route hidden.
 
 ## Non-Negotiables

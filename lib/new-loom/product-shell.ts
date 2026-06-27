@@ -1,10 +1,10 @@
-export type NewLoomCapabilityId = 'sources' | 'draft';
+export type NewLoomCapabilityId = 'sources' | 'studio' | 'digital-me';
 export type NewLoomRouteClass = 'primary' | 'runtime' | 'legacy' | 'support' | 'internal';
 
 export type NewLoomCapability = {
   id: NewLoomCapabilityId;
-  label: 'Sources' | 'Draft';
-  shortLabel: 'Source archive' | 'Grounded draft';
+  label: 'Sources' | 'Studio' | 'Digital Me';
+  shortLabel: 'Source context' | 'Form workbench' | 'Living representation';
   href: string;
   description: string;
   primaryAction: string;
@@ -15,25 +15,34 @@ export const NEW_LOOM_CAPABILITIES: NewLoomCapability[] = [
   {
     id: 'sources',
     label: 'Sources',
-    shortLabel: 'Source archive',
+    shortLabel: 'Source context',
     href: '/sources',
-    description: 'Add learning paths. Capture and review source material for Overview, Path, Sources, Process, and Outputs: resources, course material, certificate evidence, and portfolio process records.',
-    primaryAction: 'Open sources',
+    description: 'Collect resources for learning paths, projects, captures, notes, and prior work, then resolve them into claims, quotes, examples, contradictions, gaps, and questions that can shape the next form.',
+    primaryAction: 'Open Sources',
   },
   {
-    id: 'draft',
-    label: 'Draft',
-    shortLabel: 'Grounded draft',
-    href: '/draft',
-    description: 'Turn sources into personal explanations, portfolio notes, public writeups, detailed process pages, and portfolio Outputs that stay grounded in the Path.',
-    primaryAction: 'Start draft',
+    id: 'studio',
+    label: 'Studio',
+    shortLabel: 'Form workbench',
+    href: '/studio',
+    description: 'Shape resolved source pieces into block documents, cited answers, process pages, portfolio explanations, proofs, and artifacts. Draft remains the compatibility storage name; Studio is the product surface.',
+    primaryAction: 'Open Studio',
+  },
+  {
+    id: 'digital-me',
+    label: 'Digital Me',
+    shortLabel: 'Living representation',
+    href: '/digital-me',
+    description: 'Present selected Studio forms and source-backed claims as a living representation that can answer with citations to the real work behind it.',
+    primaryAction: 'Open Digital Me',
   },
 ];
 
 export const NEW_LOOM_PRIMARY_ROUTES = [
   '/',
   '/sources',
-  '/draft',
+  '/studio',
+  '/digital-me',
 ] as const;
 
 export const NEW_LOOM_RUNTIME_ROUTES = [
@@ -80,6 +89,7 @@ export const NEW_LOOM_LEGACY_ROUTES = [
 
 export const NEW_LOOM_SUPPORT_ROUTES = [
   '/about',
+  '/draft',
   '/help',
   '/offline',
   '/onboarding',
@@ -110,7 +120,6 @@ export const NEW_LOOM_INTERNAL_ROUTES = [
 export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES = [
   '/wiki',
   '/card',
-  '/digital-me',
   '/drafts',
   '/education',
   '/example',

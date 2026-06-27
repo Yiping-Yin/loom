@@ -127,13 +127,13 @@ test('SourceGraph renders semantic source relationships from real artifacts', ()
   assert.doesNotMatch(html, /source links/);
 });
 
-test('ProvenanceChain renders Sources to Draft to Answer as the product explanation', () => {
+test('ProvenanceChain renders Sources to Studio to Digital Me as the product explanation', () => {
   const html = render(<ProvenanceChain steps={VERIFIED_DOSSIER_WORKBENCH.provenanceSteps} />);
 
   assert.match(html, /vd-provenance-chain/);
   assert.match(html, /Sources/);
-  assert.match(html, /Draft/);
-  assert.match(html, /Answer/);
+  assert.match(html, /Studio/);
+  assert.match(html, /Digital Me/);
   assert.match(html, /UNSW course shelf/);
   assert.match(html, /Concavity and optimisation summary\.md/);
   assert.match(html, /Grounded explanation/);

@@ -2,13 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **Current vocabulary note (2026-05-15):** This is a historical Phase 1
-> implementation plan. Do not implement `Collect` or `Organize` as first-level
-> product destinations from this file. The current first-level product model is
-> `Sources` and `Draft`; `/collect` remains compatibility into Sources.
+> **Current vocabulary note (2026-06-27):** This is a historical Phase 1
+> implementation plan. Do not implement `Collect`, `Organize`, or `Draft` as
+> first-level product destinations from this file. The current first-level
+> product model is `Sources`, `Studio`, and `Digital Me`; `/collect` remains
+> compatibility into Sources and `/draft` remains the Studio-compatible route
+> and storage engine.
 
-**Goal:** Build Phase 1 of the new Loom inside the existing repo: a Sources / Draft
-product skeleton with legacy surfaces isolated from the default user path.
+**Historical goal:** Build Phase 1 of the new Loom inside the existing repo: a
+Sources / Draft product skeleton with legacy surfaces isolated from the default
+user path. Translate any current execution from this plan into Sources / Studio
+/ Digital Me before making product decisions.
 
 **Architecture:** Keep existing capture, source, and reader assets, but route them
 through a two-workspace shell. Sources owns adding files, web capture, review,
@@ -20,11 +24,13 @@ legacy names remain buildable but no longer appear as primary navigation.
 
 **Current execution status (2026-05-15 AEST):** The old 2026-05-09
 Collect / Organize / Draft sidebar evidence is historical and superseded.
-Current acceptance is Sources / Draft: `/sources` owns intake/review/state,
-`/draft` owns writing and references, and `/collect` is compatibility into
-Sources. The dedicated completion audit still keeps the broader new Loom goal
-open because two approval-bound gates remain: real user-file installed-app
-importer acceptance and live provider-output Compile/Draft acceptance.
+Current acceptance is Sources / Studio / Digital Me: `/sources` owns
+intake/review/state, `/digital-me?edit=new` opens Studio work, `/digital-me`
+owns representation, `/draft` remains a Studio-compatible route/storage layer,
+and `/collect` is compatibility into Sources. The dedicated completion audit
+still keeps the broader new Loom goal open because two approval-bound gates
+remain: real user-file installed-app importer acceptance and live
+provider-output Compile/Draft acceptance.
 
 ---
 

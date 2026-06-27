@@ -221,7 +221,7 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   assert.match(html, /class="lcv-members__item lcv-members__item--unsw">[\s\S]*?UNSW Sydney/);
   // The evidence model surfaces four numbered ledger rows: an About CV preview,
   // an Education course/logo strip, two CV-backed Experience cards, and a
-  // Digital Me Sources → Draft → Answer flow — each with a verified pill.
+  // Digital Me Sources → Studio → Digital Me flow — each with a verified pill.
   assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 4);
   assert.match(html, /class="lcv-cv"/);
   assert.match(html, /ECON 3202/);
@@ -267,19 +267,22 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   assert.doesNotMatch(html, /AI Engineer|Citadel/i);
 });
 
-test('Sources and Draft remain canonical across web and native shell copy', () => {
+test('Sources Studio and Digital Me remain canonical across product shell copy', () => {
   const productShell = readRepo('lib/new-loom/product-shell.ts');
   const nativeShell = readRepo('macos-app/Loom/Sources/LoomMinimalRootView.swift');
 
   assert.match(productShell, /Sources/);
-  assert.match(productShell, /Draft/);
-  assert.match(productShell, /learning/i);
+  assert.match(productShell, /Studio/);
+  assert.match(productShell, /Digital Me/);
+  assert.match(productShell, /context/i);
   assert.match(productShell, /portfolio/i);
   assert.match(productShell, /process/i);
 
+  // Native minimal shell is still retained as a migration source, so it can keep
+  // Draft internals while the web product shell exposes Studio.
   assert.match(nativeShell, /Sources/);
   assert.match(nativeShell, /pageDraft/);
 
-  assert.match(productShell, /Overview|Path|Outputs/);
+  assert.match(productShell, /claims|quotes|examples|contradictions|gaps|questions/);
   assert.doesNotMatch(productShell, /Collect, organize, draft/);
 });

@@ -879,7 +879,7 @@ html {
   justify-content: center;
 }
 
-/* Home capability bridge — real Sources/Draft links for the native WebView
+/* Home capability bridge — real Sources/Studio/Digital Me links for the native WebView
    bridge, presented as quiet footer actions instead of a second nav bar. */
 .new-loom-home-capabilities {
   display: flex;
@@ -9276,7 +9276,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 
 /* Homepage evidence workbench production pass.
    These rules intentionally sit after the legacy homepage blocks so the
-   visible Sources/Draft/Answer surface has stable, non-cramped geometry. */
+   visible Sources/Studio/Digital Me surface has stable, non-cramped geometry. */
 .vd-source-graph {
   min-height: 100%;
 }
@@ -14017,7 +14017,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
    the luminance ramp + one top-left key light. Signature-cyan budget on
    this screen = 2 touches ONLY (active nav underline + the
    pull-quote mark). CYAN EXCEPTION: the Digital-Me preview's
-   Sources→Draft→Answer thread + its chart strokes/fills are the
+   Sources→Studio→Digital Me thread + its chart strokes/fills are the
    one cyan-on-data signal allowed here (calm/desaturated for the
    still Cover) — stroke matches its fill so the signal lights up.
    No colour fills anywhere else. Fully scoped under .lcv so none
@@ -14342,7 +14342,7 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
 .lcv-dm__flowitem:last-child{flex:0 0 auto}
 .lcv-dm__step{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--lcv-ink2);flex:0 0 auto}
 .lcv-dm__step svg{width:17px;height:17px;stroke:var(--lcv-ink2);fill:none;stroke-width:1.4}
-/* thread-of-light: the Sources→Draft→Answer connector reads as faint cyan
+/* thread-of-light: the Sources→Studio→Digital Me connector reads as faint cyan
    signal feeding the cyan data fills below (calm/desaturated for the Cover) */
 .lcv-dm__arrow{flex:1 1 auto;min-width:34px;height:1px;
   background:linear-gradient(90deg,rgba(75,197,222,0.45),rgba(75,197,222,0.12));position:relative}
@@ -14408,6 +14408,25 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   font-family:var(--lcv-mono);font-size:11px;letter-spacing:.14em;color:var(--lcv-ink3)}
 .lcv-foot__all{display:flex;align-items:center;gap:8px;white-space:nowrap;flex:0 0 auto}
 .lcv-foot__all svg{width:14px;height:14px;stroke:var(--lcv-ink3);fill:none;stroke-width:1.6}
+
+/* BeginnerDossier — the stranger's editable Digital Me reusing the ledger cover.
+   A stranger has no photo, so the rail leads with an initials mark; the rail also
+   carries the live edit CTAs (Add proof / Keep building). */
+.lcv-mark{display:flex;align-items:center;justify-content:center;width:60px;height:60px;border-radius:50%;
+  border:1px solid var(--lcv-line2);background:color-mix(in srgb,var(--signature-cyan) 12%,transparent);
+  color:var(--lcv-ink);font-family:var(--lcv-serif,Georgia,serif);font-size:22px;letter-spacing:.04em;margin:0 0 20px}
+.lcv-rail__actions{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+.lcv-rail__cta{display:inline-flex;align-items:center;justify-content:center;padding:11px 18px;border-radius:999px;
+  font-size:14px;border:1px solid var(--lcv-line2);color:var(--lcv-ink);transition:border-color .15s,background .15s}
+.lcv-rail__cta:hover{border-color:var(--signature-cyan)}
+.lcv-rail__cta--primary{background:var(--signature-cyan);border-color:transparent;color:#06222a;font-weight:500}
+.lcv-rail__cta--primary:hover{background:var(--signature-cyan-hi,#8af7e6)}
+/* The Digital Me cover is the live CapabilityMap curtain, not a static panel —
+   drop the panel perspective/glow so it sits flat in the asset cell. */
+.lcv-row__asset--dm{perspective:none}
+.lcv-row__asset--dm::before{display:none}
+.lcv-row__asset--dm .map{margin:0}
+.lcv-proofmount{max-width:1100px;margin:0 auto;padding:8px clamp(20px,5vw,64px) 48px}
 
 /* ============================================================
    RESTRAINED ENTRANCE MOTION — the evidence rows settle in with a quiet

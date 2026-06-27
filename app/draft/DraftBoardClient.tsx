@@ -672,7 +672,7 @@ export default function DraftBoardClient() {
           that have at least one card, so on a fresh install the rail is
           quiet (just the "Pieces" eyebrow) rather than listing empty
           kinds. */}
-      <aside className="draft-board-rail" aria-label="Draft card index">
+      <aside className="draft-board-rail" aria-label="Studio card index">
         <div className="draft-board-rail-eyebrow">Pieces</div>
         {KIND_ORDER.map((kind) => {
           const items = grouped.get(kind);
@@ -711,13 +711,13 @@ export default function DraftBoardClient() {
         }}
       >
         <header className="draft-board-header">
-          <div className="draft-board-eyebrow">Draft board · thinking draft</div>
+          <div className="draft-board-eyebrow">Studio board · thinking space</div>
           <h1 className="draft-board-title">
-            {isEmpty ? 'Draft board.' : 'What does it mean to stand before you sign?'}
+            {isEmpty ? 'Studio board.' : 'What does it mean to stand before you sign?'}
           </h1>
           <p className="draft-board-subtitle">
             {isEmpty
-              ? 'The draft table is empty.'
+              ? 'The Studio board is empty.'
               : `${cards.length} pieces on the sheet · the sheet grows with you`}
           </p>
         </header>
@@ -727,7 +727,7 @@ export default function DraftBoardClient() {
             <div className="loom-empty-state" role="note">
               <div className="loom-empty-state-ornament" aria-hidden="true">── · ──</div>
               <p className="loom-empty-state-copy">
-                Draft board holds the cards you&apos;ve placed — thesis, counter,
+                Studio board holds the cards you&apos;ve placed — thesis, counter,
                 instance, question, unclear note, connection, sketch. Start by selecting
                 a passage and adding a thesis.
               </p>
@@ -862,7 +862,7 @@ export default function DraftBoardClient() {
 
       {/* Footer hint bar — shortcut scaffolding the editing tick will
           wire up. Fixed so it stays visible as the canvas scrolls. */}
-      <footer className="draft-board-footer" aria-label="Draft board shortcuts">
+      <footer className="draft-board-footer" aria-label="Studio board shortcuts">
         <span>
           <kbd>⇧⏎</kbd>new
         </span>

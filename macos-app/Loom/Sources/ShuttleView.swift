@@ -3,12 +3,14 @@ import AppKit
 
 /// Native Shuttle palette — opened by ⌘K. Phase 4 of architecture
 /// inversion. First cut: navigates to top-level routes. Since then,
-/// queries also match the bundled document search-index and — as of
-/// 2026-04-22 — live SwiftData content: pursuits, panels (reading
-/// traces), Sōan cards, and weaves. Each data hit routes to the web
-/// shell with the correct canonical object path (`/pursuit/<id>`,
-/// `/panel/<id>`) or focused query (`?focusCardId=` / `?weaveId=`) so
-/// the detail client fetches the right row from the native projection.
+/// queries also match the bundled document search-index and live
+/// SwiftData content: panels (reading traces) and weaves. Each data
+/// hit routes to the web shell with the correct canonical object path
+/// (`/panel/<id>`) or a surviving surface (weaves open Sources reader
+/// notes) so the detail client fetches the right row from the native
+/// projection. (The pursuit + Sōan search hits were removed once their
+/// web routes — `/pursuit/<id>`, `/soan` — were culled; Sōan authoring
+/// itself survives on the Draft board.)
 ///
 /// 2026-04-22 · M18 — Vellum + Liquid Glass upgrade.
 /// The card reads as paper pressed behind glass: `.regularMaterial`
@@ -27,9 +29,7 @@ struct ShuttleView: View {
     // Live SwiftData slices — loaded on appear + refreshed via the
     // per-writer notification. Kept small (recent-first) so filtering
     // stays synchronous on the main actor.
-    @State private var pursuits: [ShuttlePursuitHit] = []
     @State private var panels: [ShuttlePanelHit] = []
-    @State private var soanCards: [ShuttleSoanHit] = []
     @State private var weaves: [ShuttleWeaveHit] = []
     @FocusState private var fieldFocused: Bool
 
@@ -117,17 +117,6 @@ struct ShuttleView: View {
             .map { $0 }
     }
 
-    /// Pursuit hits — match against question text. Capped at 5 so a
-    /// vague query like "why" doesn't flood the list over docs.
-    private var pursuitHits: [ShuttlePursuitHit] {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !q.isEmpty else { return [] }
-        return pursuits
-            .filter { $0.question.lowercased().contains(q) || $0.weight.lowercased().contains(q) }
-            .prefix(5)
-            .map { $0 }
-    }
-
     /// Panel hits — derived from reading traces (sourceTitle + current
     /// summary). Capped at 5.
     private var panelHits: [ShuttlePanelHit] {
@@ -137,20 +126,6 @@ struct ShuttleView: View {
             .filter {
                 $0.title.lowercased().contains(q)
                 || $0.summary.lowercased().contains(q)
-            }
-            .prefix(5)
-            .map { $0 }
-    }
-
-    /// Sōan card hits — match on body + kind. Capped at 5.
-    private var soanHits: [ShuttleSoanHit] {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !q.isEmpty else { return [] }
-        return soanCards
-            .filter {
-                $0.body.lowercased().contains(q)
-                || $0.kind.lowercased().contains(q)
-                || $0.title.lowercased().contains(q)
             }
             .prefix(5)
             .map { $0 }
@@ -177,18 +152,14 @@ struct ShuttleView: View {
     private var filtered: [ShuttleHit] {
         var out: [ShuttleHit] = []
         if activeQuery {
-            out.append(contentsOf: pursuitHits.map { ShuttleHit.pursuit($0) })
             out.append(contentsOf: panelHits.map { ShuttleHit.panel($0) })
-            out.append(contentsOf: soanHits.map { ShuttleHit.soanCard($0) })
             out.append(contentsOf: weaveHits.map { ShuttleHit.weave($0) })
             out.append(contentsOf: docHits.map { ShuttleHit.doc($0) })
             out.append(contentsOf: navHits.map { ShuttleHit.navCommand($0) })
         } else {
             out.append(contentsOf: navHits.map { ShuttleHit.navCommand($0) })
             out.append(contentsOf: docHits.map { ShuttleHit.doc($0) })
-            out.append(contentsOf: pursuitHits.map { ShuttleHit.pursuit($0) })
             out.append(contentsOf: panelHits.map { ShuttleHit.panel($0) })
-            out.append(contentsOf: soanHits.map { ShuttleHit.soanCard($0) })
             out.append(contentsOf: weaveHits.map { ShuttleHit.weave($0) })
         }
         return out
@@ -247,17 +218,11 @@ struct ShuttleView: View {
             Task { await loadIndex() }
             loadSwiftData()
         }
-        // Live refresh — if the user mints a pursuit / card / weave
+        // Live refresh — if the user records a reading or mints a weave
         // while Shuttle is open, the next keystroke re-filters over the
         // fresh snapshot. (Data loads are cheap: small @MainActor
         // SwiftData fetches.)
-        .onReceive(NotificationCenter.default.publisher(for: .loomPursuitChanged)) { _ in
-            loadSwiftData()
-        }
         .onReceive(NotificationCenter.default.publisher(for: .loomTraceChanged)) { _ in
-            loadSwiftData()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .loomSoanChanged)) { _ in
             loadSwiftData()
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomWeaveChanged)) { _ in
@@ -335,38 +300,22 @@ struct ShuttleView: View {
     private var resultsList: some View {
         let nav = navHits
         let docs = docHits
-        let pu = pursuitHits
         let pa = panelHits
-        let so = soanHits
         let we = weaveHits
 
         if activeQuery {
-            let puOffset = 0
-            let paOffset = puOffset + pu.count
-            let soOffset = paOffset + pa.count
-            let weOffset = soOffset + so.count
+            let paOffset = 0
+            let weOffset = paOffset + pa.count
             let docOffset = weOffset + we.count
             let navOffset = docOffset + docs.count
 
             return AnyView(ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
-                        if !pu.isEmpty {
-                            sectionLabel("Pursuits")
-                            ForEach(Array(pu.enumerated()), id: \.element.id) { idx, p in
-                                row(hit: .pursuit(p), flatIndex: puOffset + idx)
-                            }
-                        }
                         if !pa.isEmpty {
-                            sectionLabel("Reading panels").padding(.top, 8)
+                            sectionLabel("Reading panels")
                             ForEach(Array(pa.enumerated()), id: \.element.id) { idx, p in
                                 row(hit: .panel(p), flatIndex: paOffset + idx)
-                            }
-                        }
-                        if !so.isEmpty {
-                            sectionLabel("Sōan").padding(.top, 8)
-                            ForEach(Array(so.enumerated()), id: \.element.id) { idx, c in
-                                row(hit: .soanCard(c), flatIndex: soOffset + idx)
                             }
                         }
                         if !we.isEmpty {
@@ -402,10 +351,8 @@ struct ShuttleView: View {
 
         let navOffset = 0
         let docOffset = navOffset + nav.count
-        let puOffset = docOffset + docs.count
-        let paOffset = puOffset + pu.count
-        let soOffset = paOffset + pa.count
-        let weOffset = soOffset + so.count
+        let paOffset = docOffset + docs.count
+        let weOffset = paOffset + pa.count
 
         return AnyView(ScrollViewReader { proxy in
             ScrollView {
@@ -422,22 +369,10 @@ struct ShuttleView: View {
                             row(hit: .doc(doc), flatIndex: docOffset + idx)
                         }
                     }
-                    if !pu.isEmpty {
-                        sectionLabel("Pursuits").padding(.top, 8)
-                        ForEach(Array(pu.enumerated()), id: \.element.id) { idx, p in
-                            row(hit: .pursuit(p), flatIndex: puOffset + idx)
-                        }
-                    }
                     if !pa.isEmpty {
                         sectionLabel("Panels").padding(.top, 8)
                         ForEach(Array(pa.enumerated()), id: \.element.id) { idx, p in
                             row(hit: .panel(p), flatIndex: paOffset + idx)
-                        }
-                    }
-                    if !so.isEmpty {
-                        sectionLabel("Sōan").padding(.top, 8)
-                        ForEach(Array(so.enumerated()), id: \.element.id) { idx, c in
-                            row(hit: .soanCard(c), flatIndex: soOffset + idx)
                         }
                     }
                     if !we.isEmpty {
@@ -574,28 +509,11 @@ struct ShuttleView: View {
                 userInfo: ["path": doc.href]
             )
             dismissWindow(id: ShuttleWindow.id)
-        case .pursuit(let p):
-            NotificationCenter.default.post(
-                name: .loomShuttleNavigate,
-                object: nil,
-                userInfo: ["path": "/pursuit/\(encode(p.id))"]
-            )
-            dismissWindow(id: ShuttleWindow.id)
         case .panel(let p):
             NotificationCenter.default.post(
                 name: .loomShuttleNavigate,
                 object: nil,
                 userInfo: ["path": "/panel/\(encode(p.id))"]
-            )
-            dismissWindow(id: ShuttleWindow.id)
-        case .soanCard(let c):
-            // SoanClient doesn't yet honour a focus param — passing it
-            // is a harmless forward-compatibility hint so the link-style
-            // is the same as the other kinds once focus lands.
-            NotificationCenter.default.post(
-                name: .loomShuttleNavigate,
-                object: nil,
-                userInfo: ["path": "/soan?focusCardId=\(encode(c.id))"]
             )
             dismissWindow(id: ShuttleWindow.id)
         case .weave:
@@ -672,18 +590,13 @@ struct ShuttleView: View {
         }
     }
 
-    /// Load + project the four SwiftData writers into immutable `@State`
-    /// slices used by the filter pipeline. `try?` with empty-array
+    /// Load + project the reading-trace and weave SwiftData writers into
+    /// immutable `@State` slices used by the filter pipeline. `try?` with empty-array
     /// fallback — a missing store is harmless, Shuttle falls back to
     /// nav + docs only. Reads happen on @MainActor (the call site is
     /// already main-isolated via SwiftUI).
     @MainActor
     private func loadSwiftData() {
-        let pursuitModels = (try? LoomPursuitWriter.allPursuits()) ?? []
-        self.pursuits = pursuitModels.map {
-            ShuttlePursuitHit(id: $0.id, question: $0.question, weight: $0.weight)
-        }
-
         let traceModels = (try? LoomTraceWriter.allTraces()) ?? []
         self.panels = traceModels
             .filter { $0.kind == "reading" }
@@ -694,11 +607,6 @@ struct ShuttleView: View {
                     summary: $0.currentSummary
                 )
             }
-
-        let cardModels = (try? LoomSoanWriter.allCards()) ?? []
-        self.soanCards = cardModels.map {
-            ShuttleSoanHit(id: $0.id, kind: $0.kind, body: $0.body, title: $0.title)
-        }
 
         let weaveModels = (try? LoomWeaveWriter.allWeaves()) ?? []
         self.weaves = weaveModels.map {
@@ -721,9 +629,7 @@ struct ShuttleView: View {
 enum ShuttleHit {
     case navCommand(ShuttleView.Command)
     case doc(ShuttleDoc)
-    case pursuit(ShuttlePursuitHit)
     case panel(ShuttlePanelHit)
-    case soanCard(ShuttleSoanHit)
     case weave(ShuttleWeaveHit)
 
     struct Display {
@@ -732,7 +638,7 @@ enum ShuttleHit {
     }
 
     /// Display title + subtitle for the row. Subtitle is italic serif
-    /// small with the kind tag prefixed (e.g. "Pursuit · primary").
+    /// small with the kind tag prefixed (e.g. "Panel · …").
     var display: Display {
         switch self {
         case .navCommand(let cmd):
@@ -742,17 +648,9 @@ enum ShuttleHit {
                 title: doc.title,
                 subtitle: doc.category.isEmpty ? "Source · \(doc.href)" : "Source · \(doc.category)"
             )
-        case .pursuit(let p):
-            return Display(
-                title: p.question,
-                subtitle: "Pursuit · \(p.weight)"
-            )
         case .panel(let p):
             let sub = p.summary.isEmpty ? "Panel" : "Panel · \(shortened(p.summary))"
             return Display(title: p.title, subtitle: sub)
-        case .soanCard(let c):
-            let title = c.title.isEmpty ? shortened(c.body, max: 80) : c.title
-            return Display(title: title, subtitle: "Sōan · \(c.kind)")
         case .weave(let w):
             let sub = w.rationale.isEmpty
                 ? "Weave · \(w.kind)"
@@ -773,12 +671,8 @@ enum ShuttleHit {
             return nil
         case .doc:
             return "▭"
-        case .pursuit:
-            return "·"
         case .panel:
             return "◇"
-        case .soanCard(let c):
-            return Self.soanGlyph(for: c.kind)
         case .weave:
             return "≈"
         }
@@ -790,23 +684,8 @@ enum ShuttleHit {
         switch self {
         case .navCommand(let c): return "nav:\(c.id.uuidString)"
         case .doc(let d): return "doc:\(d.href)"
-        case .pursuit(let p): return "pursuit:\(p.id)"
         case .panel(let p): return "panel:\(p.id)"
-        case .soanCard(let c): return "soan:\(c.id)"
         case .weave(let w): return "weave:\(w.id)"
-        }
-    }
-
-    private static func soanGlyph(for kind: String) -> String {
-        switch kind.lowercased() {
-        case "thesis": return "✦"
-        case "counter": return "✕"
-        case "instance": return "·"
-        case "question": return "?"
-        case "fog": return "~"
-        case "weft": return "─"
-        case "sketch": return "○"
-        default: return "·"
         }
     }
 }
@@ -820,26 +699,11 @@ private func shortened(_ text: String, max: Int = 60) -> String {
     return trimmed[..<idx].trimmingCharacters(in: .whitespacesAndNewlines) + "…"
 }
 
-/// Projection of `LoomPursuit` into the Shuttle filter pipeline.
-struct ShuttlePursuitHit: Identifiable, Equatable {
-    let id: String
-    let question: String
-    let weight: String
-}
-
 /// Projection of a reading `LoomTrace` into a "Panel" hit.
 struct ShuttlePanelHit: Identifiable, Equatable {
     let id: String
     let title: String
     let summary: String
-}
-
-/// Projection of `LoomSoanCard`.
-struct ShuttleSoanHit: Identifiable, Equatable {
-    let id: String
-    let kind: String
-    let body: String
-    let title: String
 }
 
 /// Projection of `LoomWeave`. Endpoints kept so the future detail

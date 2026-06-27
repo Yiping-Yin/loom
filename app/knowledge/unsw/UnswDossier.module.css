@@ -1,6 +1,6 @@
 /* UNSW dossier (/knowledge/unsw) — Evidence Desk, Archive scene. Cool-black
    luminance ramp consuming the locked globals; quiet, evidence-first, with the
-   cyan Sources -> Draft -> Answer thread on the Ask panel. */
+   cyan Sources -> Studio -> Digital Me thread on the Ask panel. */
 .page {
   /* Local aliases point at the locked globals — never private copies. */
   --unsw-ink: var(--text-1);
@@ -736,7 +736,7 @@
   min-width: 0;
 }
 
-/* The Sources -> Draft -> Answer thread is exactly 3 steps: an explicit 3-up
+/* The Sources -> Studio -> Digital Me thread is exactly 3 steps: an explicit 3-up
    that collapses to 1 at narrow widths, never an auto-fit that orphans a step. */
 .chain {
   display: grid;
@@ -758,7 +758,7 @@
   box-shadow: var(--shelf-float);
 }
 
-/* Chain steps are the Sources -> Draft -> Answer thread: cyan markers. */
+/* Chain steps are the Sources -> Studio -> Digital Me thread: cyan markers. */
 .chainStep span {
   color: var(--cyan);
   font-family: var(--mono);

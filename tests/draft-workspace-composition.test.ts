@@ -33,10 +33,11 @@ test('Draft page is composed as a professional source-grounded workspace', () =>
   assert.doesNotMatch(draftClient, /yiping-profile-white-shirt/);
   assert.match(draftClient, /readBeginnerProfileLocal/);
   assert.match(draftClient, /<h1 className="new-loom-draft__sr-title">Studio<\/h1>/);
-  // The calm header carries no "Studio" labels: the eyebrow kicker + meta row were
-  // dropped; the back link + title carry context. The hidden sr-title h1 stays (a11y).
+  // The calm header carries no noisy "Studio" eyebrow: the old kicker + meta row
+  // were dropped; the back link + title carry context. The hidden sr-title h1
+  // stays (a11y), and the handoff flow may name Studio explicitly.
   assert.doesNotMatch(draftClient, /__eyebrow">Studio/);
-  assert.doesNotMatch(draftClient, /<span>Studio<\/span>/);
+  assert.match(draftClient, /<span>Studio<\/span>/);
   // The calm empty-state entry (StudioStarters) is wired in and shown when the draft
   // is empty, so a normal user lands on "Add to your Digital Me", not the full editor.
   assert.match(draftClient, /from '\.\/StudioStarters'/);
