@@ -127,7 +127,7 @@ export async function runInstalledAppSmoke(options = {}) {
   await assertFile(executable, 'Loom executable');
   await assertFile(path.join(resources, 'PrivacyInfo.xcprivacy'), 'PrivacyInfo.xcprivacy');
   await assertFile(path.join(webRoot, 'index.html'), 'static export index');
-  await assertFile(path.join(webRoot, 'desk.html'), 'static export desk route');
+  await assertFile(path.join(webRoot, 'digital-me.html'), 'static export digital-me route');
   await assertFile(path.join(webRoot, 'knowledge.html'), 'static export knowledge route');
   await assertFile(path.join(webRoot, 'search-index.json'), 'static search index');
 
