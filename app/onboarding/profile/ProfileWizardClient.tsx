@@ -169,7 +169,12 @@ export function ProfileWizardClient({ initial }: { initial?: BeginnerProfile | n
     // (which has no Node server / API route). A false return means the write was
     // blocked (private mode / quota) — stay put and surface the error rather than
     // navigating to a profile page that would read back null.
-    const ok = writeBeginnerProfileLocal(profile);
+    //
+    // Clear any stale capabilities so /digital-me re-derives the map from the FULL
+    // journey just saved. Without this, an older derived map (e.g. seeded "Design")
+    // persists and the Digital Me's auto-build (which only runs when caps are empty)
+    // shows a stale/thin map until the user manually hits "Refresh capability map".
+    const ok = writeBeginnerProfileLocal({ ...profile, capabilities: [] });
     if (!ok) {
       setSaveError(
         "Couldn't save your profile — your browser is blocking local storage (e.g. private browsing). Try a normal window, then save again.",
