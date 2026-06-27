@@ -339,6 +339,21 @@ function StarRiver({
             <stop offset="0.62" stopColor="var(--signature-cyan-hi, #8af7e6)" stopOpacity="0.72" />
             <stop offset="1" stopColor="var(--signature-cyan, #4bc5de)" stopOpacity="0" />
           </radialGradient>
+          {/* Source comet head (the curtain's origin) — a clean, DEFINED glowing orb:
+              a soft cyan coma disc + a bright core + a crisp white nucleus, layered so it
+              reads as a luminous sphere, not a diffuse bloom. */}
+          <radialGradient id="cmSrcComa" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stopColor="#d7f6f4" stopOpacity="0.62" />
+            <stop offset="0.42" stopColor="#5cc6d8" stopOpacity="0.30" />
+            <stop offset="0.78" stopColor="#3a93a8" stopOpacity="0.10" />
+            <stop offset="1" stopColor="#3a93a8" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="cmSrcCore" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="0.34" stopColor="#eafcfb" stopOpacity="0.92" />
+            <stop offset="0.7" stopColor="#8fe9f0" stopOpacity="0.45" />
+            <stop offset="1" stopColor="#8fe9f0" stopOpacity="0" />
+          </radialGradient>
         </defs>
 
         {/* 青芒 sparkle field — fine drifting light-particles that give the river the
@@ -376,8 +391,9 @@ function StarRiver({
         {/* Comet head — the curtain's source at the top: a bright cyan-white nucleus whose
             luminous tail falls as the 青芒光帘 below. (data-moon-anchor kept as the source hook.) */}
         <g className={styles.moonAnchor} data-moon-anchor="" aria-hidden="true">
-          <circle className={styles.moonGlow} cx={geo.moonCx} cy={geo.moonCy} r={geo.moonGlowR} fill="url(#cmCometHead)" />
-          <circle cx={geo.moonCx} cy={geo.moonCy} r={Math.max(geo.moonR * 0.32, 5)} fill="url(#cmCometCore)" />
+          <circle cx={geo.moonCx} cy={geo.moonCy} r={geo.moonGlowR} fill="url(#cmSrcComa)" style={{ mixBlendMode: 'screen' }} />
+          <circle cx={geo.moonCx} cy={geo.moonCy} r={geo.moonGlowR * 0.46} fill="url(#cmSrcCore)" style={{ mixBlendMode: 'screen' }} />
+          <circle cx={geo.moonCx} cy={geo.moonCy} r={Math.max(geo.moonR * 0.18, 3.2)} fill="#ffffff" />
         </g>
 
         {/* Faint band guide the stars rest along. */}
@@ -396,20 +412,21 @@ function StarRiver({
             const h2 = Math.sin(i * 14.74) * 43758.5453;
             const j1 = h1 - Math.floor(h1);
             const j2 = h2 - Math.floor(h2);
-            const x0 = geo.moonCx + off * geo.moonR * 1.1 + (j1 - 0.5) * 5;
-            const y0 = geo.moonCy + geo.moonR * 0.5;
+            const x0 = geo.moonCx + off * geo.moonR * 0.5 + (j1 - 0.5) * 4;
+            const y0 = geo.moonCy + geo.moonR * 0.62;
             const xEnd = geo.moonCx + off * geo.vw * 0.92 + (j2 - 0.5) * 14;
             const yEnd = geo.horizonY - 6;
             const cy1 = y0 + (yEnd - y0) * 0.34;
             const cy2 = yEnd - (yEnd - y0) * 0.08;
             const d = `M ${x0.toFixed(1)} ${y0.toFixed(1)} C ${x0.toFixed(1)} ${cy1.toFixed(1)}, ${xEnd.toFixed(1)} ${cy2.toFixed(1)}, ${xEnd.toFixed(1)} ${yEnd.toFixed(1)}`;
-            const bright = Math.min(1, center * 0.58 + j1 * 0.62);
+            const bright = Math.min(1, center * 0.7 + j1 * 0.5);
             const stroke =
-              bright > 0.82 ? '#eafcfb'
-              : bright > 0.6 ? '#a6eef3'
-              : bright > 0.4 ? '#5fd2e2'
-              : bright > 0.24 ? '#34a6bd'
-              : '#1f6f7e';
+              bright > 0.86 ? '#f0fffe'
+              : bright > 0.66 ? '#c4f3ef'
+              : bright > 0.46 ? '#7fdce8'
+              : bright > 0.28 ? '#3fa9c0'
+              : bright > 0.15 ? '#246d7d'
+              : '#1b525f';
             return (
               <path
                 key={`cm-strand-${i}`}
