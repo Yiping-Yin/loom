@@ -334,7 +334,7 @@ test('installed app smoke rejects stale macOS metadata in bundled web resources'
     fs.writeFileSync(path.join(contents, 'MacOS', 'Loom'), 'binary');
     fs.writeFileSync(path.join(resources, 'PrivacyInfo.xcprivacy'), '<plist version="1.0"></plist>');
     fs.writeFileSync(path.join(webRoot, 'index.html'), '<!doctype html><script src="/_next/static/chunk.js"></script>');
-    fs.writeFileSync(path.join(webRoot, 'desk.html'), '<!doctype html>');
+    fs.writeFileSync(path.join(webRoot, 'digital-me.html'), '<!doctype html>');
     fs.writeFileSync(path.join(webRoot, 'knowledge.html'), '<!doctype html>');
     fs.writeFileSync(path.join(webRoot, 'search-index.json'), '{}');
     for (let index = 0; index < 55; index += 1) {
