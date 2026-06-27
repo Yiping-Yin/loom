@@ -109,6 +109,12 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
   const hasBackedCaps = caps.some((c) => c.evidence.length > 0);
   const established = hasJourney || hasProof || hasBackedCaps;
 
+  // The heavier sections (Ask, Studio) are only meaningful once there's REAL evidence —
+  // uploaded proof or a capability actually backed by it. A journey-only profile (typed
+  // entries, nothing verified) defers them, so a fresh Digital Me reads as ONE focused
+  // next step (add proof) + the person's background, not a stack of near-empty sections.
+  const hasSubstance = hasProof || hasBackedCaps;
+
   // Has real substance (journey / capabilities) but NO uploaded proof yet — the exact
   // state a user lands in right after form onboarding. Proof (a CV / transcript /
   // certificate) is what unlocks the verified-source citations that make a LOOM read
@@ -367,21 +373,25 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
           </div>
         )}
 
-        {/* Studio — the user's working documents; always present as an entry
-            point (not gated), so the editor is reachable from home and the empty
-            state nudges a first document. */}
-        <div data-reveal="">
-          <BeginnerDocuments documents={studioDocuments} />
-        </div>
+        {/* Studio — the user's working documents. Deferred until the profile has real
+            substance (proof/backed caps) or an actual document, so a fresh Digital Me
+            isn't padded with an empty "Your documents" prompt. Reachable meanwhile from
+            the Studio surface itself; here it earns its place once there's something. */}
+        {(hasSubstance || studioDocuments.length > 0) && (
+          <div data-reveal="">
+            <BeginnerDocuments documents={studioDocuments} />
+          </div>
+        )}
 
         {/* Ask widget — centrepiece: answers are grounded in the beginner's
             localStorage profile which /api/ask receives automatically.
             All owner-specific copy is overridden here with generic text so
             the visitor sees prompts about this person, not Yiping's topics.
             example={null} starts in a neutral idle state (no owner seed).
-            Progressive disclosure: appears once established — asking a near-empty
-            profile returns nothing useful, so a thin profile sees one next step. */}
-        {established && (
+            Progressive disclosure: appears once there's real substance (proof or a
+            backed capability) — asking a journey-only profile returns nothing useful,
+            so a thin profile sees one focused next step (add proof) instead. */}
+        {hasSubstance && (
         <div data-reveal="">
           <AskYiping
             eyebrow="Ask me"

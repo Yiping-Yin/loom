@@ -49,13 +49,18 @@ const SAMPLE_PROFILE: BeginnerProfile = {
   works: [],
 };
 
-// An "established" profile (has journey substance) — used by the tests that
-// assert the progressively-disclosed sections (Ask, capabilities, proof), which
-// only render once the profile is established.
+// An "established" profile with real SUBSTANCE (journey + an uploaded artifact) —
+// used by the tests that assert the progressively-disclosed sections. Capabilities and
+// Proof disclose once the profile is established (has a journey); Ask and Studio hold
+// back until there's actual proof (or a backed capability), since a journey-only
+// profile can't cite anything — hence the artifact here.
 const ESTABLISHED_PROFILE: BeginnerProfile = {
   ...SAMPLE_PROFILE,
   experience: [
     { role: 'Senior Engineer', organization: 'Acme', start: '2020', bullets: ['Led the platform team.'] },
+  ],
+  artifacts: [
+    { id: 'af_cv', name: 'CV.pdf', kind: 'pdf', extractedText: 'Distributed systems and ML engineering.' },
   ],
 };
 
