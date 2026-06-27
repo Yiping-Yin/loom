@@ -96,66 +96,70 @@ export function CapabilityMap({
 
 // ── Star-river layout ─────────────────────────────────────────────────────────
 
-const STAR_VIEW_W = 1000;
-const STAR_VIEW_H = 260;
-// The river flows left→right across the width, resting toward the horizon.
-const RIVER_X0 = 96; // leave room for the moon anchor at the left
-const RIVER_X1 = 956;
-const RIVER_Y_MID = 138; // centerline of the band
-const RIVER_AMP = 30; // gentle vertical sweep of the band
-const RIVER_SCATTER = 34; // per-star vertical scatter around the band
-const HORIZON_Y = 224;
+// 青芒光帘 is VERTICAL: a curtain of light falls from the moon (Memory) at the top,
+// down to the horizon base. The portrait viewBox is kept narrow + contained by CSS so
+// a full-width portrait doesn't tower over the page.
+const STAR_VIEW_W = 440;
+const STAR_VIEW_H = 560;
+const RIVER_Y0 = 120; // top of the band, just below the moon
+const RIVER_Y1 = 500; // bottom of the band, just above the horizon
+const RIVER_X_MID = 220; // vertical centerline of the falling band
+const RIVER_AMP = 24; // gentle horizontal sway of the band
+const RIVER_SCATTER = 42; // per-star horizontal scatter around the band
+const HORIZON_Y = 524;
 const MAX_COMETS = 3;
 
 type RiverGeo = {
   vw: number;
   vh: number;
-  x0: number;
-  x1: number;
-  yMid: number;
+  y0: number;
+  y1: number;
+  xMid: number;
   amp: number;
   scatter: number;
   horizonY: number;
   moonCx: number;
+  moonCy: number;
   moonR: number;
   moonGlowR: number;
   compact: boolean;
 };
 
 /**
- * River geometry adapts to capability count. A rich profile (>3) keeps the full
- * wide band, byte-for-byte as before. A sparse profile (≤3) gets a small,
- * contained constellation — so one capability reads as a deliberate seed, not a
- * lone dot stranded on a full-width void.
+ * Curtain geometry adapts to capability count. A rich profile (>3) keeps the full
+ * tall curtain. A sparse profile (≤3) gets a shorter, contained fall — so one
+ * capability reads as a deliberate seed, not a lone dot stranded in a tall void.
  */
 function geometryFor(n: number): RiverGeo {
   if (n > 3) {
     return {
       vw: STAR_VIEW_W,
       vh: STAR_VIEW_H,
-      x0: RIVER_X0,
-      x1: RIVER_X1,
-      yMid: RIVER_Y_MID,
+      y0: RIVER_Y0,
+      y1: RIVER_Y1,
+      xMid: RIVER_X_MID,
       amp: RIVER_AMP,
       scatter: RIVER_SCATTER,
       horizonY: HORIZON_Y,
-      moonCx: 44,
+      moonCx: RIVER_X_MID,
+      moonCy: 56,
       moonR: 26,
       moonGlowR: 46,
       compact: false,
     };
   }
-  const vw = 92 + n * 150 + 80; // n1→322, n2→472, n3→622
+  const vh = 150 + n * 96 + 70; // n1→316, n2→412, n3→508
   return {
-    vw,
-    vh: 188,
-    x0: 92,
-    x1: vw - 46,
-    yMid: 100,
-    amp: 18,
-    scatter: 22,
-    horizonY: 158,
-    moonCx: 36,
+    vw: 360,
+    vh,
+    y0: 104,
+    y1: vh - 70,
+    xMid: 180,
+    amp: 16,
+    scatter: 30,
+    horizonY: vh - 40,
+    moonCx: 180,
+    moonCy: 48,
     moonR: 21,
     moonGlowR: 36,
     compact: true,
@@ -224,30 +228,30 @@ function pickComets(capabilities: BeginnerCapability[]): Set<string> {
 function layoutStars(capabilities: BeginnerCapability[], geo: RiverGeo): StarLayout[] {
   const comets = pickComets(capabilities);
   const n = capabilities.length;
-  const span = geo.x1 - geo.x0;
+  const span = geo.y1 - geo.y0; // vertical fall the stars spread along
 
   return capabilities.map((cap, i) => {
-    // Even spread along the band, nudged by a stable per-id hash so the field
+    // Even spread DOWN the curtain, nudged by a stable per-id hash so the field
     // feels scattered rather than gridded — deterministic, SSR-stable.
     const h = hashId(cap.id);
-    const t = n === 1 ? 0.5 : (i + 0.5) / n; // 0..1 along the river
-    const jitterX = (h - 0.5) * (span / Math.max(n, 1)) * 0.45;
-    const cx = geo.x0 + t * span + jitterX;
+    const t = n === 1 ? 0.5 : (i + 0.5) / n; // 0..1 down the curtain
+    const jitterY = (h - 0.5) * (span / Math.max(n, 1)) * 0.45;
+    const cy = geo.y0 + t * span + jitterY;
 
-    // Band centerline sweeps gently; each star scatters around it by its hash.
-    const bandY = geo.yMid - Math.sin(t * Math.PI) * geo.amp;
-    const scatter = (hashId(cap.id + '~y') - 0.5) * 2 * geo.scatter;
-    const cy = bandY + scatter;
+    // Band centerline sways gently side-to-side; each star scatters horizontally.
+    const bandX = geo.xMid + Math.sin(t * Math.PI) * geo.amp;
+    const scatter = (hashId(cap.id + '~x') - 0.5) * 2 * geo.scatter;
+    const cx = bandX + scatter;
 
     const mag = magnitude(cap);
     const r = 2.4 + mag * 6.6; // base + magnitude
     const glow = r + 6 + mag * 14;
 
-    // Local band direction (derivative of the sweep) for the comet tail.
-    const dDir = -Math.cos(t * Math.PI) * geo.amp * Math.PI;
+    // Local band direction (mostly downward) for the comet tail.
+    const dDir = Math.cos(t * Math.PI) * geo.amp * Math.PI; // horizontal component
     const len = Math.hypot(span, dDir) || 1;
-    const tailDx = span / len;
-    const tailDy = dDir / len;
+    const tailDx = dDir / len;
+    const tailDy = span / len; // positive → the tail trails upward toward the source
 
     return {
       cap,
@@ -369,34 +373,36 @@ function StarRiver({
           y2={geo.horizonY}
         />
 
-        {/* Moon (Memory) anchor at the left end. */}
+        {/* Comet head — the curtain's source at the top: a bright cyan-white nucleus whose
+            luminous tail falls as the 青芒光帘 below. (data-moon-anchor kept as the source hook.) */}
         <g className={styles.moonAnchor} data-moon-anchor="" aria-hidden="true">
-          <circle className={styles.moonGlow} cx={geo.moonCx} cy={geo.yMid} r={geo.moonGlowR} />
-          <circle cx={geo.moonCx} cy={geo.yMid} r={geo.moonR} fill="url(#cmMoon)" />
+          <circle className={styles.moonGlow} cx={geo.moonCx} cy={geo.moonCy} r={geo.moonGlowR} fill="url(#cmCometHead)" />
+          <circle cx={geo.moonCx} cy={geo.moonCy} r={Math.max(geo.moonR * 0.32, 5)} fill="url(#cmCometCore)" />
         </g>
 
         {/* Faint band guide the stars rest along. */}
         <RiverBand geo={geo} />
 
-        {/* 青芒光帘 — fine luminous light-strands flowing FROM the moon (Memory) rightward
-            along the river: the cyan-light-curtain material brought into the river's
-            horizontal form (deep-teal → bright-cyan → white). Sits behind the capability
-            stars; deterministic (seeded sin) so SSR + client agree. */}
+        {/* 青芒光帘 — fine luminous light-strands falling FROM the moon (Memory) at the top
+            DOWN the curtain, fanning out toward the horizon (deep-teal → bright-cyan →
+            white, brightest at the centre). Sits behind the capability stars;
+            deterministic (seeded sin) so SSR + client agree. */}
         <g style={{ mixBlendMode: 'screen' }} fill="none" strokeLinecap="round">
-          {Array.from({ length: 60 }, (_, i) => {
-            const base = i / 59;
+          {Array.from({ length: 84 }, (_, i) => {
+            const base = i / 83;
             const off = base - 0.5;
             const center = 1 - Math.min(1, Math.abs(off) * 2);
             const h1 = Math.sin(i * 91.3) * 43758.5453;
             const h2 = Math.sin(i * 14.74) * 43758.5453;
             const j1 = h1 - Math.floor(h1);
             const j2 = h2 - Math.floor(h2);
-            const x0 = geo.moonCx + geo.moonR * 0.5;
-            const y0 = geo.yMid + off * geo.moonR * 1.1 + (j1 - 0.5) * 5;
-            const yEnd = geo.yMid + off * geo.vh * 0.42 + (j2 - 0.5) * 12;
-            const cx1 = x0 + (geo.vw - x0) * 0.42;
-            const cx2 = x0 + (geo.vw - x0) * 0.8;
-            const d = `M ${x0.toFixed(1)} ${y0.toFixed(1)} C ${cx1.toFixed(1)} ${(y0 + (yEnd - y0) * 0.32).toFixed(1)}, ${cx2.toFixed(1)} ${(yEnd - (yEnd - y0) * 0.08).toFixed(1)}, ${(geo.vw + 8).toFixed(1)} ${yEnd.toFixed(1)}`;
+            const x0 = geo.moonCx + off * geo.moonR * 1.1 + (j1 - 0.5) * 5;
+            const y0 = geo.moonCy + geo.moonR * 0.5;
+            const xEnd = geo.moonCx + off * geo.vw * 0.92 + (j2 - 0.5) * 14;
+            const yEnd = geo.horizonY - 6;
+            const cy1 = y0 + (yEnd - y0) * 0.34;
+            const cy2 = yEnd - (yEnd - y0) * 0.08;
+            const d = `M ${x0.toFixed(1)} ${y0.toFixed(1)} C ${x0.toFixed(1)} ${cy1.toFixed(1)}, ${xEnd.toFixed(1)} ${cy2.toFixed(1)}, ${xEnd.toFixed(1)} ${yEnd.toFixed(1)}`;
             const bright = Math.min(1, center * 0.58 + j1 * 0.62);
             const stroke =
               bright > 0.82 ? '#eafcfb'
@@ -437,12 +443,12 @@ function StarRiver({
   );
 }
 
-/** Faint flowing band the stars sit along (decorative). */
+/** Faint falling band the stars sit along (decorative). */
 function RiverBand({ geo }: { geo: RiverGeo }) {
-  // A quadratic sweep matching the centerline used in layoutStars.
-  const midX = (geo.x0 + geo.x1) / 2;
-  const peakY = geo.yMid - geo.amp;
-  const d = `M ${geo.x0} ${geo.yMid} Q ${midX} ${peakY - 30} ${geo.x1} ${geo.yMid}`;
+  // A quadratic sway matching the centerline used in layoutStars (vertical fall).
+  const midY = (geo.y0 + geo.y1) / 2;
+  const peakX = geo.xMid + geo.amp;
+  const d = `M ${geo.xMid} ${geo.y0} Q ${peakX + 30} ${midY} ${geo.xMid} ${geo.y1}`;
   return <path className={styles.riverBand} d={d} fill="none" aria-hidden="true" />;
 }
 

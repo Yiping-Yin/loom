@@ -31,7 +31,11 @@
 .starRiver {
   position: relative;
   width: 100%;
-  /* A quiet but luminous cosmic field the river floats on. */
+  /* The curtain is VERTICAL (portrait viewBox), so contain its width and centre it —
+     a full-width portrait would tower over the page. */
+  max-width: 22rem;
+  margin-inline: auto;
+  /* A quiet but luminous cosmic field the curtain falls through. */
   border: 1px solid var(--line, rgba(255, 255, 255, 0.08));
   border-radius: var(--r-2);
   background:
@@ -49,7 +53,7 @@
    as a small, deliberate constellation instead of a lone dot on a full-width
    band. The adaptive viewBox (geometryFor) keeps the cluster filling this box. */
 .starRiverCompact {
-  max-width: 30rem;
+  max-width: 15rem;
 }
 
 .starRiverSvg {
