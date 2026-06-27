@@ -151,9 +151,6 @@ export function BeginnerProofSection({
         <h2 id="proof-title" className={styles.title}>
           Verified artifacts
         </h2>
-        <p className={styles.lede}>
-          Add a CV, transcript, or certificate as proof.
-        </p>
       </header>
 
       <div className={styles.uploadRow}>

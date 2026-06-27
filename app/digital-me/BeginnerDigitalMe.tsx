@@ -232,7 +232,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
                     document, so the Digital Me can cite verified sources like the
                     example. "Keep building" (more form text) drops to the ghost slot. */}
                 <p className={styles.nextWhy}>
-                  Add a CV, transcript, or certificate — then your Digital Me answers with verified, cited sources.
+                  Add a CV or transcript to cite real proof.
                 </p>
                 <a href="#proof" className={styles.nextCta}>
                   <span>Add proof</span>
@@ -282,7 +282,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
               {/* Thin / new profile → ONE guided next step (coach). One reason,
                   one action; everything else appears once there's real content. */}
               <p className={styles.nextWhy}>
-                Add your work or a CV and your Digital Me can answer for you — with citations.
+                Add your work or a CV to get cited answers.
               </p>
               <a href="/onboarding/profile/form" className={styles.nextCta}>
                 <span>Keep building</span>
@@ -340,7 +340,7 @@ export function BeginnerDigitalMe({ profile }: { profile: BeginnerProfile }) {
                 yet, point at the next action instead of leaving a bare "0". */}
             {caps.length > 0 && proofBackedCount === 0 && (
               <p className={styles.capabilitiesNudge}>
-                Add proof to back these with evidence.
+                Add proof to back these.
               </p>
             )}
 

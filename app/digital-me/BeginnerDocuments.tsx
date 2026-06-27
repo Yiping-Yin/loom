@@ -61,7 +61,6 @@ export function BeginnerDocuments({ documents }: { documents: StudioDocumentSumm
         </ul>
       ) : (
         <a className={styles.empty} href="/digital-me?edit=new">
-          <span className={styles.emptyTitle}>Turn your work into a document your Digital Me can speak from.</span>
           <span className={styles.emptyCta}>Start a document →</span>
         </a>
       )}
