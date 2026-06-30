@@ -43,6 +43,7 @@ export const NEW_LOOM_PRIMARY_ROUTES = [
   '/sources',
   '/studio',
   '/digital-me',
+  '/reflection',
 ] as const;
 
 export const NEW_LOOM_RUNTIME_ROUTES = [

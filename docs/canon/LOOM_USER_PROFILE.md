@@ -50,7 +50,7 @@
 ## 3. Learning Patterns
 
 ### How the user reads
-- **PDF-first**: most sources are PDFs. Reading happens inside Loom's PDF viewer, not external tools.
+- **PDF-first, native-reader-first**: most sources are PDFs, but reading happens in Preview or the user's native PDF app. Loom captures anchored learning from the side instead of replacing the reader.
 - **Selection-driven**: the user highlights passages as they read; engagement happens at selection time.
 - **Light annotation**: short reactions ("Managing innovation", "business") rather than long marginalia. Implies *fast capture* matters more than *deep writing-in-the-moment*.
 - **Returns to passages**: anchors back to the source PDF passage are valued — the user has explicitly tested "Jump to passage" links.

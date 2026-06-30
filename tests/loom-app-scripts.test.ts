@@ -389,6 +389,70 @@ test('release app scripts build the static export before Xcode Release packaging
   assert.doesNotMatch(buildInstallSource, /cd\s+macos-app\/Loom|cd\s+\.\.\/\.\./);
 });
 
+test('local macOS run entrypoint builds the current Xcode app and wires Codex Run', () => {
+  const repoRoot = path.resolve(__dirname, '..');
+  const runScriptPath = path.join(repoRoot, 'script', 'build_and_run.sh');
+  const environmentPath = path.join(repoRoot, '.codex', 'environments', 'environment.toml');
+  const verifierPath = path.join(repoRoot, 'scripts', 'verify-native-sidecar.mjs');
+
+  const runScript = fs.readFileSync(runScriptPath, 'utf8');
+  const environment = fs.readFileSync(environmentPath, 'utf8');
+  const verifier = fs.readFileSync(verifierPath, 'utf8');
+
+  assert.match(runScript, /xcodebuild/);
+  assert.match(runScript, /-project "\$PROJECT_DIR\/Loom\.xcodeproj"/);
+  assert.match(runScript, /-scheme "\$APP_NAME"/);
+  assert.match(runScript, /-derivedDataPath "\$DERIVED_DATA"/);
+  assert.match(runScript, /APP_BUNDLE="\$DERIVED_DATA\/Build\/Products\/Debug\/\$APP_NAME\.app"/);
+  assert.match(runScript, /pgrep -x "\$APP_NAME"/);
+  assert.doesNotMatch(runScript, /swift build/);
+
+  assert.match(environment, /name = "LOOM"/);
+  assert.match(environment, /command = "\.\/script\/build_and_run\.sh"/);
+
+  assert.match(verifier, /process\.env\.LOOM_APP_PATH/);
+  assert.match(verifier, /path\.resolve\(process\.env\.LOOM_APP_PATH\)/);
+  assert.match(verifier, /appUnderTest/);
+  assert.match(verifier, /function processCommands\(name\)/);
+  assert.match(verifier, /execFileSync\('\/usr\/bin\/pgrep', \['-x', name\]/);
+  assert.match(verifier, /execFileSync\('\/bin\/ps', \['-p', pid, '-o', 'command='\]/);
+  assert.match(verifier, /function appUnderTestMetadata\(\)/);
+  assert.match(verifier, /function fixtureMetadata\(fixtures = \{\}/);
+  assert.match(verifier, /function runtimeMetadata\(\)/);
+  assert.match(verifier, /function openAppBundle\(target\)/);
+  assert.match(verifier, /execFileSync\('\/usr\/bin\/open', \[target\]/);
+  assert.match(verifier, /openAppBundle\(appPath\)/);
+  assert.match(verifier, /function openFileWithLoom\(target\)/);
+  assert.match(verifier, /execFileSync\('\/usr\/bin\/open', \['-a', appPath, target\]/);
+  assert.match(verifier, /openFileWithLoom\(pdfPath\)/);
+  assert.match(verifier, /openFileWithLoom\(fixtures\.docx\)/);
+  assert.match(verifier, /openFileWithLoom\(fixtures\.csv\)/);
+  assert.doesNotMatch(verifier, /\/usr\/bin\/open -a \$\{JSON\.stringify\(appPath\)\}/);
+  assert.match(verifier, /original-file-open-handoff/);
+  assert.match(verifier, /function parseCapturedInputLine\(item\)/);
+  assert.match(verifier, /function traceIntegrityFor\(reflectionCase\)/);
+  assert.match(verifier, /function allTraceIntegrityPassed\(report\)/);
+  assert.match(verifier, /sourceAnchors/);
+  assert.match(verifier, /focusLabels/);
+  assert.match(verifier, /selectedText/);
+  assert.match(verifier, /passMetadata/);
+  assert.match(verifier, /traceTypeMetadata/);
+  assert.match(verifier, /secondPassReadiness/);
+  assert.match(verifier, /thinking-version-integrity/);
+  assert.match(verifier, /reviewable understanding versions with source anchor, anchor precision, weak-anchor disclosure, focus, selected text, pass metadata, trace type, and second-pass readiness/);
+  assert.match(verifier, /### Thinking Version Integrity/);
+  assert.match(verifier, /appUnderTest: appUnderTestMetadata\(\)/);
+  assert.match(verifier, /fixtures: fixtureMetadata\(fixtures, pdfSource\)/);
+  assert.match(verifier, /runtime: runtimeMetadata\(\)/);
+  assert.match(verifier, /`- App under test: \$\{report\.appUnderTest\.path\}`/);
+  assert.match(verifier, /`- PDF path: \$\{report\.fixtures\.pdf\.path\}`/);
+  assert.match(verifier, /pdfFixture: fixtureMetadata\(\)\.pdf/);
+  assert.match(verifier, /\.\.\.runtimeMetadata\(\)/);
+  assert.match(verifier, /runningApplicationCommands/);
+  assert.match(verifier, /debugAppGuiVerification/);
+  assert.doesNotMatch(verifier, /installedApp:/);
+});
+
 test('installed app smoke is sandbox-compatible and does not call CLI AI', () => {
   const repoRoot = path.resolve(__dirname, '..');
   const pkg = JSON.parse(
@@ -485,7 +549,10 @@ test('new Loom product gates are executable and approval-safe', () => {
   assert.match(completionVerifier, /verify:product must run only safe non-approval gates/);
   assert.match(completionVerifier, /Finder-numbered duplicate artifacts/);
 
-  assert.match(activeReadme, /Current new Loom continuation reading order/);
+  assert.match(activeReadme, /Current Reading Order/);
+  assert.match(activeReadme, /sidecar\/reflection standard/);
+  assert.match(activeReadme, /original file activity -> anchored learning trace -> second-pass synthesis -> reusable memory/);
+  assert.match(activeReadme, /external learning and thinking layer around original/);
   assert.match(activeReadme, /2026-05-15-new-loom-acceptance-status\.md/);
   assert.match(activeReadme, /Sources \/ Studio \/ Digital Me/);
   assert.match(activeReadme, /historical reference only/);

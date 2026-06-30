@@ -2,6 +2,9 @@
 
 This directory is organized into clear areas. Each subdirectory holds one kind of document.
 
+Start with [Repo Structure](REPO_STRUCTURE.md) when deciding where a file,
+spec, screenshot, or generated artifact belongs.
+
 | Area | Path | What lives here |
 | --- | --- | --- |
 | **Canon** | [`canon/`](canon/) | The product constitution — what Loom is, the rules it must obey, who it is for, and the canonical design system. Source of truth; everything else defers to these. |
@@ -12,11 +15,14 @@ This directory is organized into clear areas. Each subdirectory holds one kind o
 | **Archive** | [`archive/`](archive/) | Frozen records. `archive/ai-build-log/` holds the dated specs + plans produced during AI-assisted build sessions. |
 
 The lowercase [`loom.md`](loom.md) at the top of `docs/` is a separate running build/decision log (distinct from `canon/LOOM.md`).
+Ignored private root-doc copies live in `local-private/`; tracked product truth
+lives in `canon/` and `projects/active/`.
 
 ## Canon
 
 - [Loom — Product Definition](canon/LOOM.md) — what Loom is (vision, framing, architecture, moat).
 - [Loom Rules](canon/LOOM_RULES.md) — invariants, vetoes, North Star principles, decision log.
+- [Loom Design Discipline](canon/LOOM_DESIGN_DISCIPLINE.md) — critique, choice, refusal, surface ownership, and acceptance gates for Reflection / sidecar design.
 - [Loom User Profile](canon/LOOM_USER_PROFILE.md) — who Loom is for (audience, habits, working patterns).
 - [Project Map](canon/PROJECT_MAP.md) — top-level map of the repo's projects.
 - [Design System](canon/design-system.md) — canonical token/design-system reference.

@@ -388,7 +388,7 @@ enum IngestionWindow {
 func nativeFileImporterContentTypes() -> [UTType] {
     var types: [UTType] = [.plainText, .text, .utf8PlainText, .pdf, .rtf, UTType.image]
     if let pptx = UTType(filenameExtension: "pptx") { types.append(pptx) }
-    for ext in ["md", "mdx", "markdown", "docx", "doc", "rtfd", "ppt", "key", "pages"] {
+    for ext in ["md", "mdx", "markdown", "docx", "doc", "rtfd", "xlsx", "xls", "csv", "tsv", "ppt", "key", "pages"] {
         if let type = UTType(filenameExtension: ext) { types.append(type) }
     }
     return types

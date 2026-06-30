@@ -22,6 +22,14 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function normalizeText(value: string) {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function assertTextContains(haystack: string, needle: string) {
+  assert.match(normalizeText(haystack), new RegExp(escapeRegExp(normalizeText(needle))));
+}
+
 function cssRulesContaining(css: string, selector: string) {
   const rules = css.match(/[^{}]+{[^{}]*}/g) ?? [];
   const matchingRules = rules.filter((rule) => rule.slice(0, rule.indexOf('{')).includes(selector));
@@ -76,6 +84,1966 @@ test('new Loom web shell exposes the Sources Studio Digital Me product loop', ()
   ]) {
     assert.doesNotMatch(home, new RegExp(`>${legacy}<|["']${legacy}["']`));
   }
+});
+
+test('Reflection workspace is a separate product reflection workbench', () => {
+  const page = read('app/reflection/page.tsx');
+  const workspace = [
+    read('app/reflection/ReflectionWorkspaceClient.tsx'),
+    read('app/reflection/UnderstandingSpine.tsx'),
+    read('app/reflection/reflectionModel.ts'),
+  ].join('\n');
+  const styles = read('app/reflection/ReflectionWorkspace.module.css');
+  const nativeRoot = read('macos-app/Loom/Sources/LoomReflectionRootView.swift');
+  const sourceFileView = read('macos-app/Loom/Sources/SourceFileView.swift');
+  const loomApp = read('macos-app/Loom/Sources/LoomApp.swift');
+  const contentView = read('macos-app/Loom/Sources/ContentView.swift');
+  const project = read('macos-app/Loom/Loom.xcodeproj/project.pbxproj');
+  const projectYml = read('macos-app/Loom/project.yml');
+  const infoPlist = read('macos-app/Loom/Info.plist');
+  const packageJson = read('package.json');
+  const nativeSidecarVerifier = read('scripts/verify-native-sidecar.mjs');
+  const nativeTempCleaner = read('scripts/clean-loom-native-temp.mjs');
+  const activeReadme = read('docs/projects/active/README.md');
+  const loomRules = read('docs/canon/LOOM_RULES.md');
+  const designDiscipline = read('docs/canon/LOOM_DESIGN_DISCIPLINE.md');
+  const reflectionPrd = read('docs/projects/active/2026-06-28-loom-reflection-workspace-prd.md');
+  const pollutionRules = read('docs/projects/active/2026-06-29-loom-pollution-avoidance-rules.md');
+  const layoutContract = read('docs/projects/active/2026-06-27-loom-reflection-workspace-layout-contract.md');
+  const topBarStart = nativeRoot.indexOf('private struct ReflectionTopBar');
+  const sidebarStart = nativeRoot.indexOf('private struct ReflectionSidebar');
+  const topBarBlock = nativeRoot.slice(topBarStart, sidebarStart);
+
+  assert.match(activeReadme, /2026-06-28-loom-reflection-workspace-prd\.md/);
+  assert.match(page, /ReflectionWorkspaceClient/);
+  assert.match(workspace, /Understanding Version Flow/);
+  assert.match(workspace, /UnderstandingSpine/);
+  assert.match(workspace, /understandingVersionsFromCase/);
+  for (const prdTerm of [
+    'Loom Reflection helps product builders turn real work into',
+    'better judgment. That is one vertical',
+    'Loom is an external learning and thinking layer for original files.',
+    'A PDF stays a PDF, Excel stays',
+    'Reflection is the second pass.',
+    'word meaning, pronunciation, phrase',
+    'original file activity -> anchored learning commit -> user-confirmed principle -> reusable thinking',
+    'the user works inside the native file surface while',
+    'As a Chinese-native learner reading English material',
+    'specific page or selection',
+    'later return to Loom for a second',
+    'Implementation rule: no Reflection UI change ships without a matching PRD or',
+    'docs/canon/LOOM_DESIGN_DISCIPLINE.md',
+    'Titlebar controls share one center line with the native traffic lights.',
+    'Only the left sidebar uses liquid glass.',
+    'The four zones have non-overlapping jobs.',
+    'Delete reflection belongs to the left sidebar row.',
+    'I can import local files into the current reflection',
+    'open a PDF source in the native app',
+    'Look Up, Translate, Copy, Writing Tools, Summarize, and Services',
+    'one-page or two-page viewing',
+    'Original file',
+    'Native surface',
+    'Source disambiguation',
+    'Frontmost app identity is not source truth',
+    'Wrong-window evidence is still',
+    'Native translation receipt',
+    'Structured visual extraction',
+    'Learning trace',
+    'Learning pass',
+    'Loom sidecar',
+    'Understanding Version Flow',
+    'Make learning and review continuous like source control for understanding',
+    'local cognitive version-control layer',
+    'raw exposure became understanding',
+    'understanding became thinking',
+    'thinking became a reusable system',
+    'passive notebook that merely stores highlights',
+    'Thinking system',
+    'Convert understanding into future thinking',
+    'file + anchor + pass + trace type + user meaning',
+    'Local import creates a current-case source and concrete Input trace entry',
+    'Sidecar Mode keeps Loom around the material',
+    'weaker reader',
+    "the user's native app",
+    'must not block the responder chain or replace the system menu',
+    'The first native bridge is a macOS Services capture.',
+    'Capture Selection in Loom',
+    'reads the system pasteboard',
+    'current Loom sidecar as an anchored Input trace',
+    "the browser's own PDF viewer",
+    'PDF.js, canvas rendering, or image',
+    'The companion copy should be a light confirmation',
+    "product contract, not in the user's reading flow",
+    'anchored capture: language',
+    'The smallest valuable capture is not a note.',
+    'first language pass',
+    'Second-pass synthesis is allowed to be richer',
+    'not a chat, not a mind map, and not a generic notes feed',
+    "Its differentiated job is Understanding Version Flow",
+    "Loom's broader cognitive version-control layer",
+    'understanding history: source anchor, first-pass interpretation',
+    'each capture behaves more like a small version commit than a',
+    'raw machine metadata belong behind an',
+    'audit trail',
+    "what changed in the user's understanding across passes",
+    'cognition versions',
+    'selected material -> first interpretation -> correction -> reflection ->',
+    'If the center pane only lists notes',
+    'The right pane owns **Evidence Inspector**',
+    'Source Collection is secondary',
+    'selecting a thinking version in',
+    'updates the Evidence Inspector',
+    'the right pane inspects the latest version',
+    'right pane never becomes a second note feed',
+    'thinking version -> evidence inspector',
+    'Loom output should beat static packets and rich source-summary products',
+    'NotebookLM-style source collections',
+    'source-grounded summaries, Q&A, study guides, and rich review formats',
+    'Those are table stakes, not the moat',
+    '`loom-notes`-style fill-in study notes',
+    'active recall scaffolds',
+    'what is the spine of this',
+    'readable exposition and active recall',
+    'It should not compete mainly on static',
+    'typesetting, page layout',
+    'generic source-grounded Q&A',
+    'A compiled course packet can answer: what material was collected',
+    'NotebookLM-style tools can answer: what do',
+    'what study artifacts can be',
+    "user's understanding change while using that material",
+    'across native apps and',
+    'NotebookLM-style richness is a baseline product requirement',
+    'source hub with summaries, questions',
+    'artifacts are generated from Loom',
+    "cognition trail, not only from uploaded",
+    'source collection: the documents, sheets, pages, passages',
+    'generated artifacts: summary, Q&A, glossary, timeline',
+    "learning trail: the user's selected words, phrases, sentences",
+    'versioned understanding: what was first misunderstood',
+    'weaker NotebookLM clone',
+    'rich source aggregation plus reviewable thinking evolution',
+    'rich enough to generate source-grounded summaries, Q&A, glossary, timeline',
+    'anchored source trail: exact file, page, selection, region, sheet, or paragraph',
+    'native use trail: what happened inside Preview, Word, Excel, browser',
+    'understanding diff: what the user thought before, what changed, and why',
+    'reflection memory: what changed in judgment after repeated use',
+    'Static output is downstream',
+    '## Design Discipline',
+    'critique and choice, not through feature',
+    'What mature capability already exists',
+    'What baseline must Loom match',
+    'What gap remains that only Loom should own',
+    'What tempting implementation is being refused',
+    'What acceptance signal proves',
+    '### Current Requirement Decisions',
+    'Do not make Loom a better PDF app.',
+    'Do not make the center pane a note surface.',
+    'Do not keep a composer without a commit target.',
+    'Do not confuse clean output with differentiation.',
+    'Do not confuse NotebookLM-style richness with the final product.',
+    'Do not turn every capture into memory.',
+    'Do not explain the product in the main surface.',
+    '### Design Choice Ledger',
+    'observed issue -> chosen rule -> refusal -> acceptance signal',
+    'Center owns Understanding Version Flow.',
+    'Understanding Spine',
+    "Codex records what an agent did",
+    "Loom records how a user's understanding",
+    'an agent operation log',
+    'Composer commits the next understanding version.',
+    'Static output is baseline; cognition trail is Loom.',
+    '### Decision Protocol',
+    'symptom -> critique -> choice -> rule -> acceptance evidence',
+    "The user's feedback is evidence, not an instruction to copy literally.",
+    'Name the symptom.',
+    'Challenge the proposed fix.',
+    'Choose the product owner.',
+    'Write the rule.',
+    'Add evidence.',
+    'Do not ship a design change because it makes one screenshot look better.',
+    '### Requirement Writing Standard',
+    'reference image, native app screenshot, user phrase, or competitor comparison',
+    'symptom -> critique -> choice -> owner -> refusal -> acceptance',
+    'Make it cleaner',
+    'Make it like Codex',
+    'Use Liquid glass',
+    'Support PDF',
+    'Make NotebookLM-like output',
+    'Add chat',
+    'job -> owner -> user path -> proportion -> material -> copy -> evidence',
+    'This order is part of the PRD.',
+    'Evidence comes from a real user path',
+    '### Requirement Triage',
+    'Invariant | A rule Loom must preserve every time',
+    'Baseline | A capability mature tools already provide',
+    'Differentiator | A job only Loom should own',
+    'Refusal | A tempting direction that would make Loom weaker',
+    'Open question | A real uncertainty that needs evidence',
+    '### Capability And Evidence Ladder',
+    'The Translate example is not a translation requirement.',
+    'What does the original app or macOS already do well?',
+    'What is the smallest truthful fallback',
+    'Use this evidence ladder for source context',
+    'selected text, copied translation, structured file parse',
+    'Loom-owned appshot plus OCR, Vision, or multimodal extraction',
+    'user-confirmed manual anchor',
+    'The product rule is degradation with honesty.',
+    'visual context only',
+    'The simplest path wins.',
+    '### Questioning And Choice Discipline',
+    'Loom requirements are not accepted as features.',
+    'Observed failure.',
+    'User example.',
+    'Bad literal fix.',
+    'Existing capability.',
+    'Chosen owner.',
+    'Discipline added.',
+    'Acceptance evidence.',
+    'If the decision record cannot identify a bad literal fix',
+    'Every accepted design choice must also carry a refusal.',
+    'not commentary',
+    'Every implementation pass must also write or preserve an implementation record',
+    'classification -> preserved capability -> baseline matched -> Loom-only value -> surface owner -> refusal -> acceptance path',
+    '"Cleaner", "more native", "more like Codex", "more like Preview"',
+    'one surface that owns the change',
+    '### Design Constitution',
+    'The original file is the subject; Loom is the learning and reflection layer',
+    'A native capability is always cheaper than a Loom clone',
+    'The center pane earns its existence only by showing how understanding changed',
+    'Static output is a baseline export, not the product',
+    'Rich source summaries are baseline',
+    'No visible surface may exist without a single product duty.',
+    '### Center Workspace Discipline',
+    'Understanding Version Flow',
+    '理解版本流',
+    'It should not default to long explanatory metadata.',
+    'collapsed audit trail',
+    'decorative sections',
+    '### Composer Discipline',
+    'The bottom input exists only if it has a version target.',
+    'If the composer cannot name one of these targets, it should be hidden',
+    'A generic "ask or type anything" box is not a',
+    'Loom primitive; it belongs only inside',
+    '### Output Discipline',
+    'native use -> anchored captures -> understanding versions -> second-pass synthesis -> export',
+    'structure, readability, and rich presentation',
+    'Word/PPT documents, dynamic HTML dossiers',
+    'video or narrated walkthrough formats',
+    'dynamic HTML artifact, video/script outline',
+    'Rich output has four requirements',
+    'structural strength',
+    'media fitness',
+    'replayability',
+    'If the output cannot show that',
+    'it is just another static or rich AI-generated packet.',
+    'Baseline vs Differentiation',
+    'Do not confuse a baseline feature with product differentiation',
+    'Preview/default PDF apps',
+    'Word/Excel/PowerPoint',
+    'AI chat',
+    'meet the baseline and own the',
+    'thinking-history layer',
+    'Surface Duties',
+    'Native file surface: keep the original work alive',
+    'Loom Companion: confirm a capture',
+    'Composer: commit the next understanding version',
+    'Export surface: produce readable packets after review',
+    'Commit Rule',
+    'The atomic Loom unit is not "note". It is "understanding version".',
+    'source anchor: file, page, region',
+    'Refusal Rules',
+    'rebuilds a native PDF/Word/Excel function',
+    'treats uploaded files only as RAG attachments',
+    'rich source summaries as the final product',
+    'bottom composer a generic chat input',
+    'adds controls without assigning them to a single surface duty',
+    'Center workspace | Understanding Spine inside Understanding Version Flow',
+    'an agent operation log',
+    'a center entry must look like a thinking version',
+    'version type: selected word, phrase, sentence, passage',
+    'state: needs meaning, needs interpretation, committed',
+    'Raw source app, trace type, window title, file path',
+    'When a learning case reaches `Second pass ready`',
+    'continue the same Understanding Version Flow',
+    'scaffolding belongs to product cases',
+    'not a replacement',
+    'reader, chat answer, note feed, or duplicate',
+    'Manual text typed into a learning case is an understanding version',
+    'Version History as user meaning, question, correction, or principle',
+    'manual meaning should attach to the most recent unresolved',
+    'explicit principles can become memory candidates',
+    'Product intent is visible: Loom reads as an external learning',
+    'The original file remains primary',
+    'Captures preserve file, page or region, pass, trace type, and user meaning.',
+    'Anchor precision is user-facing evidence',
+    'only app/window/time context must say so explicitly',
+    'Weak fallback labels such as `window+page`',
+    'require a short `anchor note`',
+    'FINS3666 Week 1 Quantitative',
+    'Trading Algorithmic Trading.pdf',
+    'Learning Output Packet',
+    'fill-in prompts or review gaps',
+    'active recall trail',
+    'source/provenance',
+    'learning objectives',
+    'key concepts',
+    'agenda',
+    'sections',
+    'page-aware citations',
+    'claims came from the original material',
+    'corrected understanding',
+    'affordances: table of contents',
+    'One-page and two-page viewing are PDF layout states, not Loom features.',
+    'The fixed right Sources pane is hidden in Sidecar Mode.',
+    'Deleting the final case should leave one empty reflection',
+    'Temporary sidebar peek is allowed only as a collapsed-state hover affordance.',
+    'Hover near the left edge may slide the sidebar out as an overlay.',
+    'inside the slid-out sidebar, the sidebar stays visible.',
+    'center/right pane proportions, pane seams, titlebar',
+    'the center workspace background as its transparent material base',
+    'Its internal controls also shift',
+    'to center-pane hierarchy',
+    'permanent sidebar state or center/right pane proportions.',
+    'Temporary hover peek uses center-backed glass',
+    'Loom captures unanchored notes',
+    'reading mode makes Loom visually louder',
+    'native file sidecar model',
+    'anchored learning traces',
+    'cloned Excel or Word editors',
+    'Reject PRD drift',
+    'Do not call a visual change complete from source code alone.',
+    'Do not call a product change complete from a screenshot alone.',
+  ]) {
+    assertTextContains(reflectionPrd, prdTerm);
+  }
+  for (const canonTerm of [
+    'Reflection / Sidecar Design Discipline',
+    'LOOM_DESIGN_DISCIPLINE.md',
+    'Every Loom design change must be written as a choice under constraint',
+    'What already exists?',
+    'What baseline must Loom match?',
+    "What is Loom's unique job?",
+    'What are we refusing?',
+    'Preservation:',
+    'Baseline:',
+    'Differentiation:',
+    'If Loom skips preservation',
+    'The atomic Loom unit is **understanding version**, not note.',
+    'Original file app owns reading, editing, page modes',
+    'Center workspace owns Understanding Spine inside Understanding Version Flow',
+    'Capability Ladder',
+    'Evidence Ladder',
+    'Simplest Path Rule',
+    'Missing Information Handling',
+    'Sandbox honesty',
+    'a sandboxed Service capture may only prove selected text',
+    'not precise anchors until an allowed AX helper',
+    'appshot/OCR/Vision/model extraction',
+    'Source disambiguation',
+    'frontmost app identity is not source truth',
+    'Wrong-window downgrade',
+    'different document than the target learning file',
+    'visual context only',
+    'fake precise anchor',
+    'Never present a lower rung as a higher one.',
+    'strongest evidence available',
+    'does not fake file/page/cell certainty',
+    'Codex records what an agent did',
+    'Understanding Spine',
+    'Composer owns committing the next understanding version',
+    'Rich summaries, Q&A, glossaries, study guides, and A4 exports are baseline',
+    'Circle-style course packet',
+    'source/provenance, learning objectives, key concepts, agenda, sections',
+    "The user's FINS3666 Circle packet is already fast, complete, and reviewable.",
+    'match that Learning Output Packet floor',
+    'source anchors, passes, corrections, and principles produced it',
+    'loom-notes`-style active recall packets',
+    'No turning the center workspace into a LaTeX worksheet editor',
+    'Fill-in prompts trace back to source anchors',
+    'trail, not only from uploaded files',
+    'A rich source dossier is a baseline review / export view',
+    'source collection, generated artifacts, source',
+    'learning trail, versioned understanding, and reuse',
+    'Source collection plus generated artifacts is baseline',
+    'plus understanding evolution is Loom',
+    'symptom -> critique -> choice -> rule -> acceptance evidence',
+    'request -> symptom -> objection -> baseline -> Loom-only gap -> owner -> rule -> evidence',
+    'The objection step is mandatory.',
+    "The user's wording is evidence, not an implementation order.",
+    'invariant, baseline',
+    'differentiator, refusal, or open question',
+    'Requirements are not accepted as feature orders.',
+    'observed failure -> user example -> bad literal fix -> existing capability -> chosen owner -> discipline added -> acceptance evidence',
+    'If the record cannot name a bad literal fix',
+    'Every accepted choice must carry a matching',
+    'refusal',
+    'Every implementation pass must also preserve this shorter product record',
+    'classification -> preserved capability -> baseline matched -> Loom-only value -> surface owner -> refusal -> acceptance path',
+    '"Cleaner", "more native", "more like Codex", "more like Preview"',
+    'preserved capability, baseline, Loom-only value, owner',
+    'Requirement writing is itself a product discipline.',
+    'Screenshots, comparisons,',
+    'and user wording are evidence, not specs.',
+    'symptom -> critique -> choice -> owner -> refusal -> acceptance',
+    'Do not start a Loom design from material, color, glass',
+    'job -> owner -> user path -> proportion -> material -> copy -> evidence',
+    'Vague requests such as "make it cleaner"',
+    'what Loom-only',
+    'how it can become',
+    'synthesis / memory / export',
+    'Current requirement discipline from the PDF / Word / GitHub / Circle /',
+    'Do not make Loom a better PDF, Word, or Excel app.',
+    'Do not make the center a note surface.',
+    'Do not keep the composer if it cannot name the next commit target.',
+    'Do not claim static or rich output as the moat.',
+    'Do not stop at NotebookLM-style source richness.',
+    'Do not convert every capture into memory.',
+    'Do not explain the product in the main surface.',
+    'Every serious design pass leaves a design choice ledger:',
+    'observed issue -> chosen rule -> refusal -> acceptance signal',
+    'If the ledger is missing',
+    'The current design constitution:',
+    'The original file is the subject; Loom is the learning and reflection layer',
+    'A native capability is cheaper than a Loom clone',
+    'The center workspace earns its existence only by showing how understanding',
+    'The composer is not a chat box',
+    'Static output and NotebookLM-style richness are baseline exports.',
+    'rich source aggregation plus the user',
+    'A design that cannot be tested through a real user path is an illustration',
+    'Every roadmap item must name both the baseline it protects',
+    'Understanding Spine inside Understanding Version Flow',
+    'Codex records what an agent did',
+    'Loom records how the user',
+    'Agent operation log',
+    'Understanding Version Flow',
+    '理解版本流',
+    'The bottom composer appears only when it has a version target',
+    'A generic free-form chat box is rejected',
+    'Current precedent:',
+    'PDF learning uses Preview / native PDF apps as the reader.',
+    'The composer is a commit field. Before typing',
+    'Excel, Word, and other native files keep their own editing',
+    'it is product noise',
+  ]) {
+    assertTextContains(loomRules, canonTerm);
+  }
+  for (const disciplineTerm of [
+    'Loom Design Discipline',
+    'critique, choice, refusal, and evidence',
+    'Loom is a local cognitive version-control layer around original work.',
+    'native work -> anchored capture -> understanding version -> second-pass synthesis -> reusable thinking -> export',
+    'Discipline Stack',
+    'Preservation',
+    'Baseline',
+    'Differentiation',
+    'Most wrong Loom designs happen when a baseline is mistaken for',
+    'preserve mature tools -> satisfy baseline output -> spend Loom surface area only on understanding versions',
+    'Structured rich output is table stakes.',
+    'Use a capability ladder before building.',
+    'Use an evidence ladder when information is missing.',
+    'The simplest truthful path wins.',
+    'Native translation is only one example of preserved native actions.',
+    'Visual extraction is a fallback and enrichment path.',
+    'Frontmost app is not source truth.',
+    'Wrong-window evidence must downgrade the anchor.',
+    'NotebookLM-style richness is baseline.',
+    'The center is Understanding Version Flow.',
+    'The composer is a commit field.',
+    'Every accepted choice carries a refusal.',
+    'User wording is evidence, not instruction.',
+    'Do not ship a concept without a path.',
+    'Do not ship a path without a review object.',
+    'Do not ship a review object without reuse.',
+    'Current Hard Requirements From Critique',
+    'Native PDF already has Translate, Look Up',
+    'Word and GitHub already have version history',
+    'Circle / LaTeX / AI chat can already make fast readable packets.',
+    'NotebookLM-style tools already create rich source summaries',
+    'The bottom input box has no meaning when it accepts anything.',
+    'The visible object should look like a human learning record',
+    'Capture feedback became too large and explanatory.',
+    'Loom Companion is a small transient saved receipt only',
+    'selected text, source metadata, trace explanation',
+    'Multiple Preview / Word / Excel windows can confuse automation',
+    'Loom is meant to become a thinking service / future brain interface.',
+    'Memory is only user-confirmed reusable thinking',
+    'Design Choice Ledger',
+    'Every serious design pass should leave a ledger entry.',
+    'Observed issue | Chosen rule | Refusal | Acceptance signal',
+    'Center is Understanding Version Flow.',
+    'Composer is a commit field.',
+    'Static output is baseline; cognition trail is the Loom layer.',
+    'Computer-use can observe a different Preview document',
+    'The ledger is not optional.',
+    'Questioning Loop',
+    'request -> symptom -> objection -> baseline -> Loom-only gap -> owner -> rule -> evidence',
+    'The objection step is mandatory.',
+    'Decision Gate',
+    'Observed failure',
+    'Bad literal fix',
+    'Existing capability',
+    'Chosen owner',
+    'Acceptance evidence',
+    'Implementation Record',
+    'Every implementation pass must leave a short product record',
+    'classification -> preserved capability -> baseline matched -> Loom-only value -> surface owner -> refusal -> acceptance path',
+    'Do not implement from an adjective.',
+    '"Cleaner", "more native", "more like',
+    'both the baseline it',
+    'protects and the Loom-only value',
+    'The implementation record is the product discipline',
+    'Requirement Writing Discipline',
+    'Screenshots, analogies, and user wording are evidence, not specs.',
+    'Every written requirement must include six parts',
+    'symptom -> critique -> choice -> owner -> refusal -> acceptance',
+    'make it cleaner',
+    'make it like Codex',
+    'add Liquid glass',
+    'support PDF',
+    'make NotebookLM-like output',
+    'add a chat box',
+    'job -> owner -> user path -> proportion -> material -> copy -> evidence',
+    'Do not start with material, color, glass, animation, or layout.',
+    'Product Discipline Checklist',
+    'What native or mature capability are we preserving?',
+    'What Loom-only thinking-history value are we adding?',
+    'What object is created or revised?',
+    'How can it become synthesis, memory, or export?',
+    'Request Triage',
+    'Surface Ownership',
+    'Native file app',
+    'Loom Companion',
+    'Center workspace',
+    'Composer',
+    'Export',
+    'Memory',
+    'Baseline vs Moat Rules',
+    'Rich Dossier Discipline',
+    'A rich source dossier is required',
+    'not the center workspace',
+    'source collection: files, pages, passages',
+    'generated artifacts: summary, Q&A, glossary',
+    'NotebookLM-style tools already cover much of this',
+    'source collection plus generated artifacts is baseline',
+    'plus understanding evolution is',
+    'The center workspace still remains Understanding Version Flow.',
+    'Evidence Inspector',
+    'Source Collection is secondary',
+    'which source anchors and which user',
+    'Every roadmap item must therefore name both: the baseline it protects and',
+    'Current Debate Resolutions',
+    'PDF Learning',
+    'Center Workspace',
+    'Excel / Word / Other Native Files',
+    'preserved capability -> baseline met -> Loom-only value -> refusal still true -> evidence path',
+    'Native File Sidecar',
+    'Understanding Version Flow',
+    'Rich Output',
+    'Acceptance Discipline',
+    'A Loom change is not accepted from source code alone.',
+    'A visual change is not accepted from a screenshot alone.',
+    'the native app still owns its native capabilities',
+    'the refusal is still true after the implementation',
+    'When in doubt, choose the mature existing tool',
+  ]) {
+    assertTextContains(designDiscipline, disciplineTerm);
+  }
+  for (const pollutionTerm of [
+    'wrong-window / weak-anchor finding',
+    'do not promote it to',
+    'file/page/cell evidence',
+  ]) {
+    assertTextContains(pollutionRules, pollutionTerm);
+  }
+  for (const label of ['Input', 'Assumption', 'Decision Trace', 'Outcome', 'Reflection', 'Judgment Memory']) {
+    assert.match(workspace, new RegExp(escapeRegExp(label)));
+    assert.match(nativeRoot, new RegExp(escapeRegExp(label)));
+  }
+  for (const retired of ['KaaS', 'portfolio', 'skill', 'Digital Me']) {
+    assert.doesNotMatch(workspace, new RegExp(escapeRegExp(retired), 'i'));
+    assert.doesNotMatch(nativeRoot, new RegExp(escapeRegExp(retired), 'i'));
+  }
+  for (const contractTerm of [
+    'Baseline desktop window: 1320 x 860 pt',
+    'Reflection workspace minimum: 1184 x 720 pt',
+    'File Sidecar minimum: 560 x 620 pt',
+    'Default window | 1320 x 860 pt',
+    'Reflection minimum window | 1184 x 720 pt',
+    'File Sidecar minimum | 560 x 620 pt',
+    'Titlebar height | 52 pt',
+    'Titlebar controls | 16 x 16 pt',
+    'Titlebar control center line | 16 pt',
+    'Titlebar control top inset | 8 pt',
+    'Codex reference image measured at 3456 x 2048 px',
+    'The reference image is not a generic three-column layout',
+    'sidecar-first',
+    'external learning and',
+    'original file remains the main surface',
+    'Loom must stay visually subordinate',
+    'Left rail: persistent navigation, project memory, account state',
+    'Center workstream: the live reasoning/log surface, active input, or currently promoted material',
+    'Right material pane: concrete files, document context, and source preview in Reflection Mode.',
+    'Local import is a Sources-pane action.',
+    'Sidecar Mode is the exception to the old "Sources stays on the side" rule.',
+    'preserve Preview, Excel, Word, browser, and macOS document',
+    'During native-file learning, the main Loom workspace stays parked after the',
+    'plus a compact Loom Companion panel',
+    'Review in Loom is the explicit transition',
+    'The Sidecar Mode hierarchy is file first, Loom second.',
+    'capture word,',
+    'pronunciation, phrase',
+    'must not become permanent',
+    '`NSWorkspace` opens the original file',
+    'one-page/two-page states',
+    'keep the PDFView responder',
+    'Look Up, Translate, Copy',
+    'Writing Tools, Summarize, Services',
+    'super.menu(for:)',
+    'Native selection capture enters Loom through macOS Services and the system',
+    'The Service label is "Capture Selection in Loom"',
+    'selected passage to the current sidecar Input trace',
+    'must not install a custom PDF reader',
+    'bypasses macOS Services/pasteboard',
+    'Preview/default PDF apps own',
+    'right Sources pane may collapse',
+    'They should never force another permanent pane',
+    'file-reader states or macOS services',
+    'Each capture must be anchorable back to the original file context',
+    'learning pass, trace type, and user meaning',
+    'append a concrete Input trace',
+    'For Loom this maps to',
+    'Verified v7 screenshot `/tmp/loom-reflection-window-v7-proportions.png`',
+    'left navigation rail near 240 pt',
+    'right material/file area near 575 pt',
+    'Traffic-light clearance | 88 pt',
+    'Left sidebar width | 240 pt',
+    'Right Sources width | 400 pt',
+    'Thread max width | 720 pt',
+    'Sidebar body top inset | 72 pt',
+    'Thread body top inset | 76 pt',
+    'Inspector body top inset | 74 pt',
+    'Only the left sidebar uses liquid glass',
+    'The titlebar is a control overlay, not a layout row',
+    'Pane seams align without turning the workbench into six boxed regions',
+    'Hovering near the left edge may temporarily overlay the sidebar at 240 pt',
+    'inside the slid-out sidebar, the sidebar stays',
+    'The peek overlay must not move the center workspace',
+    'The peek overlay glass must use the center workspace background',
+    'must not reuse the permanent left-rail dark',
+    'buttons, search, selected rows, row metadata, and delete affordances',
+    'The titlebar must not draw its own material background, internal vertical separators, or a full-width hard bottom rule',
+    'A custom PDF canvas/image reader replacing Preview or the user',
+    'A Loom PDF context menu that omits `super.menu(for:)`',
+    'visually dominate the original',
+    'cannot return to the file, page, selected text',
+  ]) {
+    assertTextContains(layoutContract, contractTerm);
+  }
+  assert.match(
+    layoutContract,
+    /Titlebar \| Window-level status, current case, source count, sidebar and Sources toggles/,
+  );
+  assert.match(
+    layoutContract,
+    /Center workspace \| Reflection trace, composer, and sidecar record for the current original file/,
+  );
+  assert.match(loomApp, /private let loomWorkspaceMinimumSize = NSSize\(width: 1184, height: 720\)/);
+  assert.match(
+    loomApp,
+    /\.frame\(minWidth: loomWorkspaceMinimumSize\.width, minHeight: loomWorkspaceMinimumSize\.height\)/,
+  );
+  assert.match(loomApp, /\.defaultSize\(width: 1320, height: 860\)/);
+  assert.match(loomApp, /contentRect: NSRect\(x: 0, y: 0, width: 1320, height: 860\)/);
+  assert.match(loomApp, /window\.minSize = loomWorkspaceMinimumSize/);
+  assert.doesNotMatch(loomApp, /private let loomFileSidecarMinimumSize/);
+  assert.doesNotMatch(loomApp, /private func scheduleFileSidecarPresentation\(\)/);
+  assert.doesNotMatch(loomApp, /private func presentMainWindowAsFileSidecar\(\)/);
+  assert.doesNotMatch(loomApp, /visibleFrame\.width \* 0\.32/);
+  assert.match(loomApp, /private var externalCompanionWindow: NSPanel\?/);
+  assert.match(loomApp, /private var externalCompanionKeepsMainParked = false/);
+  assert.match(loomApp, /final class LoomExternalCompanionPanel: NSPanel/);
+  assert.match(loomApp, /override var canBecomeKey: Bool \{ true \}/);
+  assert.match(loomApp, /override var canBecomeMain: Bool \{ false \}/);
+  assert.match(loomApp, /struct LoomExternalCompanionView: View/);
+  assert.match(loomApp, /private func presentExternalCompanionWindow\(\)/);
+  assert.match(loomApp, /private var externalCompanionDismissToken: UUID\?/);
+  assert.match(loomApp, /private func scheduleExternalCompanionAutoDismiss\(\)/);
+  assert.match(loomApp, /private func dismissExternalCompanionReceipt\(matching token: UUID\? = nil, clearParking: Bool\)/);
+  assert.match(loomApp, /private func parkMainWindowForExternalCompanion\(\)/);
+  assert.match(loomApp, /private func openMainWindowFromExternalCompanion\(\)/);
+  assert.match(
+    loomApp,
+    /private func ensureMainWindowVisible\(\)[\s\S]{0,180}if externalCompanionKeepsMainParked \{[\s\S]{0,120}parkMainWindowForExternalCompanion\(\)[\s\S]{0,80}return/,
+    'main-window repair must not reopen Loom over the native file during companion learning',
+  );
+  assert.match(
+    loomApp,
+    /func applicationShouldHandleReopen[\s\S]{0,220}if externalCompanionKeepsMainParked \{[\s\S]{0,120}parkMainWindowForExternalCompanion\(\)[\s\S]{0,80}return/,
+    'Dock/AppKit reopen repair must not clear external companion parking',
+  );
+  assert.match(
+    loomApp,
+    /private func openMainWindowFromExternalCompanion\(\)[\s\S]{0,100}dismissExternalCompanionReceipt\(clearParking: true\)[\s\S]{0,80}ensureMainWindowVisible\(\)/,
+    'Review in Loom is the explicit path back to the full workspace',
+  );
+  assert.match(
+    loomApp,
+    /styleMask:\s*\[\.borderless,\s*\.nonactivatingPanel\]/,
+    'external companion should be a borderless non-activating receipt, not a replacement main workspace',
+  );
+  assert.doesNotMatch(loomApp, /styleMask:\s*\[\.titled,\s*\.nonactivatingPanel,\s*\.fullSizeContentView\]/);
+  assert.match(loomApp, /let panel = LoomExternalCompanionPanel\(/);
+  assert.match(loomApp, /panel\.standardWindowButton\(\.closeButton\)\?\.isHidden = true/);
+  assert.match(loomApp, /panel\.standardWindowButton\(\.miniaturizeButton\)\?\.isHidden = true/);
+  assert.match(loomApp, /panel\.standardWindowButton\(\.zoomButton\)\?\.isHidden = true/);
+  assert.match(loomApp, /panel\.identifier = NSUserInterfaceItemIdentifier\("loom\.externalCompanion"\)/);
+  assert.match(loomApp, /panel\.title = "Loom Companion"/);
+  assert.match(loomApp, /panel\.collectionBehavior = \[\.canJoinAllSpaces, \.fullScreenAuxiliary, \.transient\]/);
+  assert.match(loomApp, /externalCompanionKeepsMainParked = true/);
+  assert.match(loomApp, /panel\.orderFrontRegardless\(\)/);
+  assert.match(
+    loomApp,
+    /panel\.orderFrontRegardless\(\)[\s\S]{0,120}scheduleExternalCompanionAutoDismiss\(\)/,
+    'external companion must behave as a transient saved receipt, not a persistent floating card',
+  );
+  assert.match(loomApp, /DispatchQueue\.main\.asyncAfter\(deadline: \.now\(\) \+ 4\.2\)/);
+  assert.match(loomApp, /dismissExternalCompanionReceipt\(matching: token, clearParking: true\)/);
+  assert.match(loomApp, /externalCompanionWindow\?\.orderOut\(nil\)/);
+  assert.match(loomApp, /panel\.becomesKeyOnlyIfNeeded = true/);
+  assert.doesNotMatch(loomApp, /panel\.makeKey\(\)/);
+  assert.match(loomApp, /private let loomExternalCompanionSize = NSSize\(width: 276, height: 64\)/);
+  assert.match(loomApp, /\.frame\(width: loomExternalCompanionSize\.width, height: loomExternalCompanionSize\.height\)/);
+  assert.match(loomApp, /panel\.minSize = loomExternalCompanionSize/);
+  assert.match(loomApp, /panel\.maxSize = loomExternalCompanionSize/);
+  assert.match(loomApp, /panel\.setContentSize\(loomExternalCompanionSize\)/);
+  assert.match(loomApp, /let width = loomExternalCompanionSize\.width/);
+  assert.match(loomApp, /let height = loomExternalCompanionSize\.height/);
+  assert.doesNotMatch(loomApp, /selectedMaterial|selectedTextPreview|sourceMetadataPreview|traceExplanation/);
+  assert.doesNotMatch(loomApp, /private static func companionPreview\(for text: String, kind: LoomNativeDocumentKind\) -> String/);
+  assert.doesNotMatch(loomApp, /compactSpreadsheetPreview/);
+  assert.match(loomApp, /fallbackMaterializationToken = nil/);
+  assert.match(loomApp, /for window in mainWindows\(includeHidden: true\)[\s\S]{0,80}parkVisibleMainWindow\(window\)/);
+  assert.match(loomApp, /private func parkVisibleMainWindow\(_ window: NSWindow\)/);
+  assert.match(loomApp, /window\.ignoresMouseEvents = true[\s\S]{0,80}window\.alphaValue = 0[\s\S]{0,80}window\.orderOut\(nil\)/);
+  assert.match(
+    loomApp,
+    /if externalCompanionKeepsMainParked \{[\s\S]{0,80}closeMainWindow\(window\)/,
+    'companion mode must close the full workspace; only Review in Loom should reopen it',
+  );
+  assert.match(loomApp, /private func presentWindowOnActiveSpace\(_ window: NSWindow\) \{[\s\S]{0,120}window\.alphaValue = 1[\s\S]{0,120}window\.ignoresMouseEvents = false/);
+  assert.match(loomApp, /if window\.identifier\?\.rawValue == "loom\.externalCompanion" \{ return false \}/);
+  assert.match(loomApp, /private var companionMainWindowSuppressionObserver: NSObjectProtocol\?/);
+  assert.match(loomApp, /registerCompanionMainWindowSuppressionObserver\(\)/);
+  assert.match(loomApp, /NSApplication\.didUpdateNotification/);
+  assert.match(loomApp, /externalCompanionKeepsMainParked[\s\S]{0,180}parkMainWindowForExternalCompanion\(\)/);
+  assert.match(loomApp, /private func isMainWindowForParking\(_ window: NSWindow, includeHidden: Bool\) -> Bool/);
+  assert.match(loomApp, /NSApp\.windows\.filter \{ window in[\s\S]{0,120}isMainWindowForParking\(window, includeHidden: includeHidden\)/);
+  assert.doesNotMatch(
+    loomApp,
+    /let isMainWindow =[\s\S]{0,160}guard isMainWindow, window\.canBecomeKey/,
+    'main-window parking must catch visible SwiftUI main windows even when they are not keyable',
+  );
+  assert.match(loomApp, /guard let self, self\.externalCompanionKeepsMainParked else \{ return \}/);
+  assert.match(loomApp, /private enum LoomNativeDocumentKind/);
+  assert.match(loomApp, /case pdf[\s\S]*case word[\s\S]*case spreadsheet/);
+  assert.match(loomApp, /case "doc", "docx", "pages", "rtf", "rtfd":[\s\S]{0,40}return \.word/);
+  assert.match(loomApp, /case "xls", "xlsx", "csv", "tsv", "numbers":[\s\S]{0,40}return \.spreadsheet/);
+  assert.doesNotMatch(loomApp, /@Published private\(set\) var subtitle/);
+  assert.doesNotMatch(loomApp, /subtitle: kind\.openSubtitle/);
+  assert.doesNotMatch(loomApp, /subtitle: kind\.captureSubtitle/);
+  assert.doesNotMatch(loomApp, /func openSubtitle/);
+  assert.doesNotMatch(loomApp, /func captureSubtitle/);
+  assert.doesNotMatch(loomApp, /kind\.captureDetail/);
+  assert.doesNotMatch(loomApp, /var captureDetail: String/);
+  assert.doesNotMatch(loomApp, /private enum LoomNativeLearningFocus/);
+  assert.doesNotMatch(loomApp, /PDF sentence meaning/);
+  assert.doesNotMatch(loomApp, /PDF phrase meaning/);
+  assert.doesNotMatch(loomApp, /PDF vocabulary/);
+  assert.doesNotMatch(loomApp, /Spreadsheet data/);
+  assert.doesNotMatch(loomApp, /Document meaning/);
+  assert.doesNotMatch(loomApp, /Added to Thinking History/);
+  assert.doesNotMatch(loomApp, /Added as data version/);
+  const externalOpenStart = loomApp.indexOf('private func openExternalFiles(_ urls: [URL])');
+  const externalOpenEnd = loomApp.indexOf('private func postExternalFileOpen', externalOpenStart);
+  const externalCaptureStart = loomApp.indexOf('private func captureExternalSelection(_ capture: LoomExternalSelectionCapture)');
+  const externalCaptureEnd = loomApp.indexOf('private func postExternalSelectionCapture', externalCaptureStart);
+  assert.ok(externalOpenStart >= 0 && externalOpenEnd > externalOpenStart);
+  assert.ok(externalCaptureStart >= 0 && externalCaptureEnd > externalCaptureStart);
+  const externalOpenBlock = loomApp.slice(externalOpenStart, externalOpenEnd);
+  const externalCaptureBlock = loomApp.slice(externalCaptureStart, externalCaptureEnd);
+  assert.doesNotMatch(externalOpenBlock, /NSApp\.activate|ensureMainWindowVisible\(\)/);
+  assert.doesNotMatch(externalCaptureBlock, /NSApp\.activate|ensureMainWindowVisible\(\)/);
+  assert.match(externalOpenBlock, /presentExternalCompanion\(for: fileURLs\)/);
+  assert.match(externalCaptureBlock, /presentExternalCompanion\(for: capture\)/);
+  assert.match(externalOpenBlock, /parkMainWindowForExternalCompanion\(\)/);
+  assert.match(externalCaptureBlock, /parkMainWindowForExternalCompanion\(\)/);
+  assert.doesNotMatch(loomApp, /\.defaultSize\(width: 1400, height: 900\)/);
+  assert.match(
+    styles,
+    /grid-template-columns:\s*var\(--reflection-sidebar-width\) minmax\(34rem, 1fr\) var\(--reflection-sources-width\)/,
+  );
+  assert.match(styles, /--reflection-sidebar-width:\s*14rem/);
+  assert.match(styles, /--reflection-sources-width:\s*22rem/);
+  assert.match(workspace, /data-sidebar-collapsed=\{isSidebarCollapsed\}/);
+  assert.match(workspace, /const \[isSidebarPeeking, setIsSidebarPeeking\] = useState\(false\)/);
+  assert.match(workspace, /const shouldShowFullSidebar = !isSidebarCollapsed \|\| isSidebarPeeking/);
+  assert.match(workspace, /data-sidebar-peeking=\{isSidebarPeeking\}/);
+  assert.match(workspace, /onMouseEnter=\{handleSidebarMouseEnter\}/);
+  assert.match(workspace, /onMouseLeave=\{handleSidebarMouseLeave\}/);
+  assert.match(workspace, /function handleSidebarMouseLeave\(\)[\s\S]{0,100}setIsSidebarPeeking\(false\)/);
+  assert.match(workspace, /data-sources-collapsed=\{isSourcesCollapsed\}/);
+  assert.match(workspace, /function deleteReflection\(caseId: string\)/);
+  assert.match(workspace, /const fileInputRef = useRef<HTMLInputElement>\(null\)/);
+  assert.match(workspace, /type WorkspaceMode = 'reflection' \| 'reader'/);
+  assert.match(workspace, /const \[workspaceMode, setWorkspaceMode\] = useState<WorkspaceMode>\('reflection'\)/);
+  assert.match(workspace, /data-workspace-mode=\{workspaceMode\}/);
+  assert.match(workspace, /function openLocalImport\(\)[\s\S]{0,80}fileInputRef\.current\?\.click\(\)/);
+  assert.match(workspace, /function isPdfSource\(source: ReflectionSource\)/);
+  assert.match(workspace, /URL\.createObjectURL\(file\)/);
+  assert.match(workspace, /objectUrlsRef\.current\.forEach\(\(url\) => URL\.revokeObjectURL\(url\)\)/);
+  assert.match(workspace, /async function importLocalFiles\(event: ChangeEvent<HTMLInputElement>\)/);
+  assert.match(workspace, /Promise\.all\(files\.map\(fileToReflectionSource\)\)/);
+  assert.match(workspace, /file\.slice\(0, 48_000\)\.text\(\)/);
+  assert.match(workspace, /sources: \[\.\.\.importedSources, \.\.\.item\.sources\]/);
+  assert.match(workspace, /input: \[\.\.\.item\.sections\.input, \.\.\.inputLines\]/);
+  assert.match(workspace, /type="file"[\s\S]{0,80}multiple[\s\S]{0,120}onChange=\{importLocalFiles\}/);
+  assert.match(workspace, /<Upload size=\{14\} \/>[\s\S]{0,40}Import/);
+  assert.match(workspace, /function SourceReader\(/);
+  assert.doesNotMatch(workspace, /function BrowserPdfReader\(\{/);
+  assert.doesNotMatch(workspace, /function PdfFallbackReader\(\{/);
+  assert.doesNotMatch(workspace, /className=\{styles\.browserPdfReader\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.pdfFrame\}/);
+  assert.doesNotMatch(workspace, /<iframe/);
+  assert.doesNotMatch(workspace, /import\('pdfjs-dist\/legacy\/build\/pdf\.mjs'\)/);
+  assert.doesNotMatch(workspace, /page\.render\(\{ canvasContext: context, viewport, canvas \}/);
+  assert.doesNotMatch(workspace, /layout === 'spread'/);
+  assert.doesNotMatch(workspace, /<Columns2 size=\{14\} \/>/);
+  assert.doesNotMatch(workspace, /Fallback preview/);
+  assert.match(
+    workspace,
+    /function sourceCanOpenInReader\(source: ReflectionSource\)[\s\S]{0,140}isImageSource\(source\)[\s\S]{0,120}TEXT_FILE_PATTERN/,
+  );
+  assert.match(workspace, /function isNativePrimarySource\(source: ReflectionSource\)/);
+  assert.match(workspace, /isPdfSource\(source\)[\s\S]{0,160}docx\?/);
+  assert.match(workspace, /<strong>Native source<\/strong>/);
+  assert.match(workspace, /Use the original app\. Loom records understanding versions\./);
+  assert.doesNotMatch(workspace, /const readerEngine = canRenderPdf \? 'browser' : 'static'/);
+  assert.doesNotMatch(workspace, /<BrowserPdfReader source=\{source\} \/>/);
+  assert.match(workspace, /data-engine="static"/);
+  assert.match(workspace, /className=\{styles\.readerMarginPanel\}/);
+  assert.match(workspace, /className=\{styles\.readerEdgeTab\}/);
+  assert.match(workspace, /setWorkspaceMode\('reader'\)/);
+  assert.match(workspace, /setIsSidebarCollapsed\(true\)/);
+  assert.match(workspace, /appendSourceExcerptToInput\(activeSource\)/);
+  assert.match(workspace, /startReflectionFromSource\(activeSource\)/);
+  assert.match(workspace, /Captured native translation from Week 1 Notes\.pdf, page 2 \[translation receipt\]/);
+  assert.match(workspace, /native tool=macOS Translate/);
+  assert.match(workspace, /visual extraction=appshot OCR candidate/);
+  assert.match(workspace, /visual precision=visual context only/);
+  assert.match(workspace, /evidence rung=selected text \+ file \+ page/);
+  assert.match(workspace, /evidence rung=selected text \+ file \+ page \+ appshot/);
+  assert.match(workspace, /focus\.includes\('translation'\)[\s\S]{0,80}\? 'Native translation'/);
+  assert.match(workspace, /type UnderstandingVersion = \{/);
+  assert.match(workspace, /type CommitTarget = \{/);
+  assert.match(workspace, /function commitTargetForCase\(reflectionCase: ReflectionCase\): CommitTarget/);
+  assert.match(workspace, /function understandingVersionsFromCase\(reflectionCase: ReflectionCase\): UnderstandingVersion\[\]/);
+  assert.match(workspace, /const LEARNING_EVIDENCE_MARKER = '\\nEvidence:'/);
+  assert.match(workspace, /function parseLearningEvidence\(value: string\)/);
+  assert.match(workspace, /function prioritizeLearningEvidence\(items: string\[\]\)/);
+  assert.match(workspace, /'anchor note:'/);
+  assert.match(workspace, /function splitLearningEvidence\(value: string\)/);
+  assert.ok(
+    workspace.includes('line.match(/^Captured (.+?) from (.+?) \\[(.+?)\\]\\s*([:.])?\\s*([\\s\\S]+)$/)'),
+    'learning trace parser must accept multiline Evidence payloads',
+  );
+  assert.match(workspace, /const supportingEvidence = prioritizeLearningEvidence\(evidenceSplit\.evidence\)/);
+  assert.match(workspace, /function currentEvidenceVersion\([\s\S]{0,160}reflectionCase: ReflectionCase,[\s\S]{0,160}activeVersionId\?: string \| null,[\s\S]{0,160}\): UnderstandingVersion \| null/);
+  assert.match(workspace, /const LEARNING_CASES: ReflectionCase\[\] = \[/);
+  assert.match(workspace, /id: 'pdf-learning-week-1-notes'/);
+  assert.match(workspace, /title: 'Week 1 Notes\.pdf'/);
+  assert.match(workspace, /id: 'word-learning-notes'/);
+  assert.match(workspace, /title: 'Loom Word Learning Notes\.docx'/);
+  assert.match(workspace, /id: 'excel-learning-table'/);
+  assert.match(workspace, /title: 'Loom Excel Learning Table\.csv'/);
+  assert.match(workspace, /\.\.\.LEARNING_CASES/);
+  assert.match(workspace, /anchor precision=file\+page/);
+  assert.match(workspace, /anchor precision=file\+cell/);
+  assert.match(workspace, /evidence rung=selected text \+ file \+ cell/);
+  assert.match(workspace, /function UnderstandingSpine\(\{[\s\S]{0,80}reflectionCase,[\s\S]{0,80}activeVersionId,[\s\S]{0,80}onSelectVersion/);
+  assert.match(workspace, /aria-label="Understanding Version Flow"/);
+  assert.match(workspace, /function buildReviewStages\(versions: ReturnType<typeof understandingVersionsFromCase>\)/);
+  assert.match(workspace, /function nextReviewVersion\(versions: ReturnType<typeof understandingVersionsFromCase>\)/);
+  assert.match(workspace, /<p className=\{styles\.kicker\}>Understanding Review<\/p>/);
+  assert.match(workspace, /<h3>理解复盘<\/h3>/);
+  assert.match(workspace, /className=\{styles\.reviewObject\} aria-label="Current understanding review"/);
+  assert.match(workspace, /className=\{styles\.reviewFocus\}/);
+  assert.match(workspace, /className=\{styles\.reviewStageList\} aria-label="Review stages"/);
+  assert.match(workspace, /Capture[\s\S]{0,260}Meaning[\s\S]{0,260}Review[\s\S]{0,260}Memory/);
+  assert.match(workspace, /Current Focus/);
+  assert.match(workspace, /const capturedLines = reflectionCase\.sections\.input\.filter\(\(line\) => line\.startsWith\('Captured '\)\)/);
+  assert.match(workspace, /learningReviewVersionFromLine\(line, capturedLines\.length \+ index, 'review'\)/);
+  assert.match(workspace, /title: phase === 'memory' \? 'Reusable principle' : 'Second-pass review'/);
+  assert.match(workspace, /role="button"/);
+  assert.match(workspace, /onKeyDown=\{\(event\) => handleVersionKeyDown\(event, version\.id\)\}/);
+  assert.match(workspace, /Understanding Version Flow/);
+  assert.match(workspace, /className=\{styles\.headerMetaLine\}/);
+  assert.match(workspace, /Learning review/);
+  assert.match(workspace, /Reflection case/);
+  assert.match(workspace, /native source/);
+  assert.match(workspace, /activeVersions\.length\} versions/);
+  assert.match(workspace, /data-learning=\{activeCase\.project === 'Learning pass'\}/);
+  assert.match(workspace, /const isSelected = version\.id === selectedVersionId/);
+  assert.match(workspace, /data-active=\{isSelected\}/);
+  assert.match(workspace, /onClick=\{\(\) => onSelectVersion\(version\.id\)\}/);
+  assert.match(workspace, /aria-label=\{`Inspect \$\{version\.number\}: \$\{version\.title\}`\}/);
+  assert.match(workspace, /<details className=\{styles\.versionAudit\}>/);
+  assert.match(workspace, /<summary>Audit trail<\/summary>/);
+  assert.match(workspace, /const \[activeVersionId, setActiveVersionId\] = useState<string \| null>\(null\)/);
+  assert.match(workspace, /currentEvidenceVersion\(activeCase, activeVersionId\)/);
+  assert.match(workspace, /activeVersionId=\{activeEvidence\?\.id \?\? null\}/);
+  assert.match(workspace, /onSelectVersion=\{setActiveVersionId\}/);
+  assert.match(workspace, /const commitTarget = commitTargetForCase\(activeCase\)/);
+  assert.match(workspace, /const commitAnchor = activeCase\.project === 'Learning pass'/);
+  assert.match(workspace, /label: 'Add understanding'/);
+  assert.match(workspace, /placeholder: 'Add one meaning, question, correction, or principle\.\.\.'/);
+  assert.match(workspace, /aria-label=\{`\$\{commitTarget\.label\} commit field`\}/);
+  assert.match(workspace, /<label className=\{styles\.composerField\}>/);
+  assert.match(workspace, /className=\{styles\.composerAnchor\}/);
+  assert.match(workspace, /function latestLearningAnchor\(reflectionCase: ReflectionCase, activeSource: ReflectionSource \| null\)/);
+  assert.match(workspace, /version\.state === 'needs meaning'/);
+  assert.match(workspace, /formatLearningCommit\(text, latestLearningAnchor\(activeCase, activeSource\)\)/);
+  assert.doesNotMatch(workspace, /Captured user trace from current source/);
+  assert.match(workspace, /\[commitTarget\.key\]: \[\.\.\.item\.sections\[commitTarget\.key\], committedText\]/);
+  assert.match(workspace, /Committed to \$\{WORKFLOW_BY_KEY\[commitTarget\.key\]\.label\}/);
+  assert.match(
+    workspace,
+    /<UnderstandingSpine[\s\S]{0,180}reflectionCase=\{activeCase\}[\s\S]{0,180}activeVersionId=\{activeEvidence\?\.id \?\? null\}[\s\S]{0,180}onSelectVersion=\{setActiveVersionId\}/,
+  );
+  assert.match(
+    workspace,
+    /const activeEvidence = useMemo\(\(\) => currentEvidenceVersion\(activeCase, activeVersionId\), \[activeCase, activeVersionId\]\)/,
+  );
+  assert.match(workspace, /aria-label="Evidence inspector"/);
+  assert.match(workspace, /<h2>\{workspaceMode === 'reader' \? 'Loom' : 'Inspector'\}<\/h2>/);
+  assert.match(workspace, /function EvidenceGrounding\(\{ version \}: \{ version: UnderstandingVersion \}\)/);
+  assert.match(workspace, /const groundingRows = groundingRowsForVersion\(version\)/);
+  assert.match(workspace, /\{ label: 'evidence rung', value: auditValue\(version\.audit, 'evidence rung'\) \?\? '' \}/);
+  assert.match(workspace, /\{ label: 'fallback', value: auditValue\(version\.audit, 'fallback note'\) \?\? '' \}/);
+  assert.match(workspace, /\{ label: 'native tool', value: auditValue\(version\.audit, 'native tool'\) \?\? '' \}/);
+  assert.match(workspace, /\{ label: 'language pair', value: auditValue\(version\.audit, 'language pair'\) \?\? '' \}/);
+  assert.match(workspace, /\{ label: 'visual extraction', value: auditValue\(version\.audit, 'visual extraction'\) \?\? '' \}/);
+  assert.match(workspace, /\{ label: 'visual precision', value: auditValue\(version\.audit, 'visual precision'\) \?\? '' \}/);
+  assert.match(workspace, /aria-label="Evidence grounding"/);
+  assert.match(workspace, /<details className=\{styles\.evidenceAudit\}>/);
+  assert.match(workspace, /<summary>Full audit<\/summary>/);
+  assert.doesNotMatch(workspace, /activeEvidence\.audit\.slice\(0, 5\)/);
+  assert.match(workspace, /Source Collection/);
+  assert.doesNotMatch(workspace, /aria-label="Reflection workflow"/);
+  assert.doesNotMatch(workspace, /aria-label="Working notes"/);
+  assert.match(workspace, /const nextCases = remainingCases\.length > 0 \? remainingCases : \[makeBlankReflectionCase\(\)\]/);
+  assert.match(workspace, /className=\{styles\.caseSelectButton\}/);
+  assert.match(workspace, /className=\{styles\.caseDeleteButton\}/);
+  assert.match(workspace, /aria-label=\{`Delete \$\{item\.title\}`\}/);
+  assert.match(workspace, /<Trash2 size=\{13\} \/>/);
+  assert.match(styles, /\.shell\[data-sidebar-collapsed='true'\]/);
+  assert.match(styles, /\.shell\[data-sidebar-collapsed='true'\]\[data-sidebar-peeking='true'\] \.sidebar/);
+  assert.doesNotMatch(
+    cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true'][data-sidebar-peeking='true'] .sidebar"),
+    /--reflection-sidebar-width/,
+    'hover peek must overlay the collapsed column instead of changing grid proportions',
+  );
+  assert.match(
+    cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true'][data-sidebar-peeking='true'] .sidebar"),
+    /color-mix\(in srgb, var\(--reflection-bg\) 84%, transparent\)/,
+    'hover peek glass should use the center workspace background as its transparent base',
+  );
+  assert.match(
+    cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true'][data-sidebar-peeking='true'] .sidebar"),
+    /--reflection-sidebar-text:\s*var\(--reflection-text\)/,
+    'overlay sidebar chrome should inherit center-pane text hierarchy rather than permanent rail text tokens',
+  );
+  assert.match(
+    cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true'][data-sidebar-peeking='true'] .newButton"),
+    /background:\s*color-mix\(in srgb, var\(--reflection-surface\) 70%, transparent\)/,
+    'overlay sidebar controls should use center-pane surface chrome instead of permanent rail chrome',
+  );
+  assert.match(
+    cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true'][data-sidebar-peeking='true'] .caseItem[data-active='true']"),
+    /background:\s*var\(--reflection-selection\)/,
+    'overlay sidebar selected rows should use center-pane selection color',
+  );
+  assert.match(
+    cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true'][data-sidebar-peeking='true'] .caseDeleteButton:hover"),
+    /color:\s*var\(--reflection-text\)/,
+    'overlay sidebar row actions should inherit center-pane foreground hierarchy',
+  );
+  assert.match(styles, /\.shell\[data-sources-collapsed='true'\]/);
+  assert.match(styles, /\.shell\[data-workspace-mode='reader'\]/);
+  assert.match(styles, /\.shell\[data-workspace-mode='reader'\] \.sources/);
+  assert.match(styles, /\.reader \{/);
+  assert.doesNotMatch(styles, /\.browserPdfReader/);
+  assert.doesNotMatch(styles, /\.pdfFrame/);
+  assert.doesNotMatch(styles, /data-engine='browser'/);
+  assert.doesNotMatch(styles, /\.pdfFallbackReader/);
+  assert.doesNotMatch(styles, /\.pdfReaderToolbar \{/);
+  assert.doesNotMatch(styles, /\.pdfPageSpread \{/);
+  assert.doesNotMatch(styles, /\.pdfPageImage \{/);
+  assert.match(styles, /\.readerMarginPanel \{/);
+  assert.match(styles, /\.readerMarginCard \{/);
+  assert.match(styles, /\.readerEdgeTab \{/);
+  assert.doesNotMatch(styles, /\.readerBody\[data-layout='spread'\]/);
+  assert.doesNotMatch(styles, /\.readerBody\[data-engine='browser'\] \.readerMarginPanel/);
+  assert.doesNotMatch(styles, /\.readerBody\[data-engine='browser'\] \.readerEdgeTab/);
+  assert.match(styles, /\.readerCompanion \{/);
+  assert.match(styles, /\.readerActionButton \{/);
+  assert.match(styles, /\.nativeSourceNotice \{/);
+  assert.match(styles, /\.nativeSourceNotice strong/);
+  assert.match(styles, /\.versionHistory \{/);
+  assert.match(styles, /\.versionHistoryHeader \{/);
+  assert.match(styles, /\.reviewObject \{/);
+  assert.match(styles, /\.reviewFocus \{/);
+  assert.match(styles, /\.reviewFocusAnchor \{/);
+  assert.match(styles, /\.reviewStageList \{/);
+  assert.match(styles, /\.reviewStage \{/);
+  assert.match(styles, /\.reviewStage\[data-state='active'\]/);
+  assert.match(styles, /\.versionRow \{/);
+  assert.match(styles, /\.versionAudit \{/);
+  assert.match(styles, /\.evidenceGrounding \{/);
+  assert.match(styles, /\.evidenceAudit \{/);
+  assert.match(styles, /\.composerField \{/);
+  assert.match(styles, /\.composerTarget \{/);
+  assert.match(styles, /\.composer \{[\s\S]*grid-template-columns:\s*minmax\(0, 48rem\) auto/);
+  assert.doesNotMatch(styles, /grid-template-columns:\s*minmax\(10\.5rem, 13rem\) minmax\(0, 1fr\) auto/);
+  assert.match(styles, /\.versionBody > p \{[\s\S]*-webkit-line-clamp:\s*2/);
+  assert.match(styles, /\.versionRow\[data-active='true'\] \.versionBody > p \{[\s\S]*-webkit-line-clamp:\s*3/);
+  assert.match(styles, /\.sidebarRail/);
+  assert.match(styles, /\.sourcesRail/);
+  assert.match(styles, /\.caseSelectButton/);
+  assert.match(styles, /\.caseDeleteButton/);
+  assert.match(styles, /\.caseItem:hover \.caseDeleteButton/);
+  assert.match(styles, /\.sidebar,[\s\S]*\.sources,[\s\S]*\.thread/);
+  assert.match(styles, /\.sidebar \{[\s\S]*backdrop-filter:\s*blur\(34px\) saturate\(128%\)/);
+  const sourcesBlock = styles.match(/\n\.sources \{[\s\S]*?\n\}/)?.[0] ?? '';
+  const threadBlock = styles.match(/\n\.thread \{[\s\S]*?\n\}/)?.[0] ?? '';
+  const threadHeaderBlock = styles.match(/\n\.threadHeader \{[\s\S]*?\n\}/)?.[0] ?? '';
+  const composerBlock = styles.match(/\n\.composer \{[\s\S]*?\n\}/)?.[0] ?? '';
+  assert.doesNotMatch(
+    [sourcesBlock, threadBlock, threadHeaderBlock, composerBlock].join('\n'),
+    /backdrop-filter|radial-gradient|linear-gradient/,
+    'only the left sidebar should use liquid glass; work and source panes stay adaptive flat surfaces',
+  );
+  assert.doesNotMatch(workspace, /styles\.traffic/, 'native traffic lights should not be faked inside the workbench');
+  assert.match(
+    workspace,
+    /<div className=\{styles\.sourceTree\}[\s\S]*<section className=\{styles\.preview\}/,
+    'source preview should live in the source tree flow instead of being pinned to the inspector floor',
+  );
+  assert.match(nativeRoot, /struct LoomReflectionRootView: View/);
+  assert.match(nativeRoot, /HStack\(spacing:\s*0\)/);
+  assert.match(nativeRoot, /@State private var isSidebarPeeking: Bool = false/);
+  assert.match(nativeRoot, /private var shouldShowSidebar: Bool \{ isSidebarPresented \|\| isSidebarPeeking \}/);
+  assert.match(nativeRoot, /private var shouldOverlaySidebar: Bool \{ !isSidebarPresented && isSidebarPeeking \}/);
+  assert.match(nativeRoot, /if isSidebarPresented \{/);
+  assert.match(nativeRoot, /if shouldOverlaySidebar \{[\s\S]{0,900}ReflectionSidebar\([\s\S]{0,180}material: \.centerOverlay/);
+  assert.match(nativeRoot, /ReflectionLeftEdgePeekZone\(\)/);
+  assert.match(nativeRoot, /private enum ReflectionSidebarMaterial: Equatable \{[\s\S]{0,80}case rail[\s\S]{0,80}case centerOverlay/);
+  assert.match(nativeRoot, /case \.centerOverlay:[\s\S]{0,160}Rectangle\(\)\.fill\(LoomTokens\.dsPaperDeep\.opacity\(0\.84\)\)/);
+  assert.match(nativeRoot, /private var usesCenterOverlay: Bool \{ material == \.centerOverlay \}/);
+  assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, material: material\)/);
+  assert.match(nativeRoot, /private var fillColor: Color \{ usesCenterOverlay \? LoomTokens\.dsPaper\.opacity\(0\.58\) : \.white\.opacity\(0\.075\) \}/);
+  assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,220}material: material/);
+  assert.match(nativeRoot, /private var selectedFill: Color \{[\s\S]{0,120}usesCenterOverlay \? LoomTokens\.dsThread\.opacity\(0\.08\) : \.white\.opacity\(0\.12\)/);
+  assert.match(nativeRoot, /private func updateSidebarPeek\(_ shouldPeek: Bool\)/);
+  assert.match(nativeRoot, /guard !isSidebarPresented else \{ return \}/);
+  assert.match(nativeRoot, /ReflectionSidebar\([\s\S]{0,760}\.onHover \{ hovering in[\s\S]{0,100}updateSidebarPeek\(hovering\)/);
+  assert.match(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: isSidebarPresented/);
+  assert.doesNotMatch(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: shouldShowSidebar/);
+  assert.match(nativeRoot, /private let reflectionSidebarWidth: CGFloat = 240/);
+  assert.match(nativeRoot, /private let reflectionInspectorWidth: CGFloat = 400/);
+  assert.match(
+    nativeRoot,
+    /private struct ReflectionSidebar:[\s\S]*var material: ReflectionSidebarMaterial = \.rail[\s\S]*\.background\(ReflectionSidebarBackground\(material: material\)\)/,
+    'left sidebar should own the liquid-glass material below the shared top bar',
+  );
+  assert.match(nativeRoot, /ZStack\(alignment: \.topLeading\)/);
+  assert.match(
+    nativeRoot,
+    /HStack\(spacing:\s*0\)[\s\S]*\.frame\(maxWidth: \.infinity, maxHeight: \.infinity\)[\s\S]*ReflectionTopBar\(/,
+    'native shell should keep one full-height body stack with the titlebar overlaid instead of adding a separate top row',
+  );
+  assert.match(nativeRoot, /ReflectionTopBar\([\s\S]{0,520}\.zIndex\(1\)/);
+  assert.match(nativeRoot, /private func deleteReflection\(_ reflectionCase: ReflectionCase\)/);
+  assert.match(nativeRoot, /private func importLocalSources\(\)/);
+  assert.match(nativeRoot, /let panel = NSOpenPanel\(\)/);
+  assert.match(nativeRoot, /panel\.allowsMultipleSelection = true/);
+  assert.match(nativeRoot, /panel\.prompt = "Import"/);
+  assert.match(nativeRoot, /panel\.title = "Import local sources"/);
+  assert.match(nativeRoot, /panel\.allowedContentTypes = nativeFileImporterContentTypes\(\)/);
+  assert.match(nativeRoot, /cases\[index\]\.sources\.insert\(contentsOf: importedSources, at: 0\)/);
+  assert.match(nativeRoot, /cases\[index\]\.steps\[0\]\.items\.append\(contentsOf: inputLines\)/);
+  assert.match(nativeRoot, /selectedSourceID = importedSources\[0\]\.id/);
+  assert.match(nativeRoot, /private static func localSource\(from url: URL\) -> ReflectionSource/);
+  assert.match(nativeRoot, /@State private var lastHandledExternalFileToken: UUID\?/);
+  assert.match(nativeRoot, /@State private var lastHandledExternalSelectionToken: UUID\?/);
+  assert.match(nativeRoot, /private var nativeSource: ReflectionSource\?/);
+  assert.match(nativeRoot, /private func reflectionLearningInputFingerprint\(_ value: String\) -> String/);
+  assert.match(nativeRoot, /range\(of: #", page \\d\+"#, options: \.regularExpression\)/);
+  assert.match(nativeRoot, /\.onReceive\(NotificationCenter\.default\.publisher\(for: \.loomOpenExternalFiles\)\)/);
+  assert.match(nativeRoot, /\.onReceive\(NotificationCenter\.default\.publisher\(for: \.loomCaptureExternalSelection\)\)/);
+  assert.match(nativeRoot, /private func consumePendingExternalFiles\(\)/);
+  assert.match(nativeRoot, /private func consumePendingExternalSelection\(\)/);
+  assert.match(nativeRoot, /private func openExternalFiles\(_ urls: \[URL\]\)/);
+  assert.match(nativeRoot, /private func handleExternalSelectionCapture\(_ capture: LoomExternalSelectionCapture\)/);
+  assert.match(nativeRoot, /import PDFKit/);
+  assert.match(nativeRoot, /LoomExternalFileOpenRelay\.pendingEntries\(\)/);
+  assert.match(nativeRoot, /LoomExternalSelectionCaptureRelay\.pendingCaptures\(\)/);
+  assert.match(nativeRoot, /LoomExternalFileOpenRelay\.clear\(ifToken: pending\.token\)/);
+  assert.match(nativeRoot, /LoomExternalSelectionCaptureRelay\.clear\(ifToken: pending\.token\)/);
+  assert.match(nativeRoot, /cases\[index\]\.steps\[0\]\.items\.append\(inputLine\)/);
+  assert.match(nativeRoot, /let sessionSources = importedSources\.isEmpty/);
+  assert.match(nativeRoot, /Self\.nativeSessionSource\(from: capture\)/);
+  assert.match(nativeRoot, /let candidateSources = importedSources \+ sessionSources/);
+  assert.match(nativeRoot, /Self\.existingLearningCaseIndex\(/);
+  assert.match(nativeRoot, /Self\.sourceDeduplicationKey\(source\) == Self\.sourceDeduplicationKey\(primarySource\)/);
+  assert.match(nativeRoot, /capture\.sourceWindowTitle/);
+  assert.match(nativeRoot, /let inferredAnchor = Self\.inferPDFAnchor\(/);
+  assert.match(nativeRoot, /Self\.nativeContextAnchoredSourceLabel\(for: capture, kind: captureKind\)/);
+  assert.match(nativeRoot, /selectedSourceID = inferredSourceID/);
+  assert.match(nativeRoot, /Window: \\\(\$0\)/);
+  assert.match(nativeRoot, /eyebrow: "Learning trace"/);
+  assert.match(nativeRoot, /Captured selected text from the native app/);
+  assert.match(nativeRoot, /private static func selectionInputLine/);
+  assert.match(nativeRoot, /private let reflectionLearningEvidenceMarker = "\\nEvidence:"/);
+  assert.match(nativeRoot, /private static func selectionEvidenceLine/);
+  assert.match(nativeRoot, /return "Evidence: \\\(body\)"/);
+  assert.match(nativeRoot, /"app", capture\.sourceApp \?\? "native macOS app"/);
+  assert.match(nativeRoot, /"window", capture\.sourceWindowTitle/);
+  assert.match(nativeRoot, /"kind", kind\.sourceKind/);
+  assert.match(nativeRoot, /"file", fileNames\.isEmpty \? nil : fileNames/);
+  assert.match(nativeRoot, /"bundle", capture\.sourceBundleIdentifier/);
+  assert.match(nativeRoot, /let anchorPrecision = selectionAnchorPrecision\(capture: capture, kind: kind\)/);
+  assert.match(nativeRoot, /\("anchor precision", anchorPrecision\)/);
+  assert.match(nativeRoot, /\("evidence rung", selectionEvidenceRung\(for: anchorPrecision\)\)/);
+  assert.match(nativeRoot, /\("anchor note", selectionAnchorNote\(for: anchorPrecision\)\)/);
+  assert.match(nativeRoot, /\("fallback note", selectionFallbackNote\(for: anchorPrecision\)\)/);
+  assert.match(nativeRoot, /\("captured at", ISO8601DateFormatter\(\)\.string\(from: capture\.capturedAt\)\)/);
+  assert.match(nativeRoot, /nativeContextEvidencePairs\(capture\.nativeContext\)/);
+  assert.match(nativeRoot, /\("path", context\.documentURL\?\.path\)/);
+  assert.match(nativeRoot, /\("page", page\)/);
+  assert.match(nativeRoot, /\("cell", context\.cellRange\)/);
+  assert.match(nativeRoot, /private static func selectionAnchorPrecision/);
+  assert.match(nativeRoot, /return "file"/);
+  assert.match(nativeRoot, /return "window\+page"/);
+  assert.match(nativeRoot, /return "window\+time"/);
+  assert.match(nativeRoot, /return "app\+time"/);
+  assert.match(nativeRoot, /private static func selectionAnchorNote\(for precision: String\) -> String\?/);
+  assert.match(nativeRoot, /weak: precise file, page, or cell unavailable/);
+  assert.match(nativeRoot, /private static func selectionEvidenceRung\(for precision: String\) -> String/);
+  assert.match(nativeRoot, /selected text \+ file \+ page/);
+  assert.match(nativeRoot, /selected text \+ app \+ time/);
+  assert.match(nativeRoot, /private static func selectionFallbackNote\(for precision: String\) -> String\?/);
+  assert.match(nativeRoot, /use appshot, OCR, Vision, or manual confirmation before promoting/);
+  assert.doesNotMatch(nativeRoot, /\("anchor precision", context\.anchorPrecision\)/);
+  assert.match(nativeRoot, /ForEach\(trace\.evidence\)/);
+  assert.match(nativeRoot, /private struct ReflectionLearningEvidence: Identifiable, Equatable/);
+  assert.match(nativeRoot, /private static func splitEvidence/);
+  assert.match(nativeRoot, /private static func parseEvidence/);
+  assert.match(nativeRoot, /evidence: evidence/);
+  assert.match(nativeRoot, /private static func learningFocus/);
+  assert.match(nativeRoot, /private enum ReflectionLearningFocus/);
+  assert.match(nativeRoot, /private static func clippedSelectionText/);
+  assert.match(nativeRoot, /private static func inferPDFAnchor/);
+  assert.match(nativeRoot, /PDFDocument\(url: url\)/);
+  assert.match(nativeRoot, /document\.page\(at: pageIndex\)\?\.string/);
+  assert.match(nativeRoot, /source\.label\), page/);
+  assert.match(nativeRoot, /pageIndex \+ 1/);
+  assert.match(nativeRoot, /private static func normalizedAnchorText/);
+  const normalizedAnchorBlock = nativeRoot.match(
+    /private static func normalizedAnchorText[\s\S]*?\n    }\n\n    private static func localFileSize/,
+  )?.[0] ?? '';
+  assert.match(normalizedAnchorBlock, /CharacterSet\.alphanumerics\.contains\(scalar\)/);
+  assert.match(normalizedAnchorBlock, /\.unicodeScalars/);
+  assert.match(normalizedAnchorBlock, /\.compactMap \{ scalar -> Character\?/);
+  assert.doesNotMatch(normalizedAnchorBlock, /components\(separatedBy: \.whitespacesAndNewlines\)[\s\S]{0,120}joined\(separator: " "\)/);
+  assert.match(nativeRoot, /private struct ReflectionSourceAnchor/);
+  assert.match(nativeRoot, /let next = Self\.learningCase\(from: candidateSources\)/);
+  assert.doesNotMatch(nativeRoot, /let primaryPath = primarySource\.fileURL\?\.standardizedFileURL\.path/);
+  assert.match(nativeRoot, /return cases\.firstIndex \{ reflectionCase in/);
+  assert.match(nativeRoot, /selectedCaseID = cases\[existingCaseIndex\]\.id/);
+  assert.match(nativeRoot, /let inputFingerprint = reflectionLearningInputFingerprint\(inputLine\)/);
+  assert.match(nativeRoot, /reflectionLearningInputFingerprint\(\$0\) == inputFingerprint/);
+  assert.match(nativeRoot, /persistWorkspace\(\)[\s\S]{0,80}return/);
+  assert.match(nativeRoot, /isSidebarPresented = false/);
+  assert.match(nativeRoot, /isSidebarPeeking = false/);
+  assert.match(nativeRoot, /isInspectorPresented = false/);
+  assert.match(nativeRoot, /openSourcesInNativeApps\(importedSources\)/);
+  assert.match(nativeRoot, /nativeSource: nativeSource/);
+  assert.match(nativeRoot, /onOpenSourceInNativeApp: openSelectedSourceInNativeApp/);
+  assert.match(nativeRoot, /private func openSourceInNativeApp\(_ source: ReflectionSource\)/);
+  assert.match(nativeRoot, /private func openSelectedSourceInNativeApp\(\)/);
+  assert.match(nativeRoot, /private func openSourcesInNativeApps\(_ sources: \[ReflectionSource\]\)/);
+  assert.match(nativeRoot, /Self\.openURLInPreferredNativeApp\(url\)/);
+  assert.match(nativeRoot, /private static func openURLInPreferredNativeApp\(_ url: URL\)/);
+  assert.match(nativeRoot, /preferredNativeApplicationURL\(for: url\)/);
+  assert.match(nativeRoot, /NSWorkspace\.shared\.urlForApplication\(toOpen: url\)/);
+  assert.match(nativeRoot, /NSWorkspace\.OpenConfiguration\(\)/);
+  assert.match(nativeRoot, /configuration\.activates = true/);
+  assert.match(nativeRoot, /withApplicationAt: applicationURL/);
+  assert.match(nativeRoot, /private static func preferredNativeApplicationURL\(for url: URL\) -> URL\?/);
+  assert.match(nativeRoot, /case "pdf":[\s\S]{0,90}Preview\.app/);
+  assert.match(nativeRoot, /case "doc", "docx", "rtf", "rtfd":[\s\S]{0,90}Microsoft Word\.app/);
+  assert.match(nativeRoot, /case "xls", "xlsx", "csv", "tsv":[\s\S]{0,90}Microsoft Excel\.app/);
+  assert.match(nativeRoot, /Image\(systemName: "arrow\.up\.forward\.app"\)/);
+  assert.match(nativeRoot, /private static func learningCase\(from sources: \[ReflectionSource\]\) -> ReflectionCase/);
+  assert.match(nativeRoot, /private static func nativeSessionSource\(from capture: LoomExternalSelectionCapture\) -> ReflectionSource\?/);
+  assert.match(nativeRoot, /Native selection captured from/);
+  assert.match(nativeRoot, /private static func existingLearningCaseIndex\(/);
+  assert.match(nativeRoot, /private static func sourceDeduplicationKey\(_ source: ReflectionSource\) -> String/);
+  assert.match(nativeRoot, /return "file:/);
+  assert.match(nativeRoot, /return "session:/);
+  assert.match(nativeRoot, /var sourceKind: String/);
+  assert.match(nativeRoot, /private struct ReflectionWorkspaceSnapshot: Codable, Equatable/);
+  assert.match(nativeRoot, /private enum ReflectionWorkspaceStore/);
+  assert.match(nativeRoot, /private static let defaultsKey = "loom\.reflectionWorkspaceSnapshot"/);
+  assert.match(nativeRoot, /private static func loadFromDefaults\(\) -> ReflectionWorkspaceSnapshot\?/);
+  assert.match(nativeRoot, /private static func loadFromMirror\(\) -> ReflectionWorkspaceSnapshot\?/);
+  assert.match(nativeRoot, /private static func writeMirror\(_ snapshot: ReflectionWorkspaceSnapshot/);
+  assert.match(nativeRoot, /reflection-workspace-snapshot\.json/);
+  assert.match(nativeRoot, /ReflectionWorkspaceStore\.load\(\)/);
+  assert.match(nativeRoot, /private func persistWorkspace\(\)/);
+  assert.match(nativeRoot, /ReflectionWorkspaceStore\.save\(/);
+  assert.match(nativeRoot, /private static func normalize\(_ snapshot: ReflectionWorkspaceSnapshot\) -> ReflectionWorkspaceSnapshot/);
+  assert.match(nativeRoot, /private static func orderedUnique\(_ values: \[String\]\) -> \[String\]/);
+  assert.match(nativeRoot, /project: "Learning pass"/);
+  assert.match(nativeRoot, /status: "Reading"/);
+  assert.match(nativeRoot, /Use native file tools first/);
+  assert.match(nativeRoot, /First language pass: keep the original file surface primary/);
+  assert.match(nativeRoot, /capture vocabulary, pronunciation, phrases, sentence meaning, grammar/);
+  assert.doesNotMatch(nativeRoot, /SourceFileView\(fileURL: fileURL\)/);
+  assert.match(nativeRoot, /if source\.fileURL != nil/);
+  assert.match(nativeRoot, /fileURL: url/);
+  assert.match(nativeRoot, /var fileURL: URL\?/);
+  assert.match(sourceFileView, /import PDFKit/);
+  assert.match(sourceFileView, /import QuickLookUI/);
+  assert.match(sourceFileView, /init\(fileURL: URL, onClose: @escaping \(\) -> Void\)/);
+  assert.match(sourceFileView, /private var sourceIdentity: URL\?/);
+  assert.match(sourceFileView, /LoomPDFView\(/);
+  assert.match(sourceFileView, /LoomQuickLookView\(fileURL: resolved\)/);
+  assert.match(sourceFileView, /if shouldShowCompileActionPanel \{/);
+  assert.match(sourceFileView, /private var shouldShowCompileActionPanel: Bool/);
+  assert.match(sourceFileView, /final class LoomPDFKitView: PDFView/);
+  assert.match(sourceFileView, /override func menu\(for event: NSEvent\) -> NSMenu\?/);
+  assert.match(sourceFileView, /super\.menu\(for: event\) \?\? NSMenu\(\)/);
+  assert.match(sourceFileView, /currentSelection\?\.string\?\.trimmingCharacters\(in: \.whitespacesAndNewlines\)/);
+  assert.match(sourceFileView, /menu\.addItem\(NSMenuItem\.separator\(\)\)/);
+  assert.match(sourceFileView, /menu\.addItem\(item\)/);
+  assert.doesNotMatch(sourceFileView, /insertItem\(item, at: 0\)/);
+  assert.match(sourceFileView, /Note this passage…/);
+  assert.match(loomApp, /func application\(_ application: NSApplication, open urls: \[URL\]\)/);
+  assert.match(loomApp, /func application\(_ sender: NSApplication, openFile filename: String\) -> Bool/);
+  assert.match(loomApp, /private func openExternalFiles\(_ urls: \[URL\]\)/);
+  assert.match(loomApp, /LoomExternalFileOpenRelay\.savePending\(fileURLs, token: token\)/);
+  assert.match(loomApp, /name: \.loomOpenExternalFiles/);
+  assert.match(loomApp, /enum LoomExternalFileOpenRelay/);
+  assert.match(loomApp, /static let loomOpenExternalFiles = Notification\.Name\("loomOpenExternalFiles"\)/);
+  assert.match(loomApp, /private var servicesProviderRegistered = false/);
+  assert.match(loomApp, /private var sourceApplicationObserverRegistered = false/);
+  assert.match(loomApp, /private var lastExternalApplicationSnapshot: LoomExternalApplicationSnapshot\?/);
+  assert.match(loomApp, /func applicationWillFinishLaunching\(_ notification: Notification\)/);
+  assert.match(loomApp, /private func registerSourceApplicationObserver\(\)/);
+  assert.match(loomApp, /NSWorkspace\.didActivateApplicationNotification/);
+  assert.match(loomApp, /@objc private func activeApplicationDidChange\(_ notification: Notification\)/);
+  assert.match(loomApp, /private func registerServicesProvider\(\)/);
+  assert.match(loomApp, /NSApp\.servicesProvider = self/);
+  assert.match(loomApp, /NSRegisterServicesProvider\(self, "Loom"\)/);
+  assert.match(loomApp, /Services provider registered for port Loom/);
+  assert.match(loomApp, /@objc\(captureSelectionInLoom:userData:error:\)/);
+  assert.match(loomApp, /func captureSelectionInLoom\(/);
+  assert.match(loomApp, /captureSelectionInLoom service invoked/);
+  assert.match(loomApp, /fallbackSource: lastExternalApplicationSnapshot/);
+  assert.match(loomApp, /_ pasteboard: NSPasteboard/);
+  assert.match(loomApp, /pasteboard\.string\(forType: \.string\)/);
+  assert.match(loomApp, /readObjects\(forClasses: \[NSURL\.self\]/);
+  assert.match(loomApp, /fallbackSource: LoomExternalApplicationSnapshot\?/);
+  assert.match(loomApp, /let activeSource = sourceApplicationSnapshot\(for: NSWorkspace\.shared\.frontmostApplication\)/);
+  assert.match(loomApp, /let refreshedFallbackSource = refreshedSourceApplicationSnapshot\(from: fallbackSource\)/);
+  assert.match(loomApp, /let source = activeSource \?\? refreshedFallbackSource/);
+  assert.match(loomApp, /sourceWindowTitle: source\?\.windowTitle/);
+  assert.match(loomApp, /nativeContext: source\?\.nativeContext/);
+  assert.match(loomApp, /private static func sourceApplicationSnapshot/);
+  assert.match(loomApp, /processIdentifier: application\.processIdentifier/);
+  assert.match(loomApp, /accessibilitySourceContext\(for: application, windowTitle: windowTitle\)/);
+  assert.match(loomApp, /private static func refreshedSourceApplicationSnapshot/);
+  assert.match(loomApp, /NSRunningApplication\(processIdentifier: snapshot\.processIdentifier\)/);
+  assert.match(loomApp, /private static func isLoomApplication\(_ application: NSRunningApplication\) -> Bool/);
+  assert.match(loomApp, /private static func isIgnoredSourceApplication\(_ application: NSRunningApplication\) -> Bool/);
+  assert.match(loomApp, /"com\.apple\.loginwindow", "com\.apple\.systemuiserver", "com\.apple\.controlcenter"/);
+  assert.match(loomApp, /private static func frontmostWindowTitle\(for application: NSRunningApplication\?\) -> String\?/);
+  assert.match(loomApp, /AXUIElementCreateApplication\(application\.processIdentifier\)/);
+  assert.match(loomApp, /kAXFocusedWindowAttribute/);
+  assert.match(loomApp, /kAXFocusedUIElementAttribute/);
+  assert.match(loomApp, /"AXDocument", "AXURL", "AXFilename"/);
+  assert.match(loomApp, /documentURL\(fromAccessibilityValue:/);
+  assert.match(loomApp, /pageContext\(from: strings\)/);
+  assert.match(loomApp, /spreadsheetCellRange\(from: strings\)/);
+  assert.match(loomApp, /anchorPrecision\(/);
+  assert.match(loomApp, /CGWindowListCopyWindowInfo/);
+  assert.match(loomApp, /private func captureExternalSelection\(_ capture: LoomExternalSelectionCapture\)/);
+  assert.match(loomApp, /LoomExternalSelectionCaptureRelay\.savePending\(capture\)/);
+  assert.match(loomApp, /name: \.loomCaptureExternalSelection/);
+  assert.match(loomApp, /static let loomCaptureExternalSelection = Notification\.Name\("loomCaptureExternalSelection"\)/);
+  assert.match(loomApp, /struct LoomExternalSelectionCapture: Codable, Equatable/);
+  assert.match(loomApp, /var sourceWindowTitle: String\?/);
+  assert.match(loomApp, /var nativeContext: LoomNativeSourceContext\?/);
+  assert.match(loomApp, /struct LoomNativeSourceContext: Codable, Equatable/);
+  assert.match(loomApp, /var documentURL: URL\?/);
+  assert.match(loomApp, /var pageNumber: Int\?/);
+  assert.match(loomApp, /var cellRange: String\?/);
+  assert.match(loomApp, /var anchorPrecision: String/);
+  assert.match(loomApp, /private struct LoomExternalApplicationSnapshot/);
+  assert.match(loomApp, /var processIdentifier: pid_t/);
+  assert.match(loomApp, /struct LoomExternalFileOpenEntry: Codable, Equatable/);
+  assert.match(loomApp, /private static let defaultsKey = "loom\.pendingExternalFileOpenEntries"/);
+  assert.match(loomApp, /private static let defaultsKey = "loom\.pendingExternalSelectionCaptures"/);
+  assert.match(loomApp, /static func pendingCaptures\(\) -> \[LoomExternalSelectionCapture\]/);
+  assert.match(loomApp, /static func pendingEntries\(\) -> \[LoomExternalFileOpenEntry\]/);
+  assert.match(loomApp, /JSONEncoder\(\)\.encode\(captures\)/);
+  assert.match(loomApp, /JSONDecoder\(\)\.decode\(\[LoomExternalSelectionCapture\]\.self/);
+  assert.match(loomApp, /enum LoomExternalSelectionCaptureRelay/);
+  assert.match(nativeRoot, /let captureKind = Self\.captureKind\(for: capture\)/);
+  assert.match(nativeRoot, /let sourceLabel = inferredAnchor\?\.label[\s\S]{0,220}\?\? Self\.nativeContextAnchoredSourceLabel\(for: capture, kind: captureKind\)[\s\S]{0,180}\?\? Self\.windowAnchoredSourceLabel\(for: capture, kind: captureKind\)/);
+  assert.match(nativeRoot, /private enum ReflectionCaptureKind: Equatable/);
+  assert.match(nativeRoot, /case pdf[\s\S]*case document[\s\S]*case spreadsheet/);
+  assert.match(nativeRoot, /private static func pdfDocumentTitle\(from windowTitle: String\) -> String\?/);
+  assert.match(nativeRoot, /private static func pdfPageNumber\(from windowTitle: String\) -> Int\?/);
+  assert.match(nativeRoot, /return "\\\(documentTitle\), page \\\(page\)"/);
+  assert.match(nativeRoot, /private static func shouldPromoteLearningInputAnchor\(_ existing: String, candidate: String\) -> Bool/);
+  assert.match(nativeRoot, /cases\[index\]\.steps\[0\]\.items\[existingInputIndex\] = inputLine/);
+  assert.match(nativeRoot, /return "PDF passage"/);
+  assert.match(nativeRoot, /return "document selection"/);
+  assert.match(nativeRoot, /return Self\.hasTabularSelection\(text\) \? "spreadsheet cells" : "spreadsheet selection"/);
+  assert.match(nativeRoot, /Trace type: \\?\(kind\.traceType\(for: capture\.text\)\\?\)/);
+  assert.match(nativeRoot, /Pass: \\?\(focus\.passLabel\\?\)/);
+  assert.match(nativeRoot, /Learning focus: \\?\(focus\.label\\?\)/);
+  assert.match(nativeRoot, /Meaning status: needs user confirmation/);
+  assert.match(nativeRoot, /Second pass: not synthesized yet/);
+  assert.match(nativeRoot, /refreshLearningSynthesis\(for: index\)/);
+  assert.match(nativeRoot, /private func refreshLearningSynthesis\(for index: Int\)/);
+  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.assumptions, to: "assumption", caseIndex: index\)/);
+  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.decisions, to: "decision", caseIndex: index\)/);
+  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.outcomes, to: "outcome", caseIndex: index\)/);
+  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.reflections, to: "reflection", caseIndex: index\)/);
+  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.memories, to: "memory", caseIndex: index\)/);
+  assert.match(nativeRoot, /cases\[index\]\.status = "Second pass ready"/);
+  assert.match(nativeRoot, /Second-pass synthesis prepared from understanding versions/);
+  assert.match(nativeRoot, /private struct ReflectionLearningSynthesis/);
+  assert.match(nativeRoot, /static func make\(for reflectionCase: ReflectionCase\) -> ReflectionLearningSynthesis/);
+  assert.match(nativeRoot, /First-pass learning is not final understanding; raw captures need review before they become reusable thinking/);
+  assert.match(nativeRoot, /Kept the original file surface primary and used Loom only to commit anchored traces/);
+  assert.match(nativeRoot, /Captured \\?\(traces\.count\\?\) anchored learning trace/);
+  assert.match(nativeRoot, /Second-pass synthesis: compare versions, correct meanings, then separate language understanding from domain knowledge/);
+  assert.match(nativeRoot, /let confirmedPrinciple = traces\.last \{ \$0\.focus == "principle" \}/);
+  assert.match(nativeRoot, /Principle candidate: /);
+  assert.match(nativeRoot, /manualLearningFocus\(for: material\)/);
+  assert.match(nativeRoot, /reviewLine\(for: trace\)/);
+  assert.match(nativeRoot, /User-confirmed meaning/);
+  assert.match(nativeRoot, /confirmedText\(from: trace\.text\)/);
+  assert.match(nativeRoot, /confirmationLabel\(for: trace\.focus\)/);
+  assert.match(nativeRoot, /LoomReflectionRootView\.clippedSelectionText\(trimmedText, maxLength: 180\)/);
+  assert.match(nativeRoot, /if reflectionCase\.project == "Learning pass"[\s\S]{0,360}ReflectionLearningLedgerView\([\s\S]{0,180}reflectionCase: reflectionCase/);
+  assert.match(nativeRoot, /ReflectionSourceInspector\([\s\S]{0,160}reflectionCase: selectedCase/);
+  assert.match(nativeRoot, /private struct ReflectionLearningLedgerView: View/);
+  assert.match(nativeRoot, /private struct ReflectionLearningTraceCard: View/);
+  assert.match(nativeRoot, /private struct ReflectionLearningStatusPill: View/);
+  assert.match(nativeRoot, /private struct ReflectionLearningTrace: Identifiable, Equatable/);
+  assert.match(nativeRoot, /@State private var selectedLearningTraceID: ReflectionLearningTrace\.ID\?/);
+  assert.match(nativeRoot, /private var selectedLearningTrace: ReflectionLearningTrace\?/);
+  assert.match(nativeRoot, /@Binding var selectedLearningTraceID: ReflectionLearningTrace\.ID\?/);
+  assert.match(nativeRoot, /private var learningTraces: \[ReflectionLearningTrace\]/);
+  assert.match(nativeRoot, /let onSelectTrace: \(ReflectionLearningTrace\) -> Void/);
+  assert.match(nativeRoot, /private func selectLearningTrace\(_ trace: ReflectionLearningTrace\)/);
+  assert.match(nativeRoot, /selectedSourceID = matchingSource\.id/);
+  assert.match(nativeRoot, /selectedTrace: selectedLearningTrace/);
+  assert.match(nativeRoot, /let sourceLabel = selectedLearningTrace\?\.sourceAnchor/);
+  assert.match(nativeRoot, /if let selectedLearningTrace \{[\s\S]{0,120}return "target: \\\(selectedLearningTrace\.version\) \\\(selectedLearningTrace\.versionTitle\.lowercased\(\)\)"/);
+  assert.match(nativeRoot, /ReflectionEvidenceInspector\([\s\S]{0,120}trace: selectedTrace[\s\S]{0,120}source: selectedSource[\s\S]{0,160}onOpenSource:/);
+  assert.match(nativeRoot, /let onOpenSource: \(\) -> Void/);
+  assert.match(nativeRoot, /let onOpenSource: \(\(\) -> Void\)\?/);
+  assert.match(nativeRoot, /Label\("Open Source", systemImage: "arrow\.up\.forward\.app"\)/);
+  assert.match(nativeRoot, /\.help\("Open the original file in its native app"\)/);
+  assert.match(nativeRoot, /func matches\(source: ReflectionSource\) -> Bool/);
+  assert.match(nativeRoot, /sourceAnchor\.hasPrefix/);
+  assert.doesNotMatch(
+    nativeRoot,
+    /private var currentTrace: ReflectionLearningTrace\?[\s\S]{0,100}ReflectionLearningTrace\.from\(reflectionCase\)\.last/,
+    'Evidence Inspector should follow the selected thinking version, not always the last trace',
+  );
+  assert.match(nativeRoot, /Text\("Understanding Version Flow"\)/);
+  assert.match(nativeRoot, /private struct ReflectionEvidenceInspector: View/);
+  assert.match(nativeRoot, /Text\("Evidence Inspector"\)/);
+  assert.match(nativeRoot, /Text\("Source Collection"\)/);
+  assert.match(nativeRoot, /Text\("Audit trail"\)/);
+  assert.match(nativeRoot, /Text\(trace\.versionTitle\)/);
+  assert.match(nativeRoot, /ReflectionLearningStatusPill\(label: trace\.statusLabel, isResolved: trace\.isUserCommitted\)/);
+  assert.match(nativeRoot, /Text\(trace\.displayLabel\)/);
+  assert.match(nativeRoot, /return "Original selection"/);
+  assert.match(nativeRoot, /return "Selected word"/);
+  assert.match(nativeRoot, /return "needs meaning"/);
+  assert.match(nativeRoot, /return "needs interpretation"/);
+  assert.match(nativeRoot, /private static func cleanUserPrefix\(_ value: String\) -> String/);
+  assert.match(nativeRoot, /"principle:", "principle："/);
+  assert.match(nativeRoot, /"question:", "question："/);
+  assert.match(nativeRoot, /"meaning:", "meaning："/);
+  assert.match(nativeRoot, /"translation:", "translation："/);
+  assert.match(nativeRoot, /"意思:", "意思："/);
+  assert.match(nativeRoot, /ReflectionLearningTrace\.from\(reflectionCase\)/);
+  assert.match(nativeRoot, /private static func latestLearningAnchor\(in reflectionCase: ReflectionCase\) -> String\?/);
+  assert.match(nativeRoot, /\.first \{ trace in[\s\S]{0,160}trace\.isLanguageSelection \|\| trace\.isDataOrDocumentSelection/);
+  assert.match(nativeRoot, /parseCaptured\(_ item: String, version: Int\)/);
+  assert.match(nativeRoot, /sourceAnchor: sourceAnchor\.isEmpty \? "Original file" : sourceAnchor/);
+  assert.match(nativeRoot, /version: "v\\?\(version\\?\)"/);
+  assert.match(nativeRoot, /private struct ReflectionLearningReviewSummary: Equatable/);
+  assert.match(nativeRoot, /private struct ReflectionLearningPrincipleCandidate: View/);
+  assert.match(nativeRoot, /ReflectionLearningPrincipleCandidate\(principle: principle\)/);
+  assert.match(nativeRoot, /steps\[5\]\.title = "Principle"/);
+  assert.match(nativeRoot, /steps\[5\]\.subtitle = "What can become reusable thinking"/);
+  assert.match(nativeRoot, /if reflectionCase\.project == "Learning pass", normalizedStep\.id == "memory"/);
+  assert.match(nativeRoot, /Meaning, question, correction, or principle\.\.\./);
+  assert.match(nativeRoot, /commitTarget: composerTarget/);
+  assert.match(nativeRoot, /private var composerTarget: String/);
+  assert.match(nativeRoot, /private var learningTraces: \[ReflectionLearningTrace\]/);
+  assert.match(nativeRoot, /if let latest = learningTraces\.last, latest\.isUserCommitted/);
+  assert.match(nativeRoot, /return "target: \\?\(latest\.version\\?\) \\?\(latest\.versionTitle\.lowercased\(\)\\?\)"/);
+  assert.match(nativeRoot, /learningTraces\.reversed\(\)\.first\(where: \{ !\$0\.isUserCommitted \}\)/);
+  assert.match(nativeRoot, /return "target: \\?\(unresolved\.version\\?\) \\?\(unresolved\.versionTitle\.lowercased\(\)\\?\)"/);
+  assert.match(nativeRoot, /return "target: \\?\(nextStep\.title\\?\)"/);
+  assert.match(nativeRoot, /Text\(isLearningCase \? "Commit next version" : "Commit reflection version"\)/);
+  assert.match(nativeRoot, /Text\(commitTarget\)/);
+  assert.match(nativeRoot, /meaning \/ question \/ correction \/ principle/);
+  assert.match(nativeRoot, /Label\("Commit", systemImage: "checkmark"\)/);
+  assert.match(nativeRoot, /Captured user trace from \\?\(sourceLabel\\?\) \[\\?\(manualLearningFocus\(for: material\)\\?\)\]/);
+  assert.match(nativeRoot, /lowercased\.hasPrefix\("principle:"\)/);
+  assert.match(nativeRoot, /return "principle"/);
+  assert.match(nativeRoot, /return "correction"/);
+  assert.match(nativeRoot, /return "question"/);
+  assert.match(nativeRoot, /return "user meaning"/);
+  assert.match(nativeRoot, /eyebrow: "Understanding version"/);
+  assert.match(nativeRoot, /statusMessage = "Committed thinking version"/);
+  assert.match(nativeRoot, /private static func normalizeLearningInputItem\(_ value: String\) -> String/);
+  assert.match(nativeRoot, /private static func orderedUniqueLearningInputs\(_ values: \[String\]\) -> \[String\]/);
+  assert.match(nativeRoot, /private static func normalizeLearningStepItems\(_ step: ReflectionStep\) -> \[String\]/);
+  assert.match(nativeRoot, /used Loom only to save anchored traces/);
+  assert.match(nativeRoot, /used Loom only to commit anchored traces/);
+  assert.match(nativeRoot, /if step\.id == "memory"/);
+  assert.match(nativeRoot, /items\.filter \{ \$0\.contains\("Principle candidate"\) \}/);
+  assert.match(nativeRoot, /private static func normalizeLearningMessage\(_ message: ReflectionMessage\) -> ReflectionMessage/);
+  assert.match(nativeRoot, /private static func orderedUniqueLearningMessages\(_ messages: \[ReflectionMessage\]\) -> \[ReflectionMessage\]/);
+  assert.match(nativeRoot, /let key = "\\\(message\.eyebrow\)\\n\\\(message\.body\)"/);
+  assert.match(nativeRoot, /next\.eyebrow = "Understanding version"/);
+  assert.match(nativeRoot, /promote only confirmed principles into memory/);
+  assert.match(nativeRoot, /First language pass: keep the original file surface primary and capture vocabulary/);
+  assert.match(nativeRoot, /case vocabulary[\s\S]*case phrase[\s\S]*case sentence[\s\S]*case passage/);
+  assert.match(nativeRoot, /return "first language pass"/);
+  assert.match(nativeRoot, /return "phrase meaning"/);
+  assert.match(nativeRoot, /return "sentence meaning"/);
+  assert.match(nativeRoot, /return "data meaning"/);
+  assert.match(nativeRoot, /case "doc", "docx", "pages", "rtf", "rtfd":[\s\S]{0,40}return \.document/);
+  assert.match(nativeRoot, /case "xls", "xlsx", "csv", "tsv", "numbers":[\s\S]{0,40}return \.spreadsheet/);
+  assert.match(infoPlist, /CFBundleDocumentTypes/);
+  assert.match(infoPlist, /com\.adobe\.pdf/);
+  assert.match(infoPlist, /org\.openxmlformats\.wordprocessingml\.document/);
+  assert.match(infoPlist, /NSServices/);
+  assert.match(infoPlist, /Capture Selection in Loom/);
+  assert.match(infoPlist, /captureSelectionInLoom/);
+  assert.match(infoPlist, /NSPortName/);
+  assert.match(infoPlist, /NSStringPboardType/);
+  assert.match(infoPlist, /public\.utf8-plain-text/);
+  assert.match(projectYml, /NSServices:/);
+  assert.match(projectYml, /Capture Selection in Loom/);
+  assert.match(projectYml, /NSMessage: captureSelectionInLoom/);
+  assert.match(projectYml, /NSPortName: Loom/);
+  assert.match(loomApp, /NSUpdateDynamicServices\(\)/);
+  assert.match(loomApp, /Text\("Saved"\)/);
+  assert.match(loomApp, /Text\("Loom"\)/);
+  assert.match(loomApp, /\.accessibilityLabel\(model\.sourceActionLabel \?\? "Back to Source"\)/);
+  assert.doesNotMatch(loomApp, /private var compactContextText: String/);
+  assert.doesNotMatch(loomApp, /Text\(compactContextText\)/);
+  assert.doesNotMatch(loomApp, /compactSpreadsheetPreview/);
+  assert.doesNotMatch(loomApp, /Text\(sourceActionLabel\)/);
+  assert.match(loomApp, /sourceActionLabel: "Back to Source"/);
+  assert.match(loomApp, /sourceActionLabel: "Open Source"/);
+  assert.match(loomApp, /actionLabel: "Review in Loom"/);
+  assert.doesNotMatch(loomApp, /actionLabel: "Open Loom"/);
+  assert.match(loomApp, /private func openSourceFromExternalCompanion\(\)/);
+  assert.match(loomApp, /private func restoreSourceFocusFromExternalCompanion\(\) -> Bool/);
+  assert.match(loomApp, /private func restoreSourceFocusFromExternalCompanionSoon\(\)/);
+  assert.match(loomApp, /restoreSourceFocusFromExternalCompanionSoon\(\)/);
+  assert.match(loomApp, /externalCompanionSourceFileURLs/);
+  assert.match(loomApp, /externalCompanionSourceBundleIdentifier/);
+  assert.match(loomApp, /externalCompanionSourceProcessIdentifier/);
+  assert.match(loomApp, /NSWorkspace\.shared\.open\(url\)/);
+  assert.match(loomApp, /Self\.openURLInPreferredNativeApp\(url\)/);
+  assert.match(loomApp, /private static func openURLInPreferredNativeApp\(_ url: URL\)/);
+  assert.match(loomApp, /NSWorkspace\.shared\.urlForApplication\(toOpen: url\)/);
+  assert.match(loomApp, /private static func preferredNativeApplicationURL\(for url: URL\) -> URL\?/);
+  assert.match(loomApp, /case "pdf":[\s\S]{0,90}Preview\.app/);
+  assert.match(loomApp, /case "doc", "docx", "rtf", "rtfd":[\s\S]{0,90}Microsoft Word\.app/);
+  assert.match(loomApp, /case "xls", "xlsx", "csv", "tsv":[\s\S]{0,90}Microsoft Excel\.app/);
+  assert.match(loomApp, /NSRunningApplication\(processIdentifier: processIdentifier\)/);
+  assert.match(loomApp, /application\.activate\(options: \[\.activateAllWindows, \.activateIgnoringOtherApps\]\)/);
+  assert.match(loomApp, /sourceBundleIdentifier: source\?\.bundleIdentifier/);
+  assert.match(loomApp, /sourceProcessIdentifier: source\?\.processIdentifier/);
+  assert.doesNotMatch(loomApp, /Added to Thinking History/);
+  assert.doesNotMatch(loomApp, /Source linked\./);
+  assert.match(packageJson, /"verify:native-sidecar": "node scripts\/verify-native-sidecar\.mjs"/);
+  assert.match(projectYml, /DEVELOPMENT_TEAM: 8BW2794353/);
+  assert.match(projectYml, /CODE_SIGN_STYLE: Automatic/);
+  assert.match(projectYml, /CODE_SIGN_IDENTITY: "Apple Development"/);
+  assert.match(packageJson, /"clean:native-temp:dry": "node scripts\/clean-loom-native-temp\.mjs"/);
+  assert.match(packageJson, /"clean:native-temp": "node scripts\/clean-loom-native-temp\.mjs --apply"/);
+  assert.match(nativeTempCleaner, /const tempRoots = \[\.\.\.new Set\(\[os\.tmpdir\(\), '\/private\/tmp'\]/);
+  assert.match(nativeTempCleaner, /function canonicalTempPath/);
+  assert.match(nativeTempCleaner, /function isSafeLoomTempPath/);
+  assert.match(nativeTempCleaner, /relative\.startsWith\('loom-'\)/);
+  assert.match(nativeTempCleaner, /scratchpad[\s\S]{0,120}loom-build/);
+  assert.match(nativeTempCleaner, /function collectRegisteredTempApps/);
+  assert.match(nativeTempCleaner, /lsregister/);
+  assert.match(nativeTempCleaner, /NSUpdateDynamicServices/);
+  assert.match(loomRules, /No workspace pollution/);
+  assert.match(loomRules, /Temporary artifacts either live[\s\S]{0,180}\.codex\//);
+  assert.match(designDiscipline, /Do not pollute user folders or macOS Services/);
+  assert.match(reflectionPrd, /Operational cleanliness is part of preservation/);
+  assert.match(nativeSidecarVerifier, /function isConsoleLocked\(\)/);
+  assert.match(nativeSidecarVerifier, /IOConsoleLocked/);
+  assert.match(nativeSidecarVerifier, /function assertConsoleUnlocked\(\)/);
+  assert.match(nativeSidecarVerifier, /Native sidecar verification requires an unlocked macOS session/);
+  assert.match(nativeSidecarVerifier, /assertConsoleUnlocked\(\)/);
+  assert.match(nativeSidecarVerifier, /NSPerformService\("Capture Selection in Loom", pasteboard\)/);
+  assert.match(nativeSidecarVerifier, /function stopRunningLoom\(\)/);
+  assert.match(nativeSidecarVerifier, /execFileSync\('\/usr\/bin\/pkill', \['-x', 'Loom'\]/);
+  assert.match(nativeSidecarVerifier, /function appUnderTestMetadata\(\)/);
+  assert.match(nativeSidecarVerifier, /function fixtureMetadata\(fixtures = \{\}, pdfSource = null\)/);
+  assert.match(nativeSidecarVerifier, /function reportPdfSource\(snapshot, verificationLevel\)/);
+  assert.match(nativeSidecarVerifier, /function readSnapshotForReport\(\) \{\n  if \(existsSync\(currentSnapshotPath\)\)/);
+  assert.match(nativeSidecarVerifier, /function withRestoredUserSnapshot\(label, task\)/);
+  assert.match(nativeSidecarVerifier, /pre-run-reflection-snapshot\.json/);
+  assert.match(nativeSidecarVerifier, /restoredUserSnapshot=\$\{label\}/);
+  assert.match(nativeSidecarVerifier, /withRestoredUserSnapshot\('native-sidecar-gui'/);
+  assert.match(nativeSidecarVerifier, /withRestoredUserSnapshot\('native-services-smoke', runServicesCaptureSmoke\)/);
+  assert.match(nativeSidecarVerifier, /if \(verificationLevel !== 'snapshot-only'\)/);
+  assert.match(nativeSidecarVerifier, /source: 'snapshot PDF learning case'/);
+  assert.match(nativeSidecarVerifier, /function isPdfLearningCase\(reflectionCase\)/);
+  assert.match(nativeSidecarVerifier, /function traceStrength\(reflectionCase, snapshot\)/);
+  assert.match(nativeSidecarVerifier, /function traceCase\(snapshot, title\) \{/);
+  assert.match(nativeSidecarVerifier, /traceStrength\(right\.entry, snapshot\) - traceStrength\(left\.entry, snapshot\)/);
+  assert.match(nativeSidecarVerifier, /function buildStaticIntegrationContract\(\)/);
+  assert.match(nativeSidecarVerifier, /function readPlistJson\(plistPath\)/);
+  assert.match(nativeSidecarVerifier, /Contents', 'Info\.plist'/);
+  assert.match(nativeSidecarVerifier, /CFBundleDocumentTypes/);
+  assert.match(nativeSidecarVerifier, /CFBundleURLTypes/);
+  assert.match(nativeSidecarVerifier, /NSServices/);
+  assert.match(nativeSidecarVerifier, /serviceDeclared/);
+  assert.match(nativeSidecarVerifier, /serviceMessage/);
+  assert.match(nativeSidecarVerifier, /serviceSendTypes/);
+  assert.match(nativeSidecarVerifier, /pdfDocumentType/);
+  assert.match(nativeSidecarVerifier, /wordDocumentType/);
+  assert.match(nativeSidecarVerifier, /excelDocumentType/);
+  assert.match(nativeSidecarVerifier, /com\.adobe\.pdf/);
+  assert.match(nativeSidecarVerifier, /org\.openxmlformats\.wordprocessingml\.document/);
+  assert.match(nativeSidecarVerifier, /org\.openxmlformats\.spreadsheetml\.sheet/);
+  assert.match(nativeSidecarVerifier, /Capture Selection in Loom/);
+  assert.match(nativeSidecarVerifier, /captureSelectionInLoom/);
+  assert.match(nativeSidecarVerifier, /NSStringPboardType/);
+  assert.match(nativeSidecarVerifier, /public\.utf8-plain-text/);
+  assert.match(nativeSidecarVerifier, /public\.file-url/);
+  assert.match(nativeSidecarVerifier, /function runtimeMetadata\(\)/);
+  assert.match(nativeSidecarVerifier, /staticIntegration: buildStaticIntegrationContract\(\)/);
+  assert.match(nativeSidecarVerifier, /appUnderTest: appUnderTestMetadata\(\)/);
+  assert.match(nativeSidecarVerifier, /fixtures: fixtureMetadata\(fixtures, pdfSource\)/);
+  assert.match(nativeSidecarVerifier, /pdfSource: \{/);
+  assert.match(nativeSidecarVerifier, /pdfLearningExperiment: compactTraceCaseFromCase\(pdfSource\.reflectionCase, pdfSource\.title\)/);
+  assert.match(nativeSidecarVerifier, /runtime: runtimeMetadata\(\)/);
+  assert.match(nativeSidecarVerifier, /`- App under test: \$\{report\.appUnderTest\.path\}`/);
+  assert.match(nativeSidecarVerifier, /`- PDF source: \$\{report\.pdfSource\.title\}`/);
+  assert.match(nativeSidecarVerifier, /`- PDF path: \$\{report\.fixtures\.pdf\.path\}`/);
+  assert.match(nativeSidecarVerifier, /pdfFixture: fixtureMetadata\(\)\.pdf/);
+  assert.match(nativeSidecarVerifier, /\.\.\.runtimeMetadata\(\)/);
+  assert.match(nativeSidecarVerifier, /function openAppBundle\(target\)/);
+  assert.match(nativeSidecarVerifier, /execFileSync\('\/usr\/bin\/open', \[target\]/);
+  assert.match(nativeSidecarVerifier, /openAppBundle\(appPath\)/);
+  assert.match(nativeSidecarVerifier, /function openFileWithLoom\(target\)/);
+  assert.match(nativeSidecarVerifier, /execFileSync\('\/usr\/bin\/open', \['-a', appPath, target\]/);
+  assert.match(nativeSidecarVerifier, /openFileWithLoom\(pdfPath\)/);
+  assert.match(nativeSidecarVerifier, /openFileWithLoom\(fixtures\.docx\)/);
+  assert.match(nativeSidecarVerifier, /openFileWithLoom\(fixtures\.csv\)/);
+  assert.doesNotMatch(nativeSidecarVerifier, /\/usr\/bin\/open -a \$\{JSON\.stringify\(appPath\)\}/);
+  assert.match(nativeSidecarVerifier, /CGWindowListCopyWindowInfo\(\[\.optionOnScreenOnly\]/);
+  assert.match(nativeSidecarVerifier, /Loom Companion/);
+  assert.match(nativeSidecarVerifier, /Week 1 Notes\.pdf/);
+  assert.match(nativeSidecarVerifier, /Microsoft Word/);
+  assert.match(nativeSidecarVerifier, /Microsoft Excel/);
+  assert.match(nativeSidecarVerifier, /function assertNativeSurface\(label, windows, owner, nameFragment\)/);
+  assert.match(nativeSidecarVerifier, /function assertLoomStaysCompanion\(label, windows\)/);
+  assert.match(nativeSidecarVerifier, /function assertLoomIsNotFrontmost\(label\)/);
+  assert.match(nativeSidecarVerifier, /function learningInputFingerprint\(value\)/);
+  assert.match(nativeSidecarVerifier, /function firstPdfPageText\(target = pdfPath\)/);
+  assert.match(nativeSidecarVerifier, /pdftotext', \['-layout', '-f', '1', '-l', '1', target, '-'\]/);
+  assert.match(nativeSidecarVerifier, /function pdfLearningSelections\(\)/);
+  assert.match(nativeSidecarVerifier, /selectPdfLearningSentence\(text\)/);
+  assert.match(nativeSidecarVerifier, /selectPdfLearningPhrase\(sentence, text\)/);
+  assert.match(nativeSidecarVerifier, /function parseCapturedInputLine\(item\)/);
+  assert.match(nativeSidecarVerifier, /function traceIntegrityFor\(reflectionCase\)/);
+  assert.match(nativeSidecarVerifier, /function allTraceIntegrityPassed\(report\)/);
+  assert.match(nativeSidecarVerifier, /sourceAnchors/);
+  assert.match(nativeSidecarVerifier, /focusLabels/);
+  assert.match(nativeSidecarVerifier, /selectedText/);
+  assert.match(nativeSidecarVerifier, /passMetadata/);
+  assert.match(nativeSidecarVerifier, /traceTypeMetadata/);
+  assert.match(nativeSidecarVerifier, /secondPassReadiness/);
+  assert.match(nativeSidecarVerifier, /understanding versions are reviewable/);
+  assert.match(nativeSidecarVerifier, /\.replace\(\//);
+  assert.match(nativeSidecarVerifier, /, page \\d\+/);
+  assert.match(nativeSidecarVerifier, /function assertNoDuplicateInputFingerprints\(label, items\)/);
+  assert.match(nativeSidecarVerifier, /duplicate understanding input fingerprints/);
+  assert.match(nativeSidecarVerifier, /assertNoDuplicateInputFingerprints\('PDF trace', inputItems\(pdfTrace\)\)/);
+  assert.match(nativeSidecarVerifier, /Loom must not become the frontmost app during native-file learning/);
+  assert.match(nativeSidecarVerifier, /assertLoomIsNotFrontmost\('PDF capture focus'\)/);
+  assert.match(nativeSidecarVerifier, /assertLoomIsNotFrontmost\('PDF phrase capture focus'\)/);
+  assert.match(nativeSidecarVerifier, /assertLoomIsNotFrontmost\('Word capture focus'\)/);
+  assert.match(nativeSidecarVerifier, /assertLoomIsNotFrontmost\('Excel capture focus'\)/);
+  assert.match(nativeSidecarVerifier, /latestWindows = readWindows\(\)/);
+  assert.match(nativeSidecarVerifier, /expected native .* surface to remain visible/);
+  assert.match(nativeSidecarVerifier, /Loom should not leave a full workspace over the native file during learning/);
+  assert.match(nativeSidecarVerifier, /function assertReceiptDoesNotPersist\(label\)/);
+  assert.match(nativeSidecarVerifier, /Loom saved receipt should auto-dismiss instead of staying open/);
+  assert.match(nativeSidecarVerifier, /assertReceiptDoesNotPersist\('Final saved receipt behavior'\)/);
+  assert.match(nativeSidecarVerifier, /Final PDF surface/);
+  assert.match(nativeSidecarVerifier, /Final Word surface/);
+  assert.match(nativeSidecarVerifier, /Final Excel surface/);
+  assert.match(nativeSidecarVerifier, /status: 'Second pass ready'/);
+  assert.match(nativeSidecarVerifier, /Second-pass synthesis prepared/);
+  assert.match(nativeSidecarVerifier, /const pdfSelection = pdfLearningSelections\(\)/);
+  assert.match(nativeSidecarVerifier, /Captured PDF passage from \$\{pdfTitle\}, page \$\{pdfSelection\.page\}/);
+  assert.match(nativeSidecarVerifier, /Source: \$\{pdfTitle\}, page \$\{pdfSelection\.page\}/);
+  assert.match(nativeSidecarVerifier, /Sentence meaning to review/);
+  assert.match(nativeSidecarVerifier, /Phrase meaning to review/);
+  assert.match(nativeSidecarVerifier, /const reportOnly = process\.argv\.includes\('--report-only'\)/);
+  assert.match(nativeSidecarVerifier, /const preflightOnly = process\.argv\.includes\('--preflight'\)/);
+  assert.match(nativeSidecarVerifier, /const serviceCaptureOnly = process\.argv\.includes\('--service-capture-only'\)/);
+  assert.match(nativeSidecarVerifier, /const repoRoot = path\.resolve\(path\.dirname\(fileURLToPath\(import\.meta\.url\)\), '\.\.'\)/);
+  assert.match(nativeSidecarVerifier, /process\.env\.LOOM_NATIVE_VERIFY_DIR/);
+  assert.match(nativeSidecarVerifier, /path\.join\(repoRoot, '\.codex', 'native-sidecar-verify'\)/);
+  assert.doesNotMatch(nativeSidecarVerifier, /\/tmp\/loom-native-sidecar-verify/);
+  assert.match(nativeSidecarVerifier, /reflection-write-snapshot\.swift/);
+  assert.match(nativeSidecarVerifier, /UserDefaults\.standard\.set\(data, forKey: "loom\.reflectionWorkspaceSnapshot"\)/);
+  assert.match(nativeSidecarVerifier, /plistWrites=/);
+  assert.match(nativeSidecarVerifier, /mirrorWrites=/);
+  assert.match(nativeSidecarVerifier, /function restoreSnapshotFocusToPdf\(snapshot\)/);
+  assert.match(nativeSidecarVerifier, /selectedCaseID: pdfCase\.id/);
+  assert.match(nativeSidecarVerifier, /selectedSourceID: selectedSource\?\.id \?\? null/);
+  assert.match(nativeSidecarVerifier, /cases: \[pdfCase, \.\.\.cases\]/);
+  assert.match(nativeSidecarVerifier, /persistPdfFocusedSnapshot\(readLearningExperimentSnapshot\(\)\)/);
+  assert.match(nativeSidecarVerifier, /learning-experiment-report\.json/);
+  assert.match(nativeSidecarVerifier, /learning-experiment-report\.md/);
+  assert.match(nativeSidecarVerifier, /learning-output-packet\.md/);
+  assert.match(nativeSidecarVerifier, /learning-output-packet\.html/);
+  assert.match(nativeSidecarVerifier, /learning-output-packet\.pdf/);
+  assert.match(nativeSidecarVerifier, /learningOutputPacketPdfSourceHashPath/);
+  assert.match(nativeSidecarVerifier, /\.source\.sha256/);
+  assert.match(nativeSidecarVerifier, /native-sidecar-preflight\.json/);
+  assert.match(nativeSidecarVerifier, /computer-use-readback\.json/);
+  assert.match(nativeSidecarVerifier, /function readComputerUseReadback\(\)/);
+  assert.match(nativeSidecarVerifier, /report\.computerUseReadback\?\.status === 'passed'/);
+  assert.match(nativeSidecarVerifier, /computerUseObservedWrongWindow/);
+  assert.match(nativeSidecarVerifier, /source-disambiguation-human-path/);
+  assert.match(nativeSidecarVerifier, /weak context instead of promoting app identity into file\/page\/cell truth/);
+  assert.match(nativeSidecarVerifier, /status: computerUsePassed \? 'passed' : guiStatus/);
+  assert.match(nativeSidecarVerifier, /Computer Use readback confirms Preview kept native document text/);
+  assert.match(nativeSidecarVerifier, /computerUseReadback: readComputerUseReadback\(\)/);
+  assert.match(nativeSidecarVerifier, /function writeLearningExperimentReport\(snapshot, verificationLevel, fixtures = \{\}\)/);
+  assert.match(nativeSidecarVerifier, /function reportOnlySnapshot\(baseSnapshot, fixtures = \{\}\)/);
+  assert.match(nativeSidecarVerifier, /function reportOnlyLearningCase\(\{/);
+  assert.match(nativeSidecarVerifier, /function reportOnlyPassLabel\(traceType\)/);
+  assert.match(nativeSidecarVerifier, /function reportOnlyAnchorPrecision\(\{ app, window, kind, file, anchorPrecision \}\)/);
+  assert.match(nativeSidecarVerifier, /function reportOnlyAnchorNote\(precision\)/);
+  assert.match(nativeSidecarVerifier, /function evidenceRungForPrecision\(precision\)/);
+  assert.match(nativeSidecarVerifier, /selected text \+ file \+ cell/);
+  assert.match(nativeSidecarVerifier, /function fallbackNoteForPrecision\(precision\)/);
+  assert.match(nativeSidecarVerifier, /use appshot, OCR, Vision, or manual confirmation before promoting/);
+  assert.match(nativeSidecarVerifier, /function reportOnlyEvidence\(\{ app, window, kind, file, bundle, anchorPrecision \}\)/);
+  assert.match(nativeSidecarVerifier, /const precision = reportOnlyAnchorPrecision\(\{ app, window, kind, file, anchorPrecision \}\)/);
+  assert.match(nativeSidecarVerifier, /\['anchor precision', precision\]/);
+  assert.match(nativeSidecarVerifier, /\['evidence rung', evidenceRungForPrecision\(precision\)\]/);
+  assert.match(nativeSidecarVerifier, /\['anchor note', reportOnlyAnchorNote\(precision\)\]/);
+  assert.match(nativeSidecarVerifier, /\['fallback note', fallbackNoteForPrecision\(precision\)\]/);
+  assert.match(nativeSidecarVerifier, /Evidence: \$\{reportOnlyEvidence/);
+  assert.match(nativeSidecarVerifier, /nativeEvidence: nativeVersions\.length > 0/);
+  assert.match(nativeSidecarVerifier, /anchorPrecision: nativeVersions\.length > 0/);
+  assert.match(nativeSidecarVerifier, /evidenceRung: nativeVersions\.length > 0/);
+  assert.match(nativeSidecarVerifier, /weakAnchorDisclosure: nativeVersions\.length > 0/);
+  assert.match(nativeSidecarVerifier, /fallbackDisclosure: nativeVersions\.length > 0/);
+  assert.match(nativeSidecarVerifier, /version\.evidence\?\.\['anchor precision'\]/);
+  assert.match(nativeSidecarVerifier, /version\.evidence\?\.\['evidence rung'\]/);
+  assert.match(nativeSidecarVerifier, /version\.evidence\?\.\['anchor note'\]/);
+  assert.match(nativeSidecarVerifier, /version\.evidence\?\.\['fallback note'\]/);
+  assert.match(nativeSidecarVerifier, /version\.evidence\?\.app && version\.evidence\?\.kind/);
+  assert.match(nativeSidecarVerifier, /function parseInputEvidence\(value\)/);
+  assert.match(nativeSidecarVerifier, /id: 'report-only-pdf-learning'/);
+  assert.match(nativeSidecarVerifier, /id: 'report-only-word-learning'/);
+  assert.match(nativeSidecarVerifier, /id: 'report-only-excel-learning'/);
+  assert.match(nativeSidecarVerifier, /const snapshot = reportOnlySnapshot\(readSnapshotForReport\(\), fixtures\)/);
+  assert.match(nativeSidecarVerifier, /function learningOutputPacketMarkdown\(report\)/);
+  assert.match(nativeSidecarVerifier, /function learningOutputPacketHtml\(markdown, report\)/);
+  assert.match(nativeSidecarVerifier, /function renderLearningOutputPacketPdf\(htmlPath, pdfPath\)/);
+  assert.match(nativeSidecarVerifier, /function sha256ForFile\(filePath\)/);
+  assert.match(nativeSidecarVerifier, /function cachedLearningOutputPacketPdf\(htmlPath, pdfPath/);
+  assert.match(nativeSidecarVerifier, /const cachedPdf = cachedLearningOutputPacketPdf\(htmlPath, pdfPath\)/);
+  assert.match(nativeSidecarVerifier, /Reused cached A4 PDF packet/);
+  assert.match(nativeSidecarVerifier, /source HTML hash unchanged/);
+  assert.match(nativeSidecarVerifier, /writeFileSync\(learningOutputPacketPdfSourceHashPath, `\$\{htmlHash\}\\n`\)/);
+  assert.match(nativeSidecarVerifier, /function packetSourceOutline\(report\)/);
+  assert.match(nativeSidecarVerifier, /function packetSourceOutlineMarkdown\(outline\)/);
+  assert.match(nativeSidecarVerifier, /function packetSourceCoverageLines\(report\)/);
+  assert.match(nativeSidecarVerifier, /function packetTraceVersionCount\(trace\)/);
+  assert.match(nativeSidecarVerifier, /function packetTraceEvidenceValues\(trace, key\)/);
+  assert.match(nativeSidecarVerifier, /Word: Loom Word Learning Notes\.docx/);
+  assert.match(nativeSidecarVerifier, /Excel: Loom Excel Learning Table\.csv/);
+  assert.match(nativeSidecarVerifier, /Native Source Coverage/);
+  assert.match(nativeSidecarVerifier, /thinking version\$\{totalVersionCount === 1 \? '' : 's'\} captured across/);
+  assert.match(nativeSidecarVerifier, /anchor precision:/);
+  assert.match(nativeSidecarVerifier, /native app:/);
+  assert.match(nativeSidecarVerifier, /Learning Objectives/);
+  assert.match(nativeSidecarVerifier, /Key Concepts/);
+  assert.match(nativeSidecarVerifier, /Agenda/);
+  assert.match(nativeSidecarVerifier, /--print-to-pdf=\$\{pdfPath\}/);
+  assert.match(nativeSidecarVerifier, /Chrome returned warnings after writing the file/);
+  assert.match(nativeSidecarVerifier, /Learning packet/);
+  assert.match(nativeSidecarVerifier, /Anchored learning trail/);
+  assert.doesNotMatch(nativeSidecarVerifier, /Learning packet · Source:[^`]+Generated:/);
+  assert.doesNotMatch(nativeSidecarVerifier, /Loom learning review/);
+  assert.match(nativeSidecarVerifier, /Native file remains the source of truth; Loom records the learning trail only/);
+  assert.match(nativeSidecarVerifier, /function packetSpineLines\(report\)/);
+  assert.match(nativeSidecarVerifier, /function packetActiveRecallPrompt\(version\)/);
+  assert.match(nativeSidecarVerifier, /function packetFirstPassLine\(version\)/);
+  assert.match(nativeSidecarVerifier, /user-confirmed meaning/);
+  assert.match(nativeSidecarVerifier, /Term \/ phrase to review/);
+  assert.match(nativeSidecarVerifier, /Sentence to understand/);
+  assert.match(nativeSidecarVerifier, /Restate the confirmed meaning/);
+  assert.match(nativeSidecarVerifier, /Study Notes/);
+  assert.match(nativeSidecarVerifier, /Active Recall/);
+  assert.match(nativeSidecarVerifier, /Understanding Version Flow/);
+  assert.match(nativeSidecarVerifier, /Evidence/);
+  assert.match(nativeSidecarVerifier, /My current meaning/);
+  assert.match(nativeSidecarVerifier, /Fill in/);
+  assert.match(nativeSidecarVerifier, /Second-Pass Synthesis/);
+  assert.match(nativeSidecarVerifier, /Promote only a reusable principle/);
+  assert.match(nativeSidecarVerifier, /--no-pdf-header-footer/);
+  assert.match(nativeSidecarVerifier, /--print-to-pdf-no-header/);
+  assert.match(nativeSidecarVerifier, /Generated from anchored learning traces/);
+  assert.match(nativeSidecarVerifier, /Evidence/);
+  assert.match(nativeSidecarVerifier, /Next Review/);
+  assert.match(nativeSidecarVerifier, /function buildAcceptanceMatrix\(report\)/);
+  assert.match(nativeSidecarVerifier, /const staticIntegrationPassed = report\.staticIntegration\?\.status === 'passed'/);
+  assert.match(nativeSidecarVerifier, /const packetGenerated = report\.outputPacket\?\.status === 'generated'/);
+  assert.match(nativeSidecarVerifier, /const pdfPacketGenerated = report\.outputPacket\?\.pdf\?\.status === 'generated'/);
+  assert.match(nativeSidecarVerifier, /a4-pdf-generated/);
+  assert.match(nativeSidecarVerifier, /html-markdown-packet-generated/);
+  assert.match(nativeSidecarVerifier, /static-native-integration-contract/);
+  assert.match(nativeSidecarVerifier, /Installed Loom\.app declares PDF, Word, Excel, Services capture, and loom:\/\/ handoff integration/);
+  assert.match(nativeSidecarVerifier, /Info\.plist declares document types, Capture Selection in Loom/);
+  assert.match(nativeSidecarVerifier, /function acceptanceMatrixMarkdown\(criteria\)/);
+  assert.match(nativeSidecarVerifier, /function humanPathChecklist\(\)/);
+  assert.match(nativeSidecarVerifier, /function humanPathChecklistMarkdown\(items\)/);
+  assert.match(nativeSidecarVerifier, /preferencePlistPaths/);
+  assert.match(nativeSidecarVerifier, /snapshotMirrorPaths/);
+  assert.match(nativeSidecarVerifier, /'Application Support'/);
+  assert.match(nativeSidecarVerifier, /'Loom'/);
+  assert.match(nativeSidecarVerifier, /reflection-workspace-snapshot\.json/);
+  assert.match(nativeSidecarVerifier, /Library', 'Containers', 'com\.yinyiping\.loom'/);
+  assert.match(nativeSidecarVerifier, /defaultsExportTimeoutMs/);
+  assert.match(nativeSidecarVerifier, /swiftHelperTimeoutMs/);
+  assert.match(nativeSidecarVerifier, /snapshotHelperTimeoutMs/);
+  assert.match(nativeSidecarVerifier, /snapshot mirror candidates/);
+  assert.match(nativeSidecarVerifier, /direct plist candidates/);
+  assert.match(nativeSidecarVerifier, /snapshot helper timeout/);
+  assert.match(nativeSidecarVerifier, /## Human Path Checklist/);
+  assert.match(nativeSidecarVerifier, /unlock-and-read-windows/);
+  assert.match(nativeSidecarVerifier, /pdf-native-reading-first/);
+  assert.match(nativeSidecarVerifier, /pdf-system-tools-preserved/);
+  assert.match(nativeSidecarVerifier, /Look Up, Copy, Translate/);
+  assert.match(nativeSidecarVerifier, /search, zoom, and Services remain native macOS actions/);
+  assert.match(nativeSidecarVerifier, /pdf-services-capture/);
+  assert.match(nativeSidecarVerifier, /word-native-capture/);
+  assert.match(nativeSidecarVerifier, /excel-native-capture/);
+  assert.match(nativeSidecarVerifier, /review-thinking-version-history/);
+  assert.match(nativeSidecarVerifier, /humanPathChecklist: humanPathChecklist\(\)/);
+  assert.match(nativeSidecarVerifier, /pdf-native-surface/);
+  assert.match(nativeSidecarVerifier, /original-file-open-handoff/);
+  assert.match(nativeSidecarVerifier, /thinking-version-integrity/);
+  assert.match(nativeSidecarVerifier, /evidence-ladder-integrity/);
+  assert.match(nativeSidecarVerifier, /Every native capture states the strongest available evidence rung/);
+  assert.match(nativeSidecarVerifier, /native-capability-preservation/);
+  assert.match(nativeSidecarVerifier, /does not rebuild mature native actions such as Look Up, Copy, Translate/);
+  assert.match(nativeSidecarVerifier, /function nativeCapabilityContract\(\)/);
+  assert.match(nativeSidecarVerifier, /function nativeCapabilityContractComplete\(items\)/);
+  assert.match(nativeSidecarVerifier, /## Native Capability Contract/);
+  assert.match(nativeSidecarVerifier, /native-capability-contract/);
+  assert.match(nativeSidecarVerifier, /pdf-native-reading/);
+  assert.match(nativeSidecarVerifier, /word-native-document/);
+  assert.match(nativeSidecarVerifier, /excel-native-spreadsheet/);
+  assert.match(nativeSidecarVerifier, /appshot-fallback/);
+  assert.match(nativeSidecarVerifier, /Do not build a custom PDF reader or clone the Preview context menu for v1/);
+  assert.match(nativeSidecarVerifier, /Do not clone Word editing, comments, or version history/);
+  assert.match(nativeSidecarVerifier, /Do not clone spreadsheet editing, formulas, or chart tooling/);
+  assert.match(nativeSidecarVerifier, /Do not present screenshot or OCR evidence as precise file, page, paragraph, or cell provenance/);
+  assert.match(nativeSidecarVerifier, /selected text \+ file \+ page/);
+  assert.match(nativeSidecarVerifier, /selected cells \+ file \+ sheet\/cell/);
+  assert.match(nativeSidecarVerifier, /visual context only/);
+  assert.match(
+    nativeSidecarVerifier,
+    /reviewable understanding versions with source anchor, anchor precision, weak-anchor disclosure, focus, selected text, pass metadata, trace type, and second-pass readiness/,
+  );
+  assert.match(nativeSidecarVerifier, /All three traces include reviewable understanding-version evidence/);
+  assert.match(nativeSidecarVerifier, /### Thinking Version Integrity/);
+  assert.match(nativeSidecarVerifier, /PDF file open through Loom/);
+  assert.match(nativeSidecarVerifier, /Word file open through Loom/);
+  assert.match(nativeSidecarVerifier, /Excel file open through Loom/);
+  assert.match(nativeSidecarVerifier, /word-native-surface/);
+  assert.match(nativeSidecarVerifier, /excel-native-surface/);
+  assert.match(nativeSidecarVerifier, /loom-companion/);
+  assert.match(nativeSidecarVerifier, /pdf-learning-experiment/);
+  assert.match(nativeSidecarVerifier, /computer-use-human-path/);
+  assert.match(nativeSidecarVerifier, /computerUsePassed \? 'passed' : 'external-check-required'/);
+  assert.match(nativeSidecarVerifier, /external-check-required/);
+  assert.match(nativeSidecarVerifier, /Requires mcp__computer_use\.get_app_state/);
+  assert.match(nativeSidecarVerifier, /report\.acceptanceMatrix = buildAcceptanceMatrix\(report\)/);
+  assert.match(nativeSidecarVerifier, /writeFileSync\(learningOutputPacketMarkdownPath, packetMarkdown\)/);
+  assert.match(nativeSidecarVerifier, /writeFileSync\(learningOutputPacketHtmlPath, packetHtml\)/);
+  assert.match(nativeSidecarVerifier, /## Acceptance Matrix/);
+  assert.match(nativeSidecarVerifier, /function writePreflightReport\(\)/);
+  assert.match(nativeSidecarVerifier, /status: consoleLocked \? 'blocked:locked-screen' : 'ready-for-gui-verification'/);
+  assert.match(nativeSidecarVerifier, /servicesCaptureSmoke: 'npm run verify:native-sidecar -- --service-capture-only'/);
+  assert.match(nativeSidecarVerifier, /fullGuiVerification: 'npm run verify:native-sidecar -- --screenshots'/);
+  assert.match(nativeSidecarVerifier, /Unlock macOS before claiming native PDF\/Word\/Excel GUI verification/);
+  assert.match(nativeSidecarVerifier, /function orderedUniqueItems\(items\)/);
+  assert.match(nativeSidecarVerifier, /function compactOutcomeItems\(items\)/);
+  assert.match(nativeSidecarVerifier, /progressiveOutcomeIndexes/);
+  assert.match(nativeSidecarVerifier, /\^Captured \\d\+ anchored learning traces\? from \(\[\^:\]\+\):/);
+  assert.match(nativeSidecarVerifier, /verificationLevel === 'snapshot-only'/);
+  assert.match(nativeSidecarVerifier, /verificationLevel === 'native-sidecar-gui'/);
+  assert.match(nativeSidecarVerifier, /native-services-smoke/);
+  assert.match(nativeSidecarVerifier, /Services capture and Reflection snapshot assertions without CGWindow native-surface checks/);
+  assert.match(nativeSidecarVerifier, /native window preservation and transient receipt behavior still require GUI verification/);
+  assert.match(nativeSidecarVerifier, /function runServicesCaptureSmoke\(\)/);
+  assert.match(nativeSidecarVerifier, /function readLearningExperimentSnapshot\(\)/);
+  assert.match(nativeSidecarVerifier, /function assertLearningExperimentTraces\(snapshot\)/);
+  assert.match(nativeSidecarVerifier, /gui-verification-required/);
+  assert.match(nativeSidecarVerifier, /Requires full GUI verifier or Computer Use to confirm native windows, focus, and companion behavior/);
+  assert.match(nativeSidecarVerifier, /writeLearningExperimentReport\(snapshot, 'native-services-smoke', fixtures\)/);
+  assert.match(nativeSidecarVerifier, /does not prove the current GUI capture path/);
+  assert.match(nativeSidecarVerifier, /writeLearningExperimentReport\(snapshot, 'native-sidecar-gui', fixtures\)/);
+  assert.match(nativeSidecarVerifier, /const pdfTitle = path\.basename\(pdfPath\)/);
+  assert.match(nativeSidecarVerifier, /PDF: \$\{report\.pdfSource\.title\}/);
+  assert.match(nativeSidecarVerifier, /Word: Loom Word Learning Notes\.docx/);
+  assert.match(nativeSidecarVerifier, /Excel: Loom Excel Learning Table\.csv/);
+  assert.match(nativeSidecarVerifier, /Preview, Word, and Excel remain the primary native surfaces/);
+  assert.match(nativeSidecarVerifier, /Loom only appears as a transient saved receipt/);
+  assert.match(nativeSidecarVerifier, /source anchors, anchor precision, weak-anchor notes when precision is weak, pass, trace type, selected text, and second-pass readiness/);
+  assert.match(nativeSidecarVerifier, /Date\.now\(\) - startedAt < 8000/);
+  assert.match(nativeSidecarVerifier, /input: orderedUniqueItems\(inputItems\(reflectionCase\)\)/);
+  assert.doesNotMatch(nativeSidecarVerifier, /original file activity -> anchored learning trace -> second-pass synthesis -> reusable memory/);
+  assert.match(nativeSidecarVerifier, /27\[0-9\]x6\[0-9\]/);
+  assert.match(nativeSidecarVerifier, /tiny transient HUD, not a modal card/);
+  assert.match(nativeRoot, /handle\.read\(upToCount: 48_000\)/);
+  assert.match(nativeRoot, /private struct ReflectionImportButton: View/);
+  assert.match(nativeRoot, /ReflectionImportButton\(action: onImport\)/);
+  assert.match(nativeRoot, /if cases\.isEmpty \{[\s\S]{0,80}cases = \[ReflectionCase\.blank\(\)\]/);
+  assert.match(nativeRoot, /onDelete: deleteReflection/);
+  assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,340}onDelete: \{ onDelete\(reflectionCase\) \}/);
+  assert.match(nativeRoot, /Image\(systemName: "trash"\)/);
+  assert.match(nativeRoot, /private let reflectionTopBarHeight: CGFloat = 52/);
+  assert.match(nativeRoot, /private let reflectionSidebarTopClearance: CGFloat = 72/);
+  assert.match(nativeRoot, /private let reflectionTitlebarControlSize: CGFloat = 16/);
+  assert.match(nativeRoot, /private let reflectionTrafficLightClearance: CGFloat = 88/);
+  assert.match(nativeRoot, /private let reflectionTitlebarControlCenterY: CGFloat = 16/);
+  assert.match(
+    nativeRoot,
+    /private let reflectionTitlebarContentTop: CGFloat = reflectionTitlebarControlCenterY - \(reflectionTitlebarControlSize \/ 2\)/,
+  );
+  assert.match(nativeRoot, /private let reflectionThreadTopPadding: CGFloat = 76/);
+  assert.match(nativeRoot, /private let reflectionInspectorTopPadding: CGFloat = 74/);
+  assert.doesNotMatch(nativeRoot, /VStack\(spacing:\s*0\)[\s\S]{0,260}ReflectionTopBar\(/, 'titlebar should overlay the workbench instead of occupying a row');
+  assert.match(topBarBlock, /Text\(reflectionCase\.title\)/);
+  assert.match(topBarBlock, /Text\(reflectionCase\.status\)/);
+  assert.match(topBarBlock, /Label\("[^"]*sourceCount[^"]*", systemImage: "folder"\)/);
+  assert.match(topBarBlock, /Text\("Sources"\)/);
+  assert.match(topBarBlock, /ReflectionTopBarButton\([\s\S]*systemName: "sidebar\.left"[\s\S]*action: onToggleSidebar/);
+  assert.match(topBarBlock, /ReflectionTopBarButton\([\s\S]*systemName: "sidebar\.right"[\s\S]*action: onToggleInspector/);
+  assert.doesNotMatch(topBarBlock, /trash|Delete reflection|onDelete/, 'destructive case actions must stay scoped to sidebar rows');
+  assert.match(topBarBlock, /\.padding\(\.top,\s*reflectionTitlebarContentTop\)/);
+  assert.match(topBarBlock, /\.frame\(height: reflectionTopBarHeight, alignment: \.topLeading\)/);
+  assert.match(topBarBlock, /\.frame\(maxWidth: \.infinity, alignment: \.topLeading\)/);
+  assert.doesNotMatch(nativeRoot, /ReflectionTopBarBackground/, 'titlebar should not own a separate material row');
+  assert.doesNotMatch(
+    topBarBlock,
+    /\.background\(/,
+    'titlebar should be a control overlay over continuous workbench materials',
+  );
+  assert.doesNotMatch(nativeRoot, /ReflectionCollapsedSidebarRail/);
+  assert.doesNotMatch(nativeRoot, /ReflectionThreadHeader|PRODUCT REFLECTION WORKSPACE|Text\("WORKSPACE"\)/);
+  assert.match(nativeRoot, /ReflectionDivider\(\)/);
+  assert.doesNotMatch(nativeRoot, /NavigationSplitView\(columnVisibility:/);
+  assert.doesNotMatch(nativeRoot, /List\(selection:/);
+  assert.doesNotMatch(nativeRoot, /\.listStyle\(\.sidebar\)/);
+  assert.doesNotMatch(nativeRoot, /\.navigationSplitViewColumnWidth/);
+  assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, material: material\)/);
+  assert.match(nativeRoot, /systemName: "sidebar\.left"/);
+  assert.match(nativeRoot, /systemName: "sidebar\.right"/);
+  assert.match(nativeRoot, /\.frame\(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize\)/);
+  assert.doesNotMatch(nativeRoot, /RoundedRectangle\(cornerRadius: 4/, 'titlebar controls should not draw separate button pills');
+  assert.doesNotMatch(nativeRoot, /\.frame\(width: 28, height: 28\)/, 'titlebar controls should match the small macOS traffic-light scale');
+  assert.match(nativeRoot, /contentExtendsUnderTitlebar:\s*true/);
+  assert.match(nativeRoot, /removesSystemToolbar:\s*true/);
+  assert.match(nativeRoot, /usesFrameAutosave:\s*false/);
+  assert.match(contentView, /var usesFrameAutosave: Bool = true/);
+  assert.match(
+    contentView,
+    /if usesFrameAutosave \{[\s\S]{0,120}window\.setFrameAutosaveName\("LoomMainWindow"\)/,
+    'reflection must be able to opt out of stale restored frame sizes while legacy shells keep autosave',
+  );
+  assert.match(
+    nativeRoot,
+    /contentCornerRadius:\s*0/,
+    'reflection should use one native window shell instead of an inner rounded content shell',
+  );
+  assert.doesNotMatch(nativeRoot, /ReflectionPaneMaterial|ReflectionSelectionMaterial|reflectionGlass/);
+  assert.match(nativeRoot, /private let reflectionThreadMaxWidth: CGFloat = 720/);
+  assert.match(nativeRoot, /ReflectionTraceList\(steps: reflectionCase\.steps\)/);
+  assert.match(nativeRoot, /\.padding\(\.top,\s*reflectionThreadTopPadding\)/);
+  assert.match(nativeRoot, /\.padding\(\.top,\s*reflectionInspectorTopPadding\)/);
+  assert.doesNotMatch(nativeRoot, /\.padding\(\.top,\s*reflectionTopBarHeight \+/);
+  assert.match(
+    nativeRoot,
+    /ReflectionTraceList\(steps: reflectionCase\.steps\)[\s\S]{0,520}\.frame\(maxWidth: \.infinity, alignment: \.center\)/,
+    'thread content should stay centered in the available center pane, especially when side panes are collapsed',
+  );
+  assert.match(
+    nativeRoot,
+    /ReflectionComposer\([\s\S]{0,220}text: \$draftText[\s\S]{0,220}onSubmit: onSubmit[\s\S]{0,520}\.frame\(maxWidth: \.infinity, alignment: \.center\)/,
+    'composer should share the centered thread axis instead of sticking to the left edge',
+  );
+  assert.doesNotMatch(nativeRoot, /ReflectionWorkflowGrid|LazyVGrid/);
+  assert.match(nativeRoot, /ReflectionSearchField\(text: \$query, placeholder: "Filter sources"\)/);
+  assert.match(
+    nativeRoot,
+    /ScrollView \{[\s\S]*ReflectionSourcePreview\(source: selectedSource\)[\s\S]*\.padding\(\.bottom,\s*18\)/,
+    'native source preview should scroll with the source tree instead of floating at the bottom edge',
+  );
+  assert.doesNotMatch(nativeRoot, /ReflectionBottomStatusStrip|reflectionBottomStatusHeight|sourceSummary/);
+  assert.doesNotMatch(nativeRoot, /Button\(action: onClose\)/, 'sources collapse belongs in the shared top bar');
+  assert.doesNotMatch(nativeRoot, /preferredColorScheme\(\.dark\)|environment\(\\\.colorScheme,\s*\.dark\)/);
+  assert.match(project, /LoomReflectionRootView\.swift in Sources/);
+  assert.ok(NEW_LOOM_PRIMARY_ROUTES.includes('/reflection'), '/reflection should be a primary product route');
 });
 
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
@@ -327,7 +2295,7 @@ test('native Sources drag-to-import works from the main Loom window', () => {
   assert.match(ingestionView, /UTType\(filenameExtension: "pptx"\)/);
   assert.match(
     ingestionView,
-    /"md", "mdx", "markdown", "docx", "doc", "rtfd", "ppt", "key", "pages"/,
+    /"md", "mdx", "markdown", "docx", "doc", "rtfd", "xlsx", "xls", "csv", "tsv", "ppt", "key", "pages"/,
   );
 
   assert.match(keyboardHelp, /Drop files into Sources/);
@@ -1374,12 +3342,14 @@ test('minimal sidebar is a compact product switcher, not a duplicate source brow
 
 test('fallback main Loom window uses the same full-size chrome contract as the scene window', () => {
   const loomApp = read('macos-app/Loom/Sources/LoomApp.swift');
+  const reflectionRoot = read('macos-app/Loom/Sources/LoomReflectionRootView.swift');
 
   assert.match(loomApp, /private func createFallbackMainWindow\(\)/);
-  // The fallback window mounts the same dossier web root as the SwiftUI scene
-  // (the macOS app now presents the latest web identity product, not the
-  // retired minimal Sources/Draft shell).
-  assert.match(loomApp, /let rootView = LoomDossierRootView\(\)/);
+  assert.match(loomApp, /LoomReflectionRootView\(\)[\s\S]{0,140}\.background\(WindowOpener\(\)\)/);
+  assert.match(loomApp, /let rootView = LoomReflectionRootView\(\)/);
+  assert.doesNotMatch(loomApp, /let rootView = LoomDossierRootView\(\)/);
+  assert.match(reflectionRoot, /ReflectionTopBar\(/);
+  assert.doesNotMatch(reflectionRoot, /ReflectionBottomStatusStrip/);
   assert.match(
     loomApp,
     /styleMask:\s*\[\.titled,\s*\.closable,\s*\.miniaturizable,\s*\.resizable,\s*\.fullSizeContentView\]/,
@@ -1409,6 +3379,11 @@ test('hosted XCTest runs do not materialize a second visible Loom room', () => {
     delegate,
     /private var isRunningInXCTestHost: Bool[\s\S]{0,320}XCTestConfigurationFilePath[\s\S]{0,160}XCTestBundlePath/,
     'the app delegate must detect hosted XCTest so verification does not activate a second Loom.app',
+  );
+  assert.doesNotMatch(
+    delegate,
+    /private var isRunningInXCTestHost: Bool[\s\S]{0,260}NSClassFromString\("XCTestCase"\)/,
+    'normal Debug launches may load XCTest symbols; hosted-test detection must use environment markers only',
   );
   assert.match(
     delegate,
@@ -1466,9 +3441,12 @@ test('main-window fallback promotes off-active scene windows and hidden windows'
     'hidden scene windows should be promoted before a fallback host is created',
   );
   const ensureStart = loomApp.indexOf('private func ensureMainWindowVisible()');
-  const presentStart = loomApp.indexOf('@MainActor\n    private func presentWindowOnActiveSpace', ensureStart);
-  assert.ok(ensureStart >= 0 && presentStart > ensureStart, 'ensureMainWindowVisible block must be bounded');
-  const ensureBlock = loomApp.slice(ensureStart, presentStart);
+  const reconcileStart = loomApp.indexOf('@MainActor\n    private func reconcileDuplicateMainWindows', ensureStart);
+  const presentStart = loomApp.indexOf('@MainActor\n    private func presentWindowOnActiveSpace', reconcileStart);
+  assert.ok(ensureStart >= 0 && reconcileStart > ensureStart, 'ensureMainWindowVisible block must be bounded');
+  assert.ok(presentStart > reconcileStart, 'duplicate main-window reconciliation block must be bounded');
+  const ensureBlock = loomApp.slice(ensureStart, reconcileStart);
+  const reconcileBlock = loomApp.slice(reconcileStart, presentStart);
   assert.match(
     ensureBlock,
     /using visible window=[\s\S]*presentWindowOnActiveSpace\(window\)[\s\S]*return/,
@@ -1492,6 +3470,21 @@ test('main-window fallback promotes off-active scene windows and hidden windows'
     ensureBlock,
     /closeMainWindow\(window\)/,
     'main-window launch repair must not close windows while AppKit is still settling Spaces',
+  );
+  assert.match(
+    ensureBlock,
+    /reconcileDuplicateMainWindows\(\)/,
+    'launch repair should first collapse accidental duplicate main rooms before presenting one',
+  );
+  assert.match(
+    reconcileBlock,
+    /if let fallbackMainWindow,[\s\S]{0,180}windows\.contains\(where: \{ \$0 !== fallbackMainWindow \}\)[\s\S]{0,240}closeMainWindow\(fallbackMainWindow\)/,
+    'duplicate reconciliation may close the AppKit fallback once the real SwiftUI scene exists',
+  );
+  assert.match(
+    reconcileBlock,
+    /for window in windows where window !== keeper \{[\s\S]{0,240}closeMainWindow\(window\)/,
+    'duplicate reconciliation may close extra visible main rooms after choosing a keeper',
   );
   assert.match(loomApp, /presentationBehavior\.insert\(\.canJoinAllSpaces\)/);
   const presentBlock = loomApp.slice(presentStart, loomApp.indexOf('/// Materialize a fallback main window', presentStart));
@@ -1545,7 +3538,7 @@ test('DevServer publishes SwiftUI observable state from the main thread', () => 
   assert.match(startBody, /if DevServer\.isSandboxed \{[\s\S]{0,120}publishStatus\(\.ready\)/);
 });
 
-test('minimal main Loom windows hide the system titlebar so Draft has one chrome owner', () => {
+test('reflection main Loom windows use one unified full-window shell', () => {
   const loomApp = read('macos-app/Loom/Sources/LoomApp.swift');
   const contentView = read('macos-app/Loom/Sources/ContentView.swift');
   const minimalRoot = read('macos-app/Loom/Sources/LoomMinimalRootView.swift');
@@ -1568,17 +3561,19 @@ test('minimal main Loom windows hide the system titlebar so Draft has one chrome
   assert.match(
     mainScene,
     /\.windowStyle\(\.hiddenTitleBar\)/,
-    'the minimal scene window must hide macOS titlebar chrome; Draft renders navigation/title/capture in-window',
+    'the reflection scene should unify titlebar and content into one shell',
   );
   assert.doesNotMatch(
     mainScene,
     /\.windowToolbarStyle\(\.unifiedCompact\)/,
-    'the main Loom scene must not keep an empty macOS toolbar/title strip above Draft chrome',
+    'the reflection scene must not recreate the floating system toolbar seen above the custom shell',
   );
   assert.match(fallback, /window\.titlebarAppearsTransparent = true/);
   assert.match(fallback, /window\.titleVisibility = \.hidden/);
   assert.match(fallback, /window\.toolbar = nil/);
   assert.match(fallback, /window\.standardWindowButton\(\.toolbarButton\)\?\.isHidden = true/);
+  assert.match(fallback, /styleMask:\s*\[\.titled,\s*\.closable,\s*\.miniaturizable,\s*\.resizable,\s*\.fullSizeContentView\]/);
+  assert.match(fallback, /window\.backgroundColor = NSColor\.windowBackgroundColor/);
   assert.match(
     configurator,
     /var removesSystemToolbar: Bool = false/,
@@ -1587,12 +3582,12 @@ test('minimal main Loom windows hide the system titlebar so Draft has one chrome
   assert.match(
     minimalRoot,
     /WindowConfigurator\(title: "Loom", isNight: usesNightPalette, contentExtendsUnderTitlebar: true, removesSystemToolbar: true\)/,
-    'minimal mode must remove the scene-managed NSWindow toolbar that reappears in fullscreen/windowed Draft screenshots',
+    'legacy minimal mode can still remove scene-managed toolbar when that shell owns its chrome',
   );
   assert.match(
     configurator,
     /if removesSystemToolbar \{\s*window\.toolbar = nil\s*clearTitlebarAccessories\(window\)\s*window\.standardWindowButton\(\.toolbarButton\)\?\.isHidden = true\s*\}/,
-    'scene-managed main windows must clear system toolbar and sidebar-toggle chrome, matching the fallback window path',
+    'full-size shells should clear system toolbar and titlebar accessory chrome explicitly',
   );
   assert.match(
     configurator,
@@ -1700,11 +3695,11 @@ test('minimal main Loom windows remain eligible for macOS fullscreen', () => {
   assert.match(
     fallback,
     /window\.collectionBehavior\.insert\(\.fullScreenPrimary\)/,
-    'fallback main windows must keep Window > fullscreen actions enabled for Draft chrome acceptance',
+    'fallback main windows must keep Window > fullscreen actions enabled',
   );
 });
 
-test('AppDelegate reasserts main-window hidden chrome when presenting existing windows', () => {
+test('AppDelegate reasserts reflection main-window hidden-toolbar chrome', () => {
   const loomApp = read('macos-app/Loom/Sources/LoomApp.swift');
   const appDelegateStart = loomApp.indexOf('class AppDelegate');
   const terminateStart = loomApp.indexOf('func applicationShouldTerminateAfterLastWindowClosed', appDelegateStart);
@@ -1723,15 +3718,18 @@ test('AppDelegate reasserts main-window hidden chrome when presenting existing w
   assert.match(appDelegate, /window\.titleVisibility = \.hidden/);
   assert.match(appDelegate, /window\.styleMask\.insert\(\.fullSizeContentView\)/);
   assert.match(appDelegate, /window\.toolbar = nil/);
-  assert.match(appDelegate, /clearMainWindowTitlebarAccessories\(window\)/);
-  assert.match(appDelegate, /Selector\(\("setTitlebarAccessoryViewControllers:"\)\)/);
-  assert.match(appDelegate, /window\.responds\(to: selector\)/);
+  assert.match(appDelegate, /clearTitlebarAccessories\(window\)/);
   assert.doesNotMatch(
     appDelegate,
     /window\.titlebarAccessoryViewControllers = \[\]/,
-    'direct titlebarAccessoryViewControllers assignment crashes before Draft route acceptance can run',
+    'direct titlebarAccessoryViewControllers assignment crashes before route acceptance can run',
   );
   assert.match(appDelegate, /window\.standardWindowButton\(\.toolbarButton\)\?\.isHidden = true/);
+  assert.match(
+    appDelegate,
+    /private func clearTitlebarAccessories\(_ window: NSWindow\)[\s\S]{0,220}Selector\(\("setTitlebarAccessoryViewControllers:"\)\)/,
+    'titlebar accessory cleanup must stay guarded when AppDelegate repairs the main window',
+  );
   assert.match(
     appDelegate,
     /applicationDidBecomeActive[\s\S]{0,900}if let window = existingMainWindow\(includeHidden: false, requireActiveSpace: true\) \{[\s\S]{0,180}configureMainWindowChrome\(window\)/,
@@ -2107,6 +4105,9 @@ test('first-run and native shortcuts land on new Loom product capabilities', () 
     assert.match(app, new RegExp(`Button\\("${label}"\\)`));
     assert.match(help, new RegExp(`label:\\s*"${label}"`));
   }
+  assert.match(app, /Button\("Reflection"\)/);
+  assert.match(app, /postNav\("\/reflection"\)/);
+  assert.doesNotMatch(app, /Button\("Home"\)/);
   for (const retired of ['Collect', 'Organize']) {
     assert.doesNotMatch(app, new RegExp(`Button\\("${retired}"\\)`));
     assert.doesNotMatch(help, new RegExp(`label:\\s*"${retired}"`));

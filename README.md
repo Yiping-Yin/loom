@@ -153,6 +153,8 @@ The defining kesi technique is **continuous warp, broken weft** (通经断纬): 
 - `npm run app`, `npm run app:user`, and `npm run app:system` build and install the macOS shell.
 - `npm run app:where` prints the currently installed *Loom.app* location.
 - [docs/README.md](docs/README.md) indexes current design and process docs.
+- [docs/REPO_STRUCTURE.md](docs/REPO_STRUCTURE.md) defines where code, specs, archives, captures, and generated files belong.
+- [docs/projects/active/README.md](docs/projects/active/README.md) is the entry point for current Loom product work.
 
 ---
 

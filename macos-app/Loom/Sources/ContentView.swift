@@ -1269,6 +1269,12 @@ struct WindowConfigurator: NSViewRepresentable {
     /// macOS otherwise re-inserts an empty toolbar strip above Draft in
     /// fullscreen/windowed transitions.
     var removesSystemToolbar: Bool = false
+    /// Optional hard clip for custom full-window shells that must align
+    /// their visual rounded corners with the actual NSWindow content.
+    var contentCornerRadius: CGFloat = 0
+    /// Some full-window product shells own a strict screenshot baseline
+    /// and must not inherit old restored window sizes.
+    var usesFrameAutosave: Bool = true
 
     private func configure(_ window: NSWindow) {
         window.tabbingMode = .disallowed
@@ -1276,7 +1282,7 @@ struct WindowConfigurator: NSViewRepresentable {
             window.toggleTabBar(nil)
         }
         window.appearance = NSAppearance(named: isNight ? .darkAqua : .aqua)
-        window.titlebarAppearsTransparent = true
+        window.titlebarAppearsTransparent = contentExtendsUnderTitlebar
         // Hide the NSWindow-rendered title entirely. macOS draws
         // that text using a mechanism that doesn't follow our
         // `.toolbarColorScheme`/`containerBackground` stack on
@@ -1285,20 +1291,37 @@ struct WindowConfigurator: NSViewRepresentable {
         // re-rendered in-window so it inherits the chrome's color
         // scheme cleanly.
         window.titleVisibility = .hidden
-        window.styleMask.insert(.fullSizeContentView)
+        if contentExtendsUnderTitlebar {
+            window.styleMask.insert(.fullSizeContentView)
+        } else {
+            window.styleMask.remove(.fullSizeContentView)
+        }
         if removesSystemToolbar {
             window.toolbar = nil
             clearTitlebarAccessories(window)
             window.standardWindowButton(.toolbarButton)?.isHidden = true
         }
+        if contentCornerRadius > 0 {
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.contentView?.wantsLayer = true
+            window.contentView?.layer?.cornerRadius = contentCornerRadius
+            if #available(macOS 10.15, *) {
+                window.contentView?.layer?.cornerCurve = .continuous
+            }
+            window.contentView?.layer?.masksToBounds = true
+        } else {
+            window.backgroundColor = NSColor.windowBackgroundColor
+        }
         // Custom chrome must not opt the window out of macOS fullscreen;
         // Window > Enter Full Screen stays available for Draft.
         window.collectionBehavior.insert(.fullScreenPrimary)
         window.isMovableByWindowBackground = true
-        window.backgroundColor = NSColor.windowBackgroundColor
         window.title = "Loom"  // keep the system window title stable; page title stays in the chrome
-        // Remember window size and position across launches
-        window.setFrameAutosaveName("LoomMainWindow")
+        if usesFrameAutosave {
+            // Remember window size and position across launches.
+            window.setFrameAutosaveName("LoomMainWindow")
+        }
     }
 
     /// macOS can restore accessory titlebar chrome separately from

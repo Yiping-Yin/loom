@@ -2,7 +2,8 @@ import SwiftUI
 import PDFKit
 import QuickLookUI
 
-/// Native viewer for a source file from the user's content root.
+/// Native viewer for a source file from the user's content root or a
+/// directly imported local file.
 /// Bypasses the webview entirely so PDFs (and other formats QuickLook
 /// supports) render under the existing NavigationSplitView chrome —
 /// sidebar stays, no Next.js routing involved.
@@ -15,7 +16,8 @@ import QuickLookUI
 /// Onbackpress / close, the parent ContentView clears its
 /// `activeSourceFileURL` state so the webview is shown again.
 struct SourceFileView: View {
-    let loomURL: URL
+    let loomURL: URL?
+    let directFileURL: URL?
     let onClose: () -> Void
 
     @State private var resolvedURL: URL?
@@ -65,6 +67,18 @@ struct SourceFileView: View {
     @State private var compileContextNotice: String? = nil
     /// Banner error (rate limit, provider failure).
     @State private var compileError: String? = nil
+
+    init(loomURL: URL, onClose: @escaping () -> Void) {
+        self.loomURL = loomURL
+        self.directFileURL = nil
+        self.onClose = onClose
+    }
+
+    init(fileURL: URL, onClose: @escaping () -> Void) {
+        self.loomURL = nil
+        self.directFileURL = fileURL
+        self.onClose = onClose
+    }
 
     struct AskMessage: Identifiable, Equatable {
         let id: UUID
@@ -160,8 +174,10 @@ struct SourceFileView: View {
                 }
             }
             .overlay(alignment: .bottomLeading) {
-                compileActionPanel
-                    .padding(20)
+                if shouldShowCompileActionPanel {
+                    compileActionPanel
+                        .padding(20)
+                }
             }
 
             if showAskPanel {
@@ -178,7 +194,7 @@ struct SourceFileView: View {
         )) {
             CaptureSheet(payload: $capturePayload, onSaved: handleCaptureSaved)
         }
-        .task(id: loomURL) {
+        .task(id: sourceIdentity) {
             await resolve()
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomApplyPDFAnchor)) { note in
@@ -206,9 +222,17 @@ struct SourceFileView: View {
     // chrome the user flagged.
 
     private var displayName: String {
+        if let directFileURL {
+            return directFileURL.lastPathComponent
+        }
+        guard let loomURL else { return "Source file" }
         let path = loomURL.path
         guard let last = path.split(separator: "/").last else { return loomURL.absoluteString }
         return last.removingPercentEncoding ?? String(last)
+    }
+
+    private var sourceIdentity: URL? {
+        directFileURL ?? loomURL
     }
 
     // MARK: - Note panel (⌘E)
@@ -643,8 +667,12 @@ struct SourceFileView: View {
     /// `LoomFileStore`, never the source folder.
     private func startCaptureFromClipboard() {
         let selection = pdfHolder.currentSelectionInfo()
+        guard let sourceIdentity else {
+            showToast("Couldn't resolve an anchor for this capture.")
+            return
+        }
         let anchors = CaptureAnchorResolver.resolveForSourceFile(
-            loomURL: loomURL,
+            loomURL: sourceIdentity,
             selection: selection
         )
         guard let primary = anchors.first else {
@@ -1202,8 +1230,9 @@ struct SourceFileView: View {
     private func anchorURL(for info: (pageIndex: Int, rect: CGRect, text: String)) -> String {
         // `src` carries the full source loom:// URL so the parent can
         // navigate directly back to this PDF without name-based search.
-        let srcComponent = loomURL.absoluteString
-            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? loomURL.absoluteString
+        let src = sourceIdentity?.absoluteString ?? displayName
+        let srcComponent = src
+            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? src
         let rectStr = String(
             format: "%.1f,%.1f,%.1f,%.1f",
             info.rect.minX, info.rect.minY, info.rect.width, info.rect.height
@@ -1215,7 +1244,7 @@ struct SourceFileView: View {
     }
 
     private func appendUnderThreads(entry: String, file: String, to source: String) -> String {
-        Self.addEntryToBook(body: entry, file: file, sourceURL: loomURL, in: source)
+        Self.addEntryToBook(body: entry, file: file, sourceURL: sourceIdentity, in: source)
     }
 
     /// Insert `body` at the end of the `## <file>` section, healing
@@ -1705,6 +1734,15 @@ struct SourceFileView: View {
     /// Compile action panel: the Compile button + first-compile pulse +
     /// streamed preview + context/error banners. Anchored bottom-left of
     /// the source body.
+    private var shouldShowCompileActionPanel: Bool {
+        compileError != nil
+            || compileContextNotice != nil
+            || !compileDraft.isEmpty
+            || isCompiling
+            || compilePulseActive
+            || hasCompilableScratch
+    }
+
     private var compileActionPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let compileError {
@@ -1921,7 +1959,7 @@ struct SourceFileView: View {
             let updated = SourceFileView.upsertCompiledSection(
                 artifact: artifact,
                 file: displayName,
-                sourceURL: loomURL,
+                sourceURL: sourceIdentity,
                 in: existing,
                 partial: partial,
                 now: Date()
@@ -2260,6 +2298,7 @@ struct SourceFileView: View {
     /// UUID of the ContentRoot the current PDF lives under, derived
     /// from the `loom://content/<uuid>/...` URL.
     private var parentRootID: UUID? {
+        guard let loomURL else { return nil }
         guard loomURL.scheme == "loom", loomURL.host == "content" else { return nil }
         let segs = loomURL.path
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
@@ -2311,7 +2350,7 @@ struct SourceFileView: View {
     /// one section per book — the whole "what I've done with this
     /// PDF" lives in one place, matching the user's mental model.
     private func appendUnderNotes(entry: String, file: String, to source: String) -> String {
-        Self.addEntryToBook(body: entry, file: file, sourceURL: loomURL, in: source)
+        Self.addEntryToBook(body: entry, file: file, sourceURL: sourceIdentity, in: source)
     }
 
     private func showToast(_ message: String) {
@@ -2330,6 +2369,30 @@ struct SourceFileView: View {
     }
 
     private func resolve() async {
+        if let directFileURL {
+            let resolved = directFileURL.standardizedFileURL
+            guard FileManager.default.fileExists(atPath: resolved.path) else {
+                await MainActor.run {
+                    resolvedURL = nil
+                    resolveError = "Missing on disk: \(resolved.path)"
+                }
+                return
+            }
+            await MainActor.run {
+                resolvedURL = resolved
+                resolveError = nil
+            }
+            return
+        }
+
+        guard let loomURL else {
+            await MainActor.run {
+                resolvedURL = nil
+                resolveError = "Missing source URL."
+            }
+            return
+        }
+
         let hostRoots = LoomRuntimePaths.resolveHostRoots()
         let contentRoots = ContentRootStore.allActiveURLs
         guard let resolved = LoomURLSchemeHandler.resolve(loomURL, hostRoots: hostRoots, contentRoots: contentRoots) else {
@@ -2531,17 +2594,18 @@ private struct LoomPDFView: NSViewRepresentable {
 /// PDFView subclass that injects Loom's reading actions into the
 /// system right-click menu when the user has selected text. The
 /// existing system items (Look Up, Translate, Search With…, Copy,
-/// Share, Speech) remain untouched — Loom items are prepended so
-/// everything lives in one stacked menu instead of scattered
-/// shortcuts.
+/// Share, Speech) remain first-class; Loom appends a quiet sidecar
+/// action after the native PDF actions instead of taking over the
+/// menu.
 final class LoomPDFKitView: PDFView {
     var onNote: (() -> Void)?
 
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = super.menu(for: event) ?? NSMenu()
-        guard currentSelection != nil else { return menu }
-        if !menu.items.isEmpty {
-            menu.insertItem(NSMenuItem.separator(), at: 0)
+        let selectedText = currentSelection?.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !selectedText.isEmpty else { return menu }
+        if let last = menu.items.last, !last.isSeparatorItem {
+            menu.addItem(NSMenuItem.separator())
         }
         let item = NSMenuItem(
             title: "Note this passage…",
@@ -2549,7 +2613,7 @@ final class LoomPDFKitView: PDFView {
             keyEquivalent: ""
         )
         item.target = self
-        menu.insertItem(item, at: 0)
+        menu.addItem(item)
         return menu
     }
 

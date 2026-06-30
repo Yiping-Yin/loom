@@ -1,0 +1,3489 @@
+import SwiftUI
+import AppKit
+import PDFKit
+
+private let reflectionSidebarWidth: CGFloat = 240
+private let reflectionInspectorWidth: CGFloat = 400
+private let reflectionTopBarHeight: CGFloat = 52
+private let reflectionSidebarTopClearance: CGFloat = 72
+private let reflectionThreadMaxWidth: CGFloat = 720
+private let reflectionTrafficLightClearance: CGFloat = 88
+private let reflectionTitlebarControlSize: CGFloat = 16
+private let reflectionTitlebarControlCenterY: CGFloat = 16
+private let reflectionTitlebarContentTop: CGFloat = reflectionTitlebarControlCenterY - (reflectionTitlebarControlSize / 2)
+private let reflectionThreadTopPadding: CGFloat = 76
+private let reflectionInspectorTopPadding: CGFloat = 74
+private let reflectionLearningEvidenceMarker = "\nEvidence:"
+
+private func reflectionLearningInputFingerprint(_ value: String) -> String {
+    var normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    if let evidenceRange = normalized.range(of: reflectionLearningEvidenceMarker) {
+        normalized = String(normalized[..<evidenceRange.lowerBound])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    while let pageRange = normalized.range(of: #", page \d+"#, options: .regularExpression) {
+        normalized.removeSubrange(pageRange)
+    }
+    return normalized
+        .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        .lowercased()
+}
+
+struct LoomReflectionRootView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var cases: [ReflectionCase]
+    @State private var selectedCaseID: ReflectionCase.ID
+    @State private var selectedSourceID: ReflectionSource.ID?
+    @State private var selectedLearningTraceID: ReflectionLearningTrace.ID?
+    @State private var draftText: String = ""
+    @State private var statusMessage: String = "Local reflection workspace"
+    @State private var isSidebarPresented: Bool = true
+    @State private var isSidebarPeeking: Bool = false
+    @State private var isInspectorPresented: Bool = true
+
+    @State private var capturePayload: CapturePayload?
+    @State private var lastHandledCaptureToken: UUID?
+    @State private var lastHandledExternalFileToken: UUID?
+    @State private var lastHandledExternalSelectionToken: UUID?
+
+    private var shouldShowSidebar: Bool { isSidebarPresented || isSidebarPeeking }
+    private var shouldOverlaySidebar: Bool { !isSidebarPresented && isSidebarPeeking }
+    private var selectedIndex: Int { cases.firstIndex { $0.id == selectedCaseID } ?? 0 }
+    private var selectedCase: ReflectionCase { cases[selectedIndex] }
+    private var selectedSource: ReflectionSource? {
+        selectedCase.sources.first { $0.id == selectedSourceID } ?? selectedCase.sources.first
+    }
+    private var nativeSource: ReflectionSource? {
+        selectedCase.sources.first { $0.id == selectedSourceID && $0.fileURL != nil }
+    }
+    private var selectedLearningTrace: ReflectionLearningTrace? {
+        let traces = ReflectionLearningTrace.from(selectedCase)
+        return traces.first { $0.id == selectedLearningTraceID } ?? traces.last
+    }
+
+    init() {
+        let restored = ReflectionWorkspaceStore.load()
+        let initialCases = restored?.cases.isEmpty == false ? restored!.cases : ReflectionCase.samples
+        let initialSelectedCaseID: ReflectionCase.ID
+        if let restoredSelectedCaseID = restored?.selectedCaseID,
+           initialCases.contains(where: { $0.id == restoredSelectedCaseID }) {
+            initialSelectedCaseID = restoredSelectedCaseID
+        } else {
+            initialSelectedCaseID = initialCases[0].id
+        }
+        let initialSelectedCase = initialCases.first { $0.id == initialSelectedCaseID } ?? initialCases[0]
+        let initialSelectedSourceID: ReflectionSource.ID?
+        if let restoredSelectedSourceID = restored?.selectedSourceID,
+           initialSelectedCase.sources.contains(where: { $0.id == restoredSelectedSourceID }) {
+            initialSelectedSourceID = restoredSelectedSourceID
+        } else {
+            initialSelectedSourceID = initialSelectedCase.sources.first?.id
+        }
+
+        _cases = State(initialValue: initialCases)
+        _selectedCaseID = State(initialValue: initialSelectedCaseID)
+        _selectedSourceID = State(initialValue: initialSelectedSourceID)
+    }
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            HStack(spacing: 0) {
+                if isSidebarPresented {
+                    ReflectionSidebar(
+                        cases: cases,
+                        selectedCaseID: selectedCaseID,
+                        onSelect: selectCase,
+                        onCreate: createReflection,
+                        onDelete: deleteReflection
+                    )
+                    .frame(width: reflectionSidebarWidth)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                    .onHover { hovering in
+                        updateSidebarPeek(hovering)
+                    }
+
+                    ReflectionDivider()
+                }
+
+                HStack(spacing: 0) {
+                    ReflectionThreadView(
+                        reflectionCase: selectedCase,
+                        selectedLearningTraceID: $selectedLearningTraceID,
+                        draftText: $draftText,
+                        onSelectTrace: selectLearningTrace,
+                        onSubmit: submitMaterial
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    if isInspectorPresented {
+                        ReflectionDivider()
+                        ReflectionSourceInspector(
+                            reflectionCase: selectedCase,
+                            sources: selectedCase.sources,
+                            selectedSourceID: selectedSourceID,
+                            selectedSource: selectedSource,
+                            selectedTrace: selectedLearningTrace,
+                            onImport: importLocalSources,
+                            onOpenSource: openSelectedSourceInNativeApp,
+                            onSelect: { source in
+                                selectedSourceID = source.id
+                                if source.fileURL != nil {
+                                    openSourceInNativeApp(source)
+                                } else {
+                                    statusMessage = "Opened \(source.label)"
+                                }
+                            }
+                        )
+                        .frame(width: reflectionInspectorWidth)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                }
+                .background(LoomTokens.dsPaperDeep.ignoresSafeArea())
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            ReflectionTopBar(
+                reflectionCase: selectedCase,
+                nativeSource: nativeSource,
+                isSidebarPresented: isSidebarPresented,
+                isInspectorPresented: isInspectorPresented,
+                sourceCount: selectedCase.sources.count,
+                onToggleSidebar: toggleSidebar,
+                onToggleInspector: toggleInspector,
+                onOpenSourceInNativeApp: openSelectedSourceInNativeApp
+            )
+            .zIndex(1)
+
+            if shouldOverlaySidebar {
+                HStack(spacing: 0) {
+                    ReflectionSidebar(
+                        cases: cases,
+                        selectedCaseID: selectedCaseID,
+                        material: .centerOverlay,
+                        onSelect: selectCase,
+                        onCreate: createReflection,
+                        onDelete: deleteReflection
+                    )
+                    .frame(width: reflectionSidebarWidth)
+
+                    ReflectionDivider()
+                }
+                .frame(maxHeight: .infinity, alignment: .topLeading)
+                .transition(.move(edge: .leading).combined(with: .opacity))
+                .onHover { hovering in
+                    updateSidebarPeek(hovering)
+                }
+                .zIndex(0.75)
+            }
+
+            if !shouldShowSidebar {
+                ReflectionLeftEdgePeekZone()
+                    .frame(width: 18)
+                    .frame(maxHeight: .infinity)
+                    .onHover { hovering in
+                        if hovering {
+                            updateSidebarPeek(true)
+                        }
+                    }
+                    .zIndex(0.5)
+            }
+        }
+        .ignoresSafeArea(.container, edges: .top)
+        .background(LoomTokens.dsPaperDeep.ignoresSafeArea())
+        .background(
+            WindowConfigurator(
+                title: "Loom",
+                isNight: colorScheme == .dark,
+                contentExtendsUnderTitlebar: true,
+                removesSystemToolbar: true,
+                contentCornerRadius: 0,
+                usesFrameAutosave: false
+            )
+        )
+        .sheet(isPresented: Binding<Bool>(
+            get: { capturePayload != nil },
+            set: { if !$0 { capturePayload = nil } }
+        )) {
+            CaptureSheet(payload: $capturePayload, onSaved: handleCaptureSaved)
+        }
+        .onAppear {
+            consumePendingCapture()
+            consumePendingExternalFiles()
+            consumePendingExternalSelection()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in createReflection() }
+        .onReceive(NotificationCenter.default.publisher(for: .loomOpenExternalFiles)) { note in
+            let token = note.userInfo?["token"] as? UUID
+            if let token, token == lastHandledExternalFileToken {
+                LoomExternalFileOpenRelay.clear(ifToken: token)
+                return
+            }
+            guard let urls = note.userInfo?["urls"] as? [URL] else { return }
+            lastHandledExternalFileToken = token
+            openExternalFiles(urls)
+            if let token {
+                LoomExternalFileOpenRelay.clear(ifToken: token)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .loomCaptureExternalSelection)) { note in
+            guard let capture = note.userInfo?["capture"] as? LoomExternalSelectionCapture else { return }
+            if capture.token == lastHandledExternalSelectionToken {
+                LoomExternalSelectionCaptureRelay.clear(ifToken: capture.token)
+                return
+            }
+            lastHandledExternalSelectionToken = capture.token
+            handleExternalSelectionCapture(capture)
+            LoomExternalSelectionCaptureRelay.clear(ifToken: capture.token)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .loomShuttleNavigate)) { note in
+            let path = note.userInfo?["path"] as? String
+            if path == nil || path == "/" || path == "/reflection" {
+                statusMessage = "Reflection workspace"
+            } else if path == "/sources" {
+                statusMessage = "Sources are visible in the right pane"
+            } else if path == "/draft" || path == "/studio" {
+                statusMessage = "Drafting is downstream of reflection"
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .loomCaptureFromURL)) { note in
+            let token = note.userInfo?["token"] as? UUID
+            if let token, token == lastHandledCaptureToken { return }
+            lastHandledCaptureToken = token
+            handleCaptureRoute(CaptureURLRouter.route(userInfo: note.userInfo))
+        }
+    }
+
+    private func selectCase(_ reflectionCase: ReflectionCase) {
+        selectedCaseID = reflectionCase.id
+        selectedSourceID = reflectionCase.sources.first?.id
+        selectedLearningTraceID = nil
+        statusMessage = "Opened \(reflectionCase.title)"
+        persistWorkspace()
+    }
+
+    private func toggleSidebar() {
+        withAnimation(.easeInOut(duration: 0.18)) {
+            isSidebarPresented.toggle()
+            isSidebarPeeking = false
+        }
+    }
+
+    private func updateSidebarPeek(_ shouldPeek: Bool) {
+        guard !isSidebarPresented else { return }
+        withAnimation(.easeInOut(duration: 0.18)) {
+            isSidebarPeeking = shouldPeek
+        }
+    }
+
+    private func selectLearningTrace(_ trace: ReflectionLearningTrace) {
+        selectedLearningTraceID = trace.id
+        if let matchingSource = selectedCase.sources.first(where: { trace.matches(source: $0) }) {
+            selectedSourceID = matchingSource.id
+        }
+        statusMessage = "Inspecting \(trace.version) \(trace.versionTitle.lowercased())"
+    }
+
+    private func toggleInspector() {
+        withAnimation(.easeInOut(duration: 0.18)) {
+            isInspectorPresented.toggle()
+        }
+    }
+
+    private func createReflection() {
+        let next = ReflectionCase.blank()
+        cases.insert(next, at: 0)
+        selectedCaseID = next.id
+        selectedSourceID = nil
+        selectedLearningTraceID = nil
+        draftText = ""
+        statusMessage = "New reflection created"
+        persistWorkspace()
+    }
+
+    private func deleteReflection(_ reflectionCase: ReflectionCase) {
+        guard let index = cases.firstIndex(where: { $0.id == reflectionCase.id }) else { return }
+
+        let wasSelected = selectedCaseID == reflectionCase.id
+        withAnimation(.easeInOut(duration: 0.16)) {
+            cases.remove(at: index)
+            if cases.isEmpty {
+                cases = [ReflectionCase.blank()]
+            }
+        }
+
+        if wasSelected {
+            let nextIndex = min(index, cases.count - 1)
+            let nextCase = cases[nextIndex]
+            selectedCaseID = nextCase.id
+            selectedSourceID = nextCase.sources.first?.id
+            selectedLearningTraceID = nil
+            draftText = ""
+        }
+
+        statusMessage = "Deleted \(reflectionCase.title)"
+        persistWorkspace()
+    }
+
+    private func importLocalSources() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = true
+        panel.prompt = "Import"
+        panel.title = "Import local sources"
+        panel.allowedContentTypes = nativeFileImporterContentTypes()
+
+        guard panel.runModal() == .OK else { return }
+
+        let importedSources = panel.urls.map(Self.localSource)
+        guard !importedSources.isEmpty else { return }
+
+        let index = selectedIndex
+        let inputLines = importedSources.map { source in
+            "Imported local source: \(source.label). \(source.excerpt)"
+        }
+
+        cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+        if cases[index].status != "Memory ready" {
+            cases[index].status = "In reflection"
+        }
+        cases[index].sources.insert(contentsOf: importedSources, at: 0)
+        cases[index].steps[0].items.append(contentsOf: inputLines)
+        cases[index].messages.append(
+            ReflectionMessage(
+                role: .human,
+                eyebrow: "Imported source",
+                body: importedSources.count == 1
+                    ? "Imported \(importedSources[0].label) into Sources."
+                    : "Imported \(importedSources.count) local files into Sources."
+            )
+        )
+
+        selectedSourceID = importedSources[0].id
+        openSourcesInNativeApps(importedSources)
+        statusMessage = importedSources.count == 1
+            ? "Imported \(importedSources[0].label) and opened it in the native app"
+            : "Imported \(importedSources.count) local sources and opened them in native apps"
+        persistWorkspace()
+    }
+
+    private func submitMaterial() {
+        let material = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !material.isEmpty else { return }
+
+        let index = selectedIndex
+        if cases[index].project == "Learning pass" {
+            let sourceLabel = selectedLearningTrace?.sourceAnchor
+                ?? Self.latestLearningAnchor(in: cases[index])
+                ?? cases[index].sources.first?.label
+                ?? cases[index].title
+            cases[index].status = "Reading"
+            cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+            cases[index].steps[0].items.append(Self.manualLearningInputLine(material, sourceLabel: sourceLabel))
+            cases[index].messages.append(ReflectionMessage(role: .human, eyebrow: "Understanding version", body: material))
+            cases[index].messages.append(
+                ReflectionMessage(
+                    role: .loom,
+                    eyebrow: "Version committed",
+                    body: "Committed as a thinking version. Native file stays the source of truth; only confirmed principles become reusable memory."
+                )
+            )
+            refreshLearningSynthesis(for: index)
+            selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
+            draftText = ""
+            statusMessage = "Committed thinking version"
+            persistWorkspace()
+            return
+        }
+
+        cases[index].status = "In reflection"
+        cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+        cases[index].steps[0].items.append(material)
+        cases[index].messages.append(ReflectionMessage(role: .human, eyebrow: "New material", body: material))
+        cases[index].messages.append(
+            ReflectionMessage(
+                role: .loom,
+                eyebrow: "Loom reflection",
+                body: "Captured as input. Next useful move: name the assumption this material challenges."
+            )
+        )
+        draftText = ""
+        statusMessage = "Captured input"
+        persistWorkspace()
+    }
+
+    private func consumePendingCapture() {
+        guard let pending = LoomCaptureURLRelay.pending(),
+              pending.token != lastHandledCaptureToken else { return }
+        lastHandledCaptureToken = pending.token
+        handleCaptureRoute(CaptureURLRouter.route(url: pending.url))
+    }
+
+    private func consumePendingExternalFiles() {
+        for pending in LoomExternalFileOpenRelay.pendingEntries() {
+            if pending.token == lastHandledExternalFileToken {
+                LoomExternalFileOpenRelay.clear(ifToken: pending.token)
+                continue
+            }
+            lastHandledExternalFileToken = pending.token
+            openExternalFiles(pending.urls)
+            LoomExternalFileOpenRelay.clear(ifToken: pending.token)
+        }
+    }
+
+    private func consumePendingExternalSelection() {
+        for pending in LoomExternalSelectionCaptureRelay.pendingCaptures() {
+            if pending.token == lastHandledExternalSelectionToken {
+                LoomExternalSelectionCaptureRelay.clear(ifToken: pending.token)
+                continue
+            }
+            lastHandledExternalSelectionToken = pending.token
+            handleExternalSelectionCapture(pending)
+            LoomExternalSelectionCaptureRelay.clear(ifToken: pending.token)
+        }
+    }
+
+    private func openExternalFiles(_ urls: [URL]) {
+        let importedSources = urls
+            .filter { $0.isFileURL }
+            .map(Self.localSource)
+        guard !importedSources.isEmpty else { return }
+
+        let next = Self.learningCase(from: importedSources)
+        withAnimation(.easeInOut(duration: 0.16)) {
+            cases.insert(next, at: 0)
+        }
+        selectedCaseID = next.id
+        selectedSourceID = importedSources[0].id
+        selectedLearningTraceID = nil
+        draftText = ""
+        isSidebarPresented = false
+        isSidebarPeeking = false
+        isInspectorPresented = false
+        openSourcesInNativeApps(importedSources)
+        statusMessage = importedSources.count == 1
+            ? "Opened \(importedSources[0].label) in the native app; Loom is recording beside it"
+            : "Opened \(importedSources[0].label) and \(importedSources.count - 1) more files in native apps"
+        persistWorkspace()
+    }
+
+    private func openSourceInNativeApp(_ source: ReflectionSource) {
+        guard let url = source.fileURL else { return }
+        Self.openURLInPreferredNativeApp(url)
+        statusMessage = "Opened \(source.label) in the native app"
+    }
+
+    private func openSelectedSourceInNativeApp() {
+        guard let nativeSource else { return }
+        openSourceInNativeApp(nativeSource)
+    }
+
+    private func openSourcesInNativeApps(_ sources: [ReflectionSource]) {
+        for source in sources {
+            openSourceInNativeApp(source)
+        }
+    }
+
+    private static func openURLInPreferredNativeApp(_ url: URL) {
+        guard let applicationURL = preferredNativeApplicationURL(for: url)
+            ?? NSWorkspace.shared.urlForApplication(toOpen: url) else {
+            NSWorkspace.shared.open(url)
+            return
+        }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.open([url], withApplicationAt: applicationURL, configuration: configuration) { _, error in
+            guard error != nil else { return }
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    private static func preferredNativeApplicationURL(for url: URL) -> URL? {
+        let applicationPath: String?
+        switch url.pathExtension.lowercased() {
+        case "pdf":
+            applicationPath = "/System/Applications/Preview.app"
+        case "doc", "docx", "rtf", "rtfd":
+            applicationPath = "/Applications/Microsoft Word.app"
+        case "xls", "xlsx", "csv", "tsv":
+            applicationPath = "/Applications/Microsoft Excel.app"
+        default:
+            applicationPath = nil
+        }
+
+        guard let applicationPath else { return nil }
+        let applicationURL = URL(fileURLWithPath: applicationPath)
+        return FileManager.default.fileExists(atPath: applicationURL.path) ? applicationURL : nil
+    }
+
+    private func handleExternalSelectionCapture(_ capture: LoomExternalSelectionCapture) {
+        let importedSources = capture.fileURLs
+            .filter { $0.isFileURL }
+            .map(Self.localSource)
+        let sessionSources = importedSources.isEmpty
+            ? [Self.nativeSessionSource(from: capture)].compactMap { $0 }
+            : []
+        let candidateSources = importedSources + sessionSources
+
+        if let primarySource = candidateSources.first {
+                if let existingCaseIndex = Self.existingLearningCaseIndex(
+                for: primarySource,
+                in: cases
+            ) {
+                selectedCaseID = cases[existingCaseIndex].id
+                if let matchingSource = cases[existingCaseIndex].sources.first(where: { source in
+                    Self.sourceDeduplicationKey(source) == Self.sourceDeduplicationKey(primarySource)
+                }) {
+                    selectedSourceID = matchingSource.id
+                }
+            } else {
+                let next = Self.learningCase(from: candidateSources)
+                withAnimation(.easeInOut(duration: 0.16)) {
+                    cases.insert(next, at: 0)
+                }
+                selectedCaseID = next.id
+                selectedSourceID = candidateSources[0].id
+                selectedLearningTraceID = nil
+            }
+        } else if selectedCase.sources.isEmpty, !candidateSources.isEmpty {
+            let next = Self.learningCase(from: candidateSources)
+            withAnimation(.easeInOut(duration: 0.16)) {
+                cases.insert(next, at: 0)
+            }
+            selectedCaseID = next.id
+            selectedSourceID = candidateSources[0].id
+            selectedLearningTraceID = nil
+        }
+
+        let index = selectedIndex
+        let existingSourceKeys = Set(cases[index].sources.map(Self.sourceDeduplicationKey))
+        let newSources = candidateSources.filter { source in
+            !existingSourceKeys.contains(Self.sourceDeduplicationKey(source))
+        }
+        if !newSources.isEmpty {
+            cases[index].sources.insert(contentsOf: newSources, at: 0)
+            selectedSourceID = newSources[0].id
+        }
+
+        let captureKind = Self.captureKind(for: capture)
+        let inferredAnchor = Self.inferPDFAnchor(
+            for: capture,
+            sources: cases[index].sources + newSources
+        )
+        if let inferredSourceID = inferredAnchor?.sourceID {
+            selectedSourceID = inferredSourceID
+        }
+
+        let sourceLabel = inferredAnchor?.label
+            ?? Self.nativeContextAnchoredSourceLabel(for: capture, kind: captureKind)
+            ?? Self.windowAnchoredSourceLabel(for: capture, kind: captureKind)
+            ?? nativeSource?.label
+            ?? newSources.first?.label
+            ?? capture.sourceApp
+            ?? "native file"
+        let learningFocus = Self.learningFocus(for: capture, kind: captureKind)
+        let inputLine = Self.selectionInputLine(
+            capture: capture,
+            sourceLabel: sourceLabel,
+            kind: captureKind,
+            focus: learningFocus
+        )
+
+        let inputFingerprint = reflectionLearningInputFingerprint(inputLine)
+        if let existingInputIndex = cases[index].steps[0].items.firstIndex(where: {
+            reflectionLearningInputFingerprint($0) == inputFingerprint
+        }) {
+            let existingInputLine = cases[index].steps[0].items[existingInputIndex]
+            if Self.shouldPromoteLearningInputAnchor(existingInputLine, candidate: inputLine) {
+                cases[index].steps[0].items[existingInputIndex] = inputLine
+                cases[index].messages.append(
+                    ReflectionMessage(
+                        role: .human,
+                        eyebrow: "Learning trace",
+                        body: Self.selectionMessageBody(
+                            capture: capture,
+                            sourceLabel: sourceLabel,
+                            kind: captureKind,
+                            focus: learningFocus
+                        )
+                    )
+                )
+            }
+            cases[index].status = "Reading"
+            cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+            refreshLearningSynthesis(for: index)
+            selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
+            draftText = ""
+            isSidebarPresented = false
+            isSidebarPeeking = false
+            isInspectorPresented = false
+            statusMessage = "Captured selected text from the native app"
+            persistWorkspace()
+            return
+        }
+
+        cases[index].status = "Reading"
+        cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+        cases[index].steps[0].items.append(inputLine)
+        cases[index].messages.append(
+            ReflectionMessage(
+                role: .human,
+                eyebrow: "Learning trace",
+                body: Self.selectionMessageBody(
+                    capture: capture,
+                    sourceLabel: sourceLabel,
+                    kind: captureKind,
+                    focus: learningFocus
+                )
+            )
+        )
+        refreshLearningSynthesis(for: index)
+        selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
+        draftText = ""
+        isSidebarPresented = false
+        isSidebarPeeking = false
+        isInspectorPresented = false
+        statusMessage = "Captured selected text from the native app"
+        persistWorkspace()
+    }
+
+    private func refreshLearningSynthesis(for index: Int) {
+        guard cases.indices.contains(index),
+              cases[index].project == "Learning pass" else { return }
+
+        let synthesis = ReflectionLearningSynthesis.make(for: cases[index])
+        guard !synthesis.isEmpty else { return }
+
+        appendUniqueStepItems(synthesis.assumptions, to: "assumption", caseIndex: index)
+        appendUniqueStepItems(synthesis.decisions, to: "decision", caseIndex: index)
+        appendUniqueStepItems(synthesis.outcomes, to: "outcome", caseIndex: index)
+        appendUniqueStepItems(synthesis.reflections, to: "reflection", caseIndex: index)
+        appendUniqueStepItems(synthesis.memories, to: "memory", caseIndex: index)
+
+        cases[index].status = "Second pass ready"
+        if !cases[index].messages.contains(where: { $0.body.contains("Second-pass synthesis prepared") }) {
+            cases[index].messages.append(
+                ReflectionMessage(
+                    role: .loom,
+                    eyebrow: "Second pass",
+                    body: "Second-pass synthesis prepared from understanding versions. Review the changes before promoting any confirmed principle into memory."
+                )
+            )
+        }
+    }
+
+    private func appendUniqueStepItems(_ items: [String], to stepID: String, caseIndex: Int) {
+        guard let stepIndex = cases[caseIndex].steps.firstIndex(where: { $0.id == stepID }) else { return }
+        for item in items where !cases[caseIndex].steps[stepIndex].items.contains(item) {
+            cases[caseIndex].steps[stepIndex].items.append(item)
+        }
+    }
+
+    private func persistWorkspace() {
+        ReflectionWorkspaceStore.save(
+            cases: cases,
+            selectedCaseID: selectedCaseID,
+            selectedSourceID: selectedSourceID
+        )
+    }
+
+    private func handleCaptureRoute(_ outcome: CaptureURLRouteOutcome) {
+        switch outcome {
+        case .openCapture(let payload):
+            startWebCapture(payload)
+        case .decodeFailed, .emptyPayload:
+            statusMessage = outcome.failureToast ?? "Capture failed"
+        }
+    }
+
+    private func startWebCapture(_ payload: CaptureWebPayload) {
+        let anchors = CaptureAnchorResolver.resolveForWebCapture(payload, preferredRootID: nil)
+        guard let primary = anchors.first else {
+            statusMessage = "Open a local source folder before capture"
+            return
+        }
+        capturePayload = CapturePayload.makeFromWebPayload(payload, anchor: primary, available: anchors)
+        statusMessage = "Capture ready"
+    }
+
+    private func handleCaptureSaved(_ url: URL) {
+        let folder = url.deletingLastPathComponent().lastPathComponent
+        statusMessage = "Captured to \(folder)"
+        NotificationCenter.default.post(name: .loomCaptureSaved, object: nil)
+        NotificationCenter.default.post(name: .loomRefreshActivePage, object: nil)
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
+    private static func localSource(from url: URL) -> ReflectionSource {
+        let ext = url.pathExtension.lowercased()
+        let kind = ext.isEmpty ? "local file" : ext
+        let size = localFileSize(url: url)
+        let excerpt = localFileExcerpt(url: url, kind: kind, size: size)
+
+        return ReflectionSource(
+            folder: "Input",
+            label: url.lastPathComponent,
+            kind: kind,
+            meta: size,
+            excerpt: excerpt,
+            fileURL: url
+        )
+    }
+
+    private static func nativeSessionSource(from capture: LoomExternalSelectionCapture) -> ReflectionSource? {
+        let kind = captureKind(for: capture)
+        let label = nativeContextSourceTitle(for: capture)
+            ?? nativeSessionLabel(from: capture.sourceWindowTitle, kind: kind)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallbackLabel = capture.sourceApp.map { "\($0) selection" }
+        let sourceLabel = [label, fallbackLabel]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { !$0.isEmpty }
+        guard let sourceLabel else { return nil }
+
+        let appName = capture.sourceApp ?? "native app"
+        return ReflectionSource(
+            folder: "Input",
+            label: sourceLabel,
+            kind: kind.sourceKind,
+            meta: appName,
+            excerpt: "Native selection captured from \(appName). Original file remains in the source app.",
+            fileURL: nil
+        )
+    }
+
+    private static func existingLearningCaseIndex(
+        for source: ReflectionSource,
+        in cases: [ReflectionCase]
+    ) -> Int? {
+        let sourceKey = sourceDeduplicationKey(source)
+        return cases.firstIndex { reflectionCase in
+            reflectionCase.title == source.label
+                || reflectionCase.sources.contains { candidate in
+                    sourceDeduplicationKey(candidate) == sourceKey
+                }
+        }
+    }
+
+    private static func sourceDeduplicationKey(_ source: ReflectionSource) -> String {
+        if let path = source.fileURL?.standardizedFileURL.path {
+            return "file:\(path)"
+        }
+        return "session:\(source.kind):\(source.label.lowercased())"
+    }
+
+    private static func learningCase(from sources: [ReflectionSource]) -> ReflectionCase {
+        let primary = sources[0]
+        let extraCount = max(0, sources.count - 1)
+        let fileOpeningLine = extraCount == 0
+            ? "Opened original file for learning: \(primary.label)."
+            : "Opened original file for learning: \(primary.label), plus \(extraCount) related files."
+        var steps = ReflectionStep.blankWorkflow()
+        steps[0].items = [
+            fileOpeningLine,
+            "First language pass: keep the original file surface primary and capture vocabulary, pronunciation, phrases, sentence meaning, grammar, questions, concepts, and page context as anchored traces."
+        ]
+        steps[5].title = "Principle"
+        steps[5].subtitle = "What can become reusable thinking"
+
+        return ReflectionCase(
+            id: UUID().uuidString,
+            title: primary.label,
+            project: "Learning pass",
+            status: "Reading",
+            updatedAt: Self.timeFormatter.string(from: Date()),
+            summary: "Original file remains primary. Loom records anchored learning traces around this document.",
+            tags: ["learning", "sidecar", primary.kind],
+            sources: sources,
+            steps: steps,
+            messages: [
+                ReflectionMessage(
+                    role: .loom,
+                    eyebrow: "Loom sidecar",
+                    body: "Use native file tools first. Capture only selected words, phrases, questions, corrections, or principles that change your understanding."
+                )
+            ]
+        )
+    }
+
+    private static func selectionInputLine(
+        capture: LoomExternalSelectionCapture,
+        sourceLabel: String,
+        kind: ReflectionCaptureKind,
+        focus: ReflectionLearningFocus
+    ) -> String {
+        let selectedText = clippedSelectionText(capture.text)
+        let evidence = selectionEvidenceLine(capture: capture, kind: kind)
+        if selectedText.isEmpty {
+            return "Captured \(kind.emptyInputNoun) from \(sourceLabel) [\(focus.label)].\n\(evidence)"
+        }
+        return "Captured \(kind.inputNoun(for: capture.text)) from \(sourceLabel) [\(focus.label)]: \(selectedText)\n\(evidence)"
+    }
+
+    private static func selectionEvidenceLine(
+        capture: LoomExternalSelectionCapture,
+        kind: ReflectionCaptureKind
+    ) -> String {
+        let fileNames = capture.fileURLs
+            .filter { $0.isFileURL }
+            .map(\.lastPathComponent)
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+        let anchorPrecision = selectionAnchorPrecision(capture: capture, kind: kind)
+        let pairs: [(String, String?)] = [
+            ("app", capture.sourceApp ?? "native macOS app"),
+            ("window", capture.sourceWindowTitle),
+            ("kind", kind.sourceKind),
+            ("file", fileNames.isEmpty ? nil : fileNames),
+            ("bundle", capture.sourceBundleIdentifier),
+            ("anchor precision", anchorPrecision),
+            ("evidence rung", selectionEvidenceRung(for: anchorPrecision)),
+            ("anchor note", selectionAnchorNote(for: anchorPrecision)),
+            ("fallback note", selectionFallbackNote(for: anchorPrecision)),
+            ("captured at", ISO8601DateFormatter().string(from: capture.capturedAt))
+        ] + nativeContextEvidencePairs(capture.nativeContext)
+
+        let body = pairs.compactMap { label, value -> String? in
+            guard let cleaned = value?
+                .replacingOccurrences(of: "\n", with: " ")
+                .replacingOccurrences(of: ";", with: ",")
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+                  !cleaned.isEmpty else {
+                return nil
+            }
+            return "\(label)=\(cleaned)"
+        }
+        .joined(separator: "; ")
+
+        return "Evidence: \(body)"
+    }
+
+    private static func selectionAnchorPrecision(
+        capture: LoomExternalSelectionCapture,
+        kind: ReflectionCaptureKind
+    ) -> String {
+        if let precision = capture.nativeContext?.anchorPrecision,
+           !precision.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return precision
+        }
+        if !capture.fileURLs.filter(\.isFileURL).isEmpty {
+            return "file"
+        }
+        if kind == .pdf,
+           let windowTitle = capture.sourceWindowTitle,
+           pdfPageNumber(from: windowTitle) != nil {
+            return "window+page"
+        }
+        if capture.sourceWindowTitle != nil {
+            return "window+time"
+        }
+        if capture.sourceApp != nil || capture.sourceBundleIdentifier != nil {
+            return "app+time"
+        }
+        return "unknown"
+    }
+
+    private static func selectionAnchorNote(for precision: String) -> String? {
+        switch precision.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "window+page":
+            return "medium: page inferred from window title"
+        case "window+time", "app+time":
+            return "weak: precise file, page, or cell unavailable"
+        case "unknown":
+            return "weak: source app unavailable"
+        default:
+            return nil
+        }
+    }
+
+    private static func selectionEvidenceRung(for precision: String) -> String {
+        switch precision.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "file+cell":
+            return "selected text + file + cell"
+        case "file+page":
+            return "selected text + file + page"
+        case "file":
+            return "selected text + file"
+        case "window+page":
+            return "selected text + window + page"
+        case "window", "window+time":
+            return "selected text + window + time"
+        case "app", "app+time":
+            return "selected text + app + time"
+        default:
+            return "selected text only"
+        }
+    }
+
+    private static func selectionFallbackNote(for precision: String) -> String? {
+        switch precision.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "file+cell", "file+page", "file":
+            return nil
+        case "window+page":
+            return "verify source file before promoting this capture"
+        case "window", "window+time", "app", "app+time", "unknown":
+            return "use appshot, OCR, Vision, or manual confirmation before promoting"
+        default:
+            return "label precision before promoting"
+        }
+    }
+
+    private static func shouldPromoteLearningInputAnchor(_ existing: String, candidate: String) -> Bool {
+        candidate.range(of: #", page \d+"#, options: .regularExpression) != nil
+            && existing.range(of: #", page \d+"#, options: .regularExpression) == nil
+    }
+
+    private static func nativeSessionLabel(from windowTitle: String?, kind: ReflectionCaptureKind) -> String? {
+        guard let windowTitle else { return nil }
+        if kind == .pdf, let documentTitle = pdfDocumentTitle(from: windowTitle) {
+            return documentTitle
+        }
+        return windowTitle
+    }
+
+    private static func nativeContextSourceTitle(for capture: LoomExternalSelectionCapture) -> String? {
+        capture.nativeContext?.documentURL?.lastPathComponent
+            ?? capture.nativeContext?.documentTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func nativeContextAnchoredSourceLabel(
+        for capture: LoomExternalSelectionCapture,
+        kind: ReflectionCaptureKind
+    ) -> String? {
+        guard let context = capture.nativeContext else { return nil }
+        let title = nativeContextSourceTitle(for: capture)
+            ?? nativeSessionLabel(from: capture.sourceWindowTitle, kind: kind)
+            ?? capture.sourceApp
+        guard let title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+
+        if kind == .spreadsheet {
+            let sheetPrefix = context.sheetName.map { "\($0)!" } ?? ""
+            if let cellRange = context.cellRange {
+                return "\(title), \(sheetPrefix)\(cellRange)"
+            }
+        }
+
+        if let page = context.pageNumber {
+            return "\(title), page \(page)"
+        }
+
+        return title
+    }
+
+    private static func windowAnchoredSourceLabel(
+        for capture: LoomExternalSelectionCapture,
+        kind: ReflectionCaptureKind
+    ) -> String? {
+        guard kind == .pdf else { return capture.sourceWindowTitle }
+        guard let windowTitle = capture.sourceWindowTitle,
+              let documentTitle = pdfDocumentTitle(from: windowTitle) else {
+            return capture.sourceWindowTitle
+        }
+        guard let page = pdfPageNumber(from: windowTitle) else {
+            return documentTitle
+        }
+        return "\(documentTitle), page \(page)"
+    }
+
+    private static func nativeContextEvidencePairs(_ context: LoomNativeSourceContext?) -> [(String, String?)] {
+        guard let context else { return [] }
+        let page = context.pageNumber.map { pageNumber in
+            if let pageCount = context.pageCount {
+                return "\(pageNumber) of \(pageCount)"
+            }
+            return "\(pageNumber)"
+        }
+
+        return [
+            ("path", context.documentURL?.path),
+            ("page", page),
+            ("sheet", context.sheetName),
+            ("cell", context.cellRange),
+            ("role", context.selectedRole)
+        ]
+    }
+
+    private static func manualLearningInputLine(_ material: String, sourceLabel: String) -> String {
+        "Captured user trace from \(sourceLabel) [\(manualLearningFocus(for: material))]: \(clippedSelectionText(material))"
+    }
+
+    private static func manualLearningFocus(for material: String) -> String {
+        let trimmed = material.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lowercased = trimmed.lowercased()
+
+        if lowercased.hasPrefix("principle:")
+            || lowercased.hasPrefix("principle：")
+            || lowercased.hasPrefix("memory:")
+            || lowercased.hasPrefix("memory：")
+            || lowercased.hasPrefix("原则")
+            || lowercased.hasPrefix("记忆") {
+            return "principle"
+        }
+
+        if lowercased.hasPrefix("correction:")
+            || lowercased.hasPrefix("correction：")
+            || lowercased.hasPrefix("correct:")
+            || lowercased.hasPrefix("correct：")
+            || lowercased.hasPrefix("修正")
+            || lowercased.hasPrefix("纠正") {
+            return "correction"
+        }
+
+        if lowercased.hasPrefix("question:")
+            || lowercased.hasPrefix("question：")
+            || lowercased.hasPrefix("问题")
+            || trimmed.contains("?")
+            || trimmed.contains("？") {
+            return "question"
+        }
+
+        return "user meaning"
+    }
+
+    private static func latestLearningAnchor(in reflectionCase: ReflectionCase) -> String? {
+        ReflectionLearningTrace.from(reflectionCase)
+            .reversed()
+            .first { trace in
+                trace.isLanguageSelection || trace.isDataOrDocumentSelection
+            }?
+            .sourceAnchor
+    }
+
+    private static func selectionMessageBody(
+        capture: LoomExternalSelectionCapture,
+        sourceLabel: String,
+        kind: ReflectionCaptureKind,
+        focus: ReflectionLearningFocus
+    ) -> String {
+        let selectedText = clippedSelectionText(capture.text)
+        let appLine = capture.sourceApp.map { "Source app: \($0)" } ?? "Source app: native macOS app"
+        let windowLine = capture.sourceWindowTitle.map { "Window: \($0)" }
+        let traceLine = "Trace type: \(kind.traceType(for: capture.text))"
+        let passLine = "Pass: \(focus.passLabel)"
+        let focusLine = "Learning focus: \(focus.label)"
+        let statusLine = "Meaning status: needs user confirmation"
+        let secondPassLine = "Second pass: not synthesized yet"
+        let contextLines = ([appLine, windowLine, "Source: \(sourceLabel)", passLine, focusLine, statusLine, secondPassLine, traceLine] as [String?])
+            .compactMap { $0 }
+            .joined(separator: "\n")
+        if selectedText.isEmpty {
+            return contextLines
+        }
+        return "\(contextLines)\n\n\(selectedText)"
+    }
+
+    private static func learningFocus(
+        for capture: LoomExternalSelectionCapture,
+        kind: ReflectionCaptureKind
+    ) -> ReflectionLearningFocus {
+        ReflectionLearningFocus.infer(kind: kind, text: capture.text)
+    }
+
+    private enum ReflectionLearningFocus {
+        case vocabulary
+        case phrase
+        case sentence
+        case passage
+        case data
+        case document
+        case slide
+        case text
+        case file
+
+        var label: String {
+            switch self {
+            case .vocabulary:
+                return "vocabulary / term"
+            case .phrase:
+                return "phrase meaning"
+            case .sentence:
+                return "sentence meaning"
+            case .passage:
+                return "passage meaning"
+            case .data:
+                return "data meaning"
+            case .document:
+                return "document meaning"
+            case .slide:
+                return "slide meaning"
+            case .text:
+                return "text meaning"
+            case .file:
+                return "file context"
+            }
+        }
+
+        var passLabel: String {
+            switch self {
+            case .vocabulary, .phrase, .sentence, .passage:
+                return "first language pass"
+            case .data:
+                return "data reading pass"
+            case .document, .slide, .text, .file:
+                return "source comprehension pass"
+            }
+        }
+
+        static func infer(kind: ReflectionCaptureKind, text: String) -> ReflectionLearningFocus {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                return .file
+            }
+
+            switch kind {
+            case .pdf:
+                return inferPDFTextFocus(trimmed)
+            case .spreadsheet:
+                return .data
+            case .document:
+                return .document
+            case .presentation:
+                return .slide
+            case .text:
+                return .text
+            case .file:
+                return .text
+            }
+        }
+
+        private static func inferPDFTextFocus(_ text: String) -> ReflectionLearningFocus {
+            let words = text.split(whereSeparator: { $0.isWhitespace })
+            let hasSentencePunctuation = text.rangeOfCharacter(from: CharacterSet(charactersIn: ".!?;:。！？；：")) != nil
+
+            if words.count <= 1 {
+                return .vocabulary
+            }
+            if words.count <= 5, !hasSentencePunctuation {
+                return .phrase
+            }
+            if words.count <= 35 {
+                return .sentence
+            }
+            return .passage
+        }
+    }
+
+    private struct ReflectionLearningSynthesis {
+        var assumptions: [String]
+        var decisions: [String]
+        var outcomes: [String]
+        var reflections: [String]
+        var memories: [String]
+
+        var isEmpty: Bool {
+            assumptions.isEmpty
+                && decisions.isEmpty
+                && outcomes.isEmpty
+                && reflections.isEmpty
+                && memories.isEmpty
+        }
+
+        static func make(for reflectionCase: ReflectionCase) -> ReflectionLearningSynthesis {
+            let traces = LearningTrace.from(reflectionCase)
+            guard !traces.isEmpty else {
+                return ReflectionLearningSynthesis(
+                    assumptions: [],
+                    decisions: [],
+                    outcomes: [],
+                    reflections: [],
+                    memories: []
+                )
+            }
+
+            let sourceLabel = reflectionCase.sources.first?.label ?? reflectionCase.title
+            let focusSummary = focusCounts(from: traces)
+            let samples = sampleLines(from: traces)
+            let confirmedPrinciple = traces.last { $0.focus == "principle" }
+
+            var reflections = samples
+            reflections.append("Second-pass synthesis: compare versions, correct meanings, then separate language understanding from domain knowledge.")
+
+            return ReflectionLearningSynthesis(
+                assumptions: [
+                    "First-pass learning is not final understanding; raw captures need review before they become reusable thinking."
+                ],
+                decisions: [
+                    "Kept the original file surface primary and used Loom only to commit anchored traces from \(sourceLabel)."
+                ],
+                outcomes: [
+                    "Captured \(traces.count) anchored learning trace\(traces.count == 1 ? "" : "s") from \(sourceLabel): \(focusSummary)."
+                ],
+                reflections: reflections,
+                memories: confirmedPrinciple.map { ["Principle candidate: \($0.text)"] } ?? []
+            )
+        }
+
+        private static func focusCounts(from traces: [LearningTrace]) -> String {
+            let grouped = Dictionary(grouping: traces, by: \.focus)
+            return grouped.keys.sorted().map { focus in
+                let count = grouped[focus]?.count ?? 0
+                return "\(count) \(focus)"
+            }
+            .joined(separator: ", ")
+        }
+
+        private static func sampleLines(from traces: [LearningTrace]) -> [String] {
+            traces.prefix(4).map { trace in
+                reviewLine(for: trace)
+            }
+        }
+
+        private static func reviewLine(for trace: LearningTrace) -> String {
+            switch trace.focus {
+            case "user meaning":
+                return "User-confirmed meaning: \(confirmedText(from: trace.text))"
+            case "question":
+                return "Question to resolve: \(trace.text)"
+            case "correction":
+                return "Correction applied: \(trace.text)"
+            default:
+                return "\(confirmationLabel(for: trace.focus)) to review: \(trace.text)"
+            }
+        }
+
+        private static func confirmationLabel(for focus: String) -> String {
+            guard let first = focus.first else { return focus }
+            return first.uppercased() + focus.dropFirst()
+        }
+
+        private static func confirmedText(from text: String) -> String {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            for prefix in ["Meaning confirmed:", "Meaning confirmed", "Confirmed:", "Confirmed"] {
+                if trimmed.range(of: prefix, options: [.anchored, .caseInsensitive]) != nil {
+                    let index = trimmed.index(trimmed.startIndex, offsetBy: prefix.count)
+                    return String(trimmed[index...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+            return trimmed
+        }
+
+        private struct LearningTrace {
+            let focus: String
+            let text: String
+
+            static func from(_ reflectionCase: ReflectionCase) -> [LearningTrace] {
+                let inputItems = reflectionCase.steps.first { $0.id == "input" }?.items ?? []
+                return inputItems.compactMap(parse)
+            }
+
+            private static func parse(_ item: String) -> LearningTrace? {
+                guard item.hasPrefix("Captured "),
+                      let focusStart = item.firstIndex(of: "["),
+                      let focusEnd = item[focusStart...].firstIndex(of: "]") else {
+                    return nil
+                }
+
+                let focus = String(item[item.index(after: focusStart)..<focusEnd])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !focus.isEmpty else { return nil }
+
+                let afterFocus = item[item.index(after: focusEnd)...]
+                let text: String
+                if afterFocus.hasPrefix(":") {
+                    text = String(afterFocus.dropFirst())
+                } else {
+                    text = String(afterFocus)
+                }
+                let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmedText.isEmpty else { return nil }
+
+                return LearningTrace(
+                    focus: focus,
+                    text: LoomReflectionRootView.clippedSelectionText(trimmedText, maxLength: 180)
+                )
+            }
+        }
+    }
+
+    private enum ReflectionCaptureKind: Equatable {
+        case pdf
+        case document
+        case spreadsheet
+        case presentation
+        case text
+        case file
+
+        var sourceKind: String {
+            switch self {
+            case .pdf:
+                return "pdf"
+            case .document:
+                return "document"
+            case .spreadsheet:
+                return "spreadsheet"
+            case .presentation:
+                return "presentation"
+            case .text:
+                return "text"
+            case .file:
+                return "native"
+            }
+        }
+
+        func inputNoun(for text: String) -> String {
+            switch self {
+            case .pdf:
+                return "PDF passage"
+            case .document:
+                return "document selection"
+            case .spreadsheet:
+                return Self.hasTabularSelection(text) ? "spreadsheet cells" : "spreadsheet selection"
+            case .presentation:
+                return "slide selection"
+            case .text:
+                return "text selection"
+            case .file:
+                return "native selection"
+            }
+        }
+
+        var emptyInputNoun: String {
+            switch self {
+            case .pdf:
+                return "PDF context"
+            case .document:
+                return "document context"
+            case .spreadsheet:
+                return "spreadsheet context"
+            case .presentation:
+                return "slide context"
+            case .text:
+                return "text file context"
+            case .file:
+                return "native file context"
+            }
+        }
+
+        func traceType(for text: String) -> String {
+            switch self {
+            case .pdf:
+                return "PDF passage"
+            case .document:
+                return "document selection"
+            case .spreadsheet:
+                return Self.hasTabularSelection(text) ? "spreadsheet cells" : "spreadsheet selection"
+            case .presentation:
+                return "slide selection"
+            case .text:
+                return "text selection"
+            case .file:
+                return text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "file context" : "native selection"
+            }
+        }
+
+        static func infer(from capture: LoomExternalSelectionCapture) -> ReflectionCaptureKind {
+            if let url = capture.fileURLs.first {
+                return infer(fromExtension: url.pathExtension)
+            }
+
+            let appName = (capture.sourceApp ?? "").lowercased()
+            if appName.contains("preview") { return .pdf }
+            if appName.contains("word") || appName.contains("pages") { return .document }
+            if appName.contains("excel") || appName.contains("numbers") { return .spreadsheet }
+            if appName.contains("powerpoint") || appName.contains("keynote") { return .presentation }
+            return .file
+        }
+
+        private static func infer(fromExtension value: String?) -> ReflectionCaptureKind {
+            switch value?.lowercased() {
+            case "pdf":
+                return .pdf
+            case "doc", "docx", "pages", "rtf", "rtfd":
+                return .document
+            case "xls", "xlsx", "csv", "tsv", "numbers":
+                return .spreadsheet
+            case "ppt", "pptx", "key":
+                return .presentation
+            case "txt", "md", "mdx", "markdown", "json", "xml", "html", "htm":
+                return .text
+            default:
+                return .file
+            }
+        }
+
+        private static func hasTabularSelection(_ text: String) -> Bool {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.contains("\t") || trimmed.split(whereSeparator: \.isNewline).count > 1
+        }
+    }
+
+    private static func captureKind(for capture: LoomExternalSelectionCapture) -> ReflectionCaptureKind {
+        ReflectionCaptureKind.infer(from: capture)
+    }
+
+    private static func clippedSelectionText(_ text: String, maxLength: Int = 900) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > maxLength else { return trimmed }
+        let end = trimmed.index(trimmed.startIndex, offsetBy: maxLength)
+        return String(trimmed[..<end]) + "..."
+    }
+
+    private static func inferPDFAnchor(
+        for capture: LoomExternalSelectionCapture,
+        sources: [ReflectionSource]
+    ) -> ReflectionSourceAnchor? {
+        let query = normalizedAnchorText(capture.text)
+        guard !query.isEmpty else { return nil }
+
+        for source in sources {
+            guard let url = source.fileURL,
+                  url.pathExtension.lowercased() == "pdf",
+                  let document = PDFDocument(url: url) else { continue }
+
+            for pageIndex in 0..<document.pageCount {
+                guard let pageText = document.page(at: pageIndex)?.string else { continue }
+                if normalizedAnchorText(pageText).contains(query) {
+                    return ReflectionSourceAnchor(
+                        label: "\(source.label), page \(pageIndex + 1)",
+                        sourceID: source.id
+                    )
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func pdfDocumentTitle(from windowTitle: String) -> String? {
+        var title = windowTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { return nil }
+        let pageSuffixPatterns = [
+            #"[\s\p{Zs}]+[–—-][\s\p{Zs}]+Page[\s\p{Zs}]+\d+[\s\p{Zs}]+of[\s\p{Zs}]+\d+.*$"#,
+            #"[\s\p{Zs}]+Page[\s\p{Zs}]+\d+[\s\p{Zs}]+of[\s\p{Zs}]+\d+.*$"#
+        ]
+        for pattern in pageSuffixPatterns {
+            title = title.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+        }
+        return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? nil
+            : title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func pdfPageNumber(from windowTitle: String) -> Int? {
+        let pattern = #"Page[\s\p{Zs}]+(\d+)[\s\p{Zs}]+of[\s\p{Zs}]+\d+"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(windowTitle.startIndex..<windowTitle.endIndex, in: windowTitle)
+        guard let match = regex.firstMatch(in: windowTitle, range: range),
+              match.numberOfRanges > 1,
+              let pageRange = Range(match.range(at: 1), in: windowTitle) else {
+            return nil
+        }
+        return Int(windowTitle[pageRange])
+    }
+
+    private static func normalizedAnchorText(_ text: String) -> String {
+        let normalized = text
+            .lowercased()
+            .unicodeScalars
+            .compactMap { scalar -> Character? in
+                CharacterSet.alphanumerics.contains(scalar) ? Character(scalar) : nil
+            }
+        return String(normalized)
+    }
+
+    private static func localFileSize(url: URL) -> String {
+        guard let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size]) as? NSNumber else {
+            return "local"
+        }
+
+        let bytes = size.doubleValue
+        if bytes < 1024 {
+            return "\(Int(bytes)) B"
+        }
+        if bytes < 1024 * 1024 {
+            return "\(Double(round((bytes / 1024) * 10) / 10)) KB"
+        }
+        return "\(Double(round((bytes / 1024 / 1024) * 10) / 10)) MB"
+    }
+
+    private static func localFileExcerpt(url: URL, kind: String, size: String) -> String {
+        let textKinds: Set<String> = [
+            "txt", "md", "mdx", "markdown", "csv", "json", "html", "htm", "css",
+            "js", "jsx", "ts", "tsx", "swift", "py", "rb", "java", "c", "cpp",
+            "h", "hpp", "go", "rs", "sql", "yaml", "yml", "xml", "rtf"
+        ]
+
+        if textKinds.contains(kind),
+           let data = readPreviewBytes(from: url),
+           let text = String(data: data.prefix(48_000), encoding: .utf8) {
+            let excerpt = text
+                .components(separatedBy: .whitespacesAndNewlines)
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            if !excerpt.isEmpty {
+                return String(excerpt.prefix(520))
+            }
+        }
+
+        return "Imported local file. Type: \(kind); size: \(size)."
+    }
+
+    private static func readPreviewBytes(from url: URL) -> Data? {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? handle.close() }
+        return try? handle.read(upToCount: 48_000)
+    }
+}
+
+private struct ReflectionLeftEdgePeekZone: View {
+    var body: some View {
+        Rectangle()
+            .fill(Color.white.opacity(0.001))
+            .contentShape(Rectangle())
+            .help("Hover to peek sidebar")
+    }
+}
+
+private struct ReflectionTopBar: View {
+    let reflectionCase: ReflectionCase
+    let nativeSource: ReflectionSource?
+    let isSidebarPresented: Bool
+    let isInspectorPresented: Bool
+    let sourceCount: Int
+    let onToggleSidebar: () -> Void
+    let onToggleInspector: () -> Void
+    let onOpenSourceInNativeApp: () -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Spacer().frame(width: reflectionTrafficLightClearance)
+                sidebarButton
+                Spacer(minLength: 0)
+            }
+            .frame(width: isSidebarPresented ? reflectionSidebarWidth : reflectionTrafficLightClearance + 36)
+
+            HStack(spacing: 10) {
+                Image(systemName: "bubble.left.and.text.bubble.right")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(LoomTokens.dsInk3)
+
+                Text(reflectionCase.title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsInk1)
+                    .lineLimit(1)
+
+                Text(reflectionCase.status)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(LoomTokens.dsSuccess)
+                    .lineLimit(1)
+
+                Label("\(sourceCount)", systemImage: "folder")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(LoomTokens.dsInk3)
+
+                if nativeSource?.fileURL != nil {
+                    Button(action: onOpenSourceInNativeApp) {
+                        Image(systemName: "arrow.up.forward.app")
+                            .font(.system(size: 12, weight: .medium))
+                            .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .contentShape(Rectangle())
+                    .help("Open original file in the default native app")
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(.leading, isSidebarPresented ? 18 : 8)
+            .padding(.trailing, 14)
+            .frame(height: reflectionTitlebarControlSize)
+            .frame(maxWidth: .infinity)
+
+            if isInspectorPresented {
+                HStack(spacing: 10) {
+                    Text("Sources")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(LoomTokens.dsInk1)
+                    Spacer(minLength: 0)
+                    inspectorButton
+                }
+                .padding(.horizontal, 14)
+                .frame(height: reflectionTitlebarControlSize)
+                .frame(width: reflectionInspectorWidth)
+            } else {
+                inspectorButton
+                    .padding(.trailing, 16)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, reflectionTitlebarContentTop)
+        .frame(height: reflectionTopBarHeight, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .allowsHitTesting(true)
+    }
+
+    private var sidebarButton: some View {
+        ReflectionTopBarButton(
+            systemName: "sidebar.left",
+            isActive: isSidebarPresented,
+            help: isSidebarPresented ? "Hide sidebar" : "Show sidebar",
+            action: onToggleSidebar
+        )
+    }
+
+    private var inspectorButton: some View {
+        ReflectionTopBarButton(
+            systemName: "sidebar.right",
+            isActive: isInspectorPresented,
+            help: isInspectorPresented ? "Hide sources" : "Show sources",
+            action: onToggleInspector
+        )
+    }
+}
+
+private struct ReflectionTopBarButton: View {
+    let systemName: String
+    let isActive: Bool
+    let help: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 12, weight: .medium))
+                .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(isActive ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
+        .contentShape(Rectangle())
+        .help(help)
+    }
+}
+
+private struct ReflectionSidebar: View {
+    let cases: [ReflectionCase]
+    let selectedCaseID: ReflectionCase.ID
+    var material: ReflectionSidebarMaterial = .rail
+    let onSelect: (ReflectionCase) -> Void
+    let onCreate: () -> Void
+    let onDelete: (ReflectionCase) -> Void
+    @State private var query: String = ""
+
+    private var usesCenterOverlay: Bool { material == .centerOverlay }
+    private var primaryText: Color { usesCenterOverlay ? LoomTokens.dsInk1 : .white.opacity(0.90) }
+    private var sectionText: Color { usesCenterOverlay ? LoomTokens.dsInk3 : .white.opacity(0.42) }
+    private var localPrimaryText: Color { usesCenterOverlay ? LoomTokens.dsInk1 : .white.opacity(0.86) }
+    private var localSecondaryText: Color { usesCenterOverlay ? LoomTokens.dsInk3 : .white.opacity(0.48) }
+    private var localDivider: Color { usesCenterOverlay ? LoomTokens.dsHair : .white.opacity(0.08) }
+
+    private var visibleCases: [ReflectionCase] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !needle.isEmpty else { return cases }
+        return cases.filter { item in
+            ([item.title, item.project, item.summary] + item.tags)
+                .contains { $0.lowercased().contains(needle) }
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 14) {
+                Button(action: onCreate) {
+                    Label("New reflection", systemImage: "square.and.pencil")
+                        .font(.system(size: 14, weight: .medium))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(primaryText)
+
+                ReflectionSidebarSearchField(text: $query, material: material)
+            }
+            .padding(.top, reflectionSidebarTopClearance)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 18)
+
+            Text("Reflections")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(sectionText)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(visibleCases) { reflectionCase in
+                        ReflectionSidebarRow(
+                            reflectionCase: reflectionCase,
+                            isSelected: reflectionCase.id == selectedCaseID,
+                            material: material,
+                            onSelect: { onSelect(reflectionCase) },
+                            onDelete: { onDelete(reflectionCase) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 20)
+            }
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.26, green: 0.54, blue: 0.72),
+                                Color(red: 0.09, green: 0.13, blue: 0.18)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 30, height: 30)
+                    .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Local")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(localPrimaryText)
+                    Text("On-device memory")
+                        .font(.system(size: 11))
+                        .foregroundStyle(localSecondaryText)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 20)
+            .frame(height: 64)
+            .overlay(alignment: .top) {
+                Rectangle().fill(localDivider).frame(height: 1)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(ReflectionSidebarBackground(material: material))
+    }
+}
+
+private enum ReflectionSidebarMaterial: Equatable {
+    case rail
+    case centerOverlay
+}
+
+private struct ReflectionSidebarBackground: View {
+    let material: ReflectionSidebarMaterial
+
+    var body: some View {
+        ZStack {
+            switch material {
+            case .rail:
+                Rectangle().fill(.regularMaterial)
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.17, green: 0.25, blue: 0.32).opacity(0.94),
+                        Color(red: 0.13, green: 0.16, blue: 0.20).opacity(0.88),
+                        Color(red: 0.18, green: 0.15, blue: 0.13).opacity(0.78)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            case .centerOverlay:
+                Rectangle().fill(LoomTokens.dsPaperDeep.opacity(0.84))
+                Rectangle().fill(.regularMaterial).opacity(0.42)
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.12),
+                        LoomTokens.dsThread.opacity(0.035),
+                        Color.black.opacity(0.06)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+        }
+    }
+}
+
+private struct ReflectionSidebarSearchField: View {
+    @Binding var text: String
+    let material: ReflectionSidebarMaterial
+
+    private var usesCenterOverlay: Bool { material == .centerOverlay }
+    private var iconColor: Color { usesCenterOverlay ? LoomTokens.dsInk3 : .white.opacity(0.50) }
+    private var textColor: Color { usesCenterOverlay ? LoomTokens.dsInk1 : .white.opacity(0.88) }
+    private var fillColor: Color { usesCenterOverlay ? LoomTokens.dsPaper.opacity(0.58) : .white.opacity(0.075) }
+    private var strokeColor: Color { usesCenterOverlay ? LoomTokens.dsHair : .white.opacity(0.10) }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12))
+                .foregroundStyle(iconColor)
+            TextField("Search", text: $text)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .foregroundStyle(textColor)
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 32)
+        .background(fillColor, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(strokeColor, lineWidth: 1)
+        )
+    }
+}
+
+private struct ReflectionSidebarRow: View {
+    let reflectionCase: ReflectionCase
+    let isSelected: Bool
+    let material: ReflectionSidebarMaterial
+    let onSelect: () -> Void
+    let onDelete: () -> Void
+    @State private var isHovering = false
+
+    private var usesCenterOverlay: Bool { material == .centerOverlay }
+
+    private var iconColor: Color {
+        usesCenterOverlay
+            ? (isSelected ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
+            : (isSelected ? .white.opacity(0.90) : .white.opacity(0.56))
+    }
+
+    private var titleColor: Color {
+        usesCenterOverlay
+            ? (isSelected ? LoomTokens.dsInk1 : LoomTokens.dsInk2)
+            : (isSelected ? .white.opacity(0.96) : .white.opacity(0.78))
+    }
+
+    private var metaColor: Color {
+        usesCenterOverlay
+            ? (isSelected ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
+            : .white.opacity(isSelected ? 0.62 : 0.44)
+    }
+
+    private var timeColor: Color {
+        usesCenterOverlay
+            ? LoomTokens.dsInk3
+            : .white.opacity(isSelected ? 0.58 : 0.38)
+    }
+
+    private var deleteColor: Color {
+        guard isHovering || isSelected else { return .clear }
+        return usesCenterOverlay ? LoomTokens.dsInk3 : .white.opacity(0.62)
+    }
+
+    private var deleteFill: Color {
+        guard isHovering else { return .clear }
+        return usesCenterOverlay ? LoomTokens.dsPaper.opacity(0.64) : .white.opacity(0.08)
+    }
+
+    private var selectedFill: Color {
+        guard isSelected else { return .clear }
+        return usesCenterOverlay ? LoomTokens.dsThread.opacity(0.08) : .white.opacity(0.12)
+    }
+
+    private var selectedStroke: Color {
+        guard isSelected else { return .clear }
+        return usesCenterOverlay ? LoomTokens.dsHair : .white.opacity(0.08)
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 4) {
+            Button(action: onSelect) {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "bubble.left")
+                        .font(.system(size: 13))
+                        .foregroundStyle(iconColor)
+                        .frame(width: 16, height: 18)
+                        .padding(.top, 1)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(reflectionCase.title)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(titleColor)
+                            .lineLimit(1)
+                        HStack(spacing: 6) {
+                            Text(reflectionCase.project)
+                                .font(.system(size: 11))
+                                .foregroundStyle(metaColor)
+                                .lineLimit(1)
+                            Spacer(minLength: 0)
+                            Text(reflectionCase.updatedAt)
+                                .font(.system(size: 10, weight: .regular, design: .monospaced))
+                                .foregroundStyle(timeColor)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Button(action: onDelete) {
+                Image(systemName: "trash")
+                    .font(.system(size: 11, weight: .medium))
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(deleteColor)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(deleteFill)
+            )
+            .help("Delete reflection")
+        }
+        .onHover { isHovering = $0 }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(selectedFill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(selectedStroke, lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .help(reflectionCase.summary)
+    }
+}
+private struct ReflectionThreadView: View {
+    let reflectionCase: ReflectionCase
+    @Binding var selectedLearningTraceID: ReflectionLearningTrace.ID?
+    @Binding var draftText: String
+    let onSelectTrace: (ReflectionLearningTrace) -> Void
+    let onSubmit: () -> Void
+
+    private var learningTraces: [ReflectionLearningTrace] {
+        ReflectionLearningTrace.from(reflectionCase)
+    }
+
+    private var selectedLearningTrace: ReflectionLearningTrace? {
+        learningTraces.first { $0.id == selectedLearningTraceID }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    if reflectionCase.project == "Learning pass" {
+                        ReflectionLearningLedgerView(
+                            reflectionCase: reflectionCase,
+                            selectedTraceID: selectedLearningTraceID,
+                            onSelectTrace: onSelectTrace
+                        )
+                    } else {
+                        ReflectionTraceList(steps: reflectionCase.steps)
+                        ReflectionMessages(messages: reflectionCase.messages)
+                    }
+                }
+                .frame(maxWidth: reflectionThreadMaxWidth, alignment: .leading)
+                .padding(.horizontal, 28)
+                .padding(.top, reflectionThreadTopPadding)
+                .padding(.bottom, 22)
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+            ReflectionComposer(
+                text: $draftText,
+                placeholder: composerPlaceholder,
+                commitTarget: composerTarget,
+                isLearningCase: reflectionCase.project == "Learning pass",
+                onSubmit: onSubmit
+            )
+                .frame(maxWidth: reflectionThreadMaxWidth)
+                .padding(.horizontal, 28)
+                .padding(.top, 8)
+                .padding(.bottom, 18)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .background(LoomTokens.dsPaperDeep)
+    }
+
+    private var composerPlaceholder: String {
+        if reflectionCase.project == "Learning pass" {
+            return "Meaning, question, correction, or principle..."
+        }
+        return "Paste a product event, user reaction, decision, or launch result..."
+    }
+
+    private var composerTarget: String {
+        if reflectionCase.project == "Learning pass" {
+            if let selectedLearningTrace {
+                return "target: \(selectedLearningTrace.version) \(selectedLearningTrace.versionTitle.lowercased())"
+            }
+            if let latest = learningTraces.last, latest.isUserCommitted {
+                return "target: \(latest.version) \(latest.versionTitle.lowercased())"
+            }
+            if let unresolved = learningTraces.reversed().first(where: { !$0.isUserCommitted }) {
+                return "target: \(unresolved.version) \(unresolved.versionTitle.lowercased())"
+            }
+            return "target: meaning / question / correction / principle"
+        }
+
+        if let nextStep = reflectionCase.steps.first(where: { $0.items.isEmpty }) {
+            return "target: \(nextStep.title)"
+        }
+
+        return "target: Reflection"
+    }
+}
+
+private struct ReflectionLearningLedgerView: View {
+    let reflectionCase: ReflectionCase
+    let selectedTraceID: ReflectionLearningTrace.ID?
+    let onSelectTrace: (ReflectionLearningTrace) -> Void
+
+    private var traces: [ReflectionLearningTrace] {
+        ReflectionLearningTrace.from(reflectionCase)
+    }
+
+    private var sourceLabel: String {
+        reflectionCase.sources.first?.label ?? reflectionCase.title
+    }
+
+    private var activeTraceID: ReflectionLearningTrace.ID? {
+        selectedTraceID ?? traces.last?.id
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text("Understanding Version Flow")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsInk1)
+                Text(sourceLabel)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Text("\(traces.count) version\(traces.count == 1 ? "" : "s")")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(LoomTokens.dsInk3)
+            }
+            .padding(.horizontal, 2)
+
+            if traces.isEmpty {
+                ReflectionLearningEmptyLedger(sourceLabel: sourceLabel)
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(traces) { trace in
+                        ReflectionLearningTraceCard(
+                            trace: trace,
+                            isSelected: trace.id == activeTraceID,
+                            onSelect: {
+                                onSelectTrace(trace)
+                            }
+                        )
+                    }
+                }
+            }
+
+            if let summary = ReflectionLearningReviewSummary.make(for: reflectionCase),
+               let principle = summary.principle {
+                ReflectionLearningPrincipleCandidate(principle: principle)
+            }
+        }
+    }
+}
+
+private struct ReflectionLearningEmptyLedger: View {
+    let sourceLabel: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("No understanding versions yet.")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(LoomTokens.dsInk1)
+            Text("Use \(sourceLabel) in its native app first. Capture only a selected word, phrase, question, correction, or principle that changes your understanding.")
+                .font(.system(size: 12))
+                .lineSpacing(3)
+                .foregroundStyle(LoomTokens.dsInk2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 14)
+        .padding(.horizontal, 2)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(LoomTokens.dsHair).frame(height: 1)
+        }
+    }
+}
+
+private struct ReflectionLearningTraceCard: View {
+    let trace: ReflectionLearningTrace
+    let isSelected: Bool
+    let onSelect: () -> Void
+    @State private var showsProvenance = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(trace.version)
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .frame(width: 34, alignment: .leading)
+
+                Text(trace.versionTitle)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsInk1)
+                    .lineLimit(1)
+
+                ReflectionLearningStatusPill(label: trace.statusLabel, isResolved: trace.isUserCommitted)
+
+                Spacer(minLength: 0)
+
+                Text(trace.pass)
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .lineLimit(1)
+
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(trace.displayLabel)
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .tracking(0.8)
+                    .foregroundStyle(LoomTokens.dsInk3)
+
+                Text(trace.displayText)
+                    .font(.system(size: trace.isShortLanguageTrace ? 18 : 14, weight: trace.isShortLanguageTrace ? .semibold : .regular))
+                    .lineSpacing(4)
+                    .foregroundStyle(LoomTokens.dsInk1)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            DisclosureGroup(isExpanded: $showsProvenance) {
+                VStack(alignment: .leading, spacing: 5) {
+                    ReflectionLearningProvenanceLine(label: "source", value: trace.sourceAnchor)
+                    ReflectionLearningProvenanceLine(label: "type", value: trace.traceType)
+                    ForEach(trace.evidence) { evidence in
+                        ReflectionLearningProvenanceLine(label: evidence.label, value: evidence.value)
+                    }
+                    ReflectionLearningProvenanceLine(label: "raw", value: trace.raw)
+                }
+                .padding(.top, 6)
+            } label: {
+                Text("Audit trail")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(LoomTokens.dsInk3)
+            }
+            .tint(LoomTokens.dsInk3)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(isSelected ? LoomTokens.dsPaperCard.opacity(0.54) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(isSelected ? LoomTokens.dsHair : Color.clear, lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .onTapGesture(perform: onSelect)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(LoomTokens.dsHair).frame(height: 1)
+        }
+    }
+}
+
+private struct ReflectionLearningStatusPill: View {
+    let label: String
+    let isResolved: Bool
+
+    var body: some View {
+        Text(label)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(isResolved ? LoomTokens.dsThread : LoomTokens.dsInk3)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(LoomTokens.dsPaperCard.opacity(isResolved ? 0.42 : 0.72), in: Capsule())
+    }
+}
+
+private struct ReflectionLearningProvenanceLine: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(label)
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .foregroundStyle(LoomTokens.dsInk3)
+                .frame(width: 44, alignment: .leading)
+            Text(value)
+                .font(.system(size: 11))
+                .foregroundStyle(LoomTokens.dsInk2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+private struct ReflectionLearningEvidence: Identifiable, Equatable {
+    let label: String
+    let value: String
+
+    var id: String {
+        "\(label)=\(value)"
+    }
+}
+
+private struct ReflectionLearningPrincipleCandidate: View {
+    let principle: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text("Principle")
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .tracking(1.1)
+                .foregroundStyle(LoomTokens.dsInk3)
+                .frame(width: 72, alignment: .leading)
+
+            Text(principle)
+                .font(.system(size: 13, weight: .semibold))
+                .lineSpacing(3)
+                .foregroundStyle(LoomTokens.dsThread)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 14)
+        .padding(.horizontal, 2)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(LoomTokens.dsHair).frame(height: 1)
+        }
+    }
+}
+
+private struct ReflectionLearningTrace: Identifiable, Equatable {
+    let id: String
+    let version: String
+    let traceType: String
+    let sourceAnchor: String
+    let focus: String
+    let pass: String
+    let text: String
+    let evidence: [ReflectionLearningEvidence]
+    let raw: String
+
+    var displayText: String {
+        let cleaned = Self.cleanUserPrefix(text)
+        return cleaned.isEmpty ? traceType : cleaned
+    }
+
+    var displayLabel: String {
+        if isLanguageSelection {
+            return "Original selection"
+        }
+        if focus == "correction" {
+            return "Correction"
+        }
+        if focus == "question" {
+            return "Question"
+        }
+        if focus == "principle" {
+            return "Principle candidate"
+        }
+        if isDataOrDocumentSelection {
+            return "Source material"
+        }
+        return "Committed meaning"
+    }
+
+    var versionTitle: String {
+        if focus.contains("vocabulary") {
+            return "Selected word"
+        }
+        if focus.contains("phrase") {
+            return "Selected phrase"
+        }
+        if focus.contains("sentence") {
+            return "Selected sentence"
+        }
+        if focus.contains("passage") {
+            return "Selected passage"
+        }
+        if focus.contains("data") {
+            return "Selected data"
+        }
+        if focus.contains("document") {
+            return "Document point"
+        }
+        if focus.contains("slide") {
+            return "Slide point"
+        }
+        if focus == "correction" {
+            return "Correction"
+        }
+        if focus == "question" {
+            return "Question"
+        }
+        if focus == "principle" {
+            return "Principle"
+        }
+        return "User meaning"
+    }
+
+    var statusLabel: String {
+        if isLanguageSelection {
+            return "needs meaning"
+        }
+        if focus == "correction" {
+            return "corrected"
+        }
+        if focus == "question" {
+            return "open question"
+        }
+        if focus == "principle" {
+            return "memory candidate"
+        }
+        if isDataOrDocumentSelection {
+            return "needs interpretation"
+        }
+        return "committed"
+    }
+
+    var isUserCommitted: Bool {
+        !(isLanguageSelection || isDataOrDocumentSelection || focus == "question")
+    }
+
+    var isShortLanguageTrace: Bool {
+        let words = displayText.split(whereSeparator: { $0.isWhitespace })
+        return (focus.contains("vocabulary") || focus.contains("phrase")) && words.count <= 6
+    }
+
+    var isLanguageSelection: Bool {
+        focus.contains("vocabulary") || focus.contains("phrase") || focus.contains("sentence") || focus.contains("passage")
+    }
+
+    var isDataOrDocumentSelection: Bool {
+        focus.contains("data") || focus.contains("document") || focus.contains("slide") || focus.contains("text") || focus.contains("file")
+    }
+
+    func matches(source: ReflectionSource) -> Bool {
+        sourceAnchor == source.label
+            || sourceAnchor.hasPrefix("\(source.label),")
+            || sourceAnchor.contains(source.label)
+    }
+
+    static func from(_ reflectionCase: ReflectionCase) -> [ReflectionLearningTrace] {
+        let inputItems = reflectionCase.steps.first { $0.id == "input" }?.items ?? []
+        var traces: [ReflectionLearningTrace] = []
+        var version = 1
+
+        for item in inputItems {
+            if let capturedTrace = parseCaptured(item, version: version) {
+                traces.append(capturedTrace)
+                version += 1
+            } else if let manualTrace = parseLegacyManual(item, version: version, sourceLabel: reflectionCase.sources.first?.label ?? reflectionCase.title) {
+                traces.append(manualTrace)
+                version += 1
+            }
+        }
+        return traces
+    }
+
+    private static func cleanUserPrefix(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prefixes = [
+            "principle:", "principle：",
+            "memory:", "memory：",
+            "correction:", "correction：",
+            "correct:", "correct：",
+            "question:", "question：",
+            "meaning:", "meaning：",
+            "translation:", "translation：",
+            "意思:", "意思：",
+            "含义:", "含义：",
+            "翻译:", "翻译："
+        ]
+
+        for prefix in prefixes {
+            if trimmed.lowercased().hasPrefix(prefix) {
+                let start = trimmed.index(trimmed.startIndex, offsetBy: prefix.count)
+                return String(trimmed[start...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+
+        return trimmed
+    }
+
+    private static func parseCaptured(_ item: String, version: Int) -> ReflectionLearningTrace? {
+        let prefix = "Captured "
+        guard item.hasPrefix(prefix),
+              let fromRange = item.range(of: " from "),
+              let focusStart = item.range(of: "[", range: fromRange.upperBound..<item.endIndex),
+              let focusEnd = item.range(of: "]", range: focusStart.upperBound..<item.endIndex)
+        else { return nil }
+
+        let typeStart = item.index(item.startIndex, offsetBy: prefix.count)
+        let traceType = String(item[typeStart..<fromRange.lowerBound])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let sourceAnchor = String(item[fromRange.upperBound..<focusStart.lowerBound])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let focus = String(item[focusStart.upperBound..<focusEnd.lowerBound])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let split = splitEvidence(from: String(item[focusEnd.upperBound...]))
+        var remainder = split.content
+        if remainder.hasPrefix(":") || remainder.hasPrefix(".") {
+            remainder.removeFirst()
+        }
+        let text = remainder.trimmingCharacters(in: .whitespacesAndNewlines)
+        let evidence = parseEvidence(split.evidence)
+
+        return ReflectionLearningTrace(
+            id: "\(version)-\(item)",
+            version: "v\(version)",
+            traceType: traceType.isEmpty ? "learning trace" : traceType,
+            sourceAnchor: sourceAnchor.isEmpty ? "Original file" : sourceAnchor,
+            focus: focus.isEmpty ? "user meaning" : focus,
+            pass: passLabel(for: focus),
+            text: text,
+            evidence: evidence,
+            raw: item
+        )
+    }
+
+    private static func splitEvidence(from value: String) -> (content: String, evidence: String?) {
+        guard let evidenceRange = value.range(of: reflectionLearningEvidenceMarker) else {
+            return (value, nil)
+        }
+
+        let content = String(value[..<evidenceRange.lowerBound])
+        let evidence = String(value[evidenceRange.upperBound...])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (content, evidence.isEmpty ? nil : evidence)
+    }
+
+    private static func parseEvidence(_ value: String?) -> [ReflectionLearningEvidence] {
+        guard let value else { return [] }
+        return value
+            .split(separator: ";")
+            .compactMap { segment -> ReflectionLearningEvidence? in
+                let parts = segment.split(separator: "=", maxSplits: 1)
+                guard parts.count == 2 else { return nil }
+                let label = parts[0]
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased()
+                let evidenceValue = parts[1]
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !label.isEmpty, !evidenceValue.isEmpty else { return nil }
+                return ReflectionLearningEvidence(label: label, value: evidenceValue)
+            }
+    }
+
+    private static func parseLegacyManual(_ item: String, version: Int, sourceLabel: String) -> ReflectionLearningTrace? {
+        let prefix = "Manual learning note: "
+        guard item.hasPrefix(prefix) else { return nil }
+        let textStart = item.index(item.startIndex, offsetBy: prefix.count)
+        let text = String(item[textStart...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+
+        return ReflectionLearningTrace(
+            id: "\(version)-\(item)",
+            version: "v\(version)",
+            traceType: "user trace",
+            sourceAnchor: sourceLabel,
+            focus: "user meaning",
+            pass: "second pass",
+            text: text,
+            evidence: [],
+            raw: item
+        )
+    }
+
+    private static func passLabel(for focus: String) -> String {
+        if focus.contains("vocabulary") || focus.contains("phrase") || focus.contains("sentence") || focus.contains("passage") {
+            return "first language pass"
+        }
+        if focus.contains("data") {
+            return "data pass"
+        }
+        if focus.contains("user") || focus.contains("question") || focus.contains("correction") || focus.contains("principle") {
+            return "second pass"
+        }
+        return "source pass"
+    }
+}
+
+private struct ReflectionLearningReviewSummary: Equatable {
+    let sourceLabel: String
+    let status: String
+    let traceSummary: String
+    let focusSummary: String
+    let confirmations: [String]
+    let principle: String?
+
+    static func make(for reflectionCase: ReflectionCase) -> ReflectionLearningReviewSummary? {
+        guard reflectionCase.project == "Learning pass" else { return nil }
+
+        let outcomeItems = stepItems(in: reflectionCase, id: "outcome")
+        let reflectionItems = stepItems(in: reflectionCase, id: "reflection")
+        let principleItems = stepItems(in: reflectionCase, id: "memory")
+        let inputItems = stepItems(in: reflectionCase, id: "input")
+        let outcome = outcomeItems.last { $0.contains("anchored learning trace") }
+        let confirmations = Array(reflectionItems.filter { $0.contains(" to confirm:") }.prefix(4))
+        let principle = principleItems.first { $0.contains("Principle candidate") } ?? principleItems.first
+
+        guard reflectionCase.status == "Second pass ready"
+            || !confirmations.isEmpty
+            || principle != nil
+        else { return nil }
+
+        return ReflectionLearningReviewSummary(
+            sourceLabel: reflectionCase.sources.first?.label ?? reflectionCase.title,
+            status: reflectionCase.status,
+            traceSummary: traceSummary(from: outcome, inputItems: inputItems),
+            focusSummary: focusSummary(from: outcome),
+            confirmations: confirmations,
+            principle: principle
+        )
+    }
+
+    private static func stepItems(in reflectionCase: ReflectionCase, id: String) -> [String] {
+        reflectionCase.steps.first { $0.id == id }?.items ?? []
+    }
+
+    private static func traceSummary(from outcome: String?, inputItems: [String]) -> String {
+        if let outcome,
+           let capturedRange = outcome.range(of: "Captured "),
+           let fromRange = outcome.range(of: " from ", range: capturedRange.upperBound..<outcome.endIndex) {
+            return String(outcome[capturedRange.upperBound..<fromRange.lowerBound])
+        }
+
+        let capturedCount = inputItems.filter { $0.hasPrefix("Captured ") }.count
+        if capturedCount > 0 {
+            return "\(capturedCount) captured trace\(capturedCount == 1 ? "" : "s")"
+        }
+        return "No focused captures yet"
+    }
+
+    private static func focusSummary(from outcome: String?) -> String {
+        guard let outcome,
+              let range = outcome.range(of: ": ") else {
+            return "Waiting for anchored traces"
+        }
+        return String(outcome[range.upperBound...])
+    }
+}
+
+private struct ReflectionLearningReview: View {
+    let summary: ReflectionLearningReviewSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Label("Second pass", systemImage: "checkmark.circle")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsSuccess)
+                Text(summary.status)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                Spacer(minLength: 0)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                ReflectionLearningReviewLine(label: "Original file", value: summary.sourceLabel)
+                ReflectionLearningReviewLine(label: "Captured", value: summary.traceSummary)
+                ReflectionLearningReviewLine(label: "Trace types", value: summary.focusSummary)
+                if !summary.confirmations.isEmpty {
+                    ReflectionLearningReviewList(label: "Confirm meaning", values: summary.confirmations)
+                }
+                if let principle = summary.principle {
+                    ReflectionLearningReviewLine(label: "Principle", value: principle, accent: true)
+                }
+            }
+        }
+        .padding(.horizontal, 2)
+        .padding(.bottom, 16)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(LoomTokens.dsHair).frame(height: 1)
+        }
+    }
+}
+
+private struct ReflectionLearningReviewLine: View {
+    let label: String
+    let value: String
+    var accent: Bool = false
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text(label)
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .tracking(1.1)
+                .foregroundStyle(LoomTokens.dsInk3)
+                .frame(width: 104, alignment: .leading)
+
+            Text(value)
+                .font(.system(size: 13, weight: accent ? .semibold : .regular))
+                .lineSpacing(3)
+                .foregroundStyle(accent ? LoomTokens.dsThread : LoomTokens.dsInk1)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct ReflectionLearningReviewList: View {
+    let label: String
+    let values: [String]
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Text(label)
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .tracking(1.1)
+                .foregroundStyle(LoomTokens.dsInk3)
+                .frame(width: 104, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 5) {
+                ForEach(values, id: \.self) { value in
+                    Text(value)
+                        .font(.system(size: 13))
+                        .lineSpacing(3)
+                        .foregroundStyle(LoomTokens.dsInk1)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct ReflectionTraceList: View {
+    let steps: [ReflectionStep]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
+                HStack(alignment: .top, spacing: 14) {
+                    Text(String(format: "%02d", index + 1))
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                        .frame(width: 24, alignment: .leading)
+
+                    VStack(alignment: .leading, spacing: 7) {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(step.title)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(LoomTokens.dsInk1)
+                            Text(step.subtitle)
+                                .font(.system(size: 11))
+                                .foregroundStyle(LoomTokens.dsInk3)
+                                .lineLimit(1)
+                            Spacer(minLength: 0)
+                        }
+
+                        if step.items.isEmpty {
+                            Text("No entry yet.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(LoomTokens.dsInk3)
+                        } else {
+                            VStack(alignment: .leading, spacing: 5) {
+                                ForEach(step.items, id: \.self) { item in
+                                    Text(item)
+                                        .font(.system(size: 12))
+                                        .lineSpacing(2)
+                                        .foregroundStyle(LoomTokens.dsInk2)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical, 12)
+                .overlay(alignment: .bottom) {
+                    if index < steps.count - 1 {
+                        Rectangle().fill(LoomTokens.dsHair).frame(height: 1)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 2)
+    }
+}
+
+private struct ReflectionMessages: View {
+    let messages: [ReflectionMessage]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(messages) { message in
+                HStack(alignment: .top, spacing: 14) {
+                    Text(message.eyebrow)
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .tracking(1.1)
+                        .foregroundStyle(LoomTokens.dsInk3)
+                        .frame(width: 92, alignment: .leading)
+
+                    Text(message.body)
+                        .font(.system(size: 13))
+                        .lineSpacing(3)
+                        .foregroundStyle(message.role == .loom ? LoomTokens.dsThread : LoomTokens.dsInk1)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.vertical, 12)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(LoomTokens.dsHair.opacity(0.72)).frame(height: 1)
+                }
+            }
+        }
+    }
+}
+
+private struct ReflectionComposer: View {
+    @Binding var text: String
+    let placeholder: String
+    let commitTarget: String
+    let isLearningCase: Bool
+    let onSubmit: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(isLearningCase ? "Commit next version" : "Commit reflection version")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .tracking(0.8)
+                    .foregroundStyle(LoomTokens.dsInk3)
+                Text(commitTarget)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 2)
+
+            HStack(alignment: .bottom, spacing: 9) {
+                ZStack(alignment: .topLeading) {
+                    TextEditor(text: $text)
+                        .font(.system(size: 13))
+                        .foregroundStyle(LoomTokens.dsInk1)
+                        .scrollContentBackground(.hidden)
+                        .frame(minHeight: isLearningCase ? 38 : 46, maxHeight: isLearningCase ? 76 : 92)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                    if text.isEmpty {
+                        Text(placeholder)
+                            .font(.system(size: 13))
+                            .foregroundStyle(LoomTokens.dsInk3)
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 16)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .background(LoomTokens.dsPaper.opacity(0.88), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .stroke(LoomTokens.dsHair, lineWidth: 1)
+                )
+
+                Button(action: onSubmit) {
+                    if isLearningCase {
+                        Label("Commit", systemImage: "checkmark")
+                            .font(.system(size: 12, weight: .semibold))
+                            .labelStyle(.titleAndIcon)
+                            .frame(width: 86, height: 36)
+                    } else {
+                        Image(systemName: "paperplane")
+                            .font(.system(size: 14, weight: .semibold))
+                            .frame(width: 36, height: 36)
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(LoomTokens.dsPaperDeep)
+                .background(LoomTokens.dsInk1, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .opacity(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.58 : 1)
+            }
+        }
+    }
+}
+
+private struct ReflectionSourceInspector: View {
+    let reflectionCase: ReflectionCase
+    let sources: [ReflectionSource]
+    let selectedSourceID: ReflectionSource.ID?
+    let selectedSource: ReflectionSource?
+    let selectedTrace: ReflectionLearningTrace?
+    let onImport: () -> Void
+    let onOpenSource: () -> Void
+    let onSelect: (ReflectionSource) -> Void
+    @State private var query: String = ""
+
+    private var groupedSources: [(String, [ReflectionSource])] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let filtered = needle.isEmpty ? sources : sources.filter {
+            [$0.label, $0.folder, $0.kind, $0.excerpt].contains { value in
+                value.lowercased().contains(needle)
+            }
+        }
+        let groups = Dictionary(grouping: filtered, by: \.folder)
+        return groups.keys.sorted().map { ($0, groups[$0] ?? []) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 12) {
+                ReflectionEvidenceInspector(
+                    trace: selectedTrace,
+                    source: selectedSource,
+                    onOpenSource: selectedSource?.fileURL == nil ? nil : onOpenSource
+                )
+
+                HStack(spacing: 8) {
+                    ReflectionSearchField(text: $query, placeholder: "Filter sources")
+                    ReflectionImportButton(action: onImport)
+                }
+            }
+            .padding(.top, reflectionInspectorTopPadding)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 12)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    if groupedSources.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "tray").font(.system(size: 24))
+                            Text("No sources added yet.").font(.system(size: 12))
+                        }
+                        .foregroundStyle(LoomTokens.dsInk3)
+                        .frame(maxWidth: .infinity, minHeight: 120)
+                    } else {
+                        Text("Source Collection")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .tracking(1.1)
+                            .foregroundStyle(LoomTokens.dsInk3)
+                            .padding(.horizontal, 4)
+
+                        ForEach(groupedSources, id: \.0) { folder, folderSources in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Label(folder, systemImage: "folder")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(LoomTokens.dsInk2)
+                                    .padding(.horizontal, 4)
+                                ForEach(folderSources) { source in
+                                    Button {
+                                        onSelect(source)
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: source.symbol)
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(source.id == selectedSourceID ? LoomTokens.dsThread : LoomTokens.dsInk3)
+                                                .frame(width: 16)
+                                            Text(source.label)
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(LoomTokens.dsInk1)
+                                                .lineLimit(1)
+                                            Spacer(minLength: 0)
+                                            Text(source.meta)
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(LoomTokens.dsInk3)
+                                                .lineLimit(1)
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .frame(height: 30)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                                .fill(source.id == selectedSourceID ? LoomTokens.dsPaperCard.opacity(0.72) : Color.clear)
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                                .stroke(source.id == selectedSourceID ? LoomTokens.dsHair : Color.clear, lineWidth: 1)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+
+                        ReflectionSourcePreview(source: selectedSource)
+                            .padding(.top, 6)
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.bottom, 18)
+            }
+        }
+        .background(LoomTokens.dsPaper.ignoresSafeArea())
+    }
+}
+
+private struct ReflectionEvidenceInspector: View {
+    let trace: ReflectionLearningTrace?
+    let source: ReflectionSource?
+    let onOpenSource: (() -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("Evidence Inspector")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsInk1)
+                Spacer(minLength: 0)
+                Text(trace?.version ?? "source")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(LoomTokens.dsInk3)
+            }
+
+            if let trace {
+                Label(trace.versionTitle, systemImage: "scope")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsThread)
+                Text(trace.displayText)
+                    .font(.system(size: trace.isShortLanguageTrace ? 17 : 12, weight: trace.isShortLanguageTrace ? .semibold : .regular))
+                    .lineSpacing(3)
+                    .foregroundStyle(LoomTokens.dsInk1)
+                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 5) {
+                    ReflectionLearningProvenanceLine(label: "anchor", value: trace.sourceAnchor)
+                    ReflectionLearningProvenanceLine(label: "pass", value: trace.pass)
+                    ReflectionLearningProvenanceLine(label: "focus", value: trace.focus)
+                    ReflectionLearningProvenanceLine(label: "type", value: trace.traceType)
+                    ForEach(trace.evidence) { evidence in
+                        ReflectionLearningProvenanceLine(label: evidence.label, value: evidence.value)
+                    }
+                }
+                openSourceButton
+            } else if let source {
+                Label(source.label, systemImage: source.symbol)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsInk1)
+                Text(source.excerpt)
+                    .font(.system(size: 12))
+                    .lineSpacing(3)
+                    .foregroundStyle(LoomTokens.dsInk2)
+                    .fixedSize(horizontal: false, vertical: true)
+                ReflectionLearningProvenanceLine(label: "source", value: source.folder)
+                openSourceButton
+            } else {
+                Text("Select or capture a source-backed version.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(LoomTokens.dsInk3)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(LoomTokens.dsPaperUp.opacity(0.78), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(LoomTokens.dsHair, lineWidth: 1)
+        )
+    }
+
+    @ViewBuilder
+    private var openSourceButton: some View {
+        if let onOpenSource {
+            Button(action: onOpenSource) {
+                Label("Open Source", systemImage: "arrow.up.forward.app")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(height: 30)
+                    .padding(.horizontal, 9)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(LoomTokens.dsInk1)
+            .background(LoomTokens.dsPaperCard.opacity(0.66), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(LoomTokens.dsHair, lineWidth: 1)
+            )
+            .help("Open the original file in its native app")
+        }
+    }
+}
+
+private struct ReflectionImportButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label("Import", systemImage: "square.and.arrow.down")
+                .labelStyle(.titleAndIcon)
+                .font(.system(size: 12, weight: .semibold))
+                .frame(height: 32)
+                .padding(.horizontal, 9)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(LoomTokens.dsInk1)
+        .background(LoomTokens.dsPaperUp.opacity(0.78), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(LoomTokens.dsHair, lineWidth: 1)
+        )
+        .help("Import local files")
+    }
+}
+
+private struct ReflectionSourcePreview: View {
+    let source: ReflectionSource?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let source {
+                HStack(alignment: .top, spacing: 9) {
+                    Image(systemName: "scope")
+                        .foregroundStyle(LoomTokens.dsThread)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(source.label)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(LoomTokens.dsInk1)
+                        Text(source.kind)
+                            .font(.system(size: 11))
+                            .foregroundStyle(LoomTokens.dsInk3)
+                    }
+                }
+                Text(source.excerpt)
+                    .font(.system(size: 12))
+                    .lineSpacing(3)
+                    .foregroundStyle(LoomTokens.dsInk2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Label("Linked to \(source.folder)", systemImage: "point.3.connected.trianglepath.dotted")
+                    .font(.system(size: 11))
+                    .foregroundStyle(LoomTokens.dsInk3)
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "doc.text")
+                        .font(.system(size: 24))
+                    Text("Open source")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text("Select evidence from the source tree.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                }
+                .frame(maxWidth: .infinity, minHeight: 138)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(LoomTokens.dsPaperUp.opacity(0.86), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(LoomTokens.dsHair, lineWidth: 1)
+        )
+    }
+}
+
+private struct ReflectionSearchField: View {
+    @Binding var text: String
+    let placeholder: String
+
+    var body: some View {
+        searchContent
+            .frame(maxWidth: .infinity)
+            .background(LoomTokens.dsPaperUp.opacity(0.78), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(LoomTokens.dsHair, lineWidth: 1)
+            )
+    }
+
+    private var searchContent: some View {
+        HStack(spacing: 7) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12))
+                .foregroundStyle(LoomTokens.dsInk3)
+            TextField(placeholder, text: $text)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .foregroundStyle(LoomTokens.dsInk1)
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 32)
+    }
+}
+
+private struct ReflectionDivider: View {
+    var body: some View {
+        Rectangle()
+            .fill(LoomTokens.dsHair)
+            .frame(width: 1)
+    }
+}
+
+private struct ReflectionWorkspaceSnapshot: Codable, Equatable {
+    var cases: [ReflectionCase]
+    var selectedCaseID: ReflectionCase.ID
+    var selectedSourceID: ReflectionSource.ID?
+}
+
+private enum ReflectionWorkspaceStore {
+    private static let defaultsKey = "loom.reflectionWorkspaceSnapshot"
+
+    static func load() -> ReflectionWorkspaceSnapshot? {
+        guard let snapshot = loadFromDefaults() ?? loadFromMirror() else { return nil }
+        let normalized = normalize(snapshot)
+        if normalized != snapshot {
+            save(
+                cases: normalized.cases,
+                selectedCaseID: normalized.selectedCaseID,
+                selectedSourceID: normalized.selectedSourceID
+            )
+        } else {
+            writeMirror(normalized)
+        }
+        return normalized
+    }
+
+    static func save(
+        cases: [ReflectionCase],
+        selectedCaseID: ReflectionCase.ID,
+        selectedSourceID: ReflectionSource.ID?
+    ) {
+        let snapshot = ReflectionWorkspaceSnapshot(
+            cases: cases,
+            selectedCaseID: selectedCaseID,
+            selectedSourceID: selectedSourceID
+        )
+        guard let data = try? JSONEncoder().encode(snapshot) else { return }
+        UserDefaults.standard.set(data, forKey: defaultsKey)
+        writeMirror(snapshot, encodedData: data)
+    }
+
+    private static func loadFromDefaults() -> ReflectionWorkspaceSnapshot? {
+        guard let data = UserDefaults.standard.data(forKey: defaultsKey) else { return nil }
+        return try? JSONDecoder().decode(ReflectionWorkspaceSnapshot.self, from: data)
+    }
+
+    private static func loadFromMirror() -> ReflectionWorkspaceSnapshot? {
+        guard let url = mirrorURL,
+              let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(ReflectionWorkspaceSnapshot.self, from: data)
+    }
+
+    private static func writeMirror(_ snapshot: ReflectionWorkspaceSnapshot, encodedData: Data? = nil) {
+        guard let url = mirrorURL else { return }
+        let data = encodedData ?? (try? JSONEncoder().encode(snapshot))
+        guard let data else { return }
+        do {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try data.write(to: url, options: [.atomic])
+        } catch {
+            // UserDefaults remains the in-app source of truth when the mirror cannot be written.
+        }
+    }
+
+    private static var mirrorURL: URL? {
+        FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent("Loom", isDirectory: true)
+            .appendingPathComponent("reflection-workspace-snapshot.json")
+    }
+
+    private static func normalize(_ snapshot: ReflectionWorkspaceSnapshot) -> ReflectionWorkspaceSnapshot {
+        var next = snapshot
+        next.cases = snapshot.cases.map { reflectionCase in
+            var normalizedCase = reflectionCase
+            if reflectionCase.project == "Learning pass" {
+                normalizedCase.messages = orderedUniqueLearningMessages(
+                    reflectionCase.messages.map(normalizeLearningMessage)
+                )
+            }
+            normalizedCase.steps = reflectionCase.steps.map { step in
+                var normalizedStep = step
+                let items = reflectionCase.project == "Learning pass"
+                    ? normalizeLearningStepItems(step)
+                    : step.items
+                normalizedStep.items = orderedUnique(items)
+                if reflectionCase.project == "Learning pass", normalizedStep.id == "memory" {
+                    normalizedStep.title = "Principle"
+                    normalizedStep.subtitle = "What can become reusable thinking"
+                }
+                return normalizedStep
+            }
+            return normalizedCase
+        }
+        return next
+    }
+
+    private static func orderedUnique(_ values: [String]) -> [String] {
+        var seen = Set<String>()
+        return values.filter { value in
+            if seen.contains(value) { return false }
+            seen.insert(value)
+            return true
+        }
+    }
+
+    private static func orderedUniqueLearningMessages(_ messages: [ReflectionMessage]) -> [ReflectionMessage] {
+        var seen = Set<String>()
+        return messages.filter { message in
+            let key = "\(message.eyebrow)\n\(message.body)"
+            if seen.contains(key) { return false }
+            seen.insert(key)
+            return true
+        }
+    }
+
+    private static func normalizeLearningStepItems(_ step: ReflectionStep) -> [String] {
+        let items = step.items.map(normalizeLearningInputItem)
+
+        if step.id == "input" {
+            return orderedUniqueLearningInputs(items)
+        }
+
+        if step.id == "decision" {
+            return items.map {
+                $0.replacingOccurrences(
+                    of: "used Loom only to save anchored traces",
+                    with: "used Loom only to commit anchored traces"
+                )
+            }
+        }
+
+        if step.id == "memory" {
+            return items.filter { $0.contains("Principle candidate") }
+        }
+
+        return items
+    }
+
+    private static func orderedUniqueLearningInputs(_ values: [String]) -> [String] {
+        var seen = Set<String>()
+        return values.filter { value in
+            let key = reflectionLearningInputFingerprint(value)
+            if seen.contains(key) { return false }
+            seen.insert(key)
+            return true
+        }
+    }
+
+    private static func normalizeLearningMessage(_ message: ReflectionMessage) -> ReflectionMessage {
+        var next = message
+        if next.eyebrow == "Learning note" {
+            next.eyebrow = "Understanding version"
+        }
+        if next.eyebrow == "Understanding commit" {
+            next.eyebrow = "Understanding version"
+        }
+        next.body = next.body
+            .replacingOccurrences(
+                of: "Second-pass synthesis prepared from anchored learning traces. Review the meaning before turning it into reusable memory.",
+                with: "Second-pass synthesis prepared from understanding versions. Review the changes before promoting any confirmed principle into memory."
+            )
+            .replacingOccurrences(
+                of: "Second-pass synthesis prepared from anchored learning commits. Review the meaning before promoting any confirmed principle into memory.",
+                with: "Second-pass synthesis prepared from understanding versions. Review the changes before promoting any confirmed principle into memory."
+            )
+            .replacingOccurrences(
+                of: "Added to the understanding ledger. Keep the original file as the source of truth, then confirm the meaning before turning it into memory.",
+                with: "Committed as a thinking version. Native file stays the source of truth; only confirmed principles become reusable memory."
+            )
+            .replacingOccurrences(
+                of: "Added to the understanding ledger. Keep the original file as the source of truth; promote only confirmed principles into memory.",
+                with: "Committed as a thinking version. Native file stays the source of truth; only confirmed principles become reusable memory."
+            )
+        return next
+    }
+
+    private static func normalizeLearningInputItem(_ value: String) -> String {
+        if value == "First pass: preserve the original file surface and capture language, concepts, questions, page meaning, and useful passages as anchored traces." {
+            return "First language pass: keep the original file surface primary and capture vocabulary, pronunciation, phrases, sentence meaning, grammar, questions, concepts, and page context as anchored traces."
+        }
+        return value
+    }
+}
+
+private struct ReflectionCase: Identifiable, Codable, Equatable {
+    let id: String
+    var title: String
+    var project: String
+    var status: String
+    var updatedAt: String
+    var summary: String
+    var tags: [String]
+    var sources: [ReflectionSource]
+    var steps: [ReflectionStep]
+    var messages: [ReflectionMessage]
+
+    static func blank() -> ReflectionCase {
+        ReflectionCase(
+            id: UUID().uuidString,
+            title: "Untitled product reflection",
+            project: "New product practice",
+            status: "Collecting input",
+            updatedAt: "now",
+            summary: "Start with a real product event, decision, result, or user reaction.",
+            tags: ["new"],
+            sources: [],
+            steps: ReflectionStep.blankWorkflow(),
+            messages: [
+                ReflectionMessage(
+                    role: .loom,
+                    eyebrow: "Loom reflection",
+                    body: "Start with the concrete material. A decision, a user reaction, a metric change, or a launch result is enough."
+                )
+            ]
+        )
+    }
+
+    static let samples: [ReflectionCase] = [
+        ReflectionCase(
+            id: "activation-empty-state",
+            title: "Onboarding empty-state drop",
+            project: "LOOM / first session",
+            status: "In reflection",
+            updatedAt: "18:41",
+            summary: "A first-run user reached Sources, added nothing, and left before opening Studio.",
+            tags: ["activation", "first-run", "evidence"],
+            sources: [
+                ReflectionSource(folder: "Input", label: "User feedback note", kind: "feedback", meta: "2 quotes", excerpt: "The user understood that files could be added, but did not understand what a good first file should be."),
+                ReflectionSource(folder: "Input", label: "First session path", kind: "trace", meta: "4 events", excerpt: "Open app, Sources, empty shelf, Help, quit. No source imported."),
+                ReflectionSource(folder: "Decision Trace", label: "Entry copy decision", kind: "decision", meta: "1 note", excerpt: "We chose to keep the first screen minimal, assuming the user already had a file in mind."),
+                ReflectionSource(folder: "Outcome", label: "Activation result", kind: "metric", meta: "local sample", excerpt: "Three test sessions reached Sources. Only one imported a file without prompting."),
+            ],
+            steps: [
+                ReflectionStep(title: "Input", subtitle: "What actually happened", items: ["The real material is a failed first session, not a feature request.", "The user reached the correct surface but did not know what action had value."]),
+                ReflectionStep(title: "Assumption", subtitle: "What had to be true", items: ["If the product exposes Add files clearly, the next step will be obvious.", "A sparse interface reduces confusion for a first-run user."]),
+                ReflectionStep(title: "Decision Trace", subtitle: "Why this path won", items: ["We removed explanatory onboarding and made Sources the first working surface.", "Evidence: repeated complaints about heavy first-run copy in earlier builds."]),
+                ReflectionStep(title: "Outcome", subtitle: "What reality returned", items: ["The screen looked cleaner, but the first useful action was still underspecified."]),
+                ReflectionStep(title: "Reflection", subtitle: "What changed in judgment", items: ["Clean UI was not the same as clear intent. The first action needs a concrete example from the user context."]),
+                ReflectionStep(title: "Judgment Memory", subtitle: "What should be reused", items: ["For first-run product surfaces, reduce chrome only after the primary action has a meaningful object."]),
+            ],
+            messages: [
+                ReflectionMessage(role: .human, eyebrow: "Material", body: "User entered Sources, saw an empty shelf, opened Help, then quit. The UI was clean but did not create momentum."),
+                ReflectionMessage(role: .loom, eyebrow: "Loom reflection", body: "The failure is not missing explanation. The hidden assumption is that an empty source shelf still communicates a useful first move."),
+            ]
+        ),
+        ReflectionCase(
+            id: "pricing-trust",
+            title: "Pricing page trust test",
+            project: "Public site",
+            status: "Needs outcome",
+            updatedAt: "16:12",
+            summary: "A simplified pricing page increased clicks but reduced qualified conversations.",
+            tags: ["pricing", "trust", "conversion"],
+            sources: [
+                ReflectionSource(folder: "Input", label: "Pricing screenshot", kind: "screenshot", meta: "before / after", excerpt: "The simplified page made the price visible earlier and removed most qualifying detail."),
+                ReflectionSource(folder: "Outcome", label: "Sales feedback", kind: "feedback", meta: "3 notes", excerpt: "More visitors clicked the call-to-action, but the conversations started with lower understanding."),
+            ],
+            steps: [
+                ReflectionStep(title: "Input", subtitle: "What actually happened", items: ["The pricing page was shortened to make the offer easier to scan."]),
+                ReflectionStep(title: "Assumption", subtitle: "What had to be true", items: ["Less detail would reduce anxiety and increase qualified intent."]),
+                ReflectionStep(title: "Decision Trace", subtitle: "Why this path won", items: ["We prioritized CTA clarity over qualification detail."]),
+                ReflectionStep(title: "Outcome", subtitle: "What reality returned", items: ["Clicks rose, but qualified conversations weakened."]),
+                ReflectionStep(title: "Reflection", subtitle: "What changed in judgment", items: ["Reducing friction also removed useful self-selection."]),
+                ReflectionStep(title: "Judgment Memory", subtitle: "What should be reused", items: ["For high-trust products, compression must preserve qualification cues."]),
+            ],
+            messages: [
+                ReflectionMessage(role: .human, eyebrow: "Decision", body: "We removed the comparison table because it made the page feel heavy."),
+                ReflectionMessage(role: .loom, eyebrow: "Judgment check", body: "The decision optimized for click clarity, but the outcome should be judged against conversation quality."),
+            ]
+        ),
+        ReflectionCase(
+            id: "answer-grounding",
+            title: "Cited answer grounding",
+            project: "AI answer surface",
+            status: "Memory ready",
+            updatedAt: "11:05",
+            summary: "A polished generated answer looked convincing until source attribution was visible.",
+            tags: ["attribution", "answer", "trust"],
+            sources: [
+                ReflectionSource(folder: "Input", label: "Generated answer draft", kind: "draft", meta: "1 answer", excerpt: "The answer made three confident claims, but only one claim had a direct source."),
+                ReflectionSource(folder: "Reflection", label: "Citation review", kind: "review", meta: "3 claims", excerpt: "Attribution changed the evaluation from fluent to inspectable."),
+            ],
+            steps: [
+                ReflectionStep(title: "Input", subtitle: "What actually happened", items: ["A generated answer sounded ready before citation review."]),
+                ReflectionStep(title: "Assumption", subtitle: "What had to be true", items: ["Fluency would roughly correlate with source support."]),
+                ReflectionStep(title: "Decision Trace", subtitle: "Why this path won", items: ["We kept the answer but exposed source coverage beside it."]),
+                ReflectionStep(title: "Outcome", subtitle: "What reality returned", items: ["Unsupported claims became obvious immediately."]),
+                ReflectionStep(title: "Reflection", subtitle: "What changed in judgment", items: ["Trust improved when answer quality became inspectable, not when copy became smoother."]),
+                ReflectionStep(title: "Judgment Memory", subtitle: "What should be reused", items: ["For AI output, the minimum viable unit is claim plus source, not answer text."]),
+            ],
+            messages: [
+                ReflectionMessage(role: .human, eyebrow: "Observation", body: "The answer was good prose, but I could not tell which parts were earned."),
+                ReflectionMessage(role: .loom, eyebrow: "Judgment memory", body: "Do not evaluate generated work as text alone. Evaluate the claim-source pair."),
+            ]
+        ),
+    ]
+}
+
+private struct ReflectionStep: Identifiable, Codable, Equatable {
+    let id: String
+    var title: String
+    var subtitle: String
+    var items: [String]
+
+    init(id: String = UUID().uuidString, title: String, subtitle: String, items: [String]) {
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.items = items
+    }
+
+    static func blankWorkflow() -> [ReflectionStep] {
+        [
+            ReflectionStep(id: "input", title: "Input", subtitle: "What actually happened", items: []),
+            ReflectionStep(id: "assumption", title: "Assumption", subtitle: "What had to be true", items: []),
+            ReflectionStep(id: "decision", title: "Decision Trace", subtitle: "Why this path won", items: []),
+            ReflectionStep(id: "outcome", title: "Outcome", subtitle: "What reality returned", items: []),
+            ReflectionStep(id: "reflection", title: "Reflection", subtitle: "What changed in judgment", items: []),
+            ReflectionStep(id: "memory", title: "Judgment Memory", subtitle: "What should be reused", items: []),
+        ]
+    }
+}
+
+private struct ReflectionSource: Identifiable, Codable, Equatable {
+    let id: String
+    var folder: String
+    var label: String
+    var kind: String
+    var meta: String
+    var excerpt: String
+    var fileURL: URL?
+
+    init(
+        id: String = UUID().uuidString,
+        folder: String,
+        label: String,
+        kind: String,
+        meta: String,
+        excerpt: String,
+        fileURL: URL? = nil
+    ) {
+        self.id = id
+        self.folder = folder
+        self.label = label
+        self.kind = kind
+        self.meta = meta
+        self.excerpt = excerpt
+        self.fileURL = fileURL
+    }
+
+    var symbol: String {
+        switch kind {
+        case "feedback": return "quote.bubble"
+        case "trace": return "point.3.connected.trianglepath.dotted"
+        case "decision": return "arrow.triangle.branch"
+        case "metric": return "chart.line.uptrend.xyaxis"
+        case "screenshot": return "rectangle.dashed"
+        case "review": return "checkmark.seal"
+        case "pdf": return "doc.richtext"
+        case "png", "jpg", "jpeg", "heic", "gif", "tiff", "webp": return "photo"
+        case "md", "markdown", "txt", "rtf": return "doc.plaintext"
+        default: return "doc.text"
+        }
+    }
+}
+
+private struct ReflectionSourceAnchor {
+    let label: String
+    let sourceID: ReflectionSource.ID
+}
+
+private struct ReflectionMessage: Identifiable, Codable, Equatable {
+    enum Role: Codable, Equatable {
+        case human
+        case loom
+    }
+
+    let id: String
+    var role: Role
+    var eyebrow: String
+    var body: String
+
+    init(id: String = UUID().uuidString, role: Role, eyebrow: String, body: String) {
+        self.id = id
+        self.role = role
+        self.eyebrow = eyebrow
+        self.body = body
+    }
+}

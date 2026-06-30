@@ -41,6 +41,7 @@ macos-app/Loom/.build/
 .next-export-out/
 .next-acceptance/
 .next-*/
+.codex/
 .playwright-cli/
 .playwright-mcp/
 .superpowers/
@@ -62,6 +63,7 @@ captures/
 /LOOM_RULES.md
 /LOOM_USER_PROFILE.md
 /PROJECTS.md
+/docs/local-private/
 
 # Finder duplicates (generated, never commit)
 * 2.*

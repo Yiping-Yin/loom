@@ -53,6 +53,9 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "15.0"
+        DEVELOPMENT_TEAM: 8BW2794353
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
         ENABLE_HARDENED_RUNTIME: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # Education/Reference per the trademark-check memo (2026-04-21) —
@@ -72,6 +75,22 @@ targets:
           NSAllowsLocalNetworking: true
         CFBundleName: Loom
         CFBundleDisplayName: Loom
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Learning documents
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - com.adobe.pdf
+              - public.text
+              - public.plain-text
+              - public.rtf
+              - public.image
+              - org.openxmlformats.wordprocessingml.document
+              - com.microsoft.word.doc
+              - org.openxmlformats.spreadsheetml.sheet
+              - com.microsoft.excel.xls
+              - org.openxmlformats.presentationml.presentation
+              - com.microsoft.powerpoint.ppt
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleURLTypes:
@@ -79,6 +98,15 @@ targets:
             CFBundleURLSchemes:
               - loom
         LSApplicationCategoryType: "public.app-category.education"
+        NSServices:
+          - NSMenuItem:
+              default: Capture Selection in Loom
+            NSMessage: captureSelectionInLoom
+            NSPortName: Loom
+            NSSendTypes:
+              - NSStringPboardType
+              - public.utf8-plain-text
+              - public.file-url
     preBuildScripts:
       - name: Stage Next.js static export into bundle Resources
         # Stages `.next-export/` output into the .app bundle's Resources/web
@@ -189,3 +217,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yinyiping.loomTests
         GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_TEAM: 8BW2794353
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"

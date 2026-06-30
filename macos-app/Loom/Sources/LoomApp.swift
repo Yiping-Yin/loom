@@ -1,23 +1,16 @@
 import SwiftUI
 import AppKit
+import ApplicationServices
+import CoreGraphics
 import UniformTypeIdentifiers
 
 private let showDebugHUDDefaultsKey = "loom.showDebugHUD.v2"
+private let loomWorkspaceMinimumSize = NSSize(width: 1184, height: 720)
+private let loomExternalCompanionSize = NSSize(width: 276, height: 64)
 
 @main
 struct LoomApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-
-    /// Experimental clean-mode toggle. When the user defaults flag
-    /// `loom.minimal.enabled` is true we render the new minimal Loom
-    /// (page-only, no webview, no overlay machinery). Lets us iterate
-    /// on the new architecture without inheriting any legacy chrome.
-    /// Default ON for now — flip in `defaults write com.yinyiping.loom
-    /// loom.minimal.enabled 0` to fall back to the legacy ContentView.
-    private var minimalModeEnabled: Bool {
-        let raw = UserDefaults.standard.object(forKey: "loom.minimal.enabled") as? Bool
-        return raw ?? true
-    }
 
     /// Hosted XCTest detection — when Loom.app is only the host process
     /// for a unit-test bundle, the product root view must not mount and
@@ -26,7 +19,6 @@ struct LoomApp: App {
         let env = ProcessInfo.processInfo.environment
         return env["XCTestConfigurationFilePath"] != nil
             || env["XCTestBundlePath"] != nil
-            || NSClassFromString("XCTestCase") != nil
     }
 
     var body: some Scene {
@@ -35,28 +27,25 @@ struct LoomApp: App {
                 if isRunningInXCTestHost {
                     EmptyView()
                 } else {
-                    // The macOS app IS the latest web identity product: a
-                    // full-window WebView of the dossier (Home / About /
-                    // Education / Experience / Digital Me). The earlier
-                    // minimal Sources/Draft shell and the legacy ContentView
-                    // are retained in the codebase but no longer mounted.
-                    LoomDossierRootView()
-                        .environmentObject(delegate.server)
+                    // The macOS app now starts as a native product
+                    // reflection workspace. Legacy web and Sources/Draft
+                    // surfaces remain in the codebase for compatibility,
+                    // but the first screen is local judgment work.
+                    LoomReflectionRootView()
                         .background(WindowOpener())
                 }
             }
-            .frame(minWidth: 960, minHeight: 640)
+            .frame(minWidth: loomWorkspaceMinimumSize.width, minHeight: loomWorkspaceMinimumSize.height)
         }
-        .defaultSize(width: 1400, height: 900)
+        .defaultSize(width: 1320, height: 860)
         // macOS 15+ is the product floor. Do not let system state
         // restoration reopen Loom into the "all windows closed" state:
         // clicking the app icon should always present the room.
         .restorationBehavior(.disabled)
         .defaultLaunchBehavior(.presented)
-        // The minimal scene window hides macOS titlebar chrome entirely —
-        // Draft renders navigation/title/capture in-window through the
-        // shared root toolbar, so a system toolbar/title strip would be
-        // a second top band above the one chrome owner.
+        // Reflection owns one unified, minimal full-window shell:
+        // traffic lights stay native, while the sidebar/detail/source
+        // panes share a single content surface under them.
         .windowStyle(.hiddenTitleBar)
 
         Settings {
@@ -177,12 +166,8 @@ struct LoomApp: App {
                 Button("Forward") { NotificationCenter.default.post(name: .loomGoForward, object: nil) }
                     .keyboardShortcut("]", modifiers: .command)
             }
-            // Workspace ⌘1-⌘5 switcher — mirrors the top-level
-            // Workspaces list (Home, Desk, Coworks, Patterns, Weaves).
-            // Sources + LLM Wiki now live under Desk as content
-            // sections, not peer workspaces.
-            // wins over minimalism here; the sidebar design is worth
-            // keeping AND upgrading.
+            // Workspace shortcuts for the native reflection surface and
+            // compatibility routes that still exist behind it.
             CommandGroup(after: .sidebar) {
                 Divider()
                 WorkspaceShortcutsCommands()
@@ -250,12 +235,187 @@ struct LoomApp: App {
     }
 }
 
+final class LoomExternalCompanionModel: ObservableObject {
+    @Published private(set) var iconSystemName: String = "rectangle.on.rectangle"
+    @Published private(set) var title: String = "Native file"
+    @Published private(set) var sourceActionLabel: String? = "Back to Source"
+    @Published private(set) var actionLabel: String = "Review in Loom"
+
+    func update(
+        iconSystemName: String,
+        title: String,
+        sourceActionLabel: String?,
+        actionLabel: String
+    ) {
+        self.iconSystemName = iconSystemName
+        self.title = title
+        self.sourceActionLabel = sourceActionLabel
+        self.actionLabel = actionLabel
+    }
+}
+
+final class LoomExternalCompanionPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+}
+
+struct LoomExternalCompanionView: View {
+    @ObservedObject var model: LoomExternalCompanionModel
+    let onOpenSource: () -> Void
+    let onOpenMain: () -> Void
+    let onClose: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 9) {
+            Image(systemName: model.iconSystemName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 24, height: 24)
+                .background(.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text("Loom")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Saved")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.green)
+                }
+
+                Text(model.title)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(.primary.opacity(0.88))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 3) {
+                if model.sourceActionLabel != nil {
+                    Button(action: onOpenSource) {
+                        Image(systemName: "arrow.uturn.left")
+                            .font(.system(size: 11.5, weight: .semibold))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 24, height: 24)
+                    .accessibilityLabel(model.sourceActionLabel ?? "Back to Source")
+                    .help(model.sourceActionLabel ?? "Back to Source")
+                }
+
+                Button(action: onOpenMain) {
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.system(size: 11.5, weight: .semibold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .frame(width: 24, height: 24)
+                .accessibilityLabel(model.actionLabel)
+                .help(model.actionLabel)
+
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11.5, weight: .bold))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .frame(width: 24, height: 24)
+                .accessibilityLabel("Close")
+                .help("Close")
+            }
+        }
+        .padding(.top, 8)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 7)
+        .frame(width: loomExternalCompanionSize.width, height: loomExternalCompanionSize.height)
+        .background(.thinMaterial)
+    }
+}
+
+private enum LoomNativeDocumentKind {
+    case pdf
+    case word
+    case spreadsheet
+    case presentation
+    case text
+    case image
+    case file
+
+    var iconSystemName: String {
+        switch self {
+        case .pdf:
+            return "doc.richtext"
+        case .word:
+            return "doc.text"
+        case .spreadsheet:
+            return "tablecells"
+        case .presentation:
+            return "rectangle.stack"
+        case .text:
+            return "text.document"
+        case .image:
+            return "photo"
+        case .file:
+            return "doc"
+        }
+    }
+
+    static func infer(from urls: [URL]) -> LoomNativeDocumentKind {
+        infer(fromExtension: urls.first?.pathExtension)
+    }
+
+    static func infer(from capture: LoomExternalSelectionCapture) -> LoomNativeDocumentKind {
+        if let url = capture.fileURLs.first {
+            return infer(fromExtension: url.pathExtension)
+        }
+
+        let appName = (capture.sourceApp ?? "").lowercased()
+        if appName.contains("preview") { return .pdf }
+        if appName.contains("word") { return .word }
+        if appName.contains("excel") { return .spreadsheet }
+        if appName.contains("powerpoint") || appName.contains("keynote") { return .presentation }
+        return .file
+    }
+
+    private static func infer(fromExtension value: String?) -> LoomNativeDocumentKind {
+        switch value?.lowercased() {
+        case "pdf":
+            return .pdf
+        case "doc", "docx", "pages", "rtf", "rtfd":
+            return .word
+        case "xls", "xlsx", "csv", "tsv", "numbers":
+            return .spreadsheet
+        case "ppt", "pptx", "key":
+            return .presentation
+        case "txt", "md", "mdx", "markdown", "json", "xml", "html", "htm":
+            return .text
+        case "png", "jpg", "jpeg", "gif", "heic", "webp", "tiff":
+            return .image
+        default:
+            return .file
+        }
+    }
+
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate {
     let server = DevServer()
     private var fallbackMainWindow: NSWindow?
+    private let externalCompanionModel = LoomExternalCompanionModel()
+    private var externalCompanionWindow: NSPanel?
+    private var externalCompanionKeepsMainParked = false
+    private var externalCompanionDismissToken: UUID?
+    private var externalCompanionSourceFileURLs: [URL] = []
+    private var externalCompanionSourceBundleIdentifier: String?
+    private var externalCompanionSourceProcessIdentifier: pid_t?
     private var launchConfigured = false
+    private var servicesProviderRegistered = false
+    private var sourceApplicationObserverRegistered = false
+    private var companionMainWindowSuppressionObserver: NSObjectProtocol?
+    private var lastExternalApplicationSnapshot: LoomExternalApplicationSnapshot?
     private var captureSpaceRestoreBehavior: NSWindow.CollectionBehavior?
     private var captureSpaceRestoreToken: UUID?
+    private var fallbackMaterializationToken: UUID?
 
     /// Hosted XCTest detection — when the running process is only the
     /// host for a unit-test bundle, every main-window repair path must
@@ -264,7 +424,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let env = ProcessInfo.processInfo.environment
         return env["XCTestConfigurationFilePath"] != nil
             || env["XCTestBundlePath"] != nil
-            || NSClassFromString("XCTestCase") != nil
     }
 
     override init() {
@@ -274,7 +433,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.async { [weak self] in
             Task { @MainActor in
                 self?.configureLaunchIfNeeded()
-                self?.ensureMainWindowVisible()
                 self?.scheduleMainWindowRepair()
             }
         }
@@ -290,6 +448,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // `configureLaunchIfNeeded` hops (DispatchQueue/Task) lose that
         // race nondeterministically.
         guard !isRunningInXCTestHost else { return }
+        registerSourceApplicationObserver()
+        registerCompanionMainWindowSuppressionObserver()
+        registerServicesProvider()
         registerURLSchemeHandler()
     }
 
@@ -297,7 +458,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             guard !isRunningInXCTestHost else { return }
             configureLaunchIfNeeded()
-            ensureMainWindowVisible()
             scheduleMainWindowRepair()
         }
     }
@@ -306,6 +466,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             guard !isRunningInXCTestHost else { return }
             configureLaunchIfNeeded()
+            if externalCompanionKeepsMainParked {
+                parkMainWindowForExternalCompanion()
+                return
+            }
             // Returning to Loom should repair any titlebar chrome macOS
             // restored while the app was inactive.
             if let window = existingMainWindow(includeHidden: false, requireActiveSpace: true) {
@@ -313,6 +477,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 ensureMainWindowVisible()
             }
+        }
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        Task { @MainActor in
+            openExternalFiles(urls)
+        }
+    }
+
+    func application(_ sender: NSApplication, openFile filename: String) -> Bool {
+        Task { @MainActor in
+            openExternalFiles([URL(fileURLWithPath: filename)])
+        }
+        return true
+    }
+
+    @objc(captureSelectionInLoom:userData:error:)
+    func captureSelectionInLoom(
+        _ pasteboard: NSPasteboard,
+        userData: String?,
+        error: AutoreleasingUnsafeMutablePointer<NSString?>
+    ) {
+        NSLog("[Loom] captureSelectionInLoom service invoked")
+        guard let capture = Self.externalSelectionCapture(
+            from: pasteboard,
+            fallbackSource: lastExternalApplicationSnapshot
+        ) else {
+            error.pointee = "No selected text or file URL was available for Loom." as NSString
+            return
+        }
+
+        Task { @MainActor in
+            self.captureExternalSelection(capture)
         }
     }
 
@@ -324,6 +521,51 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Called synchronously from `applicationWillFinishLaunching` —
     /// see the comment there for why it must not be deferred.
     private var urlHandlerRegistered = false
+    private func registerSourceApplicationObserver() {
+        guard !sourceApplicationObserverRegistered else { return }
+        sourceApplicationObserverRegistered = true
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(activeApplicationDidChange(_:)),
+            name: NSWorkspace.didActivateApplicationNotification,
+            object: nil
+        )
+        if let application = NSWorkspace.shared.frontmostApplication,
+           !Self.isIgnoredSourceApplication(application) {
+            lastExternalApplicationSnapshot = Self.sourceApplicationSnapshot(for: application)
+        }
+    }
+
+    private func registerCompanionMainWindowSuppressionObserver() {
+        guard companionMainWindowSuppressionObserver == nil else { return }
+        companionMainWindowSuppressionObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didUpdateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.externalCompanionKeepsMainParked else { return }
+                self.fallbackMaterializationToken = nil
+                self.parkMainWindowForExternalCompanion()
+            }
+        }
+    }
+
+    @objc private func activeApplicationDidChange(_ notification: Notification) {
+        guard let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              !Self.isIgnoredSourceApplication(application) else { return }
+        lastExternalApplicationSnapshot = Self.sourceApplicationSnapshot(for: application)
+    }
+
+    private func registerServicesProvider() {
+        guard !servicesProviderRegistered else { return }
+        servicesProviderRegistered = true
+        NSApp.servicesProvider = self
+        NSRegisterServicesProvider(self, "Loom")
+        NSUpdateDynamicServices()
+        NSLog("[Loom] Services provider registered for port Loom")
+    }
+
     private func registerURLSchemeHandler() {
         guard !urlHandlerRegistered else { return }
         urlHandlerRegistered = true
@@ -341,6 +583,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         launchConfigured = true
         NSWindow.allowsAutomaticWindowTabbing = false
         NSApp.setActivationPolicy(.regular)
+        registerSourceApplicationObserver()
+        registerCompanionMainWindowSuppressionObserver()
+        registerServicesProvider()
         UserDefaults.standard.set(false, forKey: showDebugHUDDefaultsKey)
         // URL handler registration normally already happened in
         // applicationWillFinishLaunching; this is a belt-and-braces
@@ -392,6 +637,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func ensureMainWindowVisible() {
         guard !isRunningInXCTestHost else { return }
+        if externalCompanionKeepsMainParked {
+            parkMainWindowForExternalCompanion()
+            return
+        }
+        reconcileDuplicateMainWindows()
         NSLog("[Loom] ensureMainWindowVisible windows=%d", NSApp.windows.count)
         if let window = existingMainWindow(includeHidden: false, requireActiveSpace: true) {
             NSLog("[Loom] ensureMainWindowVisible using visible window=%d", window.windowNumber)
@@ -411,11 +661,90 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             presentWindowOnActiveSpace(window)
             return
         }
-        materializeFallbackMainWindow()
+        requestMainWindowSceneOrFallback()
+    }
+
+    @MainActor
+    private func requestMainWindowSceneOrFallback() {
+        NotificationCenter.default.post(name: .loomOpenMainWindow, object: nil)
+
+        let token = UUID()
+        fallbackMaterializationToken = token
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
+            Task { @MainActor in
+                guard let self, self.fallbackMaterializationToken == token else { return }
+                self.fallbackMaterializationToken = nil
+                self.reconcileDuplicateMainWindows()
+                if let window = self.existingMainWindow(includeHidden: false, requireActiveSpace: true)
+                    ?? self.existingMainWindow(includeHidden: false)
+                    ?? self.existingMainWindow(includeHidden: true) {
+                    self.presentWindowOnActiveSpace(window)
+                    return
+                }
+                self.materializeFallbackMainWindow()
+            }
+        }
+    }
+
+    @MainActor
+    private func scheduleDuplicateMainWindowReconciliation() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                if self.externalCompanionKeepsMainParked {
+                    self.parkMainWindowForExternalCompanion()
+                } else {
+                    self.reconcileDuplicateMainWindows()
+                }
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                if self.externalCompanionKeepsMainParked {
+                    self.parkMainWindowForExternalCompanion()
+                } else {
+                    self.reconcileDuplicateMainWindows()
+                }
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                if self.externalCompanionKeepsMainParked {
+                    self.parkMainWindowForExternalCompanion()
+                } else {
+                    self.reconcileDuplicateMainWindows()
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func reconcileDuplicateMainWindows() {
+        let windows = mainWindows(includeHidden: false)
+        guard windows.count > 1 else { return }
+
+        if let fallbackMainWindow,
+           windows.contains(where: { $0 !== fallbackMainWindow }) {
+            loomCaptureLog("reconcileDuplicateMainWindows: closing fallback window #\(fallbackMainWindow.windowNumber)")
+            closeMainWindow(fallbackMainWindow)
+            return
+        }
+
+        guard let keeper = windows.first(where: { $0.isKeyWindow || $0.isMainWindow }) ?? windows.first else {
+            return
+        }
+        for window in windows where window !== keeper {
+            loomCaptureLog("reconcileDuplicateMainWindows: closing duplicate main window #\(window.windowNumber)")
+            closeMainWindow(window)
+        }
     }
 
     @MainActor
     private func presentWindowOnActiveSpace(_ window: NSWindow) {
+        window.alphaValue = 1
+        window.ignoresMouseEvents = false
         configureMainWindowChrome(window)
         let originalSpaceBehavior = window.collectionBehavior
         var presentationBehavior = originalSpaceBehavior
@@ -466,14 +795,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Fallback main window — same full-size hidden-titlebar chrome
-    /// contract as the SwiftUI scene window, hosting the dossier web root
-    /// (the latest Loom identity product), matching the SwiftUI scene.
+    /// contract as the SwiftUI scene window, hosting the native reflection
+    /// root instead of the retired web-first shell.
     @MainActor
     private func createFallbackMainWindow() {
-        let rootView = LoomDossierRootView()
-            .environmentObject(server)
+        let rootView = LoomReflectionRootView()
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1400, height: 900),
+            contentRect: NSRect(x: 0, y: 0, width: 1320, height: 860),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -486,6 +814,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.toolbar = nil
         window.standardWindowButton(.toolbarButton)?.isHidden = true
         window.collectionBehavior.insert(.fullScreenPrimary)
+        window.minSize = loomWorkspaceMinimumSize
+        window.backgroundColor = NSColor.windowBackgroundColor
         window.isRestorable = false
         window.contentView = NSHostingView(rootView: rootView)
         window.isReleasedWhenClosed = false
@@ -498,6 +828,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if !flag {
             Task { @MainActor in
                 sender.activate(ignoringOtherApps: true)
+                if externalCompanionKeepsMainParked {
+                    externalCompanionWindow?.orderFrontRegardless()
+                    parkMainWindowForExternalCompanion()
+                    return
+                }
+                externalCompanionKeepsMainParked = false
                 ensureMainWindowVisible()
                 NotificationCenter.default.post(name: .loomOpenMainWindow, object: nil)
             }
@@ -584,6 +920,635 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @MainActor
+    private func openExternalFiles(_ urls: [URL]) {
+        let fileURLs = urls.filter { $0.isFileURL }
+        guard !fileURLs.isEmpty else { return }
+
+        let token = UUID()
+        LoomExternalFileOpenRelay.savePending(fileURLs, token: token)
+        externalCompanionKeepsMainParked = true
+
+        postExternalFileOpen(fileURLs, token: token)
+        presentExternalCompanion(for: fileURLs)
+        parkMainWindowForExternalCompanion()
+        scheduleDuplicateMainWindowReconciliation()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.postExternalFileOpen(fileURLs, token: token)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.postExternalFileOpen(fileURLs, token: token)
+        }
+    }
+
+    private func postExternalFileOpen(_ urls: [URL], token: UUID) {
+        NotificationCenter.default.post(
+            name: .loomOpenExternalFiles,
+            object: nil,
+            userInfo: ["urls": urls, "token": token]
+        )
+    }
+
+    @MainActor
+    private func captureExternalSelection(_ capture: LoomExternalSelectionCapture) {
+        LoomExternalSelectionCaptureRelay.savePending(capture)
+        externalCompanionKeepsMainParked = true
+
+        postExternalSelectionCapture(capture)
+        presentExternalCompanion(for: capture)
+        parkMainWindowForExternalCompanion()
+        restoreSourceFocusFromExternalCompanionSoon()
+        scheduleDuplicateMainWindowReconciliation()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.postExternalSelectionCapture(capture)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.postExternalSelectionCapture(capture)
+        }
+    }
+
+    private func postExternalSelectionCapture(_ capture: LoomExternalSelectionCapture) {
+        NotificationCenter.default.post(
+            name: .loomCaptureExternalSelection,
+            object: nil,
+            userInfo: ["capture": capture]
+        )
+    }
+
+    @MainActor
+    private func presentExternalCompanion(for urls: [URL]) {
+        let fileNames = urls.map(\.lastPathComponent)
+        let kind = LoomNativeDocumentKind.infer(from: urls)
+        let title = fileNames.first ?? "Native file"
+        externalCompanionSourceFileURLs = urls
+        externalCompanionSourceBundleIdentifier = nil
+        externalCompanionSourceProcessIdentifier = nil
+        externalCompanionModel.update(
+            iconSystemName: kind.iconSystemName,
+            title: title,
+            sourceActionLabel: "Open Source",
+            actionLabel: "Review in Loom"
+        )
+        presentExternalCompanionWindow()
+    }
+
+    @MainActor
+    private func presentExternalCompanion(for capture: LoomExternalSelectionCapture) {
+        let kind = LoomNativeDocumentKind.infer(from: capture)
+        let source = capture.sourceWindowTitle
+            ?? capture.fileURLs.first?.lastPathComponent
+            ?? capture.sourceApp
+            ?? "Native file"
+        externalCompanionSourceFileURLs = capture.fileURLs
+        externalCompanionSourceBundleIdentifier = capture.sourceBundleIdentifier
+        externalCompanionSourceProcessIdentifier = capture.sourceProcessIdentifier
+        externalCompanionModel.update(
+            iconSystemName: kind.iconSystemName,
+            title: source,
+            sourceActionLabel: "Back to Source",
+            actionLabel: "Review in Loom"
+        )
+        presentExternalCompanionWindow()
+    }
+
+    @MainActor
+    private func presentExternalCompanionWindow() {
+        let panel = externalCompanionWindow ?? createExternalCompanionWindow()
+        externalCompanionWindow = panel
+        externalCompanionKeepsMainParked = true
+        positionExternalCompanionWindow(panel)
+        panel.orderFrontRegardless()
+        scheduleExternalCompanionAutoDismiss()
+    }
+
+    @MainActor
+    private func openMainWindowFromExternalCompanion() {
+        dismissExternalCompanionReceipt(clearParking: true)
+        ensureMainWindowVisible()
+    }
+
+    @MainActor
+    private func openSourceFromExternalCompanion() {
+        externalCompanionKeepsMainParked = true
+
+        if restoreSourceFocusFromExternalCompanion() {
+            dismissExternalCompanionReceipt(clearParking: true)
+            return
+        }
+
+        if let url = externalCompanionSourceFileURLs.first {
+            Self.openURLInPreferredNativeApp(url)
+            parkMainWindowForExternalCompanion()
+            dismissExternalCompanionReceipt(clearParking: true)
+        }
+    }
+
+    @MainActor
+    private func scheduleExternalCompanionAutoDismiss() {
+        let token = UUID()
+        externalCompanionDismissToken = token
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.2) { [weak self] in
+            Task { @MainActor in
+                self?.dismissExternalCompanionReceipt(matching: token, clearParking: true)
+            }
+        }
+    }
+
+    @MainActor
+    private func dismissExternalCompanionReceipt(matching token: UUID? = nil, clearParking: Bool) {
+        if let token, token != externalCompanionDismissToken { return }
+        externalCompanionDismissToken = nil
+        if clearParking {
+            externalCompanionKeepsMainParked = false
+        }
+        externalCompanionWindow?.orderOut(nil)
+    }
+
+    @MainActor
+    @discardableResult
+    private func restoreSourceFocusFromExternalCompanion() -> Bool {
+        if let processIdentifier = externalCompanionSourceProcessIdentifier,
+           let application = NSRunningApplication(processIdentifier: processIdentifier),
+           !Self.isIgnoredSourceApplication(application) {
+            application.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+            parkMainWindowForExternalCompanion()
+            return true
+        }
+
+        if let bundleIdentifier = externalCompanionSourceBundleIdentifier,
+           let application = NSWorkspace.shared.runningApplications.first(where: {
+                $0.bundleIdentifier == bundleIdentifier && !Self.isIgnoredSourceApplication($0)
+           }) {
+            application.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+            parkMainWindowForExternalCompanion()
+            return true
+        }
+
+        return false
+    }
+
+    @MainActor
+    private func restoreSourceFocusFromExternalCompanionSoon() {
+        for delay in [0.08, 0.35, 0.9] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                Task { @MainActor in
+                    guard let self, self.externalCompanionKeepsMainParked else { return }
+                    _ = self.restoreSourceFocusFromExternalCompanion()
+                }
+            }
+        }
+    }
+
+    private static func openURLInPreferredNativeApp(_ url: URL) {
+        guard let applicationURL = preferredNativeApplicationURL(for: url)
+            ?? NSWorkspace.shared.urlForApplication(toOpen: url) else {
+            NSWorkspace.shared.open(url)
+            return
+        }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.open([url], withApplicationAt: applicationURL, configuration: configuration) { _, error in
+            guard error != nil else { return }
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    private static func preferredNativeApplicationURL(for url: URL) -> URL? {
+        let applicationPath: String?
+        switch url.pathExtension.lowercased() {
+        case "pdf":
+            applicationPath = "/System/Applications/Preview.app"
+        case "doc", "docx", "rtf", "rtfd":
+            applicationPath = "/Applications/Microsoft Word.app"
+        case "xls", "xlsx", "csv", "tsv":
+            applicationPath = "/Applications/Microsoft Excel.app"
+        default:
+            applicationPath = nil
+        }
+
+        guard let applicationPath else { return nil }
+        let applicationURL = URL(fileURLWithPath: applicationPath)
+        return FileManager.default.fileExists(atPath: applicationURL.path) ? applicationURL : nil
+    }
+
+    @MainActor
+    private func createExternalCompanionWindow() -> NSPanel {
+        let rootView = LoomExternalCompanionView(
+            model: externalCompanionModel,
+            onOpenSource: { [weak self] in
+                Task { @MainActor in
+                    self?.openSourceFromExternalCompanion()
+                }
+            },
+            onOpenMain: { [weak self] in
+                Task { @MainActor in
+                    self?.openMainWindowFromExternalCompanion()
+                }
+            },
+            onClose: { [weak self] in
+                Task { @MainActor in
+                    self?.dismissExternalCompanionReceipt(clearParking: true)
+                }
+            }
+        )
+        let panel = LoomExternalCompanionPanel(
+            contentRect: NSRect(origin: .zero, size: loomExternalCompanionSize),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.identifier = NSUserInterfaceItemIdentifier("loom.externalCompanion")
+        panel.title = "Loom Companion"
+        panel.titleVisibility = .hidden
+        panel.titlebarAppearsTransparent = true
+        panel.toolbar = nil
+        panel.standardWindowButton(.closeButton)?.isHidden = true
+        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        panel.standardWindowButton(.zoomButton)?.isHidden = true
+        panel.standardWindowButton(.toolbarButton)?.isHidden = true
+        panel.isFloatingPanel = true
+        panel.hidesOnDeactivate = false
+        panel.becomesKeyOnlyIfNeeded = true
+        panel.level = .floating
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        panel.minSize = loomExternalCompanionSize
+        panel.maxSize = loomExternalCompanionSize
+        panel.isReleasedWhenClosed = false
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.contentView = NSHostingView(rootView: rootView)
+        panel.setContentSize(loomExternalCompanionSize)
+        return panel
+    }
+
+    @MainActor
+    private func positionExternalCompanionWindow(_ panel: NSPanel) {
+        guard let visibleFrame = (panel.screen ?? NSScreen.main)?.visibleFrame else { return }
+        let width = loomExternalCompanionSize.width
+        let height = loomExternalCompanionSize.height
+        let frame = NSRect(
+            x: visibleFrame.maxX - width - 24,
+            y: visibleFrame.minY + max(36, (visibleFrame.height - height) / 2),
+            width: width,
+            height: height
+        )
+        panel.setFrame(frame, display: true, animate: false)
+    }
+
+    @MainActor
+    private func parkMainWindowForExternalCompanion() {
+        fallbackMaterializationToken = nil
+        for window in mainWindows(includeHidden: true) {
+            parkVisibleMainWindow(window)
+        }
+        for delay in [0.05, 0.2, 0.7, 1.4, 2.4] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                Task { @MainActor in
+                    guard let self, self.externalCompanionKeepsMainParked else { return }
+                    self.fallbackMaterializationToken = nil
+                    for window in self.mainWindows(includeHidden: true) {
+                        self.parkVisibleMainWindow(window)
+                    }
+                }
+            }
+        }
+    }
+
+    private static func externalSelectionCapture(
+        from pasteboard: NSPasteboard,
+        fallbackSource: LoomExternalApplicationSnapshot?
+    ) -> LoomExternalSelectionCapture? {
+        let objectText = (pasteboard.readObjects(
+            forClasses: [NSString.self],
+            options: nil
+        ) as? [NSString])?.first.map { String($0) }
+        let text = pasteboard.string(forType: .string) ?? objectText
+
+        let urlObjects = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [NSURL] ?? []
+        let urls = urlObjects.map { $0 as URL }
+
+        let trimmedText = text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !(trimmedText?.isEmpty ?? true) || !urls.isEmpty else { return nil }
+
+        let activeSource = sourceApplicationSnapshot(for: NSWorkspace.shared.frontmostApplication)
+        let refreshedFallbackSource = refreshedSourceApplicationSnapshot(from: fallbackSource)
+        let source = activeSource ?? refreshedFallbackSource
+        let contextualURLs = urls.isEmpty
+            ? [source?.nativeContext?.documentURL].compactMap { $0 }
+            : urls
+
+        return LoomExternalSelectionCapture(
+            token: UUID(),
+            text: trimmedText ?? "",
+            fileURLs: contextualURLs,
+            sourceApp: source?.localizedName,
+            sourceBundleIdentifier: source?.bundleIdentifier,
+            sourceProcessIdentifier: source?.processIdentifier,
+            sourceWindowTitle: source?.windowTitle,
+            nativeContext: source?.nativeContext,
+            capturedAt: Date()
+        )
+    }
+
+    private static func sourceApplicationSnapshot(
+        for application: NSRunningApplication?
+    ) -> LoomExternalApplicationSnapshot? {
+        guard let application, !isIgnoredSourceApplication(application) else { return nil }
+        let windowTitle = frontmostWindowTitle(for: application)
+        return LoomExternalApplicationSnapshot(
+            localizedName: application.localizedName,
+            bundleIdentifier: application.bundleIdentifier,
+            processIdentifier: application.processIdentifier,
+            windowTitle: windowTitle,
+            nativeContext: accessibilitySourceContext(for: application, windowTitle: windowTitle)
+        )
+    }
+
+    private static func refreshedSourceApplicationSnapshot(
+        from snapshot: LoomExternalApplicationSnapshot?
+    ) -> LoomExternalApplicationSnapshot? {
+        guard let snapshot,
+              let application = NSRunningApplication(processIdentifier: snapshot.processIdentifier),
+              !isIgnoredSourceApplication(application) else { return snapshot }
+        return sourceApplicationSnapshot(for: application) ?? snapshot
+    }
+
+    private static func isLoomApplication(_ application: NSRunningApplication) -> Bool {
+        application.bundleIdentifier == Bundle.main.bundleIdentifier
+    }
+
+    private static func isIgnoredSourceApplication(_ application: NSRunningApplication) -> Bool {
+        if isLoomApplication(application) { return true }
+        switch application.bundleIdentifier {
+        case "com.apple.loginwindow", "com.apple.systemuiserver", "com.apple.controlcenter":
+            return true
+        default:
+            return false
+        }
+    }
+
+    private static func frontmostWindowTitle(for application: NSRunningApplication?) -> String? {
+        guard let application else { return nil }
+        return accessibilityFocusedWindowTitle(for: application)
+            ?? cgWindowTitle(for: application)
+    }
+
+    private static func accessibilitySourceContext(
+        for application: NSRunningApplication,
+        windowTitle: String?
+    ) -> LoomNativeSourceContext? {
+        let appElement = AXUIElementCreateApplication(application.processIdentifier)
+        let focusedWindow = accessibilityElementAttribute(kAXFocusedWindowAttribute as String, from: appElement)
+        let focusedElement = accessibilityElementAttribute(kAXFocusedUIElementAttribute as String, from: appElement)
+        let elements = [focusedElement, focusedWindow, appElement].compactMap { $0 }
+
+        let documentURL = firstAccessibilityURLAttribute(
+            ["AXDocument", "AXURL", "AXFilename"],
+            from: elements
+        )
+        let documentTitle = documentURL?.lastPathComponent
+            ?? firstAccessibilityStringAttribute(["AXTitle", "AXFilename", "AXDescription"], from: elements)
+            ?? windowTitle
+        let strings = orderedUniqueStrings(
+            ([windowTitle] as [String?])
+                + accessibilityStrings(["AXValue", "AXDescription", "AXTitle", "AXHelp", "AXIdentifier"], from: elements)
+        )
+        let pageContext = pageContext(from: strings)
+        let cellRange = spreadsheetCellRange(from: strings)
+        let sheetName = spreadsheetSheetName(from: strings)
+        let selectedRole = firstAccessibilityStringAttribute(["AXRoleDescription", "AXRole"], from: elements)
+
+        let precision = anchorPrecision(
+            documentURL: documentURL,
+            pageNumber: pageContext.pageNumber,
+            cellRange: cellRange,
+            windowTitle: windowTitle
+        )
+
+        guard documentURL != nil
+                || pageContext.pageNumber != nil
+                || cellRange != nil
+                || sheetName != nil
+                || selectedRole != nil
+                || windowTitle != nil else {
+            return nil
+        }
+
+        return LoomNativeSourceContext(
+            documentURL: documentURL,
+            documentTitle: nonEmptyString(documentTitle),
+            pageNumber: pageContext.pageNumber,
+            pageCount: pageContext.pageCount,
+            sheetName: sheetName,
+            cellRange: cellRange,
+            selectedRole: selectedRole,
+            anchorPrecision: precision
+        )
+    }
+
+    private static func accessibilityFocusedWindowTitle(for application: NSRunningApplication) -> String? {
+        let appElement = AXUIElementCreateApplication(application.processIdentifier)
+        var focusedWindow: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            appElement,
+            kAXFocusedWindowAttribute as CFString,
+            &focusedWindow
+        ) == .success else { return nil }
+
+        var title: CFTypeRef?
+        guard let window = focusedWindow,
+              AXUIElementCopyAttributeValue(
+                window as! AXUIElement,
+                kAXTitleAttribute as CFString,
+                &title
+              ) == .success else { return nil }
+
+        return nonEmptyString(title as? String)
+    }
+
+    private static func accessibilityElementAttribute(_ attribute: String, from element: AXUIElement) -> AXUIElement? {
+        guard let value = accessibilityAttribute(attribute, from: element),
+              CFGetTypeID(value) == AXUIElementGetTypeID() else { return nil }
+        return (value as! AXUIElement)
+    }
+
+    private static func firstAccessibilityStringAttribute(
+        _ attributes: [String],
+        from elements: [AXUIElement]
+    ) -> String? {
+        for element in elements {
+            for attribute in attributes {
+                if let value = accessibilityStringAttribute(attribute, from: element) {
+                    return value
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func accessibilityStrings(_ attributes: [String], from elements: [AXUIElement]) -> [String?] {
+        elements.flatMap { element in
+            attributes.map { accessibilityStringAttribute($0, from: element) }
+        }
+    }
+
+    private static func accessibilityStringAttribute(_ attribute: String, from element: AXUIElement) -> String? {
+        guard let value = accessibilityAttribute(attribute, from: element) else { return nil }
+        if let string = value as? String {
+            return nonEmptyString(string)
+        }
+        if let number = value as? NSNumber {
+            return "\(number)"
+        }
+        return nil
+    }
+
+    private static func firstAccessibilityURLAttribute(
+        _ attributes: [String],
+        from elements: [AXUIElement]
+    ) -> URL? {
+        for element in elements {
+            for attribute in attributes {
+                if let value = accessibilityAttribute(attribute, from: element),
+                   let url = documentURL(fromAccessibilityValue: value) {
+                    return url
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func accessibilityAttribute(_ attribute: String, from element: AXUIElement) -> CFTypeRef? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success else {
+            return nil
+        }
+        return value
+    }
+
+    private static func documentURL(fromAccessibilityValue value: CFTypeRef) -> URL? {
+        if CFGetTypeID(value) == CFURLGetTypeID() {
+            return (value as! URL)
+        }
+        guard let string = nonEmptyString(value as? String) else { return nil }
+        if string.hasPrefix("file://"), let url = URL(string: string) {
+            return url
+        }
+        if string.hasPrefix("/") {
+            return URL(fileURLWithPath: string)
+        }
+        return URL(string: string)?.isFileURL == true ? URL(string: string) : nil
+    }
+
+    private static func pageContext(from strings: [String]) -> (pageNumber: Int?, pageCount: Int?) {
+        for string in strings {
+            if let context = pageContext(from: string) {
+                return context
+            }
+        }
+        return (nil, nil)
+    }
+
+    private static func pageContext(from string: String) -> (pageNumber: Int?, pageCount: Int?)? {
+        let patterns = [
+            #"(?i)\bpage[\s\p{Zs}]+(\d+)[\s\p{Zs}]+of[\s\p{Zs}]+(\d+)\b"#,
+            #"(?i)\bpage[\s\p{Zs}]+(\d+)\b"#
+        ]
+        for pattern in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+            let range = NSRange(string.startIndex..<string.endIndex, in: string)
+            guard let match = regex.firstMatch(in: string, range: range),
+                  match.numberOfRanges > 1,
+                  let pageRange = Range(match.range(at: 1), in: string) else { continue }
+            let count: Int?
+            if match.numberOfRanges > 2,
+               let countRange = Range(match.range(at: 2), in: string) {
+                count = Int(string[countRange])
+            } else {
+                count = nil
+            }
+            return (Int(string[pageRange]), count)
+        }
+        return nil
+    }
+
+    private static func spreadsheetCellRange(from strings: [String]) -> String? {
+        let pattern = #"\$?[A-Z]{1,4}\$?\d{1,7}(?::\$?[A-Z]{1,4}\$?\d{1,7})?"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        for string in strings {
+            let range = NSRange(string.startIndex..<string.endIndex, in: string)
+            guard let match = regex.firstMatch(in: string, range: range),
+                  let cellRange = Range(match.range, in: string) else { continue }
+            return String(string[cellRange])
+        }
+        return nil
+    }
+
+    private static func spreadsheetSheetName(from strings: [String]) -> String? {
+        let patterns = [
+            #"(?i)\bsheet[\s\p{Zs}:]+([^,\n]+)"#,
+            #"(?i)\bworksheet[\s\p{Zs}:]+([^,\n]+)"#
+        ]
+        for string in strings {
+            for pattern in patterns {
+                guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+                let range = NSRange(string.startIndex..<string.endIndex, in: string)
+                guard let match = regex.firstMatch(in: string, range: range),
+                      match.numberOfRanges > 1,
+                      let sheetRange = Range(match.range(at: 1), in: string),
+                      let sheet = nonEmptyString(String(string[sheetRange])) else { continue }
+                return sheet
+            }
+        }
+        return nil
+    }
+
+    private static func anchorPrecision(
+        documentURL: URL?,
+        pageNumber: Int?,
+        cellRange: String?,
+        windowTitle: String?
+    ) -> String {
+        if documentURL != nil, cellRange != nil { return "file+cell" }
+        if documentURL != nil, pageNumber != nil { return "file+page" }
+        if documentURL != nil { return "file" }
+        if pageNumber != nil { return "window+page" }
+        if windowTitle != nil { return "window" }
+        return "app"
+    }
+
+    private static func orderedUniqueStrings(_ values: [String?]) -> [String] {
+        var seen = Set<String>()
+        var output: [String] = []
+        for value in values {
+            guard let cleaned = nonEmptyString(value),
+                  !seen.contains(cleaned) else { continue }
+            seen.insert(cleaned)
+            output.append(cleaned)
+        }
+        return output
+    }
+
+    private static func cgWindowTitle(for application: NSRunningApplication) -> String? {
+        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
+        guard let windowInfo = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
+            return nil
+        }
+
+        for window in windowInfo {
+            guard let ownerPID = window[kCGWindowOwnerPID as String] as? pid_t,
+                  ownerPID == application.processIdentifier else { continue }
+            return nonEmptyString(window[kCGWindowName as String] as? String)
+        }
+        return nil
+    }
+
+    private static func nonEmptyString(_ value: String?) -> String? {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    @MainActor
     private func handleCaptureURL(_ url: URL) {
         // Park the URL before any window work: on a cold launch this
         // handler runs before any root view has subscribed to
@@ -646,13 +1611,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func existingMainWindow(includeHidden: Bool, requireActiveSpace: Bool = false) -> NSWindow? {
-        NSApp.windows.first { window in
-            let isMainWindow = window.identifier?.rawValue == MainWindow.id || window.title == "Loom"
-            guard isMainWindow, window.canBecomeKey, !window.isMiniaturized else { return false }
-            guard includeHidden || window.isVisible else { return false }
+        mainWindows(includeHidden: includeHidden).first { window in
             if requireActiveSpace && !window.isOnActiveSpace { return false }
             return true
         }
+    }
+
+    @MainActor
+    private func mainWindows(includeHidden: Bool) -> [NSWindow] {
+        NSApp.windows.filter { window in
+            isMainWindowForParking(window, includeHidden: includeHidden)
+        }
+    }
+
+    @MainActor
+    private func isMainWindowForParking(_ window: NSWindow, includeHidden: Bool) -> Bool {
+        if window.identifier?.rawValue == "loom.externalCompanion" { return false }
+        let isMainWindow = window.identifier?.rawValue == MainWindow.id || window.title == "Loom"
+        guard isMainWindow, !window.isMiniaturized else { return false }
+        guard includeHidden || window.isVisible else { return false }
+        return true
     }
 
     @MainActor
@@ -665,6 +1643,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.close()
     }
 
+    @MainActor
+    private func parkVisibleMainWindow(_ window: NSWindow) {
+        loomCaptureLog("parkVisibleMainWindow: #\(window.windowNumber) (sheet: \(window.attachedSheet != nil))")
+        window.ignoresMouseEvents = true
+        window.alphaValue = 0
+        window.orderOut(nil)
+        if externalCompanionKeepsMainParked {
+            closeMainWindow(window)
+        }
+    }
+
     /// Main-window chrome repair — macOS can restore titlebar/toolbar
     /// chrome during space transitions, fullscreen exits, and focus
     /// changes. This must not rely only on the SwiftUI WindowConfigurator
@@ -672,21 +1661,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// before SwiftUI updates run.
     @MainActor
     private func configureMainWindowChrome(_ window: NSWindow) {
-        window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
         window.styleMask.insert(.fullSizeContentView)
         window.toolbar = nil
-        clearMainWindowTitlebarAccessories(window)
+        clearTitlebarAccessories(window)
         window.standardWindowButton(.toolbarButton)?.isHidden = true
         window.collectionBehavior.insert(.fullScreenPrimary)
     }
 
-    /// Clears accessory titlebar chrome through the guarded runtime
-    /// selector. SwiftUI's AppKitWindow subclass may not implement the
-    /// setter — assigning the accessory array directly crashes in the
-    /// installed app.
-    @MainActor
-    private func clearMainWindowTitlebarAccessories(_ window: NSWindow) {
+    private func clearTitlebarAccessories(_ window: NSWindow) {
         let selector = Selector(("setTitlebarAccessoryViewControllers:"))
         guard window.responds(to: selector) else { return }
         window.perform(selector, with: [] as NSArray)
@@ -932,6 +1916,37 @@ enum MainWindow {
     static let id = "com.loom.window.main"
 }
 
+struct LoomExternalSelectionCapture: Codable, Equatable {
+    let token: UUID
+    var text: String
+    var fileURLs: [URL]
+    var sourceApp: String?
+    var sourceBundleIdentifier: String?
+    var sourceProcessIdentifier: pid_t?
+    var sourceWindowTitle: String?
+    var nativeContext: LoomNativeSourceContext?
+    var capturedAt: Date
+}
+
+struct LoomNativeSourceContext: Codable, Equatable {
+    var documentURL: URL?
+    var documentTitle: String?
+    var pageNumber: Int?
+    var pageCount: Int?
+    var sheetName: String?
+    var cellRange: String?
+    var selectedRole: String?
+    var anchorPrecision: String
+}
+
+private struct LoomExternalApplicationSnapshot {
+    var localizedName: String?
+    var bundleIdentifier: String?
+    var processIdentifier: pid_t
+    var windowTitle: String?
+    var nativeContext: LoomNativeSourceContext?
+}
+
 /// Hands `loom://bundle/<route>` support-route navigations from the
 /// AppDelegate URL handler to whichever minimal root view mounts next.
 /// The route is parked in UserDefaults so a navigation arriving before
@@ -951,6 +1966,103 @@ enum LoomBundleRouteRelay {
     static func clearPendingRoute(_ path: String) {
         guard UserDefaults.standard.string(forKey: pendingRouteDefaultsKey) == path else { return }
         UserDefaults.standard.removeObject(forKey: pendingRouteDefaultsKey)
+    }
+}
+
+struct LoomExternalFileOpenEntry: Codable, Equatable {
+    var urls: [URL]
+    var token: UUID
+}
+
+@MainActor
+enum LoomExternalFileOpenRelay {
+    private static let defaultsKey = "loom.pendingExternalFileOpenEntries"
+    private static var parked: [LoomExternalFileOpenEntry] = load()
+
+    static func savePending(_ urls: [URL], token: UUID) {
+        var entries = pendingEntries()
+        guard !entries.contains(where: { $0.token == token }) else { return }
+        entries.append(LoomExternalFileOpenEntry(urls: urls, token: token))
+        store(entries)
+    }
+
+    static func pending() -> (urls: [URL], token: UUID)? {
+        pendingEntries().first.map { (urls: $0.urls, token: $0.token) }
+    }
+
+    static func pendingEntries() -> [LoomExternalFileOpenEntry] {
+        parked
+    }
+
+    static func clear(ifToken token: UUID) {
+        let next = pendingEntries().filter { $0.token != token }
+        guard next != parked else { return }
+        store(next)
+    }
+
+    private static func load() -> [LoomExternalFileOpenEntry] {
+        guard let data = UserDefaults.standard.data(forKey: defaultsKey),
+              let entries = try? JSONDecoder().decode([LoomExternalFileOpenEntry].self, from: data) else {
+            return []
+        }
+        return entries
+    }
+
+    private static func store(_ entries: [LoomExternalFileOpenEntry]) {
+        parked = entries
+        if entries.isEmpty {
+            UserDefaults.standard.removeObject(forKey: defaultsKey)
+            return
+        }
+        if let data = try? JSONEncoder().encode(entries) {
+            UserDefaults.standard.set(data, forKey: defaultsKey)
+        }
+    }
+}
+
+@MainActor
+enum LoomExternalSelectionCaptureRelay {
+    private static let defaultsKey = "loom.pendingExternalSelectionCaptures"
+    private static var parked: [LoomExternalSelectionCapture] = load()
+
+    static func savePending(_ capture: LoomExternalSelectionCapture) {
+        var captures = pendingCaptures()
+        guard !captures.contains(where: { $0.token == capture.token }) else { return }
+        captures.append(capture)
+        store(captures)
+    }
+
+    static func pending() -> LoomExternalSelectionCapture? {
+        pendingCaptures().first
+    }
+
+    static func pendingCaptures() -> [LoomExternalSelectionCapture] {
+        parked
+    }
+
+    static func clear(ifToken token: UUID) {
+        let next = pendingCaptures().filter { $0.token != token }
+        guard next != parked else { return }
+        store(next)
+    }
+
+    private static func load() -> [LoomExternalSelectionCapture] {
+        guard let data = UserDefaults.standard.data(forKey: defaultsKey),
+              let captures = try? JSONDecoder().decode([LoomExternalSelectionCapture].self, from: data) else {
+            return []
+        }
+        return captures
+    }
+
+    private static func store(_ captures: [LoomExternalSelectionCapture]) {
+        parked = captures
+        if captures.isEmpty {
+            UserDefaults.standard.removeObject(forKey: defaultsKey)
+            return
+        }
+        if let data = try? JSONEncoder().encode(captures) {
+            UserDefaults.standard.set(data, forKey: defaultsKey)
+        }
     }
 }
 
@@ -1088,6 +2200,8 @@ extension Notification.Name {
     static let loomGoBack = Notification.Name("loomGoBack")
     static let loomGoForward = Notification.Name("loomGoForward")
     static let loomOpenMainWindow = Notification.Name("loomOpenMainWindow")
+    static let loomOpenExternalFiles = Notification.Name("loomOpenExternalFiles")
+    static let loomCaptureExternalSelection = Notification.Name("loomCaptureExternalSelection")
     static let loomNewTopic = Notification.Name("loomNewTopic")
     static let loomLearn = Notification.Name("loomLearn")
     static let loomZoomIn = Notification.Name("loomZoomIn")
@@ -1131,15 +2245,13 @@ extension Notification.Name {
     static let loomImport = Notification.Name("loomImport")
 }
 
-/// Keyboard shortcuts for the sidebar's Workspaces section. Each button
-/// binds to the corresponding href via `.loomShuttleNavigate` so the
-/// webview loads the target in-place. Mirrors `KnowledgeSidebarView`'s
-/// `workspaces` array — keep them in sync.
+/// Keyboard shortcuts for the native Reflection workspace and the remaining
+/// compatibility routes.
 struct WorkspaceShortcutsCommands: View {
     var body: some View {
         Group {
-            Button("Home") {
-                postNav("/")
+            Button("Reflection") {
+                postNav("/reflection")
             }
             .keyboardShortcut("1", modifiers: .command)
             Button("Sources") {

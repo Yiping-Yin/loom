@@ -33,6 +33,7 @@
 		144BFEF1903E1ACC2E1DE2D0 /* LoomExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B4CACBB394F77A58E8AC670 /* LoomExport.swift */; };
 		1779D22A3CF0C319D60089CE /* ShuttleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F404A51FFFC4215A4DACB2C /* ShuttleView.swift */; };
 		17BE39DB5296DED485475441 /* StructuredOutputClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09F879C1AE12EF3D782ECA5 /* StructuredOutputClient.swift */; };
+		185CACF8CC9A4FAEB6A4EE56 /* LoomReflectionRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B76755EC865579B933A4161 /* LoomReflectionRootView.swift */; };
 		1A721B8D7F00C56477EFA186 /* CLIRuntimeClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7150E29C609C574638AA92 /* CLIRuntimeClientTests.swift */; };
 		1C483E029F30A013EC08EB7F /* PursuitHideStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95FD20AF70E98427295C75C0 /* PursuitHideStore.swift */; };
 		1DB8717A68351DDD37D00DD0 /* body-separated-marker.key in Resources */ = {isa = PBXBuildFile; fileRef = DE44EE279B24A57295EA74AA /* body-separated-marker.key */; };
@@ -337,6 +338,7 @@
 		696423A83EE42B32A74FCD93 /* FragmentExtractorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentExtractorTests.swift; sourceTree = "<group>"; };
 		69787CACCEF72CD0B42D756C /* ellipsis-stitch-format.filename.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "ellipsis-stitch-format.filename.txt"; sourceTree = "<group>"; };
 		6B4CACBB394F77A58E8AC670 /* LoomExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomExport.swift; sourceTree = "<group>"; };
+		6B76755EC865579B933A4161 /* LoomReflectionRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomReflectionRootView.swift; sourceTree = "<group>"; };
 		6D0B019A22698945148EDA1E /* SlideDeckSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlideDeckSchema.swift; sourceTree = "<group>"; };
 		6D618D7BF0962CD6E39207B1 /* EmbeddingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingClient.swift; sourceTree = "<group>"; };
 		6DEB4639A072780235090D3F /* fins-3666-group-project.expected.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "fins-3666-group-project.expected.json"; sourceTree = "<group>"; };
@@ -606,6 +608,7 @@
 				20D558EB47DDE6FBBB469276 /* LoomMinimalRootView.swift */,
 				AD865C041C2DF4D3FCE615F5 /* LoomPursuitHideBridgeHandler.swift */,
 				DC60E3169E26CB01CA6A193C /* LoomPursuitWriter.swift */,
+				6B76755EC865579B933A4161 /* LoomReflectionRootView.swift */,
 				DDA5A2EB4CB4022BE8541513 /* LoomRuntimePaths.swift */,
 				0469DE35173337EBC972267F /* LoomSchemaBridgeHandler.swift */,
 				F0F49042F2CED678F4FBF4DC /* LoomSoanWriter.swift */,
@@ -888,6 +891,14 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					92B1BC83B42A8E6DA14FE2C3 = {
+						DevelopmentTeam = 8BW2794353;
+						ProvisioningStyle = Automatic;
+					};
+					ED826D576EF84C5DCAA12309 = {
+						DevelopmentTeam = 8BW2794353;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 8469BC710BBCEBFD6D40602E /* Build configuration list for PBXProject "Loom" */;
@@ -1119,6 +1130,7 @@
 				9D180174CFF726D8E2946667 /* LoomMinimalRootView.swift in Sources */,
 				9B33FFDDFCC3C4BC8E7D66C4 /* LoomPursuitHideBridgeHandler.swift in Sources */,
 				D717753C694893E6DAF0B37B /* LoomPursuitWriter.swift in Sources */,
+				185CACF8CC9A4FAEB6A4EE56 /* LoomReflectionRootView.swift in Sources */,
 				78DAAAFE00FED02AD1C5E73B /* LoomRuntimePaths.swift in Sources */,
 				CC8385821FDF167F8A409689 /* LoomSchemaBridgeHandler.swift in Sources */,
 				51923102F8EE735FF7E6D5BF /* LoomSoanWriter.swift in Sources */,
@@ -1227,7 +1239,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 8BW2794353;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1245,8 +1260,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Loom.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8BW2794353;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleGetInfoString = "Loom — a screen that replaces paper";
@@ -1271,8 +1289,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Loom.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8BW2794353;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleGetInfoString = "Loom — a screen that replaces paper";
@@ -1415,7 +1436,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 8BW2794353;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

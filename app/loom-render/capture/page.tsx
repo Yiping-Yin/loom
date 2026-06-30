@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import { StageShell } from '../../../components/StageShell';
 import { QuietScene } from '../../../components/QuietScene';
 import { PageFrame } from '../../../components/PageFrame';
@@ -468,6 +469,27 @@ function configureMarkedSync() {
   if (_markedConfigured) return;
   marked.setOptions({ gfm: true, breaks: false, async: false });
   _markedConfigured = true;
+}
+
+/// XSS gate before injecting marked() output into the privileged loom://
+/// WKWebView. Captured PDF/Word/web text reaches marked() raw, and the
+/// loom:// CSP allows 'unsafe-inline' script — so a capture containing
+/// `<script>`, `<img onerror=…>` or `[x](javascript:…)` would execute and
+/// could exfiltrate the local corpus. DOMPurify strips scripts, event
+/// handlers, iframes/objects and unsafe URL schemes while preserving the
+/// app's own media: data: images and the click-to-load provider video
+/// card (figure/button/span/img/a + data-* attrs, all app-escaped).
+const SAFE_RENDER_URI_REGEXP =
+  /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|data|loom):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i;
+function sanitizeRenderedHtml(html: string): string {
+  if (!html) return '';
+  // Build/SSR has no capture data (and no DOM for DOMPurify); the sinks
+  // render empty there, so '' is the correct, safe server value.
+  if (typeof window === 'undefined') return '';
+  return DOMPurify.sanitize(html, {
+    ADD_ATTR: ['target'],
+    ALLOWED_URI_REGEXP: SAFE_RENDER_URI_REGEXP,
+  });
 }
 
 /// Map of human-language slugs → Prism grammar names. Aliases on the
@@ -1247,7 +1269,7 @@ function ArticleBodyWithImages({ source, snapshotHref = '' }: { source: string; 
     <div
       ref={rootRef}
       className="note-rendered prose-rendered"
-      dangerouslySetInnerHTML={{ __html: htmlWithIds }}
+      dangerouslySetInnerHTML={{ __html: sanitizeRenderedHtml(htmlWithIds) }}
     />
   );
 }
@@ -1896,7 +1918,7 @@ function AstCodeBlock({ block }: { block: CaptureAstBlock }) {
     out = highlightCodeBlocks(out);
     return out;
   }, [block.text, block.markdown]);
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div dangerouslySetInnerHTML={{ __html: sanitizeRenderedHtml(html) }} />;
 }
 
 function AstAudioBlock({ block }: { block: CaptureAstBlock }) {
@@ -5001,7 +5023,7 @@ function ArticleRender({
                 ) : distillError ? (
                   <div className="loom-capture-distill-error">{distillError}</div>
                 ) : distillText ? (
-                  <div dangerouslySetInnerHTML={{ __html: distillHTML }} />
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeRenderedHtml(distillHTML) }} />
                 ) : (
                   <div className="loom-capture-distill-error">Click Distill again to fetch a summary.</div>
                 )}

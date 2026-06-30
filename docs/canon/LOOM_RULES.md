@@ -33,21 +33,318 @@ Each principle is load-bearing. When a feature contradicts a principle, the feat
 
 2. **Source is authority.** The user's source files (PDFs, .docx, folders) are READ-ONLY. Loom never writes into the user's picked folders. Loom-managed data lives separately in `LoomFileStore`.
 
-3. **Loom = pages.** The page (a `ContentRoot`) is the primary unit of meaning. Pages contain notes. Notes are anchored fragments. Pages are addressable, notes are not (until promoted).
+3. **No workspace pollution.** Loom work must not leave generated files,
+   screenshots, temp PDFs, verifier fixtures, or helper scripts in the user's
+   original folders such as `Private Wiki`. Temporary artifacts either live
+   under the Loom repo's `.codex/` workspace or are deleted immediately after
+   use. Native GUI verification must also clean old `/private/tmp/loom-*`
+   bundles and unregister stale temporary `Loom.app` Services so macOS menus do
+   not drift.
 
-4. **AI is summoned.** AI is summoned, never always-visible chrome. Curiosity-led - the user asks AI; AI never quizzes the user. Any future review, practice, or testing surface needs an explicit product contract before it can appear.
+4. **Loom = pages.** The page (a `ContentRoot`) is the primary unit of meaning. Pages contain notes. Notes are anchored fragments. Pages are addressable, notes are not (until promoted).
 
-5. **One primitive over many.** When two surfaces overlap functionally, collapse to one with progressive paths inside, even if it costs an extra click. Mental clarity > click count.
+5. **AI is summoned.** AI is summoned, never always-visible chrome. Curiosity-led - the user asks AI; AI never quizzes the user. Any future review, practice, or testing surface needs an explicit product contract before it can appear.
 
-6. **Lean on macOS.** The system already provides Translate, Look Up, Writing Tools, Speech, Share via right-click on selected text. Loom adds only what macOS doesn't. Do not duplicate system features.
+6. **One primitive over many.** When two surfaces overlap functionally, collapse to one with progressive paths inside, even if it costs an extra click. Mental clarity > click count.
 
-7. **Source fidelity.** Loom's sidebar mirrors the Finder tree the user picked. No auto-clustering, no silent flattening, no smart folders. The user already paid the organizing cost.
+7. **Lean on macOS.** The system already provides Translate, Look Up, Writing Tools, Speech, Share via right-click on selected text. Loom adds only what macOS doesn't. Do not duplicate system features.
 
-8. **Extract, don't author.** If information is in the source (syllabus, slides), AI extracts at ingest. The user corrects inline. Loom is not a Notion-style block editor.
+8. **Source fidelity.** Loom's sidebar mirrors the Finder tree the user picked. No auto-clustering, no silent flattening, no smart folders. The user already paid the organizing cost.
 
-9. **Apple-native aesthetic.** macOS feel: NavigationSplitView, native context menus, system materials, system fonts. Triangulate against (a) Loom's product philosophy, (b) Apple aesthetic, (c) App Store distribution goal — all three must agree.
+9. **Extract, don't author.** If information is in the source (syllabus, slides), AI extracts at ingest. The user corrects inline. Loom is not a Notion-style block editor.
 
-10. **Markdown files the user owns.** All Loom-managed data is plain Markdown in a known location. Future iCloud sync friendly. No proprietary database.
+10. **Apple-native aesthetic.** macOS feel: NavigationSplitView, native context menus, system materials, system fonts. Triangulate against (a) Loom's product philosophy, (b) Apple aesthetic, (c) App Store distribution goal — all three must agree.
+
+11. **Markdown files the user owns.** All Loom-managed data is plain Markdown in a known location. Future iCloud sync friendly. No proprietary database.
+
+---
+
+## 2b. Reflection / Sidecar Design Discipline (Locked 2026-06-28)
+
+Canonical detailed discipline lives in
+[`LOOM_DESIGN_DISCIPLINE.md`](LOOM_DESIGN_DISCIPLINE.md). This section is the
+compressed operating rule for day-to-day product work.
+
+This section governs the current Loom direction: external learning sidecar,
+Understanding Version Flow, and repeated-pass review. It does not erase earlier
+source-grounded substrate rules; it tightens how new design work is chosen.
+
+Every Loom design change must be written as a choice under constraint, not as a
+feature addition. Before implementing, answer:
+
+1. **What already exists?** macOS, Preview, Word, Excel, browsers,
+   NotebookLM-style source collections, AI chat, LaTeX, Circle-style packet
+   builders, and `loom-notes`-style active recall packets already solve many
+   parts of the workflow.
+2. **What baseline must Loom match?** Users must not lose speed,
+   completeness, native file functions, structured readable output,
+   source-grounded summaries, Q&A, glossary, timeline, briefing, study guide,
+   clean PDF / Markdown export, Word/PPT packet, dynamic HTML dossier, or
+   video/scripted walkthrough when that form fits the job.
+3. **What is Loom's unique job?** Preserve anchored learning traces,
+   pass history, understanding diff, correction history, judgment memory, and
+   reusable thinking formed from repeated use. Learning and review are one
+   compounding flow, not two disconnected ledgers.
+4. **What are we refusing?** Reject weaker clones of Preview, Word, Excel,
+   NotebookLM, AI chat, static note apps, dashboards, mind maps, and debug logs.
+5. **What proves it worked?** The user can keep using the original app while
+   Loom records a replayable understanding version that can continue into
+   correction, review, synthesis, memory, and export without switching into a
+   separate product mode.
+
+Loom requirements have three layers and the layers must not be confused:
+
+- **Preservation:** keep native file and macOS capabilities intact.
+- **Baseline:** match or integrate mature outputs such as clean A4 PDF,
+  Markdown, Word/PPT packets, dynamic HTML dossiers, video/scripted
+  walkthroughs, study guides, Q&A, glossary, timeline, briefing,
+  `loom-notes`-style active recall packets, and source-grounded summaries. The
+  floor is a Circle-style course packet plus a fill-in study packet: title,
+  source/provenance, learning objectives, key concepts, agenda, sections,
+  readable typography, spine, fill-in prompts or review gaps, and page-aware
+  review.
+- **Differentiation:** spend Loom surface area only on the user's understanding
+  versions, pass history, corrections, judgment memory, and reusable thinking.
+  Learning and review are one compounding flow, not two disconnected ledgers.
+
+If Loom skips preservation, it breaks trust. If it skips baseline output, it
+feels weaker than existing AI tools. If it skips differentiation, it becomes a
+clone.
+
+The atomic Loom unit is **understanding version**, not note. A valid capture or
+manual entry preserves source anchor, pass, trace type, user meaning, and state.
+Raw metadata may exist for audit, but the visible object must read like a human
+learning or judgment record.
+
+Surface duties are strict:
+
+- Original file app owns reading, editing, page modes, search, zoom,
+  Translate, Look Up, Copy, Writing Tools, Summarize, Services, annotation,
+  formulas, comments, and file-specific workflows.
+- Loom Companion owns lightweight confirmation and return paths; it must remain
+  subordinate to the original file.
+- Center workspace owns Understanding Spine inside Understanding Version Flow;
+  it must not become a generic notes list, transcript, mind map, static PDF
+  replacement, provenance log, Agent operation log, or split learning/review
+  ledger. Codex records what an agent did: read file, searched code, edited
+  file. Loom records how the user's understanding changed: source contact,
+  first meaning, question, correction, synthesis, principle, judgment change.
+- Composer owns committing the next understanding version; it must not become a
+  generic chat box without a version target.
+- Rich summaries, Q&A, glossaries, study guides, and A4 exports are baseline
+  outputs. `loom-notes`-style active recall packets are baseline outputs too.
+  They become differentiated only when generated from Loom's cognition trail,
+  not only from uploaded files.
+- The user's FINS3666 Circle packet is already fast, complete, and reviewable.
+  Loom must match that Learning Output Packet floor before claiming value, then
+  expose which source anchors, passes, corrections, and principles produced it.
+- A rich source dossier is a baseline review / export view, not the center
+  workspace. It must include source collection, generated artifacts, source
+  claims, and return navigation; it becomes Loom-specific only when those
+  artifacts also expose learning trail, versioned understanding, and reuse
+  state.
+
+Capability discipline:
+
+- **Capability Ladder:** before adding a Loom feature, ask what the original app,
+  macOS, or an existing AI/source tool already does better. Preserve that path
+  first. Loom may add surface area only for the remaining Loom-only job:
+  anchored understanding, pass history, correction, synthesis, reusable thinking,
+  or export from the cognition trail.
+- **Evidence Ladder:** use the strongest available evidence, then degrade
+  honestly: selected text / structured file parse -> native app document
+  metadata -> Accessibility app/window/page context -> Services or pasteboard ->
+  Loom-owned appshot / OCR / Vision / multimodal extraction -> user-confirmed
+  manual anchor. Never present a lower rung as a higher one.
+- **Simplest Path Rule:** if a mature capability plus a thin Loom receipt solves
+  the problem, do not build a new Loom surface. If the first approach is blocked
+  by sandboxing, permissions, unavailable APIs, or source-app behavior, choose
+  the smallest truthful fallback before inventing a larger product feature.
+- **Missing Information Handling:** when Loom cannot obtain a file, page,
+  paragraph, region, sheet, or cell directly, it must probe in order: native
+  selection/structured parse, file metadata, Accessibility metadata, Services or
+  pasteboard, appshot/OCR/Vision/model extraction, then user confirmation. The
+  result must state its precision (`file+page`, `file`, `file+cell`,
+  `visual context only`, or `manual anchor`) and confidence. Loom may use a
+  clever fallback, but it may not convert missing provenance into a fake precise
+  anchor.
+- **Sandbox honesty:** a sandboxed Service capture may only prove selected text,
+  source app, and source file. Page labels, sheet/cell labels, or paragraph
+  labels are not precise anchors until an allowed AX helper, structured parser,
+  appshot/OCR/Vision pass, or user confirmation supplies that evidence.
+- **Source disambiguation:** frontmost app identity is not source truth. When
+  Preview, Word, Excel, or a browser has multiple windows or documents, Loom
+  must treat the observed app/window as weak context until Service invocation,
+  file URL, source-app metadata, capture-triggered appshot, structured parse, or
+  user confirmation identifies the intended file and location.
+- **Wrong-window downgrade:** if a verifier or capture path observes a different
+  document than the target learning file, the trace stays at `app/window/time`
+  or `visual context only`. It cannot become memory or export citation until the
+  user or a stronger evidence rung confirms the source.
+
+Engineering discipline: if a UI change cannot state the existing capability it
+leans on, the Loom-only gap it fills, the refusal it enforces, and the
+acceptance signal, it is product noise.
+
+Design decisions use this protocol:
+
+`symptom -> critique -> choice -> rule -> acceptance evidence`
+
+The user's wording is evidence, not an implementation order. First translate the
+feedback into a product failure, then decide which surface owns the repair.
+Every request must be classified as one of: invariant, baseline,
+differentiator, refusal, or open question. Baselines are integrated or
+preserved; differentiators may add Loom surface area; refusals are written down
+so the same mistake does not return.
+
+The required questioning loop is:
+
+`request -> symptom -> objection -> baseline -> Loom-only gap -> owner -> rule -> evidence`
+
+The objection step is mandatory. If the team cannot argue against the literal
+request, it has not earned the right to implement it.
+
+Requirements are not accepted as feature orders. Convert each request into a
+decision record before building:
+
+`observed failure -> user example -> bad literal fix -> existing capability -> chosen owner -> discipline added -> acceptance evidence`
+
+If the record cannot name a bad literal fix, the request has not been
+questioned enough. If it cannot name an existing capability, Loom is likely
+about to clone a mature tool. If it cannot name one chosen owner, the UI will
+split into overlapping surfaces. Every accepted choice must carry a matching
+refusal, because the refusal is what keeps Loom differentiated on the next
+iteration.
+
+Every implementation pass must also preserve this shorter product record:
+
+`classification -> preserved capability -> baseline matched -> Loom-only value -> surface owner -> refusal -> acceptance path`
+
+"Cleaner", "more native", "more like Codex", "more like Preview", "more
+NotebookLM", and "more glass" are symptoms, not requirements. They cannot be
+implemented until the preserved capability, baseline, Loom-only value, owner,
+refusal, and acceptance path are named.
+
+Requirement writing is itself a product discipline. Screenshots, comparisons,
+and user wording are evidence, not specs. A requirement is accepted only after
+it has six parts:
+
+`symptom -> critique -> choice -> owner -> refusal -> acceptance`
+
+Do not start a Loom design from material, color, glass, layout, animation, or a
+copied interface. Start from the job and owner:
+
+`job -> owner -> user path -> proportion -> material -> copy -> evidence`
+
+Vague requests such as "make it cleaner", "make it like Codex", "add Liquid
+glass", "support PDF", "make NotebookLM-like output", or "add a chat box" are
+not implementation-ready. They must first be rewritten into a concrete failure,
+a rejected literal fix, one chosen owner, and a measurable path. This protects
+Loom from becoming attractive fragments instead of a coherent product.
+
+Before implementation, the work item must answer: what native or mature
+capability is preserved, what baseline is matched, what Loom-only
+thinking-history value is added, what surface owns it, what is refused, what
+object is created or revised, how it will be reviewed later, how it can become
+synthesis / memory / export, and what evidence proves acceptance.
+
+Current requirement discipline from the PDF / Word / GitHub / Circle /
+NotebookLM critique:
+
+- Do not make Loom a better PDF, Word, or Excel app. Preserve native file
+  functions and add understanding versions beside them.
+- Do not make the center a note surface. The center exists only as
+  Understanding Version Flow: first interpretation, correction, synthesis, open
+  issue, and reusable principle.
+- Do not keep the composer if it cannot name the next commit target. Meaning,
+  question, correction, synthesis, principle, or reflection stage must be known
+  before typing.
+- Do not claim static or rich output as the moat. Clean A4 PDF, Markdown,
+  Word/PPT packet, dynamic HTML dossier, video/scripted walkthrough, study
+  sheet, Q&A, glossary, briefing, and source-grounded summary are baseline.
+- Do not turn the center workspace into a LaTeX worksheet editor.
+  No turning the center workspace into a LaTeX worksheet editor.
+  `loom-notes`-style active recall is a baseline output pattern; Fill-in
+  prompts trace back to source anchors, learning pass, correction, or memory
+  candidate.
+- Do not stop at NotebookLM-style source richness. Rich artifacts become Loom
+  only when they also expose source anchors, learning trail, understanding diff,
+  pass history, and reuse state.
+- Do not convert every capture into memory. Memory is user-confirmed reusable
+  thinking after second-pass review.
+- Do not explain the product in the main surface. User-facing entries should
+  look like compact human learning records; metadata and product logic belong
+  in audit trail, PRD, or documentation.
+
+Every serious design pass leaves a design choice ledger:
+
+`observed issue -> chosen rule -> refusal -> acceptance signal`
+
+If the ledger is missing, the change is not yet a Loom requirement.
+
+The current design constitution:
+
+- The original file is the subject; Loom is the learning and reflection layer
+  around it.
+- A native capability is cheaper than a Loom clone unless Loom adds an
+  understanding version on top.
+- When information cannot be obtained directly, Loom follows the Evidence Ladder:
+  preserve the strongest evidence available, label the precision, and ask for
+  user confirmation rather than pretending.
+- The simplest path wins. A thin capture receipt over a mature native feature is
+  usually better than a custom Loom clone.
+- The center workspace earns its existence only by showing how understanding
+  changed across passes: source contact -> first meaning -> question /
+  correction -> second-pass synthesis -> reusable principle.
+- A capture is valid only when it preserves anchor, pass, trace type, user
+  meaning, and state.
+- The composer is not a chat box; it commits or revises the next understanding
+  version.
+- Static output and NotebookLM-style richness are baseline exports. Loom's edge
+  is rich source aggregation plus the user's learning trail and thinking
+  evolution.
+- Source collection plus generated artifacts is baseline; source collection
+  plus generated artifacts plus understanding evolution is Loom.
+- A design that cannot be tested through a real user path is an illustration,
+  not a product improvement.
+- Every roadmap item must name both the baseline it protects and the Loom-only
+  moat it advances.
+
+Source precision is part of the baseline trust contract. A native app with many
+open documents can keep all its own functions and still give Loom ambiguous
+context. Loom does not fail by being uncertain; it fails only if it pretends
+uncertainty is a precise anchor.
+
+The center workspace presents **Understanding Review** (`理解复盘`) backed by
+**Understanding Version Flow** (`理解版本流`). It must show the current review
+focus and compact human learning / judgment records first, with provenance
+behind an audit trail. "Learning version" and "review version" are not separate
+products; they are neighboring commits in the same flow. The bottom composer
+appears only when it has a version target: meaning, question, correction,
+synthesis, principle, or a specific product-reflection stage. A generic
+free-form chat box is rejected unless it is inside an explicitly labeled AI
+conversation trace.
+
+Current precedent:
+
+- PDF learning uses Preview / native PDF apps as the reader. Loom captures
+  anchored learning versions; it does not rebuild page modes, Translate,
+  Look Up, Copy, Writing Tools, Summarize, Services, search, zoom, or
+  annotation.
+- Center workspace quality is judged by whether the user can see the continuous
+  path from first understanding to review to reusable thinking.
+- The composer is a commit field. Before typing, the user must know which
+  understanding version the text will become.
+- Exports must be fast, complete, and readable, but must also preserve source
+  claim, learning trail, understanding diff, and reusable principle when those
+  exist.
+- Excel, Word, and other native files keep their own editing, formulas,
+  comments, review, and version tools. Loom records why a file state mattered
+  to learning or judgment.
+- If exact source metadata is blocked by sandboxing, source-app APIs, or
+  permissions, Loom falls back to app/window/time, appshot/OCR/Vision/model
+  candidates, or user-confirmed anchors with explicit precision labels. It does
+  not fake file/page/cell certainty.
 
 ---
 
@@ -528,4 +825,4 @@ If you (the AI assistant) are about to make a design decision that contradicts s
 
 ---
 
-*Last meaningful update: 2026-04-30. §8 catchup added 5 entries (2026-04-27 ×2, 2026-04-28, 2026-04-29) covering Phase C plan, source-folder immutability, ingest-bridge, DS v1 spec, and Web Capture extension. Initial version captured decisions through the late-April 2026 reading-flow rewrite.*
+*Last meaningful update: 2026-06-30. §2b now points to `LOOM_DESIGN_DISCIPLINE.md` as the canonical Reflection / sidecar discipline and keeps the compressed symptom→critique→choice→rule→evidence protocol, request triage, Understanding Version Flow, composer targeting, output discipline, baseline vs differentiation, native-app leverage, understanding-version commits, parallel Codex ownership, and refusal rules for NotebookLM/chat/note/custom-reader drift.*

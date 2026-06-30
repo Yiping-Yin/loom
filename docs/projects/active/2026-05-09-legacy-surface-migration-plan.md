@@ -13,6 +13,8 @@ Legacy surfaces are not first-level product concepts. They can remain as files a
 2. **Studio** - shape source material into block documents, cited answers, proof artifacts, and process pages with durable references.
 3. **Digital Me** - represent selected source-backed forms and answer from them with citations.
 
+`/reflection` is the first split toward the Product Reflection Workspace: it turns real product practice into Input, Assumption, Decision Trace, Outcome, Reflection, and Judgment Memory. It is primary as a new workbench, but it should not inherit the old legacy surface sprawl.
+
 `Draft` remains a route/storage/test compatibility name for the Studio document engine. It is not the primary user-facing product noun.
 
 ## Surface Classes
@@ -30,6 +32,7 @@ Legacy surfaces are not first-level product concepts. They can remain as files a
 | Route / surface | Class | Target | Action |
 |---|---|---|---|
 | `/` / `HomeClient` | Primary | Sources / Studio / Digital Me | Keep as new shell. No legacy links. |
+| `/reflection` | Primary/Reflection | Product Reflection Workspace | Keep as the first Codex-like workbench split for product practice reflection: cases, working thread, and local source evidence. Do not fold it into skill, KaaS, portfolio, or Digital Me language. |
 | `/collect` | Compatibility | Sources | Redirect to `/sources`; file intake, captures, source folders, and review now live in one Sources workbench. |
 | Native `LoomMinimalRootView` | Migration source | Native shell strategy | Retain as old native workbench evidence until the app chooses web-first wrapper or native-first workbench. Do not let it define the current web product contract. |
 | `/sources` | Primary/Sources | Sources | Keep. Align copy around one source workbench and collected captures. |
