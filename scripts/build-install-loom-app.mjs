@@ -52,6 +52,11 @@ async function buildReleaseApp() {
 
   removeStaleNamedProjects();
   run('xcodegen', ['generate'], { cwd: macosRoot });
+  // CI runners have no Apple Development identity for team 8BW2794353, so
+  // signing there fails hard (project.yml pins DEVELOPMENT_TEAM for the app
+  // and the LoomAnchorHelper XPC service). Local builds keep real signing —
+  // macOS 26 suppresses NSServices from ad-hoc-signed apps.
+  const signingArgs = process.env.CI ? ['CODE_SIGNING_ALLOWED=NO'] : [];
   run('xcodebuild', [
     '-project',
     'Loom.xcodeproj',
@@ -60,6 +65,7 @@ async function buildReleaseApp() {
     '-configuration',
     'Release',
     'build',
+    ...signingArgs,
   ], { cwd: macosRoot });
   await assertNoStaleBuildArtifacts(path.join(repoRoot, '.next-export'), '.next-export after Xcode staging');
 }
