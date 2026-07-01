@@ -2233,71 +2233,70 @@ private struct ReflectionLearningDigest: View {
         reflectionCase.sources.first?.label ?? reflectionCase.title
     }
 
-    private var activeTrace: ReflectionLearningTrace? {
-        traces.first { $0.id == activeTraceID } ?? traces.last
+    // The center is a learning DOCUMENT, not a capture inbox (owner north
+    // star: the final presentation is still the book — a professional
+    // document genre with clear structure and readable typesetting).
+    private var documentTitle: String {
+        let label = sourceLabel
+        guard let dot = label.lastIndex(of: "."), dot != label.startIndex else { return label }
+        return String(label[..<dot])
     }
 
-    private var unresolvedTrace: ReflectionLearningTrace? {
-        traces.first { trace in
-            trace.isLanguageSelection || trace.isDataOrDocumentSelection || trace.focus == "question"
-        }
-    }
-
-    private var confirmedTrace: ReflectionLearningTrace? {
-        traces.last { $0.isUserCommitted }
-    }
-
-    private var shouldShowReviewColumns: Bool {
-        confirmedTrace != nil || traces.count > 1
+    // Book order: entries follow the source's own structure (page ascending),
+    // not capture time. Unanchored entries keep their capture order at the end.
+    private var orderedTraces: [ReflectionLearningTrace] {
+        traces.enumerated().sorted { lhs, rhs in
+            let lhsPage = lhs.element.pageNumber ?? Int.max
+            let rhsPage = rhs.element.pageNumber ?? Int.max
+            if lhsPage != rhsPage { return lhsPage < rhsPage }
+            return lhs.offset < rhs.offset
+        }.map(\.element)
     }
 
     private var shouldShowStageSummary: Bool {
-        traces.count > 1 || confirmedTrace != nil
+        traces.count > 1 || traces.contains { $0.isUserCommitted }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if shouldShowStageSummary {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 7) {
+                Text(documentTitle)
+                    .font(.system(size: 23, weight: .semibold, design: .serif))
+                    .foregroundStyle(LoomTokens.dsInk1)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 10) {
-                    Text("\(traces.count) version\(traces.count == 1 ? "" : "s")")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    Text("Learning record")
+                        .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                        .tracking(1.2)
+                        .textCase(.uppercase)
                         .foregroundStyle(LoomTokens.dsInk3)
                     Spacer(minLength: 0)
-                    HStack(spacing: 6) {
-                        ReflectionLearningStagePill(title: "Collect", count: traces.filter { $0.isLanguageSelection || $0.isDataOrDocumentSelection }.count)
-                        ReflectionLearningStagePill(title: "Explain", count: traces.filter { $0.isUserCommitted }.count)
-                        ReflectionLearningStagePill(title: "Review", count: traces.filter { $0.focus == "question" || $0.focus == "correction" }.count)
-                        ReflectionLearningStagePill(title: "Reuse", count: traces.filter { $0.focus == "principle" }.count)
+                    if shouldShowStageSummary {
+                        HStack(spacing: 6) {
+                            ReflectionLearningStagePill(title: "Collect", count: traces.filter { $0.isLanguageSelection || $0.isDataOrDocumentSelection }.count)
+                            ReflectionLearningStagePill(title: "Explain", count: traces.filter { $0.isUserCommitted }.count)
+                            ReflectionLearningStagePill(title: "Review", count: traces.filter { $0.focus == "question" || $0.focus == "correction" }.count)
+                            ReflectionLearningStagePill(title: "Reuse", count: traces.filter { $0.focus == "principle" }.count)
+                        }
                     }
                 }
             }
 
             if let summary = ReflectionLearningReviewSummary.make(for: reflectionCase) {
                 ReflectionLearningReview(summary: summary)
-            } else if let activeTrace {
-                ReflectionLearningDigestFocus(trace: activeTrace)
             }
 
-            if shouldShowReviewColumns {
-                HStack(alignment: .top, spacing: 16) {
-                    ReflectionLearningDigestColumn(
-                        title: "Needs attention",
-                        trace: unresolvedTrace,
-                        fallback: "No unresolved language, data, or question trace."
-                    )
-
-                    ReflectionLearningDigestColumn(
-                        title: "Current meaning",
-                        trace: confirmedTrace ?? activeTrace,
-                        fallback: "Add your own meaning before turning this into reusable memory."
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(orderedTraces) { trace in
+                    ReflectionLearningDocumentEntry(
+                        trace: trace,
+                        isActive: trace.id == activeTraceID,
+                        onSelect: { onSelectTrace(trace) }
                     )
                 }
             }
         }
         .padding(.vertical, 2)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(LoomTokens.dsHair).frame(height: 1).offset(y: 10)
-        }
     }
 }
 
@@ -2323,67 +2322,75 @@ private struct ReflectionLearningStagePill: View {
     }
 }
 
-private struct ReflectionLearningDigestFocus: View {
+private struct ReflectionLearningDocumentEntry: View {
     let trace: ReflectionLearningTrace
+    let isActive: Bool
+    let onSelect: () -> Void
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ReflectionLearningSignal(label: trace.signalLabel, color: trace.signalColor)
-            Text(trace.displayText)
-                .font(.system(size: trace.isShortLanguageTrace ? 20 : 14, weight: trace.isShortLanguageTrace ? .semibold : .regular))
-                .lineSpacing(4)
-                .foregroundStyle(LoomTokens.dsInk1)
-                .fixedSize(horizontal: false, vertical: true)
-            Text(trace.sourceAnchor)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(LoomTokens.dsInk3)
-                .lineLimit(1)
-        }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(LoomTokens.dsPaperUp.opacity(0.42), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .stroke(LoomTokens.dsHair.opacity(0.72), lineWidth: 1)
-        )
+    private var needsMeaning: Bool {
+        trace.isLanguageSelection || trace.isDataOrDocumentSelection
     }
-}
 
-private struct ReflectionLearningDigestColumn: View {
-    let title: String
-    let trace: ReflectionLearningTrace?
-    let fallback: String
+    private var entryTextFont: Font {
+        trace.isShortLanguageTrace
+            ? .system(size: 17, weight: .semibold, design: .serif)
+            : .system(size: 14.5, design: .serif)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .tracking(1.0)
-                .foregroundStyle(LoomTokens.dsInk3)
-            if let trace {
-                Text(trace.versionTitle)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(LoomTokens.dsInk1)
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(trace.displayLabel)
+                        .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                        .tracking(1.1)
+                        .textCase(.uppercase)
+                        .foregroundStyle(LoomTokens.dsInk3)
+                    if needsMeaning || trace.focus == "question" || trace.isWeakAnchor {
+                        Circle()
+                            .fill(trace.signalColor)
+                            .frame(width: 6, height: 6)
+                            .accessibilityLabel(trace.signalLabel)
+                    }
+                    Spacer(minLength: 0)
+                    if let pageAnchor = trace.pageAnchorLabel {
+                        Text(pageAnchor)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(LoomTokens.dsInk3)
+                    }
+                }
+
                 Text(trace.displayText)
-                    .font(.system(size: 12))
-                    .lineSpacing(3)
-                    .foregroundStyle(LoomTokens.dsInk2)
-                    .lineLimit(4)
-            } else {
-                Text(fallback)
-                    .font(.system(size: 12))
-                    .lineSpacing(3)
-                    .foregroundStyle(LoomTokens.dsInk3)
+                    .font(entryTextFont)
+                    .lineSpacing(5)
+                    .foregroundStyle(LoomTokens.dsInk1)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if needsMeaning {
+                    VStack(alignment: .leading, spacing: 11) {
+                        Text("Explain it in your own words")
+                            .font(.system(size: 11.5, design: .serif).italic())
+                            .foregroundStyle(LoomTokens.dsInk3)
+                        Rectangle()
+                            .fill(LoomTokens.dsHair)
+                            .frame(height: 1)
+                            .padding(.trailing, 48)
+                    }
+                    .padding(.top, 3)
+                }
+            }
+            .padding(.vertical, 13)
+            .padding(.horizontal, isActive ? 10 : 0)
+            .background(
+                isActive ? LoomTokens.dsPaperUp.opacity(0.36) : Color.clear,
+                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+            )
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(LoomTokens.dsHair.opacity(0.8)).frame(height: 1)
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-        .background(LoomTokens.dsPaper.opacity(0.46), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(LoomTokens.dsHair.opacity(0.72), lineWidth: 1)
-        )
+        .buttonStyle(.plain)
     }
 }
 
@@ -2673,6 +2680,20 @@ private struct ReflectionLearningTrace: Identifiable, Equatable {
         }?.value.lowercased() ?? ""
         let fallback = evidence.first { $0.label == "fallback note" }?.value.lowercased() ?? ""
         return precision.contains("visual context only") || precision.contains("window") || fallback.contains("weak")
+    }
+
+    /// Page parsed from the source anchor ("…, page 9") — the learning
+    /// document orders entries by the source's own structure, not capture time.
+    var pageNumber: Int? {
+        guard let range = sourceAnchor.range(of: #"page (\d+)"#, options: [.regularExpression, .caseInsensitive]) else {
+            return nil
+        }
+        let digits = sourceAnchor[range].compactMap { $0.isNumber ? $0 : nil }
+        return Int(String(digits))
+    }
+
+    var pageAnchorLabel: String? {
+        pageNumber.map { "p.\($0)" }
     }
 
     var isUserCommitted: Bool {
