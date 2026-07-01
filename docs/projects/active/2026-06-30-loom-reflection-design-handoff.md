@@ -3,6 +3,25 @@
 Owner-reviewed direction for the Reflection/learning surface. The whole screen
 currently reads as an **explanatory demo** because it narrates its own model.
 
+## Owner north star (2026-07-02, owner's own words)
+
+> 先把书读厚，再把书读薄。最后跨知识融会贯通。
+> 最后的呈现还是一个书的内容。不是乱七八糟。
+
+Read the book THICK (first pass: anchored captures, meanings, questions grow on
+the book) → read it THIN (second pass: your own meaning, corrections, synthesis;
+only confirmed understanding is promoted) → integrate ACROSS knowledge (reusable
+principles that fire in later reading) → and the final presentation is still
+**the book itself** — organized by the source's own structure (sections, pages,
+narrative order) with understanding woven in. NOT a capture inbox, NOT
+type-bucketed cards, NOT a dashboard.
+
+Acceptance smell-test for the center pane and every export: cover the chrome and
+ask "does this read like that book?" If it reads like an inbox, it fails.
+Maps onto the product stages: thick = Capture/Collect · thin = Meaning/Review ·
+integrate = Memory/Reuse · presentation = the learning document / packet shaped
+by the source's structure.
+
 ## Core principle (apply everywhere)
 **Show the work, not the scaffolding.** If an icon, the filename, or the context
 already conveys something, DELETE the text. Every text element must carry info
