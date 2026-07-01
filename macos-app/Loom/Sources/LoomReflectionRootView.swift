@@ -3719,42 +3719,72 @@ private struct ReflectionDivider: View {
 }
 
 /// The seam between the center workspace and the Evidence pane: visually the
-/// same hairline as ReflectionDivider, but with a wider invisible hit area
-/// that drags to resize the pane (clamped, persisted via AppStorage).
+/// same hairline as ReflectionDivider, but with a wider hit area that drags
+/// to resize the pane (clamped, persisted via AppStorage). Implemented on an
+/// NSView because the workbench window is movable by background — a plain
+/// SwiftUI gesture loses to AppKit's window drag, so the handle must return
+/// mouseDownCanMoveWindow = false.
 private struct ReflectionPaneResizer: View {
     @Binding var width: Double
-    @State private var dragStartWidth: CGFloat?
-    @State private var isHovering = false
 
     var body: some View {
         ZStack {
             Rectangle()
                 .fill(LoomTokens.dsHair)
                 .frame(width: 1)
+            ReflectionResizeHandle(width: $width)
         }
         .frame(width: 9)
-        .contentShape(Rectangle())
-        .onHover { hovering in
-            isHovering = hovering
-            if hovering {
-                NSCursor.resizeLeftRight.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
-        .gesture(
-            DragGesture(minimumDistance: 1, coordinateSpace: .global)
-                .onChanged { value in
-                    let start = dragStartWidth ?? clampedInspectorWidth(width)
-                    if dragStartWidth == nil { dragStartWidth = start }
-                    // The pane sits right of the seam: dragging left grows it.
-                    width = Double(clampedInspectorWidth(Double(start - value.translation.width)))
-                }
-                .onEnded { _ in
-                    dragStartWidth = nil
-                }
-        )
         .accessibilityLabel("Resize sources inspector")
+    }
+}
+
+private struct ReflectionResizeHandle: NSViewRepresentable {
+    @Binding var width: Double
+
+    func makeNSView(context: Context) -> ReflectionResizeHandleNSView {
+        let view = ReflectionResizeHandleNSView()
+        view.onDragBegan = { clampedInspectorWidth(width) }
+        view.onDragChanged = { startWidth, deltaX in
+            // The pane sits right of the seam: dragging left grows it.
+            width = Double(clampedInspectorWidth(Double(startWidth - deltaX)))
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: ReflectionResizeHandleNSView, context: Context) {
+        nsView.onDragBegan = { clampedInspectorWidth(width) }
+        nsView.onDragChanged = { startWidth, deltaX in
+            width = Double(clampedInspectorWidth(Double(startWidth - deltaX)))
+        }
+    }
+}
+
+final class ReflectionResizeHandleNSView: NSView {
+    var onDragBegan: (() -> CGFloat)?
+    var onDragChanged: ((CGFloat, CGFloat) -> Void)?
+    private var dragStartX: CGFloat?
+    private var dragStartWidth: CGFloat?
+
+    override var mouseDownCanMoveWindow: Bool { false }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .resizeLeftRight)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        dragStartX = event.locationInWindow.x
+        dragStartWidth = onDragBegan?()
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let startX = dragStartX, let startWidth = dragStartWidth else { return }
+        onDragChanged?(startWidth, event.locationInWindow.x - startX)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        dragStartX = nil
+        dragStartWidth = nil
     }
 }
 

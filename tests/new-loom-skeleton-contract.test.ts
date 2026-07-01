@@ -1631,7 +1631,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private let reflectionInspectorMaxWidth: CGFloat = 560/);
   assert.match(nativeRoot, /private struct ReflectionPaneResizer: View/);
   assert.match(nativeRoot, /@AppStorage\(reflectionInspectorWidthKey\)/);
-  assert.match(nativeRoot, /NSCursor\.resizeLeftRight\.push\(\)/);
+  assert.match(nativeRoot, /addCursorRect\(bounds, cursor: \.resizeLeftRight\)/);
+  assert.match(nativeRoot, /override var mouseDownCanMoveWindow: Bool \{ false \}/);
   assert.match(
     nativeRoot,
     /private struct ReflectionSidebar:[\s\S]*var material: ReflectionSidebarMaterial = \.rail[\s\S]*\.background\(ReflectionSidebarBackground\(material: material\)\)/,
