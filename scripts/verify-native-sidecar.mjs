@@ -1763,7 +1763,7 @@ function learningOutputPacketMarkdown(report) {
       'This is a learning record of what was actually captured — not a summary of the source documents.',
       'Meanings are the learner\'s own. Entries marked ⚠️ are not settled knowledge.',
       'Entries below page/cell precision cannot be cited back to an exact location; their status says so inline.',
-      'The native file remains the source of truth; Loom records the learning trail only.',
+      'Native file remains the source of truth; Loom records the learning trail only.',
     ]),
     '',
     '## 1. Sources',
