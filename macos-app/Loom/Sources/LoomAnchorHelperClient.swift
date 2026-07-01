@@ -58,6 +58,26 @@ enum LoomAnchorHelperClient {
         )
     }
 
+    /// Fire-and-forget reveal: open the document and, when the helper is
+    /// AX-trusted, land on the captured page. The UI never waits on this —
+    /// the file open itself happens in the helper either way.
+    static func revealAnchor(documentURL: URL, page: Int?) {
+        let connection = NSXPCConnection(serviceName: serviceName)
+        connection.remoteObjectInterface = NSXPCInterface(with: LoomAnchorHelperProtocol.self)
+        connection.resume()
+        guard let proxy = connection.remoteObjectProxyWithErrorHandler({ error in
+            Self.log.error("anchor-helper: reveal xpc error \(String(describing: error), privacy: .public)")
+            connection.invalidate()
+        }) as? LoomAnchorHelperProtocol else {
+            connection.invalidate()
+            return
+        }
+        proxy.revealAnchor(documentPath: documentURL.path, page: Int32(page ?? 0)) { reply in
+            Self.log.info("anchor-helper: reveal opened=\(reply["opened"] ?? "?", privacy: .public) pageJump=\(reply["pageJump"] ?? "?", privacy: .public) trusted=\(reply["axTrusted"] ?? "?", privacy: .public)")
+            connection.invalidate()
+        }
+    }
+
     private static func documentURL(from raw: String?) -> URL? {
         guard let raw, !raw.isEmpty else { return nil }
         if raw.hasPrefix("file://"), let url = URL(string: raw) { return url }

@@ -13,4 +13,13 @@ import Foundation
 ///   pageCount   total pages parsed from the title
 @objc(LoomAnchorHelperProtocol) public protocol LoomAnchorHelperProtocol {
     func resolveAnchor(forPID pid: Int32, reply: @escaping ([String: String]) -> Void)
+
+    /// Reveal the anchor back in the native app: open the document with the
+    /// system-default app and, when a page is known and Accessibility is
+    /// granted, drive the PDF app's "Go to Page…" so the user lands on the
+    /// captured page instead of page 1. Degrades honestly: reply carries
+    ///   opened    "1"/"0" — the file open succeeded
+    ///   pageJump  "1"/"0" — the page navigation succeeded
+    ///   axTrusted "1"/"0"
+    func revealAnchor(documentPath: String, page: Int32, reply: @escaping ([String: String]) -> Void)
 }

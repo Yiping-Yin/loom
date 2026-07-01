@@ -2186,6 +2186,7 @@ private struct ReflectionLearningLedgerView: View {
                     reflectionCase: reflectionCase,
                     traces: traces,
                     activeTraceID: activeTraceID,
+                    sourceFileURL: reflectionCase.sources.first?.fileURL,
                     onSelectTrace: onSelectTrace
                 )
 
@@ -2227,6 +2228,7 @@ private struct ReflectionLearningDigest: View {
     let reflectionCase: ReflectionCase
     let traces: [ReflectionLearningTrace]
     let activeTraceID: ReflectionLearningTrace.ID?
+    let sourceFileURL: URL?
     let onSelectTrace: (ReflectionLearningTrace) -> Void
 
     private var sourceLabel: String {
@@ -2291,6 +2293,7 @@ private struct ReflectionLearningDigest: View {
                     ReflectionLearningDocumentEntry(
                         trace: trace,
                         isActive: trace.id == activeTraceID,
+                        sourceFileURL: sourceFileURL,
                         onSelect: { onSelectTrace(trace) }
                     )
                 }
@@ -2325,6 +2328,7 @@ private struct ReflectionLearningStagePill: View {
 private struct ReflectionLearningDocumentEntry: View {
     let trace: ReflectionLearningTrace
     let isActive: Bool
+    let sourceFileURL: URL?
     let onSelect: () -> Void
 
     private var needsMeaning: Bool {
@@ -2354,9 +2358,25 @@ private struct ReflectionLearningDocumentEntry: View {
                     }
                     Spacer(minLength: 0)
                     if let pageAnchor = trace.pageAnchorLabel {
-                        Text(pageAnchor)
-                            .font(.system(size: 10, weight: .medium, design: .monospaced))
-                            .foregroundStyle(LoomTokens.dsInk3)
+                        if let sourceFileURL, let page = trace.pageNumber {
+                            // The anchor jumps BACK into the original file at
+                            // the captured page (anchor helper drives the
+                            // native app's Go to Page; degrades to file-open).
+                            Button {
+                                LoomAnchorHelperClient.revealAnchor(documentURL: sourceFileURL, page: page)
+                            } label: {
+                                Text(pageAnchor)
+                                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(LoomTokens.dsInk3)
+                                    .underline(false)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Open the original at page \(page)")
+                        } else {
+                            Text(pageAnchor)
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundStyle(LoomTokens.dsInk3)
+                        }
                     }
                 }
 
