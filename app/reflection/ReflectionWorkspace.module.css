@@ -1350,6 +1350,76 @@
   color: color-mix(in srgb, var(--reflection-accent) 24%, var(--reflection-muted));
 }
 
+/* Book-ordered understanding entries — the document body follows the
+   source's own structure (page ascending), matching the native register. */
+.learningObjectEntries {
+  display: grid;
+  gap: 0;
+  margin-top: 0.35rem;
+}
+
+.learningObjectEntry {
+  display: grid;
+  gap: 0.32rem;
+  padding: 0.72rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--reflection-text) 9%, transparent);
+}
+
+.learningObjectEntry[data-active='true'] {
+  background: color-mix(in srgb, var(--reflection-text) 4%, transparent);
+  border-radius: 0.45rem;
+  padding-inline: 0.55rem;
+}
+
+.learningObjectTermLine {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  font-family: ui-serif, 'New York', Georgia, 'Times New Roman', serif;
+  font-size: 1.02rem;
+  color: var(--reflection-text);
+}
+
+.learningObjectTermLine em {
+  font-style: normal;
+  color: var(--reflection-muted);
+  font-size: 0.86rem;
+}
+
+.learningObjectTermLine strong {
+  font-weight: 560;
+  color: var(--reflection-text);
+  font-size: 0.9rem;
+}
+
+.learningObjectPage {
+  margin-left: auto;
+  font-family: var(--reflection-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  color: var(--reflection-muted);
+}
+
+.learningObjectMeaning {
+  margin: 0;
+  max-width: 40rem;
+  font-family: ui-serif, 'New York', Georgia, 'Times New Roman', serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--reflection-text) 78%, var(--reflection-muted));
+}
+
+.learningObjectFillIn {
+  margin: 0.05rem 3rem 0 0;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--reflection-text) 16%, transparent);
+  font-family: ui-serif, 'New York', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--reflection-muted);
+}
+
 .learningInlineGlossary .learningTraceAnchor {
   margin-right: 0.36rem;
 }

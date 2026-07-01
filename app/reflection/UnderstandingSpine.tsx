@@ -459,6 +459,30 @@ function primaryLearningObject(objects: UnderstandingObject[]) {
   );
 }
 
+function objectPageNumber(object: UnderstandingObject): number | null {
+  const audited = auditValue(object.primary.audit, 'page');
+  if (audited) {
+    const parsed = Number.parseInt(audited, 10);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  const match = object.primary.anchor.match(/page (\d+)/i);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
+// Book order: the learning document follows the source's own structure
+// (page ascending; unanchored objects keep capture order at the end).
+function orderedLearningObjects(objects: UnderstandingObject[]) {
+  return objects
+    .map((object, index) => ({ object, index }))
+    .sort((a, b) => {
+      const pageA = objectPageNumber(a.object) ?? Number.MAX_SAFE_INTEGER;
+      const pageB = objectPageNumber(b.object) ?? Number.MAX_SAFE_INTEGER;
+      if (pageA !== pageB) return pageA - pageB;
+      return a.index - b.index;
+    })
+    .map((entry) => entry.object);
+}
+
 function LearningDigest({
   versions,
   selectedVersionId,
@@ -535,6 +559,46 @@ function LearningDigest({
               {primaryMeaning.translation ? <strong>{primaryMeaning.translation}</strong> : null}
               {primaryMeaning.context ? <span>{primaryMeaning.context}</span> : null}
             </p>
+          ) : null}
+
+          {understandingObjects.length > 1 ? (
+            <section className={styles.learningObjectEntries} aria-label="Understanding entries">
+              {orderedLearningObjects(understandingObjects)
+                .filter((object) => object !== primaryObject)
+                .map((object) => {
+                  const meaning = understandingObjectMeaning(object);
+                  const page = objectPageNumber(object);
+                  const hasMeaning = Boolean(meaning && (meaning.translation || meaning.context));
+                  return (
+                    <article
+                      key={object.primary.id}
+                      className={styles.learningObjectEntry}
+                      data-active={object.primary.id === selectedVersionId}
+                      data-kind={object.kind}
+                    >
+                      <p className={styles.learningObjectTermLine}>
+                        <TraceAnchor
+                          version={object.primary}
+                          supportCount={understandingObjectTraceCount(object)}
+                          componentTerms={object.componentTerms}
+                          onSelectVersion={onSelectVersion}
+                        >
+                          <span className={styles.learningInlineTerm}>{object.term}</span>
+                        </TraceAnchor>
+                        {meaning?.phonetic ? <em>{meaning.phonetic}</em> : null}
+                        {meaning?.translation ? <strong>{meaning.translation}</strong> : null}
+                        {page ? <span className={styles.learningObjectPage}>p.{page}</span> : null}
+                      </p>
+                      {hasMeaning && meaning?.context ? (
+                        <p className={styles.learningObjectMeaning}>{meaning.context}</p>
+                      ) : null}
+                      {!hasMeaning ? (
+                        <p className={styles.learningObjectFillIn}>Explain it in your own words</p>
+                      ) : null}
+                    </article>
+                  );
+                })}
+            </section>
           ) : null}
         </article>
       ) : null}
