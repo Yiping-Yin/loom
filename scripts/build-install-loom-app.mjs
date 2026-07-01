@@ -53,10 +53,14 @@ async function buildReleaseApp() {
   removeStaleNamedProjects();
   run('xcodegen', ['generate'], { cwd: macosRoot });
   // CI runners have no Apple Development identity for team 8BW2794353, so
-  // signing there fails hard (project.yml pins DEVELOPMENT_TEAM for the app
-  // and the LoomAnchorHelper XPC service). Local builds keep real signing —
-  // macOS 26 suppresses NSServices from ad-hoc-signed apps.
-  const signingArgs = process.env.CI ? ['CODE_SIGNING_ALLOWED=NO'] : [];
+  // team signing there fails hard (project.yml pins DEVELOPMENT_TEAM for the
+  // app and the LoomAnchorHelper XPC service). Fall back to AD-HOC signing on
+  // CI — it embeds the entitlements (installed-app-smoke asserts app-sandbox)
+  // and matches CI behavior from before the team pin. Local builds keep real
+  // signing — macOS 26 suppresses NSServices from ad-hoc-signed apps.
+  const signingArgs = process.env.CI
+    ? ['CODE_SIGN_STYLE=Manual', 'CODE_SIGN_IDENTITY=-', 'DEVELOPMENT_TEAM=']
+    : [];
   run('xcodebuild', [
     '-project',
     'Loom.xcodeproj',
