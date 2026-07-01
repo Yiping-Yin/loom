@@ -31,6 +31,25 @@ academic record / paper form (loom-notes / FINS3666 packet register);
 product-reflection case → report / design-doc form. The failure mode stays the
 same: a UI-shaped list (inbox, type buckets, card sea) is not a document.
 
+Quality bar (owner, 2026-07-02, "我希望的效果至少是这样"): two reference
+documents — the FINS3666 Circle packet (baseline floor, already canon) and
+~/Downloads/RESEARCH_REPORT.pdf (the MoltBook dataset study produced by the
+owner's own research workflow). The report's anatomy IS the bar for Loom's
+learning report/export:
+1. Title + provenance box (source, freeze date, verification statement).
+2. Scope declaration FIRST (hard boundaries, no out-of-sample claims).
+3. Numbered sections: data → questions → methods → results & VALIDATION →
+   conclusions → reproducibility → review record.
+4. Tables for structured facts; charts with intervals; ⚠️ honest caveats
+   INLINE next to the numbers they qualify.
+5. Conclusions numbered, each carrying its own constraints.
+Loom mapping (one-to-one with the evidence ladder): citations→anchors
+(file · p.N) · ⚠️ caveats→weak-anchor disclosure + needs-confirmation ·
+results&validation→review-pass state · reproducibility→capture trail ·
+review record→second-pass corrections · constrained conclusions→promoted
+principles. The learning-output packet and the mature center view must reach
+AT LEAST this register.
+
 ## Core principle (apply everywhere)
 **Show the work, not the scaffolding.** If an icon, the filename, or the context
 already conveys something, DELETE the text. Every text element must carry info
