@@ -1314,43 +1314,53 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let focusedElement = accessibilityElementAttribute(kAXFocusedUIElementAttribute as String, from: appElement)
         let elements = [focusedElement, focusedWindow, appElement].compactMap { $0 }
 
+        // The sandbox blocks these cross-app AX reads inside the app, so the
+        // non-sandboxed LoomAnchorHelper XPC service performs the same read
+        // and its result fills whatever the in-app attempt could not
+        // (docs/projects/active/2026-06-30-loom-anchor-precision-handoff.md).
+        // In-app values win when present; the helper only upgrades precision.
+        let helperAnchor = LoomAnchorHelperClient.resolveAnchor(forPID: application.processIdentifier)
+        let mergedWindowTitle = windowTitle ?? helperAnchor?.windowTitle
+
         let documentURL = firstAccessibilityURLAttribute(
             ["AXDocument", "AXURL", "AXFilename"],
             from: elements
-        )
+        ) ?? helperAnchor?.documentURL
         let documentTitle = documentURL?.lastPathComponent
             ?? firstAccessibilityStringAttribute(["AXTitle", "AXFilename", "AXDescription"], from: elements)
-            ?? windowTitle
+            ?? mergedWindowTitle
         let strings = orderedUniqueStrings(
-            ([windowTitle] as [String?])
+            ([windowTitle, helperAnchor?.windowTitle] as [String?])
                 + accessibilityStrings(["AXValue", "AXDescription", "AXTitle", "AXHelp", "AXIdentifier"], from: elements)
         )
         let pageContext = pageContext(from: strings)
+        let pageNumber = pageContext.pageNumber ?? helperAnchor?.page
+        let pageCount = pageContext.pageCount ?? helperAnchor?.pageCount
         let cellRange = spreadsheetCellRange(from: strings)
         let sheetName = spreadsheetSheetName(from: strings)
         let selectedRole = firstAccessibilityStringAttribute(["AXRoleDescription", "AXRole"], from: elements)
 
         let precision = anchorPrecision(
             documentURL: documentURL,
-            pageNumber: pageContext.pageNumber,
+            pageNumber: pageNumber,
             cellRange: cellRange,
-            windowTitle: windowTitle
+            windowTitle: mergedWindowTitle
         )
 
         guard documentURL != nil
-                || pageContext.pageNumber != nil
+                || pageNumber != nil
                 || cellRange != nil
                 || sheetName != nil
                 || selectedRole != nil
-                || windowTitle != nil else {
+                || mergedWindowTitle != nil else {
             return nil
         }
 
         return LoomNativeSourceContext(
             documentURL: documentURL,
             documentTitle: nonEmptyString(documentTitle),
-            pageNumber: pageContext.pageNumber,
-            pageCount: pageContext.pageCount,
+            pageNumber: pageNumber,
+            pageCount: pageCount,
             sheetName: sheetName,
             cellRange: cellRange,
             selectedRole: selectedRole,

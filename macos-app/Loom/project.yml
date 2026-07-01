@@ -39,9 +39,20 @@ targets:
       - Sources
       - Assets.xcassets
       - Resources
+      # Shared XPC contract with the non-sandboxed anchor helper — the one
+      # file both processes compile (docs/projects/active/
+      # 2026-06-30-loom-anchor-precision-handoff.md).
+      - path: AnchorHelper/LoomAnchorHelperProtocol.swift
     dependencies:
       - package: CoreXLSX
       - package: ZIPFoundation
+      # Anchor-precision helper: embedded XPC service, NOT sandboxed, so it
+      # can read the source app's Accessibility tree (AXDocument + page)
+      # while the main app keeps its sandbox. Direct-distribution only —
+      # a Mac App Store build would need every component sandboxed.
+      - target: LoomAnchorHelper
+        embed: true
+        codeSign: true
     settings:
       base:
         PRODUCT_NAME: Loom
@@ -202,6 +213,33 @@ targets:
         # any server, but keeping it off-by-default is fine — no listener
         # is created at runtime.
         com.apple.security.files.user-selected.read-write: true
+
+  LoomAnchorHelper:
+    # Non-sandboxed XPC service that resolves the source anchor (file URL +
+    # page) via Accessibility for the sandboxed main app. Deliberately has
+    # NO entitlements block: no app-sandbox — that is the entire point
+    # (sandboxed processes cannot read another app's AX tree). It needs its
+    # own Accessibility grant in System Settings > Privacy & Security.
+    type: xpc-service
+    platform: macOS
+    sources:
+      - AnchorHelper
+    settings:
+      base:
+        PRODUCT_NAME: LoomAnchorHelper
+        PRODUCT_BUNDLE_IDENTIFIER: com.yinyiping.loom.AnchorHelper
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
+        DEVELOPMENT_TEAM: 8BW2794353
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        ENABLE_HARDENED_RUNTIME: YES
+    info:
+      path: AnchorHelper/Info.plist
+      properties:
+        CFBundleName: LoomAnchorHelper
+        XPCService:
+          ServiceType: Application
 
   LoomTests:
     type: bundle.unit-test
