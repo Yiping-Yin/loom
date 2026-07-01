@@ -102,7 +102,7 @@ Codex reference image measured at 3456 x 2048 px, or roughly 1728 x 1024 pt on R
 | Titlebar control top inset | 8 pt | Derived from the 16 pt center line and 16 pt control size; do not tune this independently. |
 | Traffic-light clearance | 88 pt | Keeps the left titlebar toggle after the native traffic-light cluster without touching the green button. |
 | Left sidebar width | 240 pt | Fixed desktop navigation rail matching the Codex reference weight; the left rail must not become a primary content column. |
-| Right Sources width | 400 pt | Sources is a material/evidence area, so it needs more width than a narrow inspector while staying smaller than the center work area. |
+| Right Sources width | 400 pt default, drag-resizable 320–560 pt (persisted) | Sources is a material/evidence area, so it needs more width than a narrow inspector while staying smaller than the center work area; the seam between the center and the Evidence pane drags to resize, and the width persists per user. |
 | Center workspace | Flexible remainder | The middle owns all extra width after fixed rails. In Sidecar Mode it owns the Loom record while the native app owns the file. |
 | Thread max width | 720 pt | The reasoning column and composer share one reading axis close to Codex chat density. |
 | Sidebar body top inset | 72 pt | The sidebar material begins at the window edge, while the first action clears the traffic-light/titlebar row. |

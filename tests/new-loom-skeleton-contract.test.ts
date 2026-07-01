@@ -1626,7 +1626,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: isSidebarPresented/);
   assert.doesNotMatch(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: shouldShowSidebar/);
   assert.match(nativeRoot, /private let reflectionSidebarWidth: CGFloat = 240/);
-  assert.match(nativeRoot, /private let reflectionInspectorWidth: CGFloat = 400/);
+  assert.match(nativeRoot, /private let reflectionInspectorDefaultWidth: CGFloat = 400/);
+  assert.match(nativeRoot, /private let reflectionInspectorMinWidth: CGFloat = 320/);
+  assert.match(nativeRoot, /private let reflectionInspectorMaxWidth: CGFloat = 560/);
+  assert.match(nativeRoot, /private struct ReflectionPaneResizer: View/);
+  assert.match(nativeRoot, /@AppStorage\(reflectionInspectorWidthKey\)/);
+  assert.match(nativeRoot, /NSCursor\.resizeLeftRight\.push\(\)/);
   assert.match(
     nativeRoot,
     /private struct ReflectionSidebar:[\s\S]*var material: ReflectionSidebarMaterial = \.rail[\s\S]*\.background\(ReflectionSidebarBackground\(material: material\)\)/,

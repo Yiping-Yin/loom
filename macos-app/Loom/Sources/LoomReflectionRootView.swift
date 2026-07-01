@@ -3,7 +3,17 @@ import AppKit
 import PDFKit
 
 private let reflectionSidebarWidth: CGFloat = 240
-private let reflectionInspectorWidth: CGFloat = 400
+// The right pane is drag-resizable between the bounds below; 400 pt stays the
+// contract default. The width persists via AppStorage under
+// "loom.reflection.inspectorWidth" and the top-bar Evidence strip tracks it.
+private let reflectionInspectorDefaultWidth: CGFloat = 400
+private let reflectionInspectorMinWidth: CGFloat = 320
+private let reflectionInspectorMaxWidth: CGFloat = 560
+private let reflectionInspectorWidthKey = "loom.reflection.inspectorWidth"
+
+private func clampedInspectorWidth(_ value: Double) -> CGFloat {
+    min(max(CGFloat(value), reflectionInspectorMinWidth), reflectionInspectorMaxWidth)
+}
 private let reflectionTopBarHeight: CGFloat = 52
 private let reflectionSidebarTopClearance: CGFloat = 72
 private let reflectionThreadMaxWidth: CGFloat = 720
@@ -60,6 +70,7 @@ struct LoomReflectionRootView: View {
     @State private var isSidebarPresented: Bool = true
     @State private var isSidebarPeeking: Bool = false
     @State private var isInspectorPresented: Bool = true
+    @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
 
     @State private var capturePayload: CapturePayload?
     @State private var lastHandledCaptureToken: UUID?
@@ -136,7 +147,7 @@ struct LoomReflectionRootView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     if isInspectorPresented {
-                        ReflectionDivider()
+                        ReflectionPaneResizer(width: $inspectorWidth)
                         ReflectionSourceInspector(
                             reflectionCase: selectedCase,
                             sources: selectedCase.sources,
@@ -154,7 +165,7 @@ struct LoomReflectionRootView: View {
                                 }
                             }
                         )
-                        .frame(width: reflectionInspectorWidth)
+                        .frame(width: clampedInspectorWidth(inspectorWidth))
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
                 }
@@ -1605,6 +1616,8 @@ private struct ReflectionTopBar: View {
     let onToggleSidebar: () -> Void
     let onToggleInspector: () -> Void
     let onOpenSourceInNativeApp: () -> Void
+    // The Evidence strip tracks the resizable pane width live.
+    @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
 
     var body: some View {
         HStack(spacing: 0) {
@@ -1669,7 +1682,7 @@ private struct ReflectionTopBar: View {
                 }
                 .padding(.horizontal, 14)
                 .frame(height: reflectionTitlebarControlSize)
-                .frame(width: reflectionInspectorWidth)
+                .frame(width: clampedInspectorWidth(inspectorWidth))
             } else {
                 inspectorButton
                     .padding(.trailing, 16)
@@ -3670,6 +3683,46 @@ private struct ReflectionDivider: View {
         Rectangle()
             .fill(LoomTokens.dsHair)
             .frame(width: 1)
+    }
+}
+
+/// The seam between the center workspace and the Evidence pane: visually the
+/// same hairline as ReflectionDivider, but with a wider invisible hit area
+/// that drags to resize the pane (clamped, persisted via AppStorage).
+private struct ReflectionPaneResizer: View {
+    @Binding var width: Double
+    @State private var dragStartWidth: CGFloat?
+    @State private var isHovering = false
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(LoomTokens.dsHair)
+                .frame(width: 1)
+        }
+        .frame(width: 9)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            isHovering = hovering
+            if hovering {
+                NSCursor.resizeLeftRight.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+        .gesture(
+            DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                .onChanged { value in
+                    let start = dragStartWidth ?? clampedInspectorWidth(width)
+                    if dragStartWidth == nil { dragStartWidth = start }
+                    // The pane sits right of the seam: dragging left grows it.
+                    width = Double(clampedInspectorWidth(Double(start - value.translation.width)))
+                }
+                .onEnded { _ in
+                    dragStartWidth = nil
+                }
+        )
+        .accessibilityLabel("Resize sources inspector")
     }
 }
 
