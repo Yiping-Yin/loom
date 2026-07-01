@@ -1,10 +1,12 @@
 import Foundation
+import os
 
 /// App-side client for the non-sandboxed LoomAnchorHelper XPC service.
 /// The main app stays fully sandboxed; only the tiny helper holds the
 /// cross-app Accessibility capability (and needs its own Accessibility
 /// grant in System Settings, separate from the app's).
 enum LoomAnchorHelperClient {
+    private static let log = Logger(subsystem: "com.yinyiping.loom", category: "anchor-helper")
     struct HelperAnchor {
         let documentURL: URL?
         let page: Int?
@@ -24,18 +26,28 @@ enum LoomAnchorHelperClient {
         connection.resume()
         defer { connection.invalidate() }
 
+        log.info("anchor-helper: connecting for pid \(pid, privacy: .public)")
         let semaphore = DispatchSemaphore(value: 0)
         var payload: [String: String]?
-        let proxy = connection.remoteObjectProxyWithErrorHandler { _ in
+        let proxy = connection.remoteObjectProxyWithErrorHandler { error in
+            Self.log.error("anchor-helper: xpc error \(String(describing: error), privacy: .public)")
             semaphore.signal()
         } as? LoomAnchorHelperProtocol
-        guard let proxy else { return nil }
+        guard let proxy else {
+            log.error("anchor-helper: proxy cast failed")
+            return nil
+        }
 
         proxy.resolveAnchor(forPID: Int32(pid)) { reply in
             payload = reply
             semaphore.signal()
         }
-        guard semaphore.wait(timeout: .now() + timeout) == .success, let payload else { return nil }
+        let waited = semaphore.wait(timeout: .now() + timeout)
+        guard waited == .success, let payload else {
+            log.error("anchor-helper: \(waited == .success ? "nil payload" : "timeout", privacy: .public)")
+            return nil
+        }
+        log.info("anchor-helper: reply keys \(payload.keys.sorted().joined(separator: ","), privacy: .public) trusted=\(payload["axTrusted"] ?? "?", privacy: .public)")
 
         return HelperAnchor(
             documentURL: documentURL(from: payload["document"]),
