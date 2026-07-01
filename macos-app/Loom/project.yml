@@ -114,6 +114,15 @@ targets:
               default: Capture Selection in Loom
             NSMessage: captureSelectionInLoom
             NSPortName: Loom
+            # One-keystroke capture: select text -> Cmd-Shift-L. Services key
+            # equivalents are always Cmd-Shift-<key>. Chosen for the lead PDF
+            # case (free in Preview); Word (bullet list) and Excel (filter)
+            # bind Cmd-Shift-L themselves and app menus win over Services
+            # there — users can remap in System Settings > Keyboard >
+            # Keyboard Shortcuts > Services. The capture route itself stays
+            # Services/pasteboard per the layout contract.
+            NSKeyEquivalent:
+              default: L
             NSSendTypes:
               - NSStringPboardType
               - public.utf8-plain-text

@@ -22,6 +22,15 @@ Maps onto the product stages: thick = Capture/Collect · thin = Meaning/Review �
 integrate = Memory/Reuse · presentation = the learning document / packet shaped
 by the source's structure.
 
+Refinement (owner, 2026-07-02): "书" means a PROFESSIONAL DOCUMENT GENRE, not
+one literal format — 论文 (paper), 报告 (report), 创业设计 (startup design doc),
+严谨的学术纪录 (rigorous academic record) are all valid final forms. The two
+invariants: 结构清晰 (clear structure) + 专业可读的排版 (professional, readable
+typesetting). Genre follows the case's nature: course PDF learning pass →
+academic record / paper form (loom-notes / FINS3666 packet register);
+product-reflection case → report / design-doc form. The failure mode stays the
+same: a UI-shaped list (inbox, type buckets, card sea) is not a document.
+
 ## Core principle (apply everywhere)
 **Show the work, not the scaffolding.** If an icon, the filename, or the context
 already conveys something, DELETE the text. Every text element must carry info
