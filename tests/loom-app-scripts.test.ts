@@ -396,7 +396,12 @@ test('local macOS run entrypoint builds the current Xcode app and wires Codex Ru
   const verifierPath = path.join(repoRoot, 'scripts', 'verify-native-sidecar.mjs');
 
   const runScript = fs.readFileSync(runScriptPath, 'utf8');
-  const environment = fs.readFileSync(environmentPath, 'utf8');
+  // .codex/ is gitignored machine-local Codex config, so the file is absent
+  // on CI — assert on it only when present (same skip-when-absent pattern as
+  // the gitignored optibook fixtures).
+  const environment = fs.existsSync(environmentPath)
+    ? fs.readFileSync(environmentPath, 'utf8')
+    : null;
   const verifier = fs.readFileSync(verifierPath, 'utf8');
 
   assert.match(runScript, /xcodebuild/);
@@ -407,8 +412,10 @@ test('local macOS run entrypoint builds the current Xcode app and wires Codex Ru
   assert.match(runScript, /pgrep -x "\$APP_NAME"/);
   assert.doesNotMatch(runScript, /swift build/);
 
-  assert.match(environment, /name = "LOOM"/);
-  assert.match(environment, /command = "\.\/script\/build_and_run\.sh"/);
+  if (environment !== null) {
+    assert.match(environment, /name = "LOOM"/);
+    assert.match(environment, /command = "\.\/script\/build_and_run\.sh"/);
+  }
 
   assert.match(verifier, /process\.env\.LOOM_APP_PATH/);
   assert.match(verifier, /path\.resolve\(process\.env\.LOOM_APP_PATH\)/);

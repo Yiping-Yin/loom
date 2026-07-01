@@ -69,8 +69,9 @@ const spec = read('macos-app/Loom/project.yml');
 const entitlements = read('macos-app/Loom/Loom.entitlements');
 const sourceFiles = listSwiftFiles('macos-app/Loom/Sources');
 const testFiles = listSwiftFiles('macos-app/Loom/Tests');
+const anchorHelperFiles = listSwiftFiles('macos-app/Loom/AnchorHelper');
 const projectSwiftNames = extractProjectSwiftNames(project);
-const diskSwiftNames = new Set([...sourceFiles, ...testFiles]);
+const diskSwiftNames = new Set([...sourceFiles, ...testFiles, ...anchorHelperFiles]);
 
 for (const name of sourceFiles) {
   expectProjectReference(project, name, 'Source');
@@ -78,6 +79,10 @@ for (const name of sourceFiles) {
 
 for (const name of testFiles) {
   expectProjectReference(project, name, 'Test');
+}
+
+for (const name of anchorHelperFiles) {
+  expectProjectReference(project, name, 'AnchorHelper');
 }
 
 for (const name of projectSwiftNames) {
