@@ -17,7 +17,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 
 import styles from './ReflectionWorkspace.module.css';
@@ -282,6 +282,45 @@ export default function ReflectionWorkspaceClient() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSidebarPeeking, setIsSidebarPeeking] = useState(false);
   const [isSourcesCollapsed, setIsSourcesCollapsed] = useState(false);
+  // Web parity with the native drag-resizable Evidence pane: 22rem stays the
+  // contract default; a persisted user width (clamped like native, 320–560)
+  // overrides it via the --reflection-sources-width variable.
+  const [sourcesWidth, setSourcesWidth] = useState<number | null>(null);
+  const sourcesWidthRef = useRef<number | null>(null);
+  sourcesWidthRef.current = sourcesWidth;
+
+  useEffect(() => {
+    const stored = Number.parseInt(window.localStorage.getItem('loom.reflection.sourcesWidth') ?? '', 10);
+    if (Number.isFinite(stored)) {
+      setSourcesWidth(Math.min(Math.max(stored, 320), 560));
+    }
+  }, []);
+
+  function beginSourcesResize(event: ReactPointerEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = sourcesWidthRef.current
+      ?? document.querySelector<HTMLElement>(`.${styles.sources}`)?.getBoundingClientRect().width
+      ?? 352;
+    function onMove(move: PointerEvent) {
+      // The pane sits right of the seam: dragging left grows it. Write the
+      // ref directly so pointerup persists the exact final width even when
+      // React hasn't re-rendered between the last move and the release.
+      const next = Math.min(Math.max(startWidth + (startX - move.clientX), 320), 560);
+      sourcesWidthRef.current = next;
+      setSourcesWidth(next);
+    }
+    function onUp() {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      const finalWidth = sourcesWidthRef.current;
+      if (finalWidth) {
+        window.localStorage.setItem('loom.reflection.sourcesWidth', String(Math.round(finalWidth)));
+      }
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
   const [hasNativeOpenSourceBridge, setHasNativeOpenSourceBridge] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlsRef = useRef<string[]>([]);
@@ -547,6 +586,11 @@ export default function ReflectionWorkspaceClient() {
       data-sidebar-peeking={isSidebarPeeking}
       data-sources-collapsed={isSourcesCollapsed}
       aria-labelledby="reflection-title"
+      style={
+        sourcesWidth !== null && !isSourcesCollapsed
+          ? ({ '--reflection-sources-width': `${sourcesWidth}px` } as React.CSSProperties)
+          : undefined
+      }
     >
       <aside
         className={styles.sidebar}
@@ -743,6 +787,13 @@ export default function ReflectionWorkspaceClient() {
           </div>
         ) : (
           <>
+            <div
+              className={styles.sourcesResizeHandle}
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize sources inspector"
+              onPointerDown={beginSourcesResize}
+            />
             <header className={styles.sourcesHeader}>
               <div className={styles.sourcesHeaderQuiet} aria-hidden="true" />
               <div className={styles.sourceHeaderControls}>

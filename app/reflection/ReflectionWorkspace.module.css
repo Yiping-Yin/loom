@@ -192,6 +192,7 @@
 }
 
 .sources {
+  position: relative;
   background: var(--reflection-inspector-glass);
   border-left: 1px solid var(--reflection-line);
   box-shadow:
@@ -199,6 +200,18 @@
     inset 0 1px 0 var(--reflection-glass-inset);
   backdrop-filter: blur(22px) saturate(118%) brightness(1.01);
   -webkit-backdrop-filter: blur(22px) saturate(118%) brightness(1.01);
+}
+
+/* Web parity with the native drag-resizable Evidence pane: the seam drags,
+   the width persists (loom.reflection.sourcesWidth), clamped like native. */
+.sourcesResizeHandle {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  cursor: col-resize;
+  z-index: 6;
 }
 
 .thread {
