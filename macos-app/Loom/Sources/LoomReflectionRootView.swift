@@ -547,12 +547,17 @@ struct LoomReflectionRootView: View {
         let candidateSources = importedSources + sessionSources
 
         if let primarySource = candidateSources.first {
-                if let existingCaseIndex = Self.existingLearningCaseIndex(
-                for: primarySource,
-                in: cases
+            // Sidebar rows are user-initiated PROJECTS, never files (owner:
+            // 左边就应该是一个发起的). A capture joins the ACTIVE learning
+            // project — its file becomes one of the project's sources —
+            // instead of creating a file-named case per document.
+            if let activeIndex = Self.activeLearningCaseIndex(
+                in: cases,
+                selectedCaseID: selectedCaseID,
+                containing: primarySource
             ) {
-                selectedCaseID = cases[existingCaseIndex].id
-                if let matchingSource = cases[existingCaseIndex].sources.first(where: { source in
+                selectedCaseID = cases[activeIndex].id
+                if let matchingSource = cases[activeIndex].sources.first(where: { source in
                     Self.sourceDeduplicationKey(source) == Self.sourceDeduplicationKey(primarySource)
                 }) {
                     selectedSourceID = matchingSource.id
@@ -787,6 +792,26 @@ struct LoomReflectionRootView: View {
         )
     }
 
+    /// The capture destination, in priority order: the SELECTED learning
+    /// project (the user's active initiation) → any learning project that
+    /// already holds this source → the most recent learning project. Nil
+    /// means "start a new project".
+    private static func activeLearningCaseIndex(
+        in cases: [ReflectionCase],
+        selectedCaseID: String?,
+        containing source: ReflectionSource
+    ) -> Int? {
+        if let selectedCaseID,
+           let index = cases.firstIndex(where: { $0.id == selectedCaseID }),
+           cases[index].project == "Learning pass" {
+            return index
+        }
+        if let index = existingLearningCaseIndex(for: source, in: cases) {
+            return index
+        }
+        return cases.firstIndex { $0.project == "Learning pass" }
+    }
+
     private static func existingLearningCaseIndex(
         for source: ReflectionSource,
         in cases: [ReflectionCase]
@@ -807,6 +832,13 @@ struct LoomReflectionRootView: View {
         return "session:\(source.kind):\(source.label.lowercased())"
     }
 
+    private static func learningProjectTitle(date: Date = Date()) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MMM d"
+        return "Learning · \(formatter.string(from: date))"
+    }
+
     private static func learningCase(from sources: [ReflectionSource]) -> ReflectionCase {
         let primary = sources[0]
         let extraCount = max(0, sources.count - 1)
@@ -823,7 +855,9 @@ struct LoomReflectionRootView: View {
 
         return ReflectionCase(
             id: UUID().uuidString,
-            title: primary.label,
+            // A project is named for the INITIATION, not the file — files are
+            // sources inside it. The user can rename it to the real endeavor.
+            title: Self.learningProjectTitle(),
             project: "Learning pass",
             status: "Reading",
             updatedAt: Self.timeFormatter.string(from: Date()),
@@ -2237,10 +2271,14 @@ private struct ReflectionLearningDigest: View {
 
     // The center is a learning DOCUMENT, not a capture inbox (owner north
     // star: the final presentation is still the book — a professional
-    // document genre with clear structure and readable typesetting).
+    // document genre with clear structure and readable typesetting). The
+    // title is the PROJECT (the user's initiation); legacy file-named cases
+    // just lose their extension.
     private var documentTitle: String {
-        let label = sourceLabel
+        let label = reflectionCase.title
         guard let dot = label.lastIndex(of: "."), dot != label.startIndex else { return label }
+        let suffix = label[label.index(after: dot)...]
+        guard suffix.count <= 4, suffix.allSatisfy({ $0.isLetter || $0.isNumber }) else { return label }
         return String(label[..<dot])
     }
 

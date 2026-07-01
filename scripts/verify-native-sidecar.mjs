@@ -1015,10 +1015,22 @@ function runtimeMetadata() {
   };
 }
 
+function caseMentionsSource(entry, title) {
+  if ((entry?.sources ?? []).some((source) => String(source?.label ?? '').includes(title))) {
+    return true;
+  }
+  return inputItems(entry).some((item) => String(item).includes(title));
+}
+
 function traceCase(snapshot, title) {
+  // Sidebar cases are user-initiated PROJECTS, not files: a learning project
+  // holds several sources, so a per-file expectation matches either a legacy
+  // file-named case or a learning project that contains that source.
   const candidates = (snapshot.cases ?? [])
     .map((entry, index) => ({ entry, index }))
-    .filter(({ entry }) => entry?.title === title);
+    .filter(({ entry }) =>
+      entry?.title === title
+      || (entry?.project === 'Learning pass' && caseMentionsSource(entry, title)));
   return candidates
     .sort((left, right) => {
       const strengthDelta = traceStrength(right.entry, snapshot) - traceStrength(left.entry, snapshot);

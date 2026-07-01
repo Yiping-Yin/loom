@@ -1670,7 +1670,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /let sessionSources = importedSources\.isEmpty/);
   assert.match(nativeRoot, /Self\.nativeSessionSource\(from: capture\)/);
   assert.match(nativeRoot, /let candidateSources = importedSources \+ sessionSources/);
-  assert.match(nativeRoot, /Self\.existingLearningCaseIndex\(/);
+  // Sidebar rows are user-initiated projects, never files: captures join the
+  // active learning project; a file-named case per document is forbidden.
+  assert.match(nativeRoot, /Self\.activeLearningCaseIndex\(/);
+  assert.match(nativeRoot, /private static func activeLearningCaseIndex\(/);
+  assert.match(nativeRoot, /title: Self\.learningProjectTitle\(\)/);
+  assert.doesNotMatch(nativeRoot, /title: primary\.label/);
   assert.match(nativeRoot, /Self\.sourceDeduplicationKey\(source\) == Self\.sourceDeduplicationKey\(primarySource\)/);
   assert.match(nativeRoot, /capture\.sourceWindowTitle/);
   assert.match(nativeRoot, /let inferredAnchor = Self\.inferPDFAnchor\(/);
@@ -1744,7 +1749,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /let next = Self\.learningCase\(from: candidateSources\)/);
   assert.doesNotMatch(nativeRoot, /let primaryPath = primarySource\.fileURL\?\.standardizedFileURL\.path/);
   assert.match(nativeRoot, /return cases\.firstIndex \{ reflectionCase in/);
-  assert.match(nativeRoot, /selectedCaseID = cases\[existingCaseIndex\]\.id/);
+  assert.match(nativeRoot, /selectedCaseID = cases\[activeIndex\]\.id/);
   assert.match(nativeRoot, /let inputFingerprint = reflectionLearningInputFingerprint\(inputLine\)/);
   assert.match(nativeRoot, /reflectionLearningInputFingerprint\(\$0\) == inputFingerprint/);
   assert.match(nativeRoot, /persistWorkspace\(\)[\s\S]{0,80}return/);

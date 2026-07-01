@@ -31,6 +31,22 @@ academic record / paper form (loom-notes / FINS3666 packet register);
 product-reflection case → report / design-doc form. The failure mode stays the
 same: a UI-shaped list (inbox, type buckets, card sea) is not a document.
 
+Sidebar = initiatives, not file formats (owner, 2026-07-02): "左边就应该是
+一个发起的，不应该有各种文件格式。你可以把每个发起的设计成一个项目。"
+- A sidebar row is a user-INITIATED project (a study session, a review, a
+  decision), never a file. Files are sources INSIDE the project (case.sources),
+  inspected in the Evidence pane.
+- Capture routing changes accordingly: a capture attaches to the ACTIVE
+  learning project (adding its file to the project's sources when new) instead
+  of auto-creating one file-named case per document. With no active project,
+  create one named by initiation ("Learning · <date>"), not by file.
+- The learning document's title = the project name; multi-source projects get
+  per-source record sections (the Learning Record packet already has this
+  shape in §4).
+- Refusals: no folder trees in the sidebar, no per-file cases, no file-format
+  badges on sidebar rows (badges live in Evidence/Sources). This enforces the
+  layout contract's "left sidebar must not become a file browser clone".
+
 Quality bar (owner, 2026-07-02, "我希望的效果至少是这样"): two reference
 documents — the FINS3666 Circle packet (baseline floor, already canon) and
 ~/Downloads/RESEARCH_REPORT.pdf (the MoltBook dataset study produced by the
