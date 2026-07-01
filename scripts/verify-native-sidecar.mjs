@@ -1662,14 +1662,39 @@ function nativeCapabilityContractMarkdown(items) {
   ].join('\n');
 }
 
+function packetCell(value, limit = 96) {
+  const text = String(value ?? '').replace(/\s+/g, ' ').replace(/\|/g, '\\|').trim();
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit - 1)}…`;
+}
+
+function packetVersionIsWeak(version) {
+  const precision = String(version?.evidence?.['anchor precision'] ?? '').toLowerCase();
+  const fallback = String(version?.evidence?.['fallback note'] ?? '').toLowerCase();
+  return precision.includes('window') || precision.includes('visual context only') || fallback.includes('weak');
+}
+
+function packetStatusCell(version) {
+  const weak = packetVersionIsWeak(version);
+  const focus = String(version?.focus ?? '');
+  if (/user meaning/i.test(focus)) {
+    return weak ? '⚠️ confirmed on a weak anchor' : 'confirmed';
+  }
+  if (/question/i.test(focus)) return '⚠️ open question';
+  if (/correction/i.test(focus)) return 'corrected';
+  if (/principle/i.test(focus)) return 'memory candidate';
+  return weak ? '⚠️ needs confirmation · weak anchor' : '⚠️ needs confirmation';
+}
+
+// The Learning Record follows the owner's report bar (see the design
+// handoff): provenance box, scope first, numbered sections, tables for
+// structured facts, honest ⚠️ caveats inline, conclusions with their own
+// constraints, and a reproducibility trail. The evidence ladder IS the
+// report's citation discipline.
 function learningOutputPacketMarkdown(report) {
   const learningTraces = packetLearningTraces(report);
-  const pdfTrace = report.pdfLearningExperiment;
-  const pdfVersions = packetVersions(pdfTrace);
-  const phraseVersion = pdfVersions.find((version) => /phrase/i.test(version.focus ?? ''));
-  const sentenceVersion = pdfVersions.find((version) => /sentence/i.test(version.focus ?? ''));
-  const confirmedVersion = pdfVersions.find((version) => /user meaning/i.test(version.focus ?? ''));
-  const capturedVersions = learningTraces.flatMap(({ trace }) => packetVersionLines(trace));
+  const allVersions = learningTraces.flatMap(({ label, trace }) =>
+    packetVersions(trace).map((version) => ({ label, version })));
   const activeRecallLines = learningTraces.flatMap(({ trace }) => packetActiveRecallLines(trace));
   const secondPassItems = learningTraces
     .flatMap(({ trace }) => trace?.messages ?? [])
@@ -1677,83 +1702,117 @@ function learningOutputPacketMarkdown(report) {
   const memoryLines = packetMemoryLines(learningTraces);
   const outputTitle = report.pdfSource.title.replace(/\.pdf$/i, '');
   const sourceOutline = packetSourceOutline(report);
-  const anchors = orderedUniqueItems(
-    capturedVersions
-      .map((item) => item.split('|')[0]?.trim())
-      .filter(Boolean),
-  );
   const capturedTraceCount = learningTraces.filter(({ trace }) => trace?.found).length;
   const totalVersionCount = learningTraces.reduce((sum, { trace }) => sum + packetTraceVersionCount(trace), 0);
-  const statusLine = totalVersionCount > 0
-    ? `${totalVersionCount} thinking version${totalVersionCount === 1 ? '' : 's'} captured across ${capturedTraceCount} native source${capturedTraceCount === 1 ? '' : 's'}.`
-    : 'No learning pass captured yet.';
-  const confirmedText = confirmedVersion ? packetVersionText(confirmedVersion) : 'Needs confirmation.';
+  const apps = orderedUniqueItems(learningTraces.flatMap(({ trace }) => packetTraceEvidenceValues(trace, 'app')));
+  const rungs = orderedUniqueItems(learningTraces.flatMap(({ trace }) => packetTraceEvidenceValues(trace, 'evidence rung')));
+  const weakCount = allVersions.filter(({ version }) => packetVersionIsWeak(version)).length;
+  const openQuestions = allVersions.filter(({ version }) => /question/i.test(version.focus ?? ''));
+  const corrections = allVersions.filter(({ version }) => /correction/i.test(version.focus ?? ''));
+
+  const sourcesTable = [
+    '| Source | Status | Versions | Anchor precision | Evidence rung |',
+    '|---|---|---|---|---|',
+    ...learningTraces.map(({ label, trace }) => {
+      if (!trace?.found) {
+        return `| ${packetCell(label, 48)} | not captured | 0 | — | — |`;
+      }
+      const precision = packetTraceEvidenceValues(trace, 'anchor precision');
+      const traceRungs = packetTraceEvidenceValues(trace, 'evidence rung');
+      return `| ${packetCell(label, 48)} | ${packetCell(trace.status, 32)} | ${packetTraceVersionCount(trace)} | ${packetCell(precision.join(', ') || '—', 40)} | ${packetCell(traceRungs.join(', ') || '—', 44)} |`;
+    }),
+  ];
+
+  const recordSections = learningTraces.map(({ label, trace }) => {
+    if (!trace?.found) {
+      return [`### ${label}`, '', 'No anchored learning trace captured yet.', ''].join('\n');
+    }
+    const versions = packetVersions(trace);
+    return [
+      `### ${label}`,
+      '',
+      `Status: ${trace.status}`,
+      '',
+      '| # | Focus | Selection / meaning | Anchor | Status |',
+      '|---|---|---|---|---|',
+      ...versions.map((version, index) =>
+        `| ${index + 1} | ${packetCell(packetFocusLabel(version), 28)} | ${packetCell(packetVersionText(version))} | ${packetCell(version.sourceAnchor || '—', 44)} | ${packetCell(packetStatusCell(version), 40)} |`),
+      '',
+    ].join('\n');
+  });
+
+  const trailTable = allVersions.length > 0
+    ? [
+        '| # | Anchor | Focus | Captured at | Evidence rung |',
+        '|---|---|---|---|---|',
+        ...allVersions.map(({ version }, index) =>
+          `| ${index + 1} | ${packetCell(version.sourceAnchor || '—', 44)} | ${packetCell(packetFocusLabel(version), 28)} | ${packetCell(version.evidence?.['captured at'] || '—', 26)} | ${packetCell(version.evidence?.['evidence rung'] || '—', 40)} |`),
+      ]
+    : ['- No captures yet.'];
 
   return [
-    `# ${outputTitle}`,
+    `# ${outputTitle} — Learning Record`,
     '',
-    `Learning packet · ${report.pdfSource.title}`,
+    `**Source** ${report.pdfSource.title} (\`${report.pdfSource.path}\`) · **Native apps** ${apps.join(', ') || '—'} · **Capture route** macOS Services · pasteboard`,
     '',
-    '## Study Notes',
+    `**Verification** ${totalVersionCount} understanding version${totalVersionCount === 1 ? '' : 's'} across ${capturedTraceCount} source${capturedTraceCount === 1 ? '' : 's'}; every entry carries an explicit anchor-precision label; ${weakCount > 0 ? `${weakCount} weak-anchor entr${weakCount === 1 ? 'y is' : 'ies are'} disclosed inline` : 'no weak anchors in this record'}.`,
+    '',
+    '## 0. Scope — read this first',
     '',
     packetList([
-      `Spine: ${packetSpineLines(report).map((line) => line.replace(/^Spine:\s*/, '')).join(' ')}`,
-      phraseVersion ? `Term: ${packetVersionText(phraseVersion)}` : null,
-      sentenceVersion ? `Original sentence: ${packetVersionText(sentenceVersion)}` : null,
-      `My current meaning: ${confirmedText}`,
-    ].filter(Boolean)),
+      'This is a learning record of what was actually captured — not a summary of the source documents.',
+      'Meanings are the learner\'s own. Entries marked ⚠️ are not settled knowledge.',
+      'Entries below page/cell precision cannot be cited back to an exact location; their status says so inline.',
+      'The native file remains the source of truth; Loom records the learning trail only.',
+    ]),
+    '',
+    '## 1. Sources',
+    '',
+    ...sourcesTable,
     '',
     ...packetSourceOutlineMarkdown(sourceOutline),
-    '## Native Source Coverage',
+    '## 2. Open questions',
     '',
-    packetList(packetSourceCoverageLines(report)),
+    openQuestions.length > 0
+      ? packetList(openQuestions.map(({ version }) =>
+          `${packetVersionText(version)} (${version.sourceAnchor || 'no anchor'}) — ⚠️ open; do not promote until confirmed.`))
+      : '- None open.',
     '',
-    '## Active Recall',
+    '## 3. Method',
+    '',
+    packetList([
+      'Capture: select in the native app → macOS Services "Capture Selection in Loom" (⌘⇧L) → anchored understanding version. The native app stays primary.',
+      `Evidence ladder rungs observed: ${rungs.join('; ') || 'none yet'}.`,
+      `Spine: ${packetSpineLines(report).map((line) => line.replace(/^Spine:\s*/, '')).join(' ')}`,
+    ]),
+    '',
+    '## 4. Records & validation',
+    '',
+    ...recordSections,
+    '## 5. Conclusions — promoted principles',
+    '',
+    memoryLines.length > 0
+      ? memoryLines.map((line, index) => `${index + 1}. ${line} *(valid for this record's sources; promoted after user confirmation.)*`).join('\n')
+      : '- None promoted yet. Promotion requires a user-confirmed second pass — that gate is the point.',
+    '',
+    '## 6. Reproducibility — capture trail',
+    '',
+    ...trailTable,
+    '',
+    '## 7. Review record',
+    '',
+    packetList([
+      secondPassItems.length > 0
+        ? 'Second pass prepared: review captured meanings, separate language understanding from domain knowledge, then promote only stable principles.'
+        : 'Second pass not ready: capture at least one meaning and one user correction before compiling memory.',
+      corrections.length > 0
+        ? `${corrections.length} correction${corrections.length === 1 ? '' : 's'} recorded — see Records & validation.`
+        : 'No corrections recorded yet.',
+    ]),
+    '',
+    '## Appendix — Active recall',
     '',
     packetList(activeRecallLines),
-    '',
-    '## Trace History',
-    '',
-    `Status: ${statusLine}`,
-    '',
-    packetList(capturedVersions.map((line, index) => `${index + 1}. ${line}`)),
-    '',
-    '## Second-Pass Synthesis',
-    '',
-    packetList(
-      secondPassItems.length > 0
-        ? [
-            'Ready: review captured meanings, separate language understanding from domain knowledge, then promote only stable principles.',
-          ]
-        : ['Not ready yet. Capture at least one meaning and one user correction before compiling memory.'],
-    ),
-    '',
-    '## Reusable Memory',
-    '',
-    packetList(memoryLines.length > 0 ? memoryLines : ['No principle promoted yet.']),
-    '',
-    '## Evidence',
-    '',
-    packetList([
-      `Source file: ${report.pdfSource.title}`,
-      `Native path: ${report.pdfSource.path}`,
-      anchors.length > 0 ? `Anchors: ${anchors.join('; ')}` : 'Anchors: not captured yet.',
-      'Native file remains the source of truth; Loom records the learning trail only.',
-    ]),
-    '',
-    '## Native Capability Contract',
-    '',
-    packetList((report.nativeCapabilityContract ?? []).map((item) => {
-      return `${item.surface}: preserve ${item.preservedCapability} Loom only adds ${item.loomLayer}`;
-    })),
-    '',
-    '## Next Review',
-    '',
-    packetList([
-      'Confirm the current meaning in your own words.',
-      'Add one question or correction if the sentence still feels vague.',
-      'Promote only a reusable principle, not every captured note.',
-    ]),
     '',
   ].join('\n');
 }
@@ -1776,6 +1835,7 @@ function markdownToHtmlBody(markdown) {
   const lines = String(markdown).split('\n');
   const html = [];
   let listType = null;
+  let tableRows = [];
 
   function closeList() {
     if (!listType) return;
@@ -1783,7 +1843,39 @@ function markdownToHtmlBody(markdown) {
     listType = null;
   }
 
+  function splitTableRow(row) {
+    return row.replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
+  }
+
+  function flushTable() {
+    if (tableRows.length === 0) return;
+    const rows = tableRows;
+    tableRows = [];
+    const hasSeparator = rows.length >= 2 && /^\|[\s:|-]+\|$/.test(rows[1].replace(/\s/g, ''));
+    const headerCells = splitTableRow(rows[0]);
+    const bodyRows = hasSeparator ? rows.slice(2) : rows.slice(1);
+    html.push('<table>');
+    html.push('<thead><tr>');
+    for (const cell of headerCells) html.push(`<th>${inlineMarkdownToHtml(cell)}</th>`);
+    html.push('</tr></thead>');
+    html.push('<tbody>');
+    for (const row of bodyRows) {
+      html.push('<tr>');
+      for (const cell of splitTableRow(row)) html.push(`<td>${inlineMarkdownToHtml(cell)}</td>`);
+      html.push('</tr>');
+    }
+    html.push('</tbody>');
+    html.push('</table>');
+  }
+
   for (const line of lines) {
+    if (line.trim().startsWith('|')) {
+      closeList();
+      tableRows.push(line.trim());
+      continue;
+    }
+    flushTable();
+
     if (!line.trim()) {
       closeList();
       continue;
@@ -1822,6 +1914,7 @@ function markdownToHtmlBody(markdown) {
     html.push(`<p>${inlineMarkdownToHtml(line)}</p>`);
   }
 
+  flushTable();
   closeList();
   return html.join('\n');
 }
@@ -1899,6 +1992,29 @@ function learningOutputPacketHtml(markdown, report) {
 
     strong {
       color: #111827;
+    }
+
+    table {
+      width: 100%;
+      margin: 0 0 4.5mm;
+      border-collapse: collapse;
+      font-size: 9.8pt;
+      page-break-inside: avoid;
+    }
+
+    th {
+      text-align: left;
+      padding: 1.6mm 2.2mm;
+      background: #eef2f7;
+      border: 0.5pt solid #d7dde7;
+      color: #14213d;
+      font-weight: 650;
+    }
+
+    td {
+      padding: 1.5mm 2.2mm;
+      border: 0.5pt solid #d7dde7;
+      vertical-align: top;
     }
 
     .packet-meta {
