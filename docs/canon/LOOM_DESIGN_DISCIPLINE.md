@@ -143,25 +143,25 @@ not differentiated.
    requirement because it prevents the same mistake from returning.
 20. **User wording is evidence, not instruction.** Treat every comparison,
    screenshot, or complaint as a symptom that still needs product judgment.
-19. **Do not ship a concept without a path.** A design is not accepted until it
+21. **Do not ship a concept without a path.** A design is not accepted until it
     describes the real user path before, during, and after the Loom action.
-20. **Do not ship a path without a review object.** The captured object must be
+22. **Do not ship a path without a review object.** The captured object must be
     reviewable later as an understanding version, not only stored as text.
-21. **Do not ship a review object without reuse.** The second pass must be able
+23. **Do not ship a review object without reuse.** The second pass must be able
     to produce a synthesis, correction, principle, memory candidate, or export.
-22. **Do not pollute user folders or macOS Services.** Generated artifacts,
+24. **Do not pollute user folders or macOS Services.** Generated artifacts,
     fixtures, screenshots, helper scripts, and temporary exports must stay
     under the Loom repo `.codex/` area or be deleted. Native GUI tests must
     clean `/private/tmp/loom-*` files, old temporary Loom build bundles, and
     stale LaunchServices registrations so Preview / Word / Excel context menus
     reflect the current app rather than old test builds.
-23. **Synthetic evidence cannot upgrade anchors.** Report-only fixtures,
+25. **Synthetic evidence cannot upgrade anchors.** Report-only fixtures,
     snapshot-only data, app names, and window titles may preserve context, but
     they cannot promote a trace to `file+page`, `file+cell`, paragraph, or
     region precision. That promotion requires a real native file URL, helper
     result, structured selection, appshot/OCR result with confidence label, or
     explicit user confirmation.
-24. **Liquid Glass light is interaction feedback, not background decoration.**
+26. **Liquid Glass light is interaction feedback, not background decoration.**
     White light and tiny red / gold / blue refraction may appear on commit
     fields, submit buttons, loading dots, saved receipts, or status transitions.
     Sidebar, center reading surface, right evidence surface, and document
