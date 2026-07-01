@@ -125,6 +125,7 @@ struct LoomReflectionRootView: View {
                         selectedCaseID: selectedCaseID,
                         onSelect: selectCase,
                         onCreate: createReflection,
+                        onCreateLearning: createLearningProject,
                         onDelete: deleteReflection
                     )
                     .frame(width: reflectionSidebarWidth)
@@ -193,6 +194,7 @@ struct LoomReflectionRootView: View {
                         material: .centerOverlay,
                         onSelect: selectCase,
                         onCreate: createReflection,
+                        onCreateLearning: createLearningProject,
                         onDelete: deleteReflection
                     )
                     .frame(width: reflectionSidebarWidth)
@@ -328,6 +330,20 @@ struct LoomReflectionRootView: View {
         selectedLearningTraceID = nil
         draftText = ""
         statusMessage = "New reflection created"
+        persistWorkspace()
+    }
+
+    /// An INITIATION the user starts before touching any file: an empty
+    /// learning project. Captures (⌘⇧L) then join it as the active project
+    /// and its files accumulate under Sources.
+    private func createLearningProject() {
+        let next = Self.learningCase(from: [])
+        cases.insert(next, at: 0)
+        selectedCaseID = next.id
+        selectedSourceID = nil
+        selectedLearningTraceID = nil
+        draftText = ""
+        statusMessage = "New learning project started"
         persistWorkspace()
     }
 
@@ -851,11 +867,15 @@ struct LoomReflectionRootView: View {
     }
 
     private static func learningCase(from sources: [ReflectionSource]) -> ReflectionCase {
-        let primary = sources[0]
-        let extraCount = max(0, sources.count - 1)
-        let fileOpeningLine = extraCount == 0
-            ? "Opened original file for learning: \(primary.label)."
-            : "Opened original file for learning: \(primary.label), plus \(extraCount) related files."
+        let fileOpeningLine: String
+        if let primary = sources.first {
+            let extraCount = max(0, sources.count - 1)
+            fileOpeningLine = extraCount == 0
+                ? "Opened original file for learning: \(primary.label)."
+                : "Opened original file for learning: \(primary.label), plus \(extraCount) related files."
+        } else {
+            fileOpeningLine = "Learning project started. Capture from any native file (⌘⇧L) to attach it as a source."
+        }
         var steps = ReflectionStep.blankWorkflow()
         steps[0].items = [
             fileOpeningLine,
@@ -873,7 +893,7 @@ struct LoomReflectionRootView: View {
             status: "Reading",
             updatedAt: Self.timeFormatter.string(from: Date()),
             summary: "Original file remains primary. Loom records anchored learning traces around this document.",
-            tags: ["learning", "sidecar", primary.kind],
+            tags: ["learning", "sidecar"] + (sources.first.map { [$0.kind] } ?? []),
             sources: sources,
             steps: steps,
             messages: [
@@ -1747,6 +1767,7 @@ private struct ReflectionSidebar: View {
     var material: ReflectionSidebarMaterial = .rail
     let onSelect: (ReflectionCase) -> Void
     let onCreate: () -> Void
+    let onCreateLearning: () -> Void
     let onDelete: (ReflectionCase) -> Void
     @Environment(\.colorScheme) private var colorScheme
     @State private var query: String = ""
@@ -1771,12 +1792,17 @@ private struct ReflectionSidebar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 14) {
-                Button(action: onCreate) {
+                Menu {
+                    Button("Learning project", action: onCreateLearning)
+                    Button("Product reflection", action: onCreate)
+                } label: {
                     Label("New reflection", systemImage: "square.and.pencil")
                         .font(.system(size: 14, weight: .medium))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
                 }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
                 .buttonStyle(.plain)
                 .foregroundStyle(primaryText)
 
@@ -2438,9 +2464,15 @@ private struct ReflectionLearningDocumentEntry: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                if needsMeaning {
+                if needsMeaning || trace.focus == "question" {
+                    // Recall texture, and for questions the OPEN CONDITION
+                    // slot (owner's example: "needs confirmation ·
+                    // Exercise 1.1") — a question stays open until the user
+                    // commits what would close it.
                     VStack(alignment: .leading, spacing: 11) {
-                        Text("Explain it in your own words")
+                        Text(trace.focus == "question"
+                            ? "Open — what would close this question?"
+                            : "Explain it in your own words")
                             .font(.system(size: 11.5, design: .serif).italic())
                             .foregroundStyle(LoomTokens.dsInk3)
                         Rectangle()
