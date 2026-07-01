@@ -172,6 +172,7 @@ portfolio viewers, public identity consumers, or full replacement editors.
 | Structured visual extraction | OCR, Vision, or multimodal extraction from a Loom-owned appshot | Produce candidate text, table, figure, layout, or emphasis evidence with confidence labels; never pretend it is a precise source anchor by itself |
 | Learning trace | A captured moment of understanding, confusion, translation, vocabulary, grammar, question, or insight | Record what the user learned while using the file |
 | Learning pass | A first-pass language pass, domain pass, review pass, or synthesis pass over the same file | Keep repeated learning layers distinct without splitting them into separate products |
+| Understanding object | A reviewed semantic unit such as a word, phrase, sentence, concept, question, correction, or principle, backed by one or more traces | Consolidate raw captures into the object the user should actually review; larger objects absorb component traces when they explain the same source context |
 | Loom sidecar | The external companion layer beside or over the native file | Capture, classify, and retrieve traces without taking focus from the file |
 | Understanding Version Flow | A versioned center record of how the user's interpretation changed | Make learning and review continuous like source control for understanding, not a chat transcript or note feed |
 | Synthesis | Second-pass organization across traces | Prepare structured understanding, explanation, summary, reflection, or principle candidates; memory requires user confirmation |
@@ -239,11 +240,30 @@ user confirmation disambiguates the source. Wrong-window evidence is still
 useful as a warning and review cue, but it cannot become memory or export
 citation until confirmed.
 
-The bottom input is not a chat composer. In review mode it is a compact commit
-field attached to the current understanding object. Its label must name the
-target before the user types: meaning, question, correction, synthesis,
-principle, or a specific product-reflection stage. If Loom cannot name the
-target, the input should not be visible.
+The input is not a chat composer and, in learning mode, it is not a fixed bottom
+bar. In review mode it is a compact commit affordance attached to the current
+understanding object. Its target must be inferable before the user types:
+meaning, question, correction, synthesis, principle, or a specific
+product-reflection stage. In learning mode the default shape is a quiet
+document-edge note field: one short user-language input plus icon-only submit,
+placed as a small affordance near the understanding page rather than a toolbar
+that cuts the center pane into another region. Type, page, file, and assist
+controls stay hidden unless the target is ambiguous or the user opens details.
+The full anchor stays available in tooltip, accessibility text, the right
+evidence pane, or audit trail; it should not repeat the filename and metadata in
+the primary writing row. If Loom cannot name the target, the input should not be
+visible.
+
+The center pane's default learning state is the organized understanding object,
+not the process ledger. Show the user's current understanding as a readable
+document first: title hierarchy, paragraphs, selective evidence quotes,
+consolidated inline terms, and footnote-like anchors. It should feel like a
+well-typeset Word / Markdown / LaTeX-quality page in spirit, not a dashboard or
+trace list. Version counts, capture receipts, raw evidence labels, and
+automation scaffolding stay behind Capture trail or Details. Internal categories
+can organize the model, but visible labels such as `01 Current understanding`,
+`Understanding objects`, `Meaning`, `Language`, or `Principles` cannot become a
+template column or default section system in the reading page.
 
 ### Center And Right Pane Contract
 
@@ -388,12 +408,12 @@ from raw material to understanding to reusable thinking. If Loom only produces a
 well-formatted packet from multiple sources, it is not differentiated enough.
 
 This is the main critique of the current prototype: if the center pane displays
-too much explanatory provenance, it becomes a debug log; if the bottom composer
-asks for generic text, it becomes a chat box; if captured selections are shown
-as independent notes, Loom becomes another note app. The visible unit must be a
-thinking version: the smallest reviewable change in understanding. Metadata is
-kept for replay and audit, but it is secondary to the user's actual learning
-change.
+too much explanatory provenance, it becomes a debug log; if the composer asks
+for generic text or splits the page into a third toolbar region, it becomes a
+chat box; if captured selections are shown as independent notes, Loom becomes
+another note app. The visible unit must be a thinking version: the smallest
+reviewable change in understanding. Metadata is kept for replay and audit, but
+it is secondary to the user's actual learning change.
 
 ## Design Discipline
 
@@ -439,10 +459,11 @@ until replaced by stronger evidence.
    open issue, and reusable principle. If it only shows notes or source
    metadata, it has failed.
 
-3. **Do not keep a composer without a commit target.** The bottom input box is
-   not a chat box. It appears only when the current action can say what will be
-   created or revised: meaning, question, correction, synthesis, principle,
-   Input, Assumption, Decision Trace, Outcome, Reflection, or Judgment Memory.
+3. **Do not keep a composer without a commit target.** The input is not a chat
+   box and must not become a fixed bottom toolbar in learning mode. It appears
+   only when the current action can say what will be created or revised:
+   meaning, question, correction, synthesis, principle, Input, Assumption,
+   Decision Trace, Outcome, Reflection, or Judgment Memory.
 
 4. **Do not confuse clean output with differentiation.** Fast A4 PDF,
    Markdown, study sheet, glossary, Q&A, briefing, and source-grounded summary
@@ -478,7 +499,7 @@ record the choice in this form:
 |---|---|---|---|
 | Native file capability is at risk. | Native app owns the original work. | No cloned primary PDF / Word / Excel editor. | Native menu, selection, page mode, search, and editing still work. |
 | Center surface feels decorative or unclear. | Center owns Understanding Version Flow. | No decorative sections, note feed, mind map, transcript, dashboard, provenance-first table, or split learning/review ledgers. | User can review first meaning, correction, open issue, synthesis, and reusable principle. |
-| Composer feels like generic AI chat. | Composer commits the next understanding version. | No always-visible "ask anything" input in learning mode. | UI names the target before typing. |
+| Composer feels like generic AI chat. | Composer is a document-edge commit affordance. | No always-visible "ask anything" input, fixed bottom toolbar, or mode strip in learning mode. | UI names the target before typing, and details stay folded. |
 | Output could be made elsewhere. | Static output is baseline; cognition trail is Loom. | No moat claim based only on formatting, source aggregation, or summary quality. | Export shows source claim, learning trail, understanding diff, and reuse state. |
 | NotebookLM comparison raises the quality bar. | Rich dossier is review / export baseline. | No NotebookLM clone as the default center workspace. | Generated artifact exposes source anchors and the learning versions that shaped it. |
 | UI copy is too explanatory. | Default entry reads like an editable human learning record. | No developer-facing metadata as the first visible layer. | Audit details are available only when requested. |
@@ -708,6 +729,16 @@ should feel editable by a person and useful in a second pass: the user can see
 what they did not understand, what they later understood, what still needs work,
 and what can become reusable thinking.
 
+The center must consolidate learning traces into semantic objects. A first pass
+may capture `market`, `making`, and `market making` separately because the user
+encountered them separately. That example defines the method, not a translation
+feature. The review result should not remain a flat list of notes when the
+source context proves the traces belong together. A larger object may be a
+phrase, sentence, formula, table, figure, claim, example, question, correction,
+concept, or reusable principle. It must show the fields useful for review first
+and collapse raw capture order, source events, OCR/appshot candidates, and
+automation metadata into supporting evidence or audit.
+
 For product cases, Input, Assumption, Decision Trace, Outcome, Reflection, and
 Judgment Memory are stage labels inside the same version flow. They should not
 be treated as a separate "reflection mode" that breaks the learning/review
@@ -715,7 +746,7 @@ continuum.
 
 ### Composer Discipline
 
-The bottom input exists only if it has a version target. Before showing a
+The document-edge input exists only if it has a version target. Before showing a
 composer, the product must know what the next commit will become:
 
 - add meaning to the current unresolved word, phrase, sentence, formula, or
@@ -843,7 +874,7 @@ Reject the design if it does any of the following:
 - treats uploaded files only as RAG attachments for AI answers
 - treats rich source summaries as the final product rather than a baseline view
 - makes the center pane a static mind map, note feed, or debug provenance log
-- makes the bottom composer a generic chat input with no version target
+- makes the composer a generic chat input with no version target
 - makes Loom visually louder than the original file during reading
 - stores material without enough anchor data to replay the learning moment
 - produces an export without preserving what changed in the user's
@@ -929,12 +960,30 @@ Required:
 
 ### Materials
 
-Only the left sidebar uses liquid glass.
+The whole Reflection workspace may use macOS Liquid Glass, but the materials
+must be differentiated by job.
 
-The center workspace and right Sources pane are normal adaptive surfaces:
-white in light mode, black in dark mode. Glass in the work area weakens the
-product because it makes reflection feel like a visual demo instead of a
-working surface.
+- Left sidebar: true transparent navigation glass. It may reveal the desktop or
+  source app behind the window, and its text/icons must adapt to light or dark
+  mode.
+- Center workspace: matte/frosted workbench. It may have depth, blur, and
+  paper-like translucency, but it must remain the clearest reading and review
+  surface on the screen. It cannot own prism light, moving glare, persistent
+  glow, or animated color wash.
+- Right Sources pane: quieter frosted inspector glass. It supports evidence
+  inspection without becoming a second source reader or a debug panel. It can
+  use depth and blur, but it must stay visually quieter than the center
+  understanding object and cannot use action-light effects as decoration.
+
+Glass is a system material, not a painted gradient. Do not use decorative
+linear/radial gradients to fake translucency. A narrow one-direction specular
+highlight is allowed only when it reads as glass edge thickness or refraction.
+If a surface becomes visually louder than the original file or the understanding version, the material is
+wrong even if it looks more "liquid".
+
+Optical light is reserved for moments of action: input focus, commit, loading,
+saved, or short status transition. The Siri-like white/prism effect is a point
+of emphasis, not the workspace theme.
 
 ### Proportion
 
@@ -965,7 +1014,7 @@ the pointer leaves the sidebar, it returns to collapsed. This must not change
 the permanent sidebar state, center/right pane proportions, pane seams, titlebar
 layout, or add a second sidebar toggle. In overlay mode, the sidebar glass uses
 the center workspace background as its transparent material base instead of
-reusing the permanent left-rail dark gradient. Its internal controls also shift
+reusing the permanent left-rail material. Its internal controls also shift
 to center-pane hierarchy: search, new reflection, selected rows, row metadata,
 and delete controls must feel like a temporary workspace overlay, not the
 permanent left rail stretched across the content.
@@ -1085,6 +1134,9 @@ Examples:
   translation, page gist, question, concept, or product evidence
 - user meaning: the user's Chinese explanation, question, correction, or
   understanding
+- consolidation: `market` and `making` may start as word traces, but when
+  `market making` is captured from the same passage, the phrase becomes the
+  visible review object and the word traces become evidence
 
 The UI should make this cheap. A selected PDF passage can use macOS Translate
 or Look Up first, then Loom records the useful result and the user's own
@@ -1163,8 +1215,9 @@ A Reflection build is acceptable only when all of these are true:
    proves that precision.
 6. The four zones have non-overlapping jobs.
 7. The titlebar controls share one center line with the native traffic lights.
-8. Left glass, center flat surface, and right flat surface join cleanly at pane
-   seams.
+8. Left navigation glass, center matte workbench glass, and right frosted
+   inspector glass join cleanly at pane seams without turning the workspace into
+   one repeated translucent slab.
 9. The layout does not split into six boxed regions.
 10. In Reflection Mode, the center thread and composer stay centered at the
    baseline window size and after pane collapse.
@@ -1181,10 +1234,13 @@ A Reflection build is acceptable only when all of these are true:
 14. A Loom-owned appshot can be OCR / Vision / model processed into candidate
    text, table, figure, layout, and emphasis evidence, but the row must say
    `visual context only` unless a stronger source anchor is also verified.
-15. Sources remains inspectable as material, not merely metadata.
-16. Local import creates a current-case source and concrete Input trace entry
+15. The center review page consolidates word, phrase, sentence, and concept
+   captures into understanding objects; raw capture order remains audit
+   evidence, not the default reading surface.
+16. Sources remains inspectable as material, not merely metadata.
+17. Local import creates a current-case source and concrete Input trace entry
     or learning trace.
-17. The implementation is backed by a contract test or explicit visual
+18. The implementation is backed by a contract test or explicit visual
    acceptance note.
 18. Reflection deletion is row-scoped in the left sidebar and preserves a valid
    selected case after deletion.

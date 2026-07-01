@@ -2,16 +2,15 @@
 
 import {
   Archive,
-  BookOpen,
   CheckCircle2,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  CircleDot,
-  FileText,
+  ExternalLink,
   Folder,
-  GitBranch,
   MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   Plus,
   Search,
   Send,
@@ -23,39 +22,243 @@ import type { ChangeEvent, FormEvent } from 'react';
 
 import styles from './ReflectionWorkspace.module.css';
 import { UnderstandingSpine } from './UnderstandingSpine';
-import type { ReflectionCase, ReflectionSource, UnderstandingVersion, WorkspaceMode } from './reflectionModel';
+import type { ReflectionCase, ReflectionSource, UnderstandingVersion } from './reflectionModel';
 import {
   INITIAL_CASES,
   WORKFLOW_BY_KEY,
+  auditValue,
   cloneCase,
   commitTargetForCase,
   currentEvidenceVersion,
   fileToReflectionSource,
   formatLearningCommit,
   groundingRowsForVersion,
-  isImageSource,
   isNativePrimarySource,
   latestLearningAnchor,
   makeBlankReflectionCase,
-  sourceCanOpenInReader,
+  sourceForVersion,
   understandingVersionsFromCase,
+  versionForSource,
 } from './reflectionModel';
+import type { LearningCommitFocus } from './reflectionModel';
 
-function EvidenceGrounding({ version }: { version: UnderstandingVersion }) {
+type InspectorTarget = 'version' | 'source';
+type LoomOpenSourceBridge = { postMessage: (payload: unknown) => void };
+type ReflectionBridgeWindow = Window & {
+  webkit?: {
+    messageHandlers?: {
+      loomOpenReflectionSource?: LoomOpenSourceBridge;
+    };
+  };
+};
+
+function sourceTone(kind?: string) {
+  const normalized = kind?.toLowerCase().replace(/^\./, '') ?? '';
+  if (/(^|[-/])pdf$/.test(normalized) || normalized.includes('pdf')) return 'pdf';
+  if (/(^|[-/])(xls|xlsx|csv|tsv|numbers)$/.test(normalized)) return 'spreadsheet';
+  if (normalized.includes('spreadsheet') || normalized.includes('excel')) return 'spreadsheet';
+  if (/(^|[-/])(ppt|pptx|keynote)$/.test(normalized)) return 'presentation';
+  if (normalized.includes('presentation') || normalized.includes('slide')) return 'presentation';
+  if (/(^|[-/])(doc|docx|pages|rtf|rtfd)$/.test(normalized)) return 'document';
+  if (normalized.includes('document') || normalized.includes('word')) return 'document';
+  return 'source';
+}
+
+function FileBadge({ kind }: { kind?: string }) {
+  const tone = sourceTone(kind);
+  const label = tone === 'pdf' ? 'PDF' : '';
+
+  return (
+    <span className={styles.fileBadge} data-kind={tone} aria-hidden="true">
+      {tone === 'document' ? <span className={styles.fileBadgeLines} /> : null}
+      {tone === 'spreadsheet' ? <span className={styles.fileBadgeGrid} /> : null}
+      {tone === 'presentation' ? <span className={styles.fileBadgeSlide} /> : null}
+      {tone === 'source' ? <span className={styles.fileBadgeLines} /> : null}
+      {label ? <span className={styles.fileBadgeText}>{label}</span> : null}
+    </span>
+  );
+}
+
+function caseFileKind(reflectionCase: ReflectionCase) {
+  return reflectionCase.sources.find((source) => sourceTone(source.kind) !== 'source')?.kind ?? null;
+}
+
+function CaseGlyph({ reflectionCase }: { reflectionCase: ReflectionCase }) {
+  const fileKind = caseFileKind(reflectionCase);
+
+  if (fileKind) {
+    return <FileBadge kind={fileKind} />;
+  }
+
+  return <MessageSquare size={15} />;
+}
+
+function caseSubLabel(reflectionCase: ReflectionCase) {
+  if (reflectionCase.project === 'Learning pass') return null;
+  return reflectionCase.project;
+}
+
+function caseTimeLabel(reflectionCase: ReflectionCase) {
+  if (reflectionCase.project === 'Learning pass' && reflectionCase.updatedAt === 'learning') return null;
+  return reflectionCase.updatedAt;
+}
+
+function openSourceBridge() {
+  if (typeof window === 'undefined') return null;
+  return (window as ReflectionBridgeWindow).webkit?.messageHandlers?.loomOpenReflectionSource ?? null;
+}
+
+function sourceOpenPayload(source: ReflectionSource) {
+  return {
+    id: source.id,
+    label: source.label,
+    kind: source.kind,
+    meta: source.meta,
+    folder: source.folder,
+  };
+}
+
+function sourceCanOpen(source: ReflectionSource | null, hasNativeBridge: boolean) {
+  return Boolean(source?.localPreviewUrl || hasNativeBridge);
+}
+
+function evidenceSourceFor(
+  reflectionCase: ReflectionCase,
+  version: UnderstandingVersion | null,
+  activeSource: ReflectionSource | null,
+  inspectorTarget: InspectorTarget,
+) {
+  if (inspectorTarget === 'source') return activeSource;
+
+  const matchedSource = sourceForVersion(reflectionCase.sources, version);
+  if (matchedSource) return matchedSource;
+
+  if (reflectionCase.project === 'Learning pass' && reflectionCase.sources.length === 1) {
+    return reflectionCase.sources[0] ?? activeSource;
+  }
+
+  return null;
+}
+
+function SourceOpenButton({
+  source,
+  canOpen,
+  onOpenSource,
+}: {
+  source: ReflectionSource | null;
+  canOpen: boolean;
+  onOpenSource: (source: ReflectionSource) => void;
+}) {
+  const title = source
+    ? canOpen
+      ? `Open ${source.label} in the source app`
+      : 'Open source is available when Loom has a native file handle'
+    : 'No source selected';
+
+  return (
+    <button
+      type="button"
+      disabled={!source || !canOpen}
+      onClick={() => {
+        if (source && canOpen) onOpenSource(source);
+      }}
+      aria-label={source ? `Open source: ${source.label}` : 'Open source'}
+      title={title}
+    >
+      <ExternalLink size={13} />
+    </button>
+  );
+}
+
+function evidenceGateForVersion(version: UnderstandingVersion) {
+  const precision = [
+    auditValue(version.audit, 'anchor precision'),
+    auditValue(version.audit, 'visual precision'),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  const fallback = auditValue(version.audit, 'fallback note')?.toLowerCase() ?? '';
+  const hasWeakAnchor = precision.includes('visual context only') || precision.includes('window') || fallback.includes('weak');
+
+  if (hasWeakAnchor) {
+    return {
+      label: 'Weak anchor',
+      detail: 'Confirm the source before reuse.',
+      state: 'weak',
+    };
+  }
+
+  if (version.state === 'needs meaning' || version.state === 'needs interpretation') {
+    return {
+      label: 'Needs meaning',
+      detail: 'User explanation required.',
+      state: 'review',
+    };
+  }
+
+  if (version.state === 'open question') {
+    return {
+      label: 'Open question',
+      detail: 'Keep unresolved until answered.',
+      state: 'review',
+    };
+  }
+
+  if (version.state === 'memory candidate') {
+    return {
+      label: 'Memory candidate',
+      detail: 'Reusable only after review.',
+      state: 'ready',
+    };
+  }
+
+  return {
+    label: 'Review first',
+    detail: 'Do not promote automatically.',
+    state: 'review',
+  };
+}
+
+function EvidenceGrounding({
+  version,
+  source,
+  canOpenSource,
+  onOpenSource,
+}: {
+  version: UnderstandingVersion;
+  source: ReflectionSource | null;
+  canOpenSource: boolean;
+  onOpenSource: (source: ReflectionSource) => void;
+}) {
   const groundingRows = groundingRowsForVersion(version);
+  const evidenceGate = evidenceGateForVersion(version);
+  const fileLabel = source?.label ?? auditValue(version.audit, 'file') ?? version.anchor;
+  const kind = source?.kind ?? auditValue(version.audit, 'kind') ?? 'source';
 
   return (
     <>
-      <dl className={styles.evidenceGrounding} aria-label="Evidence grounding">
-        {groundingRows.map((row) => (
-          <div key={`${row.label}-${row.value}`}>
-            <dt>{row.label}</dt>
-            <dd>{row.value}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className={styles.evidenceSourceLine} aria-label="Evidence source">
+        <FileBadge kind={kind} />
+        <span>{fileLabel}</span>
+        <strong data-state={evidenceGate.state}>{evidenceGate.label}</strong>
+        <SourceOpenButton source={source} canOpen={canOpenSource} onOpenSource={onOpenSource} />
+      </div>
       <details className={styles.evidenceAudit}>
-        <summary>Full audit</summary>
+        <summary>Details</summary>
+        <div className={styles.evidenceGate} data-state={evidenceGate.state} aria-label="Evidence reuse gate">
+          <span>reuse gate</span>
+          <strong>{evidenceGate.label}</strong>
+          <p>{evidenceGate.detail}</p>
+        </div>
+        <dl className={styles.evidenceGrounding} aria-label="Evidence grounding">
+          {groundingRows.map((row) => (
+            <div key={`${row.label}-${row.value}`}>
+              <dt>{row.label}</dt>
+              <dd>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
         <ul>
           {version.audit.map((line) => (
             <li key={line}>{line}</li>
@@ -66,72 +269,6 @@ function EvidenceGrounding({ version }: { version: UnderstandingVersion }) {
   );
 }
 
-function SourceReader({
-  source,
-  onReturnToReflection,
-  onAddToInput,
-  onReflect,
-}: {
-  source: ReflectionSource;
-  onReturnToReflection: () => void;
-  onAddToInput: () => void;
-  onReflect: () => void;
-}) {
-  const canRenderImage = isImageSource(source) && source.localPreviewUrl;
-
-  return (
-    <section className={styles.reader} aria-label="Source reader">
-      <div className={styles.readerBody} data-engine="static">
-        {canRenderImage ? (
-          <div className={styles.imageReader}>
-            <img src={source.localPreviewUrl} alt={source.label} />
-          </div>
-        ) : (
-          <article className={styles.sourceTextReader}>
-            <p>{source.excerpt}</p>
-          </article>
-        )}
-
-        <aside className={styles.readerMarginPanel} data-side="left" aria-label="Loom reader navigation">
-          <button className={styles.readerReturnButton} type="button" onClick={onReturnToReflection}>
-            <MessageSquare size={15} />
-            Reflection
-          </button>
-          <div className={styles.readerMarginCard}>
-            <p className={styles.kicker}>Current Source</p>
-            <h3>{source.label}</h3>
-            <p>
-              {source.kind}
-              {source.meta ? ` · ${source.meta}` : ''}
-            </p>
-          </div>
-        </aside>
-
-        <aside className={styles.readerMarginPanel} data-side="right" aria-label="Loom reader companion">
-          <span className={styles.readerEdgeTab} aria-hidden="true">
-            Loom
-          </span>
-          <div className={styles.readerMarginCard}>
-            <p className={styles.kicker}>Loom</p>
-            <h3>Use this page</h3>
-            <p>{source.excerpt}</p>
-            <div className={styles.readerActionGrid}>
-              <button className={styles.readerActionButton} type="button" onClick={onAddToInput}>
-                <GitBranch size={14} />
-                Add to Input
-              </button>
-              <button className={styles.readerActionButton} type="button" onClick={onReflect}>
-                <MessageSquare size={14} />
-                Reflect
-              </button>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </section>
-  );
-}
-
 export default function ReflectionWorkspaceClient() {
   const [cases, setCases] = useState<ReflectionCase[]>(() => INITIAL_CASES.map(cloneCase));
   const [activeCaseId, setActiveCaseId] = useState(INITIAL_CASES[0]!.id);
@@ -139,15 +276,19 @@ export default function ReflectionWorkspaceClient() {
   const [caseQuery, setCaseQuery] = useState('');
   const [sourceQuery, setSourceQuery] = useState('');
   const [draft, setDraft] = useState('');
+  const learningCommitFocus: LearningCommitFocus = 'user meaning';
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
+  const [inspectorTarget, setInspectorTarget] = useState<InspectorTarget>('version');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSidebarPeeking, setIsSidebarPeeking] = useState(false);
   const [isSourcesCollapsed, setIsSourcesCollapsed] = useState(false);
-  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>('reflection');
+  const [hasNativeOpenSourceBridge, setHasNativeOpenSourceBridge] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
+    setHasNativeOpenSourceBridge(Boolean(openSourceBridge()));
+
     return () => {
       objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     };
@@ -178,13 +319,23 @@ export default function ReflectionWorkspaceClient() {
     activeCase.sources.find((source) => source.id === activeSourceId) ??
     activeCase.sources[0] ??
     null;
-  const activeEvidence = useMemo(() => currentEvidenceVersion(activeCase, activeVersionId), [activeCase, activeVersionId]);
   const activeVersions = useMemo(() => understandingVersionsFromCase(activeCase), [activeCase]);
+  const activeEvidence = useMemo(() => {
+    if (inspectorTarget === 'source') return versionForSource(activeVersions, activeSource);
+    return currentEvidenceVersion(activeCase, activeVersionId);
+  }, [activeCase, activeSource, activeVersionId, activeVersions, inspectorTarget]);
+  const evidenceSource = useMemo(() => {
+    return evidenceSourceFor(activeCase, activeEvidence, activeSource, inspectorTarget);
+  }, [activeCase, activeEvidence, activeSource, inspectorTarget]);
   const commitTarget = commitTargetForCase(activeCase);
+  const isLearningCase = activeCase.project === 'Learning pass';
   const commitAnchor = activeCase.project === 'Learning pass'
     ? latestLearningAnchor(activeCase, activeSource)
     : WORKFLOW_BY_KEY[commitTarget.key].description;
+  const canOpenEvidenceSource = sourceCanOpen(evidenceSource, hasNativeOpenSourceBridge);
+  const canOpenActiveSource = sourceCanOpen(activeSource, hasNativeOpenSourceBridge);
   const shouldShowFullSidebar = !isSidebarCollapsed || isSidebarPeeking;
+  const shouldShowSourceList = activeCase.sources.length !== 1 || sourceQuery.trim().length > 0;
 
   const sourcesByFolder = useMemo(() => {
     return visibleSources.reduce<Record<string, ReflectionSource[]>>((acc, source) => {
@@ -198,8 +349,8 @@ export default function ReflectionWorkspaceClient() {
     setActiveCaseId(nextCase.id);
     setActiveSourceId(nextCase.sources[0]?.id ?? '');
     setActiveVersionId(null);
+    setInspectorTarget('version');
     setSourceQuery('');
-    setWorkspaceMode('reflection');
   }
 
   function createReflection() {
@@ -209,6 +360,7 @@ export default function ReflectionWorkspaceClient() {
     setActiveCaseId(nextCase.id);
     setActiveSourceId('');
     setActiveVersionId(null);
+    setInspectorTarget('version');
     setSourceQuery('');
     setDraft('');
   }
@@ -252,6 +404,7 @@ export default function ReflectionWorkspaceClient() {
       setActiveCaseId(nextActiveCase.id);
       setActiveSourceId(nextActiveCase.sources[0]?.id ?? '');
       setActiveVersionId(null);
+      setInspectorTarget('version');
       setSourceQuery('');
       setDraft('');
     }
@@ -261,14 +414,32 @@ export default function ReflectionWorkspaceClient() {
     fileInputRef.current?.click();
   }
 
-  function openSourceInReader(source: ReflectionSource) {
-    setActiveSourceId(source.id);
-    if (sourceCanOpenInReader(source)) {
-      setWorkspaceMode('reader');
-      setIsSidebarCollapsed(true);
-      setIsSidebarPeeking(false);
-      setIsSourcesCollapsed(false);
+  function openSource(source: ReflectionSource) {
+    const bridge = openSourceBridge();
+    if (bridge) {
+      bridge.postMessage(sourceOpenPayload(source));
+      return;
     }
+
+    if (source.localPreviewUrl) {
+      window.open(source.localPreviewUrl, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  function selectSource(source: ReflectionSource) {
+    setActiveSourceId(source.id);
+    setActiveVersionId(null);
+    setInspectorTarget('source');
+    setIsSourcesCollapsed(false);
+  }
+
+  function selectVersion(versionId: string) {
+    const version = activeVersions.find((item) => item.id === versionId) ?? null;
+    const source = sourceForVersion(activeCase.sources, version);
+
+    setActiveVersionId(versionId);
+    setInspectorTarget('version');
+    if (source) setActiveSourceId(source.id);
   }
 
   async function importLocalFiles(event: ChangeEvent<HTMLInputElement>) {
@@ -315,50 +486,9 @@ export default function ReflectionWorkspaceClient() {
 
     setActiveSourceId(importedSources[0]!.id);
     setActiveVersionId(null);
+    setInspectorTarget('source');
     setSourceQuery('');
     setIsSourcesCollapsed(false);
-    if (sourceCanOpenInReader(importedSources[0]!)) {
-      setWorkspaceMode('reader');
-      setIsSidebarCollapsed(true);
-      setIsSidebarPeeking(false);
-    }
-  }
-
-  function appendSourceExcerptToInput(source: ReflectionSource | null) {
-    if (!source) return;
-
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const line = `Source note from ${source.label}: ${source.excerpt}`;
-    setCases((current) =>
-      current.map((item) => {
-        if (item.id !== activeCase.id) return item;
-        return {
-          ...item,
-          updatedAt: now,
-          status: item.status === 'Memory ready' ? item.status : 'In reflection',
-          sections: {
-            ...item.sections,
-            input: [...item.sections.input, line],
-          },
-          messages: [
-            ...item.messages,
-            {
-              id: `${item.id}-source-note-${Date.now()}`,
-              role: 'human',
-              eyebrow: 'Source note',
-              body: line,
-            },
-          ],
-        };
-      }),
-    );
-  }
-
-  function startReflectionFromSource(source: ReflectionSource | null) {
-    if (!source) return;
-    setDraft(`From ${source.label}: ${source.excerpt}`);
-    setWorkspaceMode('reflection');
-    setIsSidebarCollapsed(false);
   }
 
   function submitMaterial(event: FormEvent<HTMLFormElement>) {
@@ -368,8 +498,8 @@ export default function ReflectionWorkspaceClient() {
 
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const committedText =
-      activeCase.project === 'Learning pass'
-        ? formatLearningCommit(text, latestLearningAnchor(activeCase, activeSource))
+      isLearningCase
+        ? formatLearningCommit(text, latestLearningAnchor(activeCase, activeSource), learningCommitFocus)
         : text;
     setCases((current) =>
       current.map((item) => {
@@ -406,6 +536,7 @@ export default function ReflectionWorkspaceClient() {
       }),
     );
     setActiveVersionId(null);
+    setInspectorTarget('version');
     setDraft('');
   }
 
@@ -415,7 +546,6 @@ export default function ReflectionWorkspaceClient() {
       data-sidebar-collapsed={isSidebarCollapsed}
       data-sidebar-peeking={isSidebarPeeking}
       data-sources-collapsed={isSourcesCollapsed}
-      data-workspace-mode={workspaceMode}
       aria-labelledby="reflection-title"
     >
       <aside
@@ -426,14 +556,17 @@ export default function ReflectionWorkspaceClient() {
       >
         {!shouldShowFullSidebar ? (
           <div className={styles.sidebarRail}>
-            <button
-              className={styles.iconButton}
-              type="button"
-              onClick={expandSidebar}
-              aria-label="Expand reflection sidebar"
-            >
-              <ChevronRight size={17} />
-            </button>
+            <div className={styles.paneRailTop}>
+              <button
+                className={styles.paneToggleButton}
+                data-pane="left"
+                type="button"
+                onClick={expandSidebar}
+                aria-label="Expand reflection sidebar"
+              >
+                <PanelLeftOpen size={16} />
+              </button>
+            </div>
             <button className={styles.iconButton} type="button" onClick={createReflection} aria-label="New reflection">
               <Plus size={17} />
             </button>
@@ -448,7 +581,7 @@ export default function ReflectionWorkspaceClient() {
                   aria-label={item.title}
                   title={item.title}
                 >
-                  <MessageSquare size={15} />
+                  <CaseGlyph reflectionCase={item} />
                 </button>
               ))}
             </div>
@@ -461,12 +594,13 @@ export default function ReflectionWorkspaceClient() {
                 <h1 id="reflection-title">Reflection</h1>
               </div>
               <button
-                className={styles.iconButton}
+                className={styles.paneToggleButton}
+                data-pane="left"
                 type="button"
                 onClick={collapseSidebar}
                 aria-label="Collapse reflection sidebar"
               >
-                <ChevronLeft size={17} />
+                <PanelLeftClose size={16} />
               </button>
             </div>
 
@@ -486,26 +620,21 @@ export default function ReflectionWorkspaceClient() {
 
             <div className={styles.caseList} role="list">
               {visibleCases.map((item) => (
-                <div
-                  key={item.id}
-                  className={styles.caseItem}
-                  data-active={item.id === activeCase.id}
-                  role="listitem"
-                >
+                <div key={item.id} className={styles.caseItem} data-active={item.id === activeCase.id} role="listitem">
                   <button
                     type="button"
                     className={styles.caseSelectButton}
                     onClick={() => selectCase(item)}
                     aria-label={`Open ${item.title}`}
                   >
-                    <span className={styles.caseIcon}>
-                      <MessageSquare size={15} />
+                    <span className={styles.caseIcon} data-file={Boolean(caseFileKind(item))}>
+                      <CaseGlyph reflectionCase={item} />
                     </span>
-                    <span className={styles.caseText}>
+                    <span className={styles.caseText} data-single-line={caseSubLabel(item) === null}>
                       <strong>{item.title}</strong>
-                      <span>{item.project}</span>
+                      {caseSubLabel(item) ? <span>{caseSubLabel(item)}</span> : null}
                     </span>
-                    <span className={styles.caseTime}>{item.updatedAt}</span>
+                    {caseTimeLabel(item) ? <span className={styles.caseTime}>{caseTimeLabel(item)}</span> : null}
                   </button>
                   <button
                     type="button"
@@ -523,106 +652,117 @@ export default function ReflectionWorkspaceClient() {
         )}
       </aside>
 
-      {workspaceMode === 'reader' && activeSource ? (
-        <SourceReader
-          source={activeSource}
-          onReturnToReflection={() => setWorkspaceMode('reflection')}
-          onAddToInput={() => appendSourceExcerptToInput(activeSource)}
-          onReflect={() => startReflectionFromSource(activeSource)}
-        />
-      ) : (
-        <section className={styles.thread} aria-label="Reflection thread">
+      <section className={styles.thread} aria-label="Reflection thread">
           <header className={styles.threadHeader} data-learning={activeCase.project === 'Learning pass'}>
-            <div>
-              <p className={styles.kicker}>
-                {activeCase.project === 'Learning pass' ? 'Learning review' : 'Reflection case'}
-              </p>
-              <h2>{activeCase.title}</h2>
+            <div className={styles.threadTitleBlock}>
+              <div className={styles.threadTitleLine}>
+                {activeCase.project === 'Learning pass' ? <FileBadge kind={activeSource?.kind} /> : null}
+                <h2>{activeCase.title}</h2>
+                {isLearningCase ? (
+                  <span className={styles.headerStatus} title={activeCase.status} aria-label={activeCase.status}>
+                    <CheckCircle2 size={13} />
+                  </span>
+                ) : null}
+              </div>
               {activeCase.project === 'Learning pass' ? (
-                <div className={styles.headerMetaLine} aria-label="Learning context">
-                  <span>{activeSource?.kind?.toUpperCase() ?? 'SOURCE'}</span>
-                  <span>native source</span>
-                  <span>{activeVersions.length} versions</span>
-                </div>
+                null
               ) : (
                 <p>{activeCase.summary}</p>
               )}
             </div>
-            <div className={styles.headerStatus}>
-              <span>{activeCase.status}</span>
-              <CheckCircle2 size={16} />
-            </div>
+            {!isLearningCase ? (
+              <div className={styles.headerStatus} title={activeCase.status} aria-label={activeCase.status}>
+                <span>{activeCase.status}</span>
+                <CheckCircle2 size={16} />
+              </div>
+            ) : null}
           </header>
 
           <UnderstandingSpine
             reflectionCase={activeCase}
             activeVersionId={activeEvidence?.id ?? null}
-            onSelectVersion={setActiveVersionId}
+            onSelectVersion={selectVersion}
           />
 
           <form
             className={styles.composer}
-            data-learning={activeCase.project === 'Learning pass'}
-            aria-label={`${commitTarget.label} commit field`}
+            data-learning={isLearningCase}
+            aria-label={isLearningCase ? 'Add margin note' : `${commitTarget.label} commit`}
             onSubmit={submitMaterial}
           >
-            <label className={styles.composerField}>
-              <span className={styles.composerTarget}>
-                <strong>{commitTarget.label}</strong>
-                <span className={styles.composerAnchor}>
-                  {commitTarget.helper}
-                  {' · '}
-                  {commitAnchor}
-                </span>
-              </span>
+            <div className={styles.composerField}>
               <textarea
+                aria-label={isLearningCase ? 'Margin note input' : `${commitTarget.label} input`}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder={commitTarget.placeholder}
-                rows={2}
+                placeholder={
+                  isLearningCase
+                    ? 'Margin note...'
+                    : commitTarget.placeholder
+                }
+                rows={isLearningCase ? 1 : 2}
               />
-            </label>
-            <button type="submit" aria-label={commitTarget.buttonLabel}>
+            </div>
+            <button
+              type="submit"
+              disabled={!draft.trim()}
+              aria-label={
+                isLearningCase
+                  ? 'Save margin note'
+                  : commitTarget.buttonLabel
+              }
+              title={
+                isLearningCase
+                  ? 'Save margin note'
+                  : commitTarget.buttonLabel
+              }
+            >
               <Send size={17} />
-              <span>{commitTarget.buttonLabel}</span>
             </button>
           </form>
-        </section>
-      )}
+      </section>
 
       <aside className={styles.sources} aria-label="Local sources">
         {isSourcesCollapsed ? (
           <div className={styles.sourcesRail}>
-            <button
-              className={styles.plainIconButton}
-              type="button"
-              onClick={() => setIsSourcesCollapsed(false)}
-              aria-label="Expand sources inspector"
-            >
-              <ChevronLeft size={17} />
-            </button>
-            <Folder size={16} />
-            <span>{activeCase.sources.length}</span>
+            <div className={styles.paneRailTop}>
+              <button
+                className={styles.paneToggleButton}
+                data-pane="right"
+                type="button"
+                onClick={() => setIsSourcesCollapsed(false)}
+                aria-label="Expand sources inspector"
+              >
+                <PanelRightOpen size={16} />
+              </button>
+            </div>
+            <div className={styles.sourcesRailMeta} aria-label={`${activeCase.sources.length} sources`}>
+              <Folder size={16} />
+              <span>{activeCase.sources.length}</span>
+            </div>
           </div>
         ) : (
           <>
             <header className={styles.sourcesHeader}>
-              <div>
-                <p className={styles.kicker}>{workspaceMode === 'reader' ? 'Reader' : 'Evidence'}</p>
-                <h2>{workspaceMode === 'reader' ? 'Loom' : 'Inspector'}</h2>
-              </div>
+              <div className={styles.sourcesHeaderQuiet} aria-hidden="true" />
               <div className={styles.sourceHeaderControls}>
-                <button className={styles.importButton} type="button" onClick={openLocalImport}>
+                <button
+                  className={styles.importButton}
+                  type="button"
+                  onClick={openLocalImport}
+                  aria-label="Import local source"
+                  title="Import local source"
+                >
                   <Upload size={14} />
-                  Import
                 </button>
                 <button
-                  className={styles.plainIconButton}
+                  className={styles.paneToggleButton}
+                  data-pane="right"
                   type="button"
                   onClick={() => setIsSourcesCollapsed(true)}
                   aria-label="Collapse sources inspector"
                 >
-                  <ChevronRight size={17} />
+                  <PanelRightClose size={16} />
                 </button>
               </div>
             </header>
@@ -636,32 +776,26 @@ export default function ReflectionWorkspaceClient() {
               aria-label="Import local files"
             />
 
-            <section className={styles.evidenceInspector} aria-label="Evidence inspector">
+            <section className={styles.evidenceInspector} aria-label="Evidence">
               {activeEvidence ? (
                 <>
-                  <div className={styles.evidenceTop}>
-                    <GitBranch size={15} />
-                    <div>
-                      <h3>{activeEvidence.title}</h3>
-                      <p>{activeEvidence.number} · {activeEvidence.state}</p>
-                    </div>
-                  </div>
-                  <p className={styles.evidenceMaterial}>{activeEvidence.material}</p>
-                  <EvidenceGrounding version={activeEvidence} />
+                  <EvidenceGrounding
+                    version={activeEvidence}
+                    source={evidenceSource}
+                    canOpenSource={canOpenEvidenceSource}
+                    onOpenSource={openSource}
+                  />
                 </>
               ) : activeSource ? (
                 <>
-                  <div className={styles.evidenceTop}>
-                    <CircleDot size={15} />
-                    <div>
-                      <h3>{activeSource.label}</h3>
-                      <p>{activeSource.kind}</p>
-                    </div>
-                  </div>
-                  <p className={styles.evidenceMaterial}>{activeSource.excerpt}</p>
-                  <div className={styles.evidenceMeta}>
-                    <span>source</span>
-                    <strong>{activeSource.folder}</strong>
+                  <div className={styles.evidenceSourceLine} aria-label="Evidence source">
+                    <FileBadge kind={activeSource.kind} />
+                    <span>{activeSource.label}</span>
+                    <SourceOpenButton
+                      source={activeSource}
+                      canOpen={canOpenActiveSource}
+                      onOpenSource={openSource}
+                    />
                   </div>
                 </>
               ) : (
@@ -669,125 +803,54 @@ export default function ReflectionWorkspaceClient() {
               )}
             </section>
 
-            <label className={styles.searchBox}>
-              <Search size={15} />
-              <input
-                value={sourceQuery}
-                onChange={(event) => setSourceQuery(event.target.value)}
-                placeholder="Filter sources"
-              />
-            </label>
+            {shouldShowSourceList ? (
+              <>
+                <label className={styles.searchBox}>
+                  <Search size={15} />
+                  <input
+                    value={sourceQuery}
+                    onChange={(event) => setSourceQuery(event.target.value)}
+                    placeholder="Filter sources"
+                  />
+                </label>
 
-            <p className={styles.sourceCollectionLabel}>Source Collection</p>
-            <div className={styles.sourceTree} aria-label="Source tree">
-              {Object.entries(sourcesByFolder).length > 0 ? (
-                <>
-                  {Object.entries(sourcesByFolder).map(([folder, sources]) => (
-                    <section key={folder} className={styles.sourceFolder}>
-                      <div className={styles.folderLabel}>
-                        <ChevronDown size={14} />
-                        <Folder size={15} />
-                        <span>{folder}</span>
-                      </div>
-                      {sources.map((source) => (
-                        <button
-                          key={source.id}
-	                          type="button"
-	                          className={styles.sourceItem}
-	                          data-active={source.id === activeSource?.id}
-	                          data-readable={sourceCanOpenInReader(source)}
-	                          onClick={() => openSourceInReader(source)}
-	                        >
-	                          {sourceCanOpenInReader(source) ? <BookOpen size={15} /> : <FileText size={15} />}
-	                          <span>{source.label}</span>
-	                          <small>{source.meta}</small>
-	                        </button>
-	                      ))}
-                    </section>
-                  ))}
+                <div className={styles.sourceTree} aria-label="Source tree">
+                  {Object.entries(sourcesByFolder).length > 0 ? (
+                    <>
+                      {Object.entries(sourcesByFolder).map(([folder, sources]) => (
+                        <section key={folder} className={styles.sourceFolder}>
+                          <div className={styles.folderLabel}>
+                            <ChevronDown size={14} />
+                            <Folder size={15} />
+                            <span>{folder}</span>
+                          </div>
+                          {sources.map((source) => (
+                            <button
+                              key={source.id}
+                              type="button"
+                              className={styles.sourceItem}
+                              data-active={source.id === activeSource?.id}
+                              data-native-primary={isNativePrimarySource(source)}
+                              onClick={() => selectSource(source)}
+                            >
+                              <FileBadge kind={source.kind} />
+                              <span>{source.label}</span>
+                              <small>{source.meta}</small>
+                            </button>
+                          ))}
+                        </section>
+                      ))}
 
-	                  {workspaceMode === 'reader' && activeSource ? (
-	                    <section className={styles.readerCompanion} aria-label="Loom reader companion">
-	                      <div className={styles.previewTop}>
-	                        <CircleDot size={16} />
-	                        <div>
-	                          <h3>{activeSource.label}</h3>
-	                          <p>{activeSource.kind}</p>
-	                        </div>
-	                      </div>
-	                      <p>{activeSource.excerpt}</p>
-	                      <div className={styles.readerActionGrid}>
-	                        <button
-	                          className={styles.readerActionButton}
-	                          type="button"
-	                          onClick={() => appendSourceExcerptToInput(activeSource)}
-	                        >
-	                          <GitBranch size={14} />
-	                          Add to Input
-	                        </button>
-	                        <button
-	                          className={styles.readerActionButton}
-	                          type="button"
-	                          onClick={() => startReflectionFromSource(activeSource)}
-	                        >
-	                          <MessageSquare size={14} />
-	                          Reflect
-	                        </button>
-	                      </div>
-	                    </section>
-	                  ) : (
-	                    <section className={styles.preview} aria-label="Selected source preview">
-	                      {activeSource ? (
-	                        <>
-	                          <div className={styles.previewTop}>
-	                            <CircleDot size={16} />
-	                            <div>
-	                              <h3>{activeSource.label}</h3>
-	                              <p>{activeSource.kind}</p>
-		                            </div>
-		                          </div>
-		                          <p>{activeSource.excerpt}</p>
-		                          {isNativePrimarySource(activeSource) ? (
-		                            <div className={styles.nativeSourceNotice}>
-		                              <BookOpen size={14} />
-		                              <div>
-		                                <strong>Native source</strong>
-		                                <span>Use the original app. Loom records understanding versions.</span>
-		                              </div>
-		                            </div>
-		                          ) : null}
-		                          {sourceCanOpenInReader(activeSource) ? (
-		                            <button
-		                              className={styles.readerActionButton}
-	                              type="button"
-	                              onClick={() => openSourceInReader(activeSource)}
-	                          >
-	                            <BookOpen size={14} />
-	                            Open source
-	                          </button>
-	                          ) : null}
-	                          <div className={styles.trace}>
-	                            <GitBranch size={15} />
-	                            <span>Linked to {activeSource.folder}</span>
-	                          </div>
-	                        </>
-	                      ) : (
-	                        <div className={styles.emptyPreview}>
-	                          <FileText size={26} />
-	                          <h3>Open source</h3>
-	                          <p>Select evidence from the workspace tree.</p>
-	                        </div>
-	                      )}
-	                    </section>
-	                  )}
-                </>
-              ) : (
-                <div className={styles.emptySources}>
-                  <Archive size={22} />
-                  <p>No sources added yet.</p>
+                    </>
+                  ) : (
+                    <div className={styles.emptySources}>
+                      <Archive size={22} />
+                      <p>No sources added yet.</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            ) : null}
           </>
         )}
       </aside>

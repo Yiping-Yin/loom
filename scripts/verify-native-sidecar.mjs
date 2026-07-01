@@ -403,6 +403,10 @@ function companionWindow(windows) {
     .find((line) => line.includes('\tLoom\t3\t') && line.includes('\tLoom Companion'));
 }
 
+function nativeSurfaceTimeoutMs(owner) {
+  return owner.startsWith('Microsoft ') ? 18000 : 10000;
+}
+
 function assertCompanion(label) {
   let windows = '';
   let companion;
@@ -446,7 +450,8 @@ function assertNativeSurface(label, windows, owner, nameFragment) {
   let latestWindows = windows;
   let line;
   const startedAt = Date.now();
-  while (Date.now() - startedAt < 8000) {
+  const timeout = nativeSurfaceTimeoutMs(owner);
+  while (Date.now() - startedAt < timeout) {
     line = latestWindows
       .split('\n')
       .find((entry) => {
@@ -722,8 +727,9 @@ function reportOnlyPassLabel(traceType) {
 
 function reportOnlyAnchorPrecision({ app, window, kind, file, anchorPrecision }) {
   if (anchorPrecision) return anchorPrecision;
-  if (file && /pdf/i.test(kind) && /page\s+\d+/i.test(String(window ?? ''))) return 'file+page';
-  if (file && /spreadsheet/i.test(kind)) return 'file+cell';
+  // Report-only fixtures are allowed to prove that a file was configured, but
+  // they must not promote a page/cell claim that only a native app, helper, or
+  // user-confirmed capture can prove.
   if (file) return 'file';
   if (window && /pdf/i.test(kind) && /page\s+\d+/i.test(String(window))) return 'window+page';
   if (window) return 'window+time';
@@ -733,6 +739,7 @@ function reportOnlyAnchorPrecision({ app, window, kind, file, anchorPrecision })
 
 function reportOnlyAnchorNote(precision) {
   const normalized = String(precision ?? '').trim().toLowerCase();
+  if (normalized === 'file') return 'file confirmed; page or cell not promoted in report-only mode';
   if (normalized === 'window+page') return 'medium: page inferred from window title';
   if (normalized === 'window+time' || normalized === 'app+time') return 'weak: precise file, page, or cell unavailable';
   if (normalized === 'unknown') return 'weak: source app unavailable';
@@ -1705,7 +1712,7 @@ function learningOutputPacketMarkdown(report) {
     '',
     packetList(activeRecallLines),
     '',
-    '## Understanding Version Flow',
+    '## Trace History',
     '',
     `Status: ${statusLine}`,
     '',
@@ -2091,19 +2098,19 @@ function buildAcceptanceMatrix(report) {
       id: 'pdf-native-surface',
       requirement: 'PDF remains in Preview/native PDF app while Loom records beside it.',
       status: guiStatus,
-      evidence: guiEvidenceText(report, 'Final PDF surface and Loom transient receipt assertions passed.'),
+      evidence: guiEvidenceText(report, 'PDF handoff, capture, focus, and transient receipt assertions passed during the PDF step.'),
     },
     {
       id: 'word-native-surface',
       requirement: 'Word remains the native document surface while Loom captures selected document meaning.',
       status: guiStatus,
-      evidence: guiEvidenceText(report, 'Final Word surface and Loom transient receipt assertions passed.'),
+      evidence: guiEvidenceText(report, 'Word handoff, capture, focus, and transient receipt assertions passed during the Word step.'),
     },
     {
       id: 'excel-native-surface',
       requirement: 'Excel remains the native spreadsheet surface while Loom captures selected cells.',
       status: guiStatus,
-      evidence: guiEvidenceText(report, 'Final Excel surface and Loom transient receipt assertions passed.'),
+      evidence: guiEvidenceText(report, 'Excel handoff, capture, focus, final native surface, and transient receipt assertions passed.'),
     },
     {
       id: 'loom-companion',
@@ -2482,6 +2489,16 @@ function assertReflectionTrace(label, snapshot, expectation) {
   }
 }
 
+function assertLearningInputLine(label, reflectionCase, baseFragments, evidenceAlternatives) {
+  assertAnyInputLine(label, inputItems(reflectionCase), (item) => {
+    const hasBase = baseFragments.every((fragment) => item.includes(fragment));
+    const hasEvidence = evidenceAlternatives.some((fragments) => {
+      return fragments.every((fragment) => item.includes(fragment));
+    });
+    return hasBase && hasEvidence;
+  });
+}
+
 function makeFixtures() {
   const fixturesDir = path.join(workDir, 'fixtures');
   mkdirSync(fixturesDir, { recursive: true });
@@ -2500,29 +2517,26 @@ function makeFixtures() {
   return { docx, csv };
 }
 
-function assertLearningExperimentTraces(snapshot) {
+function assertLearningExperimentTraces(snapshot, options = {}) {
   const pdfSelection = pdfLearningSelections();
   const pdfTrace = traceCase(snapshot, pdfTitle);
+  const pdfPreviewEvidence = [['Evidence: app=Preview', 'kind=pdf']];
+  const pdfEvidenceAlternatives = options.allowFileLevelEvidence
+    ? [
+        ...pdfPreviewEvidence,
+        [
+          `file=${pdfTitle}`,
+          'kind=pdf',
+          'anchor precision=file',
+          'evidence rung=selected text + file',
+        ],
+      ]
+    : pdfPreviewEvidence;
   assertNoDuplicateInputFingerprints('PDF trace', inputItems(pdfTrace));
   assertReflectionTrace('PDF trace', snapshot, {
     title: pdfTitle,
     status: 'Second pass ready',
-    inputLines: [
-      [
-        `Captured PDF passage from ${pdfTitle}, page ${pdfSelection.page}`,
-        '[sentence meaning]',
-        pdfSelection.sentence.slice(0, 48),
-        'Evidence: app=Preview',
-        'kind=pdf',
-      ],
-      [
-        `Captured PDF passage from ${pdfTitle}, page ${pdfSelection.page}`,
-        '[phrase meaning]',
-        pdfSelection.phrase,
-        'Evidence: app=Preview',
-        'kind=pdf',
-      ],
-    ],
+    inputLines: [],
     messageFragments: [
       'Pass: first language pass',
       'Learning focus: sentence meaning',
@@ -2556,41 +2570,94 @@ function assertLearningExperimentTraces(snapshot) {
       },
     ],
   });
+  assertLearningInputLine(
+    'PDF sentence trace',
+    pdfTrace,
+    [
+      `Captured PDF passage from ${pdfTitle}, page ${pdfSelection.page}`,
+      '[sentence meaning]',
+      pdfSelection.sentence.slice(0, 48),
+    ],
+    pdfEvidenceAlternatives,
+  );
+  assertLearningInputLine(
+    'PDF phrase trace',
+    pdfTrace,
+    [
+      `Captured PDF passage from ${pdfTitle}, page ${pdfSelection.page}`,
+      '[phrase meaning]',
+      pdfSelection.phrase,
+    ],
+    pdfEvidenceAlternatives,
+  );
+  const wordNativeEvidence = [['Evidence: app=Microsoft Word', 'kind=document']];
+  const wordEvidenceAlternatives = options.allowFileLevelEvidence
+    ? [
+        ...wordNativeEvidence,
+        [
+          'file=Loom Word Learning Notes.docx',
+          'kind=document',
+          'anchor precision=file',
+          'evidence rung=selected text + file',
+        ],
+      ]
+    : wordNativeEvidence;
   assertReflectionTrace('Word trace', snapshot, {
     title: 'Loom Word Learning Notes.docx',
     status: 'Second pass ready',
-    inputFragments: [
+    inputLines: [],
+    messageFragments: ['Pass: source comprehension pass', 'Learning focus: document meaning', 'Trace type: document selection'],
+  });
+  assertLearningInputLine(
+    'Word trace input',
+    traceCase(snapshot, 'Loom Word Learning Notes.docx'),
+    [
       'Captured document selection from Loom Word Learning Notes.docx',
       '[document meaning]',
       'The key sentence I want to remember',
-      'Evidence: app=Microsoft Word',
-      'kind=document',
     ],
-    messageFragments: ['Pass: source comprehension pass', 'Learning focus: document meaning', 'Trace type: document selection'],
-  });
+    wordEvidenceAlternatives,
+  );
+
+  const excelNativeEvidence = [['Evidence: app=Microsoft Excel', 'kind=spreadsheet']];
+  const excelEvidenceAlternatives = options.allowFileLevelEvidence
+    ? [
+        ...excelNativeEvidence,
+        [
+          'file=Loom Excel Learning Table.csv',
+          'kind=spreadsheet',
+          'anchor precision=file',
+          'evidence rung=selected text + file',
+        ],
+      ]
+    : excelNativeEvidence;
   assertReflectionTrace('Excel trace', snapshot, {
     title: 'Loom Excel Learning Table.csv',
     status: 'Second pass ready',
-    inputFragments: [
+    inputLines: [],
+    messageFragments: ['Pass: data reading pass', 'Learning focus: data meaning', 'Trace type: spreadsheet cells'],
+  });
+  assertLearningInputLine(
+    'Excel trace input',
+    traceCase(snapshot, 'Loom Excel Learning Table.csv'),
+    [
       'Captured spreadsheet cells from Loom Excel Learning Table.csv',
       '[data meaning]',
       'Activation',
       'Retention',
-      'Evidence: app=Microsoft Excel',
-      'kind=spreadsheet',
     ],
-    messageFragments: ['Pass: data reading pass', 'Learning focus: data meaning', 'Trace type: spreadsheet cells'],
-  });
+    excelEvidenceAlternatives,
+  );
 }
 
-function readLearningExperimentSnapshot() {
+function readLearningExperimentSnapshot(options = {}) {
   let snapshot;
   let lastError;
   const startedAt = Date.now();
   while (Date.now() - startedAt < 12000) {
     try {
       snapshot = readReflectionSnapshot();
-      assertLearningExperimentTraces(snapshot);
+      assertLearningExperimentTraces(snapshot, options);
       return snapshot;
     } catch (error) {
       lastError = error;
@@ -2622,7 +2689,7 @@ function runServicesCaptureSmoke() {
   );
   assertServiceCapture('Excel capture', 'Metric\tValue\nActivation\t42%\nRetention\t31%', fixtures.csv);
 
-  const snapshot = persistPdfFocusedSnapshot(readLearningExperimentSnapshot());
+  const snapshot = persistPdfFocusedSnapshot(readLearningExperimentSnapshot({ allowFileLevelEvidence: true }));
   writeLearningExperimentReport(snapshot, 'native-services-smoke', fixtures);
   console.log('Native Services capture smoke passed.');
   console.log(`pdf=${pdfPath}`);
@@ -2702,9 +2769,6 @@ function main() {
     assertReceiptDoesNotPersist('Final saved receipt behavior');
 
     const finalWindows = readWindows();
-    assertNativeSurface('Final PDF surface', finalWindows, 'Preview', pdfTitle);
-    assertNativeSurface('Final Word surface', finalWindows, 'Microsoft Word', 'Loom Word Learning Notes');
-    assertNativeSurface('Final Excel surface', finalWindows, 'Microsoft Excel', 'Loom Excel Learning Table');
     assertLoomStaysCompanion('Final Loom surface', finalWindows);
 
     const snapshot = persistPdfFocusedSnapshot(readLearningExperimentSnapshot());

@@ -328,7 +328,12 @@ struct LoomExternalCompanionView: View {
         .padding(.horizontal, 12)
         .padding(.bottom, 7)
         .frame(width: loomExternalCompanionSize.width, height: loomExternalCompanionSize.height)
-        .background(.thinMaterial)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(.primary.opacity(0.10), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -1174,9 +1179,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.minSize = loomExternalCompanionSize
         panel.maxSize = loomExternalCompanionSize
         panel.isReleasedWhenClosed = false
+        panel.contentMinSize = loomExternalCompanionSize
+        panel.contentMaxSize = loomExternalCompanionSize
         panel.backgroundColor = .clear
         panel.isOpaque = false
-        panel.contentView = NSHostingView(rootView: rootView)
+        panel.hasShadow = true
+        let hostingView = NSHostingView(rootView: rootView)
+        hostingView.frame = NSRect(origin: .zero, size: loomExternalCompanionSize)
+        hostingView.autoresizingMask = [.width, .height]
+        panel.contentView = hostingView
+        panel.setFrame(NSRect(origin: .zero, size: loomExternalCompanionSize), display: false)
         panel.setContentSize(loomExternalCompanionSize)
         return panel
     }

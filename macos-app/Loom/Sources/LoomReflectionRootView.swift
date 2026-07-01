@@ -29,6 +29,26 @@ private func reflectionLearningInputFingerprint(_ value: String) -> String {
         .lowercased()
 }
 
+private enum ReflectionCommitFocus: String {
+    case meaning
+    case question
+    case correction
+    case principle
+
+    var captureLabel: String {
+        switch self {
+        case .meaning:
+            return "user meaning"
+        case .question:
+            return "question"
+        case .correction:
+            return "correction"
+        case .principle:
+            return "principle"
+        }
+    }
+}
+
 struct LoomReflectionRootView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var cases: [ReflectionCase]
@@ -138,7 +158,7 @@ struct LoomReflectionRootView: View {
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
                 }
-                .background(LoomTokens.dsPaperDeep.ignoresSafeArea())
+                .background(ReflectionMatteWorkbenchBackground().ignoresSafeArea())
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -189,7 +209,7 @@ struct LoomReflectionRootView: View {
             }
         }
         .ignoresSafeArea(.container, edges: .top)
-        .background(LoomTokens.dsPaperDeep.ignoresSafeArea())
+        .background(ReflectionMatteWorkbenchBackground().ignoresSafeArea())
         .background(
             WindowConfigurator(
                 title: "Loom",
@@ -379,7 +399,7 @@ struct LoomReflectionRootView: View {
                 ?? cases[index].title
             cases[index].status = "Reading"
             cases[index].updatedAt = Self.timeFormatter.string(from: Date())
-            cases[index].steps[0].items.append(Self.manualLearningInputLine(material, sourceLabel: sourceLabel))
+            cases[index].steps[0].items.append(Self.manualLearningInputLine(material, sourceLabel: sourceLabel, focus: .meaning))
             cases[index].messages.append(ReflectionMessage(role: .human, eyebrow: "Understanding version", body: material))
             cases[index].messages.append(
                 ReflectionMessage(
@@ -575,9 +595,15 @@ struct LoomReflectionRootView: View {
             selectedSourceID = inferredSourceID
         }
 
+        let captureHasFileEvidence = !capture.fileURLs.filter(\.isFileURL).isEmpty
+            || capture.nativeContext?.documentURL != nil
         let sourceLabel = inferredAnchor?.label
             ?? Self.nativeContextAnchoredSourceLabel(for: capture, kind: captureKind)
-            ?? Self.windowAnchoredSourceLabel(for: capture, kind: captureKind)
+            ?? Self.windowAnchoredSourceLabel(
+                for: capture,
+                kind: captureKind,
+                includeWindowPage: !captureHasFileEvidence
+            )
             ?? nativeSource?.label
             ?? newSources.first?.label
             ?? capture.sourceApp
@@ -587,7 +613,8 @@ struct LoomReflectionRootView: View {
             capture: capture,
             sourceLabel: sourceLabel,
             kind: captureKind,
-            focus: learningFocus
+            focus: learningFocus,
+            inferredAnchor: inferredAnchor
         )
 
         let inputFingerprint = reflectionLearningInputFingerprint(inputLine)
@@ -605,7 +632,8 @@ struct LoomReflectionRootView: View {
                             capture: capture,
                             sourceLabel: sourceLabel,
                             kind: captureKind,
-                            focus: learningFocus
+                            focus: learningFocus,
+                            inferredAnchor: inferredAnchor
                         )
                     )
                 )
@@ -634,7 +662,8 @@ struct LoomReflectionRootView: View {
                     capture: capture,
                     sourceLabel: sourceLabel,
                     kind: captureKind,
-                    focus: learningFocus
+                    focus: learningFocus,
+                    inferredAnchor: inferredAnchor
                 )
             )
         )
@@ -816,10 +845,11 @@ struct LoomReflectionRootView: View {
         capture: LoomExternalSelectionCapture,
         sourceLabel: String,
         kind: ReflectionCaptureKind,
-        focus: ReflectionLearningFocus
+        focus: ReflectionLearningFocus,
+        inferredAnchor: ReflectionSourceAnchor?
     ) -> String {
         let selectedText = clippedSelectionText(capture.text)
-        let evidence = selectionEvidenceLine(capture: capture, kind: kind)
+        let evidence = selectionEvidenceLine(capture: capture, kind: kind, inferredAnchor: inferredAnchor)
         if selectedText.isEmpty {
             return "Captured \(kind.emptyInputNoun) from \(sourceLabel) [\(focus.label)].\n\(evidence)"
         }
@@ -828,19 +858,21 @@ struct LoomReflectionRootView: View {
 
     private static func selectionEvidenceLine(
         capture: LoomExternalSelectionCapture,
-        kind: ReflectionCaptureKind
+        kind: ReflectionCaptureKind,
+        inferredAnchor: ReflectionSourceAnchor?
     ) -> String {
         let fileNames = capture.fileURLs
             .filter { $0.isFileURL }
             .map(\.lastPathComponent)
             .filter { !$0.isEmpty }
             .joined(separator: ", ")
-        let anchorPrecision = selectionAnchorPrecision(capture: capture, kind: kind)
+        let evidenceFileName = fileNames.isEmpty ? inferredAnchor?.fileName : fileNames
+        let anchorPrecision = selectionAnchorPrecision(capture: capture, kind: kind, inferredAnchor: inferredAnchor)
         let pairs: [(String, String?)] = [
             ("app", capture.sourceApp ?? "native macOS app"),
             ("window", capture.sourceWindowTitle),
             ("kind", kind.sourceKind),
-            ("file", fileNames.isEmpty ? nil : fileNames),
+            ("file", evidenceFileName?.isEmpty == false ? evidenceFileName : nil),
             ("bundle", capture.sourceBundleIdentifier),
             ("anchor precision", anchorPrecision),
             ("evidence rung", selectionEvidenceRung(for: anchorPrecision)),
@@ -848,6 +880,7 @@ struct LoomReflectionRootView: View {
             ("fallback note", selectionFallbackNote(for: anchorPrecision)),
             ("captured at", ISO8601DateFormatter().string(from: capture.capturedAt))
         ] + nativeContextEvidencePairs(capture.nativeContext)
+            + inferredAnchorEvidencePairs(inferredAnchor)
 
         let body = pairs.compactMap { label, value -> String? in
             guard let cleaned = value?
@@ -866,9 +899,14 @@ struct LoomReflectionRootView: View {
 
     private static func selectionAnchorPrecision(
         capture: LoomExternalSelectionCapture,
-        kind: ReflectionCaptureKind
+        kind: ReflectionCaptureKind,
+        inferredAnchor: ReflectionSourceAnchor?
     ) -> String {
         if let precision = capture.nativeContext?.anchorPrecision,
+           !precision.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return precision
+        }
+        if let precision = inferredAnchor?.precision,
            !precision.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return precision
         }
@@ -978,17 +1016,27 @@ struct LoomReflectionRootView: View {
 
     private static func windowAnchoredSourceLabel(
         for capture: LoomExternalSelectionCapture,
-        kind: ReflectionCaptureKind
+        kind: ReflectionCaptureKind,
+        includeWindowPage: Bool
     ) -> String? {
         guard kind == .pdf else { return capture.sourceWindowTitle }
         guard let windowTitle = capture.sourceWindowTitle,
               let documentTitle = pdfDocumentTitle(from: windowTitle) else {
             return capture.sourceWindowTitle
         }
+        guard includeWindowPage else { return documentTitle }
         guard let page = pdfPageNumber(from: windowTitle) else {
             return documentTitle
         }
         return "\(documentTitle), page \(page)"
+    }
+
+    private static func inferredAnchorEvidencePairs(_ anchor: ReflectionSourceAnchor?) -> [(String, String?)] {
+        guard let anchor else { return [] }
+        return [
+            ("page", anchor.pageNumber.map(String.init)),
+            ("anchor method", anchor.method)
+        ]
     }
 
     private static func nativeContextEvidencePairs(_ context: LoomNativeSourceContext?) -> [(String, String?)] {
@@ -1009,41 +1057,8 @@ struct LoomReflectionRootView: View {
         ]
     }
 
-    private static func manualLearningInputLine(_ material: String, sourceLabel: String) -> String {
-        "Captured user trace from \(sourceLabel) [\(manualLearningFocus(for: material))]: \(clippedSelectionText(material))"
-    }
-
-    private static func manualLearningFocus(for material: String) -> String {
-        let trimmed = material.trimmingCharacters(in: .whitespacesAndNewlines)
-        let lowercased = trimmed.lowercased()
-
-        if lowercased.hasPrefix("principle:")
-            || lowercased.hasPrefix("principle：")
-            || lowercased.hasPrefix("memory:")
-            || lowercased.hasPrefix("memory：")
-            || lowercased.hasPrefix("原则")
-            || lowercased.hasPrefix("记忆") {
-            return "principle"
-        }
-
-        if lowercased.hasPrefix("correction:")
-            || lowercased.hasPrefix("correction：")
-            || lowercased.hasPrefix("correct:")
-            || lowercased.hasPrefix("correct：")
-            || lowercased.hasPrefix("修正")
-            || lowercased.hasPrefix("纠正") {
-            return "correction"
-        }
-
-        if lowercased.hasPrefix("question:")
-            || lowercased.hasPrefix("question：")
-            || lowercased.hasPrefix("问题")
-            || trimmed.contains("?")
-            || trimmed.contains("？") {
-            return "question"
-        }
-
-        return "user meaning"
+    private static func manualLearningInputLine(_ material: String, sourceLabel: String, focus: ReflectionCommitFocus) -> String {
+        "Captured user trace from \(sourceLabel) [\(focus.captureLabel)]: \(clippedSelectionText(material))"
     }
 
     private static func latestLearningAnchor(in reflectionCase: ReflectionCase) -> String? {
@@ -1059,7 +1074,8 @@ struct LoomReflectionRootView: View {
         capture: LoomExternalSelectionCapture,
         sourceLabel: String,
         kind: ReflectionCaptureKind,
-        focus: ReflectionLearningFocus
+        focus: ReflectionLearningFocus,
+        inferredAnchor: ReflectionSourceAnchor?
     ) -> String {
         let selectedText = clippedSelectionText(capture.text)
         let appLine = capture.sourceApp.map { "Source app: \($0)" } ?? "Source app: native macOS app"
@@ -1067,9 +1083,10 @@ struct LoomReflectionRootView: View {
         let traceLine = "Trace type: \(kind.traceType(for: capture.text))"
         let passLine = "Pass: \(focus.passLabel)"
         let focusLine = "Learning focus: \(focus.label)"
+        let precisionLine = "Anchor precision: \(selectionAnchorPrecision(capture: capture, kind: kind, inferredAnchor: inferredAnchor))"
         let statusLine = "Meaning status: needs user confirmation"
         let secondPassLine = "Second pass: not synthesized yet"
-        let contextLines = ([appLine, windowLine, "Source: \(sourceLabel)", passLine, focusLine, statusLine, secondPassLine, traceLine] as [String?])
+        let contextLines = ([appLine, windowLine, "Source: \(sourceLabel)", passLine, focusLine, precisionLine, statusLine, secondPassLine, traceLine] as [String?])
             .compactMap { $0 }
             .joined(separator: "\n")
         if selectedText.isEmpty {
@@ -1431,6 +1448,7 @@ struct LoomReflectionRootView: View {
         let query = normalizedAnchorText(capture.text)
         guard !query.isEmpty else { return nil }
 
+        var matches: [(source: ReflectionSource, page: Int)] = []
         for source in sources {
             guard let url = source.fileURL,
                   url.pathExtension.lowercased() == "pdf",
@@ -1439,14 +1457,19 @@ struct LoomReflectionRootView: View {
             for pageIndex in 0..<document.pageCount {
                 guard let pageText = document.page(at: pageIndex)?.string else { continue }
                 if normalizedAnchorText(pageText).contains(query) {
-                    return ReflectionSourceAnchor(
-                        label: "\(source.label), page \(pageIndex + 1)",
-                        sourceID: source.id
-                    )
+                    matches.append((source, pageIndex + 1))
                 }
             }
         }
-        return nil
+        guard matches.count == 1, let match = matches.first else { return nil }
+        return ReflectionSourceAnchor(
+            label: "\(match.source.label), page \(match.page)",
+            sourceID: match.source.id,
+            fileName: match.source.label,
+            pageNumber: match.page,
+            precision: "file+page",
+            method: "selected text matched one PDF page"
+        )
     }
 
     private static func pdfDocumentTitle(from windowTitle: String) -> String? {
@@ -1558,24 +1581,29 @@ private struct ReflectionTopBar: View {
             }
             .frame(width: isSidebarPresented ? reflectionSidebarWidth : reflectionTrafficLightClearance + 36)
 
-            HStack(spacing: 10) {
-                Image(systemName: "bubble.left.and.text.bubble.right")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(LoomTokens.dsInk3)
+            HStack(spacing: 9) {
+                ReflectionFileTypeBadge(
+                    kind: nativeSource?.kind ?? reflectionCase.sources.first?.kind ?? "document",
+                    fallbackColor: LoomTokens.dsInk3
+                )
+                .scaleEffect(0.78)
+                .frame(width: 18, height: 18)
 
                 Text(reflectionCase.title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(LoomTokens.dsInk1)
                     .lineLimit(1)
 
-                Text(reflectionCase.status)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(LoomTokens.dsSuccess)
-                    .lineLimit(1)
+                Circle()
+                    .fill(reflectionCase.status == "Second pass ready" ? LoomTokens.dsSuccess : LoomTokens.dsInk3)
+                    .frame(width: 6, height: 6)
+                    .help(reflectionCase.status)
 
-                Label("\(sourceCount)", systemImage: "folder")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(LoomTokens.dsInk3)
+                if sourceCount > 1 {
+                    Label("\(sourceCount)", systemImage: "folder")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                }
 
                 if nativeSource?.fileURL != nil {
                     Button(action: onOpenSourceInNativeApp) {
@@ -1586,6 +1614,7 @@ private struct ReflectionTopBar: View {
                     .buttonStyle(.plain)
                     .foregroundStyle(LoomTokens.dsInk3)
                     .contentShape(Rectangle())
+                    .accessibilityLabel("Open Source")
                     .help("Open original file in the default native app")
                 }
 
@@ -1598,7 +1627,7 @@ private struct ReflectionTopBar: View {
 
             if isInspectorPresented {
                 HStack(spacing: 10) {
-                    Text("Sources")
+                    Text("Evidence")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(LoomTokens.dsInk1)
                     Spacer(minLength: 0)
@@ -1632,7 +1661,7 @@ private struct ReflectionTopBar: View {
         ReflectionTopBarButton(
             systemName: "sidebar.right",
             isActive: isInspectorPresented,
-            help: isInspectorPresented ? "Hide sources" : "Show sources",
+            help: isInspectorPresented ? "Hide evidence" : "Show evidence",
             action: onToggleInspector
         )
     }
@@ -1649,6 +1678,14 @@ private struct ReflectionTopBarButton: View {
             Image(systemName: systemName)
                 .font(.system(size: 12, weight: .medium))
                 .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(
+                            isActive ? Color.white.opacity(0.18) : Color.white.opacity(0.08),
+                            lineWidth: 0.5
+                        )
+                )
         }
         .buttonStyle(.plain)
         .foregroundStyle(isActive ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
@@ -1664,14 +1701,16 @@ private struct ReflectionSidebar: View {
     let onSelect: (ReflectionCase) -> Void
     let onCreate: () -> Void
     let onDelete: (ReflectionCase) -> Void
+    @Environment(\.colorScheme) private var colorScheme
     @State private var query: String = ""
 
     private var usesCenterOverlay: Bool { material == .centerOverlay }
-    private var primaryText: Color { usesCenterOverlay ? LoomTokens.dsInk1 : .white.opacity(0.90) }
-    private var sectionText: Color { usesCenterOverlay ? LoomTokens.dsInk3 : .white.opacity(0.42) }
-    private var localPrimaryText: Color { usesCenterOverlay ? LoomTokens.dsInk1 : .white.opacity(0.86) }
-    private var localSecondaryText: Color { usesCenterOverlay ? LoomTokens.dsInk3 : .white.opacity(0.48) }
-    private var localDivider: Color { usesCenterOverlay ? LoomTokens.dsHair : .white.opacity(0.08) }
+    private var usesLightChrome: Bool { usesCenterOverlay || colorScheme == .light }
+    private var primaryText: Color { usesLightChrome ? LoomTokens.dsInk1 : .white.opacity(0.90) }
+    private var sectionText: Color { usesLightChrome ? LoomTokens.dsInk3 : .white.opacity(0.42) }
+    private var localPrimaryText: Color { usesLightChrome ? LoomTokens.dsInk1 : .white.opacity(0.86) }
+    private var localSecondaryText: Color { usesLightChrome ? LoomTokens.dsInk3 : .white.opacity(0.48) }
+    private var localDivider: Color { usesLightChrome ? LoomTokens.dsHair : .white.opacity(0.08) }
 
     private var visibleCases: [ReflectionCase] {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -1766,47 +1805,153 @@ private enum ReflectionSidebarMaterial: Equatable {
 
 private struct ReflectionSidebarBackground: View {
     let material: ReflectionSidebarMaterial
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var liquidGlassMaterial: NSVisualEffectView.Material {
+        switch material {
+        case .rail:
+            return .sidebar
+        case .centerOverlay:
+            return .popover
+        }
+    }
+
+    private var liquidGlassBlendingMode: NSVisualEffectView.BlendingMode {
+        material == .rail ? .behindWindow : .withinWindow
+    }
+
+    private var glassTint: Color {
+        switch (material, colorScheme) {
+        case (.rail, .light):
+            return Color.white.opacity(0.08)
+        case (.rail, .dark):
+            return Color.black.opacity(0.05)
+        case (.centerOverlay, .light):
+            return LoomTokens.dsPaper.opacity(0.16)
+        case (.centerOverlay, .dark):
+            return LoomTokens.dsPaperDeep.opacity(0.18)
+        }
+    }
+
+    private var glassHairline: Color {
+        colorScheme == .light ? Color.white.opacity(0.62) : Color.white.opacity(0.11)
+    }
+
+    private var glassShadow: Color {
+        colorScheme == .light ? Color.black.opacity(0.07) : Color.black.opacity(0.22)
+    }
 
     var body: some View {
         ZStack {
-            switch material {
-            case .rail:
-                Rectangle().fill(.regularMaterial)
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.17, green: 0.25, blue: 0.32).opacity(0.94),
-                        Color(red: 0.13, green: 0.16, blue: 0.20).opacity(0.88),
-                        Color(red: 0.18, green: 0.15, blue: 0.13).opacity(0.78)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            case .centerOverlay:
-                Rectangle().fill(LoomTokens.dsPaperDeep.opacity(0.84))
-                Rectangle().fill(.regularMaterial).opacity(0.42)
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.12),
-                        LoomTokens.dsThread.opacity(0.035),
-                        Color.black.opacity(0.06)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            }
+            ReflectionVisualEffectBackground(
+                material: liquidGlassMaterial,
+                blendingMode: liquidGlassBlendingMode
+            )
+            Rectangle().fill(glassTint)
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(colorScheme == .light ? 0.28 : 0.09),
+                    Color.clear
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .blendMode(.plusLighter)
+            Rectangle()
+                .fill(glassHairline)
+                .frame(width: 0.5)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
+        .shadow(color: glassShadow, radius: material == .rail ? 24 : 34, x: material == .rail ? 10 : 18, y: 0)
+    }
+}
+
+private struct ReflectionMatteWorkbenchBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var paperTint: Color {
+        colorScheme == .light ? LoomTokens.dsPaperDeep.opacity(0.68) : LoomTokens.dsPaperDeep.opacity(0.78)
+    }
+
+    private var fogTint: Color {
+        colorScheme == .light ? Color.white.opacity(0.16) : Color.white.opacity(0.025)
+    }
+
+    var body: some View {
+        ZStack {
+            ReflectionVisualEffectBackground(
+                material: .contentBackground,
+                blendingMode: .withinWindow
+            )
+            Rectangle().fill(paperTint)
+            Rectangle().fill(fogTint).blendMode(.plusLighter)
+        }
+    }
+}
+
+private struct ReflectionFrostedInspectorBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var frostTint: Color {
+        colorScheme == .light ? LoomTokens.dsPaper.opacity(0.42) : LoomTokens.dsPaper.opacity(0.58)
+    }
+
+    private var edgeTint: Color {
+        colorScheme == .light ? Color.white.opacity(0.34) : Color.white.opacity(0.075)
+    }
+
+    var body: some View {
+        ZStack {
+            ReflectionVisualEffectBackground(
+                material: .underPageBackground,
+                blendingMode: .withinWindow
+            )
+            Rectangle().fill(frostTint)
+            Rectangle()
+                .fill(edgeTint)
+                .frame(width: 0.5)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct ReflectionVisualEffectBackground: NSViewRepresentable {
+    let material: NSVisualEffectView.Material
+    let blendingMode: NSVisualEffectView.BlendingMode
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = blendingMode
+        view.state = .active
+        view.isEmphasized = true
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {
+        view.material = material
+        view.blendingMode = blendingMode
+        view.state = .active
+        view.isEmphasized = true
     }
 }
 
 private struct ReflectionSidebarSearchField: View {
     @Binding var text: String
     let material: ReflectionSidebarMaterial
+    @Environment(\.colorScheme) private var colorScheme
 
     private var usesCenterOverlay: Bool { material == .centerOverlay }
-    private var iconColor: Color { usesCenterOverlay ? LoomTokens.dsInk3 : .white.opacity(0.50) }
-    private var textColor: Color { usesCenterOverlay ? LoomTokens.dsInk1 : .white.opacity(0.88) }
-    private var fillColor: Color { usesCenterOverlay ? LoomTokens.dsPaper.opacity(0.58) : .white.opacity(0.075) }
-    private var strokeColor: Color { usesCenterOverlay ? LoomTokens.dsHair : .white.opacity(0.10) }
+    private var usesLightChrome: Bool { usesCenterOverlay || colorScheme == .light }
+    private var iconColor: Color { usesLightChrome ? LoomTokens.dsInk3 : .white.opacity(0.50) }
+    private var textColor: Color { usesLightChrome ? LoomTokens.dsInk1 : .white.opacity(0.88) }
+    private var fillColor: Color {
+        if usesCenterOverlay {
+            return LoomTokens.dsPaper.opacity(colorScheme == .light ? 0.18 : 0.14)
+        }
+        return usesLightChrome ? Color.white.opacity(0.15) : .white.opacity(0.055)
+    }
+    private var strokeColor: Color { usesLightChrome ? Color.white.opacity(0.32) : .white.opacity(0.10) }
 
     var body: some View {
         HStack(spacing: 8) {
@@ -1820,9 +1965,10 @@ private struct ReflectionSidebarSearchField: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 32)
-        .background(fillColor, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(fillColor, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .stroke(strokeColor, lineWidth: 1)
         )
     }
@@ -1834,52 +1980,57 @@ private struct ReflectionSidebarRow: View {
     let material: ReflectionSidebarMaterial
     let onSelect: () -> Void
     let onDelete: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovering = false
 
     private var usesCenterOverlay: Bool { material == .centerOverlay }
+    private var usesLightChrome: Bool { usesCenterOverlay || colorScheme == .light }
 
     private var iconColor: Color {
-        usesCenterOverlay
+        usesLightChrome
             ? (isSelected ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
             : (isSelected ? .white.opacity(0.90) : .white.opacity(0.56))
     }
 
     private var titleColor: Color {
-        usesCenterOverlay
+        usesLightChrome
             ? (isSelected ? LoomTokens.dsInk1 : LoomTokens.dsInk2)
             : (isSelected ? .white.opacity(0.96) : .white.opacity(0.78))
     }
 
     private var metaColor: Color {
-        usesCenterOverlay
+        usesLightChrome
             ? (isSelected ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
             : .white.opacity(isSelected ? 0.62 : 0.44)
     }
 
     private var timeColor: Color {
-        usesCenterOverlay
+        usesLightChrome
             ? LoomTokens.dsInk3
             : .white.opacity(isSelected ? 0.58 : 0.38)
     }
 
     private var deleteColor: Color {
         guard isHovering || isSelected else { return .clear }
-        return usesCenterOverlay ? LoomTokens.dsInk3 : .white.opacity(0.62)
+        return usesLightChrome ? LoomTokens.dsInk3 : .white.opacity(0.62)
     }
 
     private var deleteFill: Color {
         guard isHovering else { return .clear }
-        return usesCenterOverlay ? LoomTokens.dsPaper.opacity(0.64) : .white.opacity(0.08)
+        return usesLightChrome ? LoomTokens.dsPaper.opacity(0.34) : .white.opacity(0.08)
     }
 
     private var selectedFill: Color {
         guard isSelected else { return .clear }
-        return usesCenterOverlay ? LoomTokens.dsThread.opacity(0.08) : .white.opacity(0.12)
+        if usesLightChrome {
+            return usesCenterOverlay ? LoomTokens.dsThread.opacity(0.07) : Color.white.opacity(0.18)
+        }
+        return .white.opacity(0.09)
     }
 
     private var selectedStroke: Color {
         guard isSelected else { return .clear }
-        return usesCenterOverlay ? LoomTokens.dsHair : .white.opacity(0.08)
+        return usesLightChrome ? Color.white.opacity(0.34) : .white.opacity(0.10)
     }
 
     var body: some View {
@@ -1931,6 +2082,12 @@ private struct ReflectionSidebarRow: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(.thinMaterial)
+            }
+        }
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(selectedFill)
@@ -1982,45 +2139,23 @@ private struct ReflectionThreadView: View {
             ReflectionComposer(
                 text: $draftText,
                 placeholder: composerPlaceholder,
-                commitTarget: composerTarget,
                 isLearningCase: reflectionCase.project == "Learning pass",
                 onSubmit: onSubmit
             )
                 .frame(maxWidth: reflectionThreadMaxWidth)
                 .padding(.horizontal, 28)
-                .padding(.top, 8)
-                .padding(.bottom, 18)
+                .padding(.top, 6)
+                .padding(.bottom, 12)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
-        .background(LoomTokens.dsPaperDeep)
+        .background(ReflectionMatteWorkbenchBackground())
     }
 
     private var composerPlaceholder: String {
         if reflectionCase.project == "Learning pass" {
-            return "Meaning, question, correction, or principle..."
+            return "Margin note..."
         }
         return "Paste a product event, user reaction, decision, or launch result..."
-    }
-
-    private var composerTarget: String {
-        if reflectionCase.project == "Learning pass" {
-            if let selectedLearningTrace {
-                return "target: \(selectedLearningTrace.version) \(selectedLearningTrace.versionTitle.lowercased())"
-            }
-            if let latest = learningTraces.last, latest.isUserCommitted {
-                return "target: \(latest.version) \(latest.versionTitle.lowercased())"
-            }
-            if let unresolved = learningTraces.reversed().first(where: { !$0.isUserCommitted }) {
-                return "target: \(unresolved.version) \(unresolved.versionTitle.lowercased())"
-            }
-            return "target: meaning / question / correction / principle"
-        }
-
-        if let nextStep = reflectionCase.steps.first(where: { $0.items.isEmpty }) {
-            return "target: \(nextStep.title)"
-        }
-
-        return "target: Reflection"
     }
 }
 
@@ -2028,6 +2163,7 @@ private struct ReflectionLearningLedgerView: View {
     let reflectionCase: ReflectionCase
     let selectedTraceID: ReflectionLearningTrace.ID?
     let onSelectTrace: (ReflectionLearningTrace) -> Void
+    @State private var showsTraceHistory = false
 
     private var traces: [ReflectionLearningTrace] {
         ReflectionLearningTrace.from(reflectionCase)
@@ -2043,35 +2179,40 @@ private struct ReflectionLearningLedgerView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text("Understanding Version Flow")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(LoomTokens.dsInk1)
-                Text(sourceLabel)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(LoomTokens.dsInk3)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-                Text("\(traces.count) version\(traces.count == 1 ? "" : "s")")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(LoomTokens.dsInk3)
-            }
-            .padding(.horizontal, 2)
-
             if traces.isEmpty {
                 ReflectionLearningEmptyLedger(sourceLabel: sourceLabel)
             } else {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(traces) { trace in
-                        ReflectionLearningTraceCard(
-                            trace: trace,
-                            isSelected: trace.id == activeTraceID,
-                            onSelect: {
-                                onSelectTrace(trace)
-                            }
-                        )
+                ReflectionLearningDigest(
+                    reflectionCase: reflectionCase,
+                    traces: traces,
+                    activeTraceID: activeTraceID,
+                    onSelectTrace: onSelectTrace
+                )
+
+                DisclosureGroup(isExpanded: $showsTraceHistory) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(traces) { trace in
+                            ReflectionLearningTraceCard(
+                                trace: trace,
+                                isSelected: trace.id == activeTraceID,
+                                onSelect: {
+                                    onSelectTrace(trace)
+                                }
+                            )
+                        }
+                    }
+                    .padding(.top, 10)
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("Capture trail")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(LoomTokens.dsInk2)
+                        Text("\(traces.count) version\(traces.count == 1 ? "" : "s")")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(LoomTokens.dsInk3)
                     }
                 }
+                .tint(LoomTokens.dsInk3)
             }
 
             if let summary = ReflectionLearningReviewSummary.make(for: reflectionCase),
@@ -2079,6 +2220,170 @@ private struct ReflectionLearningLedgerView: View {
                 ReflectionLearningPrincipleCandidate(principle: principle)
             }
         }
+    }
+}
+
+private struct ReflectionLearningDigest: View {
+    let reflectionCase: ReflectionCase
+    let traces: [ReflectionLearningTrace]
+    let activeTraceID: ReflectionLearningTrace.ID?
+    let onSelectTrace: (ReflectionLearningTrace) -> Void
+
+    private var sourceLabel: String {
+        reflectionCase.sources.first?.label ?? reflectionCase.title
+    }
+
+    private var activeTrace: ReflectionLearningTrace? {
+        traces.first { $0.id == activeTraceID } ?? traces.last
+    }
+
+    private var unresolvedTrace: ReflectionLearningTrace? {
+        traces.first { trace in
+            trace.isLanguageSelection || trace.isDataOrDocumentSelection || trace.focus == "question"
+        }
+    }
+
+    private var confirmedTrace: ReflectionLearningTrace? {
+        traces.last { $0.isUserCommitted }
+    }
+
+    private var shouldShowReviewColumns: Bool {
+        confirmedTrace != nil || traces.count > 1
+    }
+
+    private var shouldShowStageSummary: Bool {
+        traces.count > 1 || confirmedTrace != nil
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if shouldShowStageSummary {
+                HStack(spacing: 10) {
+                    Text("\(traces.count) version\(traces.count == 1 ? "" : "s")")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                    Spacer(minLength: 0)
+                    HStack(spacing: 6) {
+                        ReflectionLearningStagePill(title: "Collect", count: traces.filter { $0.isLanguageSelection || $0.isDataOrDocumentSelection }.count)
+                        ReflectionLearningStagePill(title: "Explain", count: traces.filter { $0.isUserCommitted }.count)
+                        ReflectionLearningStagePill(title: "Review", count: traces.filter { $0.focus == "question" || $0.focus == "correction" }.count)
+                        ReflectionLearningStagePill(title: "Reuse", count: traces.filter { $0.focus == "principle" }.count)
+                    }
+                }
+            }
+
+            if let summary = ReflectionLearningReviewSummary.make(for: reflectionCase) {
+                ReflectionLearningReview(summary: summary)
+            } else if let activeTrace {
+                ReflectionLearningDigestFocus(trace: activeTrace)
+            }
+
+            if shouldShowReviewColumns {
+                HStack(alignment: .top, spacing: 16) {
+                    ReflectionLearningDigestColumn(
+                        title: "Needs attention",
+                        trace: unresolvedTrace,
+                        fallback: "No unresolved language, data, or question trace."
+                    )
+
+                    ReflectionLearningDigestColumn(
+                        title: "Current meaning",
+                        trace: confirmedTrace ?? activeTrace,
+                        fallback: "Add your own meaning before turning this into reusable memory."
+                    )
+                }
+            }
+        }
+        .padding(.vertical, 2)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(LoomTokens.dsHair).frame(height: 1).offset(y: 10)
+        }
+    }
+}
+
+private struct ReflectionLearningStagePill: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Text(title)
+            Text("\(count)")
+                .foregroundStyle(count > 0 ? LoomTokens.dsSuccess : LoomTokens.dsInk3)
+        }
+        .font(.system(size: 11, weight: .semibold))
+        .foregroundStyle(LoomTokens.dsInk2)
+        .padding(.horizontal, 9)
+        .frame(height: 26)
+        .background(LoomTokens.dsPaperUp.opacity(0.74), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(LoomTokens.dsHair, lineWidth: 1)
+        )
+    }
+}
+
+private struct ReflectionLearningDigestFocus: View {
+    let trace: ReflectionLearningTrace
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ReflectionLearningSignal(label: trace.signalLabel, color: trace.signalColor)
+            Text(trace.displayText)
+                .font(.system(size: trace.isShortLanguageTrace ? 20 : 14, weight: trace.isShortLanguageTrace ? .semibold : .regular))
+                .lineSpacing(4)
+                .foregroundStyle(LoomTokens.dsInk1)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(trace.sourceAnchor)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(LoomTokens.dsInk3)
+                .lineLimit(1)
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(LoomTokens.dsPaperUp.opacity(0.42), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(LoomTokens.dsHair.opacity(0.72), lineWidth: 1)
+        )
+    }
+}
+
+private struct ReflectionLearningDigestColumn: View {
+    let title: String
+    let trace: ReflectionLearningTrace?
+    let fallback: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .tracking(1.0)
+                .foregroundStyle(LoomTokens.dsInk3)
+            if let trace {
+                Text(trace.versionTitle)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsInk1)
+                Text(trace.displayText)
+                    .font(.system(size: 12))
+                    .lineSpacing(3)
+                    .foregroundStyle(LoomTokens.dsInk2)
+                    .lineLimit(4)
+            } else {
+                Text(fallback)
+                    .font(.system(size: 12))
+                    .lineSpacing(3)
+                    .foregroundStyle(LoomTokens.dsInk3)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+        .background(LoomTokens.dsPaper.opacity(0.46), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(LoomTokens.dsHair.opacity(0.72), lineWidth: 1)
+        )
     }
 }
 
@@ -2123,7 +2428,7 @@ private struct ReflectionLearningTraceCard: View {
                     .foregroundStyle(LoomTokens.dsInk1)
                     .lineLimit(1)
 
-                ReflectionLearningStatusPill(label: trace.statusLabel, isResolved: trace.isUserCommitted)
+                ReflectionLearningSignal(label: trace.signalLabel, color: trace.signalColor)
 
                 Spacer(minLength: 0)
 
@@ -2182,17 +2487,19 @@ private struct ReflectionLearningTraceCard: View {
     }
 }
 
-private struct ReflectionLearningStatusPill: View {
+private struct ReflectionLearningSignal: View {
     let label: String
-    let isResolved: Bool
+    let color: Color
 
     var body: some View {
-        Text(label)
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(isResolved ? LoomTokens.dsThread : LoomTokens.dsInk3)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 3)
-            .background(LoomTokens.dsPaperCard.opacity(isResolved ? 0.42 : 0.72), in: Capsule())
+        HStack(spacing: 5) {
+            Circle()
+                .fill(color)
+                .frame(width: 5, height: 5)
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(LoomTokens.dsInk3)
+        }
     }
 }
 
@@ -2335,6 +2642,37 @@ private struct ReflectionLearningTrace: Identifiable, Equatable {
             return "needs interpretation"
         }
         return "committed"
+    }
+
+    var signalLabel: String {
+        if isWeakAnchor {
+            return "Confirm source"
+        }
+        if isLanguageSelection || isDataOrDocumentSelection {
+            return "Needs meaning"
+        }
+        if focus == "question" {
+            return "Question"
+        }
+        if focus == "principle" {
+            return "Reusable"
+        }
+        return "Grounded"
+    }
+
+    var signalColor: Color {
+        if isWeakAnchor || isLanguageSelection || isDataOrDocumentSelection || focus == "question" {
+            return Color(red: 0.72, green: 0.47, blue: 0.12)
+        }
+        return LoomTokens.dsThread
+    }
+
+    var isWeakAnchor: Bool {
+        let precision = evidence.first { item in
+            item.label == "anchor precision" || item.label == "visual precision"
+        }?.value.lowercased() ?? ""
+        let fallback = evidence.first { $0.label == "fallback note" }?.value.lowercased() ?? ""
+        return precision.contains("visual context only") || precision.contains("window") || fallback.contains("weak")
     }
 
     var isUserCommitted: Bool {
@@ -2564,26 +2902,33 @@ private struct ReflectionLearningReviewSummary: Equatable {
 private struct ReflectionLearningReview: View {
     let summary: ReflectionLearningReviewSummary
 
+    private var cleanedConfirmations: [String] {
+        summary.confirmations.map(Self.cleanReviewText)
+    }
+
+    private var cleanedPrinciple: String? {
+        summary.principle.map(Self.cleanReviewText)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Label("Second pass", systemImage: "checkmark.circle")
+                Label("Ready to review", systemImage: "checkmark.circle")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(LoomTokens.dsSuccess)
-                Text(summary.status)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(LoomTokens.dsInk3)
                 Spacer(minLength: 0)
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                ReflectionLearningReviewLine(label: "Original file", value: summary.sourceLabel)
-                ReflectionLearningReviewLine(label: "Captured", value: summary.traceSummary)
-                ReflectionLearningReviewLine(label: "Trace types", value: summary.focusSummary)
-                if !summary.confirmations.isEmpty {
-                    ReflectionLearningReviewList(label: "Confirm meaning", values: summary.confirmations)
+                if cleanedConfirmations.isEmpty {
+                    ReflectionLearningReviewLine(
+                        label: "Next",
+                        value: "Write your own meaning for the captured source before turning it into memory."
+                    )
+                } else {
+                    ReflectionLearningReviewList(label: "Check", values: cleanedConfirmations)
                 }
-                if let principle = summary.principle {
+                if let principle = cleanedPrinciple {
                     ReflectionLearningReviewLine(label: "Principle", value: principle, accent: true)
                 }
             }
@@ -2593,6 +2938,24 @@ private struct ReflectionLearningReview: View {
         .overlay(alignment: .bottom) {
             Rectangle().fill(LoomTokens.dsHair).frame(height: 1)
         }
+    }
+
+    private static func cleanReviewText(_ value: String) -> String {
+        var cleaned = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prefixes = [
+            "Sentence meaning to confirm:",
+            "Phrase meaning to confirm:",
+            "Word meaning to confirm:",
+            "Data meaning to confirm:",
+            "Principle candidate:",
+            "Reusable principle:"
+        ]
+
+        for prefix in prefixes where cleaned.localizedCaseInsensitiveContains(prefix) {
+            cleaned = cleaned.replacingOccurrences(of: prefix, with: "", options: [.caseInsensitive])
+        }
+
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
@@ -2730,66 +3093,109 @@ private struct ReflectionMessages: View {
 private struct ReflectionComposer: View {
     @Binding var text: String
     let placeholder: String
-    let commitTarget: String
     let isLearningCase: Bool
     let onSubmit: () -> Void
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(isLearningCase ? "Commit next version" : "Commit reflection version")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                    .tracking(0.8)
-                    .foregroundStyle(LoomTokens.dsInk3)
-                Text(commitTarget)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(LoomTokens.dsInk3)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 2)
+    private var hasCommitText: Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .bottom, spacing: 9) {
                 ZStack(alignment: .topLeading) {
                     TextEditor(text: $text)
                         .font(.system(size: 13))
                         .foregroundStyle(LoomTokens.dsInk1)
                         .scrollContentBackground(.hidden)
-                        .frame(minHeight: isLearningCase ? 38 : 46, maxHeight: isLearningCase ? 76 : 92)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
+                        .frame(minHeight: isLearningCase ? 24 : 44, maxHeight: isLearningCase ? 34 : 84)
+                        .padding(.leading, 10)
+                        .padding(.trailing, isLearningCase ? 38 : 10)
+                        .padding(.vertical, isLearningCase ? 3 : 8)
                     if text.isEmpty {
                         Text(placeholder)
                             .font(.system(size: 13))
                             .foregroundStyle(LoomTokens.dsInk3)
                             .padding(.horizontal, 15)
-                            .padding(.vertical, 16)
+                            .padding(.vertical, isLearningCase ? 8 : 16)
                             .allowsHitTesting(false)
                     }
-                }
-                .background(LoomTokens.dsPaper.opacity(0.88), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .stroke(LoomTokens.dsHair, lineWidth: 1)
-                )
 
-                Button(action: onSubmit) {
+                    if isLearningCase && hasCommitText {
+                        LinearGradient(
+                            colors: [
+                                Color.clear,
+                                Color.white.opacity(0.32),
+                                Color(red: 1.0, green: 0.24, blue: 0.34).opacity(0.10),
+                                Color(red: 1.0, green: 0.84, blue: 0.28).opacity(0.08),
+                                Color(red: 0.28, green: 0.66, blue: 1.0).opacity(0.12),
+                                Color.clear
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .blendMode(.plusLighter)
+                        .frame(width: 120)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+                        .allowsHitTesting(false)
+                    }
+
                     if isLearningCase {
-                        Label("Commit", systemImage: "checkmark")
-                            .font(.system(size: 12, weight: .semibold))
-                            .labelStyle(.titleAndIcon)
-                            .frame(width: 86, height: 36)
+                        Button(action: onSubmit) {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                                .frame(width: 24, height: 24)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(hasCommitText ? LoomTokens.dsPaperUp : LoomTokens.dsInk3)
+                        .background(
+                            Circle()
+                                .fill(hasCommitText ? LoomTokens.dsInk1 : LoomTokens.dsPaperCard.opacity(0.85))
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(hasCommitText ? 0.28 : 0), lineWidth: 1)
+                        )
+                        .shadow(color: Color(red: 0.28, green: 0.66, blue: 1.0).opacity(hasCommitText ? 0.18 : 0), radius: 8, x: 0, y: 0)
+                        .disabled(!hasCommitText)
+                        .help("Save margin note")
+                        .padding(.top, 6)
+                        .padding(.trailing, 7)
+                        .frame(maxWidth: .infinity, alignment: .topTrailing)
+                    }
+                }
+                .background {
+                    if !isLearningCase {
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .fill(LoomTokens.dsPaper.opacity(0.88))
+                    }
+                }
+                .overlay {
+                    if isLearningCase {
+                        VStack(spacing: 0) {
+                            Spacer(minLength: 0)
+                            Rectangle()
+                                .fill(LoomTokens.dsHair.opacity(0.78))
+                                .frame(height: 1)
+                        }
                     } else {
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .stroke(LoomTokens.dsHair, lineWidth: 1)
+                    }
+                }
+
+                if !isLearningCase {
+                    Button(action: onSubmit) {
                         Image(systemName: "paperplane")
                             .font(.system(size: 14, weight: .semibold))
                             .frame(width: 36, height: 36)
                     }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(LoomTokens.dsPaperDeep)
+                    .background(LoomTokens.dsInk1, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    .disabled(!hasCommitText)
+                    .opacity(hasCommitText ? 1 : 0.58)
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(LoomTokens.dsPaperDeep)
-                .background(LoomTokens.dsInk1, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .opacity(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.58 : 1)
             }
         }
     }
@@ -2805,6 +3211,7 @@ private struct ReflectionSourceInspector: View {
     let onOpenSource: () -> Void
     let onSelect: (ReflectionSource) -> Void
     @State private var query: String = ""
+    @State private var showsSourceList = false
 
     private var groupedSources: [(String, [ReflectionSource])] {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -2819,88 +3226,99 @@ private struct ReflectionSourceInspector: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Spacer(minLength: 0)
+                    ReflectionImportButton(action: onImport)
+                }
+
                 ReflectionEvidenceInspector(
                     trace: selectedTrace,
                     source: selectedSource,
                     onOpenSource: selectedSource?.fileURL == nil ? nil : onOpenSource
                 )
 
-                HStack(spacing: 8) {
-                    ReflectionSearchField(text: $query, placeholder: "Filter sources")
-                    ReflectionImportButton(action: onImport)
+                if sources.count > 1 {
+                    DisclosureGroup(isExpanded: $showsSourceList) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ReflectionSearchField(text: $query, placeholder: "Filter sources")
+                            sourceList
+                        }
+                        .padding(.top, 8)
+                    } label: {
+                        Label("\(sources.count) sources", systemImage: "folder")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(LoomTokens.dsInk2)
+                    }
+                    .tint(LoomTokens.dsInk3)
                 }
             }
             .padding(.top, reflectionInspectorTopPadding)
             .padding(.horizontal, 14)
             .padding(.bottom, 12)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    if groupedSources.isEmpty {
-                        VStack(spacing: 8) {
-                            Image(systemName: "tray").font(.system(size: 24))
-                            Text("No sources added yet.").font(.system(size: 12))
-                        }
-                        .foregroundStyle(LoomTokens.dsInk3)
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                    } else {
-                        Text("Source Collection")
-                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                            .tracking(1.1)
-                            .foregroundStyle(LoomTokens.dsInk3)
-                            .padding(.horizontal, 4)
+            Spacer(minLength: 0)
+        }
+        .background(ReflectionFrostedInspectorBackground().ignoresSafeArea())
+    }
 
-                        ForEach(groupedSources, id: \.0) { folder, folderSources in
-                            VStack(alignment: .leading, spacing: 5) {
-                                Label(folder, systemImage: "folder")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(LoomTokens.dsInk2)
-                                    .padding(.horizontal, 4)
-                                ForEach(folderSources) { source in
-                                    Button {
-                                        onSelect(source)
-                                    } label: {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: source.symbol)
-                                                .font(.system(size: 13))
-                                                .foregroundStyle(source.id == selectedSourceID ? LoomTokens.dsThread : LoomTokens.dsInk3)
-                                                .frame(width: 16)
-                                            Text(source.label)
-                                                .font(.system(size: 13))
-                                                .foregroundStyle(LoomTokens.dsInk1)
-                                                .lineLimit(1)
-                                            Spacer(minLength: 0)
-                                            Text(source.meta)
-                                                .font(.system(size: 10))
-                                                .foregroundStyle(LoomTokens.dsInk3)
-                                                .lineLimit(1)
-                                        }
-                                        .padding(.horizontal, 8)
-                                        .frame(height: 30)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                                .fill(source.id == selectedSourceID ? LoomTokens.dsPaperCard.opacity(0.72) : Color.clear)
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                                .stroke(source.id == selectedSourceID ? LoomTokens.dsHair : Color.clear, lineWidth: 1)
-                                        )
+    @ViewBuilder
+    private var sourceList: some View {
+        if groupedSources.isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "tray")
+                    .font(.system(size: 22))
+                Text("No matching sources")
+                    .font(.system(size: 12))
+            }
+            .foregroundStyle(LoomTokens.dsInk3)
+            .frame(maxWidth: .infinity, minHeight: 96)
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(groupedSources, id: \.0) { folder, folderSources in
+                        VStack(alignment: .leading, spacing: 5) {
+                            Label(folder, systemImage: "folder")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(LoomTokens.dsInk2)
+                                .padding(.horizontal, 4)
+                            ForEach(folderSources) { source in
+                                Button {
+                                    onSelect(source)
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        ReflectionFileTypeBadge(kind: source.kind, fallbackColor: source.iconColor)
+                                        Text(source.label)
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(LoomTokens.dsInk1)
+                                            .lineLimit(1)
+                                        Spacer(minLength: 0)
+                                        Text(source.meta)
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(LoomTokens.dsInk3)
+                                            .lineLimit(1)
                                     }
-                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 8)
+                                    .frame(height: 30)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .fill(source.id == selectedSourceID ? LoomTokens.dsPaperCard.opacity(0.72) : Color.clear)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .stroke(source.id == selectedSourceID ? LoomTokens.dsHair : Color.clear, lineWidth: 1)
+                                    )
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
-
-                        ReflectionSourcePreview(source: selectedSource)
-                            .padding(.top, 6)
                     }
                 }
-                .padding(.horizontal, 10)
                 .padding(.bottom, 18)
             }
+            .frame(maxHeight: 260)
+            .scrollIndicators(.automatic)
         }
-        .background(LoomTokens.dsPaper.ignoresSafeArea())
     }
 }
 
@@ -2910,47 +3328,40 @@ private struct ReflectionEvidenceInspector: View {
     let onOpenSource: (() -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("Evidence Inspector")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(LoomTokens.dsInk1)
-                Spacer(minLength: 0)
-                Text(trace?.version ?? "source")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(LoomTokens.dsInk3)
-            }
-
+        VStack(alignment: .leading, spacing: 8) {
             if let trace {
-                Label(trace.versionTitle, systemImage: "scope")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(LoomTokens.dsThread)
-                Text(trace.displayText)
-                    .font(.system(size: trace.isShortLanguageTrace ? 17 : 12, weight: trace.isShortLanguageTrace ? .semibold : .regular))
-                    .lineSpacing(3)
-                    .foregroundStyle(LoomTokens.dsInk1)
-                    .fixedSize(horizontal: false, vertical: true)
-                VStack(alignment: .leading, spacing: 5) {
-                    ReflectionLearningProvenanceLine(label: "anchor", value: trace.sourceAnchor)
-                    ReflectionLearningProvenanceLine(label: "pass", value: trace.pass)
-                    ReflectionLearningProvenanceLine(label: "focus", value: trace.focus)
-                    ReflectionLearningProvenanceLine(label: "type", value: trace.traceType)
-                    ForEach(trace.evidence) { evidence in
-                        ReflectionLearningProvenanceLine(label: evidence.label, value: evidence.value)
+                ReflectionEvidenceSourceLine(
+                    kind: source?.kind ?? trace.traceType,
+                    iconColor: source?.iconColor ?? LoomTokens.dsInk3,
+                    title: source?.label ?? trace.sourceAnchor,
+                    state: trace.signalLabel,
+                    onOpenSource: onOpenSource
+                )
+                DisclosureGroup {
+                    VStack(alignment: .leading, spacing: 5) {
+                        ReflectionLearningProvenanceLine(label: "anchor", value: trace.sourceAnchor)
+                        ReflectionLearningProvenanceLine(label: "pass", value: trace.pass)
+                        ReflectionLearningProvenanceLine(label: "focus", value: trace.focus)
+                        ReflectionLearningProvenanceLine(label: "type", value: trace.traceType)
+                        ForEach(trace.evidence) { evidence in
+                            ReflectionLearningProvenanceLine(label: evidence.label, value: evidence.value)
+                        }
                     }
+                    .padding(.top, 6)
+                } label: {
+                    Text("Details")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(LoomTokens.dsInk3)
                 }
-                openSourceButton
+                .tint(LoomTokens.dsInk3)
             } else if let source {
-                Label(source.label, systemImage: source.symbol)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(LoomTokens.dsInk1)
-                Text(source.excerpt)
-                    .font(.system(size: 12))
-                    .lineSpacing(3)
-                    .foregroundStyle(LoomTokens.dsInk2)
-                    .fixedSize(horizontal: false, vertical: true)
-                ReflectionLearningProvenanceLine(label: "source", value: source.folder)
-                openSourceButton
+                ReflectionEvidenceSourceLine(
+                    kind: source.kind,
+                    iconColor: source.iconColor,
+                    title: source.label,
+                    state: source.meta,
+                    onOpenSource: onOpenSource
+                )
             } else {
                 Text("Select or capture a source-backed version.")
                     .font(.system(size: 12))
@@ -2965,25 +3376,116 @@ private struct ReflectionEvidenceInspector: View {
                 .stroke(LoomTokens.dsHair, lineWidth: 1)
         )
     }
+}
 
-    @ViewBuilder
-    private var openSourceButton: some View {
-        if let onOpenSource {
-            Button(action: onOpenSource) {
-                Label("Open Source", systemImage: "arrow.up.forward.app")
-                    .font(.system(size: 12, weight: .semibold))
-                    .frame(height: 30)
-                    .padding(.horizontal, 9)
+private struct ReflectionEvidenceSourceLine: View {
+    let kind: String
+    let iconColor: Color
+    let title: String
+    let state: String
+    let onOpenSource: (() -> Void)?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ReflectionFileTypeBadge(kind: kind, fallbackColor: iconColor)
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(LoomTokens.dsInk1)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+            Text(state)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(LoomTokens.dsInk3)
+                .lineLimit(1)
+            if let onOpenSource {
+                Button(action: onOpenSource) {
+                    Label("Open Source", systemImage: "arrow.up.forward.app")
+                        .labelStyle(.iconOnly)
+                        .font(.system(size: 11, weight: .semibold))
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(LoomTokens.dsInk3)
+                .background(LoomTokens.dsPaperCard.opacity(0.54), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .help("Open the original file in its native app")
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(LoomTokens.dsInk1)
-            .background(LoomTokens.dsPaperCard.opacity(0.66), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(LoomTokens.dsHair, lineWidth: 1)
-            )
-            .help("Open the original file in its native app")
         }
+    }
+}
+
+private struct ReflectionFileTypeBadge: View {
+    let kind: String
+    var fallbackColor: Color = LoomTokens.dsThread
+
+    private var normalizedKind: String {
+        kind.lowercased()
+    }
+
+    private var label: String {
+        if normalizedKind.contains("pdf") {
+            return "PDF"
+        }
+        if normalizedKind.contains("spreadsheet") || normalizedKind.contains("csv") || normalizedKind.contains("excel") || normalizedKind.contains("cell") {
+            return "XLS"
+        }
+        if normalizedKind.contains("presentation") || normalizedKind.contains("slide") || normalizedKind.contains("powerpoint") {
+            return "PPT"
+        }
+        if normalizedKind.contains("document") || normalizedKind.contains("word") || normalizedKind.contains("text") {
+            return "DOC"
+        }
+        return "FILE"
+    }
+
+    private var fillColor: Color {
+        switch label {
+        case "PDF":
+            return Color(red: 1.0, green: 0.36, blue: 0.39)
+        case "XLS":
+            return Color(red: 0.34, green: 0.66, blue: 0.39)
+        case "PPT":
+            return Color(red: 0.93, green: 0.61, blue: 0.30)
+        case "DOC":
+            return Color(red: 0.35, green: 0.56, blue: 0.96)
+        default:
+            return fallbackColor
+        }
+    }
+
+    private var symbolName: String {
+        switch label {
+        case "XLS":
+            return "tablecells.fill"
+        case "PPT":
+            return "rectangle.on.rectangle.angled.fill"
+        case "DOC":
+            return "doc.text.fill"
+        case "PDF":
+            return "doc.richtext.fill"
+        default:
+            return "doc.fill"
+        }
+    }
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Image(systemName: symbolName)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(fillColor)
+                .frame(width: 22, height: 22)
+
+            if label != "FILE" {
+                Text(label)
+                    .font(.system(size: 5.5, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 2)
+                    .frame(height: 8)
+                    .background(fillColor, in: RoundedRectangle(cornerRadius: 2, style: .continuous))
+                    .offset(x: 2, y: 1)
+            }
+        }
+        .frame(width: 24, height: 24)
+        .accessibilityLabel("\(label) file")
     }
 }
 
@@ -2992,11 +3494,9 @@ private struct ReflectionImportButton: View {
 
     var body: some View {
         Button(action: action) {
-            Label("Import", systemImage: "square.and.arrow.down")
-                .labelStyle(.titleAndIcon)
+            Image(systemName: "square.and.arrow.down")
                 .font(.system(size: 12, weight: .semibold))
-                .frame(height: 32)
-                .padding(.horizontal, 9)
+                .frame(width: 32, height: 32)
         }
         .buttonStyle(.plain)
         .foregroundStyle(LoomTokens.dsInk1)
@@ -3016,8 +3516,7 @@ private struct ReflectionSourcePreview: View {
         VStack(alignment: .leading, spacing: 12) {
             if let source {
                 HStack(alignment: .top, spacing: 9) {
-                    Image(systemName: "scope")
-                        .foregroundStyle(LoomTokens.dsThread)
+                    ReflectionFileTypeBadge(kind: source.kind, fallbackColor: source.iconColor)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(source.label)
                             .font(.system(size: 13, weight: .semibold))
@@ -3459,7 +3958,25 @@ private struct ReflectionSource: Identifiable, Codable, Equatable {
         case "pdf": return "doc.richtext"
         case "png", "jpg", "jpeg", "heic", "gif", "tiff", "webp": return "photo"
         case "md", "markdown", "txt", "rtf": return "doc.plaintext"
+        case "doc", "docx", "pages": return "doc.text"
+        case "xls", "xlsx", "csv", "tsv", "numbers": return "tablecells"
+        case "ppt", "pptx", "key": return "rectangle.on.rectangle"
         default: return "doc.text"
+        }
+    }
+
+    var iconColor: Color {
+        switch kind {
+        case "pdf":
+            return Color(red: 0.86, green: 0.20, blue: 0.18)
+        case "doc", "docx", "pages", "rtf":
+            return Color(red: 0.18, green: 0.42, blue: 0.82)
+        case "xls", "xlsx", "csv", "tsv", "numbers":
+            return Color(red: 0.16, green: 0.58, blue: 0.34)
+        case "ppt", "pptx", "key":
+            return Color(red: 0.83, green: 0.42, blue: 0.12)
+        default:
+            return LoomTokens.dsInk3
         }
     }
 }
@@ -3467,6 +3984,10 @@ private struct ReflectionSource: Identifiable, Codable, Equatable {
 private struct ReflectionSourceAnchor {
     let label: String
     let sourceID: ReflectionSource.ID
+    let fileName: String?
+    let pageNumber: Int?
+    let precision: String
+    let method: String
 }
 
 private struct ReflectionMessage: Identifiable, Codable, Equatable {

@@ -18,8 +18,6 @@ export type ReflectionSource = {
   localFile?: File;
 };
 
-export type WorkspaceMode = 'reflection' | 'reader';
-
 export type ThreadMessage = {
   id: string;
   role: 'human' | 'loom';
@@ -50,6 +48,8 @@ export type CommitTarget = {
   placeholder: string;
   buttonLabel: string;
 };
+
+export type LearningCommitFocus = 'user meaning' | 'question' | 'correction' | 'principle';
 
 export type ReflectionCase = {
   id: string;
@@ -86,10 +86,10 @@ export function commitTargetForCase(reflectionCase: ReflectionCase): CommitTarge
   if (reflectionCase.project === 'Learning pass') {
     return {
       key: 'input',
-      label: 'Add understanding',
-      helper: 'meaning / question / correction / principle',
-      placeholder: 'Add one meaning, question, correction, or principle...',
-      buttonLabel: 'Commit',
+      label: 'Margin note',
+      helper: 'current source',
+      placeholder: 'Write a margin note...',
+      buttonLabel: 'Save',
     };
   }
 
@@ -106,29 +106,20 @@ export function commitTargetForCase(reflectionCase: ReflectionCase): CommitTarge
   };
 }
 
-export function formatLearningCommit(text: string, sourceAnchor: string) {
-  const lower = text.toLowerCase();
-  const focus =
-    lower.startsWith('principle:') || lower.startsWith('memory:') || lower.startsWith('原则')
-      ? 'principle'
-      : lower.startsWith('correction:') ||
-          lower.startsWith('correct:') ||
-          lower.startsWith('修正') ||
-          lower.startsWith('纠正')
-        ? 'correction'
-        : lower.startsWith('question:') ||
-            lower.startsWith('问题') ||
-            text.includes('?') ||
-            text.includes('？')
-          ? 'question'
-          : 'user meaning';
-
+export function formatLearningCommit(
+  text: string,
+  sourceAnchor: string,
+  focus: LearningCommitFocus = 'user meaning',
+) {
   return `Captured user trace from ${sourceAnchor} [${focus}]: ${text}`;
 }
 
 export function cleanVersionMaterial(value: string) {
   return value
-    .replace(/^(principle|memory|correction|correct|question|meaning|translation)[:：]\s*/i, '')
+    .replace(
+      /^(concept synthesis|reusable principle|principle|memory|correction|correct|question|meaning|translation)[:：]\s*/i,
+      '',
+    )
     .replace(/^(原则|记忆|修正|纠正|问题|意思|含义|翻译)[:：]?\s*/i, '')
     .trim();
 }
@@ -202,6 +193,49 @@ export function groundingRowsForVersion(version: UnderstandingVersion): Groundin
   ].filter((row) => row.value);
 }
 
+function normalizedEvidenceText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function sourceNeedles(source: ReflectionSource) {
+  return [source.label, source.id, source.excerpt]
+    .map(normalizedEvidenceText)
+    .filter((value) => value.length > 0);
+}
+
+function versionEvidenceText(version: UnderstandingVersion) {
+  return normalizedEvidenceText([
+    version.title,
+    version.material,
+    version.anchor,
+    ...version.audit,
+  ].join('\n'));
+}
+
+export function versionMatchesSource(version: UnderstandingVersion, source: ReflectionSource) {
+  const haystack = versionEvidenceText(version);
+  return sourceNeedles(source).some((needle) => haystack.includes(needle));
+}
+
+export function sourceForVersion(
+  sources: ReflectionSource[],
+  version: UnderstandingVersion | null,
+): ReflectionSource | null {
+  if (!version) return null;
+  return sources.find((source) => versionMatchesSource(version, source)) ?? null;
+}
+
+export function versionForSource(
+  versions: UnderstandingVersion[],
+  source: ReflectionSource | null,
+): UnderstandingVersion | null {
+  if (!source) return null;
+  return [...versions].reverse().find((version) => versionMatchesSource(version, source)) ?? null;
+}
+
 function splitLearningEvidence(value: string) {
   const markerIndex = value.indexOf(LEARNING_EVIDENCE_MARKER);
   if (markerIndex === -1) {
@@ -267,7 +301,7 @@ function learningReviewVersionFromLine(line: string, index: number, phase: 'revi
   return {
     id: `learning-${phase}-${index}-${line}`,
     number: `v${index + 1}`,
-    title: phase === 'memory' ? 'Reusable principle' : 'Second-pass review',
+    title: phase === 'memory' ? 'Reusable memory' : 'Second-pass review',
     state: phase === 'memory' ? 'memory candidate' : 'synthesis draft',
     material: cleanVersionMaterial(line),
     anchor: phase === 'memory' ? 'Reuse after review' : 'Review path',
@@ -354,19 +388,20 @@ export const LEARNING_CASES: ReflectionCase[] = [
         folder: 'Original file',
         label: 'Week 1 Notes.pdf',
         kind: 'pdf',
-        meta: 'page 1',
+        meta: 'page 2',
         excerpt:
-          'An Introduction to Trading 1.1 The Big Picture. In modern times, trading of financial instruments is primarily done through code.',
+          'Definition of Market Making. To make a market is to simultaneously supply a price you are willing to buy at and a price you are willing to sell at.',
       },
     ],
     sections: {
       input: [
         'Opened original file for learning: Week 1 Notes.pdf.',
         'First language pass: keep the original file surface primary and capture vocabulary, pronunciation, phrases, sentence meaning, grammar, questions, concepts, and page context as anchored traces.',
-        'Captured PDF passage from Week 1 Notes.pdf, page 1 [sentence meaning]: An Introduction to Trading 1.1 The Big Picture In modern times, trading of financial instruments is primarily done through the execution of code.\nEvidence: app=Preview; window=Week 1 Notes.pdf Page 1; kind=pdf; file=Week 1 Notes.pdf; page=1; bundle=com.apple.Preview; anchor precision=file+page; evidence rung=selected text + file + page',
-        'Captured PDF passage from Week 1 Notes.pdf, page 1 [phrase meaning]: trading of\nEvidence: app=Preview; window=Week 1 Notes.pdf Page 1; kind=pdf; file=Week 1 Notes.pdf; page=1; bundle=com.apple.Preview; anchor precision=file+page; evidence rung=selected text + file + page',
-        'Captured native translation from Week 1 Notes.pdf, page 2 [translation receipt]: Financial markets -> 金融市场. User meaning: markets where financial assets are issued, traded, and priced.\nEvidence: app=Preview; window=Week 1 Notes.pdf Page 2; kind=pdf; file=Week 1 Notes.pdf; page=2; native tool=macOS Translate; language pair=en-US->zh-Hans; visual extraction=appshot OCR candidate; anchor precision=file+page; evidence rung=selected text + file + page + appshot; visual precision=visual context only',
-        'Captured user trace from Week 1 Notes.pdf, page 1 [user meaning]: Meaning confirmed trading of is the current concept to explain in your own words before promoting it to reusable memory.',
+        'Captured PDF passage from Week 1 Notes.pdf, page 2 [sentence meaning]: Definition of Market Making. To make a market is to simultaneously supply a price you are willing to buy at and a price you are willing to sell at.\nEvidence: app=Preview; window=Week 1 Notes.pdf Page 2; kind=pdf; file=Week 1 Notes.pdf; page=2; bundle=com.apple.Preview; anchor precision=file+page; evidence rung=selected text + file + page',
+        'Captured native translation from Week 1 Notes.pdf, page 2 [vocabulary meaning]: market /ˈmɑːrkɪt/ -> 市场. In this PDF: a setting where financial instruments can be traded.\nEvidence: app=Preview; window=Week 1 Notes.pdf Page 2; kind=pdf; file=Week 1 Notes.pdf; page=2; native tool=macOS Translate; language pair=en-US->zh-Hans; anchor precision=file+page; evidence rung=selected text + file + page',
+        'Captured native translation from Week 1 Notes.pdf, page 2 [vocabulary meaning]: making /ˈmeɪkɪŋ/ -> 制造/形成. In this PDF: the act of providing quoted prices.\nEvidence: app=Preview; window=Week 1 Notes.pdf Page 2; kind=pdf; file=Week 1 Notes.pdf; page=2; native tool=macOS Translate; language pair=en-US->zh-Hans; anchor precision=file+page; evidence rung=selected text + file + page',
+        'Captured native translation from Week 1 Notes.pdf, page 2 [phrase meaning]: market making /ˈmɑːrkɪt ˌmeɪkɪŋ/ -> 做市. In this PDF: continuously quoting buy and sell prices so other participants can trade.\nEvidence: app=Preview; window=Week 1 Notes.pdf Page 2; kind=pdf; file=Week 1 Notes.pdf; page=2; native tool=macOS Translate; language pair=en-US->zh-Hans; visual extraction=appshot OCR candidate; anchor precision=file+page; evidence rung=selected text + file + page + appshot; visual precision=visual context only',
+        'Captured user trace from Week 1 Notes.pdf, page 2 [user meaning]: Market making means providing both bid and ask prices, not simply predicting whether the market will rise or fall.',
       ],
       assumption: [
         'First-pass learning is not final understanding; raw captures need review before they become reusable thinking.',
@@ -375,13 +410,13 @@ export const LEARNING_CASES: ReflectionCase[] = [
         'Kept the original PDF surface primary and used Loom only to commit anchored traces from Week 1 Notes.pdf.',
       ],
       outcome: [
-        'Captured sentence, phrase, and user-confirmed meaning versions without replacing Preview.',
+        'Captured word, phrase, sentence, and user-confirmed meaning versions without replacing Preview.',
       ],
       reflection: [
-        'Second-pass synthesis should review captured meanings, then separate language understanding from domain knowledge.',
+        'Market making combines market as a trading venue with making as actively providing quotes, so here it means doing market-making rather than predicting price direction.',
       ],
       memory: [
-        'Reuse this pattern: original file activity -> anchored learning trace -> second-pass synthesis -> reusable memory.',
+        'A market maker improves liquidity by continuously showing bid and ask prices; the core action is providing a market, not betting on one direction.',
       ],
     },
     messages: [
@@ -729,10 +764,6 @@ export function isImageSource(source: ReflectionSource) {
 
 export function isNativePrimarySource(source: ReflectionSource) {
   return isPdfSource(source) || /\.(docx?|xlsx?|csv)$/i.test(source.label) || ['doc', 'docx', 'xls', 'xlsx', 'csv'].includes(source.kind);
-}
-
-export function sourceCanOpenInReader(source: ReflectionSource) {
-  return (isImageSource(source) && Boolean(source.localPreviewUrl)) || TEXT_FILE_PATTERN.test(source.label);
 }
 
 function isTextLikeFile(file: File) {

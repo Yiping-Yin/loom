@@ -116,6 +116,17 @@ manual entry preserves source anchor, pass, trace type, user meaning, and state.
 Raw metadata may exist for audit, but the visible object must read like a human
 learning or judgment record.
 
+Learning captures are not append-only notes. The review surface must consolidate
+smaller traces into larger understanding objects when the source context proves
+they belong together. Example: if a user first captures `market`, then `making`,
+then `market making` from the same PDF passage, the visible object is `market
+making`; the single-word translations become absorbed evidence, not three
+competing final notes. This is a method example, not a translation feature.
+The same rule applies to sentence translations, grammar patterns, formulas,
+tables, figures, claims, examples, questions, corrections, concepts, and
+reusable principles. Each object exposes only the user-facing fields needed for
+review, plus a compact supporting trace line.
+
 Surface duties are strict:
 
 - Original file app owns reading, editing, page modes, search, zoom,
@@ -129,8 +140,29 @@ Surface duties are strict:
   ledger. Codex records what an agent did: read file, searched code, edited
   file. Loom records how the user's understanding changed: source contact,
   first meaning, question, correction, synthesis, principle, judgment change.
+- Learning center defaults to the organized understanding object, not the
+  process ledger. Show the user's current understanding as a readable document:
+  title hierarchy, paragraphs, selective evidence quotes, consolidated inline
+  terms, and footnote-like source anchors. Version counts, capture receipts, raw
+  evidence labels, and automation scaffolding stay behind Capture trail or
+  Details. Internal categories may organize the data model, but visible labels
+  such as `01 Current understanding`, `Understanding objects`, `Meaning`,
+  `Language`, or `Principles` must not become a left-hand template column or
+  default section system in the reading page.
+  Grouped objects mean semantic consolidation, not a
+  flat vocabulary or evidence list: larger phrases, sentences, formulas, tables,
+  figures, concepts, or problems absorb their component traces when the anchors,
+  pass, and user meaning show they describe the same learning object.
 - Composer owns committing the next understanding version; it must not become a
-  generic chat box without a version target.
+  generic chat box without a version target or a fixed bottom toolbar. In
+  learning mode the default shape is a quiet document-edge note field: one line
+  of user language and icon-only submit. Type choice, source anchor, and assist
+  controls stay hidden unless the target is ambiguous, focused, or opened
+  through details. Full source metadata belongs in tooltip, aria-label,
+  Evidence, or audit.
+- Glass is a material system; light is momentary feedback. Center and right
+  panes may use stable frosted material, but Siri-like white/prism light belongs
+  only to input focus, commit, loading, saved, or short status transitions.
 - Rich summaries, Q&A, glossaries, study guides, and A4 exports are baseline
   outputs. `loom-notes`-style active recall packets are baseline outputs too.
   They become differentiated only when generated from Loom's cognition trail,
@@ -319,11 +351,11 @@ The center workspace presents **Understanding Review** (`理解复盘`) backed b
 **Understanding Version Flow** (`理解版本流`). It must show the current review
 focus and compact human learning / judgment records first, with provenance
 behind an audit trail. "Learning version" and "review version" are not separate
-products; they are neighboring commits in the same flow. The bottom composer
-appears only when it has a version target: meaning, question, correction,
-synthesis, principle, or a specific product-reflection stage. A generic
-free-form chat box is rejected unless it is inside an explicitly labeled AI
-conversation trace.
+products; they are neighboring commits in the same flow. The document-edge
+composer appears only when it has a version target: meaning, question,
+correction, synthesis, principle, or a specific product-reflection stage. A
+generic free-form chat box is rejected unless it is inside an explicitly labeled
+AI conversation trace.
 
 Current precedent:
 
@@ -333,8 +365,8 @@ Current precedent:
   annotation.
 - Center workspace quality is judged by whether the user can see the continuous
   path from first understanding to review to reusable thinking.
-- The composer is a commit field. Before typing, the user must know which
-  understanding version the text will become.
+- The composer is a commit affordance. Before typing, the user must know which
+  understanding version the text will revise or become.
 - Exports must be fast, complete, and readable, but must also preserve source
   claim, learning trail, understanding diff, and reusable principle when those
   exist.

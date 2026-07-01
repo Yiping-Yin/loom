@@ -39,6 +39,15 @@ function cssRulesContaining(css: string, selector: string) {
   return matchingRules.join('\n');
 }
 
+function exactCssRule(css: string, selector: string) {
+  const rules = css.match(/[^{}]+{[^{}]*}/g) ?? [];
+  const matchingRules = rules.filter((rule) => rule.slice(0, rule.indexOf('{')).trim() === selector);
+
+  assert.ok(matchingRules.length > 0, `${selector} should have an exact CSS rule`);
+
+  return matchingRules.join('\n');
+}
+
 function listPageRoutes(dir: string = path.join(repoRoot, 'app')): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const routes: string[] = [];
@@ -112,11 +121,17 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   const layoutContract = read('docs/projects/active/2026-06-27-loom-reflection-workspace-layout-contract.md');
   const topBarStart = nativeRoot.indexOf('private struct ReflectionTopBar');
   const sidebarStart = nativeRoot.indexOf('private struct ReflectionSidebar');
+  const sidebarBackgroundStart = nativeRoot.indexOf('private struct ReflectionSidebarBackground');
+  const sidebarVisualEffectStart = nativeRoot.indexOf('private struct ReflectionVisualEffectBackground', sidebarBackgroundStart);
+  const reflectionComposerStart = nativeRoot.indexOf('private struct ReflectionComposer');
+  const reflectionSourceInspectorStart = nativeRoot.indexOf('private struct ReflectionSourceInspector', reflectionComposerStart);
   const topBarBlock = nativeRoot.slice(topBarStart, sidebarStart);
+  const sidebarBackgroundBlock = nativeRoot.slice(sidebarBackgroundStart, sidebarVisualEffectStart);
+  const reflectionComposerBlock = nativeRoot.slice(reflectionComposerStart, reflectionSourceInspectorStart);
 
   assert.match(activeReadme, /2026-06-28-loom-reflection-workspace-prd\.md/);
   assert.match(page, /ReflectionWorkspaceClient/);
-  assert.match(workspace, /Understanding Version Flow/);
+  assert.match(workspace, /Learning document/);
   assert.match(workspace, /UnderstandingSpine/);
   assert.match(workspace, /understandingVersionsFromCase/);
   for (const prdTerm of [
@@ -134,7 +149,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'Implementation rule: no Reflection UI change ships without a matching PRD or',
     'docs/canon/LOOM_DESIGN_DISCIPLINE.md',
     'Titlebar controls share one center line with the native traffic lights.',
-    'Only the left sidebar uses liquid glass.',
+    'The whole Reflection workspace may use macOS Liquid Glass, but the materials',
     'The four zones have non-overlapping jobs.',
     'Delete reflection belongs to the left sidebar row.',
     'I can import local files into the current reflection',
@@ -250,7 +265,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     "Codex records what an agent did",
     "Loom records how a user's understanding",
     'an agent operation log',
-    'Composer commits the next understanding version.',
+    'Composer is a document-edge commit affordance.',
     'Static output is baseline; cognition trail is Loom.',
     '### Decision Protocol',
     'symptom -> critique -> choice -> rule -> acceptance evidence',
@@ -320,7 +335,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'collapsed audit trail',
     'decorative sections',
     '### Composer Discipline',
-    'The bottom input exists only if it has a version target.',
+    'The document-edge input exists only if it has a version target.',
     'If the composer cannot name one of these targets, it should be hidden',
     'A generic "ask or type anything" box is not a',
     'Loom primitive; it belongs only inside',
@@ -355,7 +370,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'rebuilds a native PDF/Word/Excel function',
     'treats uploaded files only as RAG attachments',
     'rich source summaries as the final product',
-    'bottom composer a generic chat input',
+    'composer a generic chat input',
     'adds controls without assigning them to a single surface duty',
     'Center workspace | Understanding Spine inside Understanding Version Flow',
     'an agent operation log',
@@ -382,6 +397,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'FINS3666 Week 1 Quantitative',
     'Trading Algorithmic Trading.pdf',
     'Learning Output Packet',
+    'Understanding object',
+    'Consolidate raw captures into the object the user should actually review',
+    '`market` and `making` may start as word traces',
+    '`market making` is captured from the same passage',
+    'larger objects absorb component traces',
     'fill-in prompts or review gaps',
     'active recall trail',
     'source/provenance',
@@ -429,6 +449,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'Differentiation:',
     'If Loom skips preservation',
     'The atomic Loom unit is **understanding version**, not note.',
+    'Learning captures are not append-only notes.',
+    'single-word translations become absorbed evidence',
+    'Grouped objects mean semantic consolidation, not a',
+    'formulas, tables, figures, concepts, or problems absorb their component traces',
     'Original file app owns reading, editing, page modes',
     'Center workspace owns Understanding Spine inside Understanding Version Flow',
     'Capability Ladder',
@@ -517,11 +541,18 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'Agent operation log',
     'Understanding Version Flow',
     '理解版本流',
-    'The bottom composer appears only when it has a version target',
+    'The document-edge composer appears only when it has a version target',
     'A generic free-form chat box is rejected',
     'Current precedent:',
     'PDF learning uses Preview / native PDF apps as the reader.',
-    'The composer is a commit field. Before typing',
+    'In learning mode the default shape',
+    'quiet document-edge note field',
+    'Type choice, source anchor, and assist controls stay hidden',
+    'Full source metadata belongs in tooltip, aria-label, Evidence, or audit',
+    'Learning center defaults to the organized understanding object',
+    'Version counts, capture receipts, raw evidence labels, and automation scaffolding stay behind',
+    'Glass is a material system; light is momentary feedback',
+    'Siri-like white/prism light belongs',
     'Excel, Word, and other native files keep their own editing',
     'it is product noise',
   ]) {
@@ -548,7 +579,18 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'Wrong-window evidence must downgrade the anchor.',
     'NotebookLM-style richness is baseline.',
     'The center is Understanding Version Flow.',
-    'The composer is a commit field.',
+    'The composer is a commit affordance, not a bottom bar.',
+    'quiet document-edge note field: one line of user language',
+    'Type choice, compact source anchor, and assist controls',
+    'Full metadata belongs in evidence or audit',
+    'The center pane shows the understanding object first.',
+    'Version counts, capture receipts, and raw automation evidence belong behind Capture trail',
+    'Learning traces mature into semantic objects.',
+    'That is only one example of the',
+    'formulas, tables, figures, claims, examples, questions, or corrections',
+    'Larger objects show the useful review',
+    'The same source context produces word, phrase, and sentence captures.',
+    'Larger semantic objects absorb smaller traces',
     'Every accepted choice carries a refusal.',
     'User wording is evidence, not instruction.',
     'Do not ship a concept without a path.',
@@ -559,7 +601,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'Word and GitHub already have version history',
     'Circle / LaTeX / AI chat can already make fast readable packets.',
     'NotebookLM-style tools already create rich source summaries',
-    'The bottom input box has no meaning when it accepts anything.',
+    'The input box has no meaning when it accepts anything.',
     'The visible object should look like a human learning record',
     'Capture feedback became too large and explanatory.',
     'Loom Companion is a small transient saved receipt only',
@@ -571,7 +613,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'Every serious design pass should leave a ledger entry.',
     'Observed issue | Chosen rule | Refusal | Acceptance signal',
     'Center is Understanding Version Flow.',
-    'Composer is a commit field.',
+    'Composer is a document-edge commit affordance.',
     'Static output is baseline; cognition trail is the Loom layer.',
     'Computer-use can observe a different Preview document',
     'The ledger is not optional.',
@@ -645,6 +687,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'the native app still owns its native capabilities',
     'the refusal is still true after the implementation',
     'When in doubt, choose the mature existing tool',
+    'Liquid Glass light is interaction feedback, not background decoration.',
+    'short-lived, local, and',
+    'if it continuously attracts attention, it is visual noise',
+    'Center and right panes may use frosted material',
+    'Those effects belong only to action controls.',
+    'No animated color wash on sidebars',
+    'Center/right material can be frosted but not visually alive.',
+    'Middle and right panes read as stable paper/inspector surfaces',
   ]) {
     assertTextContains(designDiscipline, disciplineTerm);
   }
@@ -722,16 +772,30 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'Sidebar body top inset | 72 pt',
     'Thread body top inset | 76 pt',
     'Inspector body top inset | 74 pt',
-    'Only the left sidebar uses liquid glass',
+    'The whole workbench may use Liquid Glass, but not as one repeated effect.',
     'The titlebar is a control overlay, not a layout row',
     'Pane seams align without turning the workbench into six boxed regions',
     'Hovering near the left edge may temporarily overlay the sidebar at 240 pt',
     'inside the slid-out sidebar, the sidebar stays',
     'The peek overlay must not move the center workspace',
     'The peek overlay glass must use the center workspace background',
-    'must not reuse the permanent left-rail dark',
+    'must not reuse the permanent left-rail material',
     'buttons, search, selected rows, row metadata, and delete affordances',
     'The titlebar must not draw its own material background, internal vertical separators, or a full-width hard bottom rule',
+    'macOS 27-style white light and small red/gold/blue separation belong to',
+    'one-shot points of emphasis',
+    'it cannot own prism light, moving glare, persistent',
+    'Optical light is reserved for moments of action',
+    'not the workspace theme',
+    'The learning center default is the organized understanding object',
+    'Show the selected word, phrase, sentence, data point, user',
+    'keep capture receipts, version counts, and raw evidence labels',
+    'The learning composer is a quiet document-edge note field',
+    'not a second toolbar',
+    'Full source metadata belongs in tooltip, aria-label, Evidence, or audit',
+    'A learning composer that repeats the full filename',
+    'Persistent glow on normal selection rows',
+    'Visible learning-default copy such as `Receipts`, `Needs human meaning`',
     'A custom PDF canvas/image reader replacing Preview or the user',
     'A Loom PDF context menu that omits `super.menu(for:)`',
     'visually dominate the original',
@@ -892,11 +956,22 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(workspace, /onMouseLeave=\{handleSidebarMouseLeave\}/);
   assert.match(workspace, /function handleSidebarMouseLeave\(\)[\s\S]{0,100}setIsSidebarPeeking\(false\)/);
   assert.match(workspace, /data-sources-collapsed=\{isSourcesCollapsed\}/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}/);
+  assert.match(workspace, /PanelLeftOpen/);
+  assert.match(workspace, /PanelLeftClose/);
+  assert.match(workspace, /PanelRightOpen/);
+  assert.match(workspace, /PanelRightClose/);
+  assert.doesNotMatch(workspace, /ChevronLeft/);
+  assert.doesNotMatch(workspace, /ChevronRight/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}[\s\S]{0,160}aria-label="Expand reflection sidebar"/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}[\s\S]{0,160}aria-label="Collapse reflection sidebar"/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}[\s\S]{0,160}aria-label="Expand sources inspector"/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}[\s\S]{0,160}aria-label="Collapse sources inspector"/);
   assert.match(workspace, /function deleteReflection\(caseId: string\)/);
   assert.match(workspace, /const fileInputRef = useRef<HTMLInputElement>\(null\)/);
-  assert.match(workspace, /type WorkspaceMode = 'reflection' \| 'reader'/);
-  assert.match(workspace, /const \[workspaceMode, setWorkspaceMode\] = useState<WorkspaceMode>\('reflection'\)/);
-  assert.match(workspace, /data-workspace-mode=\{workspaceMode\}/);
+  assert.doesNotMatch(workspace, /type WorkspaceMode = 'reflection' \| 'reader'/);
+  assert.doesNotMatch(workspace, /const \[workspaceMode, setWorkspaceMode\]/);
+  assert.doesNotMatch(workspace, /data-workspace-mode=\{workspaceMode\}/);
   assert.match(workspace, /function openLocalImport\(\)[\s\S]{0,80}fileInputRef\.current\?\.click\(\)/);
   assert.match(workspace, /function isPdfSource\(source: ReflectionSource\)/);
   assert.match(workspace, /URL\.createObjectURL\(file\)/);
@@ -907,8 +982,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(workspace, /sources: \[\.\.\.importedSources, \.\.\.item\.sources\]/);
   assert.match(workspace, /input: \[\.\.\.item\.sections\.input, \.\.\.inputLines\]/);
   assert.match(workspace, /type="file"[\s\S]{0,80}multiple[\s\S]{0,120}onChange=\{importLocalFiles\}/);
-  assert.match(workspace, /<Upload size=\{14\} \/>[\s\S]{0,40}Import/);
-  assert.match(workspace, /function SourceReader\(/);
+  assert.match(workspace, /aria-label="Import local source"/);
+  assert.match(workspace, /title="Import local source"/);
+  assert.match(workspace, /<Upload size=\{14\} \/>/);
+  assert.match(workspace, /function selectSource\(source: ReflectionSource\)/);
+  assert.match(workspace, /setInspectorTarget\('source'\)/);
+  assert.match(workspace, /data-native-primary=\{isNativePrimarySource\(source\)\}/);
+  assert.match(workspace, /onClick=\{\(\) => selectSource\(source\)\}/);
+  assert.doesNotMatch(workspace, /function SourceReader\(/);
   assert.doesNotMatch(workspace, /function BrowserPdfReader\(\{/);
   assert.doesNotMatch(workspace, /function PdfFallbackReader\(\{/);
   assert.doesNotMatch(workspace, /className=\{styles\.browserPdfReader\}/);
@@ -919,24 +1000,31 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(workspace, /layout === 'spread'/);
   assert.doesNotMatch(workspace, /<Columns2 size=\{14\} \/>/);
   assert.doesNotMatch(workspace, /Fallback preview/);
-  assert.match(
-    workspace,
-    /function sourceCanOpenInReader\(source: ReflectionSource\)[\s\S]{0,140}isImageSource\(source\)[\s\S]{0,120}TEXT_FILE_PATTERN/,
-  );
+  assert.doesNotMatch(workspace, /function sourceCanOpenInReader\(source: ReflectionSource\)/);
   assert.match(workspace, /function isNativePrimarySource\(source: ReflectionSource\)/);
   assert.match(workspace, /isPdfSource\(source\)[\s\S]{0,160}docx\?/);
-  assert.match(workspace, /<strong>Native source<\/strong>/);
-  assert.match(workspace, /Use the original app\. Loom records understanding versions\./);
+  assert.doesNotMatch(workspace, /<strong>Native source<\/strong>/);
+  assert.doesNotMatch(workspace, /Use the original app\. Loom records understanding versions\./);
   assert.doesNotMatch(workspace, /const readerEngine = canRenderPdf \? 'browser' : 'static'/);
   assert.doesNotMatch(workspace, /<BrowserPdfReader source=\{source\} \/>/);
-  assert.match(workspace, /data-engine="static"/);
-  assert.match(workspace, /className=\{styles\.readerMarginPanel\}/);
-  assert.match(workspace, /className=\{styles\.readerEdgeTab\}/);
-  assert.match(workspace, /setWorkspaceMode\('reader'\)/);
-  assert.match(workspace, /setIsSidebarCollapsed\(true\)/);
-  assert.match(workspace, /appendSourceExcerptToInput\(activeSource\)/);
-  assert.match(workspace, /startReflectionFromSource\(activeSource\)/);
-  assert.match(workspace, /Captured native translation from Week 1 Notes\.pdf, page 2 \[translation receipt\]/);
+  assert.doesNotMatch(workspace, /data-engine="static"/);
+  assert.doesNotMatch(workspace, /className=\{styles\.readerMarginPanel\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.readerEdgeTab\}/);
+  assert.doesNotMatch(workspace, /setWorkspaceMode\('reader'\)/);
+  assert.doesNotMatch(workspace, /appendSourceExcerptToInput\(activeSource\)/);
+  assert.doesNotMatch(workspace, /startReflectionFromSource\(activeSource\)/);
+  assert.match(workspace, /Definition of Market Making/);
+  assert.match(workspace, /Captured native translation from Week 1 Notes\.pdf, page 2 \[vocabulary meaning\]: market/);
+  assert.match(workspace, /Captured native translation from Week 1 Notes\.pdf, page 2 \[vocabulary meaning\]: making/);
+  assert.match(workspace, /Captured native translation from Week 1 Notes\.pdf, page 2 \[phrase meaning\]: market making/);
+  assert.match(workspace, /Market making means providing both bid and ask prices/);
+  assert.match(workspace, /Market making combines market as a trading venue with making as actively providing quotes/);
+  assert.match(workspace, /A market maker improves liquidity by continuously showing bid and ask prices/);
+  assert.match(workspace, /function displayLearningMaterial\(version: UnderstandingVersion\)/);
+  assert.match(
+    workspace,
+    /\.replace\(\s*\/\^\(concept synthesis\|reusable principle\)\[:：\]\\s\*\/i,\s*''\s*\)/,
+  );
   assert.match(workspace, /native tool=macOS Translate/);
   assert.match(workspace, /visual extraction=appshot OCR candidate/);
   assert.match(workspace, /visual precision=visual context only/);
@@ -958,6 +1046,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   );
   assert.match(workspace, /const supportingEvidence = prioritizeLearningEvidence\(evidenceSplit\.evidence\)/);
   assert.match(workspace, /function currentEvidenceVersion\([\s\S]{0,160}reflectionCase: ReflectionCase,[\s\S]{0,160}activeVersionId\?: string \| null,[\s\S]{0,160}\): UnderstandingVersion \| null/);
+  assert.match(workspace, /function versionMatchesSource\(version: UnderstandingVersion, source: ReflectionSource\)/);
+  assert.match(workspace, /function sourceForVersion\(/);
+  assert.match(workspace, /function versionForSource\(/);
   assert.match(workspace, /const LEARNING_CASES: ReflectionCase\[\] = \[/);
   assert.match(workspace, /id: 'pdf-learning-week-1-notes'/);
   assert.match(workspace, /title: 'Week 1 Notes\.pdf'/);
@@ -970,28 +1061,117 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(workspace, /anchor precision=file\+cell/);
   assert.match(workspace, /evidence rung=selected text \+ file \+ cell/);
   assert.match(workspace, /function UnderstandingSpine\(\{[\s\S]{0,80}reflectionCase,[\s\S]{0,80}activeVersionId,[\s\S]{0,80}onSelectVersion/);
-  assert.match(workspace, /aria-label="Understanding Version Flow"/);
-  assert.match(workspace, /function buildReviewStages\(versions: ReturnType<typeof understandingVersionsFromCase>\)/);
-  assert.match(workspace, /function nextReviewVersion\(versions: ReturnType<typeof understandingVersionsFromCase>\)/);
-  assert.match(workspace, /<p className=\{styles\.kicker\}>Understanding Review<\/p>/);
-  assert.match(workspace, /<h3>理解复盘<\/h3>/);
-  assert.match(workspace, /className=\{styles\.reviewObject\} aria-label="Current understanding review"/);
-  assert.match(workspace, /className=\{styles\.reviewFocus\}/);
-  assert.match(workspace, /className=\{styles\.reviewStageList\} aria-label="Review stages"/);
-  assert.match(workspace, /Capture[\s\S]{0,260}Meaning[\s\S]{0,260}Review[\s\S]{0,260}Memory/);
-  assert.match(workspace, /Current Focus/);
+  assert.match(workspace, /aria-label="Learning review"/);
+  assert.match(workspace, /function stageForVersion\(version: UnderstandingVersion\)/);
+  assert.match(workspace, /function sectionForVersion\(version: UnderstandingVersion\)/);
+  assert.match(workspace, /function documentProseVersions\(versions: UnderstandingVersion\[\], focus: UnderstandingVersion \| null\)/);
+  assert.match(workspace, /function documentSourceQuoteVersion\(versions: UnderstandingVersion\[\], focus: UnderstandingVersion \| null\)/);
+  assert.match(workspace, /type UnderstandingObject = \{/);
+  assert.match(workspace, /function normalizeObjectSubject\(value: string\)/);
+  assert.match(workspace, /function objectSubjectForVersion\(version: UnderstandingVersion\)/);
+  assert.match(workspace, /function understandingObjectMeaning\(object: UnderstandingObject\): ObjectMeaning/);
+  assert.match(workspace, /function understandingObjectTraceCount\(object: UnderstandingObject\)/);
+  assert.match(workspace, /function buildUnderstandingObjects\(versions: UnderstandingVersion\[\]\)/);
+  assert.match(workspace, /if \(phrase\.kind !== 'phrase'\) return/);
+  assert.match(workspace, /function documentObjectVersions\(versions: UnderstandingVersion\[\]\)/);
+  assert.match(workspace, /function primaryLearningObject\(objects: UnderstandingObject\[\]\)/);
+  assert.match(workspace, /function bestLearningFocus\(versions: UnderstandingVersion\[\]\)/);
+  assert.doesNotMatch(workspace, /function unresolvedVersion\(versions: UnderstandingVersion\[\]\)/);
+  assert.match(workspace, /function LearningDigest\(\{/);
+  assert.match(workspace, /function memoryGateForVersion\(version: UnderstandingVersion \| null\)/);
+  assert.doesNotMatch(workspace, /<p className=\{styles\.kicker\}>Trace Ledger<\/p>/);
+  assert.doesNotMatch(workspace, /<h3>理解账本<\/h3>/);
+  assert.match(workspace, /className=\{styles\.learningDigest\} aria-label="Learning document"/);
+  assert.match(workspace, /className=\{styles\.learningDocument\} aria-label="Learning document"/);
+  assert.match(workspace, /className=\{styles\.learningDocumentHeader\}/);
+  assert.match(workspace, /className=\{styles\.learningDocumentTitleBlock\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningDocumentEyebrow\}/);
+  assert.match(workspace, /className=\{styles\.learningDocumentLead\}/);
+  assert.match(workspace, /function learningSourceLabel\(version: UnderstandingVersion\)/);
+  assert.match(workspace, /function documentTitleForFocus\(version: UnderstandingVersion\)/);
+  assert.match(workspace, /function documentReportTitle\(versions: UnderstandingVersion\[\], focus: UnderstandingVersion\)/);
+  assert.doesNotMatch(workspace, /function documentSectionTitle\(section: LearningSection\)/);
+  assert.doesNotMatch(workspace, /function documentSectionAccessibilityLabel\(section: LearningSection\)/);
+  assert.doesNotMatch(workspace, /function documentFlowSections\(sections: LearningSection\[\]\)/);
+  assert.doesNotMatch(workspace, /function documentSectionSummary\(section: LearningSection\)/);
+  assert.doesNotMatch(workspace, /Current understanding/);
+  assert.doesNotMatch(workspace, /Understanding objects/);
+  assert.doesNotMatch(workspace, /Needs human meaning/);
+  assert.doesNotMatch(workspace, /const unresolved = unresolvedVersion\(versions\)/);
+  assert.doesNotMatch(workspace, /Learning report/);
+  assert.doesNotMatch(workspace, /learning report/);
+  assert.doesNotMatch(workspace, /captured moments/);
+  assert.match(workspace, /function sourceFootnoteLabel\(version: UnderstandingVersion\)/);
+  assert.match(workspace, /className=\{styles\.learningDocumentMeta\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningDocumentAbstract\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningDocumentPrompt\}/);
+  assert.doesNotMatch(workspace, />Abstract</);
+  assert.doesNotMatch(workspace, />Next</);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningReviewGrid\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningReviewCard\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningDocumentSections\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningDocumentSection\}/);
+  assert.doesNotMatch(workspace, /aria-label=\{documentSectionAccessibilityLabel\(section\)\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningDocumentSectionTitle\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningDocumentSectionNumber\}/);
+  assert.match(workspace, /className=\{styles\.learningDocumentProse\} aria-label="Learning note"/);
+  assert.match(workspace, /className=\{styles\.learningDocumentQuote\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningDocumentEvidence\}/);
+  assert.match(workspace, /className=\{styles\.learningInlineGlossary\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningGlossaryItem\}/);
+  assert.match(workspace, /data-kind=\{primaryObject\.kind\}/);
+  assert.match(workspace, /className=\{styles\.learningInlineTerm\}/);
+  assert.match(workspace, /className=\{styles\.learningTraceAnchor\}/);
+  assert.match(workspace, /function TraceAnchor\(\{/);
+  assert.match(workspace, /data-compact=\{compact\}/);
+  assert.doesNotMatch(workspace, /<em>\{object\.kind\}<\/em>/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningGlossaryMeaning\}/);
+  assert.match(workspace, /function TraceTip\(\{/);
+  assert.match(workspace, /className=\{styles\.learningTraceTip\} role="tooltip"/);
+  assert.match(workspace, /Absorbs: \{componentTerms\.join\(' \+ '\)\}/);
+  assert.doesNotMatch(workspace, /Includes earlier notes: \{object\.componentTerms\.join\(' \+ '\)\}/);
+  assert.doesNotMatch(workspace, /Absorbs component traces/);
+  assert.match(workspace, /supportCount=\{understandingObjectTraceCount\(primaryObject\)\}/);
+  assert.doesNotMatch(workspace, /source moments/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningParagraphList\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningParagraph\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningParagraphText\}/);
+  for (const reviewCardTitle of ['Current meaning', 'Next review']) {
+    assert.doesNotMatch(workspace, new RegExp(reviewCardTitle));
+  }
+  assert.doesNotMatch(workspace, /className=\{styles\.learningStageStrip\}/);
+  assert.doesNotMatch(workspace, /Next Human Move/);
+  assert.doesNotMatch(workspace, /className=\{styles\.learningSectionCount\}/);
+  assert.doesNotMatch(workspace, /Meaning that can survive this pass/);
+  assert.doesNotMatch(workspace, /Only promote after the second pass/);
+  assert.match(workspace, /data-weak-anchor=\{hasWeakAnchor\}/);
+  assert.match(workspace, /className=\{styles\.versionSignalLine\}/);
+  assert.match(workspace, /aria-label=\{`Trace grounding: \$\{stage\.label\}; \$\{precision\}; \$\{evidence\}`\}/);
+  assert.match(workspace, /className=\{styles\.versionSignalDot\} data-tone=\{signal\.tone\}/);
   assert.match(workspace, /const capturedLines = reflectionCase\.sections\.input\.filter\(\(line\) => line\.startsWith\('Captured '\)\)/);
   assert.match(workspace, /learningReviewVersionFromLine\(line, capturedLines\.length \+ index, 'review'\)/);
-  assert.match(workspace, /title: phase === 'memory' \? 'Reusable principle' : 'Second-pass review'/);
+  assert.match(workspace, /title: phase === 'memory' \? 'Reusable memory' : 'Second-pass review'/);
   assert.match(workspace, /role="button"/);
   assert.match(workspace, /onKeyDown=\{\(event\) => handleVersionKeyDown\(event, version\.id\)\}/);
-  assert.match(workspace, /Understanding Version Flow/);
-  assert.match(workspace, /className=\{styles\.headerMetaLine\}/);
+  assert.match(workspace, /Capture trail/);
+  assert.doesNotMatch(workspace, /Receipts/);
+  assert.match(workspace, /Trace history/);
   assert.match(workspace, /Learning review/);
-  assert.match(workspace, /Reflection case/);
-  assert.match(workspace, /native source/);
-  assert.match(workspace, /activeVersions\.length\} versions/);
-  assert.match(workspace, /data-learning=\{activeCase\.project === 'Learning pass'\}/);
+  assert.doesNotMatch(workspace, /function recallPromptForVersion\(version: UnderstandingVersion\)/);
+  assert.doesNotMatch(workspace, /function nextReviewActionForVersion\(version: UnderstandingVersion \| null\)/);
+  assert.doesNotMatch(workspace, /<details className=\{styles\.recallCheck\}>/);
+  assert.doesNotMatch(workspace, /aria-label="Recall this understanding"/);
+  assert.doesNotMatch(workspace, /Recall before review/);
+  assert.match(workspace, /aria-label="Learning document"/);
+  assert.doesNotMatch(workspace, /const reviewTarget = unresolved \?\? focus/);
+  assert.doesNotMatch(workspace, /aria-label="Review prompt"/);
+  assert.doesNotMatch(workspace, /nextReviewActionForVersion\(reviewTarget\)/);
+  assert.match(workspace, /const historyHeaderLabel = versionCountLabel/);
+  assert.match(workspace, /\{!isLearningCase \? \(/);
+  assert.doesNotMatch(workspace, /Understanding document/);
+  assert.match(workspace, /threadTitleLine/);
+  assert.doesNotMatch(workspace, /native · \{activeVersions\.length\} notes/);
+  assert.match(workspace, /data-learning=\{isLearningCase\}/);
   assert.match(workspace, /const isSelected = version\.id === selectedVersionId/);
   assert.match(workspace, /data-active=\{isSelected\}/);
   assert.match(workspace, /onClick=\{\(\) => onSelectVersion\(version\.id\)\}/);
@@ -999,34 +1179,114 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(workspace, /<details className=\{styles\.versionAudit\}>/);
   assert.match(workspace, /<summary>Audit trail<\/summary>/);
   assert.match(workspace, /const \[activeVersionId, setActiveVersionId\] = useState<string \| null>\(null\)/);
-  assert.match(workspace, /currentEvidenceVersion\(activeCase, activeVersionId\)/);
+  assert.match(workspace, /type InspectorTarget = 'version' \| 'source'/);
+  assert.match(workspace, /const \[inspectorTarget, setInspectorTarget\] = useState<InspectorTarget>\('version'\)/);
+  assert.match(workspace, /if \(inspectorTarget === 'source'\) return versionForSource\(activeVersions, activeSource\)/);
+  assert.match(workspace, /return currentEvidenceVersion\(activeCase, activeVersionId\)/);
+  assert.match(workspace, /if \(inspectorTarget === 'source'\) return activeSource/);
+  assert.match(workspace, /function evidenceSourceFor\(/);
+  assert.match(workspace, /const matchedSource = sourceForVersion\(reflectionCase\.sources, version\)/);
+  assert.match(workspace, /reflectionCase\.project === 'Learning pass' && reflectionCase\.sources\.length === 1/);
+  assert.match(workspace, /return evidenceSourceFor\(activeCase, activeEvidence, activeSource, inspectorTarget\)/);
   assert.match(workspace, /activeVersionId=\{activeEvidence\?\.id \?\? null\}/);
-  assert.match(workspace, /onSelectVersion=\{setActiveVersionId\}/);
+  assert.match(workspace, /onSelectVersion=\{selectVersion\}/);
+  assert.match(workspace, /function selectVersion\(versionId: string\)/);
+  assert.match(workspace, /const source = sourceForVersion\(activeCase\.sources, version\)/);
+  assert.match(workspace, /setInspectorTarget\('version'\)/);
   assert.match(workspace, /const commitTarget = commitTargetForCase\(activeCase\)/);
   assert.match(workspace, /const commitAnchor = activeCase\.project === 'Learning pass'/);
-  assert.match(workspace, /label: 'Add understanding'/);
-  assert.match(workspace, /placeholder: 'Add one meaning, question, correction, or principle\.\.\.'/);
-  assert.match(workspace, /aria-label=\{`\$\{commitTarget\.label\} commit field`\}/);
-  assert.match(workspace, /<label className=\{styles\.composerField\}>/);
-  assert.match(workspace, /className=\{styles\.composerAnchor\}/);
+  assert.match(workspace, /label: 'Margin note'/);
+  assert.match(workspace, /placeholder: 'Write a margin note\.\.\.'/);
+  assert.match(workspace, /aria-label=\{isLearningCase \? 'Add margin note' : `\$\{commitTarget\.label\} commit`\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.composerTypeBar\}/);
+  assert.doesNotMatch(workspace, /LEARNING_COMMIT_TYPES\.map/);
+  assert.doesNotMatch(workspace, />Meaning<|>Ask<|>Fix<|>Keep</);
+  assert.doesNotMatch(workspace, /data-active=\{type\.focus === learningCommitFocus\}/);
+  assert.doesNotMatch(workspace, /aria-label=\{`Commit \$\{type\.focus\}`\}/);
+  assert.match(workspace, /formatLearningCommit\(text, latestLearningAnchor\(activeCase, activeSource\), learningCommitFocus\)/);
+  assert.doesNotMatch(workspace, /function learningStarterFor\(/);
+  assert.doesNotMatch(workspace, /function draftLearningStarter\(\)/);
+  assert.match(workspace, /Margin note\.\.\./);
+  assert.match(workspace, /aria-label=\{isLearningCase \? 'Margin note input' : `\$\{commitTarget\.label\} input`\}/);
+  assert.doesNotMatch(workspace, /Add understanding\.\.\./);
+  assert.doesNotMatch(workspace, /placeholder: 'Add your meaning\.\.\.'/);
+  assert.doesNotMatch(workspace, /placeholder: 'Add a question\.\.\.'/);
+  assert.doesNotMatch(workspace, /placeholder: 'Add a correction\.\.\.'/);
+  assert.doesNotMatch(workspace, /placeholder: 'Add a principle\.\.\.'/);
+  assert.doesNotMatch(workspace, /Add your meaning for the selected source moment/);
+  assert.match(workspace, /<div className=\{styles\.composerField\}>/);
+  assert.doesNotMatch(workspace, /className=\{styles\.composerAnchor\}/);
+  assert.doesNotMatch(workspace, /className=\{styles\.composerReference\}/);
+  assert.doesNotMatch(workspace, /aria-label=\{`Current source anchor: \$\{commitAnchor\}`\}/);
+  assert.doesNotMatch(workspace, /title=\{isLearningCase \? commitAnchor : undefined\}/);
+  assert.doesNotMatch(workspace, /<span>@ \{commitAnchorLabel\}<\/span>/);
+  assert.doesNotMatch(workspace, /className=\{styles\.composerAssistButton\}/);
+  assert.doesNotMatch(workspace, /aria-label="Help me interpret the selected source moment"/);
+  assert.doesNotMatch(workspace, /<Sparkles size=\{13\} \/>/);
   assert.match(workspace, /function latestLearningAnchor\(reflectionCase: ReflectionCase, activeSource: ReflectionSource \| null\)/);
   assert.match(workspace, /version\.state === 'needs meaning'/);
-  assert.match(workspace, /formatLearningCommit\(text, latestLearningAnchor\(activeCase, activeSource\)\)/);
+  assert.match(workspace, /type LearningCommitFocus = 'user meaning' \| 'question' \| 'correction' \| 'principle'/);
   assert.doesNotMatch(workspace, /Captured user trace from current source/);
+  assert.match(workspace, /disabled=\{!draft\.trim\(\)\}/);
+  assert.match(workspace, /\? 'Save margin note'/);
+  assert.doesNotMatch(workspace, /\? 'Commit understanding'/);
+  assert.doesNotMatch(workspace, /Commit \$\{learningCommitFocus\} to \$\{commitAnchor\}/);
   assert.match(workspace, /\[commitTarget\.key\]: \[\.\.\.item\.sections\[commitTarget\.key\], committedText\]/);
   assert.match(workspace, /Committed to \$\{WORKFLOW_BY_KEY\[commitTarget\.key\]\.label\}/);
   assert.match(
     workspace,
-    /<UnderstandingSpine[\s\S]{0,180}reflectionCase=\{activeCase\}[\s\S]{0,180}activeVersionId=\{activeEvidence\?\.id \?\? null\}[\s\S]{0,180}onSelectVersion=\{setActiveVersionId\}/,
+    /<UnderstandingSpine[\s\S]{0,180}reflectionCase=\{activeCase\}[\s\S]{0,180}activeVersionId=\{activeEvidence\?\.id \?\? null\}[\s\S]{0,180}onSelectVersion=\{selectVersion\}/,
   );
   assert.match(
     workspace,
-    /const activeEvidence = useMemo\(\(\) => currentEvidenceVersion\(activeCase, activeVersionId\), \[activeCase, activeVersionId\]\)/,
+    /const activeEvidence = useMemo\(\(\) => \{[\s\S]{0,140}versionForSource\(activeVersions, activeSource\)[\s\S]{0,140}currentEvidenceVersion\(activeCase, activeVersionId\)/,
   );
-  assert.match(workspace, /aria-label="Evidence inspector"/);
-  assert.match(workspace, /<h2>\{workspaceMode === 'reader' \? 'Loom' : 'Inspector'\}<\/h2>/);
-  assert.match(workspace, /function EvidenceGrounding\(\{ version \}: \{ version: UnderstandingVersion \}\)/);
+  assert.match(workspace, /source=\{evidenceSource\}/);
+  assert.match(workspace, /aria-label="Evidence"/);
+  assert.match(workspace, /className=\{styles\.sourcesHeaderQuiet\} aria-hidden="true"/);
+  assert.match(workspace, /const shouldShowSourceList = activeCase\.sources\.length !== 1 \|\| sourceQuery\.trim\(\)\.length > 0/);
+  assert.doesNotMatch(workspace, /<h2>\{workspaceMode === 'reader' \? 'Loom' : 'Inspector'\}<\/h2>/);
+  assert.match(workspace, /type LoomOpenSourceBridge = \{ postMessage: \(payload: unknown\) => void \}/);
+  assert.match(workspace, /loomOpenReflectionSource\?: LoomOpenSourceBridge/);
+  assert.match(workspace, /function openSourceBridge\(\)/);
+  assert.match(workspace, /function sourceCanOpen\(source: ReflectionSource \| null, hasNativeBridge: boolean\)/);
+  assert.match(workspace, /function SourceOpenButton\(\{/);
+  assert.match(workspace, /<ExternalLink size=\{13\} \/>/);
+  assert.match(workspace, /bridge\.postMessage\(sourceOpenPayload\(source\)\)/);
+  assert.match(workspace, /window\.open\(source\.localPreviewUrl, '_blank', 'noopener,noreferrer'\)/);
+  assert.match(workspace, /function EvidenceGrounding\(\{/);
+  assert.match(workspace, /source: ReflectionSource \| null/);
+  assert.match(workspace, /onOpenSource: \(source: ReflectionSource\) => void/);
+  assert.match(workspace, /className=\{styles\.evidenceSourceLine\} aria-label="Evidence source"/);
+  assert.match(workspace, /<SourceOpenButton source=\{source\} canOpen=\{canOpenSource\} onOpenSource=\{onOpenSource\} \/>/);
+  assert.match(workspace, /<SourceOpenButton[\s\S]{0,120}source=\{activeSource\}[\s\S]{0,120}canOpen=\{canOpenActiveSource\}/);
+  assert.match(workspace, /function FileBadge\(\{ kind \}: \{ kind\?: string \}\)/);
+  assert.match(workspace, /replace\(\/\^\\\.\/, ''\)/);
+  assert.match(workspace, /\(\^\|\[-\/\]\)\(xls\|xlsx\|csv\|tsv\|numbers\)\$/);
+  assert.match(workspace, /\(\^\|\[-\/\]\)\(ppt\|pptx\|keynote\)\$/);
+  assert.match(workspace, /\(\^\|\[-\/\]\)\(doc\|docx\|pages\|rtf\|rtfd\)\$/);
+  assert.match(workspace, /function caseFileKind\(reflectionCase: ReflectionCase\)/);
+  assert.match(workspace, /function CaseGlyph\(\{ reflectionCase \}: \{ reflectionCase: ReflectionCase \}\)/);
+  assert.match(workspace, /function caseSubLabel\(reflectionCase: ReflectionCase\)/);
+  assert.match(workspace, /if \(reflectionCase\.project === 'Learning pass'\) return null/);
+  assert.match(workspace, /function caseTimeLabel\(reflectionCase: ReflectionCase\)/);
+  assert.match(workspace, /reflectionCase\.project === 'Learning pass' && reflectionCase\.updatedAt === 'learning'/);
+  assert.match(workspace, /<CaseGlyph reflectionCase=\{item\} \/>/);
+  assert.match(workspace, /data-file=\{Boolean\(caseFileKind\(item\)\)\}/);
+  assert.match(workspace, /data-single-line=\{caseSubLabel\(item\) === null\}/);
+  assert.doesNotMatch(workspace, /<span>\{item\.project\}<\/span>/);
+  assert.doesNotMatch(workspace, /<span className=\{styles\.caseTime\}>\{item\.updatedAt\}<\/span>/);
+  assert.match(workspace, /const tone = sourceTone\(kind\)/);
+  assert.match(workspace, /\{tone === 'document' \? <span className=\{styles\.fileBadgeLines\} \/> : null\}/);
+  assert.match(workspace, /<FileBadge kind=\{kind\} \/>/);
   assert.match(workspace, /const groundingRows = groundingRowsForVersion\(version\)/);
+  assert.match(workspace, /function evidenceGateForVersion\(version: UnderstandingVersion\)/);
+  assert.match(workspace, /auditValue\(version\.audit, 'anchor precision'\)/);
+  assert.match(workspace, /auditValue\(version\.audit, 'visual precision'\)/);
+  assert.match(workspace, /Confirm the source before reuse/);
+  assert.match(workspace, /Reusable only after review/);
+  assert.match(workspace, /aria-label="Evidence reuse gate"/);
+  assert.match(workspace, /data-state=\{evidenceGate\.state\}/);
   assert.match(workspace, /\{ label: 'evidence rung', value: auditValue\(version\.audit, 'evidence rung'\) \?\? '' \}/);
   assert.match(workspace, /\{ label: 'fallback', value: auditValue\(version\.audit, 'fallback note'\) \?\? '' \}/);
   assert.match(workspace, /\{ label: 'native tool', value: auditValue\(version\.audit, 'native tool'\) \?\? '' \}/);
@@ -1035,9 +1295,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(workspace, /\{ label: 'visual precision', value: auditValue\(version\.audit, 'visual precision'\) \?\? '' \}/);
   assert.match(workspace, /aria-label="Evidence grounding"/);
   assert.match(workspace, /<details className=\{styles\.evidenceAudit\}>/);
-  assert.match(workspace, /<summary>Full audit<\/summary>/);
+  assert.match(workspace, /<summary>Details<\/summary>/);
   assert.doesNotMatch(workspace, /activeEvidence\.audit\.slice\(0, 5\)/);
-  assert.match(workspace, /Source Collection/);
+  assert.doesNotMatch(workspace, /Source Collection/);
   assert.doesNotMatch(workspace, /aria-label="Reflection workflow"/);
   assert.doesNotMatch(workspace, /aria-label="Working notes"/);
   assert.match(workspace, /const nextCases = remainingCases\.length > 0 \? remainingCases : \[makeBlankReflectionCase\(\)\]/);
@@ -1054,8 +1314,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   );
   assert.match(
     cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true'][data-sidebar-peeking='true'] .sidebar"),
-    /color-mix\(in srgb, var\(--reflection-bg\) 84%, transparent\)/,
-    'hover peek glass should use the center workspace background as its transparent base',
+    /color-mix\(in srgb, var\(--reflection-matte\) 58%, transparent\)/,
+    'hover peek glass should use the center matte workspace background as its transparent base',
   );
   assert.match(
     cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true'][data-sidebar-peeking='true'] .sidebar"),
@@ -1078,9 +1338,57 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'overlay sidebar row actions should inherit center-pane foreground hierarchy',
   );
   assert.match(styles, /\.shell\[data-sources-collapsed='true'\]/);
-  assert.match(styles, /\.shell\[data-workspace-mode='reader'\]/);
-  assert.match(styles, /\.shell\[data-workspace-mode='reader'\] \.sources/);
-  assert.match(styles, /\.reader \{/);
+  assert.match(styles, /--reflection-pane-rail-width:\s*4\.25rem/);
+  assert.match(styles, /--reflection-pane-toggle-size:\s*2rem/);
+  assert.match(
+    cssRulesContaining(styles, ".shell[data-sidebar-collapsed='true']"),
+    /--reflection-sidebar-width:\s*var\(--reflection-pane-rail-width\)/,
+  );
+  assert.match(
+    cssRulesContaining(styles, ".shell[data-sources-collapsed='true']"),
+    /--reflection-sources-width:\s*var\(--reflection-pane-rail-width\)/,
+  );
+  assert.match(styles, /\.paneToggleButton \{/);
+  assert.match(
+    cssRulesContaining(styles, '.paneToggleButton'),
+    /width:\s*var\(--reflection-pane-toggle-size\)[\s\S]*height:\s*var\(--reflection-pane-toggle-size\)/,
+  );
+  assert.match(styles, /\.paneToggleButton svg \{[\s\S]*width:\s*1rem[\s\S]*height:\s*1rem[\s\S]*stroke-width:\s*2/);
+  assert.match(styles, /\.paneToggleButton\[data-pane='left'\] svg \{[\s\S]*transform:\s*translateX\(0\.5px\)/);
+  assert.match(styles, /\.paneToggleButton\[data-pane='right'\] svg \{[\s\S]*transform:\s*translateX\(-0\.5px\)/);
+  assert.match(styles, /\.sidebar \.paneToggleButton \{/);
+  assert.match(styles, /--reflection-pane-topbar-height:\s*3\.5rem/);
+  assert.match(styles, /\.paneRailTop \{/);
+  assert.match(
+    cssRulesContaining(styles, '.paneRailTop'),
+    /height:\s*var\(--reflection-pane-topbar-height\)[\s\S]*place-items:\s*center/,
+  );
+  assert.match(
+    cssRulesContaining(styles, '.brandRow'),
+    /min-height:\s*var\(--reflection-pane-topbar-height\)[\s\S]*align-items:\s*center/,
+  );
+  assert.match(
+    cssRulesContaining(styles, '.sourcesHeader'),
+    /min-height:\s*var\(--reflection-pane-topbar-height\)[\s\S]*align-items:\s*center/,
+  );
+  assert.match(
+    cssRulesContaining(styles, '.sidebarRail'),
+    /width:\s*var\(--reflection-pane-rail-width\)[\s\S]*padding:\s*0 var\(--reflection-pane-rail-padding-inline\) var\(--reflection-pane-rail-padding-block\)/,
+  );
+  assert.match(
+    cssRulesContaining(styles, '.sourcesRail'),
+    /width:\s*var\(--reflection-pane-rail-width\)[\s\S]*padding:\s*0 var\(--reflection-pane-rail-padding-inline\) var\(--reflection-pane-rail-padding-block\)/,
+  );
+  assert.match(workspace, /className=\{styles\.paneRailTop\}[\s\S]{0,240}aria-label="Expand reflection sidebar"/);
+  assert.match(workspace, /className=\{styles\.paneRailTop\}[\s\S]{0,240}aria-label="Expand sources inspector"/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}[\s\S]{0,80}data-pane="left"[\s\S]{0,160}aria-label="Expand reflection sidebar"/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}[\s\S]{0,80}data-pane="left"[\s\S]{0,160}aria-label="Collapse reflection sidebar"/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}[\s\S]{0,80}data-pane="right"[\s\S]{0,160}aria-label="Expand sources inspector"/);
+  assert.match(workspace, /className=\{styles\.paneToggleButton\}[\s\S]{0,80}data-pane="right"[\s\S]{0,160}aria-label="Collapse sources inspector"/);
+  assert.doesNotMatch(styles, /\.sourcesRail > span/);
+  assert.doesNotMatch(styles, /\.shell\[data-workspace-mode='reader'\]/);
+  assert.doesNotMatch(styles, /\.shell\[data-workspace-mode='reader'\] \.sources/);
+  assert.doesNotMatch(styles, /\.reader \{/);
   assert.doesNotMatch(styles, /\.browserPdfReader/);
   assert.doesNotMatch(styles, /\.pdfFrame/);
   assert.doesNotMatch(styles, /data-engine='browser'/);
@@ -1088,31 +1396,145 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(styles, /\.pdfReaderToolbar \{/);
   assert.doesNotMatch(styles, /\.pdfPageSpread \{/);
   assert.doesNotMatch(styles, /\.pdfPageImage \{/);
-  assert.match(styles, /\.readerMarginPanel \{/);
-  assert.match(styles, /\.readerMarginCard \{/);
-  assert.match(styles, /\.readerEdgeTab \{/);
+  assert.doesNotMatch(styles, /\.readerMarginPanel \{/);
+  assert.doesNotMatch(styles, /\.readerMarginCard \{/);
+  assert.doesNotMatch(styles, /\.readerEdgeTab \{/);
   assert.doesNotMatch(styles, /\.readerBody\[data-layout='spread'\]/);
   assert.doesNotMatch(styles, /\.readerBody\[data-engine='browser'\] \.readerMarginPanel/);
   assert.doesNotMatch(styles, /\.readerBody\[data-engine='browser'\] \.readerEdgeTab/);
-  assert.match(styles, /\.readerCompanion \{/);
-  assert.match(styles, /\.readerActionButton \{/);
-  assert.match(styles, /\.nativeSourceNotice \{/);
-  assert.match(styles, /\.nativeSourceNotice strong/);
+  assert.doesNotMatch(styles, /\.readerActionButton \{/);
+  assert.match(styles, /\.evidenceSourceLine \{/);
+  assert.match(styles, /\.fileBadge\[data-kind='pdf'\]/);
+  assert.match(styles, /\.fileBadge\[data-kind='document'\]/);
+  assert.match(styles, /\.fileBadge\[data-kind='spreadsheet'\]/);
+  assert.match(styles, /\.fileBadge\[data-kind='presentation'\]/);
+  assert.match(styles, /\.fileBadge::after \{[\s\S]*clip-path:\s*polygon\(0 0, 100% 100%, 100% 0\)/);
+  assert.doesNotMatch(cssRulesContaining(styles, '.fileBadge::after'), /linear-gradient|radial-gradient/);
+  assert.doesNotMatch(cssRulesContaining(styles, '.fileBadgeGrid'), /linear-gradient|radial-gradient/);
+  assert.doesNotMatch(cssRulesContaining(styles, '.fileBadgeLines'), /linear-gradient|radial-gradient/);
+  assert.doesNotMatch(styles, /svg\[data-kind='pdf'\]/);
+  assert.doesNotMatch(styles, /svg\[data-kind='document'\]/);
+  assert.match(styles, /\.caseIcon\[data-file='true'\]/);
+  assert.match(styles, /\.railCaseItem \.fileBadge/);
+  assert.match(styles, /\.evidenceSourceLine button:disabled/);
+  assert.doesNotMatch(styles, /\.composerTypeBar \{/);
   assert.match(styles, /\.versionHistory \{/);
   assert.match(styles, /\.versionHistoryHeader \{/);
-  assert.match(styles, /\.reviewObject \{/);
-  assert.match(styles, /\.reviewFocus \{/);
-  assert.match(styles, /\.reviewFocusAnchor \{/);
-  assert.match(styles, /\.reviewStageList \{/);
-  assert.match(styles, /\.reviewStage \{/);
-  assert.match(styles, /\.reviewStage\[data-state='active'\]/);
+  assert.match(styles, /\.learningDigest \{/);
+  assert.match(styles, /\.learningDocument \{/);
+  assert.match(styles, /\.learningDocumentHeader \{/);
+  assert.match(styles, /\.learningDocumentTitleBlock \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentEyebrow \{/);
+  assert.match(styles, /\.learningDocumentMeta \{/);
+  assert.match(styles, /\.learningDocumentLead \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentAbstract \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentPrompt \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentSections \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentSection \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentSectionTitle \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentSectionNumber \{/);
+  assert.match(styles, /\.learningDocumentProse \{/);
+  assert.match(styles, /\.learningDocumentProse p \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentEvidence \{/);
+  assert.doesNotMatch(styles, /\.learningDocumentEvidence blockquote \{/);
+  assert.match(styles, /\.learningInlineGlossary \{/);
+  assert.match(styles, /\.learningInlineGlossary\[data-active='true'\]/);
+  assert.match(styles, /\.learningInlineTerm \{/);
+  assert.doesNotMatch(styles, /\.learningGlossaryItem \{/);
+  assert.doesNotMatch(styles, /\.learningGlossaryItem\[data-active='true'\]/);
+  assert.doesNotMatch(styles, /\.learningGlossaryMeaning \{/);
+  assert.doesNotMatch(styles, /\.learningGlossaryMeaning em \{/);
+  assert.doesNotMatch(styles, /\.learningGlossaryMeaning strong \{/);
+  assert.doesNotMatch(styles, /\.learningTermList \{/);
+  assert.doesNotMatch(styles, /\.learningTermObject \{/);
+  assert.doesNotMatch(styles, /\.learningTermHeader \{/);
+  assert.doesNotMatch(styles, /\.learningTermTranslation \{/);
+  assert.doesNotMatch(styles, /\.learningTermMeaning \{/);
+  assert.doesNotMatch(styles, /\.learningTermSupport \{/);
+  assert.match(styles, /\.learningTraceAnchor \{/);
+  assert.match(styles, /\.learningTraceAnchor\[data-compact='true'\] \{/);
+  assert.match(styles, /\.learningDocument \.learningTraceAnchor\[data-compact='true'\] \{[\s\S]*opacity:\s*0/);
+  assert.match(styles, /\.learningDocumentProse p:hover \.learningTraceAnchor\[data-compact='true'\]/);
+  assert.doesNotMatch(styles, /\.learningGlossaryItem:hover \.learningTraceAnchor\[data-compact='true'\]/);
+  assert.match(styles, /\.learningTraceTip \{/);
+  assert.match(styles, /\.learningTraceAnchor:hover \.learningTraceTip/);
+  assert.match(styles, /\.learningTraceAnchor:focus \.learningTraceTip/);
+  assert.doesNotMatch(styles, /\.learningParagraphList \{/);
+  assert.doesNotMatch(styles, /\.learningParagraph \{/);
+  assert.doesNotMatch(styles, /\.learningParagraphText \{/);
+  assert.doesNotMatch(styles, /\.learningParagraph small em \{/);
+  assert.doesNotMatch(styles, /\.learningDigestLead \{/);
+  assert.doesNotMatch(styles, /\.learningLeadActions \{/);
+  assert.doesNotMatch(styles, /\.learningObjectBody \{/);
+  assert.doesNotMatch(styles, /\.learningObjectHeader \{/);
+  assert.doesNotMatch(styles, /\.learningObjectHeader > span \{/);
+  assert.doesNotMatch(styles, /\.learningObjectHeader > strong\[data-tone='memory'\]/);
+  assert.doesNotMatch(styles, /\.recallCheck \{/);
+  assert.doesNotMatch(styles, /\.recallCheck > summary \{/);
+  assert.doesNotMatch(styles, /\.recallCheck > div \{/);
+  assert.doesNotMatch(styles, /\.learningStatusLine \{/);
+  assert.doesNotMatch(styles, /\.learningStatusTarget \{/);
+  assert.doesNotMatch(styles, /\.learningStatusTarget > span \{/);
+  assert.doesNotMatch(styles, /\.learningStatusTarget \{[\s\S]*grid-template-columns:\s*auto minmax\(0, 1fr\) auto/);
+  assert.doesNotMatch(styles, /\.learningReviewGrid \{/);
+  assert.doesNotMatch(styles, /\.learningReviewCard \{/);
+  assert.doesNotMatch(styles, /\.learningStageStrip \{/);
+  assert.doesNotMatch(styles, /\.learningSectionList \{/);
+  assert.doesNotMatch(styles, /\.learningNote \{/);
+  assert.match(styles, /\.traceHistory \{/);
+  assert.match(styles, /\.versionHistory\[data-learning='true'\] \.traceHistory \{[\s\S]*display:\s*none/);
   assert.match(styles, /\.versionRow \{/);
+  assert.match(styles, /\.versionSignalLine \{/);
+  assert.match(styles, /\.versionSignalDot \{/);
+  assert.match(styles, /\.versionSignalDot\[data-tone='memory'\]/);
   assert.match(styles, /\.versionAudit \{/);
   assert.match(styles, /\.evidenceGrounding \{/);
+  assert.match(styles, /\.evidenceGate \{/);
+  assert.match(styles, /\.evidenceGate\[data-state='weak'\]/);
+  assert.match(styles, /\.evidenceGate\[data-state='ready'\]/);
   assert.match(styles, /\.evidenceAudit \{/);
+  const composerSurfaceBlock = exactCssRule(styles, '.composer');
+  const learningComposerBlock = exactCssRule(styles, ".composer[data-learning='true']");
   assert.match(styles, /\.composerField \{/);
-  assert.match(styles, /\.composerTarget \{/);
-  assert.match(styles, /\.composer \{[\s\S]*grid-template-columns:\s*minmax\(0, 48rem\) auto/);
+  assert.doesNotMatch(styles, /\.composerReference \{/);
+  assert.doesNotMatch(styles, /\.composerAssistButton \{/);
+  assert.match(styles, /\.thread \{[\s\S]*position:\s*relative/);
+  assert.match(styles, /\.versionHistory \{[\s\S]*padding:\s*0\.82rem clamp\(1\.25rem, 2\.6vw, 2\.2rem\) 5rem/);
+  assert.match(styles, /\.versionHistory\[data-learning='true'\] \{[\s\S]*padding:\s*clamp\(1\.05rem, 2\.6vw, 2\.4rem\) clamp\(1\.25rem, 2\.6vw, 2\.2rem\) 1\.25rem/);
+  assert.match(composerSurfaceBlock, /position:\s*absolute/);
+  assert.match(composerSurfaceBlock, /left:\s*50%/);
+  assert.match(composerSurfaceBlock, /width:\s*min\(50rem, calc\(100% - clamp\(2rem, 5vw, 4\.5rem\)\)\)/);
+  assert.match(composerSurfaceBlock, /grid-template-columns:\s*minmax\(0, 1fr\) auto/);
+  assert.match(composerSurfaceBlock, /transform:\s*translateX\(-50%\)/);
+  assert.match(composerSurfaceBlock, /border:\s*0/);
+  assert.match(composerSurfaceBlock, /background:\s*transparent/);
+  assert.match(composerSurfaceBlock, /backdrop-filter:\s*none/);
+  assert.doesNotMatch(composerSurfaceBlock, /border-top:\s*1px solid var\(--reflection-line\)/);
+  assert.doesNotMatch(composerSurfaceBlock, /background:\s*color-mix\(in srgb, var\(--reflection-matte\)/);
+  assert.match(learningComposerBlock, /position:\s*absolute/);
+  assert.match(learningComposerBlock, /left:\s*50%/);
+  assert.match(learningComposerBlock, /bottom:\s*clamp\(0\.56rem, 1\.2vw, 0\.86rem\)/);
+  assert.match(learningComposerBlock, /width:\s*min\(18rem, calc\(100% - clamp\(4rem, 18vw, 12rem\)\)\)/);
+  assert.match(learningComposerBlock, /grid-template-columns:\s*minmax\(0, 1fr\) auto/);
+  assert.match(learningComposerBlock, /gap:\s*0/);
+  assert.match(learningComposerBlock, /transform:\s*translateX\(-50%\)/);
+  assert.match(learningComposerBlock, /margin:\s*0/);
+  assert.match(learningComposerBlock, /opacity:\s*0\.36/);
+  assert.match(styles, /\.composer\[data-learning='true'\]:hover,[\s\S]*\.composer\[data-learning='true'\]:focus-within \{[\s\S]*width:\s*min\(22rem, calc\(100% - clamp\(3rem, 14vw, 9rem\)\)\)/);
+  assert.match(styles, /\.composer\[data-learning='true'\] \.composerField \{[\s\S]*border:\s*1px solid color-mix\(in srgb, var\(--reflection-line\) 42%, transparent\)/);
+  assert.match(styles, /\.composer\[data-learning='true'\] \.composerField \{[\s\S]*border-radius:\s*999px/);
+  assert.match(styles, /\.composer\[data-learning='true'\] \.composerField \{[\s\S]*background:\s*color-mix\(in srgb, var\(--reflection-surface\) 18%, transparent\)/);
+  assert.match(styles, /\.composer\[data-learning='true'\] \.composerField \{[\s\S]*backdrop-filter:\s*blur\(22px\) saturate\(124%\) brightness\(1\.02\)/);
+  assert.match(styles, /\.composer\[data-learning='true'\] \.composerField \{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+  assert.match(styles, /\.composer\[data-learning='true'\] > button \{[\s\S]*width:\s*0/);
+  assert.match(styles, /\.composer\[data-learning='true'\] > button \{[\s\S]*opacity:\s*0/);
+  assert.match(styles, /\.composer\[data-learning='true'\] > button:not\(:disabled\) \{[\s\S]*width:\s*1\.28rem/);
+  assert.match(styles, /\.composer\[data-learning='true'\] > button:not\(:disabled\) \{[\s\S]*opacity:\s*0\.72/);
+  assert.doesNotMatch(styles, /\.composerReference \{[\s\S]*max-width:\s*clamp\(3\.6rem, 8vw, 6\.4rem\)/);
+  assert.doesNotMatch(styles, /\.composerTypeBar button \{[\s\S]*border-radius:\s*999px/);
+  assert.match(styles, /\.composer > button \{[\s\S]*border-radius:\s*999px/);
+  assert.match(styles, /\.composer > button:disabled \{/);
+  assert.match(styles, /\.composer > button:disabled::after \{/);
   assert.doesNotMatch(styles, /grid-template-columns:\s*minmax\(10\.5rem, 13rem\) minmax\(0, 1fr\) auto/);
   assert.match(styles, /\.versionBody > p \{[\s\S]*-webkit-line-clamp:\s*2/);
   assert.match(styles, /\.versionRow\[data-active='true'\] \.versionBody > p \{[\s\S]*-webkit-line-clamp:\s*3/);
@@ -1122,21 +1544,49 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(styles, /\.caseDeleteButton/);
   assert.match(styles, /\.caseItem:hover \.caseDeleteButton/);
   assert.match(styles, /\.sidebar,[\s\S]*\.sources,[\s\S]*\.thread/);
-  assert.match(styles, /\.sidebar \{[\s\S]*backdrop-filter:\s*blur\(34px\) saturate\(128%\)/);
-  const sourcesBlock = styles.match(/\n\.sources \{[\s\S]*?\n\}/)?.[0] ?? '';
-  const threadBlock = styles.match(/\n\.thread \{[\s\S]*?\n\}/)?.[0] ?? '';
-  const threadHeaderBlock = styles.match(/\n\.threadHeader \{[\s\S]*?\n\}/)?.[0] ?? '';
-  const composerBlock = styles.match(/\n\.composer \{[\s\S]*?\n\}/)?.[0] ?? '';
+  assert.match(styles, /\.sidebar \{[\s\S]*background:\s*var\(--reflection-sidebar-glass\)/);
+  assert.match(styles, /\.sidebar \{[\s\S]*backdrop-filter:\s*blur\(62px\) saturate\(178%\) brightness\(1\.04\) contrast\(1\.02\)/);
+  const sourcesBlock = cssRulesContaining(styles, '.sources');
+  const threadBlock = cssRulesContaining(styles, '.thread');
+  const threadHeaderBlock = cssRulesContaining(styles, '.threadHeader');
+  const sidebarHighlightBlock = cssRulesContaining(styles, '.sidebar::before');
+  const composerInputHighlightBlock = cssRulesContaining(styles, '.composerField::after');
+  const composerSubmitHighlightBlock = cssRulesContaining(styles, '.composer > button::after');
+  assert.match(sourcesBlock, /background:\s*var\(--reflection-inspector-glass\)/);
+  assert.match(sourcesBlock, /backdrop-filter:\s*blur\(22px\) saturate\(118%\) brightness\(1\.01\)/);
+  assert.match(sourcesBlock, /box-shadow:[\s\S]*inset 1px 0 0 var\(--reflection-glass-edge\)/);
+  assert.match(threadBlock, /background:\s*var\(--reflection-workbench-glass\)/);
+  assert.match(threadBlock, /backdrop-filter:\s*blur\(8px\) saturate\(108%\)/);
+  assert.match(styles, /--reflection-workbench-glass:/);
+  assert.match(styles, /--reflection-glass-edge:/);
+  assert.match(styles, /--reflection-glass-inset:/);
+  assert.match(styles, /--reflection-live-white:/);
+  assert.match(styles, /--reflection-prism-red:/);
+  assert.match(styles, /--reflection-prism-gold:/);
+  assert.match(styles, /--reflection-prism-blue:/);
+  assert.match(styles, /@keyframes reflectionInputSheen/);
+  assert.match(composerInputHighlightBlock, /--reflection-live-white/);
+  assert.match(composerInputHighlightBlock, /--reflection-prism-red/);
+  assert.match(composerInputHighlightBlock, /--reflection-prism-gold/);
+  assert.match(composerInputHighlightBlock, /--reflection-prism-blue/);
+  assert.match(cssRulesContaining(styles, '.composerField:focus-within::after'), /animation:\s*reflectionInputSheen 1\.8s ease-out 1/);
+  assert.match(composerSubmitHighlightBlock, /--reflection-live-white/);
+  assert.match(composerSubmitHighlightBlock, /--reflection-prism-blue/);
+  assert.doesNotMatch(sidebarHighlightBlock, /--reflection-prism|reflectionInputSheen|animation:/);
+  assert.doesNotMatch(cssRulesContaining(styles, ".caseItem[data-active='true']"), /--reflection-prism|0 0 18px|0 0 20px|0 0 14px/);
+  assert.doesNotMatch(cssRulesContaining(styles, ".reviewStage[data-state='active']"), /--reflection-prism|0 0 18px|0 0 20px|0 0 14px/);
+  assert.doesNotMatch(styles, /\.learningNote\[data-active='true'\]/);
+  assert.doesNotMatch(cssRulesContaining(styles, '.fileBadge'), /linear-gradient|radial-gradient/);
   assert.doesNotMatch(
-    [sourcesBlock, threadBlock, threadHeaderBlock, composerBlock].join('\n'),
-    /backdrop-filter|radial-gradient|linear-gradient/,
-    'only the left sidebar should use liquid glass; work and source panes stay adaptive flat surfaces',
+    [sourcesBlock, threadBlock, threadHeaderBlock, composerSurfaceBlock].join('\n'),
+    /radial-gradient|linear-gradient/,
+    'reflection glass must come from matte/frosted materials, not decorative gradients',
   );
   assert.doesNotMatch(workspace, /styles\.traffic/, 'native traffic lights should not be faked inside the workbench');
-  assert.match(
+  assert.doesNotMatch(
     workspace,
-    /<div className=\{styles\.sourceTree\}[\s\S]*<section className=\{styles\.preview\}/,
-    'source preview should live in the source tree flow instead of being pinned to the inspector floor',
+    /<section className=\{styles\.preview\}/,
+    'source preview should not compete with the compact evidence receipt',
   );
   assert.match(nativeRoot, /struct LoomReflectionRootView: View/);
   assert.match(nativeRoot, /HStack\(spacing:\s*0\)/);
@@ -1147,12 +1597,29 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /if shouldOverlaySidebar \{[\s\S]{0,900}ReflectionSidebar\([\s\S]{0,180}material: \.centerOverlay/);
   assert.match(nativeRoot, /ReflectionLeftEdgePeekZone\(\)/);
   assert.match(nativeRoot, /private enum ReflectionSidebarMaterial: Equatable \{[\s\S]{0,80}case rail[\s\S]{0,80}case centerOverlay/);
-  assert.match(nativeRoot, /case \.centerOverlay:[\s\S]{0,160}Rectangle\(\)\.fill\(LoomTokens\.dsPaperDeep\.opacity\(0\.84\)\)/);
+  assert.match(nativeRoot, /private var liquidGlassMaterial: NSVisualEffectView\.Material \{[\s\S]{0,180}case \.rail:[\s\S]{0,80}return \.sidebar[\s\S]{0,120}case \.centerOverlay:[\s\S]{0,80}return \.popover/);
+  assert.match(nativeRoot, /private var liquidGlassBlendingMode: NSVisualEffectView\.BlendingMode \{[\s\S]{0,120}\.rail \? \.behindWindow : \.withinWindow/);
+  assert.match(nativeRoot, /ReflectionVisualEffectBackground\([\s\S]{0,120}material: liquidGlassMaterial[\s\S]{0,120}blendingMode: liquidGlassBlendingMode/);
+  assert.match(sidebarBackgroundBlock, /ReflectionVisualEffectBackground/);
+  assert.match(sidebarBackgroundBlock, /LinearGradient\(/);
+  assert.match(sidebarBackgroundBlock, /\.blendMode\(\.plusLighter\)/);
+  assert.doesNotMatch(sidebarBackgroundBlock, /Color\(red:/);
+  assert.doesNotMatch(sidebarBackgroundBlock, /RadialGradient/);
+  assert.match(reflectionComposerBlock, /private var hasCommitText: Bool/);
+  assert.match(reflectionComposerBlock, /Color\(red:\s*1\.0, green:\s*0\.24, blue:\s*0\.34\)/);
+  assert.match(reflectionComposerBlock, /Color\(red:\s*1\.0, green:\s*0\.84, blue:\s*0\.28\)/);
+  assert.match(reflectionComposerBlock, /Color\(red:\s*0\.28, green:\s*0\.66, blue:\s*1\.0\)/);
+  assert.match(reflectionComposerBlock, /\.shadow\(color: Color\(red: 0\.28, green: 0\.66, blue: 1\.0\)\.opacity\(hasCommitText \? 0\.18 : 0\)/);
+  assert.match(nativeRoot, /private struct ReflectionMatteWorkbenchBackground: View/);
+  assert.match(nativeRoot, /private struct ReflectionFrostedInspectorBackground: View/);
+  assert.match(nativeRoot, /ReflectionMatteWorkbenchBackground\(\)\.ignoresSafeArea\(\)/);
+  assert.match(nativeRoot, /ReflectionFrostedInspectorBackground\(\)\.ignoresSafeArea\(\)/);
   assert.match(nativeRoot, /private var usesCenterOverlay: Bool \{ material == \.centerOverlay \}/);
   assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, material: material\)/);
-  assert.match(nativeRoot, /private var fillColor: Color \{ usesCenterOverlay \? LoomTokens\.dsPaper\.opacity\(0\.58\) : \.white\.opacity\(0\.075\) \}/);
+  assert.match(nativeRoot, /case \(\.rail, \.light\):[\s\S]{0,80}return Color\.white\.opacity\(0\.08\)/);
+  assert.match(nativeRoot, /colorScheme == \.light \? Color\.white\.opacity\(0\.34\) : Color\.white\.opacity\(0\.075\)/);
   assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,220}material: material/);
-  assert.match(nativeRoot, /private var selectedFill: Color \{[\s\S]{0,120}usesCenterOverlay \? LoomTokens\.dsThread\.opacity\(0\.08\) : \.white\.opacity\(0\.12\)/);
+  assert.match(nativeRoot, /private var selectedFill: Color \{[\s\S]{0,180}if usesLightChrome \{[\s\S]{0,120}usesCenterOverlay \? LoomTokens\.dsThread\.opacity\(0\.07\) : Color\.white\.opacity\(0\.18\)/);
   assert.match(nativeRoot, /private func updateSidebarPeek\(_ shouldPeek: Bool\)/);
   assert.match(nativeRoot, /guard !isSidebarPresented else \{ return \}/);
   assert.match(nativeRoot, /ReflectionSidebar\([\s\S]{0,760}\.onHover \{ hovering in[\s\S]{0,100}updateSidebarPeek\(hovering\)/);
@@ -1219,19 +1686,24 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /"app", capture\.sourceApp \?\? "native macOS app"/);
   assert.match(nativeRoot, /"window", capture\.sourceWindowTitle/);
   assert.match(nativeRoot, /"kind", kind\.sourceKind/);
-  assert.match(nativeRoot, /"file", fileNames\.isEmpty \? nil : fileNames/);
+  assert.match(nativeRoot, /let evidenceFileName = fileNames\.isEmpty \? inferredAnchor\?\.fileName : fileNames/);
+  assert.match(nativeRoot, /"file", evidenceFileName\?\.isEmpty == false \? evidenceFileName : nil/);
   assert.match(nativeRoot, /"bundle", capture\.sourceBundleIdentifier/);
-  assert.match(nativeRoot, /let anchorPrecision = selectionAnchorPrecision\(capture: capture, kind: kind\)/);
+  assert.match(nativeRoot, /let anchorPrecision = selectionAnchorPrecision\(capture: capture, kind: kind, inferredAnchor: inferredAnchor\)/);
   assert.match(nativeRoot, /\("anchor precision", anchorPrecision\)/);
   assert.match(nativeRoot, /\("evidence rung", selectionEvidenceRung\(for: anchorPrecision\)\)/);
   assert.match(nativeRoot, /\("anchor note", selectionAnchorNote\(for: anchorPrecision\)\)/);
   assert.match(nativeRoot, /\("fallback note", selectionFallbackNote\(for: anchorPrecision\)\)/);
   assert.match(nativeRoot, /\("captured at", ISO8601DateFormatter\(\)\.string\(from: capture\.capturedAt\)\)/);
   assert.match(nativeRoot, /nativeContextEvidencePairs\(capture\.nativeContext\)/);
+  assert.match(nativeRoot, /inferredAnchorEvidencePairs\(inferredAnchor\)/);
   assert.match(nativeRoot, /\("path", context\.documentURL\?\.path\)/);
   assert.match(nativeRoot, /\("page", page\)/);
   assert.match(nativeRoot, /\("cell", context\.cellRange\)/);
+  assert.match(nativeRoot, /private static func inferredAnchorEvidencePairs\(_ anchor: ReflectionSourceAnchor\?\)/);
+  assert.match(nativeRoot, /\("anchor method", anchor\.method\)/);
   assert.match(nativeRoot, /private static func selectionAnchorPrecision/);
+  assert.match(nativeRoot, /if let precision = inferredAnchor\?\.precision/);
   assert.match(nativeRoot, /return "file"/);
   assert.match(nativeRoot, /return "window\+page"/);
   assert.match(nativeRoot, /return "window\+time"/);
@@ -1255,8 +1727,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private static func inferPDFAnchor/);
   assert.match(nativeRoot, /PDFDocument\(url: url\)/);
   assert.match(nativeRoot, /document\.page\(at: pageIndex\)\?\.string/);
+  assert.match(nativeRoot, /var matches: \[\(source: ReflectionSource, page: Int\)\] = \[\]/);
+  assert.match(nativeRoot, /guard matches\.count == 1/);
   assert.match(nativeRoot, /source\.label\), page/);
-  assert.match(nativeRoot, /pageIndex \+ 1/);
+  assert.match(nativeRoot, /precision: "file\+page"/);
+  assert.match(nativeRoot, /selected text matched one PDF page/);
   assert.match(nativeRoot, /private static func normalizedAnchorText/);
   const normalizedAnchorBlock = nativeRoot.match(
     /private static func normalizedAnchorText[\s\S]*?\n    }\n\n    private static func localFileSize/,
@@ -1411,11 +1886,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(loomApp, /JSONDecoder\(\)\.decode\(\[LoomExternalSelectionCapture\]\.self/);
   assert.match(loomApp, /enum LoomExternalSelectionCaptureRelay/);
   assert.match(nativeRoot, /let captureKind = Self\.captureKind\(for: capture\)/);
-  assert.match(nativeRoot, /let sourceLabel = inferredAnchor\?\.label[\s\S]{0,220}\?\? Self\.nativeContextAnchoredSourceLabel\(for: capture, kind: captureKind\)[\s\S]{0,180}\?\? Self\.windowAnchoredSourceLabel\(for: capture, kind: captureKind\)/);
+  assert.match(nativeRoot, /let captureHasFileEvidence = !capture\.fileURLs\.filter\(\\\.isFileURL\)\.isEmpty/);
+  assert.match(nativeRoot, /let sourceLabel = inferredAnchor\?\.label[\s\S]{0,260}\?\? Self\.nativeContextAnchoredSourceLabel\(for: capture, kind: captureKind\)[\s\S]{0,260}\?\? Self\.windowAnchoredSourceLabel\(/);
+  assert.match(nativeRoot, /includeWindowPage: !captureHasFileEvidence/);
   assert.match(nativeRoot, /private enum ReflectionCaptureKind: Equatable/);
   assert.match(nativeRoot, /case pdf[\s\S]*case document[\s\S]*case spreadsheet/);
   assert.match(nativeRoot, /private static func pdfDocumentTitle\(from windowTitle: String\) -> String\?/);
   assert.match(nativeRoot, /private static func pdfPageNumber\(from windowTitle: String\) -> Int\?/);
+  assert.match(nativeRoot, /guard includeWindowPage else \{ return documentTitle \}/);
   assert.match(nativeRoot, /return "\\\(documentTitle\), page \\\(page\)"/);
   assert.match(nativeRoot, /private static func shouldPromoteLearningInputAnchor\(_ existing: String, candidate: String\) -> Bool/);
   assert.match(nativeRoot, /cases\[index\]\.steps\[0\]\.items\[existingInputIndex\] = inputLine/);
@@ -1444,7 +1922,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /Second-pass synthesis: compare versions, correct meanings, then separate language understanding from domain knowledge/);
   assert.match(nativeRoot, /let confirmedPrinciple = traces\.last \{ \$0\.focus == "principle" \}/);
   assert.match(nativeRoot, /Principle candidate: /);
-  assert.match(nativeRoot, /manualLearningFocus\(for: material\)/);
+  assert.match(nativeRoot, /private enum ReflectionCommitFocus: String/);
+  assert.doesNotMatch(nativeRoot, /CaseIterable, Identifiable/);
+  assert.doesNotMatch(nativeRoot, /@State private var selectedCommitFocus/);
+  assert.match(nativeRoot, /manualLearningInputLine\(material, sourceLabel: sourceLabel, focus: \.meaning\)/);
   assert.match(nativeRoot, /reviewLine\(for: trace\)/);
   assert.match(nativeRoot, /User-confirmed meaning/);
   assert.match(nativeRoot, /confirmedText\(from: trace\.text\)/);
@@ -1454,7 +1935,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /ReflectionSourceInspector\([\s\S]{0,160}reflectionCase: selectedCase/);
   assert.match(nativeRoot, /private struct ReflectionLearningLedgerView: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningTraceCard: View/);
-  assert.match(nativeRoot, /private struct ReflectionLearningStatusPill: View/);
+  assert.match(nativeRoot, /private struct ReflectionLearningSignal: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningTrace: Identifiable, Equatable/);
   assert.match(nativeRoot, /@State private var selectedLearningTraceID: ReflectionLearningTrace\.ID\?/);
   assert.match(nativeRoot, /private var selectedLearningTrace: ReflectionLearningTrace\?/);
@@ -1465,7 +1946,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /selectedSourceID = matchingSource\.id/);
   assert.match(nativeRoot, /selectedTrace: selectedLearningTrace/);
   assert.match(nativeRoot, /let sourceLabel = selectedLearningTrace\?\.sourceAnchor/);
-  assert.match(nativeRoot, /if let selectedLearningTrace \{[\s\S]{0,120}return "target: \\\(selectedLearningTrace\.version\) \\\(selectedLearningTrace\.versionTitle\.lowercased\(\)\)"/);
+  assert.doesNotMatch(nativeRoot, /return "target: \\\(selectedLearningTrace\.version\) \\\(selectedLearningTrace\.versionTitle\.lowercased\(\)\)"/);
   assert.match(nativeRoot, /ReflectionEvidenceInspector\([\s\S]{0,120}trace: selectedTrace[\s\S]{0,120}source: selectedSource[\s\S]{0,160}onOpenSource:/);
   assert.match(nativeRoot, /let onOpenSource: \(\) -> Void/);
   assert.match(nativeRoot, /let onOpenSource: \(\(\) -> Void\)\?/);
@@ -1478,13 +1959,13 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /private var currentTrace: ReflectionLearningTrace\?[\s\S]{0,100}ReflectionLearningTrace\.from\(reflectionCase\)\.last/,
     'Evidence Inspector should follow the selected thinking version, not always the last trace',
   );
-  assert.match(nativeRoot, /Text\("Understanding Version Flow"\)/);
   assert.match(nativeRoot, /private struct ReflectionEvidenceInspector: View/);
-  assert.match(nativeRoot, /Text\("Evidence Inspector"\)/);
-  assert.match(nativeRoot, /Text\("Source Collection"\)/);
+  assert.match(nativeRoot, /private struct ReflectionEvidenceSourceLine: View/);
+  assert.doesNotMatch(nativeRoot, /Text\("Evidence Inspector"\)/);
+  assert.doesNotMatch(nativeRoot, /Text\("Source Collection"\)/);
   assert.match(nativeRoot, /Text\("Audit trail"\)/);
   assert.match(nativeRoot, /Text\(trace\.versionTitle\)/);
-  assert.match(nativeRoot, /ReflectionLearningStatusPill\(label: trace\.statusLabel, isResolved: trace\.isUserCommitted\)/);
+  assert.match(nativeRoot, /ReflectionLearningSignal\(label: trace\.signalLabel, color: trace\.signalColor\)/);
   assert.match(nativeRoot, /Text\(trace\.displayLabel\)/);
   assert.match(nativeRoot, /return "Original selection"/);
   assert.match(nativeRoot, /return "Selected word"/);
@@ -1508,23 +1989,26 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /steps\[5\]\.title = "Principle"/);
   assert.match(nativeRoot, /steps\[5\]\.subtitle = "What can become reusable thinking"/);
   assert.match(nativeRoot, /if reflectionCase\.project == "Learning pass", normalizedStep\.id == "memory"/);
-  assert.match(nativeRoot, /Meaning, question, correction, or principle\.\.\./);
-  assert.match(nativeRoot, /commitTarget: composerTarget/);
-  assert.match(nativeRoot, /private var composerTarget: String/);
+  assert.match(nativeRoot, /return "Margin note\.\.\."/);
+  assert.match(nativeRoot, /\.help\("Save margin note"\)/);
+  assert.doesNotMatch(nativeRoot, /return "Add understanding\.\.\."/);
+  assert.doesNotMatch(nativeRoot, /return "Add your meaning\.\.\."/);
+  assert.doesNotMatch(nativeRoot, /return "What is still unclear\?"/);
+  assert.doesNotMatch(nativeRoot, /return "Correct your earlier understanding\.\.\."/);
+  assert.doesNotMatch(nativeRoot, /return "Write the reusable principle\.\.\."/);
+  assert.doesNotMatch(nativeRoot, /commitTarget: composerTarget/);
+  assert.doesNotMatch(nativeRoot, /private var composerTarget: String/);
   assert.match(nativeRoot, /private var learningTraces: \[ReflectionLearningTrace\]/);
-  assert.match(nativeRoot, /if let latest = learningTraces\.last, latest\.isUserCommitted/);
-  assert.match(nativeRoot, /return "target: \\?\(latest\.version\\?\) \\?\(latest\.versionTitle\.lowercased\(\)\\?\)"/);
-  assert.match(nativeRoot, /learningTraces\.reversed\(\)\.first\(where: \{ !\$0\.isUserCommitted \}\)/);
-  assert.match(nativeRoot, /return "target: \\?\(unresolved\.version\\?\) \\?\(unresolved\.versionTitle\.lowercased\(\)\\?\)"/);
-  assert.match(nativeRoot, /return "target: \\?\(nextStep\.title\\?\)"/);
-  assert.match(nativeRoot, /Text\(isLearningCase \? "Commit next version" : "Commit reflection version"\)/);
-  assert.match(nativeRoot, /Text\(commitTarget\)/);
-  assert.match(nativeRoot, /meaning \/ question \/ correction \/ principle/);
-  assert.match(nativeRoot, /Label\("Commit", systemImage: "checkmark"\)/);
-  assert.match(nativeRoot, /Captured user trace from \\?\(sourceLabel\\?\) \[\\?\(manualLearningFocus\(for: material\)\\?\)\]/);
-  assert.match(nativeRoot, /lowercased\.hasPrefix\("principle:"\)/);
-  assert.match(nativeRoot, /return "principle"/);
-  assert.match(nativeRoot, /return "correction"/);
+  assert.doesNotMatch(nativeRoot, /if let latest = learningTraces\.last, latest\.isUserCommitted/);
+  assert.doesNotMatch(nativeRoot, /return "target: \\?\(latest\.version\\?\) \\?\(latest\.versionTitle\.lowercased\(\)\\?\)"/);
+  assert.doesNotMatch(nativeRoot, /learningTraces\.reversed\(\)\.first\(where: \{ !\$0\.isUserCommitted \}\)/);
+  assert.doesNotMatch(nativeRoot, /return "target: \\?\(unresolved\.version\\?\) \\?\(unresolved\.versionTitle\.lowercased\(\)\\?\)"/);
+  assert.doesNotMatch(nativeRoot, /return "target: \\?\(nextStep\.title\\?\)"/);
+  assert.doesNotMatch(nativeRoot, /ForEach\(ReflectionCommitFocus\.allCases\)/);
+  assert.doesNotMatch(nativeRoot, /Text\(focus\.title\)/);
+  assert.match(nativeRoot, /Image\(systemName: "paperplane\.fill"\)/);
+  assert.match(nativeRoot, /Captured user trace from \\?\(sourceLabel\\?\) \[\\?\(focus\.captureLabel\\?\)\]/);
+  assert.doesNotMatch(nativeRoot, /manualLearningFocus\(for: material\)/);
   assert.match(nativeRoot, /return "question"/);
   assert.match(nativeRoot, /return "user meaning"/);
   assert.match(nativeRoot, /eyebrow: "Understanding version"/);
@@ -1717,9 +2201,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeSidecarVerifier, /function assertReceiptDoesNotPersist\(label\)/);
   assert.match(nativeSidecarVerifier, /Loom saved receipt should auto-dismiss instead of staying open/);
   assert.match(nativeSidecarVerifier, /assertReceiptDoesNotPersist\('Final saved receipt behavior'\)/);
-  assert.match(nativeSidecarVerifier, /Final PDF surface/);
-  assert.match(nativeSidecarVerifier, /Final Word surface/);
-  assert.match(nativeSidecarVerifier, /Final Excel surface/);
+  assert.match(nativeSidecarVerifier, /PDF handoff, capture, focus, and transient receipt assertions passed during the PDF step/);
+  assert.match(nativeSidecarVerifier, /Word handoff, capture, focus, and transient receipt assertions passed during the Word step/);
+  assert.doesNotMatch(nativeSidecarVerifier, /Final active native surface/);
   assert.match(nativeSidecarVerifier, /status: 'Second pass ready'/);
   assert.match(nativeSidecarVerifier, /Second-pass synthesis prepared/);
   assert.match(nativeSidecarVerifier, /const pdfSelection = pdfLearningSelections\(\)/);
@@ -1765,6 +2249,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeSidecarVerifier, /function reportOnlyLearningCase\(\{/);
   assert.match(nativeSidecarVerifier, /function reportOnlyPassLabel\(traceType\)/);
   assert.match(nativeSidecarVerifier, /function reportOnlyAnchorPrecision\(\{ app, window, kind, file, anchorPrecision \}\)/);
+  assert.match(nativeSidecarVerifier, /Report-only fixtures are allowed to prove that a file was configured/);
+  assert.match(nativeSidecarVerifier, /they must not promote a page\/cell claim/);
+  assert.doesNotMatch(nativeSidecarVerifier, /file && \/pdf\/i\.test\(kind\)[\s\S]{0,120}return 'file\+page'/);
+  assert.doesNotMatch(nativeSidecarVerifier, /file && \/spreadsheet\/i\.test\(kind\)[\s\S]{0,120}return 'file\+cell'/);
+  assert.match(nativeSidecarVerifier, /file confirmed; page or cell not promoted in report-only mode/);
   assert.match(nativeSidecarVerifier, /function reportOnlyAnchorNote\(precision\)/);
   assert.match(nativeSidecarVerifier, /function evidenceRungForPrecision\(precision\)/);
   assert.match(nativeSidecarVerifier, /selected text \+ file \+ cell/);
@@ -1831,7 +2320,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeSidecarVerifier, /Restate the confirmed meaning/);
   assert.match(nativeSidecarVerifier, /Study Notes/);
   assert.match(nativeSidecarVerifier, /Active Recall/);
-  assert.match(nativeSidecarVerifier, /Understanding Version Flow/);
+  assert.match(nativeSidecarVerifier, /Trace History/);
   assert.match(nativeSidecarVerifier, /Evidence/);
   assert.match(nativeSidecarVerifier, /My current meaning/);
   assert.match(nativeSidecarVerifier, /Fill in/);
@@ -1935,8 +2424,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeSidecarVerifier, /Services capture and Reflection snapshot assertions without CGWindow native-surface checks/);
   assert.match(nativeSidecarVerifier, /native window preservation and transient receipt behavior still require GUI verification/);
   assert.match(nativeSidecarVerifier, /function runServicesCaptureSmoke\(\)/);
-  assert.match(nativeSidecarVerifier, /function readLearningExperimentSnapshot\(\)/);
-  assert.match(nativeSidecarVerifier, /function assertLearningExperimentTraces\(snapshot\)/);
+  assert.match(nativeSidecarVerifier, /function readLearningExperimentSnapshot\(options = \{\}\)/);
+  assert.match(nativeSidecarVerifier, /function assertLearningExperimentTraces\(snapshot, options = \{\}\)/);
+  assert.match(nativeSidecarVerifier, /allowFileLevelEvidence/);
   assert.match(nativeSidecarVerifier, /gui-verification-required/);
   assert.match(nativeSidecarVerifier, /Requires full GUI verifier or Computer Use to confirm native windows, focus, and companion behavior/);
   assert.match(nativeSidecarVerifier, /writeLearningExperimentReport\(snapshot, 'native-services-smoke', fixtures\)/);
@@ -1949,7 +2439,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeSidecarVerifier, /Preview, Word, and Excel remain the primary native surfaces/);
   assert.match(nativeSidecarVerifier, /Loom only appears as a transient saved receipt/);
   assert.match(nativeSidecarVerifier, /source anchors, anchor precision, weak-anchor notes when precision is weak, pass, trace type, selected text, and second-pass readiness/);
-  assert.match(nativeSidecarVerifier, /Date\.now\(\) - startedAt < 8000/);
+  assert.match(nativeSidecarVerifier, /function nativeSurfaceTimeoutMs\(owner\)/);
+  assert.match(nativeSidecarVerifier, /owner\.startsWith\('Microsoft '\) \? 18000 : 10000/);
   assert.match(nativeSidecarVerifier, /input: orderedUniqueItems\(inputItems\(reflectionCase\)\)/);
   assert.doesNotMatch(nativeSidecarVerifier, /original file activity -> anchored learning trace -> second-pass synthesis -> reusable memory/);
   assert.match(nativeSidecarVerifier, /27\[0-9\]x6\[0-9\]/);
@@ -1973,10 +2464,13 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private let reflectionThreadTopPadding: CGFloat = 76/);
   assert.match(nativeRoot, /private let reflectionInspectorTopPadding: CGFloat = 74/);
   assert.doesNotMatch(nativeRoot, /VStack\(spacing:\s*0\)[\s\S]{0,260}ReflectionTopBar\(/, 'titlebar should overlay the workbench instead of occupying a row');
+  assert.match(topBarBlock, /ReflectionFileTypeBadge\([\s\S]{0,140}kind: nativeSource\?\.kind \?\? reflectionCase\.sources\.first\?\.kind \?\? "document"/);
   assert.match(topBarBlock, /Text\(reflectionCase\.title\)/);
-  assert.match(topBarBlock, /Text\(reflectionCase\.status\)/);
-  assert.match(topBarBlock, /Label\("[^"]*sourceCount[^"]*", systemImage: "folder"\)/);
-  assert.match(topBarBlock, /Text\("Sources"\)/);
+  assert.doesNotMatch(topBarBlock, /Text\(reflectionCase\.status\)/);
+  assert.match(topBarBlock, /Circle\(\)[\s\S]{0,180}\.fill\(reflectionCase\.status == "Second pass ready" \? LoomTokens\.dsSuccess : LoomTokens\.dsInk3\)[\s\S]{0,120}\.help\(reflectionCase\.status\)/);
+  assert.match(topBarBlock, /if sourceCount > 1 \{/);
+  assert.match(topBarBlock, /systemImage: "folder"/);
+  assert.match(topBarBlock, /Text\("Evidence"\)/);
   assert.match(topBarBlock, /ReflectionTopBarButton\([\s\S]*systemName: "sidebar\.left"[\s\S]*action: onToggleSidebar/);
   assert.match(topBarBlock, /ReflectionTopBarButton\([\s\S]*systemName: "sidebar\.right"[\s\S]*action: onToggleInspector/);
   assert.doesNotMatch(topBarBlock, /trash|Delete reflection|onDelete/, 'destructive case actions must stay scoped to sidebar rows');
@@ -1984,11 +2478,13 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(topBarBlock, /\.frame\(height: reflectionTopBarHeight, alignment: \.topLeading\)/);
   assert.match(topBarBlock, /\.frame\(maxWidth: \.infinity, alignment: \.topLeading\)/);
   assert.doesNotMatch(nativeRoot, /ReflectionTopBarBackground/, 'titlebar should not own a separate material row');
+  const topBarViewBlock = topBarBlock.slice(0, topBarBlock.indexOf('private struct ReflectionTopBarButton'));
   assert.doesNotMatch(
-    topBarBlock,
+    topBarViewBlock,
     /\.background\(/,
     'titlebar should be a control overlay over continuous workbench materials',
   );
+  assert.match(topBarBlock, /ReflectionTopBarButton:[\s\S]*\.background\(\.thinMaterial, in: RoundedRectangle/);
   assert.doesNotMatch(nativeRoot, /ReflectionCollapsedSidebarRail/);
   assert.doesNotMatch(nativeRoot, /ReflectionThreadHeader|PRODUCT REFLECTION WORKSPACE|Text\("WORKSPACE"\)/);
   assert.match(nativeRoot, /ReflectionDivider\(\)/);
@@ -2000,8 +2496,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /systemName: "sidebar\.left"/);
   assert.match(nativeRoot, /systemName: "sidebar\.right"/);
   assert.match(nativeRoot, /\.frame\(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize\)/);
-  assert.doesNotMatch(nativeRoot, /RoundedRectangle\(cornerRadius: 4/, 'titlebar controls should not draw separate button pills');
-  assert.doesNotMatch(nativeRoot, /\.frame\(width: 28, height: 28\)/, 'titlebar controls should match the small macOS traffic-light scale');
+  assert.doesNotMatch(topBarBlock, /RoundedRectangle\(cornerRadius: 4/, 'titlebar controls should not draw separate button pills');
+  assert.doesNotMatch(topBarBlock, /\.frame\(width: 22, height: 22\)/, 'titlebar controls should use the shared 16pt macOS control size');
+  assert.doesNotMatch(topBarBlock, /\.frame\(width: 28, height: 28\)/, 'titlebar controls should match the small macOS traffic-light scale');
   assert.match(nativeRoot, /contentExtendsUnderTitlebar:\s*true/);
   assert.match(nativeRoot, /removesSystemToolbar:\s*true/);
   assert.match(nativeRoot, /usesFrameAutosave:\s*false/);
@@ -2029,16 +2526,17 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   );
   assert.match(
     nativeRoot,
-    /ReflectionComposer\([\s\S]{0,220}text: \$draftText[\s\S]{0,220}onSubmit: onSubmit[\s\S]{0,520}\.frame\(maxWidth: \.infinity, alignment: \.center\)/,
+    /ReflectionComposer\([\s\S]{0,360}text: \$draftText[\s\S]{0,360}onSubmit: onSubmit[\s\S]{0,620}\.frame\(maxWidth: \.infinity, alignment: \.center\)/,
     'composer should share the centered thread axis instead of sticking to the left edge',
   );
   assert.doesNotMatch(nativeRoot, /ReflectionWorkflowGrid|LazyVGrid/);
   assert.match(nativeRoot, /ReflectionSearchField\(text: \$query, placeholder: "Filter sources"\)/);
   assert.match(
     nativeRoot,
-    /ScrollView \{[\s\S]*ReflectionSourcePreview\(source: selectedSource\)[\s\S]*\.padding\(\.bottom,\s*18\)/,
-    'native source preview should scroll with the source tree instead of floating at the bottom edge',
+    /ScrollView \{[\s\S]*ForEach\(groupedSources, id: \\\.0\)[\s\S]*\.padding\(\.bottom,\s*18\)/,
+    'native source list should scroll as evidence navigation instead of keeping a duplicate fixed preview',
   );
+  assert.doesNotMatch(nativeRoot, /ReflectionSourcePreview\(source: selectedSource\)/);
   assert.doesNotMatch(nativeRoot, /ReflectionBottomStatusStrip|reflectionBottomStatusHeight|sourceSummary/);
   assert.doesNotMatch(nativeRoot, /Button\(action: onClose\)/, 'sources collapse belongs in the shared top bar');
   assert.doesNotMatch(nativeRoot, /preferredColorScheme\(\.dark\)|environment\(\\\.colorScheme,\s*\.dark\)/);

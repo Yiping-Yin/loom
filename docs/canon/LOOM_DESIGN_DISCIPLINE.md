@@ -111,13 +111,37 @@ not differentiated.
    Loom must record the event as `app/window/time` or `visual context only`,
    not as file/page/cell. The right pane may show the ambiguity; memory and
    export cannot use it until confirmed.
-15. **The composer is a commit field.** It commits or revises a specific
-   understanding version. It is not a generic chat input.
-16. **Every visible surface has one owner.** If two surfaces own the same job,
+15. **The composer is a commit affordance, not a bottom bar.** It commits or
+   revises a specific understanding version. It is not a generic chat input and
+   it must not cut the center pane into a third zone. In learning mode it should
+   read as a quiet document-edge note field: one line of user
+   language and icon-only submit. Type choice, compact source anchor, and assist
+   controls stay hidden unless the target is ambiguous, focused, or opened
+   through details. Full metadata belongs in evidence or audit, not beside the
+   writing row.
+16. **The center pane shows the understanding object first.** For learning
+   cases, default to the user's current understanding as a readable document:
+   title hierarchy, paragraphs, selective evidence quotes, consolidated inline
+   terms, and footnote-like anchors. Version counts, capture receipts, and raw
+   automation evidence belong behind Capture trail or Details. Internal
+   categories can organize the model, but visible labels such as `01 Current
+   understanding`, `Understanding objects`, `Meaning`, `Language`, or
+   `Principles` cannot become a template column or default section system in the
+   reading page.
+17. **Learning traces mature into semantic objects.** A PDF learning pass may
+   capture `market`, `making`, and `market making` as separate moments because
+   the user learned them at different times. That is only one example of the
+   rule. A complex problem may start as words, phrases, sentence translations,
+   formulas, tables, figures, claims, examples, questions, or corrections. The
+   review page must not leave those as independent final notes when the source
+   context proves they belong together. Larger objects show the useful review
+   fields first, then compact supporting traces; raw events remain available
+   only as audit evidence.
+18. **Every visible surface has one owner.** If two surfaces own the same job,
    the design is already drifting.
-17. **Every accepted choice carries a refusal.** The refusal is part of the
+19. **Every accepted choice carries a refusal.** The refusal is part of the
    requirement because it prevents the same mistake from returning.
-18. **User wording is evidence, not instruction.** Treat every comparison,
+20. **User wording is evidence, not instruction.** Treat every comparison,
    screenshot, or complaint as a symptom that still needs product judgment.
 19. **Do not ship a concept without a path.** A design is not accepted until it
     describes the real user path before, during, and after the Loom action.
@@ -131,6 +155,23 @@ not differentiated.
     clean `/private/tmp/loom-*` files, old temporary Loom build bundles, and
     stale LaunchServices registrations so Preview / Word / Excel context menus
     reflect the current app rather than old test builds.
+23. **Synthetic evidence cannot upgrade anchors.** Report-only fixtures,
+    snapshot-only data, app names, and window titles may preserve context, but
+    they cannot promote a trace to `file+page`, `file+cell`, paragraph, or
+    region precision. That promotion requires a real native file URL, helper
+    result, structured selection, appshot/OCR result with confidence label, or
+    explicit user confirmation.
+24. **Liquid Glass light is interaction feedback, not background decoration.**
+    White light and tiny red / gold / blue refraction may appear on commit
+    fields, submit buttons, loading dots, saved receipts, or status transitions.
+    Sidebar, center reading surface, right evidence surface, and document
+    content cannot become animated color backgrounds. The visible hierarchy
+    stays: native file first, Loom understanding record second, optical feedback
+    only at the moment of action. The effect must be short-lived, local, and
+    ignorable; if it continuously attracts attention, it is visual noise.
+    Center and right panes may use frosted material, but they cannot own prism
+    light, moving glare, or persistent glow. Those effects belong only to action
+    controls.
 
 ## Current Hard Requirements From Critique
 
@@ -145,10 +186,11 @@ canon decision replaces them.
 | Circle / LaTeX / AI chat can already make fast readable packets. | Compete mainly on static formatting. | Clean A4 / Markdown / study packet output is baseline; Loom adds source anchors, learning trail, understanding diff, and reusable principle. |
 | The user's FINS3666 Circle packet is already fast, complete, and reviewable. | Treat a polished static PDF as Loom's final value. | Loom must first match that Learning Output Packet floor, then expose which source anchors, passes, corrections, and principles produced it. |
 | NotebookLM-style tools already create rich source summaries and study artifacts. | Copy a source hub and call it the product. | Rich source dossier is baseline; Loom becomes different only when generated artifacts expose the user's learning history. |
-| The bottom input box has no meaning when it accepts anything. | Keep a generic chat composer because AI products do. | The composer is visible only when it commits or revises a named understanding version. |
+| The input box has no meaning when it accepts anything. | Keep a generic chat composer because AI products do. | The composer is visible only when it commits or revises a named understanding version. |
 | Explanatory text makes the prototype feel like a product memo. | Add more onboarding copy to justify the interface. | The visible object should look like a human learning record; product logic moves into audit trail, docs, or empty-state hints. |
 | Capture feedback became too large and explanatory. | Show a modal-style card with preview, selected text, source metadata, trace explanation, or review copy. | Loom Companion is a small transient saved receipt only: Loom, Saved, source title, Back to Source / Open Source, Review in Loom, and close. |
 | The user may first learn language, then learn the subject. | Treat every capture as one kind of note. | Capture pass and trace type explicitly: word, pronunciation, phrase, sentence, grammar, idiom, translation, gist, question, concept, correction, or principle. |
+| The same source context produces word, phrase, and sentence captures. | Show all captures as independent final notes. | Larger semantic objects absorb smaller traces when they explain the same passage; the review page shows the mature object, while audit keeps the raw sequence. |
 | macOS Translate already gives high-quality translation, pronunciation, and Copy Translation. | Rebuild translation, dictionary, or pronunciation UI inside Loom. | Loom captures a native translation receipt only when the user explicitly commits it into an understanding version. |
 | Sandbox or source apps may block file/page/cell precision. | Pretend OCR or appshots prove exact source structure. | Visual appshot extraction may add text, table, figure, layout, and emphasis candidates, but every result carries precision and confidence labels. |
 | Multiple Preview / Word / Excel windows can confuse automation or Accessibility reads. | Treat the frontmost app name as proof of the target source. | Frontmost app is not source truth; Loom must disambiguate with Service context, file URL, appshot, or user confirmation before promoting the anchor. |
@@ -168,7 +210,7 @@ Loom from becoming a set of copied product fragments.
 | PDF use lost native capability. | Original app owns reading and file-specific tools. | No cloned PDF/Word/Excel editor as the primary path. | User can use native context menu and capture into Loom without losing the file workflow. |
 | Middle pane lacked a job. | Center is Understanding Version Flow. | No generic notes feed, mind map, transcript, dashboard, provenance-first table, or split learning/review ledger. | User can answer: first understanding, correction, open issue, synthesis, reusable principle. |
 | Right pane looked like a generic project file drawer. | Right pane is Evidence Inspector for the current thinking version; Source Collection is secondary. | No GPT/Claude-style "files beside chat" as the main relationship. | User can answer why the current version is grounded: source, anchor, page or region, pass, focus, trace type. |
-| Input box lacked a target. | Composer is a commit field. | No always-visible "ask anything" box in learning mode. | Before typing, the UI names the target: meaning, question, correction, synthesis, principle, or reflection stage. |
+| Input box lacked a target. | Composer is a document-edge commit affordance. | No always-visible "ask anything" box, no fixed bottom toolbar, and no default mode toolbar in learning mode. | The target is inferred from the selected understanding object; type and source details appear only on focus, ambiguity, tooltip, or Evidence. |
 | Output could be done by AI chat / Circle / LaTeX. | Static output is baseline; cognition trail is the Loom layer. | No claim that clean formatting or source aggregation is the moat. | Export shows source claim plus the user's learning trail and understanding diff. |
 | `loom-notes` already makes beautiful fill-in study notes. | Spine plus active recall is output baseline. | No turning the center workspace into a LaTeX worksheet editor. | Fill-in prompts trace back to source anchors, learning pass, correction, or memory candidate. |
 | NotebookLM comparison exposed expected richness. | Source dossier is a review / export baseline. | No NotebookLM clone as the center workspace. | Rich artifacts also show which learning versions and anchors shaped them. |
@@ -176,6 +218,9 @@ Loom from becoming a set of copied product fragments.
 | Companion looked like a small app window. | Capture receipt stays tiny, transient, and optional. | No preview table, raw quote, source metadata block, explanatory paragraph, or persistent side window in the receipt. | The user can ignore it and continue using the original file without losing focus. |
 | Native testing left old Loom apps and generated files around the user's machine. | Verification artifacts stay inside Loom `.codex/` or are removed, and stale temp app Services are unregistered. | No helper scripts, screenshots, packets, or temp apps in source folders or unmanaged `/private/tmp` leftovers. | `npm run clean:native-temp:dry` reports only Loom temp targets before cleanup, and Preview / Word / Excel Services do not show stale builds. |
 | Computer-use can observe a different Preview document than the user's intended learning file. | Use the observed app/window as a precise file/page anchor. | No anchor promotion from app identity alone. | The readback records `app/window/time` or `visual context only` until source identity is confirmed. |
+| Report-only learning packets looked more certain than the source evidence. | Synthetic evidence preserves context but does not upgrade anchor precision. | No `file+page` or `file+cell` claims from snapshot-only fixtures, app names, or window titles. | Report-only traces remain `file`, `window+page`, `window+time`, or weaker until a native helper, structured selection, visual extraction, or user confirmation proves stronger precision. |
+| macOS 27 Siri / Liquid Glass looks alive through white light and slight color separation. | Turn Loom into a colorful glass theme. | No animated color wash on sidebars, document backgrounds, center records, right evidence panes, or every hover state. | Optical light appears only as a short, local point of emphasis on input, commit, loading, saved, or status feedback; the reading and evidence surfaces stay stable. |
+| Center/right material can be frosted but not visually alive. | Use the same moving light treatment everywhere. | No prism light, moving glare, or persistent glow on the workbench or evidence pane. | Middle and right panes read as stable paper/inspector surfaces; only action controls produce short-lived light feedback. |
 
 The ledger is not optional. If a proposal cannot fill these four columns, it is
 still a symptom, not a design decision.
@@ -311,6 +356,29 @@ Do not start with material, color, glass, animation, or layout. Those are
 solutions after the product job and surface owner are clear. If this order is
 reversed, Loom will keep producing attractive fragments that do not form a
 product.
+
+## Material Discipline
+
+Liquid Glass is allowed across Loom only when it clarifies surface ownership.
+It is not a theme to pour over every pane.
+
+For Reflection:
+
+- **Left sidebar:** transparent navigation glass. It can reveal the desktop or
+  original file context behind the window because its job is navigation, not
+  reading.
+- **Center workspace:** matte/frosted workbench. It can have glass depth, but it
+  must keep the understanding version more legible than the material.
+- **Right pane:** quieter frosted inspector glass. It proves evidence for the
+  selected version without becoming a second reader or a debug dump.
+
+Refusal: no hand-painted blue slabs, dark gradients, decorative radial glows, or
+one-effect-for-everything glass. Use native macOS material (`NSVisualEffectView`,
+SwiftUI material, or platform Liquid Glass controls), restrained tints, hairline
+seams, and adaptive foregrounds. A subtle one-direction specular highlight is
+allowed only when it reads as glass thickness or edge refraction; it must not
+become a colored decorative gradient. If the material makes the product feel
+like a demo instead of a learning/review surface, the material is wrong.
 
 ## Product Discipline Checklist
 
@@ -574,12 +642,12 @@ capture metadata.
 
 ### Composer
 
-Symptom: a generic bottom input box has unclear meaning.
+Symptom: a generic input box has unclear meaning.
 
 Bad literal fix: label it as chat, ask, note, or command and let it accept
 anything.
 
-Choice: the composer is a commit field.
+Choice: the composer is a document-edge commit affordance.
 
 Rule: it appears only when the next commit target is known: meaning, question,
 correction, synthesis, principle, product Input, Assumption, Decision Trace,

@@ -167,11 +167,11 @@ When the left sidebar is collapsed:
 - The peek overlay must not move the center workspace, the right Sources pane,
   the pane seams, or the titlebar layout.
 - The peek overlay glass must use the center workspace background as its
-  transparent material base. It must not reuse the permanent left-rail dark
-  gradient as the visible backing.
+  transparent material base. It must not reuse the permanent left-rail material
+  as the visible backing.
 - The peek overlay's internal chrome must also use center-pane hierarchy:
   buttons, search, selected rows, row metadata, and delete affordances should
-  read as a temporary layer over the workspace, not as the permanent dark rail
+  read as a temporary layer over the workspace, not as the permanent rail
   stretched over the center.
 
 When the right Sources pane is collapsed:
@@ -183,15 +183,48 @@ When the right Sources pane is collapsed:
 
 ## Material Standard
 
-Only the left sidebar uses liquid glass. The center workspace and right Sources pane use adaptive flat surfaces: white in light mode, black in dark mode.
+The whole workbench may use Liquid Glass, but not as one repeated effect. The
+left sidebar is transparent navigation glass, the center workspace is a
+matte/frosted review surface, and the right Sources pane is quieter frosted
+inspector glass. All three follow the system color scheme.
 
 The workbench materials start at the window edge and run behind the titlebar:
 
 - The titlebar is a control overlay, not a layout row.
 - The left sidebar glass runs behind the titlebar from top to bottom.
-- The center and right flat surfaces run behind the titlebar from top to bottom.
+- The center matte surface and right frosted surface run behind the titlebar
+  from top to bottom.
 - Pane seams align without turning the workbench into six boxed regions. No inner rounded content shell.
 - The titlebar must not draw its own material background, internal vertical separators, or a full-width hard bottom rule. Pane boundaries belong to the continuous body surfaces and remain subtle.
+- Do not use decorative gradients to imitate glass; use system materials,
+  restrained tints, blur, hairlines, and real surface hierarchy. A single
+  restrained specular highlight may be used only to express glass edge thickness
+  or refraction.
+- macOS 27-style white light and small red/gold/blue separation belong to
+  interaction feedback: commit fields, submit buttons, loading dots, saved
+  receipts, and status transitions. They must not become sidebar wallpaper,
+  center-pane wash, right-pane wash, or document-background animation. They are
+  one-shot points of emphasis, not a persistent visual language applied to
+  every hover state.
+- The center workspace may be matte/frosted, but it cannot own prism light,
+  moving glare, persistent glow, or animated color wash. It must remain the
+  stable review surface.
+- The right Sources pane may be frosted inspector glass, but it cannot own
+  action-light effects as decoration. It stays quieter than the current
+  understanding object.
+- Optical light is reserved for moments of action, not the workspace theme.
+- The learning center default is the organized understanding object, not the
+  process name. Show the selected word, phrase, sentence, data point, user
+  meaning, question, correction, or principle first; show source position as a
+  quiet anchor; keep capture receipts, version counts, and raw evidence labels
+  folded behind the capture trail or details.
+- The learning composer is a quiet document-edge note field, not a message box,
+  not a fixed bottom bar, and not a second toolbar. The default state shows one short input
+  and icon-only submit near the document boundary. Type choice (`Meaning`,
+  `Ask`, `Fix`, `Keep`), source anchor, and assist controls appear only when
+  ambiguous, focused, or opened through details. Full source metadata belongs in
+  tooltip, aria-label, Evidence, or audit details, not repeated beside the text
+  field.
 
 ## Rejection Tests
 
@@ -205,6 +238,19 @@ Reject a build if any of these appear:
 - A black top strip sitting above the sidebar glass.
 - Full-width titlebar rules that split the workbench into six visible rectangles.
 - A titlebar background view that creates a separate top row.
+- Animated colored light across the sidebar, center workspace, right evidence
+  pane, or document content instead of on input/loading/status feedback.
+- Persistent glow on normal selection rows, source rows, or review content that
+  makes the record compete with the original file.
+- Visible learning-default copy such as `Receipts`, `Needs human meaning`,
+  `Understanding Version Flow`, or `Evidence Inspector` when the same state can
+  be expressed by the content, a source icon, a quiet status dot, or folded
+  details.
+- A learning composer that repeats the full filename, page metadata, assist
+  explanation, or a worded `Commit` button in the primary row when the same job
+  can be handled by a compact anchor, tooltip, aria-label, and submit icon.
+- A learning composer that is fixed to the bottom edge and visually splits the
+  center pane into a third region.
 - A custom PDF canvas/image reader replacing Preview or the user's default file
   app as the primary macOS surface.
 - A Loom PDF context menu that omits `super.menu(for:)` and therefore loses

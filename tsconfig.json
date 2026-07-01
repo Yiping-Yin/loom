@@ -41,7 +41,9 @@
     ".next-verify/types/**/*.ts",
     ".next-app-dev/dev/types/**/*.ts",
     ".next-dev24/types/**/*.ts",
-    ".next-dev24/dev/types/**/*.ts"
+    ".next-dev24/dev/types/**/*.ts",
+    ".next-build/dev/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     ".app-store",
