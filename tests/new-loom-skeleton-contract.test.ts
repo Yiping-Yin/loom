@@ -1740,7 +1740,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeSurface, /evidence: evidence/);
   assert.match(nativeRoot, /private static func learningFocus/);
   assert.match(nativeRoot, /private enum ReflectionLearningFocus/);
-  assert.match(nativeRoot, /private static func clippedSelectionText/);
+  assert.match(nativeRoot, /static func clippedSelectionText/);
   assert.match(nativeRoot, /private static func inferPDFAnchor/);
   assert.match(nativeRoot, /PDFDocument\(url: url\)/);
   assert.match(nativeRoot, /document\.page\(at: pageIndex\)\?\.string/);
@@ -1924,15 +1924,17 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /Learning focus: \\?\(focus\.label\\?\)/);
   assert.match(nativeRoot, /Meaning status: needs user confirmation/);
   assert.match(nativeRoot, /Second pass: not synthesized yet/);
-  assert.match(nativeRoot, /refreshLearningSynthesis\(for: index\)/);
-  assert.match(nativeRoot, /private func refreshLearningSynthesis\(for index: Int\)/);
-  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.assumptions, to: "assumption", caseIndex: index\)/);
-  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.decisions, to: "decision", caseIndex: index\)/);
-  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.outcomes, to: "outcome", caseIndex: index\)/);
-  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.reflections, to: "reflection", caseIndex: index\)/);
-  assert.match(nativeRoot, /appendUniqueStepItems\(synthesis\.memories, to: "memory", caseIndex: index\)/);
+  // Stage 2 (THE BOOK): machine synthesis is COMPUTED ON READ — it never
+  // writes into the user's steps, never appends Loom messages, and never
+  // auto-advances the pass. Only user review actions advance it.
+  assert.doesNotMatch(nativeRoot, /appendUniqueStepItems/);
+  assert.doesNotMatch(nativeRoot, /refreshLearningSynthesis/);
+  assert.doesNotMatch(nativeRoot, /Second-pass synthesis prepared from understanding versions/);
+  assert.match(nativeRoot, /advancePassOnUserReview\(for: index, focus: focus\)/);
+  assert.match(nativeRoot, /if focus == \.question \|\| focus == \.correction \|\| focus == \.principle \{/);
   assert.match(nativeRoot, /cases\[index\]\.status = "Second pass ready"/);
-  assert.match(nativeRoot, /Second-pass synthesis prepared from understanding versions/);
+  assert.match(nativeRoot, /let synthesis = ReflectionLearningSynthesis\.make\(for: reflectionCase\)/);
+  assert.match(nativeRoot, /mergedUnique\(stepItems\(in: reflectionCase, id: "outcome"\), synthesis\.outcomes\)/);
   assert.match(nativeRoot, /private struct ReflectionLearningSynthesis/);
   assert.match(nativeRoot, /static func make\(for reflectionCase: ReflectionCase\) -> ReflectionLearningSynthesis/);
   assert.match(nativeRoot, /First-pass learning is not final understanding; raw captures need review before they become reusable thinking/);
@@ -1943,12 +1945,15 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /Principle candidate: /);
   assert.match(nativeRoot, /private enum ReflectionCommitFocus: String/);
   assert.doesNotMatch(nativeRoot, /CaseIterable, Identifiable/);
-  assert.doesNotMatch(nativeRoot, /@State private var selectedCommitFocus/);
-  assert.match(nativeRoot, /let focus = Self\.commitFocus\(for: material\)/);
+  // Stage 2 (THE BOOK): the composer carries explicit type chips — the chip
+  // is the FALLBACK; the prefix/suffix grammar still wins so muscle-memory
+  // commits keep working. The commit type is never guessed-only.
+  assert.match(nativeRoot, /@State private var composerFocus: ReflectionCommitFocus = \.meaning/);
+  assert.match(nativeRoot, /let focus = Self\.commitFocus\(for: material, fallback: composerFocus\)/);
   assert.match(nativeRoot, /manualLearningInputLine\(material, sourceLabel: sourceLabel, focus: focus\)/);
-  // Explicit commit grammar (no keyword guessing): trailing ? opens a
-  // question; principle:/correction:/question: prefixes declare intent.
-  assert.match(nativeRoot, /private static func commitFocus\(for material: String\) -> ReflectionCommitFocus/);
+  assert.match(nativeRoot, /private static func commitFocus\(for material: String, fallback: ReflectionCommitFocus\) -> ReflectionCommitFocus/);
+  assert.match(nativeRoot, /@Binding var commitFocus: ReflectionCommitFocus/);
+  assert.match(nativeRoot, /Commit the next entry as a /);
   assert.match(nativeRoot, /trimmed\.hasSuffix\("\?"\) \|\| trimmed\.hasSuffix\("？"\)/);
   assert.match(nativeRoot, /reviewLine\(for: trace\)/);
   assert.match(nativeRoot, /User-confirmed meaning/);
@@ -2016,13 +2021,16 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /steps\[5\]\.title = "Principle"/);
   assert.match(nativeRoot, /steps\[5\]\.subtitle = "What can become reusable thinking"/);
   assert.match(nativeSurface, /if reflectionCase\.project == "Learning pass", normalizedStep\.id == "memory"/);
-  assert.match(nativeRoot, /return "Margin note\.\.\."/);
+  // Stage 2 (THE BOOK): the placeholder adapts to the selected commit type —
+  // it teaches only what the chip's word cannot.
+  assert.match(nativeRoot, /case \.meaning: return "Add your meaning\.\.\."/);
+  assert.match(nativeRoot, /closes when: /);
   assert.match(nativeRoot, /\.help\("Save margin note"\)/);
+  // Superseded refusal (Stage 2): adaptive placeholders were rejected when
+  // they tracked a GUESSED focus; with explicit type chips the placeholder
+  // legitimately follows the user's own selection. The refusal that stands:
+  // no worded commit-target column beside the writing row.
   assert.doesNotMatch(nativeRoot, /return "Add understanding\.\.\."/);
-  assert.doesNotMatch(nativeRoot, /return "Add your meaning\.\.\."/);
-  assert.doesNotMatch(nativeRoot, /return "What is still unclear\?"/);
-  assert.doesNotMatch(nativeRoot, /return "Correct your earlier understanding\.\.\."/);
-  assert.doesNotMatch(nativeRoot, /return "Write the reusable principle\.\.\."/);
   assert.doesNotMatch(nativeRoot, /commitTarget: composerTarget/);
   assert.doesNotMatch(nativeRoot, /private var composerTarget: String/);
   assert.match(nativeRoot, /private var learningTraces: \[ReflectionLearningTrace\]/);

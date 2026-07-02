@@ -142,6 +142,16 @@ struct ReflectionLearningTrace: Identifiable, Equatable {
         pageNumber.map { "p.\($0)" }
     }
 
+    /// Stage 2 (THE BOOK): a question's open condition, parsed from the text
+    /// convention "… closes when: …". A pure function of the text so the
+    /// record path and the legacy string path stay equivalent by construction.
+    var openCondition: String? {
+        guard focus == "question" else { return nil }
+        guard let range = displayText.range(of: "closes when:", options: .caseInsensitive) else { return nil }
+        let value = displayText[range.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
+    }
+
     var isUserCommitted: Bool {
         !(isLanguageSelection || isDataOrDocumentSelection || focus == "question")
     }

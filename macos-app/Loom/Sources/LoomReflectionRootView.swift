@@ -70,6 +70,7 @@ struct LoomReflectionRootView: View {
         nonmutating set { workspace.selectedLearningTraceID = newValue }
     }
     @State private var draftText: String = ""
+    @State private var composerFocus: ReflectionCommitFocus = .meaning
     @State private var statusMessage: String = "Local reflection workspace"
     @State private var isSidebarPresented: Bool = true
     @State private var isSidebarPeeking: Bool = false
@@ -123,6 +124,7 @@ struct LoomReflectionRootView: View {
                         reflectionCase: selectedCase,
                         selectedLearningTraceID: $workspace.selectedLearningTraceID,
                         draftText: $draftText,
+                        commitFocus: $composerFocus,
                         onSelectTrace: selectLearningTrace,
                         onSubmit: submitMaterial
                     )
@@ -408,14 +410,17 @@ struct LoomReflectionRootView: View {
     /// prefixes — no keyword guessing. A trailing question mark opens a
     /// question (it stays open until the user commits what closes it);
     /// "principle:"/"correction:"/"question:" prefixes declare intent.
-    private static func commitFocus(for material: String) -> ReflectionCommitFocus {
+    // Stage 2 (THE BOOK): the composer's explicit type chip is the fallback —
+    // the commit type is never guessed-only. Prefix/suffix grammar still wins
+    // so muscle-memory commits keep working.
+    private static func commitFocus(for material: String, fallback: ReflectionCommitFocus) -> ReflectionCommitFocus {
         let trimmed = material.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.hasSuffix("?") || trimmed.hasSuffix("？") { return .question }
         let lowered = trimmed.lowercased()
         if lowered.hasPrefix("principle:") { return .principle }
         if lowered.hasPrefix("correction:") { return .correction }
         if lowered.hasPrefix("question:") { return .question }
-        return .meaning
+        return fallback
     }
 
     private func submitMaterial() {
@@ -430,7 +435,7 @@ struct LoomReflectionRootView: View {
                 ?? cases[index].title
             cases[index].status = "Reading"
             cases[index].updatedAt = Self.timeFormatter.string(from: Date())
-            let focus = Self.commitFocus(for: material)
+            let focus = Self.commitFocus(for: material, fallback: composerFocus)
             let manualLine = Self.manualLearningInputLine(material, sourceLabel: sourceLabel, focus: focus)
             cases[index].steps[0].items.append(manualLine)
             // Stage 1 (LoomDomain): dual-write the typed record alongside the
@@ -448,9 +453,10 @@ struct LoomReflectionRootView: View {
                     body: "Committed as a thinking version. Native file stays the source of truth; only confirmed principles become reusable memory."
                 )
             )
-            refreshLearningSynthesis(for: index)
+            advancePassOnUserReview(for: index, focus: focus)
             selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
             draftText = ""
+            composerFocus = .meaning
             statusMessage = "Committed thinking version"
             persistWorkspace()
             return
@@ -688,7 +694,6 @@ struct LoomReflectionRootView: View {
             }
             cases[index].status = "Reading"
             cases[index].updatedAt = Self.timeFormatter.string(from: Date())
-            refreshLearningSynthesis(for: index)
             selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
             draftText = ""
             isSidebarPresented = false
@@ -717,7 +722,6 @@ struct LoomReflectionRootView: View {
                 )
             )
         )
-        refreshLearningSynthesis(for: index)
         selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
         draftText = ""
         isSidebarPresented = false
@@ -727,35 +731,16 @@ struct LoomReflectionRootView: View {
         persistWorkspace()
     }
 
-    private func refreshLearningSynthesis(for index: Int) {
+    /// Stage 2 (THE BOOK): machine synthesis is computed ON READ and rendered
+    /// as Loom's marginal voice (ReflectionLearningReviewSummary) — it never
+    /// writes into the user's steps, never appends messages, and never
+    /// advances the pass. Only the user's own review actions (question /
+    /// correction / principle commits) advance the pass state.
+    private func advancePassOnUserReview(for index: Int, focus: ReflectionCommitFocus) {
         guard cases.indices.contains(index),
               cases[index].project == "Learning pass" else { return }
-
-        let synthesis = ReflectionLearningSynthesis.make(for: cases[index])
-        guard !synthesis.isEmpty else { return }
-
-        appendUniqueStepItems(synthesis.assumptions, to: "assumption", caseIndex: index)
-        appendUniqueStepItems(synthesis.decisions, to: "decision", caseIndex: index)
-        appendUniqueStepItems(synthesis.outcomes, to: "outcome", caseIndex: index)
-        appendUniqueStepItems(synthesis.reflections, to: "reflection", caseIndex: index)
-        appendUniqueStepItems(synthesis.memories, to: "memory", caseIndex: index)
-
-        cases[index].status = "Second pass ready"
-        if !cases[index].messages.contains(where: { $0.body.contains("Second-pass synthesis prepared") }) {
-            cases[index].messages.append(
-                ReflectionMessage(
-                    role: .loom,
-                    eyebrow: "Second pass",
-                    body: "Second-pass synthesis prepared from understanding versions. Review the changes before promoting any confirmed principle into memory."
-                )
-            )
-        }
-    }
-
-    private func appendUniqueStepItems(_ items: [String], to stepID: String, caseIndex: Int) {
-        guard let stepIndex = cases[caseIndex].steps.firstIndex(where: { $0.id == stepID }) else { return }
-        for item in items where !cases[caseIndex].steps[stepIndex].items.contains(item) {
-            cases[caseIndex].steps[stepIndex].items.append(item)
+        if focus == .question || focus == .correction || focus == .principle {
+            cases[index].status = "Second pass ready"
         }
     }
 
@@ -1265,137 +1250,6 @@ struct LoomReflectionRootView: View {
         }
     }
 
-    private struct ReflectionLearningSynthesis {
-        var assumptions: [String]
-        var decisions: [String]
-        var outcomes: [String]
-        var reflections: [String]
-        var memories: [String]
-
-        var isEmpty: Bool {
-            assumptions.isEmpty
-                && decisions.isEmpty
-                && outcomes.isEmpty
-                && reflections.isEmpty
-                && memories.isEmpty
-        }
-
-        static func make(for reflectionCase: ReflectionCase) -> ReflectionLearningSynthesis {
-            let traces = LearningTrace.from(reflectionCase)
-            guard !traces.isEmpty else {
-                return ReflectionLearningSynthesis(
-                    assumptions: [],
-                    decisions: [],
-                    outcomes: [],
-                    reflections: [],
-                    memories: []
-                )
-            }
-
-            let sourceLabel = reflectionCase.sources.first?.label ?? reflectionCase.title
-            let focusSummary = focusCounts(from: traces)
-            let samples = sampleLines(from: traces)
-            let confirmedPrinciple = traces.last { $0.focus == "principle" }
-
-            var reflections = samples
-            reflections.append("Second-pass synthesis: compare versions, correct meanings, then separate language understanding from domain knowledge.")
-
-            return ReflectionLearningSynthesis(
-                assumptions: [
-                    "First-pass learning is not final understanding; raw captures need review before they become reusable thinking."
-                ],
-                decisions: [
-                    "Kept the original file surface primary and used Loom only to commit anchored traces from \(sourceLabel)."
-                ],
-                outcomes: [
-                    "Captured \(traces.count) anchored learning trace\(traces.count == 1 ? "" : "s") from \(sourceLabel): \(focusSummary)."
-                ],
-                reflections: reflections,
-                memories: confirmedPrinciple.map { ["Principle candidate: \($0.text)"] } ?? []
-            )
-        }
-
-        private static func focusCounts(from traces: [LearningTrace]) -> String {
-            let grouped = Dictionary(grouping: traces, by: \.focus)
-            return grouped.keys.sorted().map { focus in
-                let count = grouped[focus]?.count ?? 0
-                return "\(count) \(focus)"
-            }
-            .joined(separator: ", ")
-        }
-
-        private static func sampleLines(from traces: [LearningTrace]) -> [String] {
-            traces.prefix(4).map { trace in
-                reviewLine(for: trace)
-            }
-        }
-
-        private static func reviewLine(for trace: LearningTrace) -> String {
-            switch trace.focus {
-            case "user meaning":
-                return "User-confirmed meaning: \(confirmedText(from: trace.text))"
-            case "question":
-                return "Question to resolve: \(trace.text)"
-            case "correction":
-                return "Correction applied: \(trace.text)"
-            default:
-                return "\(confirmationLabel(for: trace.focus)) to review: \(trace.text)"
-            }
-        }
-
-        private static func confirmationLabel(for focus: String) -> String {
-            guard let first = focus.first else { return focus }
-            return first.uppercased() + focus.dropFirst()
-        }
-
-        private static func confirmedText(from text: String) -> String {
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            for prefix in ["Meaning confirmed:", "Meaning confirmed", "Confirmed:", "Confirmed"] {
-                if trimmed.range(of: prefix, options: [.anchored, .caseInsensitive]) != nil {
-                    let index = trimmed.index(trimmed.startIndex, offsetBy: prefix.count)
-                    return String(trimmed[index...]).trimmingCharacters(in: .whitespacesAndNewlines)
-                }
-            }
-            return trimmed
-        }
-
-        private struct LearningTrace {
-            let focus: String
-            let text: String
-
-            static func from(_ reflectionCase: ReflectionCase) -> [LearningTrace] {
-                let inputItems = reflectionCase.steps.first { $0.id == "input" }?.items ?? []
-                return inputItems.compactMap(parse)
-            }
-
-            private static func parse(_ item: String) -> LearningTrace? {
-                guard item.hasPrefix("Captured "),
-                      let focusStart = item.firstIndex(of: "["),
-                      let focusEnd = item[focusStart...].firstIndex(of: "]") else {
-                    return nil
-                }
-
-                let focus = String(item[item.index(after: focusStart)..<focusEnd])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !focus.isEmpty else { return nil }
-
-                let afterFocus = item[item.index(after: focusEnd)...]
-                let text: String
-                if afterFocus.hasPrefix(":") {
-                    text = String(afterFocus.dropFirst())
-                } else {
-                    text = String(afterFocus)
-                }
-                let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmedText.isEmpty else { return nil }
-
-                return LearningTrace(
-                    focus: focus,
-                    text: LoomReflectionRootView.clippedSelectionText(trimmedText, maxLength: 180)
-                )
-            }
-        }
-    }
 
     private enum ReflectionCaptureKind: Equatable {
         case pdf
@@ -1513,7 +1367,7 @@ struct LoomReflectionRootView: View {
         ReflectionCaptureKind.infer(from: capture)
     }
 
-    private static func clippedSelectionText(_ text: String, maxLength: Int = 900) -> String {
+    static func clippedSelectionText(_ text: String, maxLength: Int = 900) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count > maxLength else { return trimmed }
         let end = trimmed.index(trimmed.startIndex, offsetBy: maxLength)
@@ -2228,6 +2082,7 @@ private struct ReflectionThreadView: View {
     let reflectionCase: ReflectionCase
     @Binding var selectedLearningTraceID: ReflectionLearningTrace.ID?
     @Binding var draftText: String
+    @Binding var commitFocus: ReflectionCommitFocus
     let onSelectTrace: (ReflectionLearningTrace) -> Void
     let onSubmit: () -> Void
 
@@ -2262,6 +2117,7 @@ private struct ReflectionThreadView: View {
             }
             ReflectionComposer(
                 text: $draftText,
+                commitFocus: $commitFocus,
                 placeholder: composerPlaceholder,
                 isLearningCase: reflectionCase.project == "Learning pass",
                 onSubmit: onSubmit
@@ -2277,7 +2133,14 @@ private struct ReflectionThreadView: View {
 
     private var composerPlaceholder: String {
         if reflectionCase.project == "Learning pass" {
-            return "Margin note..."
+            // The chip names the commit target; the placeholder teaches only
+            // what a word cannot (canon: composer = commit affordance).
+            switch commitFocus {
+            case .meaning: return "Add your meaning..."
+            case .question: return "What's unclear? Add “closes when: …” to set the open condition"
+            case .correction: return "What did you get wrong — and what is right now?"
+            case .principle: return "What holds beyond this file?"
+            }
         }
         return "Paste a product event, user reaction, decision, or launch result..."
     }
@@ -2387,6 +2250,24 @@ private struct ReflectionLearningDigest: View {
         traces.count > 1 || traces.contains { $0.isUserCommitted }
     }
 
+    // Stage 2 (THE BOOK): a correction supersedes the latest earlier
+    // user-committed entry sharing its source anchor — the pair renders as
+    // ONE revision unit (struck first meaning above the corrected text),
+    // never as two competing entries. Understanding diff, not chat history.
+    private var revisions: (hidden: Set<ReflectionLearningTrace.ID>, superseded: [ReflectionLearningTrace.ID: ReflectionLearningTrace]) {
+        var superseded: [ReflectionLearningTrace.ID: ReflectionLearningTrace] = [:]
+        var hidden: Set<ReflectionLearningTrace.ID> = []
+        for (index, trace) in traces.enumerated() where trace.focus == "correction" {
+            if let prior = traces[..<index].last(where: {
+                $0.isUserCommitted && $0.focus != "correction" && $0.sourceAnchor == trace.sourceAnchor && !hidden.contains($0.id)
+            }) {
+                superseded[trace.id] = prior
+                hidden.insert(prior.id)
+            }
+        }
+        return (hidden, superseded)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
@@ -2412,14 +2293,18 @@ private struct ReflectionLearningDigest: View {
                 }
             }
 
+            ReflectionLearningProvenanceBox(reflectionCase: reflectionCase, traces: traces)
+
             if let summary = ReflectionLearningReviewSummary.make(for: reflectionCase) {
                 ReflectionLearningReview(summary: summary)
             }
 
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(orderedTraces) { trace in
+                let revisionState = revisions
+                ForEach(orderedTraces.filter { !revisionState.hidden.contains($0.id) }) { trace in
                     ReflectionLearningDocumentEntry(
                         trace: trace,
+                        superseded: revisionState.superseded[trace.id],
                         isActive: trace.id == activeTraceID,
                         sourceFileURL: sourceFileURL,
                         onSelect: { onSelectTrace(trace) }
@@ -2428,6 +2313,57 @@ private struct ReflectionLearningDigest: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+// Stage 2 (THE BOOK): the reader's chain of custody — one quiet head-matter
+// line (RESEARCH_REPORT anatomy: provenance box + scope-first declaration).
+// It states what was read and how well it is anchored; it never becomes a
+// form or a dashboard.
+private struct ReflectionLearningProvenanceBox: View {
+    let reflectionCase: ReflectionCase
+    let traces: [ReflectionLearningTrace]
+
+    private var provenanceLine: String {
+        let sourceCount = max(reflectionCase.sources.count, 1)
+        let pageAnchored = traces.filter { $0.pageNumber != nil }.count
+        let reviewEntries = traces.filter { ["question", "correction", "principle"].contains($0.focus) }.count
+        var parts = [
+            "\(sourceCount) source\(sourceCount == 1 ? "" : "s")",
+            "\(traces.count) anchored trace\(traces.count == 1 ? "" : "s")",
+        ]
+        parts.append(pageAnchored > 0 ? "\(pageAnchored) page-anchored" : "page anchors pending")
+        if reviewEntries > 0 {
+            parts.append("\(reviewEntries) review entr\(reviewEntries == 1 ? "y" : "ies")")
+        }
+        parts.append("updated \(reflectionCase.updatedAt)")
+        return parts.joined(separator: " · ")
+    }
+
+    private var scopeLine: String? {
+        let pages = traces.compactMap(\.pageNumber)
+        guard let low = pages.min(), let high = pages.max() else { return nil }
+        let label = reflectionCase.sources.first?.label ?? reflectionCase.title
+        let span = low == high ? "p.\(low)" : "p.\(low)–p.\(high)"
+        return "Covers \(span) of \(label). Claims stay within the captured material."
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(provenanceLine)
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundStyle(LoomTokens.dsInk3)
+            if let scopeLine {
+                Text(scopeLine)
+                    .font(.system(size: 11.5, design: .serif).italic())
+                    .foregroundStyle(LoomTokens.dsInk3)
+            }
+        }
+        .padding(.bottom, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(LoomTokens.dsHair.opacity(0.8)).frame(height: 1)
+        }
     }
 }
 
@@ -2455,6 +2391,7 @@ private struct ReflectionLearningStagePill: View {
 
 private struct ReflectionLearningDocumentEntry: View {
     let trace: ReflectionLearningTrace
+    var superseded: ReflectionLearningTrace? = nil
     let isActive: Bool
     let sourceFileURL: URL?
     let onSelect: () -> Void
@@ -2508,6 +2445,18 @@ private struct ReflectionLearningDocumentEntry: View {
                     }
                 }
 
+                if let superseded {
+                    // The revision unit: the first understanding stays
+                    // visible but struck — the diff IS the learning.
+                    Text(superseded.displayText)
+                        .font(.system(size: 13, design: .serif))
+                        .strikethrough(true, color: LoomTokens.dsInk3.opacity(0.55))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 Text(trace.displayText)
                     .font(entryTextFont)
                     .lineSpacing(5)
@@ -2522,7 +2471,8 @@ private struct ReflectionLearningDocumentEntry: View {
                     // commits what would close it.
                     VStack(alignment: .leading, spacing: 11) {
                         Text(trace.focus == "question"
-                            ? "Open — what would close this question?"
+                            ? (trace.openCondition.map { "Open — closes when: \($0)" }
+                                ?? "Open — what would close this question?")
                             : "Explain it in your own words")
                             .font(.system(size: 11.5, design: .serif).italic())
                             .foregroundStyle(LoomTokens.dsInk3)
@@ -2722,9 +2672,12 @@ private struct ReflectionLearningReviewSummary: Equatable {
     static func make(for reflectionCase: ReflectionCase) -> ReflectionLearningReviewSummary? {
         guard reflectionCase.project == "Learning pass" else { return nil }
 
-        let outcomeItems = stepItems(in: reflectionCase, id: "outcome")
-        let reflectionItems = stepItems(in: reflectionCase, id: "reflection")
-        let principleItems = stepItems(in: reflectionCase, id: "memory")
+        // Stage 2 (THE BOOK): synthesis is Loom's marginal voice, computed on
+        // read — merged with any legacy persisted items but never written back.
+        let synthesis = ReflectionLearningSynthesis.make(for: reflectionCase)
+        let outcomeItems = mergedUnique(stepItems(in: reflectionCase, id: "outcome"), synthesis.outcomes)
+        let reflectionItems = mergedUnique(stepItems(in: reflectionCase, id: "reflection"), synthesis.reflections)
+        let principleItems = mergedUnique(stepItems(in: reflectionCase, id: "memory"), synthesis.memories)
         let inputItems = stepItems(in: reflectionCase, id: "input")
         let outcome = outcomeItems.last { $0.contains("anchored learning trace") }
         let confirmations = Array(reflectionItems.filter { $0.contains(" to confirm:") }.prefix(4))
@@ -2748,6 +2701,11 @@ private struct ReflectionLearningReviewSummary: Equatable {
 
     private static func stepItems(in reflectionCase: ReflectionCase, id: String) -> [String] {
         reflectionCase.steps.first { $0.id == id }?.items ?? []
+    }
+
+    private static func mergedUnique(_ persisted: [String], _ computed: [String]) -> [String] {
+        var seen = Set<String>()
+        return (persisted + computed).filter { seen.insert($0).inserted }
     }
 
     private static func traceSummary(from outcome: String?, inputItems: [String]) -> String {
@@ -2971,6 +2929,7 @@ private struct ReflectionMessages: View {
 
 private struct ReflectionComposer: View {
     @Binding var text: String
+    @Binding var commitFocus: ReflectionCommitFocus
     let placeholder: String
     let isLearningCase: Bool
     let onSubmit: () -> Void
@@ -2981,6 +2940,34 @@ private struct ReflectionComposer: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if isLearningCase {
+                // The type chips ARE the choice (design handoff §1): the user
+                // sees what the text will become before typing. Words stay —
+                // they carry the commit semantics, not chrome.
+                HStack(spacing: 6) {
+                    ForEach([ReflectionCommitFocus.meaning, .question, .correction, .principle], id: \.rawValue) { focus in
+                        Button {
+                            commitFocus = focus
+                        } label: {
+                            Text(focus.rawValue.capitalized)
+                                .font(.system(size: 10.5, weight: .semibold))
+                                .foregroundStyle(commitFocus == focus ? LoomTokens.dsPaperUp : LoomTokens.dsInk3)
+                                .padding(.horizontal, 9)
+                                .frame(height: 22)
+                                .background(
+                                    Capsule().fill(commitFocus == focus ? LoomTokens.dsInk1 : LoomTokens.dsPaperCard.opacity(0.7))
+                                )
+                                .overlay(
+                                    Capsule().stroke(LoomTokens.dsHair, lineWidth: commitFocus == focus ? 0 : 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .help("Commit the next entry as a \(focus.rawValue)")
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.bottom, 7)
+            }
             HStack(alignment: .bottom, spacing: 9) {
                 ZStack(alignment: .topLeading) {
                     TextEditor(text: $text)
@@ -3543,5 +3530,134 @@ final class ReflectionResizeHandleNSView: NSView {
     }
 }
 
+private struct ReflectionLearningSynthesis {
+    var assumptions: [String]
+    var decisions: [String]
+    var outcomes: [String]
+    var reflections: [String]
+    var memories: [String]
 
+    var isEmpty: Bool {
+        assumptions.isEmpty
+            && decisions.isEmpty
+            && outcomes.isEmpty
+            && reflections.isEmpty
+            && memories.isEmpty
+    }
 
+    static func make(for reflectionCase: ReflectionCase) -> ReflectionLearningSynthesis {
+        let traces = LearningTrace.from(reflectionCase)
+        guard !traces.isEmpty else {
+            return ReflectionLearningSynthesis(
+                assumptions: [],
+                decisions: [],
+                outcomes: [],
+                reflections: [],
+                memories: []
+            )
+        }
+
+        let sourceLabel = reflectionCase.sources.first?.label ?? reflectionCase.title
+        let focusSummary = focusCounts(from: traces)
+        let samples = sampleLines(from: traces)
+        let confirmedPrinciple = traces.last { $0.focus == "principle" }
+
+        var reflections = samples
+        reflections.append("Second-pass synthesis: compare versions, correct meanings, then separate language understanding from domain knowledge.")
+
+        return ReflectionLearningSynthesis(
+            assumptions: [
+                "First-pass learning is not final understanding; raw captures need review before they become reusable thinking."
+            ],
+            decisions: [
+                "Kept the original file surface primary and used Loom only to commit anchored traces from \(sourceLabel)."
+            ],
+            outcomes: [
+                "Captured \(traces.count) anchored learning trace\(traces.count == 1 ? "" : "s") from \(sourceLabel): \(focusSummary)."
+            ],
+            reflections: reflections,
+            memories: confirmedPrinciple.map { ["Principle candidate: \($0.text)"] } ?? []
+        )
+    }
+
+    private static func focusCounts(from traces: [LearningTrace]) -> String {
+        let grouped = Dictionary(grouping: traces, by: \.focus)
+        return grouped.keys.sorted().map { focus in
+            let count = grouped[focus]?.count ?? 0
+            return "\(count) \(focus)"
+        }
+        .joined(separator: ", ")
+    }
+
+    private static func sampleLines(from traces: [LearningTrace]) -> [String] {
+        traces.prefix(4).map { trace in
+            reviewLine(for: trace)
+        }
+    }
+
+    private static func reviewLine(for trace: LearningTrace) -> String {
+        switch trace.focus {
+        case "user meaning":
+            return "User-confirmed meaning: \(confirmedText(from: trace.text))"
+        case "question":
+            return "Question to resolve: \(trace.text)"
+        case "correction":
+            return "Correction applied: \(trace.text)"
+        default:
+            return "\(confirmationLabel(for: trace.focus)) to review: \(trace.text)"
+        }
+    }
+
+    private static func confirmationLabel(for focus: String) -> String {
+        guard let first = focus.first else { return focus }
+        return first.uppercased() + focus.dropFirst()
+    }
+
+    private static func confirmedText(from text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        for prefix in ["Meaning confirmed:", "Meaning confirmed", "Confirmed:", "Confirmed"] {
+            if trimmed.range(of: prefix, options: [.anchored, .caseInsensitive]) != nil {
+                let index = trimmed.index(trimmed.startIndex, offsetBy: prefix.count)
+                return String(trimmed[index...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        return trimmed
+    }
+
+    private struct LearningTrace {
+        let focus: String
+        let text: String
+
+        static func from(_ reflectionCase: ReflectionCase) -> [LearningTrace] {
+            let inputItems = reflectionCase.steps.first { $0.id == "input" }?.items ?? []
+            return inputItems.compactMap(parse)
+        }
+
+        private static func parse(_ item: String) -> LearningTrace? {
+            guard item.hasPrefix("Captured "),
+                  let focusStart = item.firstIndex(of: "["),
+                  let focusEnd = item[focusStart...].firstIndex(of: "]") else {
+                return nil
+            }
+
+            let focus = String(item[item.index(after: focusStart)..<focusEnd])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !focus.isEmpty else { return nil }
+
+            let afterFocus = item[item.index(after: focusEnd)...]
+            let text: String
+            if afterFocus.hasPrefix(":") {
+                text = String(afterFocus.dropFirst())
+            } else {
+                text = String(afterFocus)
+            }
+            let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedText.isEmpty else { return nil }
+
+            return LearningTrace(
+                focus: focus,
+                text: LoomReflectionRootView.clippedSelectionText(trimmedText, maxLength: 180)
+            )
+        }
+    }
+}
