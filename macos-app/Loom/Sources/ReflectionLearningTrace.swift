@@ -182,6 +182,28 @@ struct ReflectionLearningTrace: Identifiable, Equatable {
         return traces
     }
 
+    /// Stage 1 (LoomDomain): build the same view-models from typed records.
+    /// Must stay behaviorally identical to the string-parsing path above —
+    /// ReflectionTraceRecordTests pins the equivalence.
+    static func from(records: [ReflectionTraceRecord]) -> [ReflectionLearningTrace] {
+        var version = 1
+        return records.map { record in
+            let trace = ReflectionLearningTrace(
+                id: "\(version)-\(record.legacyItem)",
+                version: "v\(version)",
+                traceType: record.traceType,
+                sourceAnchor: record.sourceAnchor,
+                focus: record.focus,
+                pass: passLabel(for: record.focus),
+                text: record.text,
+                evidence: record.evidence.map { ReflectionLearningEvidence(label: $0.label, value: $0.value) },
+                raw: record.legacyItem
+            )
+            version += 1
+            return trace
+        }
+    }
+
     private static func cleanUserPrefix(_ value: String) -> String {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         let prefixes = [
@@ -207,7 +229,7 @@ struct ReflectionLearningTrace: Identifiable, Equatable {
         return trimmed
     }
 
-    private static func parseCaptured(_ item: String, version: Int) -> ReflectionLearningTrace? {
+    static func parseCaptured(_ item: String, version: Int) -> ReflectionLearningTrace? {
         let prefix = "Captured "
         guard item.hasPrefix(prefix),
               let fromRange = item.range(of: " from "),
@@ -271,7 +293,7 @@ struct ReflectionLearningTrace: Identifiable, Equatable {
             }
     }
 
-    private static func parseLegacyManual(_ item: String, version: Int, sourceLabel: String) -> ReflectionLearningTrace? {
+    static func parseLegacyManual(_ item: String, version: Int, sourceLabel: String) -> ReflectionLearningTrace? {
         let prefix = "Manual learning note: "
         guard item.hasPrefix(prefix) else { return nil }
         let textStart = item.index(item.startIndex, offsetBy: prefix.count)
