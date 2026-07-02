@@ -101,7 +101,7 @@ after binding). The old free-string `status` becomes a display projection.
 
 | Zone | Job | Refuses |
 |---|---|---|
-| **Stage rail** (52px) | The arc as navigation: 读厚/读薄/融会/装订/实战. Click = lens (thick=captures, thin=meanings/revisions/questions, weave=principles), 装订 = bind, 实战 = practice tab. 读薄 in Reading state offers "Start second pass" (turns on Recall, jumps §1, stamps a pass marker). | Becoming a feature drawer; badges/notification counts |
+| **Stage rail** (52px) | The arc as navigation: Collect / Distill / Weave / Bind / Practice (读厚/读薄/融会/装订/实战 as internal names). Click = lens (thick=captures, thin=meanings/revisions/questions, weave=principles), 装订 = bind, 实战 = practice tab. 读薄 in Reading state offers "Start second pass" (turns on Recall, jumps §1, stamps a pass marker). | Becoming a feature drawer; badges/notification counts |
 | **Explorer** (288px) | Initiated projects with derived-state meta + open-position counts; OUTLINE (book order, unread gaps inline); TIMELINE (time-travel slider with pass boundaries); PRINCIPLES (own + quiet-dot reuse suggestions). | File trees; inboxes; source rows (sources live in Evidence/doc actions) |
 | **Tabs** | The working set. Kind-aware (manuscript \| ⚔practice), MRU cycle ⌃Tab, ⌘1–9 jump, ⌘W close (last never closes), pin = title-only. | Unbounded tab sprawl (working set, not history) |
 | **Center** | The manuscript (§4). | Chat transcripts; version lists; runnable cells; machine text speaking as the user |
@@ -205,7 +205,7 @@ closed → Open Positions register celebrates quietly ("all positions closed").
   afterwards Retire/Amend.
 - **Esc peels one layer:** overlay → composer blur (draft kept) → Evidence
   close → time travel to now → stage filter clear → Recall off.
-- **⌘1–9 = tabs; ⌃1–⌃5 = stage rail** (C4); the native menu forwards the
+- **⌘1–9 = tabs; ⌃1–⌃5 = stage rail (Collect/Distill/Weave/Bind/Practice)** (C4); the native menu forwards the
   keymap generated from this section verbatim — one source of truth.
 
 ## 7. Platform architecture
@@ -270,16 +270,28 @@ Status bar "an instrument that tells the truth" · Binding "hand it over with
 zero explanation" · Practice "the book sent me here; the results report back
 to the book".
 
-## 10. Owner decisions required
+## 10. Owner decisions — RESOLVED 2026-07-03
 
-1. **Stage-rail language (H12):** 读厚/读薄/融会/装订/实战 as sanctioned brand
-   glyphs (write the canon exception) — or English (Thicken/Thin/Weave/
-   Bind/Practice)? The product is otherwise English-only.
-2. **Shared-source policy default (H2):** primary-claim routing with HUD
-   override — confirm.
-3. **Browser/URL capture grammar (H3):** URL anchors (reveal = open URL +
-   text fragment; precision grade below file+page) — v1 in scope or defer?
-4. **`#` palette scope on ⏎ with a draft present:** insert cite token vs
-   navigate — pick one.
-5. **Single window (H13):** confirm refusing multi-window/split for v1
-   (thread-hops instead).
+1. **Stage-rail language: ENGLISH-ONLY confirmed.** The rail ships
+   **Collect · Distill · Weave · Bind · Practice** (读厚/读薄/融会贯通/装订/
+   实战 remain the internal names in docs). No canon exception taken.
+2. **Shared-source policy: CONFIRMED** — one primary claim per file routes
+   captures; the HUD can override per capture; secondary attachments render
+   a Part but never route.
+3. **URL capture grammar: IN SCOPE for v1.**
+   - Anchor: `{url, textFragment?, pageTitle}` — carried by the existing
+     Safari extension capture (`loom://capture?…`) and browser AX URL reads.
+   - Precision grade: `url+fragment` > `url` — both sit BELOW `file+page`
+     and ABOVE `window` on the honesty ladder; graded and labeled like any
+     anchor.
+   - Quote-block gutter shows `web` + the domain (mono, truncated); reveal =
+     open the URL in the default browser with a `#:~:text=` scroll-to-text
+     fragment when one was captured; plain-URL anchors reveal the page and
+     say so.
+   - Coverage ruler does not apply to web sources (no page space); the Part
+     header shows the domain set instead.
+4. **`#` palette ⏎ with a draft present: DEFERRED (owner undecided).**
+   Safe default until decided: ⏎ NAVIGATES (consistent with every other
+   scope); citing stays explicit via drag-to-composer or ⌘⏎ cite-and-reply.
+5. **Single window: CONFIRMED** — v1 refuses multi-window/split view;
+   cross-project reading uses thread hops (§5.7).

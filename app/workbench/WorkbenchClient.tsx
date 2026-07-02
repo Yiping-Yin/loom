@@ -40,12 +40,14 @@ type CommitFocus = 'meaning' | 'question' | 'correction' | 'principle';
 
 type StageKey = 'thick' | 'thin' | 'weave' | 'bind' | 'practice';
 
+// English-only product UI (owner decision 2026-07-03); 读厚/读薄/融会贯通/
+// 装订/实战 remain the internal stage names in docs.
 const STAGES: Array<{ key: StageKey; glyph: string; label: string }> = [
-  { key: 'thick', glyph: '📖', label: '读厚' },
-  { key: 'thin', glyph: '✂️', label: '读薄' },
-  { key: 'weave', glyph: '🧵', label: '融会' },
-  { key: 'bind', glyph: '📕', label: '装订' },
-  { key: 'practice', glyph: '⚔️', label: '实战' },
+  { key: 'thick', glyph: '📖', label: 'Collect' },
+  { key: 'thin', glyph: '✂️', label: 'Distill' },
+  { key: 'weave', glyph: '🧵', label: 'Weave' },
+  { key: 'bind', glyph: '📕', label: 'Bind' },
+  { key: 'practice', glyph: '⚔️', label: 'Practice' },
 ];
 
 const STAGE_KINDS: Partial<Record<StageKey, ManuscriptEntry['kind'][]>> = {
@@ -345,7 +347,7 @@ export default function WorkbenchClient() {
                 return;
               }
               if (item.key === 'practice') {
-                setStatus('Practice grounds — QBook mounts here next');
+                setStatus('Practice grounds — the simulation mounts here next');
                 return;
               }
               setStage((current) => (current === item.key ? null : item.key));
