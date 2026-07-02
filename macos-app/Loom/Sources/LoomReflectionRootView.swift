@@ -2127,25 +2127,38 @@ private struct ReflectionSidebarBackground: View {
 // vibrancy failure was the web era's opaque NSHostingView + cosmic page;
 // the native register has no opaque layers, so the glass carries.
 private struct ReflectionMatteWorkbenchBackground: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    private var paperTint: Color {
-        colorScheme == .light ? LoomTokens.dsPaperDeep.opacity(0.18) : LoomTokens.dsPaperDeep.opacity(0.26)
-    }
-
-    private var fogTint: Color {
-        colorScheme == .light ? Color.white.opacity(0.12) : Color.white.opacity(0.02)
-    }
-
     var body: some View {
-        ZStack {
-            ReflectionVisualEffectBackground(
-                material: .underWindowBackground,
-                blendingMode: .behindWindow
-            )
-            Rectangle().fill(paperTint)
-            Rectangle().fill(fogTint).blendMode(.plusLighter)
-        }
+        // Glass law v2 (owner 2026-07-03): NO tint washes — neither the
+        // milk-white day cast nor the smoked-ink night cast. The window is
+        // the system glass itself, nothing added. On macOS 26+ this is the
+        // Liquid Glass generation (NSGlassEffectView); older systems fall
+        // back to the window material.
+        // NSGlassEffectView as a full-window backing renders near-solid —
+        // it is an IN-WINDOW lens (no behind-window mode), so it has nothing
+        // to refract under the root (verified live 2026-07-03). Window glass
+        // stays on the material; Liquid Glass is reserved for floating
+        // chrome ABOVE the workbench content.
+        ReflectionVisualEffectBackground(
+            material: .underWindowBackground,
+            blendingMode: .behindWindow
+        )
+    }
+}
+
+@available(macOS 26.0, *)
+private struct ReflectionLiquidGlassBackground: NSViewRepresentable {
+    let style: NSGlassEffectView.Style
+
+    func makeNSView(context: Context) -> NSGlassEffectView {
+        let view = NSGlassEffectView()
+        view.style = style
+        view.cornerRadius = 0
+        view.tintColor = nil
+        return view
+    }
+
+    func updateNSView(_ view: NSGlassEffectView, context: Context) {
+        view.style = style
     }
 }
 

@@ -1628,7 +1628,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // the inspector and the docked rail are transparent over it and never
   // stack their own behind-window material or edge hairline.
   assert.match(nativeRoot, /material: \.underWindowBackground,[\s\S]{0,40}blendingMode: \.behindWindow/);
-  assert.match(nativeRoot, /dsPaperDeep\.opacity\(0\.18\) : LoomTokens\.dsPaperDeep\.opacity\(0\.26\)/);
+  // Glass law v2: ZERO tint washes — the window is the system material
+  // itself. NSGlassEffectView is reserved for floating chrome (it is an
+  // in-window lens and renders near-solid as a full-window backing).
+  assert.doesNotMatch(nativeRoot, /Rectangle\(\)\.fill\(paperTint\)/);
+  assert.match(nativeRoot, /struct ReflectionLiquidGlassBackground: NSViewRepresentable/);
   assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,220}material: material/);
   assert.match(nativeRoot, /private var selectedFill: Color \{[\s\S]{0,180}if usesLightChrome \{[\s\S]{0,120}usesCenterOverlay \? LoomTokens\.dsThread\.opacity\(0\.07\) : Color\.white\.opacity\(0\.18\)/);
   assert.match(nativeRoot, /private func updateSidebarPeek\(_ shouldPeek: Bool\)/);
