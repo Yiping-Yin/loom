@@ -69,6 +69,12 @@ LoomTests (`xcodebuild test`, 351 tests) + lint + `tsc --noEmit` to CI, all
 keyed on exit codes.
 **Exit:** CI runs ~1,036 web + 351 native tests + lint + typecheck, all green, on every push. Rollback = revert infra commits.
 **Why first:** every later stage's exit criteria must be machine-checkable; today 87 test files (14 already failing) run nowhere — reordering this ships the data migration blind.
+**LANDED 2026-07-02:** commits `0070c64…48f9405`, CI run 28585997522 green
+(verify: lint + fast typecheck + 1,027 contract tests; macos-app-smoke: now
+RUNS LoomTests). Field notes: two orphaned concurrency tests were silently
+writing into the real user-data root (quarantine decision pending with owner)
+and carried a setImmediate-spin waitFor that starved on the CI runner — both
+deflaked with real-time polling + hermetic teardown.
 
 ### Stage 1 — LoomDomain(领域模型 + 迁移,像素不变)
 Extract model/store/parser/ingest out of the 4,288-line file into
