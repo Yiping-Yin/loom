@@ -108,7 +108,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   const nativeModel = read('macos-app/Loom/Sources/ReflectionModel.swift');
   const nativeStore = read('macos-app/Loom/Sources/ReflectionWorkspaceStore.swift');
   const nativeTrace = read('macos-app/Loom/Sources/ReflectionLearningTrace.swift');
-  const nativeSurface = nativeRoot + nativeModel + nativeStore + nativeTrace;
+  const nativeSession = read('macos-app/Loom/Sources/ReflectionWorkspaceSession.swift');
+  const nativeSurface = nativeRoot + nativeModel + nativeStore + nativeTrace + nativeSession;
   const sourceFileView = read('macos-app/Loom/Sources/SourceFileView.swift');
   const loomApp = read('macos-app/Loom/Sources/LoomApp.swift');
   const contentView = read('macos-app/Loom/Sources/ContentView.swift');
@@ -1960,7 +1961,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private struct ReflectionLearningTraceCard: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningSignal: View/);
   assert.match(nativeSurface, /struct ReflectionLearningTrace: Identifiable, Equatable/);
-  assert.match(nativeRoot, /@State private var selectedLearningTraceID: ReflectionLearningTrace\.ID\?/);
+  // Stage 1 (LoomDomain): selection state lives on the shared session so
+  // both window mounts observe one workspace instead of racing @State copies.
+  assert.match(nativeSession, /@Published var selectedLearningTraceID: ReflectionLearningTrace\.ID\?/);
+  assert.match(nativeRoot, /@StateObject private var workspace = ReflectionWorkspaceSession\.shared/);
   assert.match(nativeRoot, /private var selectedLearningTrace: ReflectionLearningTrace\?/);
   assert.match(nativeRoot, /@Binding var selectedLearningTraceID: ReflectionLearningTrace\.ID\?/);
   assert.match(nativeRoot, /private var learningTraces: \[ReflectionLearningTrace\]/);

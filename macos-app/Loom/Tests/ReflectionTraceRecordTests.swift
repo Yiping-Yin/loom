@@ -71,3 +71,35 @@ final class ReflectionTraceRecordTests: XCTestCase {
         XCTAssertEqual(decoded.schemaVersion, 1)
     }
 }
+
+extension ReflectionTraceRecordTests {
+    func testDualWriteHelpersKeepRecordsInLockstepWithItems() {
+        var learningCase = ReflectionCase.blank()
+        learningCase.project = "Learning pass"
+
+        let weakLine = "Captured selected word from Preview [vocabulary]: trajectories\nEvidence: app=Preview; anchor precision=window"
+        learningCase.steps[0].items.append(weakLine)
+        learningCase.appendTraceRecord(forLegacyItem: weakLine, sourceLabel: "Preview")
+        XCTAssertEqual(learningCase.traceRecords?.count, 1)
+
+        // Anchor promotion replaces the item in place — the record must follow.
+        let strongLine = "Captured selected word from Week 1 Notes.pdf, page 2 [vocabulary]: trajectories\nEvidence: app=Preview; file=Week 1 Notes.pdf; anchor precision=file+page"
+        let itemIndex = learningCase.steps[0].items.firstIndex(of: weakLine)!
+        learningCase.steps[0].items[itemIndex] = strongLine
+        learningCase.replaceTraceRecord(forLegacyItem: weakLine, with: strongLine, sourceLabel: "Week 1 Notes.pdf")
+        XCTAssertEqual(learningCase.traceRecords?.count, 1)
+        XCTAssertEqual(learningCase.traceRecords?.first?.legacyItem, strongLine)
+        XCTAssertEqual(learningCase.traceRecords?.first?.sourceAnchor, "Week 1 Notes.pdf, page 2")
+
+        // Narration lines never create records.
+        learningCase.appendTraceRecord(forLegacyItem: "First language pass: keep the original file primary.", sourceLabel: "Week 1 Notes.pdf")
+        XCTAssertEqual(learningCase.traceRecords?.count, 1)
+    }
+
+    func testReplaceIsNoOpWhenRecordsAreAbsent() {
+        var legacyCase = ReflectionCase.blank()
+        legacyCase.project = "Learning pass"
+        legacyCase.replaceTraceRecord(forLegacyItem: "a", with: "b", sourceLabel: "x")
+        XCTAssertNil(legacyCase.traceRecords)
+    }
+}

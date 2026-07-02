@@ -274,3 +274,33 @@ struct ReflectionMessage: Identifiable, Codable, Equatable {
         self.body = body
     }
 }
+
+// MARK: - Stage 1 (LoomDomain) dual-write helpers
+
+extension ReflectionCase {
+    /// Appends the typed twin of a newly rendered input line. No-ops for
+    /// non-trace lines so records always mirror the PARSEABLE items exactly.
+    mutating func appendTraceRecord(
+        forLegacyItem item: String,
+        sourceLabel: String,
+        createdAt: Date = Date()
+    ) {
+        guard let record = ReflectionTraceRecord.fromLegacyItem(item, sourceLabel: sourceLabel, createdAt: createdAt) else { return }
+        traceRecords = (traceRecords ?? []) + [record]
+    }
+
+    /// Keeps records in lockstep when the anchor-promotion path replaces an
+    /// existing input line in place (better-anchored duplicate capture).
+    mutating func replaceTraceRecord(
+        forLegacyItem previousItem: String,
+        with newItem: String,
+        sourceLabel: String,
+        createdAt: Date = Date()
+    ) {
+        guard var records = traceRecords, !records.isEmpty else { return }
+        guard let newRecord = ReflectionTraceRecord.fromLegacyItem(newItem, sourceLabel: sourceLabel, createdAt: createdAt) else { return }
+        guard let index = records.firstIndex(where: { $0.legacyItem == previousItem }) else { return }
+        records[index] = newRecord
+        traceRecords = records
+    }
+}

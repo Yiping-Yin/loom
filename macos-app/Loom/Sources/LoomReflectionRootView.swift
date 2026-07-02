@@ -47,10 +47,28 @@ private enum ReflectionCommitFocus: String {
 
 struct LoomReflectionRootView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @State private var cases: [ReflectionCase]
-    @State private var selectedCaseID: ReflectionCase.ID
-    @State private var selectedSourceID: ReflectionSource.ID?
-    @State private var selectedLearningTraceID: ReflectionLearningTrace.ID?
+    // Stage 1 (LoomDomain): both mount paths (SwiftUI scene + AppKit
+    // fallback window) share ONE workspace object — no more dual-@State
+    // last-writer-wins races. The computed proxies keep the 100+ existing
+    // reference sites compiling unchanged.
+    @StateObject private var workspace = ReflectionWorkspaceSession.shared
+
+    private var cases: [ReflectionCase] {
+        get { workspace.cases }
+        nonmutating set { workspace.cases = newValue }
+    }
+    private var selectedCaseID: ReflectionCase.ID {
+        get { workspace.selectedCaseID }
+        nonmutating set { workspace.selectedCaseID = newValue }
+    }
+    private var selectedSourceID: ReflectionSource.ID? {
+        get { workspace.selectedSourceID }
+        nonmutating set { workspace.selectedSourceID = newValue }
+    }
+    private var selectedLearningTraceID: ReflectionLearningTrace.ID? {
+        get { workspace.selectedLearningTraceID }
+        nonmutating set { workspace.selectedLearningTraceID = newValue }
+    }
     @State private var draftText: String = ""
     @State private var statusMessage: String = "Local reflection workspace"
     @State private var isSidebarPresented: Bool = true
@@ -78,30 +96,6 @@ struct LoomReflectionRootView: View {
         return traces.first { $0.id == selectedLearningTraceID } ?? traces.last
     }
 
-    init() {
-        let restored = ReflectionWorkspaceStore.load()
-        let initialCases = restored?.cases.isEmpty == false ? restored!.cases : ReflectionCase.samples
-        let initialSelectedCaseID: ReflectionCase.ID
-        if let restoredSelectedCaseID = restored?.selectedCaseID,
-           initialCases.contains(where: { $0.id == restoredSelectedCaseID }) {
-            initialSelectedCaseID = restoredSelectedCaseID
-        } else {
-            initialSelectedCaseID = initialCases[0].id
-        }
-        let initialSelectedCase = initialCases.first { $0.id == initialSelectedCaseID } ?? initialCases[0]
-        let initialSelectedSourceID: ReflectionSource.ID?
-        if let restoredSelectedSourceID = restored?.selectedSourceID,
-           initialSelectedCase.sources.contains(where: { $0.id == restoredSelectedSourceID }) {
-            initialSelectedSourceID = restoredSelectedSourceID
-        } else {
-            initialSelectedSourceID = initialSelectedCase.sources.first?.id
-        }
-
-        _cases = State(initialValue: initialCases)
-        _selectedCaseID = State(initialValue: initialSelectedCaseID)
-        _selectedSourceID = State(initialValue: initialSelectedSourceID)
-    }
-
     var body: some View {
         ZStack(alignment: .topLeading) {
             HStack(spacing: 0) {
@@ -127,7 +121,7 @@ struct LoomReflectionRootView: View {
                 HStack(spacing: 0) {
                     ReflectionThreadView(
                         reflectionCase: selectedCase,
-                        selectedLearningTraceID: $selectedLearningTraceID,
+                        selectedLearningTraceID: $workspace.selectedLearningTraceID,
                         draftText: $draftText,
                         onSelectTrace: selectLearningTrace,
                         onSubmit: submitMaterial
@@ -437,7 +431,11 @@ struct LoomReflectionRootView: View {
             cases[index].status = "Reading"
             cases[index].updatedAt = Self.timeFormatter.string(from: Date())
             let focus = Self.commitFocus(for: material)
-            cases[index].steps[0].items.append(Self.manualLearningInputLine(material, sourceLabel: sourceLabel, focus: focus))
+            let manualLine = Self.manualLearningInputLine(material, sourceLabel: sourceLabel, focus: focus)
+            cases[index].steps[0].items.append(manualLine)
+            // Stage 1 (LoomDomain): dual-write the typed record alongside the
+            // rendered line so new commits never depend on string re-parsing.
+            cases[index].appendTraceRecord(forLegacyItem: manualLine, sourceLabel: sourceLabel)
             cases[index].messages.append(ReflectionMessage(
                 role: .human,
                 eyebrow: focus == .question ? "Open question" : "Understanding version",
@@ -671,6 +669,9 @@ struct LoomReflectionRootView: View {
             let existingInputLine = cases[index].steps[0].items[existingInputIndex]
             if Self.shouldPromoteLearningInputAnchor(existingInputLine, candidate: inputLine) {
                 cases[index].steps[0].items[existingInputIndex] = inputLine
+                // Stage 1 (LoomDomain): keep the typed twin in lockstep with
+                // the in-place anchor promotion.
+                cases[index].replaceTraceRecord(forLegacyItem: existingInputLine, with: inputLine, sourceLabel: sourceLabel)
                 cases[index].messages.append(
                     ReflectionMessage(
                         role: .human,
@@ -701,6 +702,8 @@ struct LoomReflectionRootView: View {
         cases[index].status = "Reading"
         cases[index].updatedAt = Self.timeFormatter.string(from: Date())
         cases[index].steps[0].items.append(inputLine)
+        // Stage 1 (LoomDomain): dual-write the typed record for new captures.
+        cases[index].appendTraceRecord(forLegacyItem: inputLine, sourceLabel: sourceLabel)
         cases[index].messages.append(
             ReflectionMessage(
                 role: .human,
@@ -757,11 +760,7 @@ struct LoomReflectionRootView: View {
     }
 
     private func persistWorkspace() {
-        ReflectionWorkspaceStore.save(
-            cases: cases,
-            selectedCaseID: selectedCaseID,
-            selectedSourceID: selectedSourceID
-        )
+        workspace.persist()
     }
 
     private func handleCaptureRoute(_ outcome: CaptureURLRouteOutcome) {
