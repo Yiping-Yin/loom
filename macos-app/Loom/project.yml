@@ -263,6 +263,9 @@ targets:
       - path: Tests
         excludes:
           - fixtures/**/README.md
+          # Gitignored local-only fixture (read via #filePath at runtime);
+          # must not enter the pbxproj or CI builds fail on the missing file.
+          - fixtures/real-workspace-snapshot.json
           - fixtures/**/generate_fixtures.py
     dependencies:
       - target: Loom
