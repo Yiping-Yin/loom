@@ -1936,7 +1936,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private enum ReflectionCommitFocus: String/);
   assert.doesNotMatch(nativeRoot, /CaseIterable, Identifiable/);
   assert.doesNotMatch(nativeRoot, /@State private var selectedCommitFocus/);
-  assert.match(nativeRoot, /manualLearningInputLine\(material, sourceLabel: sourceLabel, focus: \.meaning\)/);
+  assert.match(nativeRoot, /let focus = Self\.commitFocus\(for: material\)/);
+  assert.match(nativeRoot, /manualLearningInputLine\(material, sourceLabel: sourceLabel, focus: focus\)/);
+  // Explicit commit grammar (no keyword guessing): trailing ? opens a
+  // question; principle:/correction:/question: prefixes declare intent.
+  assert.match(nativeRoot, /private static func commitFocus\(for material: String\) -> ReflectionCommitFocus/);
+  assert.match(nativeRoot, /trimmed\.hasSuffix\("\?"\) \|\| trimmed\.hasSuffix\("？"\)/);
   assert.match(nativeRoot, /reviewLine\(for: trace\)/);
   assert.match(nativeRoot, /User-confirmed meaning/);
   assert.match(nativeRoot, /confirmedText\(from: trace\.text\)/);
@@ -2022,7 +2027,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(nativeRoot, /manualLearningFocus\(for: material\)/);
   assert.match(nativeRoot, /return "question"/);
   assert.match(nativeRoot, /return "user meaning"/);
-  assert.match(nativeRoot, /eyebrow: "Understanding version"/);
+  assert.match(nativeRoot, /eyebrow: focus == \.question \? "Open question" : "Understanding version"/);
   assert.match(nativeRoot, /statusMessage = "Committed thinking version"/);
   assert.match(nativeRoot, /private static func normalizeLearningInputItem\(_ value: String\) -> String/);
   assert.match(nativeRoot, /private static func orderedUniqueLearningInputs\(_ values: \[String\]\) -> \[String\]/);

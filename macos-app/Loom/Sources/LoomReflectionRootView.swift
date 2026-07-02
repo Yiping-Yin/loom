@@ -424,6 +424,20 @@ struct LoomReflectionRootView: View {
         persistWorkspace()
     }
 
+    /// Explicit commit grammar, matching the web model's cleanVersionMaterial
+    /// prefixes — no keyword guessing. A trailing question mark opens a
+    /// question (it stays open until the user commits what closes it);
+    /// "principle:"/"correction:"/"question:" prefixes declare intent.
+    private static func commitFocus(for material: String) -> ReflectionCommitFocus {
+        let trimmed = material.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasSuffix("?") || trimmed.hasSuffix("？") { return .question }
+        let lowered = trimmed.lowercased()
+        if lowered.hasPrefix("principle:") { return .principle }
+        if lowered.hasPrefix("correction:") { return .correction }
+        if lowered.hasPrefix("question:") { return .question }
+        return .meaning
+    }
+
     private func submitMaterial() {
         let material = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !material.isEmpty else { return }
@@ -436,8 +450,13 @@ struct LoomReflectionRootView: View {
                 ?? cases[index].title
             cases[index].status = "Reading"
             cases[index].updatedAt = Self.timeFormatter.string(from: Date())
-            cases[index].steps[0].items.append(Self.manualLearningInputLine(material, sourceLabel: sourceLabel, focus: .meaning))
-            cases[index].messages.append(ReflectionMessage(role: .human, eyebrow: "Understanding version", body: material))
+            let focus = Self.commitFocus(for: material)
+            cases[index].steps[0].items.append(Self.manualLearningInputLine(material, sourceLabel: sourceLabel, focus: focus))
+            cases[index].messages.append(ReflectionMessage(
+                role: .human,
+                eyebrow: focus == .question ? "Open question" : "Understanding version",
+                body: material
+            ))
             cases[index].messages.append(
                 ReflectionMessage(
                     role: .loom,
