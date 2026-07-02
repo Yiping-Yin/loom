@@ -168,7 +168,39 @@ study log, closed until asked" · STATUS BAR "an instrument, it tells me the
 truth about anchor quality" · EXPORT "hand it to a professor with zero
 explanation".
 
-## 8. Open items feeding this framework
+## 8. Landing record (2026-07-02 → 03 all-stages sprint)
+
+- **Stage 0 LANDED** `0070c64…48f9405`, CI 28585997522 green.
+- **Stage 1 LANDED** `9508fbe…1ae7337`, CI 28592502347 green. Real-data
+  migration verified (global-domain mirror migrated with byte-identical
+  backup; container migrates on next app launch, same machinery).
+- **Stage 2 LANDED** `406050d` — provenance box + scope line,
+  corrections-as-revisions, composer type chips, open-condition rendering,
+  machine self-narration killed (synthesis computed on read; pass advances
+  only on user review commits).
+- **Stage 3 shell LANDED** `eb11f2a` — tab strip, OUTLINE/TIMELINE at the
+  Explorer's foot, WorkbenchStatusBar (anchor honesty + visible status),
+  rollback flag `loom.workbench.chrome`; keep-list contract test landed.
+  **Cull tranche DEFERRED-PACKAGED**: docs/superpowers/plans/
+  2026-07-03-cull-tranche-1-package.md (agent-verified, 3 vetoes corrected,
+  extract-first list, LoomApp prune map) — execute as its own focused
+  session; the keep-list guard already protects it.
+- **Stage 4 LANDED** `162080d`+`ad50459` — ReflectionPrincipleStore with
+  user-signed promotion gate (weak anchor BLOCKS, tested), quiet-dot reuse
+  suggestions, Cite events, PRINCIPLES sidebar section.
+- **Stage 5 LANDED** `83f03a6` — live typed-snapshot endpoint + web mirror
+  hydration (no second parser on the mirror path), web commit grammar
+  parity, Export Learning Record… (⌘⇧E, full report anatomy), weak-anchor
+  grant UX deep-linking Privacy › Accessibility.
+- **Deferred with eyes open:** cull tranche execution (packaged);
+  full reflectionModel.ts regex-parser deletion (web mirror bypasses it in
+  the app; fate table in the Stage-5 parity package);
+  post-helper GUI E2E artifact — needs the owner's unlocked session:
+  1. Grant Accessibility to LoomAnchorHelper (status bar now deep-links).
+  2. `npm run verify:native-sidecar -- --screenshots`
+  3. Confirm the report asserts anchor precision=file+page on the PDF trace.
+
+## 9. Open items feeding this framework
 
 - Native legacy cull inventory: standalone audit in flight (file-level
   reachability from the mounted root); its output finalizes the Stage 3 cull
