@@ -23,7 +23,7 @@ test('capture renderer does not ship temporary scroll debug UI', () => {
   assert.match(source, /setReadProgress\(pct\);/);
 });
 
-test('capture reader owns document scroll and forwards media wheel gestures', () => {
+test('capture reader owns document scroll', () => {
   const source = read('app/loom-render/capture/page.tsx');
 
   // Reader-scroll classes still mounted on root + body so the reader
@@ -31,30 +31,12 @@ test('capture reader owns document scroll and forwards media wheel gestures', ()
   assert.match(source, /loom-capture-reader-scroll/);
   assert.match(source, /classList\.add\('loom-capture-reader-scroll'\)/);
 
-  // Wheel listener still registered with capture+non-passive so we can
-  // preventDefault on media-targeted wheels.
-  assert.match(source, /window\.addEventListener\('wheel', onWheel, \{ capture: true, passive: false \}\)/);
-
-  // Listener still narrows to media elements only (so prose scroll is
-  // native; only video / iframe / canvas / fallback cards trigger the
-  // forwarding path).
-  assert.match(source, /target\.closest\(/);
-  assert.match(source, /video, audio, iframe, canvas, \.loom-embed-card, \.loom-provider-embed-frame, \.loom-media-fallback/);
-
-  // Wheel deltaMode normalization: page / line / pixel still distinguished.
-  assert.match(source, /event\.deltaMode === WheelEvent\.DOM_DELTA_PAGE/);
-  assert.match(source, /event\.deltaMode === WheelEvent\.DOM_DELTA_LINE/);
-
-  // Forwarding now uses RAF-batched scrollBy (per peer-chat msg-036
-  // fix to "scroll-jitter on macOS trackpad due to per-event instant
-  // scrollTo destroying native momentum smoothing"). Assertion shape
-  // matches the new implementation: deltas accumulate into pendingDy,
-  // a single requestAnimationFrame schedules a flushScroll that calls
-  // window.scrollBy once per frame.
-  assert.match(source, /pendingDy/);
-  assert.match(source, /requestAnimationFrame\(flushScroll\)/);
-  assert.match(source, /window\.scrollBy\(\{ top: pendingDy, left: 0 \}\)/);
-  assert.match(source, /event\.preventDefault\(\)/);
+  // The custom media wheel-forwarding subsystem (onWheel + pendingDy +
+  // RAF-batched scrollBy) was removed in the Reflection-era reader
+  // rework; native scrolling owns the route. Keep it removed — the
+  // per-event forwarding path was the source of trackpad jitter.
+  assert.doesNotMatch(source, /addEventListener\('wheel'/);
+  assert.doesNotMatch(source, /pendingDy/);
 
   // Reader-route layout glue + class plumbing unchanged.
   assert.match(source, /html\.loom-capture-reader-scroll body \.layout/);
@@ -97,9 +79,12 @@ test('snapshot renderer does not expose or persist side-by-side comparison UI', 
 test('capture reader exposes stored snapshots as auxiliary evidence, not comparison mode', () => {
   const source = read('app/loom-render/capture/page.tsx');
 
-  assert.match(source, /title="Open stored source snapshot"/);
-  assert.match(source, /aria-label="Open stored source snapshot"/);
-  assert.match(source, /<span>Snapshot<\/span>/);
+  // Reworked affordance: an inline "Open interactive snapshot" action
+  // (loom-interactive-snapshot-action) with an honest muted fallback —
+  // still auxiliary evidence, never a comparison mode.
+  assert.match(source, /loom-interactive-snapshot-action/);
+  assert.match(source, /Open interactive snapshot/);
+  assert.match(source, /Snapshot unavailable/);
   assert.doesNotMatch(source, /Compare with stored snapshot/);
   assert.doesNotMatch(source, /Compare with snapshot/);
   assert.doesNotMatch(source, /<span>Compare<\/span>/);

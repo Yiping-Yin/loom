@@ -88,6 +88,9 @@ test('reference citation client converts API candidates into Draft corpus docs',
 test('Digital Me renders source-grounded citations instead of a homepage ask profile', () => {
   const home = read('components/verified-dossier/VerifiedDossierHome.tsx');
   const digitalMePage = read('app/digital-me/page.tsx');
+  // The owner Role OS client moved to /example/digital-me when /digital-me
+  // became the beginner gate (see app/digital-me/DigitalMeGate.tsx header).
+  const exampleDigitalMePage = read('app/example/digital-me/page.tsx');
   const homeData = read('lib/new-loom/verified-dossier-home.ts');
 
   assert.doesNotMatch(home, /loadReferenceCitationCandidates/);
@@ -97,9 +100,9 @@ test('Digital Me renders source-grounded citations instead of a homepage ask pro
   assert.doesNotMatch(digitalMePage, /VERIFIED_DOSSIER_AI_PROMPT/);
   assert.doesNotMatch(digitalMePage, /resolveVerifiedDossierArtifact/);
   assert.doesNotMatch(digitalMePage, /FileBadge/);
-  assert.match(digitalMePage, /DIGITAL_ME_PROOF_PATH/);
-  assert.match(digitalMePage, /DigitalMeRoleOSClient/);
-  assert.match(digitalMePage, /digital-me-answer-title/);
+  assert.match(digitalMePage, /DigitalMeGate/);
+  assert.match(exampleDigitalMePage, /DIGITAL_ME_PROOF_PATH/);
+  assert.match(exampleDigitalMePage, /DigitalMeRoleOSClient/);
   assert.match(homeData, /citations:\s*\[/);
   assert.match(homeData, /econ-ps2/);
   assert.match(homeData, /econ-slides/);

@@ -22,10 +22,13 @@ async function waitFor(predicate: () => boolean, attempts = 50) {
 async function withTempRepo(t: test.TestContext, fn: (root: string) => Promise<void>) {
   const previousCwd = process.cwd();
   const previousContentRoot = process.env.LOOM_CONTENT_ROOT;
+  const previousUserDataRoot = process.env.LOOM_USER_DATA_ROOT;
   const root = await mkdtemp(path.join(os.tmpdir(), 'source-library-metadata-'));
   const manifestRoot = path.join(root, 'knowledge', '.cache', 'manifest');
+  const userDataManifestRoot = path.join(root, 'knowledge', 'manifest');
 
   await mkdir(manifestRoot, { recursive: true });
+  await mkdir(userDataManifestRoot, { recursive: true });
   await writeFile(
     path.join(manifestRoot, 'knowledge-nav.json'),
     JSON.stringify(
@@ -45,12 +48,18 @@ async function withTempRepo(t: test.TestContext, fn: (root: string) => Promise<v
 
   process.chdir(root);
   process.env.LOOM_CONTENT_ROOT = root;
+  process.env.LOOM_USER_DATA_ROOT = root;
   t.after(() => {
     process.chdir(previousCwd);
     if (previousContentRoot === undefined) {
       delete process.env.LOOM_CONTENT_ROOT;
     } else {
       process.env.LOOM_CONTENT_ROOT = previousContentRoot;
+    }
+    if (previousUserDataRoot === undefined) {
+      delete process.env.LOOM_USER_DATA_ROOT;
+    } else {
+      process.env.LOOM_USER_DATA_ROOT = previousUserDataRoot;
     }
   });
 
@@ -88,7 +97,7 @@ test('source-library metadata persists groups, keeps Ungrouped fallback, and reh
 
     const rawMetadata = JSON.parse(
       await (await import('node:fs/promises')).readFile(
-        path.join(root, 'knowledge', '.cache', 'manifest', 'source-library-groups.json'),
+        path.join(root, 'knowledge', 'manifest', 'source-library-groups.json'),
         'utf8',
       ),
     );
@@ -123,7 +132,7 @@ test('source-library metadata can hide a source without touching its underlying 
 
 test('source-library metadata rejects malformed files instead of treating them as empty', async (t) => {
   await withTempRepo(t, async (root) => {
-    const metadataPath = path.join(root, 'knowledge', '.cache', 'manifest', 'source-library-groups.json');
+    const metadataPath = path.join(root, 'knowledge', 'manifest', 'source-library-groups.json');
     await writeFile(metadataPath, '{"groups":[', 'utf8');
 
     const metadataModule = await repoImport('lib/source-library-metadata.ts');
