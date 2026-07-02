@@ -43,7 +43,9 @@ final class ReflectionWorkspaceSessionTests: XCTestCase {
         XCTAssertEqual(session.selectedCaseID, ReflectionCase.samples[0].id)
     }
 
-    func testSharedInstanceIsSingle() {
-        XCTAssertTrue(ReflectionWorkspaceSession.shared === ReflectionWorkspaceSession.shared)
-    }
+    // NOTE deliberately absent: no test may touch ReflectionWorkspaceSession
+    // .shared — its initializer loads the REAL store with default parameters,
+    // and a test doing so migrated the owner's real global-domain workspace
+    // on 2026-07-02 (backup verified intact, but tests must never reach the
+    // real domain; see the web-side source-library-metadata lesson).
 }

@@ -132,3 +132,45 @@ final class ReflectionWorkspaceMigrationTests: XCTestCase {
         XCTAssertLessThan(abs(savedAt.timeIntervalSinceNow), 30)
     }
 }
+
+extension ReflectionWorkspaceMigrationTests {
+    /// Runs only when the gitignored real-snapshot fixture is present
+    /// (harvested from the owner's pre-migration backup). Asserts the v1→v2
+    /// migration is lossless on REAL data: counts identical, items untouched,
+    /// records mirror exactly the parseable input lines.
+    func testRealSnapshotFixtureMigratesLosslessly() throws {
+        let fixtureURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("fixtures/real-workspace-snapshot.json")
+        guard let raw = try? Data(contentsOf: fixtureURL) else {
+            throw XCTSkip("real-workspace-snapshot.json fixture not present (gitignored, local-only)")
+        }
+
+        let original = try JSONDecoder().decode(ReflectionWorkspaceSnapshot.self, from: raw)
+        defaults.set(raw, forKey: "loom.reflectionWorkspaceSnapshot")
+
+        let migrated = try XCTUnwrap(ReflectionWorkspaceStore.load(defaults: defaults, mirrorURL: mirrorURL))
+
+        XCTAssertEqual(migrated.cases.count, original.cases.count)
+        for (migratedCase, originalCase) in zip(migrated.cases, original.cases) {
+            XCTAssertEqual(migratedCase.id, originalCase.id)
+            XCTAssertEqual(migratedCase.messages.count, originalCase.messages.count)
+            let originalItems = originalCase.steps.first { $0.id == "input" }?.items ?? []
+            let migratedItems = migratedCase.steps.first { $0.id == "input" }?.items ?? []
+            XCTAssertEqual(migratedItems, originalItems, "migration must never rewrite input items")
+            let sourceLabel = originalCase.sources.first?.label ?? originalCase.title
+            let expectedRecords = originalItems.compactMap {
+                ReflectionTraceRecord.fromLegacyItem($0, sourceLabel: sourceLabel)
+            }
+            XCTAssertEqual(migratedCase.traceRecords?.count, expectedRecords.isEmpty ? originalCase.traceRecords?.count : expectedRecords.count)
+            if let records = migratedCase.traceRecords {
+                XCTAssertEqual(records.map(\.legacyItem), expectedRecords.map(\.legacyItem))
+            }
+        }
+        XCTAssertEqual(
+            defaults.data(forKey: "loom.reflectionWorkspaceSnapshot.backup-v1"),
+            raw,
+            "the real pre-migration bytes must be preserved"
+        )
+    }
+}

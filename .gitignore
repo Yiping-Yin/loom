@@ -82,3 +82,4 @@ resources/design/
 # Optibook replica build (Optiver IP — lives in private repo Yiping-Yin/optibook-replica)
 /public/optibook/
 .claude/
+macos-app/Loom/Tests/fixtures/real-workspace-snapshot.json
