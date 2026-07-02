@@ -20,7 +20,11 @@ test('main Loom window disables automatic tabbing so the system title pill does 
   assert.match(contentSource, /window\.tabbingMode = \.disallowed/);
   assert.match(contentSource, /tabGroup\?\.isTabBarVisible == true/);
   assert.match(contentSource, /window\.toggleTabBar\(nil\)/);
-  assert.match(contentSource, /window\.appearance = NSAppearance\(named: isNight \? \.darkAqua : \.aqua\)/);
+  // Glass law (2026-07-03): the window INHERITS the system appearance —
+  // the old isNight pin locked the workbench out of the system day/night
+  // switch (pinned window -> colorScheme stays dark -> pinned forever).
+  assert.match(contentSource, /window\.appearance = nil/);
+  assert.doesNotMatch(contentSource, /window\.appearance = NSAppearance\(named:/);
   assert.match(contentSource, /window\.title = "Loom"/);
   assert.doesNotMatch(contentSource, /window\.title = title/);
 });
