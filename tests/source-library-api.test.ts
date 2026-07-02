@@ -11,10 +11,12 @@ function repoImport(modulePath: string) {
   return import(`${href}?t=${Date.now()}-${Math.random()}`);
 }
 
-async function waitFor(predicate: () => boolean, attempts = 50) {
+async function waitFor(predicate: () => boolean, attempts = 250) {
   for (let i = 0; i < attempts; i += 1) {
     if (predicate()) return;
-    await new Promise((resolve) => setImmediate(resolve));
+    // Real-time polling: a setImmediate spin can exhaust its attempts
+    // before slow CI disk I/O completes (seen on the ubuntu runner).
+    await new Promise((resolve) => setTimeout(resolve, 4));
   }
   throw new Error('Timed out waiting for condition');
 }
@@ -135,8 +137,8 @@ test('concurrent group writes preserve every created group', { concurrency: fals
     const fsModule = await import('node:fs');
     const originalWriteFile = fsModule.promises.writeFile.bind(fsModule.promises);
 
-    let releaseFirstWrite!: () => void;
-    let releaseSecondWrite!: () => void;
+    let releaseFirstWrite: (() => void) | undefined;
+    let releaseSecondWrite: (() => void) | undefined;
     let writeCount = 0;
     let secondWriteStarted = false;
 
@@ -175,18 +177,27 @@ test('concurrent group writes preserve every created group', { concurrency: fals
       }),
     );
 
-    await waitFor(() => writeCount > 0);
-    for (let i = 0; i < 25 && !secondWriteStarted; i += 1) {
-      await new Promise((resolve) => setImmediate(resolve));
-    }
+    try {
+      await waitFor(() => writeCount > 0);
+      await waitFor(() => secondWriteStarted, 25).catch(() => {});
 
-    if (secondWriteStarted) {
-      releaseFirstWrite();
-      releaseSecondWrite();
-    } else {
-      releaseFirstWrite();
-      await waitFor(() => secondWriteStarted);
-      releaseSecondWrite();
+      if (secondWriteStarted) {
+        releaseFirstWrite?.();
+        releaseSecondWrite?.();
+      } else {
+        releaseFirstWrite?.();
+        await waitFor(() => secondWriteStarted);
+        releaseSecondWrite?.();
+      }
+    } finally {
+      // Hermetic teardown even when waitFor throws: release whatever is
+      // blocked and let both creates finish INSIDE this test's temp
+      // root, so no zombie write outlives the env-var swap and lands in
+      // the next test's store (observed on the CI runner).
+      releaseFirstWrite?.();
+      await waitFor(() => secondWriteStarted, 100).catch(() => {});
+      releaseSecondWrite?.();
+      await Promise.allSettled([firstCreate, secondCreate]);
     }
 
     assert.equal((await firstCreate).status, 200);
