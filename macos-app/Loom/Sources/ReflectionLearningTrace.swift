@@ -166,6 +166,9 @@ struct ReflectionLearningTrace: Identifiable, Equatable {
     }
 
     static func from(_ reflectionCase: ReflectionCase) -> [ReflectionLearningTrace] {
+        if let records = reflectionCase.traceRecords, !records.isEmpty {
+            return from(records: records)
+        }
         let inputItems = reflectionCase.steps.first { $0.id == "input" }?.items ?? []
         var traces: [ReflectionLearningTrace] = []
         var version = 1

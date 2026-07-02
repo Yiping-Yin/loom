@@ -7,28 +7,66 @@
 //
 
 import Foundation
+import os
 
 enum ReflectionWorkspaceStore {
     private static let defaultsKey = "loom.reflectionWorkspaceSnapshot"
+    private static let backupKey = "loom.reflectionWorkspaceSnapshot.backup-v1"
+    private static let logger = Logger(subsystem: "com.yinyiping.loom", category: "workspace-store")
+    static let currentSchemaVersion = 2
 
     static func load(
         defaults: UserDefaults = .standard,
         mirrorURL: URL? = ReflectionWorkspaceStore.defaultMirrorURL
     ) -> ReflectionWorkspaceSnapshot? {
-        guard let snapshot = loadFromDefaults(defaults) ?? loadFromMirror(mirrorURL) else { return nil }
+        let defaultsRaw = defaults.data(forKey: defaultsKey)
+        let mirrorRaw = mirrorURL.flatMap { try? Data(contentsOf: $0) }
+        let defaultsSnapshot = loadFromDefaults(defaults)
+        let mirrorSnapshot = loadFromMirror(mirrorURL)
+        if defaultsRaw != nil, defaultsSnapshot == nil {
+            logger.error("workspace defaults blob failed to decode; falling back to the mirror replica")
+        }
+        if mirrorRaw != nil, mirrorSnapshot == nil {
+            logger.error("workspace mirror file failed to decode")
+        }
+
+        // Newer replica wins: the two stores can diverge across binary flips
+        // (the 2026-07-02 preference-domain split). Missing savedAt (legacy
+        // v1 blobs) counts as distantPast, preserving the historical
+        // defaults-first order on ties.
+        let chosen: (snapshot: ReflectionWorkspaceSnapshot, raw: Data?)?
+        switch (defaultsSnapshot, mirrorSnapshot) {
+        case (nil, nil):
+            chosen = nil
+        case (let fromDefaults?, nil):
+            chosen = (fromDefaults, defaultsRaw)
+        case (nil, let fromMirror?):
+            chosen = (fromMirror, mirrorRaw)
+        case (let fromDefaults?, let fromMirror?):
+            let defaultsDate = fromDefaults.savedAt ?? .distantPast
+            let mirrorDate = fromMirror.savedAt ?? .distantPast
+            chosen = mirrorDate > defaultsDate ? (fromMirror, mirrorRaw) : (fromDefaults, defaultsRaw)
+        }
+        guard let (snapshot, originalRaw) = chosen else { return nil }
+
         let normalized = normalize(snapshot)
-        if normalized != snapshot {
+        let migration = migrateToTypedRecords(normalized)
+        if migration.didMigrate {
+            writeBackupOnce(originalRaw, defaults: defaults, mirrorURL: mirrorURL)
+        }
+        let result = migration.snapshot
+        if result != snapshot {
             save(
-                cases: normalized.cases,
-                selectedCaseID: normalized.selectedCaseID,
-                selectedSourceID: normalized.selectedSourceID,
+                cases: result.cases,
+                selectedCaseID: result.selectedCaseID,
+                selectedSourceID: result.selectedSourceID,
                 defaults: defaults,
                 mirrorURL: mirrorURL
             )
         } else {
-            writeMirror(normalized, mirrorURL: mirrorURL)
+            writeMirror(result, mirrorURL: mirrorURL)
         }
-        return normalized
+        return result
     }
 
     static func save(
@@ -38,14 +76,67 @@ enum ReflectionWorkspaceStore {
         defaults: UserDefaults = .standard,
         mirrorURL: URL? = ReflectionWorkspaceStore.defaultMirrorURL
     ) {
-        let snapshot = ReflectionWorkspaceSnapshot(
+        var snapshot = ReflectionWorkspaceSnapshot(
             cases: cases,
             selectedCaseID: selectedCaseID,
             selectedSourceID: selectedSourceID
         )
-        guard let data = try? JSONEncoder().encode(snapshot) else { return }
+        snapshot.schemaVersion = currentSchemaVersion
+        snapshot.savedAt = Date()
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(snapshot)
+        } catch {
+            logger.error("workspace snapshot failed to encode — save dropped: \(error.localizedDescription)")
+            return
+        }
+        if data.count > 512 * 1024 {
+            logger.warning("workspace snapshot is \(data.count) bytes in UserDefaults — approaching platform limits")
+        }
         defaults.set(data, forKey: defaultsKey)
         writeMirror(snapshot, encodedData: data, mirrorURL: mirrorURL)
+    }
+
+    /// Stage 1 (LoomDomain) one-time v1→v2 migration: derive typed trace
+    /// records from parseable input items. Items are never rewritten.
+    private static func migrateToTypedRecords(
+        _ snapshot: ReflectionWorkspaceSnapshot
+    ) -> (snapshot: ReflectionWorkspaceSnapshot, didMigrate: Bool) {
+        var next = snapshot
+        var didMigrate = false
+        next.cases = snapshot.cases.map { reflectionCase in
+            guard (reflectionCase.traceRecords ?? []).isEmpty else { return reflectionCase }
+            let sourceLabel = reflectionCase.sources.first?.label ?? reflectionCase.title
+            let items = reflectionCase.steps.first { $0.id == "input" }?.items ?? []
+            let records = items.compactMap { ReflectionTraceRecord.fromLegacyItem($0, sourceLabel: sourceLabel) }
+            guard !records.isEmpty else { return reflectionCase }
+            var migratedCase = reflectionCase
+            migratedCase.traceRecords = records
+            didMigrate = true
+            return migratedCase
+        }
+        return (next, didMigrate)
+    }
+
+    /// The pre-migration blob is preserved byte-identically, once, in BOTH
+    /// domains — rollback is a documented guarantee, not a hope.
+    private static func writeBackupOnce(_ raw: Data?, defaults: UserDefaults, mirrorURL: URL?) {
+        guard let raw else { return }
+        if defaults.data(forKey: backupKey) == nil {
+            defaults.set(raw, forKey: backupKey)
+        }
+        guard let mirrorURL else { return }
+        let backupURL = mirrorURL.deletingPathExtension().appendingPathExtension("backup-v1.json")
+        guard !FileManager.default.fileExists(atPath: backupURL.path) else { return }
+        do {
+            try FileManager.default.createDirectory(
+                at: backupURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try raw.write(to: backupURL, options: [.atomic])
+        } catch {
+            logger.error("pre-migration mirror backup failed: \(error.localizedDescription)")
+        }
     }
 
     private static func loadFromDefaults(_ defaults: UserDefaults) -> ReflectionWorkspaceSnapshot? {
@@ -74,7 +165,10 @@ enum ReflectionWorkspaceStore {
             )
             try data.write(to: url, options: [.atomic])
         } catch {
-            // UserDefaults remains the in-app source of truth when the mirror cannot be written.
+            // UserDefaults remains the in-app source of truth when the mirror
+            // cannot be written — but a silently dead safety net is a data-loss
+            // hazard, so the failure is logged.
+            logger.error("workspace mirror write failed: \(error.localizedDescription)")
         }
     }
 

@@ -38,6 +38,9 @@ struct ReflectionWorkspaceSnapshot: Codable, Equatable {
     var cases: [ReflectionCase]
     var selectedCaseID: ReflectionCase.ID
     var selectedSourceID: ReflectionSource.ID?
+    // Stage 1 (LoomDomain): optional so legacy v1 blobs keep decoding.
+    var schemaVersion: Int? = nil
+    var savedAt: Date? = nil
 }
 
 struct ReflectionCase: Identifiable, Codable, Equatable {
@@ -51,6 +54,10 @@ struct ReflectionCase: Identifiable, Codable, Equatable {
     var sources: [ReflectionSource]
     var steps: [ReflectionStep]
     var messages: [ReflectionMessage]
+    // Stage 1 (LoomDomain): typed twin of the parseable input items.
+    // Optional + declared LAST so legacy blobs decode and the synthesized
+    // memberwise init keeps every existing call site compiling.
+    var traceRecords: [ReflectionTraceRecord]? = nil
 
     static func blank() -> ReflectionCase {
         ReflectionCase(

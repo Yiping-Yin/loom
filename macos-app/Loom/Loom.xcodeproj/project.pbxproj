@@ -192,6 +192,7 @@
 		B8B8C6F5796088A9F0EA8337 /* LoomCommandScriptsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738F4C9BD365A277EF6F4F2E /* LoomCommandScriptsTests.swift */; };
 		B8B8C97E6FE0672756447FF8 /* EmbeddingClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98677EAB28D6F8769007F99 /* EmbeddingClientTests.swift */; };
 		B9743D9291B1F4A66ACA5883 /* ellipsis-stitch-format.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = FE532DE615AB0024E3486918 /* ellipsis-stitch-format.schema.json */; };
+		B9F3EC8B83A8169431216764 /* ReflectionWorkspaceMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D52240727875638C476A49 /* ReflectionWorkspaceMigrationTests.swift */; };
 		BC1E828F082D13DCAA0F3EBC /* SourcePaneScrollCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73891783C82001F50003ED2 /* SourcePaneScrollCoordinator.swift */; };
 		BD5CC5A4F76B9976AD6F1D0D /* FragmentSchemaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14AB9336AC90330B8EDCF830 /* FragmentSchemaView.swift */; };
 		BEB5D87B0B644A913586CF49 /* LoomCommandScripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E17B9A3E4690E90B752D76 /* LoomCommandScripts.swift */; };
@@ -423,6 +424,7 @@
 		97F465B75FE18597076B7FEE /* LoomApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomApp.swift; sourceTree = "<group>"; };
 		981E8D9084E2AB6C27B00080 /* LoomDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomDataStore.swift; sourceTree = "<group>"; };
 		98A3E3199D28895D90997300 /* MarkdownNotesExtractorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownNotesExtractorTests.swift; sourceTree = "<group>"; };
+		98D52240727875638C476A49 /* ReflectionWorkspaceMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionWorkspaceMigrationTests.swift; sourceTree = "<group>"; };
 		9902715B7EE5A8B25248F051 /* LoomMigrationImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomMigrationImporterTests.swift; sourceTree = "<group>"; };
 		9991A8B46F80260F1654A940 /* CLIRuntimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRuntimeClient.swift; sourceTree = "<group>"; };
 		99F010FC6E6957C8C4E9DCB0 /* LoomAnchorHelperClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomAnchorHelperClient.swift; sourceTree = "<group>"; };
@@ -821,6 +823,7 @@
 				DB463CB820B0E0DFDC61FAA3 /* PageRangeTests.swift */,
 				66BFF8C822FD44301022C930 /* PursuitSpawnerTests.swift */,
 				16DCC841DFEB79DFF56517E6 /* ReflectionTraceRecordTests.swift */,
+				98D52240727875638C476A49 /* ReflectionWorkspaceMigrationTests.swift */,
 				2A70BAAB599864665667FBBB /* ReflectionWorkspaceStoreTests.swift */,
 				D8CF9C3C775507819114BD99 /* SchemaResolverTests.swift */,
 				D3080D41F3CA22A6933AC963 /* SecurityScopedFolderStoreTests.swift */,
@@ -1309,6 +1312,7 @@
 				2F8B70C24D0A8B6BEA1A5F67 /* PageRangeTests.swift in Sources */,
 				B11FED732191ABC3BA517F30 /* PursuitSpawnerTests.swift in Sources */,
 				E6EC9224B17BF78BCA09F070 /* ReflectionTraceRecordTests.swift in Sources */,
+				B9F3EC8B83A8169431216764 /* ReflectionWorkspaceMigrationTests.swift in Sources */,
 				7BD18CF22EA572F71C2A6A83 /* ReflectionWorkspaceStoreTests.swift in Sources */,
 				234209E0BE4DBAED73F7E11E /* SchemaResolverTests.swift in Sources */,
 				962B946A862C0E17C9727266 /* SecurityScopedFolderStoreTests.swift in Sources */,
