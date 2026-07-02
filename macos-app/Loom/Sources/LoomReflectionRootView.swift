@@ -3035,6 +3035,7 @@ private struct ReflectionLearningReviewSummary: Equatable {
     let focusSummary: String
     let confirmations: [String]
     let principle: String?
+    let hasCommittedMeanings: Bool
 
     static func make(for reflectionCase: ReflectionCase) -> ReflectionLearningReviewSummary? {
         guard reflectionCase.project == "Learning pass" else { return nil }
@@ -3058,7 +3059,8 @@ private struct ReflectionLearningReviewSummary: Equatable {
             traceSummary: traceSummary(from: outcome, inputItems: inputItems),
             focusSummary: focusSummary(from: outcome),
             confirmations: confirmations,
-            principle: principle
+            principle: principle,
+            hasCommittedMeanings: inputItems.contains { $0.contains("[user meaning]") }
         )
     }
 
@@ -3111,9 +3113,14 @@ private struct ReflectionLearningReview: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 if cleanedConfirmations.isEmpty {
+                    // The guidance ladder advances with the reader: collect →
+                    // explain → second pass. Once meanings are committed, the
+                    // honest next step is the second pass, not more explaining.
                     ReflectionLearningReviewLine(
                         label: "Next",
-                        value: "Write your own meaning for the captured source before turning it into memory."
+                        value: summary.hasCommittedMeanings
+                            ? "Second pass: re-read the source and confirm or correct each meaning. Open questions close here."
+                            : "Write your own meaning for the captured source before turning it into memory."
                     )
                 } else {
                     ReflectionLearningReviewList(label: "Check", values: cleanedConfirmations)
