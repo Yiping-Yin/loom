@@ -218,6 +218,7 @@ struct LoomApp: App {
             #endif
             CommandGroup(replacing: .newItem) {
                 NewTopicMenuItem()
+                ExportLearningRecordMenuItem()
             }
             // File menu · Export / Import — flat-file JSON dump of the
             // user's pursuits, traces, Sōan cards + edges, weaves. Round
@@ -1710,6 +1711,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 /// If the app is reopened from Dock/Finder with no visible window, the
 /// AppDelegate posts `.loomOpenMainWindow` and this command-scoped view
 /// owns the actual scene open.
+// Stage 5 (呈现 outward): the Learning Record export is a product action,
+// not a verification-harness artifact.
+struct ExportLearningRecordMenuItem: View {
+    var body: some View {
+        Button("Export Learning Record…") {
+            NotificationCenter.default.post(name: .loomExportLearningRecord, object: nil)
+        }
+        .keyboardShortcut("e", modifiers: [.command, .shift])
+    }
+}
+
 struct NewTopicMenuItem: View {
     @Environment(\.openWindow) private var openWindow
 
@@ -2225,6 +2237,7 @@ extension Notification.Name {
     static let loomOpenExternalFiles = Notification.Name("loomOpenExternalFiles")
     static let loomCaptureExternalSelection = Notification.Name("loomCaptureExternalSelection")
     static let loomNewTopic = Notification.Name("loomNewTopic")
+    static let loomExportLearningRecord = Notification.Name("loomExportLearningRecord")
     static let loomLearn = Notification.Name("loomLearn")
     static let loomZoomIn = Notification.Name("loomZoomIn")
     static let loomZoomOut = Notification.Name("loomZoomOut")

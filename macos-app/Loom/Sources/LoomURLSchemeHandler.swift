@@ -488,6 +488,8 @@ final class LoomURLSchemeHandler: NSObject, WKURLSchemeHandler {
                 payload = Self.buildCaptureContentPayload(query: requestURL.query ?? "")
             case .capturesList:
                 payload = Self.buildCapturesListPayload()
+            case .reflectionWorkspaceSnapshot:
+                payload = await Self.buildReflectionWorkspaceSnapshotPayload()
             case .captureSnapshot:
                 payload = Self.buildCaptureSnapshotPayload(query: requestURL.query ?? "")
             case .captureMetadata:
@@ -694,6 +696,11 @@ final class LoomURLSchemeHandler: NSObject, WKURLSchemeHandler {
         // root / timestamp), no body — keeps payload small for
         // 100+ capture inventories.
         case capturesList = "captures-list"
+        // Stage 5 (workbench mirror) — the whole typed reflection workspace
+        // (cases + traceRecords + selection) served live from the shared
+        // session so the web /reflection surface mirrors native without any
+        // sentence re-parsing.
+        case reflectionWorkspaceSnapshot = "reflection-workspace-snapshot"
         // Phase D — fetches the raw HTML body of a saved snapshot so
         // the /loom-render/snapshot route can `srcdoc=` it into an
         // iframe. Args: root, sub, filename. Returns
@@ -768,6 +775,8 @@ final class LoomURLSchemeHandler: NSObject, WKURLSchemeHandler {
             case "capture-content.json":
                 // Args come via query string; id stays empty.
                 return NativeTarget(kind: .captureContent, id: "")
+            case "reflection-workspace-snapshot.json":
+                return NativeTarget(kind: .reflectionWorkspaceSnapshot, id: "")
             case "captures-list.json":
                 return NativeTarget(kind: .capturesList, id: "")
             case "capture-snapshot.json":
@@ -982,6 +991,25 @@ final class LoomURLSchemeHandler: NSObject, WKURLSchemeHandler {
     /// landing renders a Snapshot affordance next to the trash icon
     /// when this field is present. Pick the newest snapshot if multiple
     /// exist (re-captures of the same domain accumulate).
+
+    /// Stage 5 (workbench mirror): serve the LIVE session (not the mirror
+    /// file) so unsaved edits appear on the web surface immediately. Encoded
+    /// through the same Codable path the store uses — one schema, no second
+    /// parser.
+    @MainActor
+    static func buildReflectionWorkspaceSnapshotPayload() -> Any? {
+        let session = ReflectionWorkspaceSession.shared
+        var snapshot = ReflectionWorkspaceSnapshot(
+            cases: session.cases,
+            selectedCaseID: session.selectedCaseID,
+            selectedSourceID: session.selectedSourceID
+        )
+        snapshot.schemaVersion = ReflectionWorkspaceStore.currentSchemaVersion
+        snapshot.savedAt = Date()
+        guard let data = try? JSONEncoder().encode(snapshot) else { return nil }
+        return try? JSONSerialization.jsonObject(with: data)
+    }
+
     @MainActor
     static func buildCapturesListPayload() -> [String: Any] {
         let entries = CapturesIndex.loadAll()

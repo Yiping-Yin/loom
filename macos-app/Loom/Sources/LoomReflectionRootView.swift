@@ -239,7 +239,8 @@ struct LoomReflectionRootView: View {
                 WorkbenchStatusBar(
                     trace: selectedLearningTrace,
                     isLearningCase: selectedCase.project == "Learning pass",
-                    message: statusMessage
+                    message: statusMessage,
+                    onEnablePreciseAnchors: openAccessibilityPreferences
                 )
                 .frame(maxWidth: .infinity)
                 .frame(maxHeight: .infinity, alignment: .bottom)
@@ -270,6 +271,7 @@ struct LoomReflectionRootView: View {
             consumePendingExternalSelection()
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in createReflection() }
+        .onReceive(NotificationCenter.default.publisher(for: .loomExportLearningRecord)) { _ in exportLearningRecord() }
         .onReceive(NotificationCenter.default.publisher(for: .loomOpenExternalFiles)) { note in
             let token = note.userInfo?["token"] as? UUID
             if let token, token == lastHandledExternalFileToken {
@@ -329,6 +331,35 @@ struct LoomReflectionRootView: View {
         workspace.closeCase(id)
         selectedLearningTraceID = nil
         statusMessage = "Closed tab"
+    }
+
+    /// Stage 5 (呈现 outward): export the open project as a Learning Record
+    /// (Markdown, RESEARCH_REPORT anatomy). The save panel grants the
+    /// sandboxed write; nothing touches the original files.
+    private func openAccessibilityPreferences() {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") else { return }
+        NSWorkspace.shared.open(url)
+        statusMessage = "Grant Accessibility to LoomAnchorHelper, then capture again"
+    }
+
+    private func exportLearningRecord() {
+        let markdown = ReflectionLearningRecordExporter.markdown(
+            for: selectedCase,
+            principles: workspace.principles
+        )
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "\(selectedCase.title) — Learning Record.md"
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let url = panel.url else {
+            statusMessage = "Export cancelled"
+            return
+        }
+        do {
+            try markdown.data(using: .utf8)?.write(to: url, options: [.atomic])
+            statusMessage = "Learning Record exported"
+        } catch {
+            statusMessage = "Export failed: \(error.localizedDescription)"
+        }
     }
 
     private func citePrincipleIntoSelectedCase(_ principleID: ReflectionPrincipleRecord.ID) {
@@ -4044,6 +4075,7 @@ private struct WorkbenchStatusBar: View {
     let trace: ReflectionLearningTrace?
     let isLearningCase: Bool
     let message: String
+    var onEnablePreciseAnchors: (() -> Void)? = nil
 
     private var anchorSummary: (label: String, isStrong: Bool)? {
         guard isLearningCase, let trace else { return nil }
@@ -4071,6 +4103,14 @@ private struct WorkbenchStatusBar: View {
                     Text(anchorSummary.label)
                         .font(.system(size: 10, design: .monospaced))
                         .foregroundStyle(LoomTokens.dsInk3)
+                }
+                if !anchorSummary.isStrong, let onEnablePreciseAnchors {
+                    // No silent degrade: the instrument names the fix.
+                    Button("Enable page-precise anchors…", action: onEnablePreciseAnchors)
+                        .buttonStyle(.plain)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(LoomTokens.dsThread)
+                        .help("Grant Accessibility to LoomAnchorHelper so anchors reach file+page")
                 }
             }
             Spacer(minLength: 0)

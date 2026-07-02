@@ -20,6 +20,10 @@ import {
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 
+import {
+  fetchNativeReflectionSnapshot,
+  reflectionCaseFromNative,
+} from './nativeReflectionSnapshot';
 import styles from './ReflectionWorkspace.module.css';
 import { UnderstandingSpine } from './UnderstandingSpine';
 import type { ReflectionCase, ReflectionSource, UnderstandingVersion } from './reflectionModel';
@@ -276,8 +280,29 @@ export default function ReflectionWorkspaceClient() {
   const [caseQuery, setCaseQuery] = useState('');
   const [sourceQuery, setSourceQuery] = useState('');
   const [draft, setDraft] = useState('');
-  const learningCommitFocus: LearningCommitFocus = 'user meaning';
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
+
+  // Stage 5 (workbench mirror): inside the native WKWebView this surface is
+  // a MIRROR of the typed workspace (loom:// snapshot, no sentence parsing).
+  // In a stock browser the fetch throws and the demo cases remain.
+  useEffect(() => {
+    let cancelled = false;
+    void fetchNativeReflectionSnapshot().then((snapshot) => {
+      if (cancelled || !snapshot) return;
+      const mirrored = snapshot.cases.map(reflectionCaseFromNative);
+      setCases(mirrored);
+      const selectedCase =
+        mirrored.find((item) => item.id === snapshot.selectedCaseID) ?? mirrored[0]!;
+      setActiveCaseId(selectedCase.id);
+      const selectedSource =
+        selectedCase.sources.find((item) => item.id === snapshot.selectedSourceID)
+          ?? selectedCase.sources[0];
+      if (selectedSource) setActiveSourceId(selectedSource.id);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [inspectorTarget, setInspectorTarget] = useState<InspectorTarget>('version');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSidebarPeeking, setIsSidebarPeeking] = useState(false);
@@ -536,6 +561,16 @@ export default function ReflectionWorkspaceClient() {
     if (!text) return;
 
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Web parity with the native commit grammar: a trailing ? opens a
+    // question; principle:/correction:/question: prefixes declare intent.
+    const learningCommitFocus: LearningCommitFocus = (() => {
+      if (text.endsWith('?') || text.endsWith('？')) return 'question';
+      const lowered = text.toLowerCase();
+      if (lowered.startsWith('principle:')) return 'principle';
+      if (lowered.startsWith('correction:')) return 'correction';
+      if (lowered.startsWith('question:')) return 'question';
+      return 'user meaning';
+    })();
     const committedText =
       isLearningCase
         ? formatLearningCommit(text, latestLearningAnchor(activeCase, activeSource), learningCommitFocus)
