@@ -32,6 +32,7 @@ function isPresentationPath(pathname: string) {
     pathname === '/drafts' ||
     pathname === '/loom' ||
     pathname === '/reflection' ||
+    pathname === '/workbench' ||
     pathname === '/product-history' ||
     pathname === '/help' ||
     pathname === '/offline' ||
