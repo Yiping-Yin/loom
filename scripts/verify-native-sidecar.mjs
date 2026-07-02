@@ -1793,7 +1793,7 @@ function learningOutputPacketMarkdown(report) {
     '## 3. Method',
     '',
     packetList([
-      'Capture: select in the native app → macOS Services "Capture Selection in Loom" (⌘⇧L) → anchored understanding version. The native app stays primary.',
+      'Capture: select in the native app → macOS Services "Capture Selection in Loom" (⌘⇧1) → anchored understanding version. The native app stays primary.',
       `Evidence ladder rungs observed: ${rungs.join('; ') || 'none yet'}.`,
       `Spine: ${packetSpineLines(report).map((line) => line.replace(/^Spine:\s*/, '')).join(' ')}`,
     ]),

@@ -336,7 +336,7 @@ struct LoomReflectionRootView: View {
     }
 
     /// An INITIATION the user starts before touching any file: an empty
-    /// learning project. Captures (⌘⇧L) then join it as the active project
+    /// learning project. Captures (⌘⇧1) then join it as the active project
     /// and its files accumulate under Sources.
     private func createLearningProject() {
         let next = Self.learningCase(from: [])
@@ -884,7 +884,7 @@ struct LoomReflectionRootView: View {
                 ? "Opened original file for learning: \(primary.label)."
                 : "Opened original file for learning: \(primary.label), plus \(extraCount) related files."
         } else {
-            fileOpeningLine = "Learning project started. Capture from any native file (⌘⇧L) to attach it as a source."
+            fileOpeningLine = "Learning project started. Capture from any native file (⌘⇧1) to attach it as a source."
         }
         var steps = ReflectionStep.blankWorkflow()
         steps[0].items = [
