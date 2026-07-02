@@ -25,6 +25,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Fast typecheck
+        run: npm run typecheck:fast
+
       - name: Contract tests
         run: npm run test:contracts
 
@@ -59,6 +65,9 @@ jobs:
 
       - name: Verify Loom Xcode project
         run: npm run app:check-project
+
+      - name: LoomTests
+        run: LOOM_SKIP_WEB_STAGE=1 xcodebuild test -project macos-app/Loom/Loom.xcodeproj -scheme Loom -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
       - name: Install Loom.app to ~/Applications
         run: npm run app:user

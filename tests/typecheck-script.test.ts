@@ -87,3 +87,8 @@ test('next build lock creates the lock directory recursively and retries missing
   assert.match(source, /DUPLICATE_ARTIFACT_PATTERN\.test\(name\)/);
   assert.match(source, /isStaleBuildArtifactName\(entry\.name\)/);
 });
+
+test('typecheck:fast runs bare tsc decoupled from the Next build lock', () => {
+  const scripts = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8')).scripts;
+  assert.equal(scripts['typecheck:fast'], 'tsc --noEmit -p tsconfig.json');
+});

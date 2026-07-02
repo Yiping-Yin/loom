@@ -22,6 +22,20 @@ test('CI includes a dedicated macOS app build job', () => {
   assert.doesNotMatch(source, /CODEX_BIN:\s*\.\/scripts\/fake-codex-cli\.mjs/);
 });
 
+test('CI gates lint, fast typecheck, and the native LoomTests suite (Stage 0 governance floor)', () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, '.github', 'workflows', 'ci.yml'),
+    'utf8',
+  );
+
+  assert.match(source, /name: Lint\n\s+run: npm run lint/);
+  assert.match(source, /name: Fast typecheck\n\s+run: npm run typecheck:fast/);
+  assert.match(
+    source,
+    /name: LoomTests\n\s+run: LOOM_SKIP_WEB_STAGE=1 xcodebuild test -project macos-app\/Loom\/Loom\.xcodeproj -scheme Loom -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO/,
+  );
+});
+
 test('macOS project checker supports nested Swift sources and path roots', () => {
   const source = fs.readFileSync(
     path.join(repoRoot, 'scripts', 'check-loom-macos-project-files.mjs'),
