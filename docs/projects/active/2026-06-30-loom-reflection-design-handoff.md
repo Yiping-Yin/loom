@@ -212,6 +212,83 @@ Net: the center gets QUIETER as it gets more correct, not busier.
    a complete, powerful v1. Output-back-to-formats is v2; a rich media editor is
    out of scope.
 
+## Addendum — Center view benchmark: the Colab register (2026-07-02)
+
+Owner evidence: a Colab notebook screenshot ("中心视图该长这样，甚至超过这样").
+The notebook shown was a living learning document: TOC derived from the
+document's own structure, a continuous book-order body (title, intro, numbered
+sections, prose interleaved with artifacts), new chapters visibly grown as the
+owner's study deepened, minimal chrome.
+
+- **Symptom:** the center review view is still version-list-shaped; covering
+  the chrome does not read as a professional document.
+- **Bad literal fix:** clone Colab/Jupyter — runnable cells, a kernel, a rich
+  document editor inside Loom. That rebuilds a mature tool (capability ladder
+  violation) and turns Understanding Review into an editor of record.
+- **Choice:** adopt the notebook **document register** as the center's
+  presentation floor: (1) a TOC rail derived from the document's own structure
+  (source structure + learning passes, never type buckets), (2) one continuous
+  book-order body, prose + evidence artifacts interleaved, (3) the document
+  visibly grows chapters as learning deepens (thick) with distilled summaries
+  (thin).
+- **Surpass list (the Loom-only layer Colab lacks):** footnote-like anchors
+  that reveal the original (file · p.N round-trip) · understanding diff (first
+  meaning → correction as visible revision, not chat history) · recall texture
+  (fill-in gaps) as a review pass · open questions carrying open-conditions ·
+  promoted principles rendered as constrained conclusions (cross-file reuse) ·
+  provenance box + scope-first declaration (RESEARCH_REPORT anatomy) · ⚠️
+  honest caveats inline (weak anchors disclosed quietly).
+- **Owner:** center workspace only. The TOC is the center's own outline rail
+  scoped to the open project; the left sidebar stays initiations-only.
+- **Refusals:** no runnable cells/kernel; no in-Loom media editor; no
+  type-bucket TOC (`Meanings / Questions / Captures` is not a table of
+  contents); no chat-transcript shape. Back-matter sections (Open questions,
+  Principles) are document sections, like a paper's appendix — not buckets.
+- **Acceptance:** cover the chrome — the center reads like a Colab-grade
+  professional document of the user's understanding; an anchor click reveals
+  the original file location; a second pass adds a visible correction and a
+  distilled summary without duplicating entries.
+
+## Addendum — The Workbench: IDE grammar becomes the Reflection shell (2026-07-02)
+
+Owner decisions (in-session, same day as the Colab addendum): the VSCode-style
+dev-environment grammar is **not a QBook feature — it is the shell grammar for
+LOOM's next-generation workbench**; integrate with the current Reflection into
+something brand new ("直接和现在的Reflection进行整合升级成全新的"). Two scoping
+calls, both owner-confirmed: **native SwiftUI first** (keep every native
+integration: ⌘⇧U capture chain, anchor XPC helper, revealAnchor, persistence),
+and **the workbench is LOOM's main surface** (the app root, not one view among
+many).
+
+- **Symptom:** Reflection's three panes work, but the shell has no grammar for
+  multiple open cases, document-structure navigation, or folded version
+  history — and the center is still version-list-shaped.
+- **Bad literal fix:** clone VS Code — file tree, terminal, kernel, in-app
+  file editing. That rebuilds mature tools and breaks the sidecar thesis.
+- **Choice:** adopt the IDE shell grammar as baseline presentation, filled
+  with Loom-only content:
+  Explorer → user-initiated learning projects (initiations, never files) ·
+  editor tabs → open cases · center → the notebook-register learning document
+  (Colab addendum above) · OUTLINE → the book's structure · TIMELINE →
+  understanding passes, folded · right pane → Evidence · status bar → anchor
+  precision / capture-chain honesty · command palette → LOOM actions.
+- **Refusals:** no file-tree explorer; no terminal; no kernel or run buttons;
+  no in-Loom file editing; old surfaces are demoted behind the workbench, not
+  duplicated beside it (one owner per job). Material Discipline stands: native
+  macOS materials, not a web-IDE skin.
+- **Reference implementation:** optibook-replica branch
+  `qbook-reflection-notebook` — working register renderer + functional
+  OUTLINE/TIMELINE inside a VSCode shell (React; grammar reference only).
+- **Sequencing constraint (from the 2026-07-02 audit):**
+  `LoomReflectionRootView.swift` is a 4,288-line single file whose persistence
+  stores learning traces as rendered English sentences re-parsed by substring
+  scanning. The workbench must NOT be built on that store: phase 0 is
+  extracting a structured domain model + versioned persistence, THEN the
+  shell. Otherwise every workbench copy change becomes a user-data migration.
+- **Acceptance:** cover the chrome → the center reads as the book; the shell
+  reads as a native macOS workbench; existing capture→meaning→review loop
+  works unchanged on real data after the re-shell.
+
 ## Codex implementation note — 2026-06-30
 
 Applied the handoff to the native surface first:
