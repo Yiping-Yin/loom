@@ -112,9 +112,9 @@ struct LoomReflectionRootView: View {
                     ReflectionSidebar(
                         cases: cases,
                         selectedCaseID: selectedCaseID,
-                        panelsCase: workbenchChrome ? selectedCase : nil,
+                        panelsCase: nil,
                         onSelectTrace: selectLearningTrace,
-                        panelPrinciples: workbenchChrome ? workspace.principles : [],
+                        panelPrinciples: [],
                         onCitePrinciple: citePrincipleIntoSelectedCase,
                         onSelect: selectCase,
                         onCreate: createReflection,
@@ -132,29 +132,12 @@ struct LoomReflectionRootView: View {
                 }
 
                 HStack(spacing: 0) {
-                    VStack(spacing: 0) {
-                        if workbenchChrome {
-                            WorkbenchCaseTabStrip(
-                                cases: cases,
-                                openCaseIDs: workspace.openCaseIDs,
-                                selectedCaseID: selectedCaseID,
-                                onSelect: selectCaseTab,
-                                onClose: closeCaseTab
-                            )
-                            .padding(.top, workbenchTabStripTopClearance)
-                        }
-                        ReflectionThreadView(
-                            reflectionCase: selectedCase,
-                            selectedLearningTraceID: $workspace.selectedLearningTraceID,
-                            draftText: $draftText,
-                            commitFocus: $composerFocus,
-                            topPadding: workbenchChrome ? workbenchThreadTopPadding : reflectionThreadTopPadding,
-                            onSelectTrace: selectLearningTrace,
-                            onPromotePrinciple: promoteCandidatePrinciple,
-                            onSubmit: submitMaterial
-                        )
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // Center column intentionally EMPTY (owner directive
+                    // 2026-07-03: 中间栏现在给我清空) — a clean glass canvas;
+                    // its contents will be rebuilt one requirement at a
+                    // time. LoomIDECenter stays defined below for reuse.
+                    Color.clear
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     if isInspectorPresented {
                         ReflectionPaneResizer(width: $inspectorWidth)
@@ -179,7 +162,9 @@ struct LoomReflectionRootView: View {
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
                 }
-                .background(ReflectionMatteWorkbenchBackground().ignoresSafeArea())
+                // Glass law (2026-07-03): exactly ONE glass pane per window —
+                // the root matte below. Columns never stack their own
+                // behind-window material on top of it.
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -201,9 +186,9 @@ struct LoomReflectionRootView: View {
                         cases: cases,
                         selectedCaseID: selectedCaseID,
                         material: .centerOverlay,
-                        panelsCase: workbenchChrome ? selectedCase : nil,
+                        panelsCase: nil,
                         onSelectTrace: selectLearningTrace,
-                        panelPrinciples: workbenchChrome ? workspace.principles : [],
+                        panelPrinciples: [],
                         onCitePrinciple: citePrincipleIntoSelectedCase,
                         onSelect: selectCase,
                         onCreate: createReflection,
@@ -235,17 +220,8 @@ struct LoomReflectionRootView: View {
                     .zIndex(0.5)
             }
 
-            if workbenchChrome {
-                WorkbenchStatusBar(
-                    trace: selectedLearningTrace,
-                    isLearningCase: selectedCase.project == "Learning pass",
-                    message: statusMessage,
-                    onEnablePreciseAnchors: openAccessibilityPreferences
-                )
-                .frame(maxWidth: .infinity)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-                .zIndex(0.9)
-            }
+            // Bottom status bar removed 2026-07-03 (owner directive):
+            // the workspace ends at the composer; no chrome strip below it.
         }
         .ignoresSafeArea(.container, edges: .top)
         .background(ReflectionMatteWorkbenchBackground().ignoresSafeArea())
@@ -2116,46 +2092,56 @@ private struct ReflectionSidebarBackground: View {
     }
 
     var body: some View {
-        ZStack {
-            ReflectionVisualEffectBackground(
-                material: liquidGlassMaterial,
-                blendingMode: liquidGlassBlendingMode
-            )
-            Rectangle().fill(glassTint)
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(colorScheme == .light ? 0.28 : 0.09),
-                    Color.clear
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .blendMode(.plusLighter)
-            Rectangle()
-                .fill(glassHairline)
-                .frame(width: 0.5)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+        if material == .rail {
+            // Glass law: the docked rail is TRANSPARENT — the window's one
+            // root glass shows through; the divider is the only seam.
+            Color.clear
+        } else {
+            ZStack {
+                ReflectionVisualEffectBackground(
+                    material: liquidGlassMaterial,
+                    blendingMode: liquidGlassBlendingMode
+                )
+                Rectangle().fill(glassTint)
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(colorScheme == .light ? 0.28 : 0.09),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .blendMode(.plusLighter)
+                Rectangle()
+                    .fill(glassHairline)
+                    .frame(width: 0.5)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            .shadow(color: glassShadow, radius: 34, x: 18, y: 0)
         }
-        .shadow(color: glassShadow, radius: material == .rail ? 24 : 34, x: material == .rail ? 10 : 18, y: 0)
     }
 }
 
+// Full-workbench glass (owner directive 2026-07-03: 整个工作台全部先升级成玻璃).
+// behindWindow so the desktop bleeds through the whole center — the earlier
+// vibrancy failure was the web era's opaque NSHostingView + cosmic page;
+// the native register has no opaque layers, so the glass carries.
 private struct ReflectionMatteWorkbenchBackground: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var paperTint: Color {
-        colorScheme == .light ? LoomTokens.dsPaperDeep.opacity(0.68) : LoomTokens.dsPaperDeep.opacity(0.78)
+        colorScheme == .light ? LoomTokens.dsPaperDeep.opacity(0.18) : LoomTokens.dsPaperDeep.opacity(0.26)
     }
 
     private var fogTint: Color {
-        colorScheme == .light ? Color.white.opacity(0.16) : Color.white.opacity(0.025)
+        colorScheme == .light ? Color.white.opacity(0.12) : Color.white.opacity(0.02)
     }
 
     var body: some View {
         ZStack {
             ReflectionVisualEffectBackground(
-                material: .contentBackground,
-                blendingMode: .withinWindow
+                material: .underWindowBackground,
+                blendingMode: .behindWindow
             )
             Rectangle().fill(paperTint)
             Rectangle().fill(fogTint).blendMode(.plusLighter)
@@ -2167,25 +2153,13 @@ private struct ReflectionFrostedInspectorBackground: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var frostTint: Color {
-        colorScheme == .light ? LoomTokens.dsPaper.opacity(0.42) : LoomTokens.dsPaper.opacity(0.58)
-    }
-
-    private var edgeTint: Color {
-        colorScheme == .light ? Color.white.opacity(0.34) : Color.white.opacity(0.075)
+        colorScheme == .light ? LoomTokens.dsPaper.opacity(0.22) : LoomTokens.dsPaper.opacity(0.28)
     }
 
     var body: some View {
-        ZStack {
-            ReflectionVisualEffectBackground(
-                material: .underPageBackground,
-                blendingMode: .withinWindow
-            )
-            Rectangle().fill(frostTint)
-            Rectangle()
-                .fill(edgeTint)
-                .frame(width: 0.5)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
+        // Glass law: transparent over the window's one root glass; the pane
+        // resizer is the only seam line.
+        Color.clear
     }
 }
 
@@ -2462,7 +2436,6 @@ private struct ReflectionThreadView: View {
                 .padding(.bottom, 12)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
-        .background(ReflectionMatteWorkbenchBackground())
     }
 
     private var composerPlaceholder: String {
@@ -3194,56 +3167,121 @@ private struct ReflectionLearningReviewList: View {
     }
 }
 
+// Colab-form register (owner directive 2026-07-03): collapsible sections
+// with a chevron, entries as bordered cells with a left gutter, empty steps
+// as ghost cells. Typography and spacing follow the Colab notebook document;
+// color follows Loom ink (青芒 replaces Colab blue for focus/hover).
 private struct ReflectionTraceList: View {
     let steps: [ReflectionStep]
+    @State private var collapsedSteps: Set<String> = []
+    @State private var hoveredCell: String? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 6) {
             ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
-                HStack(alignment: .top, spacing: 14) {
+                sectionView(index: index, step: step)
+                    .id(step.id)
+            }
+        }
+    }
+
+    private func sectionView(index: Int, step: ReflectionStep) -> some View {
+        let isCollapsed = collapsedSteps.contains(step.id)
+        return VStack(alignment: .leading, spacing: 10) {
+            Button {
+                if isCollapsed {
+                    collapsedSteps.remove(step.id)
+                } else {
+                    collapsedSteps.insert(step.id)
+                }
+            } label: {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                        .rotationEffect(.degrees(isCollapsed ? -90 : 0))
+                        .frame(width: 12)
                     Text(String(format: "%02d", index + 1))
                         .font(.system(size: 10, weight: .medium, design: .monospaced))
                         .foregroundStyle(LoomTokens.dsInk3)
-                        .frame(width: 24, alignment: .leading)
-
-                    VStack(alignment: .leading, spacing: 7) {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(step.title)
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(LoomTokens.dsInk1)
-                            Text(step.subtitle)
-                                .font(.system(size: 11))
-                                .foregroundStyle(LoomTokens.dsInk3)
-                                .lineLimit(1)
-                            Spacer(minLength: 0)
-                        }
-
-                        if step.items.isEmpty {
-                            Text("No entry yet.")
-                                .font(.system(size: 12))
-                                .foregroundStyle(LoomTokens.dsInk3)
-                        } else {
-                            VStack(alignment: .leading, spacing: 5) {
-                                ForEach(step.items, id: \.self) { item in
-                                    Text(item)
-                                        .font(.system(size: 12))
-                                        .lineSpacing(2)
-                                        .foregroundStyle(LoomTokens.dsInk2)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                            }
-                        }
-                    }
+                    Text(step.title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(LoomTokens.dsInk1)
+                    Text(step.subtitle)
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
                 }
-                .padding(.vertical, 12)
-                .overlay(alignment: .bottom) {
-                    if index < steps.count - 1 {
-                        Rectangle().fill(LoomTokens.dsHair).frame(height: 1)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(isCollapsed ? "Expand section" : "Collapse section")
+
+            if !isCollapsed {
+                if step.items.isEmpty {
+                    ghostCell
+                        .padding(.leading, 22)
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(step.items.enumerated()), id: \.offset) { itemIndex, item in
+                            entryCell(item, key: "\(step.id)-\(itemIndex)")
+                        }
                     }
+                    .padding(.leading, 22)
                 }
             }
         }
-        .padding(.horizontal, 2)
+        .padding(.vertical, 10)
+    }
+
+    // A committed entry as a Colab cell: left gutter marker + bordered
+    // rounded card; the border wakes on hover (青芒, never Colab blue).
+    private func entryCell(_ item: String, key: String) -> some View {
+        let isHovered = hoveredCell == key
+        return HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "circle")
+                .font(.system(size: 11, weight: .regular))
+                .foregroundStyle(isHovered ? LoomTokens.dsThread : LoomTokens.dsInk3.opacity(0.7))
+                .padding(.top, 12)
+            Text(item)
+                .font(.system(size: 12.5))
+                .lineSpacing(3)
+                .foregroundStyle(LoomTokens.dsInk2)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 11)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(LoomTokens.dsPaperUp.opacity(0.45))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(
+                            isHovered ? LoomTokens.dsThread.opacity(0.55) : LoomTokens.dsHair,
+                            lineWidth: 1
+                        )
+                )
+        }
+        .onHover { hovering in
+            hoveredCell = hovering ? key : (hoveredCell == key ? nil : hoveredCell)
+        }
+    }
+
+    // An empty step as a quiet ghost cell — the Colab empty-placeholder
+    // grammar, telling the truth ("No entry yet.") instead of a prompt.
+    private var ghostCell: some View {
+        Text("No entry yet.")
+            .font(.system(size: 12))
+            .foregroundStyle(LoomTokens.dsInk3)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(LoomTokens.dsHairFaint, style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            )
     }
 }
 
@@ -4014,6 +4052,217 @@ private struct ReflectionLearningSynthesis {
 // Stage 3 (workbench): open cases behave like editor tabs. A tab names the
 // INITIATION; closing it never deletes the case. Quiet native chrome — no
 // web-IDE skin.
+// The VSCode-form IDE center, drawn natively (owner directive 2026-07-03:
+// 不是嵌网页 — the QBook web embed is retired). Same skeleton as QBook's
+// dev environment — activity bar · side panel · tab strip · document —
+// with the reflection register as the document and Loom material as the
+// panel content.
+private enum IDEActivity: String, CaseIterable {
+    case explorer, search, sources, run, layers
+
+    var icon: String {
+        switch self {
+        case .explorer: return "doc.on.doc"
+        case .search: return "magnifyingglass"
+        case .sources: return "arrow.triangle.branch"
+        case .run: return "play"
+        case .layers: return "square.3.layers.3d"
+        }
+    }
+
+    var panelTitle: String {
+        switch self {
+        case .explorer: return "EXPLORER"
+        case .search: return "SEARCH"
+        case .sources: return "SOURCE CONTROL"
+        case .run: return "RUN"
+        case .layers: return "LAYERS"
+        }
+    }
+}
+
+private struct LoomIDECenter: View {
+    let cases: [ReflectionCase]
+    let reflectionCase: ReflectionCase
+    let openCaseIDs: [ReflectionCase.ID]
+    let principles: [ReflectionPrincipleRecord]
+    @Binding var selectedLearningTraceID: ReflectionLearningTrace.ID?
+    @Binding var draftText: String
+    @Binding var commitFocus: ReflectionCommitFocus
+    let topClearance: CGFloat
+    let onSelectTab: (ReflectionCase.ID) -> Void
+    let onCloseTab: (ReflectionCase.ID) -> Void
+    let onSelectTrace: (ReflectionLearningTrace) -> Void
+    let onPromotePrinciple: (String) -> Void
+    let onCitePrinciple: (ReflectionPrincipleRecord.ID) -> Void
+    let onSelectSource: (ReflectionSource) -> Void
+    let onSubmit: () -> Void
+
+    @State private var activity: IDEActivity = .explorer
+    @State private var isPanelVisible = true
+    @State private var workspaceExpanded = true
+
+    var body: some View {
+        HStack(spacing: 0) {
+            activityBar
+            Rectangle().fill(LoomTokens.dsHairFaint).frame(width: 1)
+            if isPanelVisible {
+                sidePanel
+                    .frame(width: 236)
+                Rectangle().fill(LoomTokens.dsHairFaint).frame(width: 1)
+            }
+            VStack(spacing: 0) {
+                WorkbenchCaseTabStrip(
+                    cases: cases,
+                    openCaseIDs: openCaseIDs,
+                    selectedCaseID: reflectionCase.id,
+                    onSelect: onSelectTab,
+                    onClose: onCloseTab
+                )
+                .padding(.top, topClearance)
+                Rectangle().fill(LoomTokens.dsHairFaint).frame(height: 1)
+                ReflectionThreadView(
+                    reflectionCase: reflectionCase,
+                    selectedLearningTraceID: $selectedLearningTraceID,
+                    draftText: $draftText,
+                    commitFocus: $commitFocus,
+                    topPadding: workbenchThreadTopPadding,
+                    onSelectTrace: onSelectTrace,
+                    onPromotePrinciple: onPromotePrinciple,
+                    onSubmit: onSubmit
+                )
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private var activityBar: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: topClearance)
+            ForEach(IDEActivity.allCases, id: \.self) { item in
+                activityButton(item)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "person.crop.circle")
+                .font(.system(size: 15))
+                .foregroundStyle(LoomTokens.dsInk3.opacity(0.7))
+                .frame(width: 46, height: 40)
+            Image(systemName: "gearshape")
+                .font(.system(size: 15))
+                .foregroundStyle(LoomTokens.dsInk3.opacity(0.7))
+                .frame(width: 46, height: 44)
+        }
+        .frame(width: 46)
+        .frame(maxHeight: .infinity)
+        .background(LoomTokens.dsPaperDeep.opacity(0.30))
+    }
+
+    private func activityButton(_ item: IDEActivity) -> some View {
+        let isActive = item == activity && isPanelVisible
+        return Button {
+            if item == activity {
+                isPanelVisible.toggle()
+            } else {
+                activity = item
+                isPanelVisible = true
+            }
+        } label: {
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(isActive ? LoomTokens.dsThread : Color.clear)
+                    .frame(width: 2)
+                    .frame(maxHeight: .infinity)
+                Image(systemName: item.icon)
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundStyle(isActive ? LoomTokens.dsInk1 : LoomTokens.dsInk3)
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(width: 46, height: 42)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(item.panelTitle.capitalized)
+    }
+
+    private var sidePanel: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer().frame(height: topClearance)
+            Text(activity.panelTitle)
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .tracking(1.2)
+                .foregroundStyle(LoomTokens.dsInk3)
+                .padding(.horizontal, 20)
+                .frame(height: 30, alignment: .leading)
+            if activity == .explorer {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        workspaceSection
+                        WorkbenchSidebarPanels(
+                            reflectionCase: reflectionCase,
+                            sectionText: LoomTokens.dsInk3,
+                            rowText: LoomTokens.dsInk2,
+                            subText: LoomTokens.dsInk3,
+                            divider: LoomTokens.dsHairFaint,
+                            onSelectTrace: onSelectTrace,
+                            principles: principles,
+                            onCitePrinciple: onCitePrinciple
+                        )
+                    }
+                }
+            } else {
+                Text("Not wired yet.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                Spacer(minLength: 0)
+            }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(LoomTokens.dsPaperDeep.opacity(0.18))
+    }
+
+    private var workspaceSection: some View {
+        DisclosureGroup(isExpanded: $workspaceExpanded) {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(reflectionCase.sources, id: \.id) { source in
+                    Button {
+                        onSelectSource(source)
+                    } label: {
+                        HStack(spacing: 7) {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 10))
+                                .foregroundStyle(LoomTokens.dsInk3)
+                            Text(source.label)
+                                .font(.system(size: 11.5))
+                                .lineLimit(1)
+                                .foregroundStyle(LoomTokens.dsInk2)
+                            Spacer(minLength: 0)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 3)
+                }
+                if reflectionCase.sources.isEmpty {
+                    Text("No sources yet — capture with ⌘⇧U.")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                }
+            }
+            .padding(.top, 4)
+        } label: {
+            Text("WORKSPACE")
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .tracking(1.2)
+                .foregroundStyle(LoomTokens.dsInk3)
+        }
+        .tint(LoomTokens.dsInk3)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+    }
+}
+
 private struct WorkbenchCaseTabStrip: View {
     let cases: [ReflectionCase]
     let openCaseIDs: [ReflectionCase.ID]

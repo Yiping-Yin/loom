@@ -1623,7 +1623,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private var usesCenterOverlay: Bool \{ material == \.centerOverlay \}/);
   assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, material: material\)/);
   assert.match(nativeRoot, /case \(\.rail, \.light\):[\s\S]{0,80}return Color\.white\.opacity\(0\.08\)/);
-  assert.match(nativeRoot, /colorScheme == \.light \? Color\.white\.opacity\(0\.34\) : Color\.white\.opacity\(0\.075\)/);
+  // Glass law 2026-07-03 (owner-approved): ONE glass pane per window — the
+  // root matte is underWindowBackground+behindWindow with day/night tints;
+  // the inspector and the docked rail are transparent over it and never
+  // stack their own behind-window material or edge hairline.
+  assert.match(nativeRoot, /material: \.underWindowBackground,[\s\S]{0,40}blendingMode: \.behindWindow/);
+  assert.match(nativeRoot, /dsPaperDeep\.opacity\(0\.18\) : LoomTokens\.dsPaperDeep\.opacity\(0\.26\)/);
   assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,220}material: material/);
   assert.match(nativeRoot, /private var selectedFill: Color \{[\s\S]{0,180}if usesLightChrome \{[\s\S]{0,120}usesCenterOverlay \? LoomTokens\.dsThread\.opacity\(0\.07\) : Color\.white\.opacity\(0\.18\)/);
   assert.match(nativeRoot, /private func updateSidebarPeek\(_ shouldPeek: Bool\)/);
@@ -2525,7 +2530,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   );
   assert.match(topBarBlock, /ReflectionTopBarButton:[\s\S]*\.background\(\.thinMaterial, in: RoundedRectangle/);
   assert.doesNotMatch(nativeRoot, /ReflectionCollapsedSidebarRail/);
-  assert.doesNotMatch(nativeRoot, /ReflectionThreadHeader|PRODUCT REFLECTION WORKSPACE|Text\("WORKSPACE"\)/);
+  // The retired thread header must not return. (The IDE explorer's
+  // WORKSPACE section label — owner-directed 2026-07-03 — is sanctioned,
+  // so the old blanket Text("WORKSPACE") clause is scoped down.)
+  assert.doesNotMatch(nativeRoot, /ReflectionThreadHeader|PRODUCT REFLECTION WORKSPACE/);
   assert.match(nativeRoot, /ReflectionDivider\(\)/);
   assert.doesNotMatch(nativeRoot, /NavigationSplitView\(columnVisibility:/);
   assert.doesNotMatch(nativeRoot, /List\(selection:/);
