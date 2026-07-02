@@ -1281,7 +1281,11 @@ struct WindowConfigurator: NSViewRepresentable {
         if window.tabGroup?.isTabBarVisible == true {
             window.toggleTabBar(nil)
         }
-        window.appearance = NSAppearance(named: isNight ? .darkAqua : .aqua)
+        // Glass law (2026-07-03): the window INHERITS the system appearance
+        // — never pinned. The old isNight pin created a lock-in loop (pinned
+        // window -> colorScheme stays dark -> isNight stays true), so the
+        // workbench ignored the system's day/night switch.
+        window.appearance = nil
         window.titlebarAppearsTransparent = contentExtendsUnderTitlebar
         // Hide the NSWindow-rendered title entirely. macOS draws
         // that text using a mechanism that doesn't follow our
