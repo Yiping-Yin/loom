@@ -126,7 +126,8 @@ struct LoomReflectionRootView: View {
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
-                        onDelete: deleteReflection
+                        onDelete: deleteReflection,
+                        onRename: renameReflection
                     )
                     .frame(width: reflectionSidebarWidth)
                     .transition(.move(edge: .leading).combined(with: .opacity))
@@ -195,7 +196,8 @@ struct LoomReflectionRootView: View {
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
-                        onDelete: deleteReflection
+                        onDelete: deleteReflection,
+                        onRename: renameReflection
                     )
                     .frame(width: reflectionSidebarWidth)
 
@@ -344,6 +346,14 @@ struct LoomReflectionRootView: View {
         selectedLearningTraceID = nil
         draftText = ""
         statusMessage = "New learning project started"
+        persistWorkspace()
+    }
+
+    private func renameReflection(_ reflectionCase: ReflectionCase, to title: String) {
+        guard let index = cases.firstIndex(where: { $0.id == reflectionCase.id }) else { return }
+        cases[index].title = title
+        cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+        statusMessage = "Renamed to \(title)"
         persistWorkspace()
     }
 
@@ -1769,6 +1779,7 @@ private struct ReflectionSidebar: View {
     let onCreate: () -> Void
     let onCreateLearning: () -> Void
     let onDelete: (ReflectionCase) -> Void
+    let onRename: (ReflectionCase, String) -> Void
     @Environment(\.colorScheme) private var colorScheme
     @State private var query: String = ""
 
@@ -1826,7 +1837,8 @@ private struct ReflectionSidebar: View {
                             isSelected: reflectionCase.id == selectedCaseID,
                             material: material,
                             onSelect: { onSelect(reflectionCase) },
-                            onDelete: { onDelete(reflectionCase) }
+                            onDelete: { onDelete(reflectionCase) },
+                            onRename: { onRename(reflectionCase, $0) }
                         )
                     }
                 }
@@ -2053,8 +2065,25 @@ private struct ReflectionSidebarRow: View {
     let material: ReflectionSidebarMaterial
     let onSelect: () -> Void
     let onDelete: () -> Void
+    let onRename: (String) -> Void
     @Environment(\.colorScheme) private var colorScheme
     @State private var isHovering = false
+    @State private var isEditingTitle = false
+    @State private var titleDraft = ""
+    @FocusState private var titleFieldFocused: Bool
+
+    private func beginRename() {
+        titleDraft = reflectionCase.title
+        isEditingTitle = true
+        titleFieldFocused = true
+    }
+
+    private func commitRename() {
+        isEditingTitle = false
+        let trimmed = titleDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != reflectionCase.title else { return }
+        onRename(trimmed)
+    }
 
     private var usesCenterOverlay: Bool { material == .centerOverlay }
     private var usesLightChrome: Bool { usesCenterOverlay || colorScheme == .light }
@@ -2117,10 +2146,24 @@ private struct ReflectionSidebarRow: View {
                         .padding(.top, 1)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(reflectionCase.title)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(titleColor)
-                            .lineLimit(1)
+                        if isEditingTitle {
+                            // Projects are named for the initiation — rename
+                            // them to the real endeavor (double-click or the
+                            // context menu).
+                            TextField("Project name", text: $titleDraft)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(titleColor)
+                                .focused($titleFieldFocused)
+                                .onSubmit { commitRename() }
+                                .onExitCommand { isEditingTitle = false }
+                        } else {
+                            Text(reflectionCase.title)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(titleColor)
+                                .lineLimit(1)
+                                .onTapGesture(count: 2) { beginRename() }
+                        }
                         HStack(spacing: 6) {
                             Text(reflectionCase.project)
                                 .font(.system(size: 11))
@@ -2152,6 +2195,10 @@ private struct ReflectionSidebarRow: View {
             .help("Delete reflection")
         }
         .onHover { isHovering = $0 }
+        .contextMenu {
+            Button("Rename") { beginRename() }
+            Button("Delete", role: .destructive, action: onDelete)
+        }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
