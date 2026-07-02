@@ -2551,7 +2551,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(nativeRoot, /ReflectionPaneMaterial|ReflectionSelectionMaterial|reflectionGlass/);
   assert.match(nativeRoot, /private let reflectionThreadMaxWidth: CGFloat = 720/);
   assert.match(nativeRoot, /ReflectionTraceList\(steps: reflectionCase\.steps\)/);
-  assert.match(nativeRoot, /\.padding\(\.top,\s*reflectionThreadTopPadding\)/);
+  // Stage 3 (workbench): the thread's top clearance is a parameter — the
+  // default keeps the contract's 76pt; the tab strip variant reduces it.
+  assert.match(nativeRoot, /var topPadding: CGFloat = reflectionThreadTopPadding/);
+  assert.match(nativeRoot, /\.padding\(\.top,\s*topPadding\)/);
   assert.match(nativeRoot, /\.padding\(\.top,\s*reflectionInspectorTopPadding\)/);
   assert.doesNotMatch(nativeRoot, /\.padding\(\.top,\s*reflectionTopBarHeight \+/);
   assert.match(

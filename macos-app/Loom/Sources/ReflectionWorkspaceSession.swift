@@ -20,6 +20,9 @@ final class ReflectionWorkspaceSession: ObservableObject {
     @Published var selectedCaseID: ReflectionCase.ID
     @Published var selectedSourceID: ReflectionSource.ID?
     @Published var selectedLearningTraceID: ReflectionLearningTrace.ID?
+    // Stage 3 (workbench): open cases behave like editor tabs — session-local,
+    // never persisted; closing a tab never deletes the case.
+    @Published var openCaseIDs: [ReflectionCase.ID] = []
 
     /// The snapshot parameter is injectable for tests; production uses the
     /// hardened store (newer-wins replicas + v1→v2 migration).
@@ -45,6 +48,21 @@ final class ReflectionWorkspaceSession: ObservableObject {
         selectedCaseID = initialSelectedCaseID
         selectedSourceID = initialSelectedSourceID
         selectedLearningTraceID = nil
+        openCaseIDs = [initialSelectedCaseID]
+    }
+
+    func openCase(_ id: ReflectionCase.ID) {
+        if !openCaseIDs.contains(id) {
+            openCaseIDs.append(id)
+        }
+        selectedCaseID = id
+    }
+
+    func closeCase(_ id: ReflectionCase.ID) {
+        openCaseIDs.removeAll { $0 == id }
+        if selectedCaseID == id {
+            selectedCaseID = openCaseIDs.last ?? cases.first?.id ?? selectedCaseID
+        }
     }
 
     func persist() {

@@ -23,6 +23,10 @@ private let reflectionTitlebarControlCenterY: CGFloat = 16
 private let reflectionTitlebarContentTop: CGFloat = reflectionTitlebarControlCenterY - (reflectionTitlebarControlSize / 2)
 private let reflectionThreadTopPadding: CGFloat = 76
 private let reflectionInspectorTopPadding: CGFloat = 74
+// Stage 3 (workbench): tab strip clears the overlay top bar; the thread's
+// own clearance shrinks to this when the strip is present.
+private let workbenchTabStripTopClearance: CGFloat = 56
+private let workbenchThreadTopPadding: CGFloat = 16
 
 
 private enum ReflectionCommitFocus: String {
@@ -72,6 +76,10 @@ struct LoomReflectionRootView: View {
     @State private var draftText: String = ""
     @State private var composerFocus: ReflectionCommitFocus = .meaning
     @State private var statusMessage: String = "Local reflection workspace"
+    // Stage 3 (workbench): the IDE-grammar chrome (tabs, OUTLINE/TIMELINE,
+    // status bar) ships ON with a persisted rollback flag — flipping it off
+    // restores the previous shell against identical data.
+    @AppStorage("loom.workbench.chrome") private var workbenchChrome: Bool = true
     @State private var isSidebarPresented: Bool = true
     @State private var isSidebarPeeking: Bool = false
     @State private var isInspectorPresented: Bool = true
@@ -104,6 +112,8 @@ struct LoomReflectionRootView: View {
                     ReflectionSidebar(
                         cases: cases,
                         selectedCaseID: selectedCaseID,
+                        panelsCase: workbenchChrome ? selectedCase : nil,
+                        onSelectTrace: selectLearningTrace,
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
@@ -120,14 +130,27 @@ struct LoomReflectionRootView: View {
                 }
 
                 HStack(spacing: 0) {
-                    ReflectionThreadView(
-                        reflectionCase: selectedCase,
-                        selectedLearningTraceID: $workspace.selectedLearningTraceID,
-                        draftText: $draftText,
-                        commitFocus: $composerFocus,
-                        onSelectTrace: selectLearningTrace,
-                        onSubmit: submitMaterial
-                    )
+                    VStack(spacing: 0) {
+                        if workbenchChrome {
+                            WorkbenchCaseTabStrip(
+                                cases: cases,
+                                openCaseIDs: workspace.openCaseIDs,
+                                selectedCaseID: selectedCaseID,
+                                onSelect: selectCaseTab,
+                                onClose: closeCaseTab
+                            )
+                            .padding(.top, workbenchTabStripTopClearance)
+                        }
+                        ReflectionThreadView(
+                            reflectionCase: selectedCase,
+                            selectedLearningTraceID: $workspace.selectedLearningTraceID,
+                            draftText: $draftText,
+                            commitFocus: $composerFocus,
+                            topPadding: workbenchChrome ? workbenchThreadTopPadding : reflectionThreadTopPadding,
+                            onSelectTrace: selectLearningTrace,
+                            onSubmit: submitMaterial
+                        )
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     if isInspectorPresented {
@@ -175,6 +198,8 @@ struct LoomReflectionRootView: View {
                         cases: cases,
                         selectedCaseID: selectedCaseID,
                         material: .centerOverlay,
+                        panelsCase: workbenchChrome ? selectedCase : nil,
+                        onSelectTrace: selectLearningTrace,
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
@@ -203,6 +228,17 @@ struct LoomReflectionRootView: View {
                         }
                     }
                     .zIndex(0.5)
+            }
+
+            if workbenchChrome {
+                WorkbenchStatusBar(
+                    trace: selectedLearningTrace,
+                    isLearningCase: selectedCase.project == "Learning pass",
+                    message: statusMessage
+                )
+                .frame(maxWidth: .infinity)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .zIndex(0.9)
             }
         }
         .ignoresSafeArea(.container, edges: .top)
@@ -271,11 +307,23 @@ struct LoomReflectionRootView: View {
     }
 
     private func selectCase(_ reflectionCase: ReflectionCase) {
-        selectedCaseID = reflectionCase.id
+        // Stage 3 (workbench): selecting from the Explorer opens a tab.
+        workspace.openCase(reflectionCase.id)
         selectedSourceID = reflectionCase.sources.first?.id
         selectedLearningTraceID = nil
         statusMessage = "Opened \(reflectionCase.title)"
         persistWorkspace()
+    }
+
+    private func selectCaseTab(_ id: ReflectionCase.ID) {
+        guard let target = cases.first(where: { $0.id == id }) else { return }
+        selectCase(target)
+    }
+
+    private func closeCaseTab(_ id: ReflectionCase.ID) {
+        workspace.closeCase(id)
+        selectedLearningTraceID = nil
+        statusMessage = "Closed tab"
     }
 
     private func toggleSidebar() {
@@ -1633,6 +1681,11 @@ private struct ReflectionSidebar: View {
     let cases: [ReflectionCase]
     let selectedCaseID: ReflectionCase.ID
     var material: ReflectionSidebarMaterial = .rail
+    // Stage 3 (workbench): OUTLINE (the book's structure) and TIMELINE (the
+    // study log, closed until asked) live at the Explorer's foot — the
+    // VSCode grammar, filled with Loom-only content.
+    var panelsCase: ReflectionCase? = nil
+    var onSelectTrace: ((ReflectionLearningTrace) -> Void)? = nil
     let onSelect: (ReflectionCase) -> Void
     let onCreate: () -> Void
     let onCreateLearning: () -> Void
@@ -1706,6 +1759,17 @@ private struct ReflectionSidebar: View {
 
             Spacer(minLength: 0)
 
+            if let panelsCase, panelsCase.project == "Learning pass" {
+                WorkbenchSidebarPanels(
+                    reflectionCase: panelsCase,
+                    sectionText: sectionText,
+                    rowText: localPrimaryText,
+                    subText: localSecondaryText,
+                    divider: localDivider,
+                    onSelectTrace: onSelectTrace
+                )
+            }
+
             HStack(spacing: 10) {
                 Circle()
                     .fill(
@@ -1738,6 +1802,122 @@ private struct ReflectionSidebar: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(ReflectionSidebarBackground(material: material))
+    }
+}
+
+// Stage 3 (workbench): OUTLINE = the book's table of contents with the
+// user's understanding woven in; TIMELINE = the study log, closed until
+// asked. Both derive from the SAME typed traces the center renders.
+private struct WorkbenchSidebarPanels: View {
+    let reflectionCase: ReflectionCase
+    let sectionText: Color
+    let rowText: Color
+    let subText: Color
+    let divider: Color
+    let onSelectTrace: ((ReflectionLearningTrace) -> Void)?
+    @State private var outlineExpanded = true
+    @State private var timelineExpanded = false
+
+    private var traces: [ReflectionLearningTrace] {
+        ReflectionLearningTrace.from(reflectionCase)
+    }
+
+    private var orderedTraces: [ReflectionLearningTrace] {
+        traces.enumerated().sorted { lhs, rhs in
+            let lhsPage = lhs.element.pageNumber ?? Int.max
+            let rhsPage = rhs.element.pageNumber ?? Int.max
+            if lhsPage != rhsPage { return lhsPage < rhsPage }
+            return lhs.offset < rhs.offset
+        }.map(\.element)
+    }
+
+    private var timelineRows: [(label: String, detail: String)] {
+        let captures = traces.filter { $0.isLanguageSelection || $0.isDataOrDocumentSelection }.count
+        let meanings = traces.filter { $0.isUserCommitted && !["question", "correction", "principle"].contains($0.focus) }.count
+        let corrections = traces.filter { $0.focus == "correction" }.count
+        let questions = traces.filter { $0.focus == "question" }.count
+        let principles = traces.filter { $0.focus == "principle" }.count
+        var rows: [(String, String)] = []
+        if captures + meanings > 0 {
+            rows.append(("First pass", "\(captures) capture\(captures == 1 ? "" : "s") · \(meanings) meaning\(meanings == 1 ? "" : "s")"))
+        }
+        if corrections + questions + principles > 0 {
+            rows.append(("Review pass", "\(corrections) correction\(corrections == 1 ? "" : "s") · \(questions) open · \(principles) principle\(principles == 1 ? "" : "s")"))
+        }
+        return rows
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            DisclosureGroup(isExpanded: $outlineExpanded) {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(orderedTraces.prefix(24)) { trace in
+                        Button {
+                            onSelectTrace?(trace)
+                        } label: {
+                            HStack(spacing: 7) {
+                                Text(trace.pageAnchorLabel ?? "·")
+                                    .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(subText)
+                                    .frame(width: 30, alignment: .trailing)
+                                Text(trace.displayText)
+                                    .font(.system(size: 11.5))
+                                    .lineLimit(1)
+                                    .foregroundStyle(rowText)
+                                Spacer(minLength: 0)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.vertical, 3)
+                    }
+                }
+                .padding(.top, 4)
+            } label: {
+                Text("OUTLINE")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .tracking(1.2)
+                    .foregroundStyle(sectionText)
+            }
+            .tint(sectionText)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
+            .overlay(alignment: .top) {
+                Rectangle().fill(divider).frame(height: 1)
+            }
+
+            DisclosureGroup(isExpanded: $timelineExpanded) {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(timelineRows, id: \.label) { row in
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(row.label)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(rowText)
+                            Text(row.detail)
+                                .font(.system(size: 10.5))
+                                .foregroundStyle(subText)
+                        }
+                    }
+                    if timelineRows.isEmpty {
+                        Text("No passes yet")
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(subText)
+                    }
+                }
+                .padding(.top, 4)
+            } label: {
+                Text("TIMELINE")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .tracking(1.2)
+                    .foregroundStyle(sectionText)
+            }
+            .tint(sectionText)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
+            .overlay(alignment: .top) {
+                Rectangle().fill(divider).frame(height: 1)
+            }
+        }
     }
 }
 
@@ -2083,6 +2263,7 @@ private struct ReflectionThreadView: View {
     @Binding var selectedLearningTraceID: ReflectionLearningTrace.ID?
     @Binding var draftText: String
     @Binding var commitFocus: ReflectionCommitFocus
+    var topPadding: CGFloat = reflectionThreadTopPadding
     let onSelectTrace: (ReflectionLearningTrace) -> Void
     let onSubmit: () -> Void
 
@@ -2111,7 +2292,7 @@ private struct ReflectionThreadView: View {
                 }
                 .frame(maxWidth: reflectionThreadMaxWidth, alignment: .leading)
                 .padding(.horizontal, 28)
-                .padding(.top, reflectionThreadTopPadding)
+                .padding(.top, topPadding)
                 .padding(.bottom, 22)
                 .frame(maxWidth: .infinity, alignment: .center)
             }
@@ -3658,6 +3839,114 @@ private struct ReflectionLearningSynthesis {
                 focus: focus,
                 text: LoomReflectionRootView.clippedSelectionText(trimmedText, maxLength: 180)
             )
+        }
+    }
+}
+
+// Stage 3 (workbench): open cases behave like editor tabs. A tab names the
+// INITIATION; closing it never deletes the case. Quiet native chrome — no
+// web-IDE skin.
+private struct WorkbenchCaseTabStrip: View {
+    let cases: [ReflectionCase]
+    let openCaseIDs: [ReflectionCase.ID]
+    let selectedCaseID: ReflectionCase.ID
+    let onSelect: (ReflectionCase.ID) -> Void
+    let onClose: (ReflectionCase.ID) -> Void
+
+    private var openCases: [ReflectionCase] {
+        openCaseIDs.compactMap { id in cases.first { $0.id == id } }
+    }
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                ForEach(openCases) { openCase in
+                    let isSelected = openCase.id == selectedCaseID
+                    HStack(spacing: 6) {
+                        Text(openCase.title)
+                            .font(.system(size: 11.5, weight: isSelected ? .semibold : .regular))
+                            .lineLimit(1)
+                            .foregroundStyle(isSelected ? LoomTokens.dsInk1 : LoomTokens.dsInk3)
+                        if openCases.count > 1 {
+                            Button {
+                                onClose(openCase.id)
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 8, weight: .semibold))
+                                    .foregroundStyle(LoomTokens.dsInk3)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Close tab")
+                        }
+                    }
+                    .padding(.horizontal, 11)
+                    .frame(height: 26)
+                    .background(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(isSelected ? LoomTokens.dsPaperUp.opacity(0.78) : Color.clear)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .stroke(isSelected ? LoomTokens.dsHair : Color.clear, lineWidth: 1)
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture { onSelect(openCase.id) }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 24)
+        }
+        .frame(height: 34)
+    }
+}
+
+// Stage 3 (workbench): the status bar is an instrument — it tells the truth
+// about anchor quality and surfaces the (previously write-only) status
+// message. One line, no decoration.
+private struct WorkbenchStatusBar: View {
+    let trace: ReflectionLearningTrace?
+    let isLearningCase: Bool
+    let message: String
+
+    private var anchorSummary: (label: String, isStrong: Bool)? {
+        guard isLearningCase, let trace else { return nil }
+        let precision = trace.evidence.first { item in
+            item.label == "anchor precision" || item.label == "visual precision"
+        }?.value
+        if let precision {
+            return ("anchor: \(precision)", !trace.isWeakAnchor)
+        }
+        return ("anchor: none", false)
+    }
+
+    var body: some View {
+        HStack(spacing: 14) {
+            if isLearningCase {
+                Text("⌘⇧U captures from the frontmost file")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(LoomTokens.dsInk3)
+            }
+            if let anchorSummary {
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(anchorSummary.isStrong ? LoomTokens.dsThread : Color(red: 0.72, green: 0.47, blue: 0.12))
+                        .frame(width: 5, height: 5)
+                    Text(anchorSummary.label)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                }
+            }
+            Spacer(minLength: 0)
+            Text(message)
+                .font(.system(size: 10))
+                .lineLimit(1)
+                .foregroundStyle(LoomTokens.dsInk3)
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 24)
+        .background(.bar)
+        .overlay(alignment: .top) {
+            Rectangle().fill(LoomTokens.dsHair).frame(height: 1)
         }
     }
 }
