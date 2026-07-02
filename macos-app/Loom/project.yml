@@ -114,17 +114,21 @@ targets:
               default: Capture Selection in Loom
             NSMessage: captureSelectionInLoom
             NSPortName: Loom
-            # One-keystroke capture: select text -> Cmd-Shift-1. Services key
-            # equivalents are always Cmd-Shift-<key>. "1" is the clean slot
-            # verified live: L loses to the system "Search with Google"
-            # service (pressing it in Preview opened Safari), Y is Notes'
-            # capture, 3-6 are screenshots, and Word/Excel/old-LOOM menus own
-            # most letters (app menus win over Services). Users can remap in
-            # System Settings > Keyboard > Keyboard Shortcuts > Services.
-            # The capture route itself stays Services/pasteboard per the
-            # layout contract.
+            # One-keystroke capture: select text -> Cmd-Shift-U (U for
+            # Understanding). Services key equivalents are always
+            # Cmd-Shift-<LETTER>: digits never fire (Shift+1 emits "!", so
+            # the equivalent can't match — verified live: pbs accepts "1"
+            # but Preview's Services menu shows no key and the stroke is
+            # dead). Letter collisions verified live too: L loses to the
+            # system "Search with Google" service (opened Safari from
+            # Preview), Y is Sticky Note, M is man-page, and Word/Excel/
+            # old-LOOM menus own most other letters (app menus win over
+            # Services). U is unbound in Preview, Word, and Excel. Users can
+            # remap in System Settings > Keyboard > Keyboard Shortcuts >
+            # Services. The capture route itself stays Services/pasteboard
+            # per the layout contract.
             NSKeyEquivalent:
-              default: "1"
+              default: U
             NSSendTypes:
               - NSStringPboardType
               - public.utf8-plain-text
