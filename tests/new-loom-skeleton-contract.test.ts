@@ -1788,12 +1788,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /return "file:/);
   assert.match(nativeRoot, /return "session:/);
   assert.match(nativeRoot, /var sourceKind: String/);
-  assert.match(nativeRoot, /private struct ReflectionWorkspaceSnapshot: Codable, Equatable/);
-  assert.match(nativeRoot, /private enum ReflectionWorkspaceStore/);
+  assert.match(nativeRoot, /struct ReflectionWorkspaceSnapshot: Codable, Equatable/);
+  // The store and the persisted model are internal (not file-private) so
+  // LoomTests can verify the mirror safety net with injected scratch stores.
+  assert.match(nativeRoot, /enum ReflectionWorkspaceStore/);
   assert.match(nativeRoot, /private static let defaultsKey = "loom\.reflectionWorkspaceSnapshot"/);
-  assert.match(nativeRoot, /private static func loadFromDefaults\(\) -> ReflectionWorkspaceSnapshot\?/);
-  assert.match(nativeRoot, /private static func loadFromMirror\(\) -> ReflectionWorkspaceSnapshot\?/);
-  assert.match(nativeRoot, /private static func writeMirror\(_ snapshot: ReflectionWorkspaceSnapshot/);
+  assert.match(nativeRoot, /private static func loadFromDefaults\(_ defaults: UserDefaults\) -> ReflectionWorkspaceSnapshot\?/);
+  assert.match(nativeRoot, /private static func loadFromMirror\(_ mirrorURL: URL\?\) -> ReflectionWorkspaceSnapshot\?/);
+  assert.match(nativeRoot, /private static func writeMirror\(\n        _ snapshot: ReflectionWorkspaceSnapshot,\n        encodedData: Data\? = nil,\n        mirrorURL: URL\?\n    \)/);
   assert.match(nativeRoot, /reflection-workspace-snapshot\.json/);
   assert.match(nativeRoot, /ReflectionWorkspaceStore\.load\(\)/);
   assert.match(nativeRoot, /private func persistWorkspace\(\)/);

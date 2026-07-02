@@ -3861,26 +3861,31 @@ final class ReflectionResizeHandleNSView: NSView {
     }
 }
 
-private struct ReflectionWorkspaceSnapshot: Codable, Equatable {
+struct ReflectionWorkspaceSnapshot: Codable, Equatable {
     var cases: [ReflectionCase]
     var selectedCaseID: ReflectionCase.ID
     var selectedSourceID: ReflectionSource.ID?
 }
 
-private enum ReflectionWorkspaceStore {
+enum ReflectionWorkspaceStore {
     private static let defaultsKey = "loom.reflectionWorkspaceSnapshot"
 
-    static func load() -> ReflectionWorkspaceSnapshot? {
-        guard let snapshot = loadFromDefaults() ?? loadFromMirror() else { return nil }
+    static func load(
+        defaults: UserDefaults = .standard,
+        mirrorURL: URL? = ReflectionWorkspaceStore.defaultMirrorURL
+    ) -> ReflectionWorkspaceSnapshot? {
+        guard let snapshot = loadFromDefaults(defaults) ?? loadFromMirror(mirrorURL) else { return nil }
         let normalized = normalize(snapshot)
         if normalized != snapshot {
             save(
                 cases: normalized.cases,
                 selectedCaseID: normalized.selectedCaseID,
-                selectedSourceID: normalized.selectedSourceID
+                selectedSourceID: normalized.selectedSourceID,
+                defaults: defaults,
+                mirrorURL: mirrorURL
             )
         } else {
-            writeMirror(normalized)
+            writeMirror(normalized, mirrorURL: mirrorURL)
         }
         return normalized
     }
@@ -3888,7 +3893,9 @@ private enum ReflectionWorkspaceStore {
     static func save(
         cases: [ReflectionCase],
         selectedCaseID: ReflectionCase.ID,
-        selectedSourceID: ReflectionSource.ID?
+        selectedSourceID: ReflectionSource.ID?,
+        defaults: UserDefaults = .standard,
+        mirrorURL: URL? = ReflectionWorkspaceStore.defaultMirrorURL
     ) {
         let snapshot = ReflectionWorkspaceSnapshot(
             cases: cases,
@@ -3896,22 +3903,26 @@ private enum ReflectionWorkspaceStore {
             selectedSourceID: selectedSourceID
         )
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
-        UserDefaults.standard.set(data, forKey: defaultsKey)
-        writeMirror(snapshot, encodedData: data)
+        defaults.set(data, forKey: defaultsKey)
+        writeMirror(snapshot, encodedData: data, mirrorURL: mirrorURL)
     }
 
-    private static func loadFromDefaults() -> ReflectionWorkspaceSnapshot? {
-        guard let data = UserDefaults.standard.data(forKey: defaultsKey) else { return nil }
+    private static func loadFromDefaults(_ defaults: UserDefaults) -> ReflectionWorkspaceSnapshot? {
+        guard let data = defaults.data(forKey: defaultsKey) else { return nil }
         return try? JSONDecoder().decode(ReflectionWorkspaceSnapshot.self, from: data)
     }
 
-    private static func loadFromMirror() -> ReflectionWorkspaceSnapshot? {
+    private static func loadFromMirror(_ mirrorURL: URL?) -> ReflectionWorkspaceSnapshot? {
         guard let url = mirrorURL,
               let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(ReflectionWorkspaceSnapshot.self, from: data)
     }
 
-    private static func writeMirror(_ snapshot: ReflectionWorkspaceSnapshot, encodedData: Data? = nil) {
+    private static func writeMirror(
+        _ snapshot: ReflectionWorkspaceSnapshot,
+        encodedData: Data? = nil,
+        mirrorURL: URL?
+    ) {
         guard let url = mirrorURL else { return }
         let data = encodedData ?? (try? JSONEncoder().encode(snapshot))
         guard let data else { return }
@@ -3926,7 +3937,7 @@ private enum ReflectionWorkspaceStore {
         }
     }
 
-    private static var mirrorURL: URL? {
+    static var defaultMirrorURL: URL? {
         FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first?
@@ -4048,7 +4059,7 @@ private enum ReflectionWorkspaceStore {
     }
 }
 
-private struct ReflectionCase: Identifiable, Codable, Equatable {
+struct ReflectionCase: Identifiable, Codable, Equatable {
     let id: String
     var title: String
     var project: String
@@ -4162,7 +4173,7 @@ private struct ReflectionCase: Identifiable, Codable, Equatable {
     ]
 }
 
-private struct ReflectionStep: Identifiable, Codable, Equatable {
+struct ReflectionStep: Identifiable, Codable, Equatable {
     let id: String
     var title: String
     var subtitle: String
@@ -4187,7 +4198,7 @@ private struct ReflectionStep: Identifiable, Codable, Equatable {
     }
 }
 
-private struct ReflectionSource: Identifiable, Codable, Equatable {
+struct ReflectionSource: Identifiable, Codable, Equatable {
     let id: String
     var folder: String
     var label: String
@@ -4257,7 +4268,7 @@ private struct ReflectionSourceAnchor {
     let method: String
 }
 
-private struct ReflectionMessage: Identifiable, Codable, Equatable {
+struct ReflectionMessage: Identifiable, Codable, Equatable {
     enum Role: Codable, Equatable {
         case human
         case loom
