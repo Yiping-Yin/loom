@@ -11,10 +11,12 @@ function repoImport(modulePath: string) {
   return import(`${href}?t=${Date.now()}-${Math.random()}`);
 }
 
-async function waitFor(predicate: () => boolean, attempts = 50) {
+async function waitFor(predicate: () => boolean, attempts = 250) {
   for (let i = 0; i < attempts; i += 1) {
     if (predicate()) return;
-    await new Promise((resolve) => setImmediate(resolve));
+    // Real-time polling: a setImmediate spin can exhaust its attempts
+    // before slow CI disk I/O completes (seen on the ubuntu runner).
+    await new Promise((resolve) => setTimeout(resolve, 4));
   }
   throw new Error('Timed out waiting for condition');
 }
@@ -156,7 +158,7 @@ test('source-library metadata writes never expose a truncated file to concurrent
 
     await writeFile(metadataPath, JSON.stringify(initialMetadata, null, 2), 'utf8');
 
-    let releaseWrite!: () => void;
+    let releaseWrite: (() => void) | undefined;
     let writeStarted = false;
 
     fsModule.promises.writeFile = (async (...args: Parameters<typeof originalWriteFile>) => {
@@ -186,15 +188,24 @@ test('source-library metadata writes never expose a truncated file to concurrent
 
     const createPromise = metadataModule.createSourceLibraryGroup('Research');
 
-    await waitFor(() => writeStarted);
+    try {
+      await waitFor(() => writeStarted);
 
-    const duringWrite = await metadataModule.readSourceLibraryMetadata();
-    assert.deepEqual(duringWrite.groups, [
-      { id: 'seed', label: 'Seed', order: 0 },
-      { id: 'ungrouped', label: 'Ungrouped', order: 9999 },
-    ]);
-
-    releaseWrite();
+      const duringWrite = await metadataModule.readSourceLibraryMetadata();
+      assert.deepEqual(duringWrite.groups, [
+        { id: 'seed', label: 'Seed', order: 0 },
+        { id: 'ungrouped', label: 'Ungrouped', order: 9999 },
+      ]);
+    } finally {
+      // Hermetic teardown even when an assertion or waitFor throws: let
+      // the blocked write finish INSIDE this test's temp root. A zombie
+      // createSourceLibraryGroup that outlives the test resolves
+      // sourceLibraryManifestRoot() at write time and would land in the
+      // NEXT test's store (observed on the CI runner).
+      await waitFor(() => writeStarted).catch(() => {});
+      releaseWrite?.();
+      await createPromise.catch(() => {});
+    }
 
     const created = await createPromise;
     const finalState = await metadataModule.readSourceLibraryMetadata();
