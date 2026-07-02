@@ -104,6 +104,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   ].join('\n');
   const styles = read('app/reflection/ReflectionWorkspace.module.css');
   const nativeRoot = read('macos-app/Loom/Sources/LoomReflectionRootView.swift');
+  // Stage 1 (LoomDomain): the domain model moved out of the root view file.
+  const nativeModel = read('macos-app/Loom/Sources/ReflectionModel.swift');
+  const nativeStore = read('macos-app/Loom/Sources/ReflectionWorkspaceStore.swift');
+  const nativeTrace = read('macos-app/Loom/Sources/ReflectionLearningTrace.swift');
+  const nativeSurface = nativeRoot + nativeModel + nativeStore + nativeTrace;
   const sourceFileView = read('macos-app/Loom/Sources/SourceFileView.swift');
   const loomApp = read('macos-app/Loom/Sources/LoomApp.swift');
   const contentView = read('macos-app/Loom/Sources/ContentView.swift');
@@ -707,11 +712,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   }
   for (const label of ['Input', 'Assumption', 'Decision Trace', 'Outcome', 'Reflection', 'Judgment Memory']) {
     assert.match(workspace, new RegExp(escapeRegExp(label)));
-    assert.match(nativeRoot, new RegExp(escapeRegExp(label)));
+    assert.match(nativeSurface, new RegExp(escapeRegExp(label)));
   }
   for (const retired of ['KaaS', 'portfolio', 'skill', 'Digital Me']) {
     assert.doesNotMatch(workspace, new RegExp(escapeRegExp(retired), 'i'));
-    assert.doesNotMatch(nativeRoot, new RegExp(escapeRegExp(retired), 'i'));
+    assert.doesNotMatch(nativeSurface, new RegExp(escapeRegExp(retired), 'i'));
   }
   for (const contractTerm of [
     'Baseline desktop window: 1320 x 860 pt',
@@ -1659,7 +1664,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /@State private var lastHandledExternalFileToken: UUID\?/);
   assert.match(nativeRoot, /@State private var lastHandledExternalSelectionToken: UUID\?/);
   assert.match(nativeRoot, /private var nativeSource: ReflectionSource\?/);
-  assert.match(nativeRoot, /private func reflectionLearningInputFingerprint\(_ value: String\) -> String/);
+  assert.match(nativeSurface, /func reflectionLearningInputFingerprint\(_ value: String\) -> String/);
   assert.match(nativeRoot, /range\(of: #", page \\d\+"#, options: \.regularExpression\)/);
   assert.match(nativeRoot, /\.onReceive\(NotificationCenter\.default\.publisher\(for: \.loomOpenExternalFiles\)\)/);
   assert.match(nativeRoot, /\.onReceive\(NotificationCenter\.default\.publisher\(for: \.loomCaptureExternalSelection\)\)/);
@@ -1691,7 +1696,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /eyebrow: "Learning trace"/);
   assert.match(nativeRoot, /Captured selected text from the native app/);
   assert.match(nativeRoot, /private static func selectionInputLine/);
-  assert.match(nativeRoot, /private let reflectionLearningEvidenceMarker = "\\nEvidence:"/);
+  assert.match(nativeSurface, /let reflectionLearningEvidenceMarker = "\\nEvidence:"/);
   assert.match(nativeRoot, /private static func selectionEvidenceLine/);
   assert.match(nativeRoot, /return "Evidence: \\\(body\)"/);
   assert.match(nativeRoot, /"app", capture\.sourceApp \?\? "native macOS app"/);
@@ -1728,10 +1733,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /use appshot, OCR, Vision, or manual confirmation before promoting/);
   assert.doesNotMatch(nativeRoot, /\("anchor precision", context\.anchorPrecision\)/);
   assert.match(nativeRoot, /ForEach\(trace\.evidence\)/);
-  assert.match(nativeRoot, /private struct ReflectionLearningEvidence: Identifiable, Equatable/);
-  assert.match(nativeRoot, /private static func splitEvidence/);
-  assert.match(nativeRoot, /private static func parseEvidence/);
-  assert.match(nativeRoot, /evidence: evidence/);
+  assert.match(nativeSurface, /struct ReflectionLearningEvidence: Identifiable, Equatable/);
+  assert.match(nativeSurface, /static func splitEvidence/);
+  assert.match(nativeSurface, /static func parseEvidence/);
+  assert.match(nativeSurface, /evidence: evidence/);
   assert.match(nativeRoot, /private static func learningFocus/);
   assert.match(nativeRoot, /private enum ReflectionLearningFocus/);
   assert.match(nativeRoot, /private static func clippedSelectionText/);
@@ -1751,13 +1756,13 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(normalizedAnchorBlock, /\.unicodeScalars/);
   assert.match(normalizedAnchorBlock, /\.compactMap \{ scalar -> Character\?/);
   assert.doesNotMatch(normalizedAnchorBlock, /components\(separatedBy: \.whitespacesAndNewlines\)[\s\S]{0,120}joined\(separator: " "\)/);
-  assert.match(nativeRoot, /private struct ReflectionSourceAnchor/);
+  assert.match(nativeSurface, /struct ReflectionSourceAnchor/);
   assert.match(nativeRoot, /let next = Self\.learningCase\(from: candidateSources\)/);
   assert.doesNotMatch(nativeRoot, /let primaryPath = primarySource\.fileURL\?\.standardizedFileURL\.path/);
   assert.match(nativeRoot, /return cases\.firstIndex \{ reflectionCase in/);
   assert.match(nativeRoot, /selectedCaseID = cases\[activeIndex\]\.id/);
-  assert.match(nativeRoot, /let inputFingerprint = reflectionLearningInputFingerprint\(inputLine\)/);
-  assert.match(nativeRoot, /reflectionLearningInputFingerprint\(\$0\) == inputFingerprint/);
+  assert.match(nativeSurface, /let inputFingerprint = reflectionLearningInputFingerprint\(inputLine\)/);
+  assert.match(nativeSurface, /reflectionLearningInputFingerprint\(\$0\) == inputFingerprint/);
   assert.match(nativeRoot, /persistWorkspace\(\)[\s\S]{0,80}return/);
   assert.match(nativeRoot, /isSidebarPresented = false/);
   assert.match(nativeRoot, /isSidebarPeeking = false/);
@@ -1788,20 +1793,20 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /return "file:/);
   assert.match(nativeRoot, /return "session:/);
   assert.match(nativeRoot, /var sourceKind: String/);
-  assert.match(nativeRoot, /struct ReflectionWorkspaceSnapshot: Codable, Equatable/);
+  assert.match(nativeSurface, /struct ReflectionWorkspaceSnapshot: Codable, Equatable/);
   // The store and the persisted model are internal (not file-private) so
   // LoomTests can verify the mirror safety net with injected scratch stores.
-  assert.match(nativeRoot, /enum ReflectionWorkspaceStore/);
-  assert.match(nativeRoot, /private static let defaultsKey = "loom\.reflectionWorkspaceSnapshot"/);
-  assert.match(nativeRoot, /private static func loadFromDefaults\(_ defaults: UserDefaults\) -> ReflectionWorkspaceSnapshot\?/);
-  assert.match(nativeRoot, /private static func loadFromMirror\(_ mirrorURL: URL\?\) -> ReflectionWorkspaceSnapshot\?/);
-  assert.match(nativeRoot, /private static func writeMirror\(\n        _ snapshot: ReflectionWorkspaceSnapshot,\n        encodedData: Data\? = nil,\n        mirrorURL: URL\?\n    \)/);
-  assert.match(nativeRoot, /reflection-workspace-snapshot\.json/);
-  assert.match(nativeRoot, /ReflectionWorkspaceStore\.load\(\)/);
+  assert.match(nativeSurface, /enum ReflectionWorkspaceStore/);
+  assert.match(nativeSurface, /static let defaultsKey = "loom\.reflectionWorkspaceSnapshot"/);
+  assert.match(nativeSurface, /private static func loadFromDefaults\(_ defaults: UserDefaults\) -> ReflectionWorkspaceSnapshot\?/);
+  assert.match(nativeSurface, /private static func loadFromMirror\(_ mirrorURL: URL\?\) -> ReflectionWorkspaceSnapshot\?/);
+  assert.match(nativeSurface, /private static func writeMirror\(\n        _ snapshot: ReflectionWorkspaceSnapshot,\n        encodedData: Data\? = nil,\n        mirrorURL: URL\?\n    \)/);
+  assert.match(nativeSurface, /reflection-workspace-snapshot\.json/);
+  assert.match(nativeSurface, /ReflectionWorkspaceStore\.load\(\)/);
   assert.match(nativeRoot, /private func persistWorkspace\(\)/);
-  assert.match(nativeRoot, /ReflectionWorkspaceStore\.save\(/);
-  assert.match(nativeRoot, /private static func normalize\(_ snapshot: ReflectionWorkspaceSnapshot\) -> ReflectionWorkspaceSnapshot/);
-  assert.match(nativeRoot, /private static func orderedUnique\(_ values: \[String\]\) -> \[String\]/);
+  assert.match(nativeSurface, /ReflectionWorkspaceStore\.save\(/);
+  assert.match(nativeSurface, /private static func normalize\(_ snapshot: ReflectionWorkspaceSnapshot\) -> ReflectionWorkspaceSnapshot/);
+  assert.match(nativeSurface, /static func orderedUnique\(_ values: \[String\]\) -> \[String\]/);
   assert.match(nativeRoot, /project: "Learning pass"/);
   assert.match(nativeRoot, /status: "Reading"/);
   assert.match(nativeRoot, /Use native file tools first/);
@@ -1810,7 +1815,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(nativeRoot, /SourceFileView\(fileURL: fileURL\)/);
   assert.match(nativeRoot, /if source\.fileURL != nil/);
   assert.match(nativeRoot, /fileURL: url/);
-  assert.match(nativeRoot, /var fileURL: URL\?/);
+  assert.match(nativeSurface, /var fileURL: URL\?/);
   assert.match(sourceFileView, /import PDFKit/);
   assert.match(sourceFileView, /import QuickLookUI/);
   assert.match(sourceFileView, /init\(fileURL: URL, onClose: @escaping \(\) -> Void\)/);
@@ -1954,7 +1959,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private struct ReflectionLearningLedgerView: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningTraceCard: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningSignal: View/);
-  assert.match(nativeRoot, /private struct ReflectionLearningTrace: Identifiable, Equatable/);
+  assert.match(nativeSurface, /struct ReflectionLearningTrace: Identifiable, Equatable/);
   assert.match(nativeRoot, /@State private var selectedLearningTraceID: ReflectionLearningTrace\.ID\?/);
   assert.match(nativeRoot, /private var selectedLearningTrace: ReflectionLearningTrace\?/);
   assert.match(nativeRoot, /@Binding var selectedLearningTraceID: ReflectionLearningTrace\.ID\?/);
@@ -1970,8 +1975,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /let onOpenSource: \(\(\) -> Void\)\?/);
   assert.match(nativeRoot, /Label\("Open Source", systemImage: "arrow\.up\.forward\.app"\)/);
   assert.match(nativeRoot, /\.help\("Open the original file in its native app"\)/);
-  assert.match(nativeRoot, /func matches\(source: ReflectionSource\) -> Bool/);
-  assert.match(nativeRoot, /sourceAnchor\.hasPrefix/);
+  assert.match(nativeSurface, /func matches\(source: ReflectionSource\) -> Bool/);
+  assert.match(nativeSurface, /sourceAnchor\.hasPrefix/);
   assert.doesNotMatch(
     nativeRoot,
     /private var currentTrace: ReflectionLearningTrace\?[\s\S]{0,100}ReflectionLearningTrace\.from\(reflectionCase\)\.last/,
@@ -1985,28 +1990,28 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /Text\(trace\.versionTitle\)/);
   assert.match(nativeRoot, /ReflectionLearningSignal\(label: trace\.signalLabel, color: trace\.signalColor\)/);
   assert.match(nativeRoot, /Text\(trace\.displayLabel\)/);
-  assert.match(nativeRoot, /return "Original selection"/);
-  assert.match(nativeRoot, /return "Selected word"/);
-  assert.match(nativeRoot, /return "needs meaning"/);
-  assert.match(nativeRoot, /return "needs interpretation"/);
-  assert.match(nativeRoot, /private static func cleanUserPrefix\(_ value: String\) -> String/);
-  assert.match(nativeRoot, /"principle:", "principle："/);
-  assert.match(nativeRoot, /"question:", "question："/);
-  assert.match(nativeRoot, /"meaning:", "meaning："/);
-  assert.match(nativeRoot, /"translation:", "translation："/);
-  assert.match(nativeRoot, /"意思:", "意思："/);
+  assert.match(nativeSurface, /return "Original selection"/);
+  assert.match(nativeSurface, /return "Selected word"/);
+  assert.match(nativeSurface, /return "needs meaning"/);
+  assert.match(nativeSurface, /return "needs interpretation"/);
+  assert.match(nativeSurface, /static func cleanUserPrefix\(_ value: String\) -> String/);
+  assert.match(nativeSurface, /"principle:", "principle："/);
+  assert.match(nativeSurface, /"question:", "question："/);
+  assert.match(nativeSurface, /"meaning:", "meaning："/);
+  assert.match(nativeSurface, /"translation:", "translation："/);
+  assert.match(nativeSurface, /"意思:", "意思："/);
   assert.match(nativeRoot, /ReflectionLearningTrace\.from\(reflectionCase\)/);
   assert.match(nativeRoot, /private static func latestLearningAnchor\(in reflectionCase: ReflectionCase\) -> String\?/);
   assert.match(nativeRoot, /\.first \{ trace in[\s\S]{0,160}trace\.isLanguageSelection \|\| trace\.isDataOrDocumentSelection/);
-  assert.match(nativeRoot, /parseCaptured\(_ item: String, version: Int\)/);
-  assert.match(nativeRoot, /sourceAnchor: sourceAnchor\.isEmpty \? "Original file" : sourceAnchor/);
-  assert.match(nativeRoot, /version: "v\\?\(version\\?\)"/);
+  assert.match(nativeSurface, /parseCaptured\(_ item: String, version: Int\)/);
+  assert.match(nativeSurface, /sourceAnchor: sourceAnchor\.isEmpty \? "Original file" : sourceAnchor/);
+  assert.match(nativeSurface, /version: "v\\?\(version\\?\)"/);
   assert.match(nativeRoot, /private struct ReflectionLearningReviewSummary: Equatable/);
   assert.match(nativeRoot, /private struct ReflectionLearningPrincipleCandidate: View/);
   assert.match(nativeRoot, /ReflectionLearningPrincipleCandidate\(principle: principle\)/);
   assert.match(nativeRoot, /steps\[5\]\.title = "Principle"/);
   assert.match(nativeRoot, /steps\[5\]\.subtitle = "What can become reusable thinking"/);
-  assert.match(nativeRoot, /if reflectionCase\.project == "Learning pass", normalizedStep\.id == "memory"/);
+  assert.match(nativeSurface, /if reflectionCase\.project == "Learning pass", normalizedStep\.id == "memory"/);
   assert.match(nativeRoot, /return "Margin note\.\.\."/);
   assert.match(nativeRoot, /\.help\("Save margin note"\)/);
   assert.doesNotMatch(nativeRoot, /return "Add understanding\.\.\."/);
@@ -2031,18 +2036,18 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /return "user meaning"/);
   assert.match(nativeRoot, /eyebrow: focus == \.question \? "Open question" : "Understanding version"/);
   assert.match(nativeRoot, /statusMessage = "Committed thinking version"/);
-  assert.match(nativeRoot, /private static func normalizeLearningInputItem\(_ value: String\) -> String/);
-  assert.match(nativeRoot, /private static func orderedUniqueLearningInputs\(_ values: \[String\]\) -> \[String\]/);
-  assert.match(nativeRoot, /private static func normalizeLearningStepItems\(_ step: ReflectionStep\) -> \[String\]/);
-  assert.match(nativeRoot, /used Loom only to save anchored traces/);
+  assert.match(nativeSurface, /static func normalizeLearningInputItem\(_ value: String\) -> String/);
+  assert.match(nativeSurface, /static func orderedUniqueLearningInputs\(_ values: \[String\]\) -> \[String\]/);
+  assert.match(nativeSurface, /static func normalizeLearningStepItems\(_ step: ReflectionStep\) -> \[String\]/);
+  assert.match(nativeSurface, /used Loom only to save anchored traces/);
   assert.match(nativeRoot, /used Loom only to commit anchored traces/);
-  assert.match(nativeRoot, /if step\.id == "memory"/);
-  assert.match(nativeRoot, /items\.filter \{ \$0\.contains\("Principle candidate"\) \}/);
-  assert.match(nativeRoot, /private static func normalizeLearningMessage\(_ message: ReflectionMessage\) -> ReflectionMessage/);
-  assert.match(nativeRoot, /private static func orderedUniqueLearningMessages\(_ messages: \[ReflectionMessage\]\) -> \[ReflectionMessage\]/);
-  assert.match(nativeRoot, /let key = "\\\(message\.eyebrow\)\\n\\\(message\.body\)"/);
-  assert.match(nativeRoot, /next\.eyebrow = "Understanding version"/);
-  assert.match(nativeRoot, /promote only confirmed principles into memory/);
+  assert.match(nativeSurface, /if step\.id == "memory"/);
+  assert.match(nativeSurface, /items\.filter \{ \$0\.contains\("Principle candidate"\) \}/);
+  assert.match(nativeSurface, /static func normalizeLearningMessage\(_ message: ReflectionMessage\) -> ReflectionMessage/);
+  assert.match(nativeSurface, /static func orderedUniqueLearningMessages\(_ messages: \[ReflectionMessage\]\) -> \[ReflectionMessage\]/);
+  assert.match(nativeSurface, /let key = "\\\(message\.eyebrow\)\\n\\\(message\.body\)"/);
+  assert.match(nativeSurface, /next\.eyebrow = "Understanding version"/);
+  assert.match(nativeSurface, /promote only confirmed principles into memory/);
   assert.match(nativeRoot, /First language pass: keep the original file surface primary and capture vocabulary/);
   assert.match(nativeRoot, /case vocabulary[\s\S]*case phrase[\s\S]*case sentence[\s\S]*case passage/);
   assert.match(nativeRoot, /return "first language pass"/);
