@@ -283,3 +283,53 @@ export function filterPalette(items: PaletteItem[], query: string, limit = 12): 
   }
   return result;
 }
+
+export type ManuscriptChapter = {
+  index: number;
+  title: string;
+  pageFrom: number | null;
+  pageTo: number | null;
+  entries: ManuscriptEntry[];
+};
+
+/** The book's own structure: consecutive page clusters become chapters
+ *  (a jump of more than 2 pages starts a new one); unanchored entries join
+ *  the current chapter; principles move to the Conclusions back-matter. */
+export function groupChapters(entries: ManuscriptEntry[]): {
+  chapters: ManuscriptChapter[];
+  conclusions: ManuscriptEntry[];
+} {
+  const conclusions = entries.filter((entry) => entry.kind === 'principle');
+  const body = bookOrder(entries.filter((entry) => entry.kind !== 'principle'));
+  const chapters: ManuscriptChapter[] = [];
+  let current: ManuscriptChapter | null = null;
+  for (const entry of body) {
+    const startsNew =
+      current === null ||
+      (entry.page !== null && current.pageTo !== null && entry.page - current.pageTo > 2);
+    if (startsNew) {
+      current = {
+        index: chapters.length + 1,
+        title: '',
+        pageFrom: entry.page,
+        pageTo: entry.page,
+        entries: [],
+      };
+      chapters.push(current);
+    }
+    current!.entries.push(entry);
+    if (entry.page !== null) {
+      current!.pageFrom = current!.pageFrom ?? entry.page;
+      current!.pageTo = Math.max(current!.pageTo ?? entry.page, entry.page);
+    }
+  }
+  for (const chapter of chapters) {
+    chapter.title =
+      chapter.pageFrom === null
+        ? 'Notes'
+        : chapter.pageFrom === chapter.pageTo
+          ? `p.${chapter.pageFrom}`
+          : `p.${chapter.pageFrom}–${chapter.pageTo}`;
+  }
+  return { chapters, conclusions };
+}

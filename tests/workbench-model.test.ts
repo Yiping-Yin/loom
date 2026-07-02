@@ -122,3 +122,30 @@ test('workbench: the palette indexes projects, entries, and jumpable pages', () 
   const jump = filterPalette(items, 'adverse');
   assert.ok(jump.some((item) => item.type === 'page' && item.page === 12));
 });
+
+test('workbench: chapters cluster by page proximity and principles go to conclusions', async () => {
+  const { groupChapters, deriveEntries: derive } = await import('../app/workbench/workbenchModel');
+  const entries = derive(
+    {
+      id: 'c',
+      title: 'T',
+      project: 'Learning pass',
+      status: '',
+      updatedAt: '',
+      summary: '',
+      tags: [],
+      sources: [],
+      steps: [{ id: 'input', title: 'Input', subtitle: '', items: [] }],
+      messages: [],
+      traceRecords: [
+        { schemaVersion: 1, id: 'a', kind: 'captured', traceType: 't', sourceAnchor: 'N.pdf, page 2', focus: 'vocabulary', text: 'x', evidence: [], legacyItem: '' },
+        { schemaVersion: 1, id: 'b', kind: 'captured', traceType: 't', sourceAnchor: 'N.pdf, page 4', focus: 'user meaning', text: 'y', evidence: [], legacyItem: '' },
+        { schemaVersion: 1, id: 'c2', kind: 'captured', traceType: 't', sourceAnchor: 'N.pdf, page 9', focus: 'user meaning', text: 'z', evidence: [], legacyItem: '' },
+        { schemaVersion: 1, id: 'd', kind: 'captured', traceType: 't', sourceAnchor: 'N.pdf, page 17', focus: 'principle', text: 'principle: p', evidence: [], legacyItem: '' },
+      ],
+    },
+  );
+  const { chapters, conclusions } = groupChapters(entries);
+  assert.deepEqual(chapters.map((chapter) => chapter.title), ['p.2–4', 'p.9']);
+  assert.equal(conclusions.length, 1);
+});

@@ -11,6 +11,7 @@ import styles from './workbench.module.css';
 import {
   bookOrder,
   deriveEntries,
+  groupChapters,
   filterPalette,
   heartbeat,
   manuscriptAt,
@@ -170,11 +171,15 @@ export default function WorkbenchClient() {
     () => (timeTravel === null ? allEntries : manuscriptAt(allEntries, timeTravel)),
     [allEntries, timeTravel],
   );
-  const visibleEntries = useMemo(() => {
-    const ordered = bookOrder(travelled);
+  const filteredEntries = useMemo(() => {
     const kinds = stage ? STAGE_KINDS[stage] : undefined;
-    return kinds ? ordered.filter((entry) => kinds.includes(entry.kind)) : ordered;
+    return kinds ? travelled.filter((entry) => kinds.includes(entry.kind)) : travelled;
   }, [travelled, stage]);
+  const { chapters, conclusions } = useMemo(() => groupChapters(filteredEntries), [filteredEntries]);
+  const visibleCount = useMemo(
+    () => chapters.reduce((sum, chapter) => sum + chapter.entries.length, 0) + conclusions.length,
+    [chapters, conclusions],
+  );
   const gaps = useMemo(() => pageGaps(travelled), [travelled]);
   const positions = useMemo(() => openPositions(travelled), [travelled]);
   const pulse = useMemo(() => heartbeat(cases), [cases]);
@@ -490,45 +495,109 @@ export default function WorkbenchClient() {
             <p className={styles.msProvenance}>{provenanceLine}</p>
             {scopeLine && <p className={styles.msScope}>{scopeLine}</p>}
             <hr className={styles.msRule} />
-            {visibleEntries.map((entry) => (
-              <section
-                key={entry.id}
-                id={`wb-entry-${entry.id}`}
-                className={`${styles.entry} ${entry.id === caughtID ? styles.entryCaught : ''}`}
-              >
-                <div className={styles.entryHead}>
-                  <span className={styles.entryLabel}>{entry.label}</span>
-                  {(entry.kind === 'question' || entry.kind === 'capture' || entry.isWeakAnchor) && (
-                    <span
-                      className={`${styles.entryDot} ${entry.kind === 'question' || entry.isWeakAnchor ? styles.dotOpen : styles.dotGrounded}`}
-                      aria-label={entry.isWeakAnchor ? 'weak anchor' : entry.kind}
-                    />
-                  )}
-                  {entry.page !== null && (
-                    <button type="button" className={styles.entryAnchor} onClick={() => revealPage(entry)}>
-                      p.{entry.page} ↗
-                    </button>
-                  )}
-                </div>
-                {entry.supersededText && <p className={styles.entrySuperseded}>{entry.supersededText}</p>}
-                <p className={`${styles.entryText} ${entry.text.split(/\s+/).length <= 6 && entry.kind === 'capture' ? styles.entryTextStrong : ''}`}>
-                  {recall && entry.kind === 'meaning' ? (
-                    <span className={styles.entryRecallBlank}>{entry.text}</span>
-                  ) : (
-                    entry.text
-                  )}
-                </p>
-                {entry.kind === 'question' && (
-                  <p className={styles.entryFooter}>
-                    {entry.openCondition ? `Open — closes when: ${entry.openCondition}` : 'Open — what would close this question?'}
-                  </p>
-                )}
-                {entry.kind === 'capture' && !recall && (
-                  <p className={styles.entryFooter}>Explain it in your own words</p>
-                )}
+            {chapters.map((chapter) => (
+              <section key={chapter.index}>
+                <h2 className={styles.chapterHead}>
+                  <span className={styles.chapterNo}>§{chapter.index}</span>
+                  {chapter.title}
+                </h2>
+                {chapter.entries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    id={`wb-entry-${entry.id}`}
+                    className={entry.id === caughtID ? styles.entryCaught : undefined}
+                  >
+                    {entry.kind === 'capture' && (
+                      <figure className={styles.quoteBlock}>
+                        <button type="button" className={styles.quoteGutter} onClick={() => revealPage(entry)}>
+                          {entry.page !== null ? `p.${entry.page}` : '·'}
+                          <span className={styles.quoteGutterArrow}>↗</span>
+                        </button>
+                        <div className={styles.quoteBody}>
+                          <blockquote
+                            className={`${entry.focus.includes('data') ? styles.quoteMono : styles.quoteText} ${
+                              entry.text.split(/\s+/).length <= 6 ? styles.quoteStrong : ''
+                            }`}
+                          >
+                            {entry.text}
+                          </blockquote>
+                          {!recall && <figcaption className={styles.quoteCaption}>Explain it in your own words</figcaption>}
+                          {entry.isWeakAnchor && (
+                            <figcaption className={styles.quoteCaption}>⚠ weak anchor — confirm the source</figcaption>
+                          )}
+                        </div>
+                      </figure>
+                    )}
+                    {entry.kind === 'meaning' && (
+                      <p className={styles.proseBlock}>
+                        {recall ? <span className={styles.entryRecallBlank}>{entry.text}</span> : entry.text}
+                        {entry.page !== null && (
+                          <button type="button" className={styles.proseAnchor} onClick={() => revealPage(entry)}>
+                            p.{entry.page} ↗
+                          </button>
+                        )}
+                      </p>
+                    )}
+                    {entry.kind === 'correction' && (
+                      <div className={styles.revisionBlock}>
+                        {entry.supersededText && <p className={styles.entrySuperseded}>{entry.supersededText}</p>}
+                        <p className={styles.proseBlockTight}>
+                          {entry.text}
+                          {entry.page !== null && (
+                            <button type="button" className={styles.proseAnchor} onClick={() => revealPage(entry)}>
+                              p.{entry.page} ↗
+                            </button>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                    {entry.kind === 'question' && (
+                      <div className={styles.calloutBlock}>
+                        <p className={styles.proseBlockTight}>
+                          {entry.text.replace(/closes when:[\s\S]*$/i, '').trim()}
+                          {entry.page !== null && (
+                            <button type="button" className={styles.proseAnchor} onClick={() => revealPage(entry)}>
+                              p.{entry.page} ↗
+                            </button>
+                          )}
+                        </p>
+                        <p className={styles.calloutCondition}>
+                          {entry.openCondition ? `Open — closes when: ${entry.openCondition}` : 'Open — what would close this question?'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </section>
             ))}
-            {visibleEntries.length === 0 && (
+            {conclusions.length > 0 && (
+              <section>
+                <h2 className={styles.chapterHead}>
+                  <span className={styles.chapterNo}>§</span>
+                  Conclusions
+                </h2>
+                <ol className={styles.conclusionList}>
+                  {conclusions.map((entry) => (
+                    <li
+                      key={entry.id}
+                      id={`wb-entry-${entry.id}`}
+                      className={`${styles.conclusionItem} ${entry.id === caughtID ? styles.entryCaught : ''}`}
+                    >
+                      <p className={styles.proseBlockTight}>{entry.text}</p>
+                      <p className={styles.conclusionMeta}>
+                        Holds within the captured material · {entry.sourceAnchor}
+                        {entry.page !== null && (
+                          <button type="button" className={styles.proseAnchor} onClick={() => revealPage(entry)}>
+                            p.{entry.page} ↗
+                          </button>
+                        )}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+            {visibleCount === 0 && (
               <div className={styles.empty} style={{ height: 'auto', padding: '48px 0' }}>
                 <div className={styles.emptyTitle}>{stage ? 'Nothing at this stage yet' : 'An empty manuscript'}</div>
                 <div>Select in any native file and press ⌘⇧U — it files itself into the book.</div>

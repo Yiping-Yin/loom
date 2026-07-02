@@ -572,3 +572,155 @@
 }
 
 .emptyTitle { font-family: Georgia, serif; font-size: 18px; color: #aeb9c2; }
+
+/* ---- Manuscript blocks (Colab-grade block variety, book anatomy) ---- */
+.chapterHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #cdd7e0;
+  margin: 30px 0 6px;
+}
+
+.chapterNo {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4bc5de;
+  letter-spacing: 0.06em;
+}
+
+.quoteBlock {
+  display: flex;
+  gap: 0;
+  margin: 14px 0;
+  border: 1px solid #232b34;
+  border-radius: 9px;
+  background: #171c23;
+  overflow: hidden;
+}
+
+.quoteGutter {
+  flex: none;
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 0;
+  border-right: 1px solid #232b34;
+  background: #12161c;
+  color: #58636e;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.quoteGutter:hover { color: #4bc5de; }
+
+.quoteGutterArrow { font-size: 9px; opacity: 0.7; }
+
+.quoteBody { padding: 13px 16px; min-width: 0; flex: 1; }
+
+.quoteText {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #e3eaf1;
+  margin: 0;
+}
+
+.quoteStrong { font-size: 19px; font-weight: 600; }
+
+.quoteMono {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #cfe6da;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.quoteCaption {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  color: #58636e;
+  margin-top: 7px;
+}
+
+.proseBlock {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14.5px;
+  line-height: 1.72;
+  color: #dbe3ea;
+  margin: 12px 2px;
+}
+
+.proseBlockTight {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14px;
+  line-height: 1.62;
+  color: #dbe3ea;
+  margin: 0;
+}
+
+.proseAnchor {
+  border: 0;
+  background: transparent;
+  color: #58636e;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  cursor: pointer;
+  margin-left: 8px;
+  vertical-align: baseline;
+}
+
+.proseAnchor:hover { color: #4bc5de; }
+
+.revisionBlock {
+  border-left: 2px solid rgba(75, 197, 222, 0.55);
+  padding: 4px 0 4px 14px;
+  margin: 14px 0;
+}
+
+.calloutBlock {
+  border-left: 2px solid #d9a03f;
+  background: rgba(217, 160, 63, 0.05);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin: 14px 0;
+}
+
+.calloutCondition {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 11.5px;
+  color: #b28a4a;
+  margin: 6px 0 0;
+}
+
+.conclusionList {
+  margin: 6px 0 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.conclusionItem::marker {
+  color: #4bc5de;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+}
+
+.conclusionMeta {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+  color: #58636e;
+  margin: 4px 0 0;
+}
