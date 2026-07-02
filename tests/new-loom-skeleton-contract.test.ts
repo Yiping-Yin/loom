@@ -1628,7 +1628,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private var selectedFill: Color \{[\s\S]{0,180}if usesLightChrome \{[\s\S]{0,120}usesCenterOverlay \? LoomTokens\.dsThread\.opacity\(0\.07\) : Color\.white\.opacity\(0\.18\)/);
   assert.match(nativeRoot, /private func updateSidebarPeek\(_ shouldPeek: Bool\)/);
   assert.match(nativeRoot, /guard !isSidebarPresented else \{ return \}/);
-  assert.match(nativeRoot, /ReflectionSidebar\([\s\S]{0,760}\.onHover \{ hovering in[\s\S]{0,100}updateSidebarPeek\(hovering\)/);
+  assert.match(nativeRoot, /ReflectionSidebar\([\s\S]{0,1200}\.onHover \{ hovering in[\s\S]{0,100}updateSidebarPeek\(hovering\)/);
   assert.match(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: isSidebarPresented/);
   assert.doesNotMatch(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: shouldShowSidebar/);
   assert.match(nativeRoot, /private let reflectionSidebarWidth: CGFloat = 240/);
@@ -2017,7 +2017,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeSurface, /version: "v\\?\(version\\?\)"/);
   assert.match(nativeRoot, /private struct ReflectionLearningReviewSummary: Equatable/);
   assert.match(nativeRoot, /private struct ReflectionLearningPrincipleCandidate: View/);
-  assert.match(nativeRoot, /ReflectionLearningPrincipleCandidate\(principle: principle\)/);
+  // Stage 4 (融会贯通): the candidate block carries the user-signed Promote
+  // affordance (gated by anchor honesty in promoteCandidatePrinciple).
+  assert.match(nativeRoot, /ReflectionLearningPrincipleCandidate\(/);
+  assert.match(nativeRoot, /onPromote: onPromotePrinciple\.map/);
+  assert.match(nativeRoot, /case \.blockedWeakAnchor\(let reason\):/);
   assert.match(nativeRoot, /steps\[5\]\.title = "Principle"/);
   assert.match(nativeRoot, /steps\[5\]\.subtitle = "What can become reusable thinking"/);
   assert.match(nativeSurface, /if reflectionCase\.project == "Learning pass", normalizedStep\.id == "memory"/);
