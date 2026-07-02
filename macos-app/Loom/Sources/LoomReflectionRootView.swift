@@ -114,6 +114,8 @@ struct LoomReflectionRootView: View {
                         selectedCaseID: selectedCaseID,
                         panelsCase: workbenchChrome ? selectedCase : nil,
                         onSelectTrace: selectLearningTrace,
+                        panelPrinciples: workbenchChrome ? workspace.principles : [],
+                        onCitePrinciple: citePrincipleIntoSelectedCase,
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
@@ -148,6 +150,7 @@ struct LoomReflectionRootView: View {
                             commitFocus: $composerFocus,
                             topPadding: workbenchChrome ? workbenchThreadTopPadding : reflectionThreadTopPadding,
                             onSelectTrace: selectLearningTrace,
+                            onPromotePrinciple: promoteCandidatePrinciple,
                             onSubmit: submitMaterial
                         )
                     }
@@ -200,6 +203,8 @@ struct LoomReflectionRootView: View {
                         material: .centerOverlay,
                         panelsCase: workbenchChrome ? selectedCase : nil,
                         onSelectTrace: selectLearningTrace,
+                        panelPrinciples: workbenchChrome ? workspace.principles : [],
+                        onCitePrinciple: citePrincipleIntoSelectedCase,
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
@@ -324,6 +329,37 @@ struct LoomReflectionRootView: View {
         workspace.closeCase(id)
         selectedLearningTraceID = nil
         statusMessage = "Closed tab"
+    }
+
+    private func citePrincipleIntoSelectedCase(_ principleID: ReflectionPrincipleRecord.ID) {
+        workspace.citePrinciple(principleID, into: selectedCase)
+        statusMessage = "Principle cited into \(selectedCase.title)"
+        persistWorkspace()
+    }
+
+    /// Stage 4 (融会贯通): the user signs a principle out of its case. The
+    /// gate inherits anchor honesty — a weak anchor blocks with an honest
+    /// status-bar message, never a silent success.
+    private func promoteCandidatePrinciple(_ candidate: String) {
+        let statement = candidate
+            .replacingOccurrences(of: "Principle candidate: ", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let anchoringTrace = ReflectionLearningTrace.from(selectedCase).last { $0.focus == "principle" }
+            ?? selectedLearningTrace
+        let outcome = workspace.promotePrinciple(
+            statement: statement,
+            holdsWithin: selectedCase.sources.first?.label ?? selectedCase.title,
+            from: selectedCase,
+            anchoringTrace: anchoringTrace
+        )
+        switch outcome {
+        case .promoted:
+            statusMessage = "Principle promoted to workspace memory"
+        case .blockedWeakAnchor(let reason):
+            statusMessage = reason
+        case .blockedEmptyStatement:
+            statusMessage = "Nothing to promote"
+        }
     }
 
     private func toggleSidebar() {
@@ -1686,6 +1722,8 @@ private struct ReflectionSidebar: View {
     // VSCode grammar, filled with Loom-only content.
     var panelsCase: ReflectionCase? = nil
     var onSelectTrace: ((ReflectionLearningTrace) -> Void)? = nil
+    var panelPrinciples: [ReflectionPrincipleRecord] = []
+    var onCitePrinciple: ((ReflectionPrincipleRecord.ID) -> Void)? = nil
     let onSelect: (ReflectionCase) -> Void
     let onCreate: () -> Void
     let onCreateLearning: () -> Void
@@ -1766,7 +1804,9 @@ private struct ReflectionSidebar: View {
                     rowText: localPrimaryText,
                     subText: localSecondaryText,
                     divider: localDivider,
-                    onSelectTrace: onSelectTrace
+                    onSelectTrace: onSelectTrace,
+                    principles: panelPrinciples,
+                    onCitePrinciple: onCitePrinciple
                 )
             }
 
@@ -1815,8 +1855,19 @@ private struct WorkbenchSidebarPanels: View {
     let subText: Color
     let divider: Color
     let onSelectTrace: ((ReflectionLearningTrace) -> Void)?
+    var principles: [ReflectionPrincipleRecord] = []
+    var onCitePrinciple: ((ReflectionPrincipleRecord.ID) -> Void)? = nil
     @State private var outlineExpanded = true
     @State private var timelineExpanded = false
+    @State private var principlesExpanded = false
+
+    private var ownPrinciples: [ReflectionPrincipleRecord] {
+        principles.filter { $0.sourceCaseID == reflectionCase.id }
+    }
+
+    private var reuseSuggestions: [ReflectionPrincipleRecord] {
+        ReflectionPrincipleStore.reuseCandidates(for: reflectionCase, in: principles)
+    }
 
     private var traces: [ReflectionLearningTrace] {
         ReflectionLearningTrace.from(reflectionCase)
@@ -1916,6 +1967,75 @@ private struct WorkbenchSidebarPanels: View {
             .padding(.vertical, 8)
             .overlay(alignment: .top) {
                 Rectangle().fill(divider).frame(height: 1)
+            }
+
+            if !ownPrinciples.isEmpty || !reuseSuggestions.isEmpty {
+                // Stage 4 (融会贯通): the conclusions chapter of MY book across
+                // all projects — constrained, cited, dated. A reuse suggestion
+                // from another case is a QUIET DOT, never an interruption.
+                DisclosureGroup(isExpanded: $principlesExpanded) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(ownPrinciples) { principle in
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(principle.statement)
+                                    .font(.system(size: 11))
+                                    .lineLimit(2)
+                                    .foregroundStyle(rowText)
+                                Text("Holds within: \(principle.holdsWithin.isEmpty ? principle.sourceCaseTitle : principle.holdsWithin)")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(subText)
+                            }
+                        }
+                        ForEach(reuseSuggestions) { principle in
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Circle()
+                                    .fill(LoomTokens.dsThread)
+                                    .frame(width: 5, height: 5)
+                                    .padding(.top, 3)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(principle.statement)
+                                        .font(.system(size: 11))
+                                        .lineLimit(2)
+                                        .foregroundStyle(rowText)
+                                    HStack(spacing: 8) {
+                                        Text("from \(principle.sourceCaseTitle)")
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(subText)
+                                        if let onCitePrinciple {
+                                            Button("Cite") {
+                                                onCitePrinciple(principle.id)
+                                            }
+                                            .buttonStyle(.plain)
+                                            .font(.system(size: 10, weight: .semibold))
+                                            .foregroundStyle(LoomTokens.dsThread)
+                                            .help("Cite this principle into the open project")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.top, 4)
+                } label: {
+                    HStack(spacing: 6) {
+                        Text("PRINCIPLES")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .tracking(1.2)
+                            .foregroundStyle(sectionText)
+                        if !reuseSuggestions.isEmpty {
+                            Circle()
+                                .fill(LoomTokens.dsThread)
+                                .frame(width: 5, height: 5)
+                                .accessibilityLabel("Reusable principles match this project")
+                        }
+                    }
+                }
+                .tint(sectionText)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+                .overlay(alignment: .top) {
+                    Rectangle().fill(divider).frame(height: 1)
+                }
             }
         }
     }
@@ -2265,6 +2385,7 @@ private struct ReflectionThreadView: View {
     @Binding var commitFocus: ReflectionCommitFocus
     var topPadding: CGFloat = reflectionThreadTopPadding
     let onSelectTrace: (ReflectionLearningTrace) -> Void
+    var onPromotePrinciple: ((String) -> Void)? = nil
     let onSubmit: () -> Void
 
     private var learningTraces: [ReflectionLearningTrace] {
@@ -2283,7 +2404,8 @@ private struct ReflectionThreadView: View {
                         ReflectionLearningLedgerView(
                             reflectionCase: reflectionCase,
                             selectedTraceID: selectedLearningTraceID,
-                            onSelectTrace: onSelectTrace
+                            onSelectTrace: onSelectTrace,
+                            onPromotePrinciple: onPromotePrinciple
                         )
                     } else {
                         ReflectionTraceList(steps: reflectionCase.steps)
@@ -2331,6 +2453,7 @@ private struct ReflectionLearningLedgerView: View {
     let reflectionCase: ReflectionCase
     let selectedTraceID: ReflectionLearningTrace.ID?
     let onSelectTrace: (ReflectionLearningTrace) -> Void
+    var onPromotePrinciple: ((String) -> Void)? = nil
     @State private var showsTraceHistory = false
 
     private var traces: [ReflectionLearningTrace] {
@@ -2386,7 +2509,10 @@ private struct ReflectionLearningLedgerView: View {
 
             if let summary = ReflectionLearningReviewSummary.make(for: reflectionCase),
                let principle = summary.principle {
-                ReflectionLearningPrincipleCandidate(principle: principle)
+                ReflectionLearningPrincipleCandidate(
+                    principle: principle,
+                    onPromote: onPromotePrinciple.map { promote in { promote(principle) } }
+                )
             }
         }
     }
@@ -2816,6 +2942,7 @@ private struct ReflectionLearningProvenanceLine: View {
 
 private struct ReflectionLearningPrincipleCandidate: View {
     let principle: String
+    var onPromote: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -2831,6 +2958,16 @@ private struct ReflectionLearningPrincipleCandidate: View {
                 .foregroundStyle(LoomTokens.dsThread)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let onPromote {
+                // Stage 4 (融会贯通): promotion is the user SIGNING the
+                // conclusion — one quiet word, gated by anchor honesty.
+                Button("Promote", action: onPromote)
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsThread)
+                    .help("Promote into workspace memory (blocked while the anchor is weak)")
+            }
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 2)

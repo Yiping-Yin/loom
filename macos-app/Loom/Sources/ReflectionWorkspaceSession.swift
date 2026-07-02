@@ -23,6 +23,9 @@ final class ReflectionWorkspaceSession: ObservableObject {
     // Stage 3 (workbench): open cases behave like editor tabs — session-local,
     // never persisted; closing a tab never deletes the case.
     @Published var openCaseIDs: [ReflectionCase.ID] = []
+    // Stage 4 (融会贯通): the cross-case principle store — file-primary,
+    // loaded once, mutated only through the user-signed gate below.
+    @Published var principles: [ReflectionPrincipleRecord] = []
 
     /// The snapshot parameter is injectable for tests; production uses the
     /// hardened store (newer-wins replicas + v1→v2 migration).
@@ -49,6 +52,7 @@ final class ReflectionWorkspaceSession: ObservableObject {
         selectedSourceID = initialSelectedSourceID
         selectedLearningTraceID = nil
         openCaseIDs = [initialSelectedCaseID]
+        principles = ReflectionPrincipleStore.load()
     }
 
     func openCase(_ id: ReflectionCase.ID) {
@@ -71,5 +75,37 @@ final class ReflectionWorkspaceSession: ObservableObject {
             selectedCaseID: selectedCaseID,
             selectedSourceID: selectedSourceID
         )
+    }
+
+    /// Stage 4 (融会贯通): user-signed promotion through the honesty gate.
+    func promotePrinciple(
+        statement: String,
+        holdsWithin: String,
+        from reflectionCase: ReflectionCase,
+        anchoringTrace: ReflectionLearningTrace?
+    ) -> ReflectionPrinciplePromotionOutcome {
+        let outcome = ReflectionPrincipleStore.promote(
+            statement: statement,
+            holdsWithin: holdsWithin,
+            from: reflectionCase,
+            anchoringTrace: anchoringTrace
+        )
+        if case .promoted(let record) = outcome {
+            principles.append(record)
+            ReflectionPrincipleStore.save(principles)
+        }
+        return outcome
+    }
+
+    /// Citing a reused principle into another case records the reuse event
+    /// and leaves the origin one click away (the record keeps its citation).
+    func citePrinciple(_ principleID: ReflectionPrincipleRecord.ID, into reflectionCase: ReflectionCase) {
+        guard let index = principles.firstIndex(where: { $0.id == principleID }) else { return }
+        guard principles[index].sourceCaseID != reflectionCase.id else { return }
+        guard !principles[index].reuseEvents.contains(where: { $0.caseID == reflectionCase.id }) else { return }
+        principles[index].reuseEvents.append(
+            ReflectionPrincipleReuseEvent(caseID: reflectionCase.id, caseTitle: reflectionCase.title, citedAt: Date())
+        )
+        ReflectionPrincipleStore.save(principles)
     }
 }
