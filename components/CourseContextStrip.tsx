@@ -127,7 +127,7 @@ export function CourseContextStrip({ docId }: { docId: string }) {
         // (single line, not per-render) so it doesn't pollute the
         // console during scrolling.
         if (next?.matchSource === 'folder-fallback') {
-          // eslint-disable-next-line no-console
+           
           console.info(
             `[Loom] CourseContextStrip: schema matched via folder-fallback for ${docId} (sourceTitle=${next.sourceTitle})`,
           );

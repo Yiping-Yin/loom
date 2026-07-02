@@ -18,7 +18,7 @@ export function TraceMigrator() {
       const result = await migrateLegacyData();
       if (cancelled) return;
       if (result.migrated && result.created > 0) {
-        // eslint-disable-next-line no-console
+         
         console.info(`[Loom] Migrated ${result.created} legacy doc(s) into Traces.`);
       }
     })();

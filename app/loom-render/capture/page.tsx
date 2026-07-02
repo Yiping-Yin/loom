@@ -988,7 +988,7 @@ function ArticleBodyWithImages({ source, snapshotHref = '' }: { source: string; 
         // the reader. If it does, the upstream save-substitution pass
         // failed; surface a loud signal so dev/test catches the gap.
         // (V7: no silent failures.)
-        // eslint-disable-next-line no-console
+         
         console.warn('[Loom capture render] transient loom://media/ URL persisted to body — substitution pass missed it', { href, isCanvasRecording });
       }
       if (isCanvasRecording) {
@@ -2607,7 +2607,7 @@ function ArticleRender({
       // and surface a non-fatal message.
       try { localStorage.setItem(`loom:edit-cache:${stableKey}`, editDraft); } catch {}
       setEditStatus('Saved (offline pending)');
-      // eslint-disable-next-line no-console
+       
       console.log('[Loom edit] native save-edit gap →', err);
     } finally {
       setEditSaving(false);
@@ -2824,7 +2824,7 @@ function ArticleRender({
         // V7: surface clipboard failure rather than swallow. Flash the
         // toolbar action with a transient error tone via custom event;
         // global toast layer (if present) renders the message.
-        // eslint-disable-next-line no-console
+         
         console.warn('[Loom capture] copy fragment link failed', err);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('loom:copy-failed', { detail: { what: 'fragment link', error: String(err) } }));
@@ -3024,7 +3024,7 @@ function ArticleRender({
     }).catch((err) => {
       // V7: do not swallow clipboard failures silently. Flash a visible
       // signal + log so the user knows the path was not copied.
-      // eslint-disable-next-line no-console
+       
       console.warn('[Loom capture] copy extension path failed', err);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('loom:copy-failed', { detail: { what: 'extension path', error: String(err) } }));

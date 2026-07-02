@@ -445,7 +445,7 @@ const PERSONA_NAME_MAX = 80;
 export function sanitizePersonaName(raw: string | undefined): string {
   if (typeof raw !== 'string') return '';
   const singleLine = raw
-    // eslint-disable-next-line no-control-regex
+     
     .replace(/[\x00-\x1F\x7F]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

@@ -283,7 +283,7 @@ export function ExtractorAnchorLayer({ docId }: { docId: string }) {
         });
         // Surface to console for now — toast UI for a future polish
         // pass; reading page already has a similar pattern.
-        // eslint-disable-next-line no-console
+         
         console.error('[Loom] confirm extractor anchor failed', err);
       }
     },
@@ -310,7 +310,7 @@ export function ExtractorAnchorLayer({ docId }: { docId: string }) {
           next.delete(anchor.fingerprint);
           return next;
         });
-        // eslint-disable-next-line no-console
+         
         console.error('[Loom] dismiss extractor anchor failed', err);
       }
     },

@@ -15,7 +15,7 @@ export default function OfflinePage() {
             Return to Sources and choose an available local file.
           </p>
           <div className={styles.actions}>
-            {/* eslint-disable @next/next/no-html-link-for-pages */}
+            { }
             <a href="/sources" className={styles.action}>Open Sources</a>
             {/* Plain anchors are intentional — this page must work without the JS router. */}
           </div>

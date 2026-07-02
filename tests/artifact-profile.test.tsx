@@ -169,7 +169,7 @@ test('normalizeBeginnerProfile strips control chars and collapses whitespace in 
   };
   const p = normalizeBeginnerProfile(raw);
   const text = p.artifacts![0].extractedText ?? '';
-  // eslint-disable-next-line no-control-regex
+   
   assert.doesNotMatch(text, /[\x00-\x1F\x7F]/, 'no control chars');
   assert.equal(text, 'A B C D', 'control chars + whitespace runs collapse to single spaces');
 });

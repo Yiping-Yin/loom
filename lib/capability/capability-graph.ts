@@ -150,7 +150,7 @@ const EXCERPT_PAD = 60; // chars of context kept on each side of the keyword
  */
 function cleanText(raw: string): string {
   return raw
-    // eslint-disable-next-line no-control-regex
+     
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

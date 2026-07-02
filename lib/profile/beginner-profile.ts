@@ -118,7 +118,7 @@ const optThumbnail = (v: unknown): string | undefined => {
 const optExtractedText = (v: unknown): string | undefined => {
   if (typeof v !== 'string') return undefined;
   const cleaned = v
-    // eslint-disable-next-line no-control-regex
+     
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

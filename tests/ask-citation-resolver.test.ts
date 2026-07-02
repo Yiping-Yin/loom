@@ -110,12 +110,12 @@ test('resolveVerifiedDossierArtifact returns a falsy value for beginner me-* ids
   // ids (undefined from a map miss), so resolveCitation's `if (!artifact)` branch
   // is what triggers the beginner fallback.
   assert.ok(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     !(resolveVerifiedDossierArtifact as any)('me-edu-0'),
     'me-edu-0 is not a dossier artifact — resolveVerifiedDossierArtifact is falsy (root cause confirmed)',
   );
   assert.ok(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     !(resolveVerifiedDossierArtifact as any)('me-exp-0'),
     'me-exp-0 is not a dossier artifact — resolveVerifiedDossierArtifact is falsy (root cause confirmed)',
   );

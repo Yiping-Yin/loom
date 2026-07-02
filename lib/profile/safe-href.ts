@@ -28,7 +28,7 @@ const ALLOWED_SCHEMES = ['http:', 'https:', 'mailto:', 'loom:'];
 // from URLs before parsing the scheme, so `java\tscript:` must collapse to
 // `javascript:` and then be rejected. Expressed via \x escapes so the source
 // never contains literal control bytes.
-// eslint-disable-next-line no-control-regex
+ 
 const CONTROL_CHARS = /[\x00-\x1F\x7F]/g;
 
 /**

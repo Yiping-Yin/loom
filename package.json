@@ -7,7 +7,7 @@
     "dev:raw": "next dev -p 3000 -H 0.0.0.0",
     "build": "node scripts/build.mjs",
     "start": "node scripts/start.mjs -p 3000 -H 0.0.0.0",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "node scripts/typecheck.mjs",
     "llm:smoke": "tsx scripts/llm-smoke.ts",
     "test:contracts": "tsx --test tests/*.test.*",

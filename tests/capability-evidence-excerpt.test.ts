@@ -122,7 +122,7 @@ test('excerpt: control chars are stripped and whitespace collapsed', () => {
   const ev = findArtifactEvidence(caps, 'art-ctrl');
   assert.ok(ev?.excerpt, 'expected an excerpt');
   // No ASCII control chars (allow ordinary space + the ellipsis).
-  // eslint-disable-next-line no-control-regex
+   
   assert.doesNotMatch(ev!.excerpt!, /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/, 'control chars stripped');
   assert.doesNotMatch(ev!.excerpt!, /\s{2,}/, 'whitespace runs collapsed');
 });

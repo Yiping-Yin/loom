@@ -962,7 +962,7 @@ function registerInterlaceAnchorListener(): void {
           at: Date.now(),
         },
       });
-      // eslint-disable-next-line no-console
+       
       console.log('Interlace anchor saved');
     } catch {}
   });

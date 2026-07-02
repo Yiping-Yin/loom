@@ -449,7 +449,7 @@ export function AskYiping({
 
         {phase === 'error' ? (
           <div className={`${styles.note} ${styles.error}`} role="alert">
-            <strong>Couldn't reach {eyebrow}</strong>
+            <strong>{"Couldn't reach"} {eyebrow}</strong>
             <p>{errorMessage}</p>
           </div>
         ) : null}

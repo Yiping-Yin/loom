@@ -70,7 +70,7 @@ const DRAFT_ARTIFACT_TEXT_MAX = 4000;
 /** Strip control chars (keeping ordinary whitespace), collapse runs, cap. */
 function boundExtractedText(value: string): string | undefined {
   const cleaned = value
-    // eslint-disable-next-line no-control-regex
+     
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

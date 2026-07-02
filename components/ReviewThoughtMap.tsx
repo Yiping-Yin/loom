@@ -1475,7 +1475,7 @@ function WideThoughtCard({
             opacity: 0.66,
           }}
         >
-          This thread isn't woven yet — {expanded ? 'write your first reading…' : 'expand to continue'}
+          {"This thread isn't woven yet — "}{expanded ? 'write your first reading…' : 'expand to continue'}
         </div>
       )}
 

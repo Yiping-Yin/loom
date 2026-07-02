@@ -21,16 +21,16 @@ function repoImport(modulePath: string) {
 }
 
 test('verified source artifacts build a Draft URL with source context and AI Answer mode', async () => {
-  const module = await repoImport('lib/new-loom/source-to-draft.ts') as {
+  const sourceToDraft = await repoImport('lib/new-loom/source-to-draft.ts') as {
     buildDraftUrlFromArtifacts?: (
       artifacts: readonly VerifiedDossierArtifact[],
       input?: { type?: string },
     ) => string;
   };
 
-  assert.equal(typeof module.buildDraftUrlFromArtifacts, 'function');
+  assert.equal(typeof sourceToDraft.buildDraftUrlFromArtifacts, 'function');
 
-  const url = module.buildDraftUrlFromArtifacts!([
+  const url = sourceToDraft.buildDraftUrlFromArtifacts!([
     resolveVerifiedDossierArtifact('econ-slides'),
     resolveVerifiedDossierArtifact('econ-tutorial'),
   ], { type: 'ai-answer' });

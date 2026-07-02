@@ -29,7 +29,7 @@ const cssModuleClassMap = new Proxy(
 ) as Record<string, string>;
 const cssModuleExports = { __esModule: true, default: cssModuleClassMap };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 (require.extensions as any)['.css'] = (mod: { exports: typeof cssModuleExports }) => {
   mod.exports = cssModuleExports;
 };
