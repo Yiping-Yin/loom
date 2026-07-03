@@ -2635,7 +2635,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private struct GlassDocumentEditor: NSViewRepresentable/);
   assert.match(
     nativeRoot,
-    /GlassDocumentEditor: NSViewRepresentable[\s\S]{0,1600}view\.drawsBackground = false/,
+    /makeNSView\(context: Context\) -> GrowingGlassTextView[\s\S]{0,300}view\.drawsBackground = false/,
     'the document editor must draw on the glass, never on an opaque backing',
   );
   assert.match(
@@ -2660,6 +2660,25 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(nativeRoot, /MoonEmblem|BacklitMoon/);
   assert.match(nativeRoot, /isBlankCase \{ editorFocusRequest \+= 1 \}/);
   assert.match(nativeRoot, /documentText\.isEmpty/, 'blankness is judged against the written document too');
+
+  // Images ride the document flow as solid white PAPER CARDS (the
+  // evidence-card material language), textual pastes stay plain so the
+  // document keeps one uniform ink, and the rich document persists as an
+  // RTFD package per case — the store keeps only a plain-text mirror.
+  assert.match(nativeRoot, /final class PaperImageAttachmentCell: NSTextAttachmentCell/);
+  assert.match(
+    nativeRoot,
+    /PaperImageAttachmentCell[\s\S]{0,2400}NSColor\.white\.setFill\(\)/,
+    'the image card is honest solid paper — white fill with a real shadow',
+  );
+  assert.match(nativeRoot, /pasteAsPlainText\(sender\)/, 'textual pastes must not smuggle foreign fonts or colors onto the glass');
+  assert.match(nativeRoot, /rtfdFileWrapper\(/, 'the rich case document persists as RTFD');
+  assert.match(nativeRoot, /CaseDocuments/, 'case documents live in their own Application Support directory');
+  assert.match(
+    nativeRoot,
+    /func normalizeDocument[\s\S]{0,1200}PaperImageAttachmentCell/,
+    'every attachment — loaded, pasted, or dropped — must wear the paper card',
+  );
 });
 
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {

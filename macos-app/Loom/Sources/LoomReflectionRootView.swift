@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import PDFKit
+import UniformTypeIdentifiers
 
 private let reflectionSidebarWidth: CGFloat = 248
 // The right pane is drag-resizable between the bounds below; 400 pt stays the
@@ -469,6 +470,9 @@ struct LoomReflectionRootView: View {
             selectedLearningTraceID = nil
             draftText = ""
         }
+
+        // The case's rich document (RTFD package) leaves with the case.
+        try? FileManager.default.removeItem(at: GlassDocumentEditor.documentURL(for: reflectionCase.id))
 
         statusMessage = "Deleted \(reflectionCase.title)"
         persistWorkspace()
@@ -3048,7 +3052,10 @@ private struct GlassReadingCenter: View {
 
 // The writing surface of the center document: a borderless, transparent
 // NSTextView that draws its ink directly on the glass and grows with its
-// content inside the outer reading scroll (no nested scroller).
+// content inside the outer reading scroll (no nested scroller). Pasted or
+// dropped images ride the flow as solid white paper cards; the rich
+// document persists as an RTFD package per case while the workspace store
+// keeps only a plain-text mirror.
 private struct GlassDocumentEditor: NSViewRepresentable {
     let caseID: ReflectionCase.ID
     let text: String
@@ -3068,6 +3075,43 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         return style
     }
 
+    static var documentsDirectory: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Loom/CaseDocuments", isDirectory: true)
+    }
+
+    static func documentURL(for caseID: ReflectionCase.ID) -> URL {
+        documentsDirectory.appendingPathComponent("\(caseID).rtfd", isDirectory: true)
+    }
+
+    /// One discipline pass over the whole document: body text keeps the
+    /// uniform serif ink, and every image attachment wears the white
+    /// paper-card cell — including attachments arriving via RTFD load,
+    /// paste, or drag.
+    static func normalizeDocument(_ view: NSTextView) {
+        guard let storage = view.textStorage, storage.length > 0 else { return }
+        let full = NSRange(location: 0, length: storage.length)
+        storage.beginEditing()
+        storage.enumerateAttribute(.attachment, in: full) { value, range, _ in
+            if let attachment = value as? NSTextAttachment {
+                if !(attachment.attachmentCell is PaperImageAttachmentCell) {
+                    let image = attachment.image
+                        ?? attachment.fileWrapper?.regularFileContents.flatMap(NSImage.init(data:))
+                    if let image {
+                        attachment.attachmentCell = PaperImageAttachmentCell(imageCell: image)
+                    }
+                }
+            } else {
+                storage.addAttributes([
+                    .font: documentFont,
+                    .foregroundColor: NSColor.labelColor,
+                    .paragraphStyle: documentParagraphStyle,
+                ], range: range)
+            }
+        }
+        storage.endEditing()
+    }
+
     func makeCoordinator() -> Coordinator {
         Coordinator(caseID: caseID, focusRequest: focusRequest, onTextChange: onTextChange)
     }
@@ -3075,7 +3119,10 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     func makeNSView(context: Context) -> GrowingGlassTextView {
         let view = GrowingGlassTextView()
         view.drawsBackground = false
-        view.isRichText = false
+        // Rich text so image attachments can live in the flow; the paste
+        // override and normalizeDocument keep body text plain and uniform.
+        view.isRichText = true
+        view.importsGraphics = true
         view.allowsUndo = true
         view.isVerticallyResizable = true
         view.isHorizontallyResizable = false
@@ -3091,7 +3138,7 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             .paragraphStyle: Self.documentParagraphStyle,
         ]
         view.delegate = context.coordinator
-        view.string = text
+        context.coordinator.loadDocument(into: view, fallback: text)
         view.setAccessibilityLabel("Case document")
         return view
     }
@@ -3100,10 +3147,10 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         let coordinator = context.coordinator
         coordinator.onTextChange = onTextChange
         if coordinator.caseID != caseID {
+            coordinator.saveDocumentNow(view)
             coordinator.caseID = caseID
-            view.string = text
-            view.invalidateIntrinsicContentSize()
-        } else if view.string != text {
+            coordinator.loadDocument(into: view, fallback: text)
+        } else if view.string != text, !Self.hasAttachments(view) {
             view.string = text
             view.invalidateIntrinsicContentSize()
         }
@@ -3115,10 +3162,16 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         }
     }
 
+    static func hasAttachments(_ view: NSTextView) -> Bool {
+        guard let storage = view.textStorage else { return false }
+        return storage.string.contains("\u{FFFC}")
+    }
+
     final class Coordinator: NSObject, NSTextViewDelegate {
         var caseID: ReflectionCase.ID
         var focusRequest: Int
         var onTextChange: (String) -> Void
+        private var saveWork: DispatchWorkItem?
 
         init(caseID: ReflectionCase.ID, focusRequest: Int, onTextChange: @escaping (String) -> Void) {
             self.caseID = caseID
@@ -3128,7 +3181,60 @@ private struct GlassDocumentEditor: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let view = notification.object as? NSTextView else { return }
+            GlassDocumentEditor.normalizeDocument(view)
             onTextChange(view.string)
+            scheduleDocumentSave(view)
+        }
+
+        func textDidEndEditing(_ notification: Notification) {
+            guard let view = notification.object as? NSTextView else { return }
+            saveDocumentNow(view)
+        }
+
+        func loadDocument(into view: NSTextView, fallback: String) {
+            let url = GlassDocumentEditor.documentURL(for: caseID)
+            if let attributed = try? NSAttributedString(
+                url: url,
+                options: [.documentType: NSAttributedString.DocumentType.rtfd],
+                documentAttributes: nil
+            ) {
+                view.textStorage?.setAttributedString(attributed)
+            } else {
+                view.string = fallback
+            }
+            GlassDocumentEditor.normalizeDocument(view)
+            view.invalidateIntrinsicContentSize()
+        }
+
+        func scheduleDocumentSave(_ view: NSTextView) {
+            saveWork?.cancel()
+            let work = DispatchWorkItem { [weak self, weak view] in
+                guard let self, let view else { return }
+                self.saveDocumentNow(view)
+            }
+            saveWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: work)
+        }
+
+        func saveDocumentNow(_ view: NSTextView) {
+            saveWork?.cancel()
+            guard let storage = view.textStorage else { return }
+            let url = GlassDocumentEditor.documentURL(for: caseID)
+            let trimmed = storage.string.trimmingCharacters(in: .whitespacesAndNewlines)
+            if storage.length == 0 || (trimmed.isEmpty && !storage.string.contains("\u{FFFC}")) {
+                try? FileManager.default.removeItem(at: url)
+                return
+            }
+            let full = NSRange(location: 0, length: storage.length)
+            guard let wrapper = storage.rtfdFileWrapper(
+                from: full,
+                documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd]
+            ) else { return }
+            try? FileManager.default.createDirectory(
+                at: GlassDocumentEditor.documentsDirectory,
+                withIntermediateDirectories: true
+            )
+            try? wrapper.write(to: url, options: .atomic, originalContentsURL: nil)
         }
     }
 
@@ -3150,6 +3256,124 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         override func setFrameSize(_ newSize: NSSize) {
             super.setFrameSize(newSize)
             invalidateIntrinsicContentSize()
+        }
+
+        // Images paste as paper cards; everything textual pastes PLAIN so
+        // the document keeps one uniform ink.
+        override func paste(_ sender: Any?) {
+            let pasteboard = NSPasteboard.general
+            let images = Self.images(from: pasteboard)
+            if images.isEmpty {
+                pasteAsPlainText(sender)
+            } else {
+                for image in images {
+                    insertPaperImage(image)
+                }
+            }
+        }
+
+        static func images(from pasteboard: NSPasteboard) -> [NSImage] {
+            let fileOptions: [NSPasteboard.ReadingOptionKey: Any] = [
+                .urlReadingFileURLsOnly: true,
+                .urlReadingContentsConformToTypes: [UTType.image.identifier],
+            ]
+            if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: fileOptions) as? [URL],
+               !urls.isEmpty {
+                return urls.compactMap { NSImage(contentsOf: $0) }
+            }
+            if let images = pasteboard.readObjects(forClasses: [NSImage.self], options: [:]) as? [NSImage],
+               !images.isEmpty {
+                return images
+            }
+            return []
+        }
+
+        /// The image lands on its own paragraph as a solid white paper
+        /// card — the same material language as captured evidence.
+        func insertPaperImage(_ image: NSImage) {
+            guard let tiff = image.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: tiff),
+                  let png = bitmap.representation(using: .png, properties: [:]) else { return }
+            let wrapper = FileWrapper(regularFileWithContents: png)
+            wrapper.preferredFilename = "image-\(UUID().uuidString.prefix(8)).png"
+            let attachment = NSTextAttachment(fileWrapper: wrapper)
+            attachment.attachmentCell = PaperImageAttachmentCell(imageCell: image)
+
+            let insertion = NSMutableAttributedString()
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: GlassDocumentEditor.documentFont,
+                .foregroundColor: NSColor.labelColor,
+                .paragraphStyle: GlassDocumentEditor.documentParagraphStyle,
+            ]
+            let location = selectedRange().location
+            let text = string as NSString
+            if location > 0, text.character(at: location - 1) != 0x0A {
+                insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
+            }
+            insertion.append(NSAttributedString(attachment: attachment))
+            insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
+            insertText(insertion, replacementRange: selectedRange())
+        }
+    }
+}
+
+// An image in the document flow is a piece of paper laid on the glass:
+// solid white card, rounded corners, a real shadow — the same material
+// honesty as EvidencePaperCard, drawn as a text attachment cell so it
+// lives inside the editor's own layout, selection, and undo.
+private final class PaperImageAttachmentCell: NSTextAttachmentCell {
+    static let padding: CGFloat = 10
+    static let cornerRadius: CGFloat = 10
+    static let maxCardWidth: CGFloat = 560
+
+    override func cellFrame(
+        for textContainer: NSTextContainer,
+        proposedLineFragment lineFrag: NSRect,
+        glyphPosition position: NSPoint,
+        characterIndex charIndex: Int
+    ) -> NSRect {
+        guard let image, image.size.width > 0 else {
+            return super.cellFrame(
+                for: textContainer,
+                proposedLineFragment: lineFrag,
+                glyphPosition: position,
+                characterIndex: charIndex
+            )
+        }
+        let available = min(lineFrag.width, Self.maxCardWidth) - Self.padding * 2
+        let scale = min(1, available / image.size.width)
+        let width = image.size.width * scale + Self.padding * 2
+        let height = image.size.height * scale + Self.padding * 2
+        return NSRect(x: 0, y: 0, width: width, height: height)
+    }
+
+    override func draw(withFrame cellFrame: NSRect, in controlView: NSView?) {
+        guard let context = NSGraphicsContext.current else { return }
+        context.saveGraphicsState()
+        let card = NSBezierPath(
+            roundedRect: cellFrame.insetBy(dx: 1, dy: 1),
+            xRadius: Self.cornerRadius,
+            yRadius: Self.cornerRadius
+        )
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.28)
+        shadow.shadowBlurRadius = 7
+        shadow.shadowOffset = NSSize(width: 0, height: -2)
+        shadow.set()
+        NSColor.white.setFill()
+        card.fill()
+        context.restoreGraphicsState()
+
+        if let image {
+            let inset = cellFrame.insetBy(dx: Self.padding, dy: Self.padding)
+            image.draw(
+                in: inset,
+                from: .zero,
+                operation: .sourceOver,
+                fraction: 1,
+                respectFlipped: true,
+                hints: [.interpolation: NSImageInterpolation.high]
+            )
         }
     }
 }
