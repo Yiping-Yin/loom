@@ -147,7 +147,16 @@ struct LoomReflectionRootView: View {
                         // The old ReflectionSourceInspector face stays
                         // defined below for the machinery it still owns.
                         ReflectionBridgePanel(
+                            sources: selectedCase.sources,
                             onFiles: importLocalSources,
+                            onOpenSource: { source in
+                                selectedSourceID = source.id
+                                if source.fileURL != nil {
+                                    openSourceInNativeApp(source)
+                                } else {
+                                    statusMessage = "Opened \(source.label)"
+                                }
+                            },
                             onUnwired: { statusMessage = $0 }
                         )
                         .frame(width: clampedInspectorWidth(inspectorWidth))
@@ -3622,8 +3631,16 @@ private struct ReflectionComposer: View {
 // 2026-07-03): a centered stack of bridge rows. System semantics
 // throughout — quinary row fill, quaternary hover/chips, secondary icons.
 private struct ReflectionBridgePanel: View {
+    // Scope law v2 (owner 2026-07-03): the pane is PROJECT-scoped — the
+    // bridge between THIS project and the world. Upper half = the gate
+    // (invoke rows); lower half = what has crossed (attached resources,
+    // click = back out to the original). Never a filesystem tree.
+    var sources: [ReflectionSource] = []
     let onFiles: () -> Void
+    let onOpenSource: (ReflectionSource) -> Void
     let onUnwired: (String) -> Void
+    @State private var knownSourceIDs: Set<String> = []
+    @State private var arrivedSourceID: String? = nil
 
     var body: some View {
         VStack(spacing: 10) {
@@ -3655,10 +3672,95 @@ private struct ReflectionBridgePanel: View {
                 action: onFiles
             )
             .keyboardShortcut("p", modifiers: .command)
+
+            if !sources.isEmpty {
+                VStack(spacing: 2) {
+                    ForEach(sources) { source in
+                        BridgeResourceRow(
+                            source: source,
+                            justArrived: source.id == arrivedSourceID,
+                            action: { onOpenSource(source) }
+                        )
+                    }
+                }
+                .padding(.top, 18)
+            }
+
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            knownSourceIDs = Set(sources.map(\.id))
+        }
+        .onChange(of: sources.map(\.id)) { _, ids in
+            // The arrival moment: a source just crossed the bridge (⌘⇧U
+            // capture or Files import) — mark its row briefly.
+            if let fresh = ids.first(where: { !knownSourceIDs.contains($0) }) {
+                arrivedSourceID = fresh
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 1_400_000_000)
+                    if arrivedSourceID == fresh { arrivedSourceID = nil }
+                }
+            }
+            knownSourceIDs = Set(ids)
+        }
+    }
+}
+
+// A resource that has crossed the bridge: quiet list row; click goes back
+// OUT to the original (native app / browser).
+private struct BridgeResourceRow: View {
+    let source: ReflectionSource
+    let justArrived: Bool
+    let action: () -> Void
+    @State private var isHovering = false
+
+    private var kindSymbol: String {
+        let kind = source.kind.lowercased()
+        if kind.contains("web") || kind.contains("http") || kind.contains("url") { return "globe" }
+        if kind.contains("pdf") { return "doc.richtext" }
+        if kind.contains("sheet") || kind.contains("xls") || kind.contains("csv") { return "tablecells" }
+        if kind.contains("slide") || kind.contains("ppt") || kind.contains("key") { return "rectangle.on.rectangle" }
+        return "doc.text"
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: kindSymbol)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 16)
+                Text(source.label)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 0)
+                if isHovering {
+                    Image(systemName: "arrow.up.forward")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 34)
+            .background {
+                if justArrived {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
+                } else if isHovering {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(.quinary)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .help(source.meta.isEmpty ? source.label : source.meta)
+        .accessibilityLabel(source.label)
     }
 }
 

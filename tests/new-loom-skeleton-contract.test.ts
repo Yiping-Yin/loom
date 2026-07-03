@@ -1993,7 +1993,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // Right pane = the launcher (owner-pointed design, 2026-07-03):
   // Review / Terminal / Browser / Files; Files wires to the local-file
   // importer. The old inspector face stays defined but unmounted.
-  assert.match(nativeRoot, /ReflectionBridgePanel\([\s\S]{0,80}onFiles: importLocalSources/);
+  assert.match(nativeRoot, /ReflectionBridgePanel\([\s\S]{0,120}sources: selectedCase\.sources[\s\S]{0,80}onFiles: importLocalSources/);
+  // Bridge v2: the lower half lists what has crossed — project-scoped
+  // resources with the way back out to the original.
+  assert.match(nativeRoot, /struct BridgeResourceRow: View/);
   assert.match(nativeRoot, /BridgeRow\([\s\S]{0,120}title: "Files"/);
   assert.match(nativeRoot, /private struct ReflectionLearningLedgerView: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningTraceCard: View/);
