@@ -2451,14 +2451,16 @@ private struct SidebarUtilityStrip: View {
 
             Spacer(minLength: 0)
 
-            Button {
+            // The About button speaks the strip's own ink (owner
+            // 2026-07-04: the photographic moon avatar was a material
+            // clash next to the line-art gear) — a moon glyph in the
+            // same stroke language, brand whisper kept.
+            SidebarRailIcon(
+                systemImage: "moon.stars",
+                help: "About Loom · Local, \(projectCount) project\(projectCount == 1 ? "" : "s") — on-device"
+            ) {
                 openWindow(id: AboutWindow.id)
-            } label: {
-                MoonAvatar()
             }
-            .buttonStyle(.plain)
-            .help("Local · \(projectCount) project\(projectCount == 1 ? "" : "s") — on-device")
-            .accessibilityLabel("About Loom")
 
             SidebarRailIcon(systemImage: "gearshape", help: "Settings (⌘,)") {
                 openSettings()
