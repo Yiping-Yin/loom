@@ -3455,24 +3455,11 @@ private struct GlassReadingCenter: View {
                     .frame(maxWidth: .infinity)
                 }
         }
-        // The blank case holds OUR MOON (owner comp 2026-07-04, final
-        // verdict of the moon arc): the modeled full moon — a Cycles
-        // render of LOOM's own frosted crater sphere from the
-        // design/blender pipeline, halo and light pool baked — luminous
-        // on the glass, gone at the first written character.
-        .overlay {
-            if isBlankCase {
-                Image("ModeledMoon")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(width: 560, height: 560)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeOut(duration: 0.35), value: isBlankCase)
+        // The blank case stages nothing (owner final call, 2026-07-04
+        // 2AM, closing the moon arc): title, auto-focused cursor, quiet
+        // glass. The moon's craft — the carved-glass laws, the relief
+        // component, the Blender pipelines — lives on for the stage and
+        // the future pass-progress instrument.
         .contentShape(Rectangle())
         .onTapGesture {
             editorFocusRequest += 1

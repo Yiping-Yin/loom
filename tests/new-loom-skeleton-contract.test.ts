@@ -2661,18 +2661,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /Paste a product event, user reaction, decision, or launch result/,
     'the reflection composer placeholder must not survive the composer removal',
   );
-  // The empty state (owner comp 2026-07-04, moon arc verdict): the blank
-  // case holds OUR MODELED MOON — a Cycles render of LOOM's own frosted
-  // crater sphere (design/blender/moon_bright.py), halo and pool baked —
-  // and yields to the first written character. The owner's artifact
-  // overrides the earlier no-bitmap stance for this mount; stock
-  // photographic emblems stay banned by name.
-  assert.doesNotMatch(nativeRoot, /MoonEmblem|BacklitMoon/);
+  // The empty state (owner final call 2026-07-04, closing the moon arc):
+  // the blank case stages NOTHING — title, auto-focused cursor, quiet
+  // glass. No emblem of any kind mounts on it; the moon's craft lives on
+  // in the relief component and the Blender pipelines for the stage and
+  // the future pass-progress instrument.
+  assert.doesNotMatch(nativeRoot, /MoonEmblem|BacklitMoon|ModeledMoon/);
   assert.match(nativeRoot, /isBlankCase \{ editorFocusRequest \+= 1 \}/);
   assert.match(nativeRoot, /documentText\.isEmpty/, 'blankness is judged against the written document too');
-  assert.match(nativeRoot, /if isBlankCase \{[\s\S]{0,160}Image\("ModeledMoon"\)/, 'the blank case holds the modeled moon');
-  const modeledMoonImageset = read('macos-app/Loom/Assets.xcassets/ModeledMoon.imageset/Contents.json');
-  assert.match(modeledMoonImageset, /modeled-moon@2x\.png/, 'the modeled moon ships in the asset catalog');
   assert.match(nativeRoot, /struct MoonGlassRelief: View/, 'the carved-glass craft stays for the progress moon and the stage');
   const reliefBlock = nativeRoot.slice(
     nativeRoot.indexOf('struct MoonGlassRelief'),
