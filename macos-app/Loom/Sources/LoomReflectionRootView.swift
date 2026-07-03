@@ -2669,6 +2669,7 @@ private struct ReflectionSidebarSearchField: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .help("Clear search")
                 .accessibilityLabel("Clear search")
             }
         }
@@ -4119,6 +4120,7 @@ private struct BridgeRow: View {
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
+        .help(title)
         .accessibilityLabel(title)
     }
 }
