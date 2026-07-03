@@ -141,22 +141,14 @@ struct LoomReflectionRootView: View {
 
                     if isInspectorPresented {
                         ReflectionPaneResizer(width: $inspectorWidth)
-                        ReflectionSourceInspector(
-                            reflectionCase: selectedCase,
-                            sources: selectedCase.sources,
-                            selectedSourceID: selectedSourceID,
-                            selectedSource: selectedSource,
-                            selectedTrace: selectedLearningTrace,
-                            onImport: importLocalSources,
-                            onOpenSource: openSelectedSourceInNativeApp,
-                            onSelect: { source in
-                                selectedSourceID = source.id
-                                if source.fileURL != nil {
-                                    openSourceInNativeApp(source)
-                                } else {
-                                    statusMessage = "Opened \(source.label)"
-                                }
-                            }
+                        // Owner directive 2026-07-03: the right pane wears the
+                        // launcher design — Review / Terminal / Browser /
+                        // Files rows (the bridge to local files and browser).
+                        // The old ReflectionSourceInspector face stays
+                        // defined below for the machinery it still owns.
+                        ReflectionBridgePanel(
+                            onFiles: importLocalSources,
+                            onUnwired: { statusMessage = $0 }
                         )
                         .frame(width: clampedInspectorWidth(inspectorWidth))
                         .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -1651,21 +1643,10 @@ private struct ReflectionTopBar: View {
             .frame(height: reflectionTitlebarControlSize)
             .frame(maxWidth: .infinity)
 
-            if isInspectorPresented {
-                HStack(spacing: 10) {
-                    Text("Evidence")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(LoomTokens.dsInk1)
-                    Spacer(minLength: 0)
-                    inspectorButton
-                }
-                .padding(.horizontal, 14)
-                .frame(height: reflectionTitlebarControlSize)
-                .frame(width: clampedInspectorWidth(inspectorWidth))
-            } else {
-                inspectorButton
-                    .padding(.trailing, 16)
-            }
+            // No pane title (owner 2026-07-03: 摘掉) — the launcher rows
+            // speak for themselves; only the pane toggle remains.
+            inspectorButton
+                .padding(.trailing, 16)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, reflectionTitlebarContentTop)
@@ -1811,20 +1792,20 @@ private struct ReflectionSidebar: View {
                     VStack(spacing: 0) {
                         Image(systemName: "square.stack")
                             .font(.system(size: 15))
-                            .foregroundStyle(LoomTokens.dsInk3)
+                            .foregroundStyle(.tertiary)
                         Text("No projects")
                             .font(.system(size: 12))
-                            .foregroundStyle(LoomTokens.dsInk2)
+                            .foregroundStyle(.secondary)
                             .padding(.top, 8)
                         Text("Create one with +")
                             .font(.system(size: 11))
-                            .foregroundStyle(LoomTokens.dsInk3)
+                            .foregroundStyle(.tertiary)
                             .padding(.top, 4)
                     }
                 } else if !queryIsEmpty && visibleCases.isEmpty {
                     Text("No matches")
                         .font(.system(size: 12))
-                        .foregroundStyle(LoomTokens.dsInk3)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -1899,11 +1880,11 @@ private struct SidebarSectionHeader: View {
             HStack(spacing: 6) {
                 Image(systemName: showsExpanded ? "chevron.down" : "chevron.right")
                     .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(LoomTokens.dsInk3)
+                    .foregroundStyle(.secondary)
                 Text(title)
                     .font(.system(size: 10.5, weight: .semibold))
                     .tracking(0.8)
-                    .foregroundStyle(LoomTokens.dsInk3)
+                    .foregroundStyle(.secondary)
                 Spacer(minLength: 0)
                 if isHovering, let onAdd {
                     Button {
@@ -1911,7 +1892,7 @@ private struct SidebarSectionHeader: View {
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(LoomTokens.dsInk2)
+                            .foregroundStyle(.secondary)
                             .frame(width: 18, height: 18)
                             .contentShape(Rectangle())
                     }
@@ -1920,7 +1901,7 @@ private struct SidebarSectionHeader: View {
                 } else {
                     Text("\(count)")
                         .font(.system(size: 10.5, design: .monospaced))
-                        .foregroundStyle(LoomTokens.dsInk3)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 12)
@@ -1956,12 +1937,14 @@ private struct SidebarCreateMenu: View {
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isHovering ? LoomTokens.dsInk1 : LoomTokens.dsInk2)
+                .foregroundStyle(isHovering ? .primary : .secondary)
                 .frame(width: 28, height: 28)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(isHovering ? Color.primary.opacity(0.06) : Color.clear)
-                )
+                .background {
+                    if isHovering {
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(.quinary)
+                    }
+                }
                 .contentShape(Rectangle())
         }
         .menuStyle(.borderlessButton)
@@ -1981,25 +1964,25 @@ private struct SidebarIdentityFooter: View {
     var body: some View {
         HStack(spacing: 8) {
             Circle()
-                .stroke(LoomTokens.dsHair, lineWidth: 1)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
                 .frame(width: 20, height: 20)
                 .overlay(
                     Image(systemName: "lock.laptopcomputer")
                         .font(.system(size: 10))
-                        .foregroundStyle(LoomTokens.dsInk2)
+                        .foregroundStyle(.secondary)
                 )
             Text("Local")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(LoomTokens.dsInk1)
+                .foregroundStyle(.primary)
             Spacer(minLength: 0)
             Text("\(projectCount) project\(projectCount == 1 ? "" : "s")")
                 .font(.system(size: 10.5, design: .monospaced))
-                .foregroundStyle(LoomTokens.dsInk3)
+                .foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 12)
         .frame(height: 44)
         .overlay(alignment: .top) {
-            Rectangle().fill(LoomTokens.dsHairFaint).frame(height: 1)
+            Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 1)
         }
     }
 }
@@ -2344,11 +2327,10 @@ private struct ReflectionSidebarSearchField: View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 11))
-                .foregroundStyle(LoomTokens.dsInk3)
+                .foregroundStyle(.secondary)
             TextField("Search", text: $text)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12))
-                .foregroundStyle(LoomTokens.dsInk1)
                 .focused(focus)
             if !text.isEmpty {
                 Button {
@@ -2357,7 +2339,7 @@ private struct ReflectionSidebarSearchField: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 11))
-                        .foregroundStyle(LoomTokens.dsInk3)
+                        .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Clear search")
@@ -2365,16 +2347,21 @@ private struct ReflectionSidebarSearchField: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 28)
-        // Glass-native objects: translucent ink washes, never opaque paper
-        // slabs (owner 2026-07-03: the black boxes read alien on glass).
-        .background(
-            Color.primary.opacity(0.055),
-            in: RoundedRectangle(cornerRadius: 6, style: .continuous)
-        )
+        // System semantics: hierarchical fill + system separator; the
+        // system tunes both for every appearance and material.
+        .background(.quinary, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(Color.primary.opacity(focus.wrappedValue ? 0.12 : 0.06), lineWidth: 1)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
         )
+        // A window-mode change (fullscreen enter/exit) must never leave the
+        // field holding first responder (caught live via computer-use).
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { _ in
+            focus.wrappedValue = false
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { _ in
+            focus.wrappedValue = false
+        }
     }
 }
 
@@ -2418,7 +2405,7 @@ private struct ReflectionSidebarRow: View {
             HStack(alignment: .center, spacing: 0) {
                 Image(systemName: isLearning ? "book" : "rectangle.and.text.magnifyingglass")
                     .font(.system(size: 11))
-                    .foregroundStyle(LoomTokens.dsInk3)
+                    .foregroundStyle(.secondary)
                     .frame(width: 22)
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -2427,14 +2414,13 @@ private struct ReflectionSidebarRow: View {
                             TextField("Project name", text: $titleDraft)
                                 .textFieldStyle(.plain)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(LoomTokens.dsInk1)
                                 .focused($titleFieldFocused)
                                 .onSubmit { commitRename() }
                                 .onExitCommand { isEditingTitle = false }
                         } else {
                             Text(reflectionCase.title)
                                 .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
-                                .foregroundStyle(LoomTokens.dsInk1)
+                                .foregroundStyle(.primary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .onTapGesture(count: 2) { beginRename() }
@@ -2445,7 +2431,7 @@ private struct ReflectionSidebarRow: View {
                         if !hasFacts && !isHovering {
                             Text(reflectionCase.updatedAt)
                                 .font(.system(size: 10.5, design: .monospaced))
-                                .foregroundStyle(LoomTokens.dsInk3)
+                                .foregroundStyle(.tertiary)
                         }
                     }
                     if hasFacts {
@@ -2466,13 +2452,13 @@ private struct ReflectionSidebarRow: View {
                                     Text("\(reflectionCase.sources.count)")
                                         .font(.system(size: 10.5, design: .monospaced))
                                 }
-                                .foregroundStyle(LoomTokens.dsInk3)
+                                .foregroundStyle(.secondary)
                             }
                             Spacer(minLength: 0)
                             if !isHovering {
                                 Text(reflectionCase.updatedAt)
                                     .font(.system(size: 10.5, design: .monospaced))
-                                    .foregroundStyle(LoomTokens.dsInk3)
+                                    .foregroundStyle(.tertiary)
                             }
                         }
                     }
@@ -2501,14 +2487,15 @@ private struct ReflectionSidebarRow: View {
             }
         }
         .background {
-            // Soft translucent highlights — the glass stays visible through
-            // the selection (Finder-sidebar grammar); no strokes, no slabs.
+            // System semantics: selection is the system's unemphasized
+            // sidebar-selection color; hover is the quinary fill. Both are
+            // Apple-tuned for every appearance and material.
             if isSelected {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.primary.opacity(0.09))
+                    .fill(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
             } else if isHovering {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.primary.opacity(0.045))
+                    .fill(.quinary)
             }
         }
         .onHover { hovering in
@@ -2543,12 +2530,14 @@ private struct SidebarRowActionButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 11))
-                .foregroundStyle(isHovering ? LoomTokens.dsInk1 : LoomTokens.dsInk3)
+                .foregroundStyle(isHovering ? .primary : .secondary)
                 .frame(width: 22, height: 22)
-                .background(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .fill(isHovering ? Color.primary.opacity(0.08) : Color.clear)
-                )
+                .background {
+                    if isHovering {
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .fill(.quaternary)
+                    }
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -3629,6 +3618,91 @@ private struct ReflectionComposer: View {
     }
 }
 
+// The right pane as a launcher (owner-pointed reference design,
+// 2026-07-03): a centered stack of bridge rows. System semantics
+// throughout — quinary row fill, quaternary hover/chips, secondary icons.
+private struct ReflectionBridgePanel: View {
+    let onFiles: () -> Void
+    let onUnwired: (String) -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Spacer(minLength: 0)
+            BridgeRow(
+                systemImage: "plus.forwardslash.minus",
+                title: "Review",
+                shortcut: "⌃⇧G",
+                action: { onUnwired("Review arrives with the workbench bridge") }
+            )
+            .keyboardShortcut("g", modifiers: [.control, .shift])
+            BridgeRow(
+                systemImage: "apple.terminal",
+                title: "Terminal",
+                shortcut: nil,
+                action: { onUnwired("Terminal arrives with the practice ground") }
+            )
+            BridgeRow(
+                systemImage: "globe",
+                title: "Browser",
+                shortcut: "⌘T",
+                action: { onUnwired("Browser bridge arrives next") }
+            )
+            .keyboardShortcut("t", modifiers: .command)
+            BridgeRow(
+                systemImage: "folder",
+                title: "Files",
+                shortcut: "⌘P",
+                action: onFiles
+            )
+            .keyboardShortcut("p", modifiers: .command)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct BridgeRow: View {
+    let systemImage: String
+    let title: String
+    let shortcut: String?
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20)
+                Text(title)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 0)
+                if let shortcut {
+                    Text(shortcut)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(.quaternary, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 46)
+            .background(
+                isHovering ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.quinary),
+                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .accessibilityLabel(title)
+    }
+}
+
 private struct ReflectionSourceInspector: View {
     let reflectionCase: ReflectionCase
     let sources: [ReflectionSource]
@@ -4016,8 +4090,10 @@ private struct ReflectionSearchField: View {
 
 private struct ReflectionDivider: View {
     var body: some View {
+        // System semantics (owner 2026-07-03): the seam is the system's
+        // separator color, tuned by Apple for every appearance/material.
         Rectangle()
-            .fill(LoomTokens.dsHair)
+            .fill(Color(nsColor: .separatorColor))
             .frame(width: 1)
     }
 }
@@ -4034,7 +4110,7 @@ private struct ReflectionPaneResizer: View {
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(LoomTokens.dsHair)
+                .fill(Color(nsColor: .separatorColor))
                 .frame(width: 1)
             ReflectionResizeHandle(width: $width)
         }

@@ -1632,7 +1632,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // logic — glass-native translucent objects via Color.primary washes.
   assert.doesNotMatch(nativeRoot, /usesLightChrome|usesCenterOverlay/);
   assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, focus: \$searchFocused\)/);
-  assert.match(nativeRoot, /Color\.primary\.opacity\(0\.09\)/);
+  // System semantics (owner 2026-07-03: 系统是什么就用什么): selection is
+  // the system's unemphasized sidebar-selection color; seams are the
+  // system separator; fills are hierarchical styles.
+  assert.match(nativeRoot, /unemphasizedSelectedContentBackgroundColor/);
+  assert.match(nativeRoot, /Color\(nsColor: \.separatorColor\)/);
   // Glass law 2026-07-03 (owner-approved): ONE glass pane per window — the
   // root matte is underWindowBackground+behindWindow with day/night tints;
   // the inspector and the docked rail are transparent over it and never
@@ -1835,7 +1839,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /First language pass: keep the original file surface primary/);
   assert.match(nativeRoot, /capture vocabulary, pronunciation, phrases, sentence meaning, grammar/);
   assert.doesNotMatch(nativeRoot, /SourceFileView\(fileURL: fileURL\)/);
-  assert.match(nativeRoot, /if source\.fileURL != nil/);
+  // The open-in-native-app route survives the launcher right pane: the
+  // top bar's Open Source button + the source-open helpers still gate on
+  // a real local fileURL.
+  assert.match(nativeRoot, /if nativeSource\?\.fileURL != nil/);
+  assert.match(nativeRoot, /private func openSourceInNativeApp\(_ source: ReflectionSource\)/);
   assert.match(nativeRoot, /fileURL: url/);
   assert.match(nativeSurface, /var fileURL: URL\?/);
   assert.match(sourceFileView, /import PDFKit/);
@@ -1982,7 +1990,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /confirmationLabel\(for: trace\.focus\)/);
   assert.match(nativeRoot, /LoomReflectionRootView\.clippedSelectionText\(trimmedText, maxLength: 180\)/);
   assert.match(nativeRoot, /if reflectionCase\.project == "Learning pass"[\s\S]{0,360}ReflectionLearningLedgerView\([\s\S]{0,180}reflectionCase: reflectionCase/);
-  assert.match(nativeRoot, /ReflectionSourceInspector\([\s\S]{0,160}reflectionCase: selectedCase/);
+  // Right pane = the launcher (owner-pointed design, 2026-07-03):
+  // Review / Terminal / Browser / Files; Files wires to the local-file
+  // importer. The old inspector face stays defined but unmounted.
+  assert.match(nativeRoot, /ReflectionBridgePanel\([\s\S]{0,80}onFiles: importLocalSources/);
+  assert.match(nativeRoot, /BridgeRow\([\s\S]{0,120}title: "Files"/);
   assert.match(nativeRoot, /private struct ReflectionLearningLedgerView: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningTraceCard: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningSignal: View/);
@@ -1997,7 +2009,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /let onSelectTrace: \(ReflectionLearningTrace\) -> Void/);
   assert.match(nativeRoot, /private func selectLearningTrace\(_ trace: ReflectionLearningTrace\)/);
   assert.match(nativeRoot, /selectedSourceID = matchingSource\.id/);
-  assert.match(nativeRoot, /selectedTrace: selectedLearningTrace/);
+  // The inspector face is unmounted (launcher pane instead); its struct
+  // and machinery stay defined for the evidence surfaces it still owns.
+  assert.match(nativeRoot, /private struct ReflectionSourceInspector: View/);
   assert.match(nativeRoot, /let sourceLabel = selectedLearningTrace\?\.sourceAnchor/);
   assert.doesNotMatch(nativeRoot, /return "target: \\\(selectedLearningTrace\.version\) \\\(selectedLearningTrace\.versionTitle\.lowercased\(\)\)"/);
   assert.match(nativeRoot, /ReflectionEvidenceInspector\([\s\S]{0,120}trace: selectedTrace[\s\S]{0,120}source: selectedSource[\s\S]{0,160}onOpenSource:/);
@@ -2530,7 +2544,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(topBarBlock, /Circle\(\)[\s\S]{0,180}\.fill\(reflectionCase\.status == "Second pass ready" \? LoomTokens\.dsSuccess : LoomTokens\.dsInk3\)[\s\S]{0,120}\.help\(reflectionCase\.status\)/);
   assert.match(topBarBlock, /if sourceCount > 1 \{/);
   assert.match(topBarBlock, /systemImage: "folder"/);
-  assert.match(topBarBlock, /Text\("Evidence"\)/);
+  // The pane title is gone (owner 2026-07-03: 摘掉) — only the pane
+  // toggle remains in the top bar's inspector slot.
+  assert.doesNotMatch(topBarBlock, /Text\("Evidence"\)/);
+  assert.match(topBarBlock, /inspectorButton[\s\S]{0,40}\.padding\(\.trailing, 16\)/);
   assert.match(topBarBlock, /ReflectionTopBarButton\([\s\S]*systemName: "sidebar\.left"[\s\S]*action: onToggleSidebar/);
   assert.match(topBarBlock, /ReflectionTopBarButton\([\s\S]*systemName: "sidebar\.right"[\s\S]*action: onToggleInspector/);
   assert.doesNotMatch(topBarBlock, /trash|Delete reflection|onDelete/, 'destructive case actions must stay scoped to sidebar rows');
