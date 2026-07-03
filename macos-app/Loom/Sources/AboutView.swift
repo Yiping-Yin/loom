@@ -1,10 +1,10 @@
 import SwiftUI
 
 /// Native "About Loom" window, replacing the default NSApp auto-generated
-/// one. Evidence Desk chrome surface: cool-black ground, watch-hand gold
-/// accent, light ink text, Cormorant Garamond for display, EB Garamond for
-/// body copy. This is a chrome surface (not user content) so art fonts are
-/// allowed.
+/// one. A STAGE surface: self-luminous cool-black canvas, the bare moon
+/// disc as the brand mark, 青芒 cyan as the only signal colour, system
+/// serif throughout (custom fonts are never bundled here — .custom would
+/// silently fall back and lie).
 ///
 /// Opens via the App menu's "About Loom" item (standard macOS position).
 /// The menu item is registered via `CommandGroup(replacing: .appInfo)` in
@@ -17,33 +17,41 @@ struct AboutView: View {
     // window could only be dismissed via the title-bar close button.
     @Environment(\.dismissWindow) private var dismissWindow
 
-    // MARK: Evidence Desk palette — direct sRGB values so the window reads
-    // the same regardless of macOS appearance. About is identity chrome (the
-    // cool-black Cover scene); it should not flip with light/dark mode.
+    // MARK: Stage palette — direct sRGB values so the window reads the
+    // same regardless of macOS appearance. About is a STAGE surface
+    // (self-luminous, black canvas); it does not flip with light/dark.
+    // Accent = 青芒 signature cyan (#4BC5DE) with the brighter data cyan
+    // (#6CE7F2) for link text — the gold era is over.
     private let paper       = Color(.sRGB, red: 0x07/255.0, green: 0x09/255.0, blue: 0x0C/255.0, opacity: 1.0)
     private let ink         = Color(.sRGB, red: 0xE6/255.0, green: 0xE9/255.0, blue: 0xEE/255.0, opacity: 1.0)
     private let muted       = Color(.sRGB, red: 0x9B/255.0, green: 0xA3/255.0, blue: 0xAE/255.0, opacity: 1.0)
-    private let bronze      = Color(.sRGB, red: 0xC8/255.0, green: 0xA2/255.0, blue: 0x4A/255.0, opacity: 1.0)
-    private let bronzeText  = Color(.sRGB, red: 0xE3/255.0, green: 0xC5/255.0, blue: 0x6A/255.0, opacity: 1.0)
+    private let signalText  = Color(.sRGB, red: 0x6C/255.0, green: 0xE7/255.0, blue: 0xF2/255.0, opacity: 1.0)
 
     var body: some View {
         ZStack {
             paper.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Spacer(minLength: 44)
+                Spacer(minLength: 40)
 
-                // Wordmark — single italic "L" in Cormorant, then the
-                // full name below. Treated as a mark, not a title.
-                Text("L")
-                    .font(.custom("Cormorant Garamond", size: 64).italic().weight(.regular))
-                    .foregroundStyle(ink)
-                    .tracking(-1)
+                // The brand mark IS the moon — the bare disc, not the app
+                // icon's squircle container. applicationIconImage carries
+                // system margin (the disc is ~57% of its canvas), so draw
+                // it oversized inside a smaller frame and let the circular
+                // clip cut everything but the moon and its 青芒 arc.
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFill()
+                    .frame(width: 231, height: 231)
+                    .frame(width: 132, height: 132)
+                    .clipShape(Circle())
+                    .accessibilityHidden(true)
 
                 Text("Loom")
-                    .font(.custom("Cormorant Garamond", size: 34).italic().weight(.regular))
+                    .font(.system(size: 32, weight: .semibold, design: .serif))
                     .foregroundStyle(ink)
-                    .padding(.top, 2)
+                    .padding(.top, 4)
 
                 // Version line — monospaced, muted.
                 Text(versionString)
@@ -51,25 +59,15 @@ struct AboutView: View {
                     .foregroundStyle(muted)
                     .padding(.top, 10)
 
-                // Tagline — Cormorant italic, slightly larger, ink. (The
-                // earlier "A small room for slow reading." now lives in the
-                // /product-history tagline lineage as sediment.)
+                // ONE tagline. (The platform restatement said the same
+                // thing twice; clean copy keeps the living line only.)
                 Text("A living knowledge identity.")
-                    .font(.custom("Cormorant Garamond", size: 18).italic())
+                    .font(.system(size: 17, design: .serif).italic())
                     .foregroundStyle(ink.opacity(0.88))
                     .padding(.top, 22)
 
-                // Product line — Loom as a personal knowledge identity platform.
-                Text("A personal knowledge identity platform.")
-                    .font(.custom("EB Garamond", size: 13))
-                    .foregroundStyle(muted)
-                    .padding(.top, 6)
-
-                ornament
-                    .padding(.top, 18)
-
                 hairRule
-                    .padding(.top, 18)
+                    .padding(.top, 22)
 
                 // "Made by" block — small-caps eyebrow + body line.
                 VStack(spacing: 6) {
@@ -80,7 +78,7 @@ struct AboutView: View {
                         .foregroundStyle(muted)
 
                     Text("One person, with care.")
-                        .font(.custom("EB Garamond", size: 14))
+                        .font(.system(size: 14, design: .serif))
                         .foregroundStyle(ink.opacity(0.82))
                 }
                 .padding(.top, 16)
@@ -88,9 +86,9 @@ struct AboutView: View {
                 hairRule
                     .padding(.top, 18)
 
-                // Text links — Privacy + Help + Colophon. Bronze, EB Garamond.
-                // Colophon is the book's back matter (type, palette, hand);
-                // it opens inside the main webview at /colophon so it stays
+                // Text links — Privacy + Help + History + Colophon, in the
+                // data cyan. Colophon is the book's back matter (type,
+                // palette, hand); it opens at /colophon so it stays
                 // consistent with the other reading surfaces.
                 HStack(spacing: 28) {
                     linkButton("Privacy") {
@@ -120,9 +118,9 @@ struct AboutView: View {
 
                 Spacer(minLength: 20)
 
-                // Footer — italic Cormorant, muted.
+                // Footer — serif italic, muted.
                 Text("© 2026 · All rights respected")
-                    .font(.custom("Cormorant Garamond", size: 12).italic())
+                    .font(.system(size: 12, design: .serif).italic())
                     .foregroundStyle(muted)
                     .padding(.bottom, 26)
             }
@@ -137,18 +135,8 @@ struct AboutView: View {
 
     // MARK: - Components
 
-    /// Single centered bronze ornament — unicode four-pointed white star.
-    /// Small, filigree-weight, not decorative noise. Sits between sections
-    /// as a breath mark.
-    private var ornament: some View {
-        Text("\u{2727}") // ✧ white four-pointed star — thin at 13pt
-            .font(.system(size: 13))
-            .foregroundStyle(bronze)
-            .accessibilityHidden(true)
-    }
-
     /// Hair-rule divider — a 1px line, ~88pt wide, muted. Never full-width:
-    /// Vellum rules breathe.
+    /// stage rules breathe.
     private var hairRule: some View {
         Rectangle()
             .fill(muted.opacity(0.35))
@@ -156,13 +144,13 @@ struct AboutView: View {
             .accessibilityHidden(true)
     }
 
-    /// Text link styled in bronze EB Garamond. Plain button so it takes
-    /// the Vellum color, not the system accent.
+    /// Text link in the data cyan — 青芒 is the only signal colour on the
+    /// stage. Plain button so it never takes the system accent.
     private func linkButton(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.custom("EB Garamond", size: 13))
-                .foregroundStyle(bronzeText)
+                .font(.system(size: 13, design: .serif))
+                .foregroundStyle(signalText)
                 .underline(false)
         }
         .buttonStyle(.plain)

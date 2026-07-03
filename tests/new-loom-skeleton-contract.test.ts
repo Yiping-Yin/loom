@@ -2755,6 +2755,17 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /importSources\(from: urls, openAfterImport: false\)/,
     'dropping into the document must not bounce the user into another app',
   );
+
+  // About window is a STAGE surface: the brand mark is the bare moon disc
+  // (not a letter, not the icon's squircle container), the accent is 青芒
+  // cyan (the gold era is over), ONE tagline, and system serif only — the
+  // Garamond custom fonts were never bundled and silently fell back.
+  const aboutView = read('macos-app/Loom/Sources/AboutView.swift');
+  assert.match(aboutView, /applicationIconImage[\s\S]{0,400}clipShape\(Circle\(\)\)/, 'the About hero is the bare moon disc');
+  assert.match(aboutView, /signalText/, 'links wear the 青芒 data cyan');
+  assert.doesNotMatch(aboutView, /bronze|0xC8|0xE3/i, 'no gold-era ink survives');
+  assert.doesNotMatch(aboutView, /Cormorant|EB Garamond|\.custom\(/, 'system serif only — unbundled custom fonts are a silent lie');
+  assert.doesNotMatch(aboutView, /personal knowledge identity platform/, 'one tagline, not two');
 });
 
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
@@ -5050,7 +5061,9 @@ test('default-visible product copy uses literal Sources Studio and Digital Me vo
   assert.match(files['app/product-history/page.tsx'], /Source-backed self\. Living archive\./);
   assert.match(files['app/product-history/page.tsx'], /Proof changed the line/);
   assert.match(files['app/about/AboutClient.tsx'], /Publish the artifact/);
-  assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /personal knowledge identity platform/);
+  // 2026-07-03 stage redesign: ONE tagline — the platform restatement
+  // was cut with the gold era.
+  assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /A living knowledge identity\./);
   assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /History/);
   for (const pattern of [
     /RehearsalOverlay/,
