@@ -2082,6 +2082,25 @@ private struct SidebarSectionHeader: View {
 // The utility strip (the reference's own horizontal bottom-bar form,
 // distilled 2026-07-03): icon-only with tooltips, no explanatory text.
 // Left: create. Right: identity (About, count in its tooltip), Settings.
+// The strip's moon avatar shows the BARE disc: applicationIconImage
+// carries system margin around the squircle, so at 22pt the un-cropped
+// canvas reads as a black blob. Overdraw past the margin (disc ≈ 57% of
+// the canvas) and let the circle clip keep only the moon.
+private struct MoonAvatar: View {
+    var size: CGFloat = 22
+
+    var body: some View {
+        Image(nsImage: NSApp.applicationIconImage)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFill()
+            .frame(width: size * 1.75, height: size * 1.75)
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color(nsColor: .separatorColor), lineWidth: 1))
+    }
+}
+
 private struct SidebarUtilityStrip: View {
     let projectCount: Int
     let onCreate: () -> Void
@@ -2118,12 +2137,7 @@ private struct SidebarUtilityStrip: View {
             Button {
                 openWindow(id: AboutWindow.id)
             } label: {
-                Image(nsImage: NSApp.applicationIconImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 22, height: 22)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color(nsColor: .separatorColor), lineWidth: 1))
+                MoonAvatar()
             }
             .buttonStyle(.plain)
             .help("Local · \(projectCount) project\(projectCount == 1 ? "" : "s") — on-device")
@@ -2352,12 +2366,7 @@ private struct SidebarIdentityFooter: View {
             Button {
                 openWindow(id: AboutWindow.id)
             } label: {
-                Image(nsImage: NSApp.applicationIconImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 22, height: 22)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color(nsColor: .separatorColor), lineWidth: 1))
+                MoonAvatar()
                     .opacity(hoveringAvatar ? 1.0 : 0.9)
             }
             .buttonStyle(.plain)
