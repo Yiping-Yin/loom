@@ -1766,6 +1766,17 @@ private struct ReflectionSidebar: View {
         query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    // Progressive disclosure (owner 2026-07-03: 这个设计是不行的 — the
+    // scaffolding outweighed the content): chrome grows with content.
+    // Sections exist only when their KIND exists in the workspace.
+    private var hasLearningProjects: Bool {
+        cases.contains { $0.project == "Learning pass" }
+    }
+
+    private var showsSectionHeaders: Bool {
+        hasLearningProjects || !panelPrinciples.isEmpty
+    }
+
     private var visiblePrinciples: [ReflectionPrincipleRecord] {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !needle.isEmpty else { return panelPrinciples }
@@ -1781,67 +1792,70 @@ private struct ReflectionSidebar: View {
             ReflectionSidebarSearchField(text: $query, focus: $searchFocused)
                 .padding(.top, reflectionSidebarTopClearance)
                 .padding(.horizontal, 12)
-                .padding(.bottom, 6)
+                .padding(.bottom, 10)
 
             // Creation is a list citizen (the Add-Tab grammar, owner-pointed
             // reference 2026-07-03) — the first row, always in reach.
             SidebarNewProjectRow(onCreate: onCreate, onCreateLearning: onCreateLearning)
                 .padding(.horizontal, 8)
-                .padding(.bottom, 6)
+                .padding(.bottom, 10)
 
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    Section(header: SidebarSectionHeader(
-                        title: "REFLECTIONS",
-                        count: reflectionCases.count,
-                        isExpanded: $reflectionsExpanded,
-                        forceExpanded: !queryIsEmpty,
-                        onAdd: onCreate
-                    )) {
-                        if reflectionsExpanded || !queryIsEmpty {
-                            ForEach(reflectionCases) { reflectionCase in
-                                sidebarRow(reflectionCase)
-                            }
+                    if !showsSectionHeaders {
+                        // One kind of content, no ceremony: just the rows.
+                        ForEach(reflectionCases) { reflectionCase in
+                            sidebarRow(reflectionCase)
                         }
-                    }
-                    Section(header: SidebarSectionHeader(
-                        title: "LEARNING",
-                        count: learningCases.count,
-                        isExpanded: $learningExpanded,
-                        forceExpanded: !queryIsEmpty,
-                        onAdd: onCreateLearning
-                    )
-                    .padding(.top, 8)) {
-                        if learningExpanded || !queryIsEmpty {
-                            ForEach(learningCases) { reflectionCase in
-                                sidebarRow(reflectionCase)
-                            }
-                        }
-                    }
-                    // Scope law v2: the workspace's ARCHITECTURE frame — the
-                    // judgment memory that spans projects (融会贯通). Rows
-                    // jump to the principle's source project.
-                    Section(header: SidebarSectionHeader(
-                        title: "PRINCIPLES",
-                        count: visiblePrinciples.count,
-                        isExpanded: $principlesExpanded,
-                        forceExpanded: !queryIsEmpty
-                    )
-                    .padding(.top, 8)) {
-                        if principlesExpanded || !queryIsEmpty {
-                            ForEach(visiblePrinciples) { record in
-                                SidebarPrincipleRow(record: record) {
-                                    onOpenPrinciple?(record)
+                    } else {
+                        Section(header: SidebarSectionHeader(
+                            title: "REFLECTIONS",
+                            count: reflectionCases.count,
+                            isExpanded: $reflectionsExpanded,
+                            forceExpanded: !queryIsEmpty,
+                            onAdd: onCreate
+                        )) {
+                            if reflectionsExpanded || !queryIsEmpty {
+                                ForEach(reflectionCases) { reflectionCase in
+                                    sidebarRow(reflectionCase)
                                 }
-                                .padding(.horizontal, 8)
-                                .padding(.bottom, 1)
                             }
-                            if panelPrinciples.isEmpty && queryIsEmpty {
-                                Text("Principles you promote gather here, across every project.")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.tertiary)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 6)
+                        }
+                        if hasLearningProjects {
+                            Section(header: SidebarSectionHeader(
+                                title: "LEARNING",
+                                count: learningCases.count,
+                                isExpanded: $learningExpanded,
+                                forceExpanded: !queryIsEmpty,
+                                onAdd: onCreateLearning
+                            )
+                            .padding(.top, 8)) {
+                                if learningExpanded || !queryIsEmpty {
+                                    ForEach(learningCases) { reflectionCase in
+                                        sidebarRow(reflectionCase)
+                                    }
+                                }
+                            }
+                        }
+                        if !panelPrinciples.isEmpty {
+                            // The workspace's ARCHITECTURE frame — appears
+                            // with the first promoted principle.
+                            Section(header: SidebarSectionHeader(
+                                title: "PRINCIPLES",
+                                count: visiblePrinciples.count,
+                                isExpanded: $principlesExpanded,
+                                forceExpanded: !queryIsEmpty
+                            )
+                            .padding(.top, 8)) {
+                                if principlesExpanded || !queryIsEmpty {
+                                    ForEach(visiblePrinciples) { record in
+                                        SidebarPrincipleRow(record: record) {
+                                            onOpenPrinciple?(record)
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.bottom, 1)
+                                    }
+                                }
                             }
                         }
                     }
@@ -1982,45 +1996,89 @@ private struct SidebarNewProjectRow: View {
     let onCreate: () -> Void
     let onCreateLearning: () -> Void
     @State private var isHovering = false
+    @State private var isPresenting = false
 
     var body: some View {
-        Menu {
-            Button {
-                onCreate()
-            } label: {
-                Label("Product reflection", systemImage: "rectangle.and.text.magnifyingglass")
-            }
-            Button {
-                onCreateLearning()
-            } label: {
-                Label("Learning project", systemImage: "book")
-            }
+        // Plain Button + popover: Menu labels re-layout images with
+        // menu-item metrics (breaking the shared left axis), and a
+        // transparent-label Menu never receives clicks — both measured
+        // live 2026-07-03. The popover is the reliable native chooser.
+        Button {
+            isPresenting = true
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "plus")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isHovering ? .primary : .secondary)
                     .frame(width: 22)
                 Text("New project")
                     .font(.system(size: 13))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(isHovering ? .primary : .secondary)
                 Spacer(minLength: 0)
             }
             .padding(.leading, 8)
             .frame(height: 36)
             .background {
-                if isHovering {
+                if isHovering || isPresenting {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .fill(.quinary)
                 }
             }
             .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
+        .popover(isPresented: $isPresenting, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 2) {
+                NewProjectChoice(
+                    systemImage: "rectangle.and.text.magnifyingglass",
+                    title: "Product reflection"
+                ) {
+                    isPresenting = false
+                    onCreate()
+                }
+                NewProjectChoice(systemImage: "book", title: "Learning project") {
+                    isPresenting = false
+                    onCreateLearning()
+                }
+            }
+            .padding(6)
+            .frame(width: 220)
+        }
         .accessibilityLabel("New project")
+    }
+}
+
+private struct NewProjectChoice: View {
+    let systemImage: String
+    let title: String
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 18)
+                Text(title)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8)
+            .frame(height: 30)
+            .background {
+                if isHovering {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(.quaternary)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
     }
 }
 
@@ -2496,10 +2554,11 @@ private struct ReflectionSidebarSearchField: View {
     var focus: FocusState<Bool>.Binding
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
+                .frame(width: 14)
             TextField("Search", text: $text)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12))
@@ -2574,7 +2633,7 @@ private struct ReflectionSidebarRow: View {
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(alignment: .center, spacing: 0) {
+            HStack(alignment: .center, spacing: 10) {
                 Image(systemName: isLearning ? "book" : "rectangle.and.text.magnifyingglass")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
