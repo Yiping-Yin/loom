@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import PDFKit
 
-private let reflectionSidebarWidth: CGFloat = 240
+private let reflectionSidebarWidth: CGFloat = 248
 // The right pane is drag-resizable between the bounds below; 400 pt stays the
 // contract default. The width persists via AppStorage under
 // "loom.reflection.inspectorWidth" and the top-bar Evidence strip tracks it.
@@ -15,7 +15,7 @@ private func clampedInspectorWidth(_ value: Double) -> CGFloat {
     min(max(CGFloat(value), reflectionInspectorMinWidth), reflectionInspectorMaxWidth)
 }
 private let reflectionTopBarHeight: CGFloat = 52
-private let reflectionSidebarTopClearance: CGFloat = 72
+private let reflectionSidebarTopClearance: CGFloat = 60
 private let reflectionThreadMaxWidth: CGFloat = 720
 private let reflectionTrafficLightClearance: CGFloat = 88
 private let reflectionTitlebarControlSize: CGFloat = 16
@@ -185,7 +185,6 @@ struct LoomReflectionRootView: View {
                     ReflectionSidebar(
                         cases: cases,
                         selectedCaseID: selectedCaseID,
-                        material: .centerOverlay,
                         panelsCase: nil,
                         onSelectTrace: selectLearningTrace,
                         panelPrinciples: [],
@@ -197,6 +196,7 @@ struct LoomReflectionRootView: View {
                         onRename: renameReflection
                     )
                     .frame(width: reflectionSidebarWidth)
+                    .background(ReflectionSidebarPeekBackdrop())
 
                     ReflectionDivider()
                 }
@@ -1720,13 +1720,15 @@ private struct ReflectionTopBarButton: View {
     }
 }
 
+// The Explorer (owner-directed left-rail redesign, 2026-07-03): a project
+// explorer in the VSCode grammar — sticky uppercase sections with mono
+// counts, dense two-line rows, hover-revealed actions — laid directly on
+// the window's one pane of glass. Categorization is DERIVED (the
+// "Learning pass" discriminator that already exists); store order is
+// preserved (updatedAt is a display string, not a Date — never sort on it).
 private struct ReflectionSidebar: View {
     let cases: [ReflectionCase]
     let selectedCaseID: ReflectionCase.ID
-    var material: ReflectionSidebarMaterial = .rail
-    // Stage 3 (workbench): OUTLINE (the book's structure) and TIMELINE (the
-    // study log, closed until asked) live at the Explorer's foot — the
-    // VSCode grammar, filled with Loom-only content.
     var panelsCase: ReflectionCase? = nil
     var onSelectTrace: ((ReflectionLearningTrace) -> Void)? = nil
     var panelPrinciples: [ReflectionPrincipleRecord] = []
@@ -1736,16 +1738,10 @@ private struct ReflectionSidebar: View {
     let onCreateLearning: () -> Void
     let onDelete: (ReflectionCase) -> Void
     let onRename: (ReflectionCase, String) -> Void
-    @Environment(\.colorScheme) private var colorScheme
     @State private var query: String = ""
-
-    private var usesCenterOverlay: Bool { material == .centerOverlay }
-    private var usesLightChrome: Bool { usesCenterOverlay || colorScheme == .light }
-    private var primaryText: Color { usesLightChrome ? LoomTokens.dsInk1 : .white.opacity(0.90) }
-    private var sectionText: Color { usesLightChrome ? LoomTokens.dsInk3 : .white.opacity(0.42) }
-    private var localPrimaryText: Color { usesLightChrome ? LoomTokens.dsInk1 : .white.opacity(0.86) }
-    private var localSecondaryText: Color { usesLightChrome ? LoomTokens.dsInk3 : .white.opacity(0.48) }
-    private var localDivider: Color { usesLightChrome ? LoomTokens.dsHair : .white.opacity(0.08) }
+    @State private var reflectionsExpanded = true
+    @State private var learningExpanded = true
+    @FocusState private var searchFocused: Bool
 
     private var visibleCases: [ReflectionCase] {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -1756,50 +1752,80 @@ private struct ReflectionSidebar: View {
         }
     }
 
+    private var reflectionCases: [ReflectionCase] {
+        visibleCases.filter { $0.project != "Learning pass" }
+    }
+
+    private var learningCases: [ReflectionCase] {
+        visibleCases.filter { $0.project == "Learning pass" }
+    }
+
+    private var queryIsEmpty: Bool {
+        query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 14) {
-                Menu {
-                    Button("Learning project", action: onCreateLearning)
-                    Button("Product reflection", action: onCreate)
-                } label: {
-                    Label("New reflection", systemImage: "square.and.pencil")
-                        .font(.system(size: 14, weight: .medium))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .buttonStyle(.plain)
-                .foregroundStyle(primaryText)
-
-                ReflectionSidebarSearchField(text: $query, material: material)
+            HStack(spacing: 8) {
+                ReflectionSidebarSearchField(text: $query, focus: $searchFocused)
+                SidebarCreateMenu(onCreate: onCreate, onCreateLearning: onCreateLearning)
             }
             .padding(.top, reflectionSidebarTopClearance)
-            .padding(.horizontal, 20)
-            .padding(.bottom, 18)
-
-            Text("Reflections")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(sectionText)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 8)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(visibleCases) { reflectionCase in
-                        ReflectionSidebarRow(
-                            reflectionCase: reflectionCase,
-                            isSelected: reflectionCase.id == selectedCaseID,
-                            material: material,
-                            onSelect: { onSelect(reflectionCase) },
-                            onDelete: { onDelete(reflectionCase) },
-                            onRename: { onRename(reflectionCase, $0) }
-                        )
+                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Section(header: SidebarSectionHeader(
+                        title: "REFLECTIONS",
+                        count: reflectionCases.count,
+                        isExpanded: $reflectionsExpanded,
+                        forceExpanded: !queryIsEmpty,
+                        onAdd: onCreate
+                    )) {
+                        if reflectionsExpanded || !queryIsEmpty {
+                            ForEach(reflectionCases) { reflectionCase in
+                                sidebarRow(reflectionCase)
+                            }
+                        }
+                    }
+                    Section(header: SidebarSectionHeader(
+                        title: "LEARNING",
+                        count: learningCases.count,
+                        isExpanded: $learningExpanded,
+                        forceExpanded: !queryIsEmpty,
+                        onAdd: onCreateLearning
+                    )
+                    .padding(.top, 8)) {
+                        if learningExpanded || !queryIsEmpty {
+                            ForEach(learningCases) { reflectionCase in
+                                sidebarRow(reflectionCase)
+                            }
+                        }
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 20)
+                .padding(.bottom, 8)
+            }
+            .overlay(alignment: .center) {
+                if cases.isEmpty {
+                    VStack(spacing: 0) {
+                        Image(systemName: "square.stack")
+                            .font(.system(size: 15))
+                            .foregroundStyle(LoomTokens.dsInk3)
+                        Text("No projects")
+                            .font(.system(size: 12))
+                            .foregroundStyle(LoomTokens.dsInk2)
+                            .padding(.top, 8)
+                        Text("Create one with +")
+                            .font(.system(size: 11))
+                            .foregroundStyle(LoomTokens.dsInk3)
+                            .padding(.top, 4)
+                    }
+                } else if !queryIsEmpty && visibleCases.isEmpty {
+                    Text("No matches")
+                        .font(.system(size: 12))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                }
             }
 
             Spacer(minLength: 0)
@@ -1807,48 +1833,174 @@ private struct ReflectionSidebar: View {
             if let panelsCase, panelsCase.project == "Learning pass" {
                 WorkbenchSidebarPanels(
                     reflectionCase: panelsCase,
-                    sectionText: sectionText,
-                    rowText: localPrimaryText,
-                    subText: localSecondaryText,
-                    divider: localDivider,
+                    sectionText: LoomTokens.dsInk3,
+                    rowText: LoomTokens.dsInk1,
+                    subText: LoomTokens.dsInk3,
+                    divider: LoomTokens.dsHair,
                     onSelectTrace: onSelectTrace,
                     principles: panelPrinciples,
                     onCitePrinciple: onCitePrinciple
                 )
             }
 
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.26, green: 0.54, blue: 0.72),
-                                Color(red: 0.09, green: 0.13, blue: 0.18)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 30, height: 30)
-                    .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Local")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(localPrimaryText)
-                    Text("On-device memory")
-                        .font(.system(size: 11))
-                        .foregroundStyle(localSecondaryText)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 20)
-            .frame(height: 64)
-            .overlay(alignment: .top) {
-                Rectangle().fill(localDivider).frame(height: 1)
-            }
+            SidebarIdentityFooter(projectCount: cases.count)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(ReflectionSidebarBackground(material: material))
+        .background(Color.clear)
+        .background { hiddenShortcutButtons }
+    }
+
+    private func sidebarRow(_ reflectionCase: ReflectionCase) -> some View {
+        ReflectionSidebarRow(
+            reflectionCase: reflectionCase,
+            isSelected: reflectionCase.id == selectedCaseID,
+            onSelect: { onSelect(reflectionCase) },
+            onDelete: { onDelete(reflectionCase) },
+            onRename: { onRename(reflectionCase, $0) }
+        )
+        .padding(.horizontal, 8)
+        .padding(.bottom, 1)
+    }
+
+    // View-local shortcuts — zero new data, zero new callbacks. Docked and
+    // peek sidebars are mutually exclusive, so these never double-register.
+    private var hiddenShortcutButtons: some View {
+        Group {
+            Button("") { searchFocused = true }
+                .keyboardShortcut("k", modifiers: .command)
+            Button("", action: onCreate)
+                .keyboardShortcut("n", modifiers: .command)
+            Button("", action: onCreateLearning)
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+        }
+        .buttonStyle(.plain)
+        .opacity(0)
+        .frame(width: 0, height: 0)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct SidebarSectionHeader: View {
+    let title: String
+    let count: Int
+    @Binding var isExpanded: Bool
+    let forceExpanded: Bool
+    // VSCode explorer grammar: the section header exposes its own create
+    // action on hover — the mono count yields to a quiet plus.
+    var onAdd: (() -> Void)? = nil
+    @State private var isHovering = false
+
+    private var showsExpanded: Bool { forceExpanded || isExpanded }
+
+    var body: some View {
+        Button {
+            isExpanded.toggle()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: showsExpanded ? "chevron.down" : "chevron.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                Text(title)
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .tracking(0.8)
+                    .foregroundStyle(LoomTokens.dsInk3)
+                Spacer(minLength: 0)
+                if isHovering, let onAdd {
+                    Button {
+                        onAdd()
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(LoomTokens.dsInk2)
+                            .frame(width: 18, height: 18)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("New in \(title.capitalized)")
+                } else {
+                    Text("\(count)")
+                        .font(.system(size: 10.5, design: .monospaced))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 26)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { isHovering = hovering }
+        }
+    }
+}
+
+private struct SidebarCreateMenu: View {
+    let onCreate: () -> Void
+    let onCreateLearning: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Menu {
+            Button {
+                onCreate()
+            } label: {
+                Label("Product reflection", systemImage: "rectangle.and.text.magnifyingglass")
+            }
+            Button {
+                onCreateLearning()
+            } label: {
+                Label("Learning project", systemImage: "book")
+            }
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(isHovering ? LoomTokens.dsInk1 : LoomTokens.dsInk2)
+                .frame(width: 28, height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(isHovering ? Color.primary.opacity(0.06) : Color.clear)
+                )
+                .contentShape(Rectangle())
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .fixedSize()
+        .onHover { isHovering = $0 }
+        .accessibilityLabel("New project")
+    }
+}
+
+// The colophon: no account, no card — a hairline, the word "Local", and a
+// machine count.
+private struct SidebarIdentityFooter: View {
+    let projectCount: Int
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .stroke(LoomTokens.dsHair, lineWidth: 1)
+                .frame(width: 20, height: 20)
+                .overlay(
+                    Image(systemName: "lock.laptopcomputer")
+                        .font(.system(size: 10))
+                        .foregroundStyle(LoomTokens.dsInk2)
+                )
+            Text("Local")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(LoomTokens.dsInk1)
+            Spacer(minLength: 0)
+            Text("\(projectCount) project\(projectCount == 1 ? "" : "s")")
+                .font(.system(size: 10.5, design: .monospaced))
+                .foregroundStyle(LoomTokens.dsInk3)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 44)
+        .overlay(alignment: .top) {
+            Rectangle().fill(LoomTokens.dsHairFaint).frame(height: 1)
+        }
     }
 }
 
@@ -2048,100 +2200,87 @@ private struct WorkbenchSidebarPanels: View {
     }
 }
 
-private enum ReflectionSidebarMaterial: Equatable {
-    case rail
-    case centerOverlay
-}
-
-private struct ReflectionSidebarBackground: View {
-    let material: ReflectionSidebarMaterial
+// The floating edge-peek panel renders OVER center content (zIndex 0.75),
+// so unlike the docked rail it keeps a painted backdrop — floating chrome
+// may carry material; the glass law's "no column material" governs the
+// docked rail only.
+private struct ReflectionSidebarPeekBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
 
-    private var liquidGlassMaterial: NSVisualEffectView.Material {
-        switch material {
-        case .rail:
-            return .sidebar
-        case .centerOverlay:
-            return .popover
-        }
-    }
-
-    private var liquidGlassBlendingMode: NSVisualEffectView.BlendingMode {
-        material == .rail ? .behindWindow : .withinWindow
-    }
-
-    private var glassTint: Color {
-        switch (material, colorScheme) {
-        case (.rail, .light):
-            return Color.white.opacity(0.08)
-        case (.rail, .dark):
-            return Color.black.opacity(0.05)
-        case (.centerOverlay, .light):
-            return LoomTokens.dsPaper.opacity(0.16)
-        case (.centerOverlay, .dark):
-            return LoomTokens.dsPaperDeep.opacity(0.18)
-        }
-    }
-
-    private var glassHairline: Color {
-        colorScheme == .light ? Color.white.opacity(0.62) : Color.white.opacity(0.11)
-    }
-
-    private var glassShadow: Color {
-        colorScheme == .light ? Color.black.opacity(0.07) : Color.black.opacity(0.22)
-    }
-
     var body: some View {
-        if material == .rail {
-            // Glass law: the docked rail is TRANSPARENT — the window's one
-            // root glass shows through; the divider is the only seam.
-            Color.clear
-        } else {
-            ZStack {
-                ReflectionVisualEffectBackground(
-                    material: liquidGlassMaterial,
-                    blendingMode: liquidGlassBlendingMode
-                )
-                Rectangle().fill(glassTint)
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(colorScheme == .light ? 0.28 : 0.09),
-                        Color.clear
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .blendMode(.plusLighter)
-                Rectangle()
-                    .fill(glassHairline)
-                    .frame(width: 0.5)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            .shadow(color: glassShadow, radius: 34, x: 18, y: 0)
+        ZStack {
+            ReflectionVisualEffectBackground(
+                material: .popover,
+                blendingMode: .withinWindow
+            )
+            Rectangle().fill(
+                colorScheme == .light
+                    ? LoomTokens.dsPaper.opacity(0.16)
+                    : LoomTokens.dsPaperDeep.opacity(0.18)
+            )
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(colorScheme == .light ? 0.28 : 0.09),
+                    Color.clear
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .blendMode(.plusLighter)
+            Rectangle()
+                .fill(colorScheme == .light ? Color.white.opacity(0.62) : Color.white.opacity(0.11))
+                .frame(width: 0.5)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
+        .shadow(
+            color: colorScheme == .light ? Color.black.opacity(0.07) : Color.black.opacity(0.22),
+            radius: 34, x: 18, y: 0
+        )
     }
 }
 
-// Full-workbench glass (owner directive 2026-07-03: 整个工作台全部先升级成玻璃).
-// behindWindow so the desktop bleeds through the whole center — the earlier
-// vibrancy failure was the web era's opaque NSHostingView + cosmic page;
-// the native register has no opaque layers, so the glass carries.
 private struct ReflectionMatteWorkbenchBackground: View {
+    // Glass has nothing to transmit in fullscreen (only the space wallpaper
+    // sits behind the window), so the material degrades into a muddy slab
+    // (owner 2026-07-03: 这个设计在这里很廉价). The law: glass when there is
+    // a world behind the window, deliberate ink when there is not.
+    @State private var isFullScreen = false
+
     var body: some View {
-        // Glass law v2 (owner 2026-07-03): NO tint washes — neither the
-        // milk-white day cast nor the smoked-ink night cast. The window is
-        // the system glass itself, nothing added. On macOS 26+ this is the
-        // Liquid Glass generation (NSGlassEffectView); older systems fall
-        // back to the window material.
-        // NSGlassEffectView as a full-window backing renders near-solid —
-        // it is an IN-WINDOW lens (no behind-window mode), so it has nothing
-        // to refract under the root (verified live 2026-07-03). Window glass
-        // stays on the material; Liquid Glass is reserved for floating
-        // chrome ABOVE the workbench content.
-        ReflectionVisualEffectBackground(
-            material: .underWindowBackground,
-            blendingMode: .behindWindow
-        )
+        Group {
+            if isFullScreen {
+                // Fullscreen glass: the dedicated .fullScreenUI material —
+                // the system recipe for full-screen surfaces — instead of
+                // the default window material whose wallpaper residue read
+                // muddy here (owner A/B 2026-07-03).
+                ReflectionVisualEffectBackground(
+                    material: .fullScreenUI,
+                    blendingMode: .behindWindow
+                )
+            } else {
+                // Glass law v2 (owner 2026-07-03): NO tint washes — the
+                // window is the system glass itself, nothing added.
+                // NSGlassEffectView as a full-window backing renders
+                // near-solid (in-window lens, verified live) — window glass
+                // stays on the material; Liquid Glass is reserved for
+                // floating chrome above the workbench content.
+                ReflectionVisualEffectBackground(
+                    material: .underWindowBackground,
+                    blendingMode: .behindWindow
+                )
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { _ in
+            isFullScreen = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { _ in
+            isFullScreen = false
+        }
+        .onAppear {
+            isFullScreen = NSApp.windows.contains {
+                $0.isKeyWindow && $0.styleMask.contains(.fullScreen)
+            }
+        }
     }
 }
 
@@ -2199,38 +2338,42 @@ private struct ReflectionVisualEffectBackground: NSViewRepresentable {
 
 private struct ReflectionSidebarSearchField: View {
     @Binding var text: String
-    let material: ReflectionSidebarMaterial
-    @Environment(\.colorScheme) private var colorScheme
-
-    private var usesCenterOverlay: Bool { material == .centerOverlay }
-    private var usesLightChrome: Bool { usesCenterOverlay || colorScheme == .light }
-    private var iconColor: Color { usesLightChrome ? LoomTokens.dsInk3 : .white.opacity(0.50) }
-    private var textColor: Color { usesLightChrome ? LoomTokens.dsInk1 : .white.opacity(0.88) }
-    private var fillColor: Color {
-        if usesCenterOverlay {
-            return LoomTokens.dsPaper.opacity(colorScheme == .light ? 0.18 : 0.14)
-        }
-        return usesLightChrome ? Color.white.opacity(0.15) : .white.opacity(0.055)
-    }
-    private var strokeColor: Color { usesLightChrome ? Color.white.opacity(0.32) : .white.opacity(0.10) }
+    var focus: FocusState<Bool>.Binding
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 12))
-                .foregroundStyle(iconColor)
+                .font(.system(size: 11))
+                .foregroundStyle(LoomTokens.dsInk3)
             TextField("Search", text: $text)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13))
-                .foregroundStyle(textColor)
+                .font(.system(size: 12))
+                .foregroundStyle(LoomTokens.dsInk1)
+                .focused(focus)
+            if !text.isEmpty {
+                Button {
+                    text = ""
+                    focus.wrappedValue = true
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear search")
+            }
         }
-        .padding(.horizontal, 10)
-        .frame(height: 32)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .background(fillColor, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .padding(.horizontal, 8)
+        .frame(height: 28)
+        // Glass-native objects: translucent ink washes, never opaque paper
+        // slabs (owner 2026-07-03: the black boxes read alien on glass).
+        .background(
+            Color.primary.opacity(0.055),
+            in: RoundedRectangle(cornerRadius: 6, style: .continuous)
+        )
         .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(strokeColor, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(Color.primary.opacity(focus.wrappedValue ? 0.12 : 0.06), lineWidth: 1)
         )
     }
 }
@@ -2238,14 +2381,13 @@ private struct ReflectionSidebarSearchField: View {
 private struct ReflectionSidebarRow: View {
     let reflectionCase: ReflectionCase
     let isSelected: Bool
-    let material: ReflectionSidebarMaterial
     let onSelect: () -> Void
     let onDelete: () -> Void
     let onRename: (String) -> Void
-    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovering = false
     @State private var isEditingTitle = false
     @State private var titleDraft = ""
+    @State private var confirmingDelete = false
     @FocusState private var titleFieldFocused: Bool
 
     private func beginRename() {
@@ -2261,141 +2403,161 @@ private struct ReflectionSidebarRow: View {
         onRename(trimmed)
     }
 
-    private var usesCenterOverlay: Bool { material == .centerOverlay }
-    private var usesLightChrome: Bool { usesCenterOverlay || colorScheme == .light }
+    private var isLearning: Bool { reflectionCase.project == "Learning pass" }
 
-    private var iconColor: Color {
-        usesLightChrome
-            ? (isSelected ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
-            : (isSelected ? .white.opacity(0.90) : .white.opacity(0.56))
+    private var openQuestionCount: Int {
+        ReflectionLearningTrace.from(reflectionCase).filter { $0.focus == "question" }.count
     }
 
-    private var titleColor: Color {
-        usesLightChrome
-            ? (isSelected ? LoomTokens.dsInk1 : LoomTokens.dsInk2)
-            : (isSelected ? .white.opacity(0.96) : .white.opacity(0.78))
-    }
-
-    private var metaColor: Color {
-        usesLightChrome
-            ? (isSelected ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
-            : .white.opacity(isSelected ? 0.62 : 0.44)
-    }
-
-    private var timeColor: Color {
-        usesLightChrome
-            ? LoomTokens.dsInk3
-            : .white.opacity(isSelected ? 0.58 : 0.38)
-    }
-
-    private var deleteColor: Color {
-        guard isHovering || isSelected else { return .clear }
-        return usesLightChrome ? LoomTokens.dsInk3 : .white.opacity(0.62)
-    }
-
-    private var deleteFill: Color {
-        guard isHovering else { return .clear }
-        return usesLightChrome ? LoomTokens.dsPaper.opacity(0.34) : .white.opacity(0.08)
-    }
-
-    private var selectedFill: Color {
-        guard isSelected else { return .clear }
-        if usesLightChrome {
-            return usesCenterOverlay ? LoomTokens.dsThread.opacity(0.07) : Color.white.opacity(0.18)
-        }
-        return .white.opacity(0.09)
-    }
-
-    private var selectedStroke: Color {
-        guard isSelected else { return .clear }
-        return usesLightChrome ? Color.white.opacity(0.34) : .white.opacity(0.10)
+    private var hasFacts: Bool {
+        openQuestionCount > 0 || !reflectionCase.sources.isEmpty
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
-            Button(action: onSelect) {
-                HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: "bubble.left")
-                        .font(.system(size: 13))
-                        .foregroundStyle(iconColor)
-                        .frame(width: 16, height: 18)
-                        .padding(.top, 1)
+        Button(action: onSelect) {
+            HStack(alignment: .center, spacing: 0) {
+                Image(systemName: isLearning ? "book" : "rectangle.and.text.magnifyingglass")
+                    .font(.system(size: 11))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .frame(width: 22)
 
-                    VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
                         if isEditingTitle {
-                            // Projects are named for the initiation — rename
-                            // them to the real endeavor (double-click or the
-                            // context menu).
                             TextField("Project name", text: $titleDraft)
                                 .textFieldStyle(.plain)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(titleColor)
+                                .foregroundStyle(LoomTokens.dsInk1)
                                 .focused($titleFieldFocused)
                                 .onSubmit { commitRename() }
                                 .onExitCommand { isEditingTitle = false }
                         } else {
                             Text(reflectionCase.title)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(titleColor)
+                                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                                .foregroundStyle(LoomTokens.dsInk1)
                                 .lineLimit(1)
+                                .truncationMode(.tail)
                                 .onTapGesture(count: 2) { beginRename() }
                         }
-                        HStack(spacing: 6) {
-                            Text(reflectionCase.project)
-                                .font(.system(size: 11))
-                                .foregroundStyle(metaColor)
-                                .lineLimit(1)
-                            Spacer(minLength: 0)
+                        Spacer(minLength: 0)
+                        // Compact form: no machine facts -> the time sits on
+                        // the title line and the row stays single-line.
+                        if !hasFacts && !isHovering {
                             Text(reflectionCase.updatedAt)
-                                .font(.system(size: 10, weight: .regular, design: .monospaced))
-                                .foregroundStyle(timeColor)
+                                .font(.system(size: 10.5, design: .monospaced))
+                                .foregroundStyle(LoomTokens.dsInk3)
+                        }
+                    }
+                    if hasFacts {
+                        HStack(spacing: 10) {
+                            if openQuestionCount > 0 {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "questionmark.circle")
+                                        .font(.system(size: 10))
+                                    Text("\(openQuestionCount)")
+                                        .font(.system(size: 10.5, design: .monospaced))
+                                }
+                                .foregroundStyle(LoomTokens.dsWarning)
+                            }
+                            if !reflectionCase.sources.isEmpty {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "doc")
+                                        .font(.system(size: 10))
+                                    Text("\(reflectionCase.sources.count)")
+                                        .font(.system(size: 10.5, design: .monospaced))
+                                }
+                                .foregroundStyle(LoomTokens.dsInk3)
+                            }
+                            Spacer(minLength: 0)
+                            if !isHovering {
+                                Text(reflectionCase.updatedAt)
+                                    .font(.system(size: 10.5, design: .monospaced))
+                                    .foregroundStyle(LoomTokens.dsInk3)
+                            }
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+                // When hover actions appear at the trailing edge, the text
+                // column yields to them (VSCode label behavior) instead of
+                // being painted over.
+                .padding(.trailing, isHovering ? 58 : 8)
             }
-            .buttonStyle(.plain)
-
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .font(.system(size: 11, weight: .medium))
-                    .frame(width: 22, height: 22)
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(deleteColor)
-            .background(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(deleteFill)
-            )
-            .help("Delete reflection")
+            .padding(.leading, 8)
+            .frame(height: hasFacts ? 44 : 32)
+            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
-        .onHover { isHovering = $0 }
+        .buttonStyle(.plain)
+        .overlay(alignment: .trailing) {
+            if isHovering {
+                HStack(spacing: 4) {
+                    SidebarRowActionButton(systemImage: "pencil", help: "Rename") {
+                        beginRename()
+                    }
+                    SidebarRowActionButton(systemImage: "trash", help: "Delete") {
+                        confirmingDelete = true
+                    }
+                }
+                .padding(.trailing, 6)
+            }
+        }
+        .background {
+            // Soft translucent highlights — the glass stays visible through
+            // the selection (Finder-sidebar grammar); no strokes, no slabs.
+            if isSelected {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.primary.opacity(0.09))
+            } else if isHovering {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.primary.opacity(0.045))
+            }
+        }
+        .onHover { hovering in
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { isHovering = hovering }
+        }
         .contextMenu {
             Button("Rename") { beginRename() }
+            Button("Delete", role: .destructive) { confirmingDelete = true }
+        }
+        .confirmationDialog(
+            "Delete \u{201C}\(reflectionCase.title)\u{201D}?",
+            isPresented: $confirmingDelete
+        ) {
             Button("Delete", role: .destructive, action: onDelete)
+            Button("Cancel", role: .cancel) {}
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            if isSelected {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.thinMaterial)
-            }
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(selectedFill)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(selectedStroke, lineWidth: 1)
-        )
-        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .help(reflectionCase.summary)
+        .accessibilityLabel(reflectionCase.title)
+        .accessibilityValue(openQuestionCount > 0 ? "\(openQuestionCount) open questions" : "")
     }
 }
+
+private struct SidebarRowActionButton: View {
+    let systemImage: String
+    let help: String
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 11))
+                .foregroundStyle(isHovering ? LoomTokens.dsInk1 : LoomTokens.dsInk3)
+                .frame(width: 22, height: 22)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(isHovering ? Color.primary.opacity(0.08) : Color.clear)
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .help(help)
+        .accessibilityLabel(help)
+    }
+}
+
 private struct ReflectionThreadView: View {
     let reflectionCase: ReflectionCase
     @Binding var selectedLearningTraceID: ReflectionLearningTrace.ID?

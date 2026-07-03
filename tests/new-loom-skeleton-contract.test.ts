@@ -127,7 +127,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   const layoutContract = read('docs/projects/active/2026-06-27-loom-reflection-workspace-layout-contract.md');
   const topBarStart = nativeRoot.indexOf('private struct ReflectionTopBar');
   const sidebarStart = nativeRoot.indexOf('private struct ReflectionSidebar');
-  const sidebarBackgroundStart = nativeRoot.indexOf('private struct ReflectionSidebarBackground');
+  const sidebarBackgroundStart = nativeRoot.indexOf('private struct ReflectionSidebarPeekBackdrop');
   const sidebarVisualEffectStart = nativeRoot.indexOf('private struct ReflectionVisualEffectBackground', sidebarBackgroundStart);
   const reflectionComposerStart = nativeRoot.indexOf('private struct ReflectionComposer');
   const reflectionSourceInspectorStart = nativeRoot.indexOf('private struct ReflectionSourceInspector', reflectionComposerStart);
@@ -1600,12 +1600,20 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private var shouldShowSidebar: Bool \{ isSidebarPresented \|\| isSidebarPeeking \}/);
   assert.match(nativeRoot, /private var shouldOverlaySidebar: Bool \{ !isSidebarPresented && isSidebarPeeking \}/);
   assert.match(nativeRoot, /if isSidebarPresented \{/);
-  assert.match(nativeRoot, /if shouldOverlaySidebar \{[\s\S]{0,900}ReflectionSidebar\([\s\S]{0,180}material: \.centerOverlay/);
+  // The Explorer redesign (owner-approved 2026-07-03): the sidebar has ONE
+  // variant and paints nothing; the floating edge-peek instance carries a
+  // painted backdrop at the call site (floating chrome may hold material).
+  assert.match(nativeRoot, /if shouldOverlaySidebar \{[\s\S]{0,900}\.background\(ReflectionSidebarPeekBackdrop\(\)\)/);
   assert.match(nativeRoot, /ReflectionLeftEdgePeekZone\(\)/);
-  assert.match(nativeRoot, /private enum ReflectionSidebarMaterial: Equatable \{[\s\S]{0,80}case rail[\s\S]{0,80}case centerOverlay/);
-  assert.match(nativeRoot, /private var liquidGlassMaterial: NSVisualEffectView\.Material \{[\s\S]{0,180}case \.rail:[\s\S]{0,80}return \.sidebar[\s\S]{0,120}case \.centerOverlay:[\s\S]{0,80}return \.popover/);
-  assert.match(nativeRoot, /private var liquidGlassBlendingMode: NSVisualEffectView\.BlendingMode \{[\s\S]{0,120}\.rail \? \.behindWindow : \.withinWindow/);
-  assert.match(nativeRoot, /ReflectionVisualEffectBackground\([\s\S]{0,120}material: liquidGlassMaterial[\s\S]{0,120}blendingMode: liquidGlassBlendingMode/);
+  // The Explorer redesign: the material enum is retired — the docked rail
+  // is transparent over the window's one glass; only the floating peek
+  // backdrop carries material (.popover, withinWindow).
+  assert.doesNotMatch(nativeRoot, /ReflectionSidebarMaterial/);
+  assert.match(nativeRoot, /struct ReflectionSidebarPeekBackdrop: View/);
+  assert.match(nativeRoot, /ReflectionVisualEffectBackground\([\s\S]{0,120}material: \.popover,[\s\S]{0,80}blendingMode: \.withinWindow/);
+  // Fullscreen glass (owner-approved 2026-07-03): the dedicated
+  // .fullScreenUI material replaces the muddy default in fullscreen.
+  assert.match(nativeRoot, /material: \.fullScreenUI,[\s\S]{0,60}blendingMode: \.behindWindow/);
   assert.match(sidebarBackgroundBlock, /ReflectionVisualEffectBackground/);
   assert.match(sidebarBackgroundBlock, /LinearGradient\(/);
   assert.match(sidebarBackgroundBlock, /\.blendMode\(\.plusLighter\)/);
@@ -1620,9 +1628,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private struct ReflectionFrostedInspectorBackground: View/);
   assert.match(nativeRoot, /ReflectionMatteWorkbenchBackground\(\)\.ignoresSafeArea\(\)/);
   assert.match(nativeRoot, /ReflectionFrostedInspectorBackground\(\)\.ignoresSafeArea\(\)/);
-  assert.match(nativeRoot, /private var usesCenterOverlay: Bool \{ material == \.centerOverlay \}/);
-  assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, material: material\)/);
-  assert.match(nativeRoot, /case \(\.rail, \.light\):[\s\S]{0,80}return Color\.white\.opacity\(0\.08\)/);
+  // The Explorer redesign: one sidebar variant, zero rail-local appearance
+  // logic — glass-native translucent objects via Color.primary washes.
+  assert.doesNotMatch(nativeRoot, /usesLightChrome|usesCenterOverlay/);
+  assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, focus: \$searchFocused\)/);
+  assert.match(nativeRoot, /Color\.primary\.opacity\(0\.09\)/);
   // Glass law 2026-07-03 (owner-approved): ONE glass pane per window — the
   // root matte is underWindowBackground+behindWindow with day/night tints;
   // the inspector and the docked rail are transparent over it and never
@@ -1633,14 +1643,16 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // in-window lens and renders near-solid as a full-window backing).
   assert.doesNotMatch(nativeRoot, /Rectangle\(\)\.fill\(paperTint\)/);
   assert.match(nativeRoot, /struct ReflectionLiquidGlassBackground: NSViewRepresentable/);
-  assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,220}material: material/);
-  assert.match(nativeRoot, /private var selectedFill: Color \{[\s\S]{0,180}if usesLightChrome \{[\s\S]{0,120}usesCenterOverlay \? LoomTokens\.dsThread\.opacity\(0\.07\) : Color\.white\.opacity\(0\.18\)/);
+  assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,220}isSelected: reflectionCase\.id == selectedCaseID/);
+  // Selection: a soft translucent highlight, never an opaque slab and never
+  // the retired cyan bar (owner 2026-07-03: black boxes + the bar were cheap).
+  assert.doesNotMatch(nativeRoot, /fill\(LoomTokens\.dsPaperCard\)/);
   assert.match(nativeRoot, /private func updateSidebarPeek\(_ shouldPeek: Bool\)/);
   assert.match(nativeRoot, /guard !isSidebarPresented else \{ return \}/);
   assert.match(nativeRoot, /ReflectionSidebar\([\s\S]{0,1200}\.onHover \{ hovering in[\s\S]{0,100}updateSidebarPeek\(hovering\)/);
   assert.match(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: isSidebarPresented/);
   assert.doesNotMatch(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: shouldShowSidebar/);
-  assert.match(nativeRoot, /private let reflectionSidebarWidth: CGFloat = 240/);
+  assert.match(nativeRoot, /private let reflectionSidebarWidth: CGFloat = 248/);
   assert.match(nativeRoot, /private let reflectionInspectorDefaultWidth: CGFloat = 400/);
   assert.match(nativeRoot, /private let reflectionInspectorMinWidth: CGFloat = 320/);
   assert.match(nativeRoot, /private let reflectionInspectorMaxWidth: CGFloat = 560/);
@@ -1650,8 +1662,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /override var mouseDownCanMoveWindow: Bool \{ false \}/);
   assert.match(
     nativeRoot,
-    /private struct ReflectionSidebar:[\s\S]*var material: ReflectionSidebarMaterial = \.rail[\s\S]*\.background\(ReflectionSidebarBackground\(material: material\)\)/,
-    'left sidebar should own the liquid-glass material below the shared top bar',
+    /private struct ReflectionSidebar:[\s\S]*\.background\(Color\.clear\)/,
+    'docked left sidebar stays transparent over the window glass (Explorer redesign, owner-approved 2026-07-03)',
   );
   assert.match(nativeRoot, /ZStack\(alignment: \.topLeading\)/);
   assert.match(
@@ -2499,9 +2511,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /if cases\.isEmpty \{[\s\S]{0,80}cases = \[ReflectionCase\.blank\(\)\]/);
   assert.match(nativeRoot, /onDelete: deleteReflection/);
   assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,340}onDelete: \{ onDelete\(reflectionCase\) \}/);
-  assert.match(nativeRoot, /Image\(systemName: "trash"\)/);
+  assert.match(nativeRoot, /SidebarRowActionButton\(systemImage: "trash", help: "Delete"\)/);
   assert.match(nativeRoot, /private let reflectionTopBarHeight: CGFloat = 52/);
-  assert.match(nativeRoot, /private let reflectionSidebarTopClearance: CGFloat = 72/);
+  assert.match(nativeRoot, /private let reflectionSidebarTopClearance: CGFloat = 60/);
   assert.match(nativeRoot, /private let reflectionTitlebarControlSize: CGFloat = 16/);
   assert.match(nativeRoot, /private let reflectionTrafficLightClearance: CGFloat = 88/);
   assert.match(nativeRoot, /private let reflectionTitlebarControlCenterY: CGFloat = 16/);
@@ -2543,7 +2555,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(nativeRoot, /List\(selection:/);
   assert.doesNotMatch(nativeRoot, /\.listStyle\(\.sidebar\)/);
   assert.doesNotMatch(nativeRoot, /\.navigationSplitViewColumnWidth/);
-  assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, material: material\)/);
+  assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, focus: \$searchFocused\)/);
   assert.match(nativeRoot, /systemName: "sidebar\.left"/);
   assert.match(nativeRoot, /systemName: "sidebar\.right"/);
   assert.match(nativeRoot, /\.frame\(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize\)/);
