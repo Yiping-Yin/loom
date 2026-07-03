@@ -267,7 +267,7 @@ struct ExaminerView: View {
     @ViewBuilder
     private func stageBanner(label: String, systemImage: String) -> some View {
         HStack(spacing: 8) {
-            ProgressView().controlSize(.small)
+            MoonPhaseIndicator(size: 14)
             Label(label, systemImage: systemImage)
                 .font(LoomTokens.serif(size: 13, italic: true))
                 .foregroundStyle(LoomTokens.ink3)

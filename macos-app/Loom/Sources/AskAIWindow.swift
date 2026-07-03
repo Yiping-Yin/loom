@@ -330,9 +330,8 @@ struct AskAIView: View {
                 }
 
                 if isStreamingAssistant {
-                    Text("…")
-                        .font(LoomTokens.serif(size: 14))
-                        .foregroundStyle(LoomTokens.muted)
+                    MoonPhaseIndicator(size: 14)
+                        .padding(.vertical, 2)
                 } else if msg.role == .assistant {
                     renderMarkdown(msg.content)
                         .font(LoomTokens.serif(size: 14))

@@ -152,6 +152,7 @@
 		8932C046F6B94500E7B4A9F6 /* textbook-filename-leak.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = BAFF48411BC42953B54DD68D /* textbook-filename-leak.schema.json */; };
 		8AA83F8B824445697E5DFDAD /* filename-leak-course-name-term.filename.txt in Resources */ = {isa = PBXBuildFile; fileRef = 6197B174A46D3B3A28E53F41 /* filename-leak-course-name-term.filename.txt */; };
 		8BFCCCC1216CB11C979337F1 /* LoomExtractorAnchorsBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3BBAB0ACB389D8A341CD60 /* LoomExtractorAnchorsBridgeHandler.swift */; };
+		8CDB4EBFBC0FA1214CF1CF5D /* MoonPhaseIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6ED071085B8F3362818017 /* MoonPhaseIndicator.swift */; };
 		8EAD602106DE79DBE7C95DCC /* SpreadsheetSchemaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0A782692CE50CE23089AC9 /* SpreadsheetSchemaView.swift */; };
 		91048885DB0AD1DAC4C7AEA9 /* SyllabusSchemaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB0F82852C96F7FFEA8998D /* SyllabusSchemaView.swift */; };
 		91BD27E785DA1D5ECAEC9975 /* SchemaCorrectionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42596514B160ED7CF477BD63 /* SchemaCorrectionsStore.swift */; };
@@ -378,6 +379,7 @@
 		5B34F36F6EAFC6BA0A1FF9CC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		5C4498AC00FE562CD298A59B /* PursuitSpawner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PursuitSpawner.swift; sourceTree = "<group>"; };
 		5D7EE70B9F4AD1E582CBDAFF /* comm-3030.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "comm-3030.schema.json"; sourceTree = "<group>"; };
+		5E6ED071085B8F3362818017 /* MoonPhaseIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPhaseIndicator.swift; sourceTree = "<group>"; };
 		6197B174A46D3B3A28E53F41 /* filename-leak-course-name-term.filename.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "filename-leak-course-name-term.filename.txt"; sourceTree = "<group>"; };
 		63185DEC5F9E03CA3708745E /* semicolon-stitch-duedate.filename.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "semicolon-stitch-duedate.filename.txt"; sourceTree = "<group>"; };
 		652BA7E02AD1FCC49B0F406B /* LoomWeaveWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomWeaveWriter.swift; sourceTree = "<group>"; };
@@ -677,6 +679,7 @@
 				652BA7E02AD1FCC49B0F406B /* LoomWeaveWriter.swift */,
 				50EE3AEE1B9EC24DFEC8541D /* LoomWebViewInteractionPolicy.swift */,
 				86249B04CF088CB0AA74F360 /* MigrationBridgeHandler.swift */,
+				5E6ED071085B8F3362818017 /* MoonPhaseIndicator.swift */,
 				BA1253932E73830C2DD9B059 /* NavigationBridgeHandler.swift */,
 				E19B1CAD81EF9A7257E0A312 /* OllamaClient.swift */,
 				F05E1D0F5B49D598380A3D76 /* OpenAIClient.swift */,
@@ -1254,6 +1257,7 @@
 				4CFCFFDCD3259D7554DE8D81 /* MarkdownNotesSchema.swift in Sources */,
 				EFEF12D0166FA5DBADECBABB /* MarkdownNotesSchemaView.swift in Sources */,
 				1E0499C305F030037453F810 /* MigrationBridgeHandler.swift in Sources */,
+				8CDB4EBFBC0FA1214CF1CF5D /* MoonPhaseIndicator.swift in Sources */,
 				351B60B8E6F17E78A7860DED /* NavigationBridgeHandler.swift in Sources */,
 				70CB370592F2AA33745BD3F9 /* OllamaClient.swift in Sources */,
 				A3EBD4EC180DF539EA4181A9 /* OpenAIClient.swift in Sources */,

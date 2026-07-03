@@ -2703,6 +2703,24 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'outline entries jump to their heading',
   );
   assert.match(nativeRoot, /view\.enclosingScrollView/, 'the jump drives the enclosing reading scroll, not a nested scroller');
+
+  // The moon-phase progress arc — LOOM's loading language ("Many faces of
+  // the Moon" distillation): a thin light travels the limb of a dark disc,
+  // drawn natively (no bitmap, no video), following the system appearance.
+  // Every AI-thinking surface wears the moon, not the stock spinner.
+  const moonIndicator = read('macos-app/Loom/Sources/MoonPhaseIndicator.swift');
+  assert.match(moonIndicator, /struct MoonPhaseIndicator: View/);
+  assert.match(moonIndicator, /\.trim\(from: 0, to: 0\.22\)/, 'the indeterminate light is a crescent on the limb');
+  assert.match(moonIndicator, /repeatForever\(autoreverses: false\)/, 'the light sweeps the limb continuously');
+  assert.doesNotMatch(moonIndicator, /Image\(|NSImage/, 'the arc is drawn light, never a bitmap');
+  assert.match(project, /MoonPhaseIndicator\.swift in Sources/);
+  const aiBar = read('macos-app/Loom/Sources/LoomAIBar.swift');
+  assert.match(aiBar, /MoonPhaseIndicator\(size: 14\)/);
+  assert.doesNotMatch(aiBar, /ProgressView\(\)/, 'the AI bar thinks in moonlight, not a stock spinner');
+  const examinerView = read('macos-app/Loom/Sources/ExaminerView.swift');
+  assert.match(examinerView, /MoonPhaseIndicator\(size: 14\)/);
+  const askAIWindow = read('macos-app/Loom/Sources/AskAIWindow.swift');
+  assert.match(askAIWindow, /MoonPhaseIndicator\(size: 14\)/);
 });
 
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
