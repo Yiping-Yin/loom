@@ -2661,21 +2661,24 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /Paste a product event, user reaction, decision, or launch result/,
     'the reflection composer placeholder must not survive the composer removal',
   );
-  // The empty state (owner 2026-07-04 final): the blank case is a
-  // MOMENT, not a state — nothing is staged in it. Title, auto-focused
-  // cursor, quiet glass. The carved-glass moon component keeps its craft
-  // for the future pass-progress instrument and the stage; it does NOT
-  // mount on the blank case. Photographic emblems stay banned.
+  // The empty state (owner comp 2026-07-04, moon arc verdict): the blank
+  // case holds OUR MODELED MOON — a Cycles render of LOOM's own frosted
+  // crater sphere (design/blender/moon_bright.py), halo and pool baked —
+  // and yields to the first written character. The owner's artifact
+  // overrides the earlier no-bitmap stance for this mount; stock
+  // photographic emblems stay banned by name.
   assert.doesNotMatch(nativeRoot, /MoonEmblem|BacklitMoon/);
   assert.match(nativeRoot, /isBlankCase \{ editorFocusRequest \+= 1 \}/);
   assert.match(nativeRoot, /documentText\.isEmpty/, 'blankness is judged against the written document too');
+  assert.match(nativeRoot, /if isBlankCase \{[\s\S]{0,160}Image\("ModeledMoon"\)/, 'the blank case holds the modeled moon');
+  const modeledMoonImageset = read('macos-app/Loom/Assets.xcassets/ModeledMoon.imageset/Contents.json');
+  assert.match(modeledMoonImageset, /modeled-moon@2x\.png/, 'the modeled moon ships in the asset catalog');
   assert.match(nativeRoot, /struct MoonGlassRelief: View/, 'the carved-glass craft stays for the progress moon and the stage');
   const reliefBlock = nativeRoot.slice(
     nativeRoot.indexOf('struct MoonGlassRelief'),
     nativeRoot.indexOf('private struct MoonAvatar'),
   );
-  assert.doesNotMatch(reliefBlock, /Image\(|NSImage/, 'the relief is pure light and material — never a bitmap');
-  assert.doesNotMatch(nativeRoot, /if isBlankCase \{[\s\S]{0,120}MoonGlassRelief\(\)/, 'nothing is staged in the blank moment');
+  assert.doesNotMatch(reliefBlock, /Image\(|NSImage/, 'the relief component itself stays pure light');
 
   // Images ride the document flow as solid white PAPER CARDS (the
   // evidence-card material language), textual pastes stay plain so the

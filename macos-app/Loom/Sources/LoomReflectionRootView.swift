@@ -3455,12 +3455,24 @@ private struct GlassReadingCenter: View {
                     .frame(maxWidth: .infinity)
                 }
         }
-        // The blank case is a MOMENT, not a state (owner 2026-07-04): it
-        // lasts seconds — the cursor is already blinking and the first
-        // character ends it. Nothing is staged in it (glass grammar law
-        // six: empty glass IS the style). The carved-glass moon
-        // (MoonGlassRelief) keeps its craft for the places the moon
-        // LIVES: the future pass-progress instrument and the stage.
+        // The blank case holds OUR MOON (owner comp 2026-07-04, final
+        // verdict of the moon arc): the modeled full moon — a Cycles
+        // render of LOOM's own frosted crater sphere from the
+        // design/blender pipeline, halo and light pool baked — luminous
+        // on the glass, gone at the first written character.
+        .overlay {
+            if isBlankCase {
+                Image("ModeledMoon")
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(width: 560, height: 560)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.35), value: isBlankCase)
         .contentShape(Rectangle())
         .onTapGesture {
             editorFocusRequest += 1
