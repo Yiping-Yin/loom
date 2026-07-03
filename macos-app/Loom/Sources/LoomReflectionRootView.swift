@@ -2733,7 +2733,7 @@ private struct ReflectionSidebarRow: View {
             HStack(alignment: .center, spacing: 10) {
                 Image(systemName: isLearning ? "book" : "rectangle.and.text.magnifyingglass")
                     .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(isSelected ? AnyShapeStyle(.white.opacity(0.85)) : AnyShapeStyle(.secondary))
                     .frame(width: 22)
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -2748,7 +2748,7 @@ private struct ReflectionSidebarRow: View {
                         } else {
                             Text(reflectionCase.title)
                                 .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(isSelected ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .onTapGesture(count: 2) { beginRename() }
@@ -2759,7 +2759,7 @@ private struct ReflectionSidebarRow: View {
                         if !hasFacts && !isHovering {
                             Text(reflectionCase.updatedAt)
                                 .font(.system(size: 10.5, design: .monospaced))
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(isSelected ? AnyShapeStyle(.white.opacity(0.7)) : AnyShapeStyle(.tertiary))
                         }
                     }
                     if hasFacts {
@@ -2780,13 +2780,13 @@ private struct ReflectionSidebarRow: View {
                                     Text("\(reflectionCase.sources.count)")
                                         .font(.system(size: 10.5, design: .monospaced))
                                 }
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(isSelected ? AnyShapeStyle(.white.opacity(0.7)) : AnyShapeStyle(.secondary))
                             }
                             Spacer(minLength: 0)
                             if !isHovering {
                                 Text(reflectionCase.updatedAt)
                                     .font(.system(size: 10.5, design: .monospaced))
-                                    .foregroundStyle(.tertiary)
+                                    .foregroundStyle(isSelected ? AnyShapeStyle(.white.opacity(0.7)) : AnyShapeStyle(.tertiary))
                             }
                         }
                     }
@@ -2819,8 +2819,11 @@ private struct ReflectionSidebarRow: View {
             // sidebar-selection color; hover is the quinary fill. Both are
             // Apple-tuned for every appearance and material.
             if isSelected {
+                // The system's EMPHASIZED selection (accent-follow, white
+                // content) — the unemphasized gray is for unfocused lists
+                // and read dead here (owner 2026-07-03).
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
+                    .fill(Color(nsColor: .selectedContentBackgroundColor))
             } else if isHovering {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(.quinary)
