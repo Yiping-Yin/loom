@@ -1778,13 +1778,16 @@ private struct ReflectionSidebar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                ReflectionSidebarSearchField(text: $query, focus: $searchFocused)
-                SidebarCreateMenu(onCreate: onCreate, onCreateLearning: onCreateLearning)
-            }
-            .padding(.top, reflectionSidebarTopClearance)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 8)
+            ReflectionSidebarSearchField(text: $query, focus: $searchFocused)
+                .padding(.top, reflectionSidebarTopClearance)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 6)
+
+            // Creation is a list citizen (the Add-Tab grammar, owner-pointed
+            // reference 2026-07-03) — the first row, always in reach.
+            SidebarNewProjectRow(onCreate: onCreate, onCreateLearning: onCreateLearning)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 6)
 
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
@@ -1975,6 +1978,52 @@ private struct SidebarSectionHeader: View {
     }
 }
 
+private struct SidebarNewProjectRow: View {
+    let onCreate: () -> Void
+    let onCreateLearning: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Menu {
+            Button {
+                onCreate()
+            } label: {
+                Label("Product reflection", systemImage: "rectangle.and.text.magnifyingglass")
+            }
+            Button {
+                onCreateLearning()
+            } label: {
+                Label("Learning project", systemImage: "book")
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "plus")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 22)
+                Text("New project")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 0)
+            }
+            .padding(.leading, 8)
+            .frame(height: 36)
+            .background {
+                if isHovering {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(.quinary)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .accessibilityLabel("New project")
+    }
+}
+
 private struct SidebarCreateMenu: View {
     let onCreate: () -> Void
     let onCreateLearning: () -> Void
@@ -2056,25 +2105,54 @@ private struct SidebarPrincipleRow: View {
 }
 
 private struct SidebarIdentityFooter: View {
+    // The utility strip (vertical-tabs bottom-bar grammar, owner-pointed
+    // reference 2026-07-03): identity at left, machine count, Settings at
+    // right. Every icon wires to something real.
     let projectCount: Int
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
+    @State private var hoveringAvatar = false
 
     var body: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-                .frame(width: 20, height: 20)
-                .overlay(
-                    Image(systemName: "lock.laptopcomputer")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                )
-            Text("Local")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.primary)
+        HStack(spacing: 10) {
+            Button {
+                openWindow(id: AboutWindow.id)
+            } label: {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 22, height: 22)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color(nsColor: .separatorColor), lineWidth: 1))
+                    .opacity(hoveringAvatar ? 1.0 : 0.9)
+            }
+            .buttonStyle(.plain)
+            .onHover { hoveringAvatar = $0 }
+            .help("About Loom — local, on-device")
+            .accessibilityLabel("About Loom")
+
             Spacer(minLength: 0)
+
             Text("\(projectCount) project\(projectCount == 1 ? "" : "s")")
                 .font(.system(size: 10.5, design: .monospaced))
                 .foregroundStyle(.tertiary)
+
+            Button {
+                // SettingsLink and the legacy showSettingsWindow: selector
+                // both refuse to fire from this hosting context on macOS 27
+                // (verified live 2026-07-03); the openSettings environment
+                // action is the modern reliable route.
+                openSettings()
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Settings")
+            .accessibilityLabel("Settings")
         }
         .padding(.horizontal, 12)
         .frame(height: 44)
@@ -2084,9 +2162,6 @@ private struct SidebarIdentityFooter: View {
     }
 }
 
-// Stage 3 (workbench): OUTLINE = the book's table of contents with the
-// user's understanding woven in; TIMELINE = the study log, closed until
-// asked. Both derive from the SAME typed traces the center renders.
 private struct WorkbenchSidebarPanels: View {
     let reflectionCase: ReflectionCase
     let sectionText: Color
@@ -2566,8 +2641,8 @@ private struct ReflectionSidebarRow: View {
                 .padding(.trailing, isHovering ? 58 : 8)
             }
             .padding(.leading, 8)
-            .frame(height: hasFacts ? 44 : 32)
-            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .frame(height: hasFacts ? 46 : 34)
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
         .overlay(alignment: .trailing) {
@@ -2588,10 +2663,10 @@ private struct ReflectionSidebarRow: View {
             // sidebar-selection color; hover is the quinary fill. Both are
             // Apple-tuned for every appearance and material.
             if isSelected {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
             } else if isHovering {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(.quinary)
             }
         }
