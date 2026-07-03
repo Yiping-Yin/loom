@@ -58,6 +58,9 @@ struct ReflectionCase: Identifiable, Codable, Equatable {
     // Optional + declared LAST so legacy blobs decode and the synthesized
     // memberwise init keeps every existing call site compiling.
     var traceRecords: [ReflectionTraceRecord]? = nil
+    // Center document: the owner's own writing surface for this case.
+    // Optional + LAST for the same legacy-decoding reason as above.
+    var documentText: String? = nil
 
     static func blank() -> ReflectionCase {
         ReflectionCase(

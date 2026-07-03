@@ -74,6 +74,7 @@ struct LoomReflectionRootView: View {
         nonmutating set { workspace.selectedLearningTraceID = newValue }
     }
     @State private var draftText: String = ""
+    @State private var documentPersistWork: DispatchWorkItem?
     @State private var composerFocus: ReflectionCommitFocus = .meaning
     @State private var statusMessage: String = "Local reflection workspace"
     // Stage 3 (workbench): the IDE-grammar chrome (tabs, OUTLINE/TIMELINE,
@@ -137,12 +138,20 @@ struct LoomReflectionRootView: View {
                 }
 
                 HStack(spacing: 0) {
-                    // Center column intentionally EMPTY (owner directive
-                    // 2026-07-03: 中间栏现在给我清空) — a clean glass canvas;
-                    // its contents will be rebuilt one requirement at a
-                    // time. LoomIDECenter stays defined below for reuse.
-                    Color.clear
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // The center: a reading document ON the glass (owner-
+                    // approved 3-reference synthesis, 2026-07-03) — text
+                    // flows directly on the pane, evidence rides as solid
+                    // paper cards, the empty state is the backlit moon.
+                    GlassReadingCenter(
+                        reflectionCase: selectedCase,
+                        draftText: $draftText,
+                        commitFocus: $composerFocus,
+                        onSelectTrace: selectLearningTrace,
+                        onPromotePrinciple: promoteCandidatePrinciple,
+                        onSubmit: submitMaterial,
+                        onDocumentTextChange: updateCaseDocumentText
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     if isInspectorPresented {
                         ReflectionPaneResizer(width: $inspectorWidth)
@@ -848,6 +857,18 @@ struct LoomReflectionRootView: View {
 
     private func persistWorkspace() {
         workspace.persist()
+    }
+
+    /// Center document edits land in the case immediately; the disk write is
+    /// debounced so continuous typing does not thrash the store.
+    private func updateCaseDocumentText(_ text: String) {
+        guard let index = cases.firstIndex(where: { $0.id == selectedCaseID }) else { return }
+        if (cases[index].documentText ?? "") == text { return }
+        cases[index].documentText = text
+        documentPersistWork?.cancel()
+        let work = DispatchWorkItem { persistWorkspace() }
+        documentPersistWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: work)
     }
 
     private func handleCaptureRoute(_ outcome: CaptureURLRouteOutcome) {
@@ -2879,6 +2900,296 @@ private struct SidebarRowActionButton: View {
     }
 }
 
+// The glass reading document (owner-approved synthesis 2026-07-03):
+// the owner's words flow directly on the glass in the system serif;
+// captured evidence rides as solid paper cards (the original's material);
+// empty projects show the backlit moon, no explanatory copy.
+private struct GlassReadingCenter: View {
+    let reflectionCase: ReflectionCase
+    @Binding var draftText: String
+    @Binding var commitFocus: ReflectionCommitFocus
+    let onSelectTrace: (ReflectionLearningTrace) -> Void
+    var onPromotePrinciple: ((String) -> Void)? = nil
+    let onSubmit: () -> Void
+    let onDocumentTextChange: (String) -> Void
+    @State private var editorFocusRequest = 0
+
+    private var contentSteps: [ReflectionStep] {
+        reflectionCase.steps.filter { !$0.items.isEmpty }
+    }
+
+    private var traces: [ReflectionLearningTrace] {
+        ReflectionLearningTrace.from(reflectionCase)
+    }
+
+    private var isLearningCase: Bool {
+        reflectionCase.project == "Learning pass"
+    }
+
+    private var documentText: String {
+        reflectionCase.documentText ?? ""
+    }
+
+    /// A case with nothing in it yet — the editor takes focus so the
+    /// blinking insertion point is the whole invitation. No emblem, no words.
+    private var isBlankCase: Bool {
+        contentSteps.isEmpty && traces.isEmpty && documentText.isEmpty
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 28) {
+                            Text(reflectionCase.title)
+                                .font(.system(size: 26, weight: .semibold, design: .serif))
+                                .foregroundStyle(.primary)
+                                .padding(.top, 8)
+
+                            // The document IS the input: writing happens
+                            // directly on the glass, not in a box below.
+                            GlassDocumentEditor(
+                                caseID: reflectionCase.id,
+                                text: documentText,
+                                focusRequest: editorFocusRequest,
+                                onTextChange: onDocumentTextChange
+                            )
+
+                            ForEach(traces) { trace in
+                                EvidencePaperCard(trace: trace) {
+                                    onSelectTrace(trace)
+                                }
+                            }
+
+                            ForEach(contentSteps) { step in
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Text(step.title.uppercased())
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .tracking(0.8)
+                                        .foregroundStyle(.secondary)
+                                    ForEach(step.items, id: \.self) { item in
+                                        Text(item)
+                                            .font(.system(size: 15, design: .serif))
+                                            .lineSpacing(5)
+                                            .foregroundStyle(.primary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                                .id(step.id)
+                            }
+                        }
+                        .frame(maxWidth: 640, alignment: .leading)
+                        .padding(.horizontal, 48)
+                        .padding(.top, reflectionSidebarTopClearance)
+                        .padding(.bottom, 32)
+                        .frame(maxWidth: .infinity)
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        if contentSteps.count > 1 {
+                            VStack(alignment: .trailing, spacing: 8) {
+                                ForEach(contentSteps) { step in
+                                    Button {
+                                        withAnimation { proxy.scrollTo(step.id, anchor: .top) }
+                                    } label: {
+                                        Text(step.title)
+                                            .font(.system(size: 10.5))
+                                            .foregroundStyle(.tertiary)
+                                            .lineLimit(1)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.top, reflectionSidebarTopClearance + 8)
+                            .padding(.trailing, 14)
+                            .frame(width: 132, alignment: .trailing)
+                        }
+                    }
+                }
+
+                // Owner directive 2026-07-03: the reflection composer box is
+                // gone — the document is the writing surface. Learning keeps
+                // its typed-trace commit strip (a different function).
+                if isLearningCase {
+                    ReflectionComposer(
+                        text: $draftText,
+                        commitFocus: $commitFocus,
+                        placeholder: composerPlaceholder,
+                        isLearningCase: true,
+                        onSubmit: onSubmit
+                    )
+                    .frame(maxWidth: 640)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 6)
+                    .padding(.bottom, 14)
+                    .frame(maxWidth: .infinity)
+                }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            editorFocusRequest += 1
+        }
+        .onAppear {
+            if isBlankCase { editorFocusRequest += 1 }
+        }
+        .onChange(of: reflectionCase.id) {
+            if isBlankCase { editorFocusRequest += 1 }
+        }
+    }
+
+    private var composerPlaceholder: String {
+        switch commitFocus {
+        case .meaning: return "Add your meaning..."
+        case .question: return "What's unclear? Add \u{201C}closes when: ...\u{201D} to set the open condition"
+        case .correction: return "What did you get wrong — and what is right now?"
+        case .principle: return "What holds beyond this file?"
+        }
+    }
+}
+
+// The writing surface of the center document: a borderless, transparent
+// NSTextView that draws its ink directly on the glass and grows with its
+// content inside the outer reading scroll (no nested scroller).
+private struct GlassDocumentEditor: NSViewRepresentable {
+    let caseID: ReflectionCase.ID
+    let text: String
+    let focusRequest: Int
+    let onTextChange: (String) -> Void
+
+    static var documentFont: NSFont {
+        let base = NSFont.systemFont(ofSize: 15)
+        guard let descriptor = base.fontDescriptor.withDesign(.serif),
+              let serif = NSFont(descriptor: descriptor, size: 15) else { return base }
+        return serif
+    }
+
+    static var documentParagraphStyle: NSParagraphStyle {
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = 5
+        return style
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(caseID: caseID, focusRequest: focusRequest, onTextChange: onTextChange)
+    }
+
+    func makeNSView(context: Context) -> GrowingGlassTextView {
+        let view = GrowingGlassTextView()
+        view.drawsBackground = false
+        view.isRichText = false
+        view.allowsUndo = true
+        view.isVerticallyResizable = true
+        view.isHorizontallyResizable = false
+        view.textContainer?.widthTracksTextView = true
+        view.textContainer?.lineFragmentPadding = 0
+        view.textContainerInset = .zero
+        view.font = Self.documentFont
+        view.textColor = .labelColor
+        view.defaultParagraphStyle = Self.documentParagraphStyle
+        view.typingAttributes = [
+            .font: Self.documentFont,
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: Self.documentParagraphStyle,
+        ]
+        view.delegate = context.coordinator
+        view.string = text
+        view.setAccessibilityLabel("Case document")
+        return view
+    }
+
+    func updateNSView(_ view: GrowingGlassTextView, context: Context) {
+        let coordinator = context.coordinator
+        coordinator.onTextChange = onTextChange
+        if coordinator.caseID != caseID {
+            coordinator.caseID = caseID
+            view.string = text
+            view.invalidateIntrinsicContentSize()
+        } else if view.string != text {
+            view.string = text
+            view.invalidateIntrinsicContentSize()
+        }
+        if coordinator.focusRequest != focusRequest {
+            coordinator.focusRequest = focusRequest
+            DispatchQueue.main.async {
+                view.window?.makeFirstResponder(view)
+            }
+        }
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        var caseID: ReflectionCase.ID
+        var focusRequest: Int
+        var onTextChange: (String) -> Void
+
+        init(caseID: ReflectionCase.ID, focusRequest: Int, onTextChange: @escaping (String) -> Void) {
+            self.caseID = caseID
+            self.focusRequest = focusRequest
+            self.onTextChange = onTextChange
+        }
+
+        func textDidChange(_ notification: Notification) {
+            guard let view = notification.object as? NSTextView else { return }
+            onTextChange(view.string)
+        }
+    }
+
+    final class GrowingGlassTextView: NSTextView {
+        override var intrinsicContentSize: NSSize {
+            guard let container = textContainer, let manager = layoutManager else {
+                return super.intrinsicContentSize
+            }
+            manager.ensureLayout(for: container)
+            let used = manager.usedRect(for: container)
+            return NSSize(width: NSView.noIntrinsicMetric, height: max(used.height + 8, 72))
+        }
+
+        override func didChangeText() {
+            super.didChangeText()
+            invalidateIntrinsicContentSize()
+        }
+
+        override func setFrameSize(_ newSize: NSSize) {
+            super.setFrameSize(newSize)
+            invalidateIntrinsicContentSize()
+        }
+    }
+}
+
+// Captured evidence as a piece of the original's paper: solid white card,
+// dark ink, mono anchor — a content object on the glass.
+private struct EvidencePaperCard: View {
+    let trace: ReflectionLearningTrace
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(trace.displayText)
+                    .font(.system(size: 14, design: .serif))
+                    .lineSpacing(4)
+                    .foregroundStyle(Color.black.opacity(0.85))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if !trace.sourceAnchor.isEmpty {
+                    Text(trace.sourceAnchor)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Color.black.opacity(0.45))
+                }
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(isHovering ? 0.22 : 0.12), radius: isHovering ? 14 : 8, y: 3)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .accessibilityLabel(trace.displayText)
+    }
+}
+
 private struct ReflectionThreadView: View {
     let reflectionCase: ReflectionCase
     @Binding var selectedLearningTraceID: ReflectionLearningTrace.ID?
@@ -2945,7 +3256,7 @@ private struct ReflectionThreadView: View {
             case .principle: return "What holds beyond this file?"
             }
         }
-        return "Paste a product event, user reaction, decision, or launch result..."
+        return "Add material..."
     }
 }
 

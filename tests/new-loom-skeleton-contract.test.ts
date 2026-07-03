@@ -2628,6 +2628,38 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(nativeRoot, /preferredColorScheme\(\.dark\)|environment\(\\\.colorScheme,\s*\.dark\)/);
   assert.match(project, /LoomReflectionRootView\.swift in Sources/);
   assert.ok(NEW_LOOM_PRIMARY_ROUTES.includes('/reflection'), '/reflection should be a primary product route');
+
+  // Owner directive 2026-07-03: the center document is WRITABLE — a
+  // transparent, growing NSTextView drawing serif ink directly on the
+  // glass (Obsidian/Notion text baseline), not a viewer plus an input box.
+  assert.match(nativeRoot, /private struct GlassDocumentEditor: NSViewRepresentable/);
+  assert.match(
+    nativeRoot,
+    /GlassDocumentEditor: NSViewRepresentable[\s\S]{0,1600}view\.drawsBackground = false/,
+    'the document editor must draw on the glass, never on an opaque backing',
+  );
+  assert.match(
+    nativeRoot,
+    /final class GrowingGlassTextView: NSTextView[\s\S]{0,600}intrinsicContentSize/,
+    'the editor grows with its content inside the outer reading scroll — no nested scroller',
+  );
+  assert.match(nativeModel, /var documentText: String\? = nil/);
+  assert.match(
+    nativeRoot,
+    /if isLearningCase \{[\s\S]{0,240}ReflectionComposer\(/,
+    'the reflection composer box is gone — the document is the writing surface; only the learning commit strip remains',
+  );
+  assert.doesNotMatch(
+    nativeRoot,
+    /Paste a product event, user reaction, decision, or launch result/,
+    'the reflection composer placeholder must not survive the composer removal',
+  );
+  // Owner directive 2026-07-03 (evening): the empty state IS the ready
+  // document — no emblem, no artwork, no words. The editor takes focus on
+  // a blank case so the blinking insertion point is the whole invitation.
+  assert.doesNotMatch(nativeRoot, /MoonEmblem|BacklitMoon/);
+  assert.match(nativeRoot, /isBlankCase \{ editorFocusRequest \+= 1 \}/);
+  assert.match(nativeRoot, /documentText\.isEmpty/, 'blankness is judged against the written document too');
 });
 
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
