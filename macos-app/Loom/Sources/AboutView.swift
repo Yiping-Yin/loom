@@ -100,11 +100,7 @@ struct AboutView: View {
                         openWindow(id: KeyboardHelpWindow.id)
                     }
                     linkButton("History") {
-                        NotificationCenter.default.post(
-                            name: .loomShuttleNavigate,
-                            object: nil,
-                            userInfo: ["path": "/product-history"]
-                        )
+                        openWindow(id: HistoryWindow.id)
                     }
                     linkButton("Colophon") {
                         NotificationCenter.default.post(
@@ -180,4 +176,18 @@ private extension View {
 
 enum AboutWindow {
     static let id = "com.loom.window.about"
+}
+
+/// The product-history stage page, loaded from the bundled static export
+/// through the loom:// scheme — About's History link opens this window.
+struct HistoryWindowView: View {
+    var body: some View {
+        CaptureWebView(url: URL(string: "loom://bundle/product-history/")!)
+            .frame(minWidth: 900, minHeight: 620)
+            .ignoresSafeArea()
+    }
+}
+
+enum HistoryWindow {
+    static let id = "com.loom.window.history"
 }
