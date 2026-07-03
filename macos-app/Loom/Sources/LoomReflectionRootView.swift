@@ -2638,12 +2638,13 @@ private struct ReflectionMatteWorkbenchBackground: View {
     var body: some View {
         Group {
             if isFullScreen {
-                // Fullscreen glass: the dedicated .fullScreenUI material —
-                // the system recipe for full-screen surfaces — instead of
-                // the default window material whose wallpaper residue read
-                // muddy here (owner A/B 2026-07-03).
+                // Fullscreen glass RETEST (owner 2026-07-03 night): the
+                // fullscreen-specific material verdict was reached while
+                // the window appearance was still pinned; under true
+                // system-follow it renders a flat slate slab (廉价 again).
+                // The same window material now reads correctly here too.
                 ReflectionVisualEffectBackground(
-                    material: .fullScreenUI,
+                    material: .underWindowBackground,
                     blendingMode: .behindWindow
                 )
             } else {

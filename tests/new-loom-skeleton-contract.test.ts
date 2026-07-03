@@ -1612,8 +1612,15 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /struct ReflectionSidebarPeekBackdrop: View/);
   assert.match(nativeRoot, /ReflectionVisualEffectBackground\([\s\S]{0,120}material: \.popover,[\s\S]{0,80}blendingMode: \.withinWindow/);
   // Fullscreen glass (owner-approved 2026-07-03): the dedicated
-  // .fullScreenUI material replaces the muddy default in fullscreen.
-  assert.match(nativeRoot, /material: \.fullScreenUI,[\s\S]{0,60}blendingMode: \.behindWindow/);
+  // Fullscreen keeps the SAME window material (2026-07-03 night retest:
+  // the .fullScreenUI verdict predated system-follow appearance; under
+  // true system-follow it rendered a flat slate slab). One material,
+  // one appearance, windowed or fullscreen.
+  assert.doesNotMatch(nativeRoot, /\.fullScreenUI/);
+  assert.match(
+    nativeRoot,
+    /if isFullScreen \{[\s\S]{0,700}material: \.underWindowBackground,[\s\S]{0,60}blendingMode: \.behindWindow/,
+  );
   assert.match(sidebarBackgroundBlock, /ReflectionVisualEffectBackground/);
   assert.match(sidebarBackgroundBlock, /LinearGradient\(/);
   assert.match(sidebarBackgroundBlock, /\.blendMode\(\.plusLighter\)/);
