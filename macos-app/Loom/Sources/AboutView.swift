@@ -100,7 +100,10 @@ struct AboutView: View {
                         openWindow(id: KeyboardHelpWindow.id)
                     }
                     linkButton("History") {
-                        openWindow(id: HistoryWindow.id)
+                        // History renders ON the main window's glass
+                        // (owner 2026-07-04: one pane, not two pages).
+                        NotificationCenter.default.post(name: .loomShowHistoryOnGlass, object: nil)
+                        dismissWindow(id: AboutWindow.id)
                     }
                     linkButton("Colophon") {
                         NotificationCenter.default.post(
@@ -178,16 +181,8 @@ enum AboutWindow {
     static let id = "com.loom.window.about"
 }
 
-/// The product-history stage page, loaded from the bundled static export
-/// through the loom:// scheme — About's History link opens this window.
-struct HistoryWindowView: View {
-    var body: some View {
-        CaptureWebView(url: URL(string: "loom://bundle/product-history/")!)
-            .frame(minWidth: 900, minHeight: 620)
-            .ignoresSafeArea()
-    }
-}
-
-enum HistoryWindow {
-    static let id = "com.loom.window.history"
+extension Notification.Name {
+    /// About's History link asks the main window to show the history
+    /// surface on its own glass — one pane, not a second page.
+    static let loomShowHistoryOnGlass = Notification.Name("loomShowHistoryOnGlass")
 }

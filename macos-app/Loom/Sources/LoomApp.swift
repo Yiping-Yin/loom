@@ -84,17 +84,6 @@ struct LoomApp: App {
         .defaultPosition(.center)
         .defaultSize(width: 420, height: 540)
 
-        // The product-history stage page (bundled static export) in its
-        // own cinematic window — the About link's REAL destination. The
-        // old loomShuttleNavigate post landed in an unmounted legacy
-        // shell and did nothing.
-        Window("History", id: HistoryWindow.id) {
-            HistoryWindowView()
-        }
-        .windowStyle(.hiddenTitleBar)
-        .defaultPosition(.center)
-        .defaultSize(width: 1200, height: 800)
-
         Window("Shuttle", id: ShuttleWindow.id) {
             ShuttleView()
         }

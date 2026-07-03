@@ -76,6 +76,7 @@ struct LoomReflectionRootView: View {
     }
     @State private var draftText: String = ""
     @State private var documentPersistWork: DispatchWorkItem?
+    @State private var isPresentingHistory = false
     @State private var composerFocus: ReflectionCommitFocus = .meaning
     @State private var statusMessage: String = "Local reflection workspace"
     // Stage 3 (workbench): the IDE-grammar chrome (tabs, OUTLINE/TIMELINE,
@@ -254,6 +255,22 @@ struct LoomReflectionRootView: View {
 
             // Bottom status bar removed 2026-07-03 (owner directive):
             // the workspace ends at the composer; no chrome strip below it.
+
+            // History ON the glass (owner 2026-07-04: one pane, not two
+            // pages) — a quiet native timeline surface over the columns,
+            // backed by a withinWindow material (the peek-backdrop law),
+            // dismissed by Esc or the close glyph.
+            if isPresentingHistory {
+                HistoryGlassSurface {
+                    isPresentingHistory = false
+                }
+                .transition(.opacity)
+                .zIndex(2)
+            }
+        }
+        .animation(.easeOut(duration: 0.22), value: isPresentingHistory)
+        .onReceive(NotificationCenter.default.publisher(for: .loomShowHistoryOnGlass)) { _ in
+            isPresentingHistory = true
         }
         .ignoresSafeArea(.container, edges: .top)
         .background(ReflectionMatteWorkbenchBackground().ignoresSafeArea())
@@ -2082,6 +2099,190 @@ private struct SidebarSectionHeader: View {
 // The utility strip (the reference's own horizontal bottom-bar form,
 // distilled 2026-07-03): icon-only with tooltips, no explanatory text.
 // Left: create. Right: identity (About, count in its tooltip), Settings.
+// History ON the glass: the product-history timeline translated into the
+// instrument room's own language — serif ink on the pane, a mono date
+// rail, the tagline lineage as sediment. Content mirrors the web stage
+// page (components/product-history/ProductHistoryPage.tsx); the stage
+// keeps its cosmos, the instrument keeps its quiet.
+private struct HistoryGlassSurface: View {
+    let onClose: () -> Void
+
+    private struct Stage {
+        let display: String
+        let title: String
+        let note: String
+    }
+
+    private struct Tagline {
+        let date: String
+        let line: String
+        let note: String
+        var current: Bool = false
+    }
+
+    private let stages: [Stage] = [
+        Stage(display: "2024 · 04", title: "Original Loom", note: "A private wiki connecting sources to insight."),
+        Stage(display: "2026 · 04 · 15", title: "Source-bound system", note: "Source before interface."),
+        Stage(display: "2026 · 04 · 17", title: "Structural mark", note: "The mark carries logic."),
+        Stage(display: "2026 · 04 · 24", title: "Frontispiece", note: "Atmosphere needed proof."),
+        Stage(display: "2026 · 06 · 02", title: "Personal Loom", note: "A real person, not a demo."),
+        Stage(display: "2026 · 06 · 03", title: "Verified dossier", note: "Trust needs visible files."),
+        Stage(display: "2026 · 06 · 04", title: "Evidence workspace", note: "Workflow became concrete."),
+        Stage(display: "2026 · 06 · 04", title: "Reference instance", note: "Person first. System beneath."),
+    ]
+
+    private let taglines: [Tagline] = [
+        Tagline(date: "2026 · 04 · 15", line: "A screen that replaces paper.", note: "Reading surface."),
+        Tagline(date: "2026 · 04 · 17", line: "A reading and thinking environment.", note: "Thinking room."),
+        Tagline(date: "2026 · 04 · 24", line: "A small room for slow reading.", note: "Slow atmosphere."),
+        Tagline(date: "2026 · 06 · 02", line: "A personal knowledge display platform.", note: "Proof appears."),
+        Tagline(date: "2026 · 06 · 11", line: "A living knowledge identity that can answer for you.", note: "Source-backed self. Living archive.", current: true),
+    ]
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            ReflectionVisualEffectBackground(
+                material: .popover,
+                blendingMode: .withinWindow
+            )
+            .ignoresSafeArea()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 30) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("History")
+                            .font(.system(size: 26, weight: .semibold, design: .serif))
+                            .foregroundStyle(.primary)
+                        Text("2024 — PRESENT")
+                            .font(.system(size: 10, design: .monospaced))
+                            .tracking(2.0)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.top, 8)
+
+                    VStack(alignment: .leading, spacing: 18) {
+                        ForEach(Array(stages.enumerated()), id: \.offset) { _, stage in
+                            HStack(alignment: .firstTextBaseline, spacing: 18) {
+                                Text(stage.display)
+                                    .font(.system(size: 10.5, design: .monospaced))
+                                    .foregroundStyle(.tertiary)
+                                    .frame(width: 96, alignment: .trailing)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(stage.title)
+                                        .font(.system(size: 16, weight: .semibold, design: .serif))
+                                        .foregroundStyle(.primary)
+                                    Text(stage.note)
+                                        .font(.system(size: 13.5, design: .serif))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Taglines")
+                            .font(.system(size: 10, weight: .medium))
+                            .kerning(2.6)
+                            .textCase(.uppercase)
+                            .foregroundStyle(.tertiary)
+                        ForEach(Array(taglines.enumerated()), id: \.offset) { _, tagline in
+                            HStack(alignment: .firstTextBaseline, spacing: 18) {
+                                Text(tagline.date)
+                                    .font(.system(size: 10.5, design: .monospaced))
+                                    .foregroundStyle(.tertiary)
+                                    .frame(width: 96, alignment: .trailing)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 7) {
+                                        Text(tagline.line)
+                                            .font(.system(size: 14, design: .serif).italic())
+                                            .foregroundStyle(tagline.current ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                                        if tagline.current {
+                                            Circle()
+                                                .fill(LoomTokens.dsThread)
+                                                .frame(width: 5, height: 5)
+                                                .accessibilityLabel("Current")
+                                        }
+                                    }
+                                    Text(tagline.note)
+                                        .font(.system(size: 12, design: .serif))
+                                        .foregroundStyle(.tertiary)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.bottom, 40)
+                }
+                .frame(maxWidth: 640, alignment: .leading)
+                .padding(.horizontal, 48)
+                .padding(.top, reflectionSidebarTopClearance)
+                .frame(maxWidth: .infinity)
+            }
+
+            Button {
+                onClose()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Close (Esc)")
+            .padding(.top, reflectionTitlebarContentTop + 4)
+            .padding(.trailing, 14)
+        }
+        // Esc closes no matter where keyboard focus sits. Neither
+        // onKeyPress nor keyboardShortcut(.cancelAction) fires here —
+        // the document editor's NSTextView keeps first responder under
+        // the glass and consumes Escape at the AppKit level — so trap
+        // the event before dispatch (SelectableTextEditor ⌘K precedent).
+        // The monitor's lifetime is the surface's: mounted with it,
+        // removed with it.
+        .background(EscapeKeyTrap(action: onClose))
+        .accessibilityLabel("Product history")
+    }
+}
+
+private struct EscapeKeyTrap: NSViewRepresentable {
+    let action: () -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = EscapeTrapView()
+        view.action = action
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        (nsView as? EscapeTrapView)?.action = action
+    }
+
+    private final class EscapeTrapView: NSView {
+        var action: (() -> Void)?
+        private var monitor: Any?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard monitor == nil, window != nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard let self, let window = self.window, event.window === window else { return event }
+                // Escape = key code 53.
+                if event.keyCode == 53 {
+                    self.action?()
+                    return nil
+                }
+                return event
+            }
+        }
+
+        override func removeFromSuperview() {
+            if let monitor { NSEvent.removeMonitor(monitor) }
+            monitor = nil
+            super.removeFromSuperview()
+        }
+    }
+}
+
 // The moon as GLASS RELIEF (owner 2026-07-04: 能否设计成玻璃浮雕?) — not
 // a photograph laid on the pane but the pane itself shaped by light: a
 // corona breathing out from behind the top limb, a grazing rim light, a

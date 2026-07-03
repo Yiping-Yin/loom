@@ -2781,6 +2781,32 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(aboutView, /bronze|0xC8|0xE3/i, 'no gold-era ink survives');
   assert.doesNotMatch(aboutView, /Cormorant|EB Garamond|\.custom\(/, 'system serif only — unbundled custom fonts are a silent lie');
   assert.doesNotMatch(aboutView, /personal knowledge identity platform/, 'one tagline, not two');
+
+  // History renders ON the main window's glass (owner 2026-07-04: 不要做成
+  // 两个页面 — one pane, not a second window). About posts a notification,
+  // the root view mounts a native serif timeline over withinWindow glass,
+  // Esc dismisses. The separate webview History window is gone.
+  assert.match(aboutView, /loomShowHistoryOnGlass/, 'the History link asks the main window, not a second window');
+  assert.doesNotMatch(aboutView, /HistoryWindow\b/, 'the dedicated History window is retired');
+  assert.match(nativeRoot, /struct HistoryGlassSurface/, 'history lives as a native surface in the root view');
+  assert.match(
+    nativeRoot,
+    /HistoryGlassSurface[\s\S]{0,4000}material: \.popover,\s*blendingMode: \.withinWindow/,
+    'the history surface sits on withinWindow glass (peek-backdrop precedent), not an opaque sheet',
+  );
+  assert.match(
+    nativeRoot,
+    /loomShowHistoryOnGlass[\s\S]{0,200}isPresentingHistory = true/,
+    'the About link actually reaches the glass — the notification is received, not posted into a void',
+  );
+  assert.match(
+    nativeRoot,
+    /HistoryGlassSurface[\s\S]{0,9000}EscapeKeyTrap\(action: onClose\)/,
+    'Esc closes the history surface via an NSEvent monitor — the document editor keeps first responder under the glass and eats Escape before onKeyPress or cancelAction can fire',
+  );
+  assert.doesNotMatch(nativeRoot, /HistoryGlassSurface[\s\S]{0,6000}WebView/, 'the on-glass history is native type, not an embedded web page');
+  const loomAppSource = read('macos-app/Loom/Sources/LoomApp.swift');
+  assert.doesNotMatch(loomAppSource, /Window\("History"/, 'no separate History window scene survives');
 });
 
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
