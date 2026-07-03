@@ -197,6 +197,11 @@ struct ReflectionSource: Identifiable, Codable, Equatable {
     var meta: String
     var excerpt: String
     var fileURL: URL?
+    // Security-scoped bookmark minted at import time, so the sandboxed app
+    // can reopen the file in later sessions (a bare fileURL loses its
+    // access grant when the session that imported it ends). Optional +
+    // last so legacy blobs keep decoding.
+    var bookmarkData: Data?
 
     init(
         id: String = UUID().uuidString,
@@ -205,7 +210,8 @@ struct ReflectionSource: Identifiable, Codable, Equatable {
         kind: String,
         meta: String,
         excerpt: String,
-        fileURL: URL? = nil
+        fileURL: URL? = nil,
+        bookmarkData: Data? = nil
     ) {
         self.id = id
         self.folder = folder
@@ -214,6 +220,7 @@ struct ReflectionSource: Identifiable, Codable, Equatable {
         self.meta = meta
         self.excerpt = excerpt
         self.fileURL = fileURL
+        self.bookmarkData = bookmarkData
     }
 
     var symbol: String {

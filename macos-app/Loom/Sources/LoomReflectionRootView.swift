@@ -150,7 +150,18 @@ struct LoomReflectionRootView: View {
                         onSelectTrace: selectLearningTrace,
                         onPromotePrinciple: promoteCandidatePrinciple,
                         onSubmit: submitMaterial,
-                        onDocumentTextChange: updateCaseDocumentText
+                        onDocumentTextChange: updateCaseDocumentText,
+                        onImportFiles: { urls in
+                            importSources(from: urls, openAfterImport: false)
+                        },
+                        onOpenSourceID: { sourceID in
+                            guard let source = selectedCase.sources.first(where: { $0.id == sourceID }) else {
+                                statusMessage = "That file is no longer in this case's sources"
+                                return
+                            }
+                            selectedSourceID = source.id
+                            openSourceInNativeApp(source)
+                        }
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -488,9 +499,17 @@ struct LoomReflectionRootView: View {
         panel.allowedContentTypes = nativeFileImporterContentTypes()
 
         guard panel.runModal() == .OK else { return }
+        importSources(from: panel.urls, openAfterImport: true)
+    }
 
-        let importedSources = panel.urls.map(Self.localSource)
-        guard !importedSources.isEmpty else { return }
+    /// The URL core of source import, shared by the Files panel and by
+    /// files dropped/pasted into the case document. Dropping into the
+    /// document should NOT bounce the user into another app, so opening
+    /// is the panel path's privilege only.
+    @discardableResult
+    private func importSources(from urls: [URL], openAfterImport: Bool) -> [ReflectionSource] {
+        let importedSources = urls.map(Self.localSource)
+        guard !importedSources.isEmpty else { return [] }
 
         let index = selectedIndex
         let inputLines = importedSources.map { source in
@@ -514,11 +533,18 @@ struct LoomReflectionRootView: View {
         )
 
         selectedSourceID = importedSources[0].id
-        openSourcesInNativeApps(importedSources)
-        statusMessage = importedSources.count == 1
-            ? "Imported \(importedSources[0].label) and opened it in the native app"
-            : "Imported \(importedSources.count) local sources and opened them in native apps"
+        if openAfterImport {
+            openSourcesInNativeApps(importedSources)
+            statusMessage = importedSources.count == 1
+                ? "Imported \(importedSources[0].label) and opened it in the native app"
+                : "Imported \(importedSources.count) local sources and opened them in native apps"
+        } else {
+            statusMessage = importedSources.count == 1
+                ? "Imported \(importedSources[0].label) into Sources"
+                : "Imported \(importedSources.count) local files into Sources"
+        }
         persistWorkspace()
+        return importedSources
     }
 
     /// Explicit commit grammar, matching the web model's cleanVersionMaterial
@@ -650,6 +676,26 @@ struct LoomReflectionRootView: View {
 
     private func openSourceInNativeApp(_ source: ReflectionSource) {
         guard let url = source.fileURL else { return }
+        // A bare fileURL loses its sandbox grant when the importing
+        // session ends; the security-scoped bookmark minted at import
+        // time buys the access back.
+        if let bookmark = source.bookmarkData {
+            var isStale = false
+            if let scoped = try? URL(
+                resolvingBookmarkData: bookmark,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                _ = scoped.startAccessingSecurityScopedResource()
+                Self.openURLInPreferredNativeApp(scoped)
+                statusMessage = "Opened \(source.label) in the native app"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+                    scoped.stopAccessingSecurityScopedResource()
+                }
+                return
+            }
+        }
         Self.openURLInPreferredNativeApp(url)
         statusMessage = "Opened \(source.label) in the native app"
     }
@@ -912,6 +958,14 @@ struct LoomReflectionRootView: View {
         let kind = ext.isEmpty ? "local file" : ext
         let size = localFileSize(url: url)
         let excerpt = localFileExcerpt(url: url, kind: kind, size: size)
+        // Mint the security-scoped bookmark NOW, while the import grant
+        // (panel / pasteboard / drag) is still alive — it is the only
+        // moment the sandbox will let us.
+        let bookmark = try? url.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
 
         return ReflectionSource(
             folder: "Input",
@@ -919,7 +973,8 @@ struct LoomReflectionRootView: View {
             kind: kind,
             meta: size,
             excerpt: excerpt,
-            fileURL: url
+            fileURL: url,
+            bookmarkData: bookmark
         )
     }
 
@@ -2916,6 +2971,8 @@ private struct GlassReadingCenter: View {
     var onPromotePrinciple: ((String) -> Void)? = nil
     let onSubmit: () -> Void
     let onDocumentTextChange: (String) -> Void
+    let onImportFiles: ([URL]) -> [ReflectionSource]
+    let onOpenSourceID: (ReflectionSource.ID) -> Void
     @State private var editorFocusRequest = 0
     @State private var headingJumpTarget: Int?
 
@@ -2963,7 +3020,10 @@ private struct GlassReadingCenter: View {
                                 text: documentText,
                                 focusRequest: editorFocusRequest,
                                 jumpTarget: $headingJumpTarget,
-                                onTextChange: onDocumentTextChange
+                                sources: reflectionCase.sources,
+                                onTextChange: onDocumentTextChange,
+                                onImportFiles: onImportFiles,
+                                onOpenSource: onOpenSourceID
                             )
 
                             ForEach(traces) { trace in
@@ -2995,6 +3055,20 @@ private struct GlassReadingCenter: View {
                         .padding(.bottom, 32)
                         .frame(maxWidth: .infinity)
                     }
+                    // Scrolled content dissolves before it reaches the top
+                    // chrome: an alpha mask, not a painted scrim — nothing
+                    // is drawn ON the glass, the ink itself fades.
+                    .mask(
+                        VStack(spacing: 0) {
+                            LinearGradient(
+                                colors: [Color.black.opacity(0), .black],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: 72)
+                            Rectangle().fill(Color.black)
+                        }
+                    )
                     .overlay(alignment: .topTrailing) {
                         // The quiet right-edge outline: the WRITTEN
                         // document's headings first (click scrolls the
@@ -3094,7 +3168,10 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     let text: String
     let focusRequest: Int
     @Binding var jumpTarget: Int?
+    let sources: [ReflectionSource]
     let onTextChange: (String) -> Void
+    let onImportFiles: ([URL]) -> [ReflectionSource]
+    let onOpenSource: (ReflectionSource.ID) -> Void
 
     static func serifFont(size: CGFloat, weight: NSFont.Weight) -> NSFont {
         let base = NSFont.systemFont(ofSize: size, weight: weight)
@@ -3170,15 +3247,31 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     /// One discipline pass over the whole document: body text keeps the
     /// uniform serif ink, heading lines (`#`/`##`/`###` + space) wear
     /// their level's serif weight with the markers faded to tertiary ink,
-    /// and every image attachment wears the white paper-card cell —
-    /// including attachments arriving via RTFD load, paste, or drag.
-    static func normalizeDocument(_ view: NSTextView) {
+    /// image attachments wear the white paper-card cell, and file chips
+    /// (.loomref payloads) rebuild their card + source link — including
+    /// everything arriving via RTFD load, paste, or drag.
+    static func normalizeDocument(_ view: NSTextView, sources: [ReflectionSource]) {
         guard let storage = view.textStorage, storage.length > 0 else { return }
         let full = NSRange(location: 0, length: storage.length)
         storage.beginEditing()
-        storage.enumerateAttribute(.attachment, in: full) { value, _, _ in
-            if let attachment = value as? NSTextAttachment,
-               !(attachment.attachmentCell is PaperImageAttachmentCell) {
+        storage.enumerateAttribute(.attachment, in: full) { value, range, _ in
+            guard let attachment = value as? NSTextAttachment else { return }
+            let wrapperName = attachment.fileWrapper?.preferredFilename
+                ?? attachment.fileWrapper?.filename ?? ""
+            if wrapperName.hasSuffix(".loomref") {
+                if !(attachment.attachmentCell is PaperFileAttachmentCell) {
+                    let payload = attachment.fileWrapper?.regularFileContents
+                        .flatMap { String(data: $0, encoding: .utf8) } ?? ""
+                    let parts = payload.split(separator: "\n", maxSplits: 1).map(String.init)
+                    let sourceID = parts.first ?? ""
+                    let source = sources.first { $0.id == sourceID }
+                    let label = source?.label ?? (parts.count > 1 ? parts[1] : "Attached file")
+                    attachment.attachmentCell = PaperFileAttachmentCell(label: label, sourceID: sourceID, fileURL: source?.fileURL)
+                    if !sourceID.isEmpty {
+                        storage.addAttribute(.link, value: "loom-source://\(sourceID)", range: range)
+                    }
+                }
+            } else if !(attachment.attachmentCell is PaperImageAttachmentCell) {
                 let image = attachment.image
                     ?? attachment.fileWrapper?.regularFileContents.flatMap(NSImage.init(data:))
                 if let image {
@@ -3223,7 +3316,14 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(caseID: caseID, focusRequest: focusRequest, onTextChange: onTextChange)
+        Coordinator(
+            caseID: caseID,
+            focusRequest: focusRequest,
+            sources: sources,
+            onTextChange: onTextChange,
+            onImportFiles: onImportFiles,
+            onOpenSource: onOpenSource
+        )
     }
 
     func makeNSView(context: Context) -> GrowingGlassTextView {
@@ -3256,6 +3356,9 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     func updateNSView(_ view: GrowingGlassTextView, context: Context) {
         let coordinator = context.coordinator
         coordinator.onTextChange = onTextChange
+        coordinator.onImportFiles = onImportFiles
+        coordinator.onOpenSource = onOpenSource
+        coordinator.sources = sources
         if coordinator.caseID != caseID {
             coordinator.saveDocumentNow(view)
             coordinator.caseID = caseID
@@ -3313,20 +3416,54 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     final class Coordinator: NSObject, NSTextViewDelegate {
         var caseID: ReflectionCase.ID
         var focusRequest: Int
+        var sources: [ReflectionSource]
         var onTextChange: (String) -> Void
+        var onImportFiles: ([URL]) -> [ReflectionSource]
+        var onOpenSource: (ReflectionSource.ID) -> Void
         private var saveWork: DispatchWorkItem?
 
-        init(caseID: ReflectionCase.ID, focusRequest: Int, onTextChange: @escaping (String) -> Void) {
+        init(
+            caseID: ReflectionCase.ID,
+            focusRequest: Int,
+            sources: [ReflectionSource],
+            onTextChange: @escaping (String) -> Void,
+            onImportFiles: @escaping ([URL]) -> [ReflectionSource],
+            onOpenSource: @escaping (ReflectionSource.ID) -> Void
+        ) {
             self.caseID = caseID
             self.focusRequest = focusRequest
+            self.sources = sources
             self.onTextChange = onTextChange
+            self.onImportFiles = onImportFiles
+            self.onOpenSource = onOpenSource
         }
 
         func textDidChange(_ notification: Notification) {
             guard let view = notification.object as? NSTextView else { return }
-            GlassDocumentEditor.normalizeDocument(view)
+            GlassDocumentEditor.normalizeDocument(view, sources: sources)
             onTextChange(view.string)
             scheduleDocumentSave(view)
+        }
+
+        /// A file chip carries a loom-source:// link; clicking it opens
+        /// the source through the workspace's own open path.
+        func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
+            let raw = (link as? URL)?.absoluteString ?? (link as? String ?? "")
+            guard raw.hasPrefix("loom-source://") else { return false }
+            onOpenSource(String(raw.dropFirst("loom-source://".count)))
+            return true
+        }
+
+        /// Attachment-cell clicks route here (not through clickedOnLink) —
+        /// a chip click opens its source the same way.
+        func textView(
+            _ textView: NSTextView,
+            clickedOn cell: NSTextAttachmentCellProtocol,
+            in cellFrame: NSRect,
+            at charIndex: Int
+        ) {
+            guard let chip = cell as? PaperFileAttachmentCell else { return }
+            onOpenSource(chip.sourceID)
         }
 
         func textDidEndEditing(_ notification: Notification) {
@@ -3345,7 +3482,7 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             } else {
                 view.string = fallback
             }
-            GlassDocumentEditor.normalizeDocument(view)
+            GlassDocumentEditor.normalizeDocument(view, sources: sources)
             view.invalidateIntrinsicContentSize()
         }
 
@@ -3401,11 +3538,34 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             invalidateIntrinsicContentSize()
         }
 
-        // Images paste as paper cards; everything textual pastes PLAIN so
-        // the document keeps one uniform ink.
+        // A click that lands on a file chip opens its source directly —
+        // deterministic hit-testing instead of AppKit's legacy attachment
+        // click plumbing.
+        override func mouseDown(with event: NSEvent) {
+            let point = convert(event.locationInWindow, from: nil)
+            if let manager = layoutManager, let container = textContainer, let storage = textStorage {
+                let glyphIndex = manager.glyphIndex(for: point, in: container)
+                let charIndex = manager.characterIndexForGlyph(at: glyphIndex)
+                if charIndex < storage.length,
+                   let attachment = storage.attribute(.attachment, at: charIndex, effectiveRange: nil) as? NSTextAttachment,
+                   let chip = attachment.attachmentCell as? PaperFileAttachmentCell {
+                    let rect = manager.boundingRect(forGlyphRange: NSRange(location: glyphIndex, length: 1), in: container)
+                    if rect.contains(point) {
+                        (delegate as? GlassDocumentEditor.Coordinator)?.onOpenSource(chip.sourceID)
+                        return
+                    }
+                }
+            }
+            super.mouseDown(with: event)
+        }
+
+        // Files route by kind (images → paper cards, documents → source
+        // chips); everything textual pastes PLAIN so the document keeps
+        // one uniform ink.
         override func paste(_ sender: Any?) {
             let pasteboard = NSPasteboard.general
-            let images = Self.images(from: pasteboard)
+            if routeFiles(from: pasteboard) { return }
+            let images = Self.pasteboardImages(pasteboard)
             if images.isEmpty {
                 pasteAsPlainText(sender)
             } else {
@@ -3415,20 +3575,52 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             }
         }
 
-        static func images(from pasteboard: NSPasteboard) -> [NSImage] {
-            let fileOptions: [NSPasteboard.ReadingOptionKey: Any] = [
-                .urlReadingFileURLsOnly: true,
-                .urlReadingContentsConformToTypes: [UTType.image.identifier],
-            ]
-            if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: fileOptions) as? [URL],
-               !urls.isEmpty {
-                return urls.compactMap { NSImage(contentsOf: $0) }
+        // Dropped files land at the drop point with the same routing.
+        override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+            let pasteboard = sender.draggingPasteboard
+            if !Self.fileURLs(from: pasteboard).isEmpty {
+                let point = convert(sender.draggingLocation, from: nil)
+                setSelectedRange(NSRange(location: characterIndexForInsertion(at: point), length: 0))
+                routeFiles(from: pasteboard)
+                return true
             }
-            if let images = pasteboard.readObjects(forClasses: [NSImage.self], options: [:]) as? [NSImage],
-               !images.isEmpty {
-                return images
+            return super.performDragOperation(sender)
+        }
+
+        /// Images become paper cards in the flow; every other file
+        /// registers as a case SOURCE (the bridge panel's resource list)
+        /// and lands in the flow as a clickable file chip.
+        @discardableResult
+        func routeFiles(from pasteboard: NSPasteboard) -> Bool {
+            let urls = Self.fileURLs(from: pasteboard)
+            guard !urls.isEmpty else { return false }
+            var documents: [URL] = []
+            for url in urls {
+                if let type = UTType(filenameExtension: url.pathExtension),
+                   type.conforms(to: .image),
+                   let image = NSImage(contentsOf: url) {
+                    insertPaperImage(image)
+                } else {
+                    documents.append(url)
+                }
             }
-            return []
+            if !documents.isEmpty,
+               let coordinator = delegate as? GlassDocumentEditor.Coordinator {
+                let imported = coordinator.onImportFiles(documents)
+                for source in imported {
+                    insertFileChip(label: source.label, fileURL: source.fileURL, sourceID: source.id)
+                }
+            }
+            return true
+        }
+
+        static func fileURLs(from pasteboard: NSPasteboard) -> [URL] {
+            let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+            return (pasteboard.readObjects(forClasses: [NSURL.self], options: options) as? [URL]) ?? []
+        }
+
+        static func pasteboardImages(_ pasteboard: NSPasteboard) -> [NSImage] {
+            (pasteboard.readObjects(forClasses: [NSImage.self], options: [:]) as? [NSImage]) ?? []
         }
 
         /// The image lands on its own paragraph as a solid white paper
@@ -3454,6 +3646,35 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             }
             insertion.append(NSAttributedString(attachment: attachment))
+            insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
+            insertText(insertion, replacementRange: selectedRange())
+        }
+
+        /// A non-image file in the flow: a compact white paper chip
+        /// (icon + name) linked to the case source it registered as.
+        /// The .loomref payload keeps the chip rebuildable after RTFD
+        /// round-trips.
+        func insertFileChip(label: String, fileURL: URL?, sourceID: String) {
+            let payload = "\(sourceID)\n\(label)"
+            let wrapper = FileWrapper(regularFileWithContents: Data(payload.utf8))
+            wrapper.preferredFilename = "loomsource-\(sourceID.prefix(8)).loomref"
+            let attachment = NSTextAttachment(fileWrapper: wrapper)
+            attachment.attachmentCell = PaperFileAttachmentCell(label: label, sourceID: sourceID, fileURL: fileURL)
+
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: GlassDocumentEditor.documentFont,
+                .foregroundColor: NSColor.labelColor,
+                .paragraphStyle: GlassDocumentEditor.documentParagraphStyle,
+            ]
+            let insertion = NSMutableAttributedString()
+            let location = selectedRange().location
+            let text = string as NSString
+            if location > 0, text.character(at: location - 1) != 0x0A {
+                insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
+            }
+            let chip = NSMutableAttributedString(attributedString: NSAttributedString(attachment: attachment))
+            chip.addAttribute(.link, value: "loom-source://\(sourceID)", range: NSRange(location: 0, length: chip.length))
+            insertion.append(chip)
             insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             insertText(insertion, replacementRange: selectedRange())
         }
@@ -3518,6 +3739,95 @@ private final class PaperImageAttachmentCell: NSTextAttachmentCell {
                 hints: [.interpolation: NSImageInterpolation.high]
             )
         }
+    }
+}
+
+// A non-image file in the document flow: the same paper material as the
+// image card, compressed to a chip — file icon and name on solid white
+// with a real shadow. Clicking follows its loom-source:// link.
+private final class PaperFileAttachmentCell: NSTextAttachmentCell {
+    static let chipHeight: CGFloat = 30
+    static let padding: CGFloat = 9
+    static let maxLabelWidth: CGFloat = 240
+
+    let label: String
+    let sourceID: String
+    let fileIcon: NSImage
+    private let labelFont = NSFont.systemFont(ofSize: 12, weight: .medium)
+
+    init(label: String, sourceID: String, fileURL: URL?) {
+        self.label = label
+        self.sourceID = sourceID
+        if let path = fileURL?.path, FileManager.default.fileExists(atPath: path) {
+            self.fileIcon = NSWorkspace.shared.icon(forFile: path)
+        } else if let ext = label.split(separator: ".").last.map(String.init),
+                  let type = UTType(filenameExtension: ext) {
+            self.fileIcon = NSWorkspace.shared.icon(for: type)
+        } else {
+            self.fileIcon = NSWorkspace.shared.icon(for: .data)
+        }
+        super.init(textCell: "")
+    }
+
+    required init(coder: NSCoder) {
+        fatalError("PaperFileAttachmentCell does not support NSCoding")
+    }
+
+    private var labelSize: NSSize {
+        (label as NSString).size(withAttributes: [.font: labelFont])
+    }
+
+    override func cellSize() -> NSSize {
+        let width = Self.padding + 16 + 6 + min(labelSize.width, Self.maxLabelWidth) + Self.padding
+        return NSSize(width: width, height: Self.chipHeight)
+    }
+
+    override func cellBaselineOffset() -> NSPoint {
+        NSPoint(x: 0, y: -8)
+    }
+
+    override func draw(withFrame cellFrame: NSRect, in controlView: NSView?) {
+        guard let context = NSGraphicsContext.current else { return }
+        context.saveGraphicsState()
+        let card = NSBezierPath(
+            roundedRect: cellFrame.insetBy(dx: 1, dy: 1),
+            xRadius: 8,
+            yRadius: 8
+        )
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.25)
+        shadow.shadowBlurRadius = 5
+        shadow.shadowOffset = NSSize(width: 0, height: -1.5)
+        shadow.set()
+        NSColor.white.setFill()
+        card.fill()
+        context.restoreGraphicsState()
+
+        let iconRect = NSRect(
+            x: cellFrame.minX + Self.padding,
+            y: cellFrame.midY - 8,
+            width: 16,
+            height: 16
+        )
+        fileIcon.draw(
+            in: iconRect,
+            from: .zero,
+            operation: .sourceOver,
+            fraction: 1,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
+        let size = labelSize
+        let textRect = NSRect(
+            x: iconRect.maxX + 6,
+            y: cellFrame.midY - size.height / 2,
+            width: min(size.width, Self.maxLabelWidth),
+            height: size.height
+        )
+        (label as NSString).draw(in: textRect, withAttributes: [
+            .font: labelFont,
+            .foregroundColor: NSColor.black.withAlphaComponent(0.8),
+        ])
     }
 }
 

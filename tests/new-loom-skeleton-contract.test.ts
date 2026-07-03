@@ -2676,7 +2676,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /CaseDocuments/, 'case documents live in their own Application Support directory');
   assert.match(
     nativeRoot,
-    /func normalizeDocument[\s\S]{0,1200}PaperImageAttachmentCell/,
+    /func normalizeDocument[\s\S]{0,2600}PaperImageAttachmentCell/,
     'every attachment — loaded, pasted, or dropped — must wear the paper card',
   );
 
@@ -2722,6 +2722,39 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(examinerView, /MoonPhaseIndicator\(size: 14\)/);
   const askAIWindow = read('macos-app/Loom/Sources/AskAIWindow.swift');
   assert.match(askAIWindow, /MoonPhaseIndicator\(size: 14\)/);
+
+  // Top-chrome collision: scrolled ink DISSOLVES before reaching the top
+  // bar — an alpha mask on the reading scroll, never a painted scrim.
+  assert.match(
+    nativeRoot,
+    /\.mask\([\s\S]{0,400}LinearGradient[\s\S]{0,300}Rectangle\(\)\.fill\(Color\.black\)/,
+    'the reading scroll fades its own ink under the top chrome',
+  );
+
+  // Files into the flow: images become paper cards, every OTHER file
+  // registers as a case source (bridge panel resources) and lands as a
+  // clickable paper chip whose loom-source:// link opens through the
+  // workspace open path. The chip payload survives RTFD round-trips.
+  assert.match(nativeRoot, /func importSources\(from urls: \[URL\], openAfterImport: Bool\)/);
+  assert.match(nativeRoot, /final class PaperFileAttachmentCell: NSTextAttachmentCell/);
+  assert.match(nativeRoot, /loom-source:\/\//);
+  assert.match(nativeRoot, /\.loomref/, 'file chips persist as .loomref payloads inside the RTFD');
+  assert.match(nativeRoot, /func routeFiles\(from pasteboard: NSPasteboard\)/);
+  assert.match(
+    nativeRoot,
+    /performDragOperation[\s\S]{0,500}characterIndexForInsertion/,
+    'dropped files land at the drop point',
+  );
+  assert.match(
+    nativeRoot,
+    /clickedOnLink[\s\S]{0,300}loom-source/,
+    'chip clicks open the source through the workspace, not a raw file URL',
+  );
+  assert.match(
+    nativeRoot,
+    /importSources\(from: urls, openAfterImport: false\)/,
+    'dropping into the document must not bounce the user into another app',
+  );
 });
 
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
