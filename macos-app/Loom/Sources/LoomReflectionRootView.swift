@@ -2093,71 +2093,213 @@ private struct MoonGlassRelief: View {
 
     var body: some View {
         ZStack {
-            // The corona: light bleeding from behind the top limb.
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color.white.opacity(0.12),
-                            Color.white.opacity(0.03),
-                            .clear,
-                        ],
-                        center: UnitPoint(x: 0.5, y: 0.34),
-                        startRadius: size * 0.28,
-                        endRadius: size * 0.78
-                    )
-                )
-                .frame(width: size * 1.6, height: size * 1.6)
+            // The corona, UNEVENLY caught (2026-07-04 光影 reference:
+            // light through material gathers in the folds — it is never a
+            // lamp's even radial). Two off-axis blooms and two hand-drawn
+            // caustic wisps stand in for the folds.
+            Ellipse()
+                .fill(Color.white.opacity(0.075))
+                .frame(width: size * 1.18, height: size * 0.72)
+                .rotationEffect(.degrees(-14))
+                .offset(x: -size * 0.05, y: -size * 0.50)
+                .blur(radius: size * 0.11)
+            Ellipse()
+                .fill(Color.white.opacity(0.05))
+                .frame(width: size * 0.68, height: size * 0.40)
+                .rotationEffect(.degrees(16))
+                .offset(x: size * 0.20, y: -size * 0.44)
+                .blur(radius: size * 0.085)
+            MoonCausticWisp(variant: 0)
+                .stroke(Color.white.opacity(0.10), style: StrokeStyle(lineWidth: size * 0.016, lineCap: .round))
+                .frame(width: size * 1.5, height: size * 1.5)
+                .blur(radius: size * 0.024)
+            MoonCausticWisp(variant: 1)
+                .stroke(Color.white.opacity(0.07), style: StrokeStyle(lineWidth: size * 0.010, lineCap: .round))
+                .frame(width: size * 1.5, height: size * 1.5)
+                .blur(radius: size * 0.030)
+
+            // The caustic pool: the glass's signature written elsewhere —
+            // light that passed THROUGH the carving, pooled on the pane
+            // below. Energy hierarchy: limb > pool > field > shadow.
+            Ellipse()
+                .fill(Color.white.opacity(0.05))
+                .frame(width: size * 0.72, height: size * 0.15)
+                .offset(y: size * 0.64)
+                .blur(radius: size * 0.045)
+            Ellipse()
+                .fill(Color.white.opacity(0.08))
+                .frame(width: size * 0.30, height: size * 0.07)
+                .offset(x: size * 0.06, y: size * 0.62)
+                .blur(radius: size * 0.028)
 
             Circle()
-                // The night side: the glass deepens one breath.
-                .fill(Color.black.opacity(0.10))
+                // FROST IS LIGHT (the research's master inversion): the
+                // carved disc scatters and reads as a luminous even haze
+                // on the dark field — never a darkened inset.
+                .fill(Color.white.opacity(0.055))
                 .overlay(
-                    // Inner glow where the backlight grazes past the limb.
+                    // Maria: the shallower frost — two quiet dimmer seas.
+                    ZStack {
+                        Ellipse()
+                            .fill(Color.black.opacity(0.035))
+                            .frame(width: size * 0.42, height: size * 0.34)
+                            .offset(x: -size * 0.10, y: -size * 0.06)
+                            .blur(radius: size * 0.055)
+                        Ellipse()
+                            .fill(Color.black.opacity(0.028))
+                            .frame(width: size * 0.30, height: size * 0.24)
+                            .offset(x: size * 0.14, y: size * 0.14)
+                            .blur(radius: size * 0.05)
+                    }
+                    .clipShape(Circle())
+                )
+                .overlay(
+                    // Craters: edges outshine fills — thin bright rim arcs
+                    // facing the light, a faint paired shadow opposite
+                    // (the brilliant-cut miter), fills left empty.
+                    MoonCraterField(size: size)
+                )
+                .overlay(
+                    // The Fresnel limb: near-flat interior, brightness
+                    // spiking only at the outermost edge — pooled
+                    // unevenly, light caught in folds of different depth.
+                    ZStack {
+                        Circle()
+                            .trim(from: 0.50, to: 1.0)
+                            .stroke(Color.white.opacity(0.12), style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
+                            .blur(radius: 0.7)
+                        Circle()
+                            .trim(from: 0.63, to: 0.78)
+                            .stroke(Color.white.opacity(0.60), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                            .blur(radius: 0.5)
+                        Circle()
+                            .trim(from: 0.82, to: 0.90)
+                            .stroke(Color.white.opacity(0.32), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
+                            .blur(radius: 0.7)
+                        Circle()
+                            .trim(from: 0.06, to: 0.16)
+                            .stroke(Color.white.opacity(0.10), style: StrokeStyle(lineWidth: 1.0, lineCap: .round))
+                            .blur(radius: 0.8)
+                    }
+                )
+                .overlay(
+                    // The relief lives UNDER the sheen: one unbroken
+                    // specular veil across the upper face, laid over every
+                    // carved feature so the moon floats INSIDE the glass.
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.white.opacity(0.06), .clear],
-                                startPoint: .top,
-                                endPoint: UnitPoint(x: 0.5, y: 0.45)
+                                colors: [Color.white.opacity(0.075), .clear],
+                                startPoint: UnitPoint(x: 0.30, y: 0.02),
+                                endPoint: UnitPoint(x: 0.55, y: 0.58)
                             )
                         )
                 )
                 .overlay(
-                    // The grazing rim light along the top limb.
+                    // The settled contact shadow — the quietest term.
                     Circle()
                         .stroke(
                             LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.60),
-                                    Color.white.opacity(0.08),
-                                    .clear,
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 1.4
-                        )
-                        .blur(radius: 0.4)
-                )
-                .overlay(
-                    // The settled shadow that gives the relief its depth.
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                colors: [.clear, Color.black.opacity(0.30)],
+                                colors: [.clear, Color.black.opacity(0.24)],
                                 startPoint: .top,
                                 endPoint: .bottom
                             ),
                             lineWidth: 1.2
                         )
-                        .blur(radius: 1.4)
-                        .offset(y: 1)
+                        .blur(radius: 1.6)
+                        .offset(y: 1.2)
                 )
                 .frame(width: size, height: size)
         }
         .accessibilityHidden(true)
         .allowsHitTesting(false)
+    }
+}
+
+// Craters drawn the engraver's way: tone is the density of a few bright
+// marks, the image is carried by RIM ARCS facing the light with a paired
+// faint shadow arc opposite — fills stay empty. Fixed lunar-ish layout,
+// no randomness.
+private struct MoonCraterField: View {
+    let size: CGFloat
+
+    private struct Crater {
+        let x: CGFloat      // unit coords in the disc, 0...1
+        let y: CGFloat
+        let r: CGFloat      // radius as fraction of disc size
+        let brightness: Double
+    }
+
+    private let craters: [Crater] = [
+        Crater(x: 0.63, y: 0.28, r: 0.085, brightness: 0.30),
+        Crater(x: 0.72, y: 0.44, r: 0.048, brightness: 0.22),
+        Crater(x: 0.36, y: 0.60, r: 0.065, brightness: 0.18),
+        Crater(x: 0.55, y: 0.70, r: 0.038, brightness: 0.14),
+        Crater(x: 0.30, y: 0.34, r: 0.045, brightness: 0.12),
+    ]
+
+    var body: some View {
+        ZStack {
+            ForEach(Array(craters.enumerated()), id: \.offset) { _, crater in
+                let d = crater.r * size * 2
+                ZStack {
+                    // Lit rim arc, facing the top light.
+                    Circle()
+                        .trim(from: 0.56, to: 0.92)
+                        .stroke(
+                            Color.white.opacity(crater.brightness),
+                            style: StrokeStyle(lineWidth: max(0.7, size * 0.005), lineCap: .round)
+                        )
+                        .blur(radius: 0.4)
+                    // Paired shadow flank — the carved groove's dark wall.
+                    Circle()
+                        .trim(from: 0.10, to: 0.38)
+                        .stroke(
+                            Color.black.opacity(crater.brightness * 0.55),
+                            style: StrokeStyle(lineWidth: max(0.7, size * 0.005), lineCap: .round)
+                        )
+                        .blur(radius: 0.6)
+                }
+                .frame(width: d, height: d)
+                .position(x: crater.x * size, y: crater.y * size)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+    }
+}
+
+// Hand-tuned flowing curves above the limb — the caustic trails the
+// reference installation leaves where its folds concentrate the light.
+// Fixed control points (no randomness): two quiet strands, not noise.
+private struct MoonCausticWisp: Shape {
+    let variant: Int
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let w = rect.width
+        let h = rect.height
+        if variant == 0 {
+            path.move(to: CGPoint(x: w * 0.26, y: h * 0.34))
+            path.addCurve(
+                to: CGPoint(x: w * 0.58, y: h * 0.18),
+                control1: CGPoint(x: w * 0.34, y: h * 0.22),
+                control2: CGPoint(x: w * 0.47, y: h * 0.15)
+            )
+            path.addCurve(
+                to: CGPoint(x: w * 0.78, y: h * 0.30),
+                control1: CGPoint(x: w * 0.68, y: h * 0.21),
+                control2: CGPoint(x: w * 0.74, y: h * 0.24)
+            )
+        } else {
+            path.move(to: CGPoint(x: w * 0.40, y: h * 0.12))
+            path.addCurve(
+                to: CGPoint(x: w * 0.66, y: h * 0.10),
+                control1: CGPoint(x: w * 0.49, y: h * 0.05),
+                control2: CGPoint(x: w * 0.58, y: h * 0.05)
+            )
+        }
+        return path
     }
 }
 
