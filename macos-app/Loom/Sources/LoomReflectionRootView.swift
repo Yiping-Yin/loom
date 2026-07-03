@@ -2133,10 +2133,22 @@ private struct MoonGlassRelief: View {
                 .blur(radius: size * 0.028)
 
             Circle()
-                // FROST IS LIGHT (the research's master inversion): the
-                // carved disc scatters and reads as a luminous even haze
-                // on the dark field — never a darkened inset.
-                .fill(Color.white.opacity(0.055))
+                // FROST IS LIGHT (the research's master inversion), and
+                // the mezzotint reference adds the vignette: the face's
+                // centre sleeps dark while the frost brightens toward the
+                // limb where the backlight grazes.
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color.white.opacity(0.022),
+                            Color.white.opacity(0.045),
+                            Color.white.opacity(0.085),
+                        ],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: size * 0.5
+                    )
+                )
                 .overlay(
                     // Maria: the shallower frost — two quiet dimmer seas.
                     ZStack {
@@ -2160,26 +2172,29 @@ private struct MoonGlassRelief: View {
                     MoonCraterField(size: size)
                 )
                 .overlay(
-                    // The Fresnel limb: near-flat interior, brightness
-                    // spiking only at the outermost edge — pooled
-                    // unevenly, light caught in folds of different depth.
+                    // The Fresnel limb, full circumference (the mezzotint
+                    // reference rings the WHOLE disc): a broad soft halo
+                    // hugging the edge, a continuous thin ring, and
+                    // brighter pools where the light gathers in folds.
                     ZStack {
                         Circle()
-                            .trim(from: 0.50, to: 1.0)
-                            .stroke(Color.white.opacity(0.12), style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
+                            .stroke(Color.white.opacity(0.10), style: StrokeStyle(lineWidth: 5))
+                            .blur(radius: 4.5)
+                        Circle()
+                            .stroke(Color.white.opacity(0.20), style: StrokeStyle(lineWidth: 1.2))
                             .blur(radius: 0.7)
                         Circle()
                             .trim(from: 0.63, to: 0.78)
-                            .stroke(Color.white.opacity(0.60), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                            .stroke(Color.white.opacity(0.62), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
                             .blur(radius: 0.5)
                         Circle()
                             .trim(from: 0.82, to: 0.90)
-                            .stroke(Color.white.opacity(0.32), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
+                            .stroke(Color.white.opacity(0.34), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
                             .blur(radius: 0.7)
                         Circle()
-                            .trim(from: 0.06, to: 0.16)
-                            .stroke(Color.white.opacity(0.10), style: StrokeStyle(lineWidth: 1.0, lineCap: .round))
-                            .blur(radius: 0.8)
+                            .trim(from: 0.08, to: 0.22)
+                            .stroke(Color.white.opacity(0.26), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+                            .blur(radius: 0.7)
                     }
                 )
                 .overlay(
@@ -2216,52 +2231,91 @@ private struct MoonGlassRelief: View {
     }
 }
 
-// Craters drawn the engraver's way: tone is the density of a few bright
-// marks, the image is carried by RIM ARCS facing the light with a paired
-// faint shadow arc opposite — fills stay empty. Fixed lunar-ish layout,
-// no randomness.
+// Deterministic pseudo-random stream for the engraved field — fixed
+// seed, so the moon is carved once, identically, forever.
+private struct LunarSeededStream {
+    private var state: UInt64
+    init(seed: UInt64) { state = seed }
+    mutating func nextUnit() -> CGFloat {
+        state &+= 0x9E3779B97F4A7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+        z ^= z >> 31
+        return CGFloat(z >> 11) / CGFloat(1 << 53)
+    }
+}
+
+// The engraved lunar field (owner reference 2026-07-04, the mezzotint
+// moon): TONE IS DENSITY — the surface is a field of packed grain and
+// crater rims, dim at the face's centre and increasingly lit toward the
+// limb where the backlight grazes. Every mark is a lit arc facing the
+// light with a paired shadow wall; fills stay empty. Drawn procedurally
+// in a Canvas from a fixed seed — no bitmap, no randomness at runtime.
 private struct MoonCraterField: View {
     let size: CGFloat
 
-    private struct Crater {
-        let x: CGFloat      // unit coords in the disc, 0...1
-        let y: CGFloat
-        let r: CGFloat      // radius as fraction of disc size
-        let brightness: Double
-    }
-
-    private let craters: [Crater] = [
-        Crater(x: 0.63, y: 0.28, r: 0.085, brightness: 0.30),
-        Crater(x: 0.72, y: 0.44, r: 0.048, brightness: 0.22),
-        Crater(x: 0.36, y: 0.60, r: 0.065, brightness: 0.18),
-        Crater(x: 0.55, y: 0.70, r: 0.038, brightness: 0.14),
-        Crater(x: 0.30, y: 0.34, r: 0.045, brightness: 0.12),
-    ]
-
     var body: some View {
-        ZStack {
-            ForEach(Array(craters.enumerated()), id: \.offset) { _, crater in
-                let d = crater.r * size * 2
-                ZStack {
-                    // Lit rim arc, facing the top light.
-                    Circle()
-                        .trim(from: 0.56, to: 0.92)
-                        .stroke(
-                            Color.white.opacity(crater.brightness),
-                            style: StrokeStyle(lineWidth: max(0.7, size * 0.005), lineCap: .round)
-                        )
-                        .blur(radius: 0.4)
-                    // Paired shadow flank — the carved groove's dark wall.
-                    Circle()
-                        .trim(from: 0.10, to: 0.38)
-                        .stroke(
-                            Color.black.opacity(crater.brightness * 0.55),
-                            style: StrokeStyle(lineWidth: max(0.7, size * 0.005), lineCap: .round)
-                        )
-                        .blur(radius: 0.6)
-                }
-                .frame(width: d, height: d)
-                .position(x: crater.x * size, y: crater.y * size)
+        Canvas { context, canvasSize in
+            var stream = LunarSeededStream(seed: 0x4C554E41)  // "LUNA"
+            let radius = canvasSize.width / 2
+            let center = CGPoint(x: radius, y: radius)
+
+            // Stipple grain: hundreds of faint specks, densest brightness
+            // near the limb, nearly asleep at the centre of the face.
+            for _ in 0..<640 {
+                let angle = stream.nextUnit() * 2 * .pi
+                let r = sqrt(stream.nextUnit()) * radius * 0.97
+                let point = CGPoint(x: center.x + cos(angle) * r, y: center.y + sin(angle) * r)
+                let limbProximity = r / radius
+                let topness = 0.5 - 0.5 * sin(angle)   // canvas y grows down: top of disc = 1
+                let alpha = 0.012 + 0.075 * pow(limbProximity, 2.2) * (0.45 + 0.55 * topness)
+                let dot = 0.5 + stream.nextUnit() * 0.9
+                context.fill(
+                    Path(ellipseIn: CGRect(x: point.x - dot / 2, y: point.y - dot / 2, width: dot, height: dot)),
+                    with: .color(.white.opacity(alpha))
+                )
+            }
+
+            // Crater rims: many small, few large (power-law sizes); each
+            // rim is lit toward the upper light and shadowed opposite,
+            // and the closer to the limb, the brighter it catches.
+            for _ in 0..<96 {
+                let angle = stream.nextUnit() * 2 * .pi
+                let r = sqrt(stream.nextUnit()) * radius * 0.90
+                let point = CGPoint(x: center.x + cos(angle) * r, y: center.y + sin(angle) * r)
+                let craterRadius = (0.010 + pow(stream.nextUnit(), 2.9) * 0.052) * radius
+                let limbProximity = r / radius
+                let alpha = 0.032 + 0.34 * pow(limbProximity, 2.1)
+                let lineWidth = max(0.5, craterRadius * 0.18)
+
+                var lit = Path()
+                lit.addArc(
+                    center: point,
+                    radius: craterRadius,
+                    startAngle: .degrees(-165),
+                    endAngle: .degrees(-15),
+                    clockwise: false
+                )
+                context.stroke(
+                    lit,
+                    with: .color(.white.opacity(alpha)),
+                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                )
+
+                var shadow = Path()
+                shadow.addArc(
+                    center: point,
+                    radius: craterRadius,
+                    startAngle: .degrees(25),
+                    endAngle: .degrees(140),
+                    clockwise: false
+                )
+                context.stroke(
+                    shadow,
+                    with: .color(.black.opacity(alpha * 0.5)),
+                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                )
             }
         }
         .frame(width: size, height: size)
