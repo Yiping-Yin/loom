@@ -2917,6 +2917,7 @@ private struct GlassReadingCenter: View {
     let onSubmit: () -> Void
     let onDocumentTextChange: (String) -> Void
     @State private var editorFocusRequest = 0
+    @State private var headingJumpTarget: Int?
 
     private var contentSteps: [ReflectionStep] {
         reflectionCase.steps.filter { !$0.items.isEmpty }
@@ -2932,6 +2933,11 @@ private struct GlassReadingCenter: View {
 
     private var documentText: String {
         reflectionCase.documentText ?? ""
+    }
+
+    /// The live outline mirrors the WRITTEN document's heading structure.
+    private var documentHeadings: [DocumentHeading] {
+        GlassDocumentEditor.documentHeadings(in: documentText)
     }
 
     /// A case with nothing in it yet — the editor takes focus so the
@@ -2956,6 +2962,7 @@ private struct GlassReadingCenter: View {
                                 caseID: reflectionCase.id,
                                 text: documentText,
                                 focusRequest: editorFocusRequest,
+                                jumpTarget: $headingJumpTarget,
                                 onTextChange: onDocumentTextChange
                             )
 
@@ -2989,8 +2996,27 @@ private struct GlassReadingCenter: View {
                         .frame(maxWidth: .infinity)
                     }
                     .overlay(alignment: .topTrailing) {
-                        if contentSteps.count > 1 {
+                        // The quiet right-edge outline: the WRITTEN
+                        // document's headings first (click scrolls the
+                        // reading pane to the line), then any structured
+                        // step sections below the editor.
+                        if documentHeadings.count + contentSteps.count > 1 {
                             VStack(alignment: .trailing, spacing: 8) {
+                                ForEach(documentHeadings) { heading in
+                                    Button {
+                                        headingJumpTarget = heading.id
+                                    } label: {
+                                        Text(heading.title)
+                                            .font(.system(
+                                                size: heading.level == 1 ? 10.5 : 10,
+                                                weight: heading.level == 1 ? .medium : .regular
+                                            ))
+                                            .foregroundStyle(.tertiary)
+                                            .lineLimit(1)
+                                            .padding(.trailing, CGFloat(heading.level - 1) * 8)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                                 ForEach(contentSteps) { step in
                                     Button {
                                         withAnimation { proxy.scrollTo(step.id, anchor: .top) }
@@ -3050,6 +3076,13 @@ private struct GlassReadingCenter: View {
     }
 }
 
+// A heading line of the written document — the unit of the live outline.
+private struct DocumentHeading: Identifiable, Equatable {
+    let id: Int      // character location in the document
+    let level: Int   // 1...3
+    let title: String
+}
+
 // The writing surface of the center document: a borderless, transparent
 // NSTextView that draws its ink directly on the glass and grows with its
 // content inside the outer reading scroll (no nested scroller). Pasted or
@@ -3060,19 +3093,69 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     let caseID: ReflectionCase.ID
     let text: String
     let focusRequest: Int
+    @Binding var jumpTarget: Int?
     let onTextChange: (String) -> Void
 
-    static var documentFont: NSFont {
-        let base = NSFont.systemFont(ofSize: 15)
+    static func serifFont(size: CGFloat, weight: NSFont.Weight) -> NSFont {
+        let base = NSFont.systemFont(ofSize: size, weight: weight)
         guard let descriptor = base.fontDescriptor.withDesign(.serif),
-              let serif = NSFont(descriptor: descriptor, size: 15) else { return base }
+              let serif = NSFont(descriptor: descriptor, size: size) else { return base }
         return serif
     }
+
+    static var documentFont: NSFont { serifFont(size: 15, weight: .regular) }
 
     static var documentParagraphStyle: NSParagraphStyle {
         let style = NSMutableParagraphStyle()
         style.lineSpacing = 5
         return style
+    }
+
+    static func headingFont(level: Int) -> NSFont {
+        switch level {
+        case 1: return serifFont(size: 22, weight: .semibold)
+        case 2: return serifFont(size: 18, weight: .semibold)
+        default: return serifFont(size: 15.5, weight: .semibold)
+        }
+    }
+
+    static var headingParagraphStyle: NSParagraphStyle {
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = 4
+        style.paragraphSpacingBefore = 12
+        style.paragraphSpacing = 4
+        return style
+    }
+
+    /// `# ` / `## ` / `### ` at line start makes a heading. Returns the
+    /// level and the marker length (hashes + space), or (0, 0).
+    static func headingLevel(of line: String) -> (level: Int, markerLength: Int) {
+        var hashes = 0
+        var index = line.startIndex
+        while index < line.endIndex, line[index] == "#", hashes < 3 {
+            hashes += 1
+            index = line.index(after: index)
+        }
+        guard hashes > 0, index < line.endIndex, line[index] == " " else { return (0, 0) }
+        return (hashes, hashes + 1)
+    }
+
+    /// The live outline is derived from the WRITTEN document — every
+    /// heading line, with its character location for click-to-jump.
+    static func documentHeadings(in text: String) -> [DocumentHeading] {
+        var headings: [DocumentHeading] = []
+        var location = 0
+        for line in text.components(separatedBy: "\n") {
+            let (level, markerLength) = headingLevel(of: line)
+            if level > 0 {
+                let title = String(line.dropFirst(markerLength)).trimmingCharacters(in: .whitespaces)
+                if !title.isEmpty {
+                    headings.append(DocumentHeading(id: location, level: level, title: title))
+                }
+            }
+            location += line.utf16.count + 1
+        }
+        return headings
     }
 
     static var documentsDirectory: URL {
@@ -3085,31 +3168,58 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     }
 
     /// One discipline pass over the whole document: body text keeps the
-    /// uniform serif ink, and every image attachment wears the white
-    /// paper-card cell — including attachments arriving via RTFD load,
-    /// paste, or drag.
+    /// uniform serif ink, heading lines (`#`/`##`/`###` + space) wear
+    /// their level's serif weight with the markers faded to tertiary ink,
+    /// and every image attachment wears the white paper-card cell —
+    /// including attachments arriving via RTFD load, paste, or drag.
     static func normalizeDocument(_ view: NSTextView) {
         guard let storage = view.textStorage, storage.length > 0 else { return }
         let full = NSRange(location: 0, length: storage.length)
         storage.beginEditing()
-        storage.enumerateAttribute(.attachment, in: full) { value, range, _ in
-            if let attachment = value as? NSTextAttachment {
-                if !(attachment.attachmentCell is PaperImageAttachmentCell) {
-                    let image = attachment.image
-                        ?? attachment.fileWrapper?.regularFileContents.flatMap(NSImage.init(data:))
-                    if let image {
-                        attachment.attachmentCell = PaperImageAttachmentCell(imageCell: image)
-                    }
+        storage.enumerateAttribute(.attachment, in: full) { value, _, _ in
+            if let attachment = value as? NSTextAttachment,
+               !(attachment.attachmentCell is PaperImageAttachmentCell) {
+                let image = attachment.image
+                    ?? attachment.fileWrapper?.regularFileContents.flatMap(NSImage.init(data:))
+                if let image {
+                    attachment.attachmentCell = PaperImageAttachmentCell(imageCell: image)
                 }
+            }
+        }
+        let text = storage.string as NSString
+        var location = 0
+        while location < text.length {
+            let paragraphRange = text.paragraphRange(for: NSRange(location: location, length: 0))
+            if paragraphRange.length == 0 { break }
+            let line = text.substring(with: paragraphRange)
+            let (level, markerLength) = headingLevel(of: line)
+            if level > 0 {
+                storage.addAttributes([
+                    .font: headingFont(level: level),
+                    .foregroundColor: NSColor.labelColor,
+                    .paragraphStyle: headingParagraphStyle,
+                ], range: paragraphRange)
+                storage.addAttribute(
+                    .foregroundColor,
+                    value: NSColor.tertiaryLabelColor,
+                    range: NSRange(location: paragraphRange.location, length: markerLength)
+                )
             } else {
                 storage.addAttributes([
                     .font: documentFont,
                     .foregroundColor: NSColor.labelColor,
                     .paragraphStyle: documentParagraphStyle,
-                ], range: range)
+                ], range: paragraphRange)
             }
+            location = NSMaxRange(paragraphRange)
         }
         storage.endEditing()
+        // A fresh line after a heading starts as body ink, not a bigger pen.
+        view.typingAttributes = [
+            .font: documentFont,
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: documentParagraphStyle,
+        ]
     }
 
     func makeCoordinator() -> Coordinator {
@@ -3160,11 +3270,44 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 view.window?.makeFirstResponder(view)
             }
         }
+        if let target = jumpTarget {
+            DispatchQueue.main.async {
+                Self.scroll(view, toCharacter: target)
+                jumpTarget = nil
+            }
+        }
     }
 
     static func hasAttachments(_ view: NSTextView) -> Bool {
         guard let storage = view.textStorage else { return false }
         return storage.string.contains("\u{FFFC}")
+    }
+
+    /// Outline click-to-jump: the editor lives inside the outer reading
+    /// scroll, so the jump animates that enclosing scroll view to the
+    /// heading's line, leaving breathing room under the top chrome.
+    static func scroll(_ view: NSTextView, toCharacter target: Int) {
+        guard let manager = view.layoutManager,
+              let container = view.textContainer,
+              let scrollView = view.enclosingScrollView,
+              let documentView = scrollView.documentView else { return }
+        let length = (view.string as NSString).length
+        guard length > 0 else { return }
+        let safeTarget = min(max(0, target), length - 1)
+        let glyphRange = manager.glyphRange(
+            forCharacterRange: NSRange(location: safeTarget, length: 1),
+            actualCharacterRange: nil
+        )
+        let rect = manager.boundingRect(forGlyphRange: glyphRange, in: container)
+        let pointInDocument = view.convert(NSPoint(x: 0, y: rect.minY), to: documentView)
+        let maxY = max(0, documentView.frame.height - scrollView.contentView.bounds.height)
+        let targetY = min(max(0, pointInDocument.y - 84), maxY)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.25
+            context.allowsImplicitAnimation = true
+            scrollView.contentView.animator().setBoundsOrigin(NSPoint(x: 0, y: targetY))
+        }
+        scrollView.reflectScrolledClipView(scrollView.contentView)
     }
 
     final class Coordinator: NSObject, NSTextViewDelegate {

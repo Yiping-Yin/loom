@@ -2679,6 +2679,30 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /func normalizeDocument[\s\S]{0,1200}PaperImageAttachmentCell/,
     'every attachment — loaded, pasted, or dropped — must wear the paper card',
   );
+
+  // Heading hierarchy + live outline (owner round, from the Obsidian
+  // reading-workflow reference): `#`/`##`/`###` lines style as serif
+  // headings with the markers faded to tertiary ink, the right-edge
+  // outline derives from the WRITTEN document, and clicking an entry
+  // scrolls the enclosing reading pane to the heading's line.
+  assert.match(nativeRoot, /func headingLevel\(of line: String\)/);
+  assert.match(nativeRoot, /func documentHeadings\(in text: String\) -> \[DocumentHeading\]/);
+  assert.match(
+    nativeRoot,
+    /headingLevel\(of: line\)[\s\S]{0,900}NSColor\.tertiaryLabelColor/,
+    'heading markers fade to tertiary ink — margin furniture, not content',
+  );
+  assert.match(
+    nativeRoot,
+    /GlassDocumentEditor\.documentHeadings\(in: documentText\)/,
+    'the live outline mirrors the written document',
+  );
+  assert.match(
+    nativeRoot,
+    /headingJumpTarget = heading\.id/,
+    'outline entries jump to their heading',
+  );
+  assert.match(nativeRoot, /view\.enclosingScrollView/, 'the jump drives the enclosing reading scroll, not a nested scroller');
 });
 
 test('product bundle does not keep Finder-numbered duplicate artifacts', () => {
