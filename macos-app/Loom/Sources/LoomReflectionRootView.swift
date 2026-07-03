@@ -2101,36 +2101,78 @@ private struct MoonAvatar: View {
     }
 }
 
+// The + chooser is a SYSTEM MENU, not a popover: anchored at the far-left
+// corner, a popover's arrow could only sprout from the bubble's corner
+// and deformed it (owner 2026-07-04: 这个框有问题). The system's own
+// grammar for a "new item" chooser is NSMenu — no arrow, no deformation,
+// standard highlight — popped manually so the trigger keeps our own
+// SidebarRailIcon face (the SwiftUI Menu label traps stay avoided).
+private final class NewProjectMenuHost: NSObject {
+    weak var anchorView: NSView?
+    var onCreate: (() -> Void)?
+    var onCreateLearning: (() -> Void)?
+
+    func popUp() {
+        guard let anchorView else { return }
+        let menu = NSMenu()
+        menu.items = [
+            item(title: "Product reflection", symbol: "rectangle.and.text.magnifyingglass", action: #selector(createReflection)),
+            item(title: "Learning project", symbol: "book", action: #selector(createLearning)),
+        ]
+        // The strip lives at the window's bottom edge, so the menu opens
+        // UPWARD: place its top-left a menu-height above the button.
+        menu.popUp(
+            positioning: nil,
+            at: NSPoint(x: 0, y: anchorView.bounds.height + menu.size.height + 2),
+            in: anchorView
+        )
+    }
+
+    private func item(title: String, symbol: String, action: Selector) -> NSMenuItem {
+        let menuItem = NSMenuItem(title: title, action: action, keyEquivalent: "")
+        menuItem.target = self
+        let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+        menuItem.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+            .withSymbolConfiguration(configuration)
+        return menuItem
+    }
+
+    @objc private func createReflection() { onCreate?() }
+    @objc private func createLearning() { onCreateLearning?() }
+}
+
+/// Invisible anchor that hands the hosting NSView to the menu host so the
+/// menu can position itself at the trigger button.
+private struct NewProjectMenuAnchor: NSViewRepresentable {
+    let host: NewProjectMenuHost
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        host.anchorView = view
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        host.anchorView = nsView
+    }
+}
+
 private struct SidebarUtilityStrip: View {
     let projectCount: Int
     let onCreate: () -> Void
     let onCreateLearning: () -> Void
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
-    @State private var isPresentingCreate = false
+    @State private var menuHost = NewProjectMenuHost()
 
     var body: some View {
         HStack(spacing: 8) {
             SidebarRailIcon(systemImage: "plus", help: "New project (⌘N)") {
-                isPresentingCreate = true
+                menuHost.onCreate = onCreate
+                menuHost.onCreateLearning = onCreateLearning
+                menuHost.popUp()
             }
-            .popover(isPresented: $isPresentingCreate, arrowEdge: .top) {
-                VStack(alignment: .leading, spacing: 2) {
-                    NewProjectChoice(
-                        systemImage: "rectangle.and.text.magnifyingglass",
-                        title: "Product reflection"
-                    ) {
-                        isPresentingCreate = false
-                        onCreate()
-                    }
-                    NewProjectChoice(systemImage: "book", title: "Learning project") {
-                        isPresentingCreate = false
-                        onCreateLearning()
-                    }
-                }
-                .padding(6)
-                .frame(width: 220)
-            }
+            .background(NewProjectMenuAnchor(host: menuHost))
 
             Spacer(minLength: 0)
 
