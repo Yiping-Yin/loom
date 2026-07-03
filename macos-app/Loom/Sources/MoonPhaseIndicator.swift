@@ -21,6 +21,7 @@ struct MoonPhaseIndicator: View {
     var progress: Double? = nil
 
     @State private var sweeping = false
+    @State private var waxing = false
 
     private var coreWidth: CGFloat { max(0.9, size * 0.04) }
     private var light: Color { Color.primary }
@@ -38,6 +39,12 @@ struct MoonPhaseIndicator: View {
             } else {
                 // Three bodies of one light: atmospheric bloom, halo, and
                 // the blade core — all tapering to nothing at both ends.
+                // The crescent WAXES AND WANES while it travels ("many
+                // faces of the moon"): the gradient peak stays at 0.15,
+                // so a short arc keeps only the dim rising side — the
+                // light shrinks and dims in the same breath. Sweep (2.6s)
+                // and breath (3.9s) run out of phase, so every pass
+                // around the limb shows a different face.
                 ZStack {
                     grazingArc(width: coreWidth * 6, opacity: 0.25)
                         .blur(radius: coreWidth * 2.4)
@@ -50,7 +57,12 @@ struct MoonPhaseIndicator: View {
             }
         }
         .frame(width: size, height: size)
-        .onAppear { sweeping = true }
+        .onAppear {
+            sweeping = true
+            withAnimation(.easeInOut(duration: 3.9).repeatForever(autoreverses: true)) {
+                waxing = true
+            }
+        }
         .accessibilityLabel(progress == nil ? "Working" : "Progress")
     }
 
@@ -62,16 +74,19 @@ struct MoonPhaseIndicator: View {
     }
 
     /// The grazing light: brightest at its middle, gone at both ends —
-    /// the angular gradient tapers the brightness along the crescent.
+    /// the angular gradient tapers the brightness along the crescent, and
+    /// the animated trim breathes the crescent between a faint whisper
+    /// (0.07, only the dim rising side of the gradient) and a full wide
+    /// blade (0.30).
     private func grazingArc(width: CGFloat, opacity: Double) -> some View {
         Circle()
-            .trim(from: 0, to: 0.22)
+            .trim(from: 0, to: waxing ? 0.30 : 0.07)
             .stroke(
                 AngularGradient(
                     gradient: Gradient(stops: [
                         .init(color: light.opacity(0), location: 0),
-                        .init(color: light.opacity(opacity), location: 0.11),
-                        .init(color: light.opacity(0), location: 0.22),
+                        .init(color: light.opacity(opacity), location: 0.15),
+                        .init(color: light.opacity(0), location: 0.30),
                         .init(color: light.opacity(0), location: 1),
                     ]),
                     center: .center,

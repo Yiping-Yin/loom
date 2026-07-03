@@ -2710,8 +2710,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // Every AI-thinking surface wears the moon, not the stock spinner.
   const moonIndicator = read('macos-app/Loom/Sources/MoonPhaseIndicator.swift');
   assert.match(moonIndicator, /struct MoonPhaseIndicator: View/);
-  assert.match(moonIndicator, /\.trim\(from: 0, to: 0\.22\)/, 'the indeterminate light is a crescent on the limb');
+  assert.match(moonIndicator, /\.trim\(from: 0, to: waxing \? 0\.30 : 0\.07\)/, 'the crescent WAXES AND WANES — many faces, not one face rotating');
   assert.match(moonIndicator, /repeatForever\(autoreverses: false\)/, 'the light sweeps the limb continuously');
+  assert.match(moonIndicator, /repeatForever\(autoreverses: true\)/, 'the breath runs out of phase with the sweep');
   assert.doesNotMatch(moonIndicator, /Image\(|NSImage/, 'the arc is drawn light, never a bitmap');
   assert.match(project, /MoonPhaseIndicator\.swift in Sources/);
   const aiBar = read('macos-app/Loom/Sources/LoomAIBar.swift');
