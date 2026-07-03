@@ -1788,16 +1788,15 @@ private struct ReflectionSidebar: View {
     }
 
     var body: some View {
+        // Judged 2026-07-03: a vertical rail for 3 icons spends 18% of the
+        // rail's width on air and will collide with the center's future
+        // activity bar. The distilled lesson (icons + tooltips over text
+        // rows) lives in the bottom strip instead; the strip graduates to
+        // a vertical rail only when workspace actions reach five.
         VStack(alignment: .leading, spacing: 0) {
             ReflectionSidebarSearchField(text: $query, focus: $searchFocused)
                 .padding(.top, reflectionSidebarTopClearance)
-                .padding(.horizontal, 12)
-                .padding(.bottom, 10)
-
-            // Creation is a list citizen (the Add-Tab grammar, owner-pointed
-            // reference 2026-07-03) — the first row, always in reach.
-            SidebarNewProjectRow(onCreate: onCreate, onCreateLearning: onCreateLearning)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 10)
                 .padding(.bottom, 10)
 
             ScrollView {
@@ -1899,7 +1898,11 @@ private struct ReflectionSidebar: View {
                 )
             }
 
-            SidebarIdentityFooter(projectCount: cases.count)
+            SidebarUtilityStrip(
+                projectCount: cases.count,
+                onCreate: onCreate,
+                onCreateLearning: onCreateLearning
+            )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
@@ -1989,6 +1992,99 @@ private struct SidebarSectionHeader: View {
             transaction.disablesAnimations = true
             withTransaction(transaction) { isHovering = hovering }
         }
+    }
+}
+
+// The workspace action rail: vertical, icon-only, tooltips over text
+// (owner-pointed reference 2026-07-03). Top: create. Bottom: identity
+// (About) and Settings. Every icon wires real; the project count lives
+// in the moon's tooltip.
+// The utility strip (the reference's own horizontal bottom-bar form,
+// distilled 2026-07-03): icon-only with tooltips, no explanatory text.
+// Left: create. Right: identity (About, count in its tooltip), Settings.
+private struct SidebarUtilityStrip: View {
+    let projectCount: Int
+    let onCreate: () -> Void
+    let onCreateLearning: () -> Void
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
+    @State private var isPresentingCreate = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            SidebarRailIcon(systemImage: "plus", help: "New project (⌘N)") {
+                isPresentingCreate = true
+            }
+            .popover(isPresented: $isPresentingCreate, arrowEdge: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    NewProjectChoice(
+                        systemImage: "rectangle.and.text.magnifyingglass",
+                        title: "Product reflection"
+                    ) {
+                        isPresentingCreate = false
+                        onCreate()
+                    }
+                    NewProjectChoice(systemImage: "book", title: "Learning project") {
+                        isPresentingCreate = false
+                        onCreateLearning()
+                    }
+                }
+                .padding(6)
+                .frame(width: 220)
+            }
+
+            Spacer(minLength: 0)
+
+            Button {
+                openWindow(id: AboutWindow.id)
+            } label: {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 22, height: 22)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color(nsColor: .separatorColor), lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .help("Local · \(projectCount) project\(projectCount == 1 ? "" : "s") — on-device")
+            .accessibilityLabel("About Loom")
+
+            SidebarRailIcon(systemImage: "gearshape", help: "Settings (⌘,)") {
+                openSettings()
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 44)
+        .overlay(alignment: .top) {
+            Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 1)
+        }
+    }
+}
+
+private struct SidebarRailIcon: View {
+    let systemImage: String
+    let help: String
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(isHovering ? .primary : .secondary)
+                .frame(width: 30, height: 30)
+                .background {
+                    if isHovering {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(.quinary)
+                    }
+                }
+                .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .help(help)
+        .accessibilityLabel(help)
     }
 }
 
