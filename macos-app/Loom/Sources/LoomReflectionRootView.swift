@@ -2082,6 +2082,85 @@ private struct SidebarSectionHeader: View {
 // The utility strip (the reference's own horizontal bottom-bar form,
 // distilled 2026-07-03): icon-only with tooltips, no explanatory text.
 // Left: create. Right: identity (About, count in its tooltip), Settings.
+// The moon as GLASS RELIEF (owner 2026-07-04: 能否设计成玻璃浮雕?) — not
+// a photograph laid on the pane but the pane itself shaped by light: a
+// corona breathing out from behind the top limb, a grazing rim light, a
+// settled shadow at the bottom edge, and a breath of depth inside the
+// disc. Pure light and material — instrument-room legal, resolution
+// independent, appearance-following.
+private struct MoonGlassRelief: View {
+    var size: CGFloat = 240
+
+    var body: some View {
+        ZStack {
+            // The corona: light bleeding from behind the top limb.
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color.white.opacity(0.12),
+                            Color.white.opacity(0.03),
+                            .clear,
+                        ],
+                        center: UnitPoint(x: 0.5, y: 0.34),
+                        startRadius: size * 0.28,
+                        endRadius: size * 0.78
+                    )
+                )
+                .frame(width: size * 1.6, height: size * 1.6)
+
+            Circle()
+                // The night side: the glass deepens one breath.
+                .fill(Color.black.opacity(0.10))
+                .overlay(
+                    // Inner glow where the backlight grazes past the limb.
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.06), .clear],
+                                startPoint: .top,
+                                endPoint: UnitPoint(x: 0.5, y: 0.45)
+                            )
+                        )
+                )
+                .overlay(
+                    // The grazing rim light along the top limb.
+                    Circle()
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.60),
+                                    Color.white.opacity(0.08),
+                                    .clear,
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            lineWidth: 1.4
+                        )
+                        .blur(radius: 0.4)
+                )
+                .overlay(
+                    // The settled shadow that gives the relief its depth.
+                    Circle()
+                        .stroke(
+                            LinearGradient(
+                                colors: [.clear, Color.black.opacity(0.30)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            lineWidth: 1.2
+                        )
+                        .blur(radius: 1.4)
+                        .offset(y: 1)
+                )
+                .frame(width: size, height: size)
+        }
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
+    }
+}
+
 // The strip's moon avatar shows the BARE disc: applicationIconImage
 // carries system margin around the squircle, so at 22pt the un-cropped
 // canvas reads as a black blob. Overdraw past the margin (disc ≈ 57% of
@@ -3180,6 +3259,17 @@ private struct GlassReadingCenter: View {
                     .frame(maxWidth: .infinity)
                 }
         }
+        // The glass-relief moon on a blank case (owner 2026-07-04): not
+        // artwork laid on the pane — the pane itself shaped by light, so
+        // it passes the instrument-room grammar. It yields to the first
+        // written character, and the cursor keeps its invitation.
+        .overlay {
+            if isBlankCase {
+                MoonGlassRelief()
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.35), value: isBlankCase)
         .contentShape(Rectangle())
         .onTapGesture {
             editorFocusRequest += 1
