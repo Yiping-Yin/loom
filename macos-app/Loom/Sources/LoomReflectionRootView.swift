@@ -114,8 +114,13 @@ struct LoomReflectionRootView: View {
                         selectedCaseID: selectedCaseID,
                         panelsCase: nil,
                         onSelectTrace: selectLearningTrace,
-                        panelPrinciples: [],
+                        panelPrinciples: workspace.principles,
                         onCitePrinciple: citePrincipleIntoSelectedCase,
+                        onOpenPrinciple: { record in
+                            if let sourceCase = cases.first(where: { $0.id == record.sourceCaseID }) {
+                                selectCase(sourceCase)
+                            }
+                        },
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
@@ -188,8 +193,13 @@ struct LoomReflectionRootView: View {
                         selectedCaseID: selectedCaseID,
                         panelsCase: nil,
                         onSelectTrace: selectLearningTrace,
-                        panelPrinciples: [],
+                        panelPrinciples: workspace.principles,
                         onCitePrinciple: citePrincipleIntoSelectedCase,
+                        onOpenPrinciple: { record in
+                            if let sourceCase = cases.first(where: { $0.id == record.sourceCaseID }) {
+                                selectCase(sourceCase)
+                            }
+                        },
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
@@ -1723,6 +1733,7 @@ private struct ReflectionSidebar: View {
     var onSelectTrace: ((ReflectionLearningTrace) -> Void)? = nil
     var panelPrinciples: [ReflectionPrincipleRecord] = []
     var onCitePrinciple: ((ReflectionPrincipleRecord.ID) -> Void)? = nil
+    var onOpenPrinciple: ((ReflectionPrincipleRecord) -> Void)? = nil
     let onSelect: (ReflectionCase) -> Void
     let onCreate: () -> Void
     let onCreateLearning: () -> Void
@@ -1731,6 +1742,7 @@ private struct ReflectionSidebar: View {
     @State private var query: String = ""
     @State private var reflectionsExpanded = true
     @State private var learningExpanded = true
+    @State private var principlesExpanded = true
     @FocusState private var searchFocused: Bool
 
     private var visibleCases: [ReflectionCase] {
@@ -1752,6 +1764,16 @@ private struct ReflectionSidebar: View {
 
     private var queryIsEmpty: Bool {
         query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var visiblePrinciples: [ReflectionPrincipleRecord] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !needle.isEmpty else { return panelPrinciples }
+        return panelPrinciples.filter {
+            $0.statement.lowercased().contains(needle)
+                || $0.holdsWithin.lowercased().contains(needle)
+                || $0.sourceCaseTitle.lowercased().contains(needle)
+        }
     }
 
     var body: some View {
@@ -1790,6 +1812,33 @@ private struct ReflectionSidebar: View {
                         if learningExpanded || !queryIsEmpty {
                             ForEach(learningCases) { reflectionCase in
                                 sidebarRow(reflectionCase)
+                            }
+                        }
+                    }
+                    // Scope law v2: the workspace's ARCHITECTURE frame — the
+                    // judgment memory that spans projects (融会贯通). Rows
+                    // jump to the principle's source project.
+                    Section(header: SidebarSectionHeader(
+                        title: "PRINCIPLES",
+                        count: visiblePrinciples.count,
+                        isExpanded: $principlesExpanded,
+                        forceExpanded: !queryIsEmpty
+                    )
+                    .padding(.top, 8)) {
+                        if principlesExpanded || !queryIsEmpty {
+                            ForEach(visiblePrinciples) { record in
+                                SidebarPrincipleRow(record: record) {
+                                    onOpenPrinciple?(record)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.bottom, 1)
+                            }
+                            if panelPrinciples.isEmpty && queryIsEmpty {
+                                Text("Principles you promote gather here, across every project.")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.tertiary)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 6)
                             }
                         }
                     }
@@ -1967,6 +2016,45 @@ private struct SidebarCreateMenu: View {
 
 // The colophon: no account, no card — a hairline, the word "Local", and a
 // machine count.
+// A promoted principle in the workspace architecture: the owner's words
+// (serif, even inside chrome) + machine meta; click jumps to its source
+// project.
+private struct SidebarPrincipleRow: View {
+    let record: ReflectionPrincipleRecord
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(record.statement)
+                    .font(.system(size: 12, design: .serif))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                Text(record.holdsWithin.isEmpty ? record.sourceCaseTitle : record.holdsWithin)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 7)
+            .background {
+                if isHovering {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(.quinary)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .help(record.sourceCaseTitle)
+        .accessibilityLabel(record.statement)
+    }
+}
+
 private struct SidebarIdentityFooter: View {
     let projectCount: Int
 

@@ -1603,7 +1603,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // The Explorer redesign (owner-approved 2026-07-03): the sidebar has ONE
   // variant and paints nothing; the floating edge-peek instance carries a
   // painted backdrop at the call site (floating chrome may hold material).
-  assert.match(nativeRoot, /if shouldOverlaySidebar \{[\s\S]{0,900}\.background\(ReflectionSidebarPeekBackdrop\(\)\)/);
+  assert.match(nativeRoot, /if shouldOverlaySidebar \{[\s\S]{0,1600}\.background\(ReflectionSidebarPeekBackdrop\(\)\)/);
   assert.match(nativeRoot, /ReflectionLeftEdgePeekZone\(\)/);
   // The Explorer redesign: the material enum is retired — the docked rail
   // is transparent over the window's one glass; only the floating peek
