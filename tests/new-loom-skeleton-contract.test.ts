@@ -2661,20 +2661,21 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /Paste a product event, user reaction, decision, or launch result/,
     'the reflection composer placeholder must not survive the composer removal',
   );
-  // The empty state: the ready document (auto-focused cursor), plus the
-  // GLASS RELIEF moon (owner 2026-07-04) — not artwork laid on the pane
-  // but the pane itself shaped by light, so it passes the instrument
-  // grammar. Photographic emblems stay banned.
+  // The empty state (owner 2026-07-04 final): the blank case is a
+  // MOMENT, not a state — nothing is staged in it. Title, auto-focused
+  // cursor, quiet glass. The carved-glass moon component keeps its craft
+  // for the future pass-progress instrument and the stage; it does NOT
+  // mount on the blank case. Photographic emblems stay banned.
   assert.doesNotMatch(nativeRoot, /MoonEmblem|BacklitMoon/);
   assert.match(nativeRoot, /isBlankCase \{ editorFocusRequest \+= 1 \}/);
   assert.match(nativeRoot, /documentText\.isEmpty/, 'blankness is judged against the written document too');
-  assert.match(nativeRoot, /struct MoonGlassRelief: View/);
+  assert.match(nativeRoot, /struct MoonGlassRelief: View/, 'the carved-glass craft stays for the progress moon and the stage');
   const reliefBlock = nativeRoot.slice(
     nativeRoot.indexOf('struct MoonGlassRelief'),
     nativeRoot.indexOf('private struct MoonAvatar'),
   );
   assert.doesNotMatch(reliefBlock, /Image\(|NSImage/, 'the relief is pure light and material — never a bitmap');
-  assert.match(nativeRoot, /if isBlankCase \{[\s\S]{0,120}MoonGlassRelief\(\)/, 'the relief lives on the blank case and yields to the first character');
+  assert.doesNotMatch(nativeRoot, /if isBlankCase \{[\s\S]{0,120}MoonGlassRelief\(\)/, 'nothing is staged in the blank moment');
 
   // Images ride the document flow as solid white PAPER CARDS (the
   // evidence-card material language), textual pastes stay plain so the

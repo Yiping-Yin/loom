@@ -3455,17 +3455,12 @@ private struct GlassReadingCenter: View {
                     .frame(maxWidth: .infinity)
                 }
         }
-        // The glass-relief moon on a blank case (owner 2026-07-04): not
-        // artwork laid on the pane — the pane itself shaped by light, so
-        // it passes the instrument-room grammar. It yields to the first
-        // written character, and the cursor keeps its invitation.
-        .overlay {
-            if isBlankCase {
-                MoonGlassRelief()
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeOut(duration: 0.35), value: isBlankCase)
+        // The blank case is a MOMENT, not a state (owner 2026-07-04): it
+        // lasts seconds — the cursor is already blinking and the first
+        // character ends it. Nothing is staged in it (glass grammar law
+        // six: empty glass IS the style). The carved-glass moon
+        // (MoonGlassRelief) keeps its craft for the places the moon
+        // LIVES: the future pass-progress instrument and the stage.
         .contentShape(Rectangle())
         .onTapGesture {
             editorFocusRequest += 1
