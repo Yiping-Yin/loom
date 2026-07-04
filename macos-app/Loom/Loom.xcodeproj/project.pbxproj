@@ -954,6 +954,7 @@
 				8BB123B3A0B5C3FB4CF01850 /* Resources */,
 				81B92D774223887B036C47A8 /* CopyFiles */,
 				AFD89F6CCAADCCDB40EC765D /* Frameworks */,
+				DD5EB918DC2B2FCC69649903 /* Rebuild high-resolution AppIcon.icns */,
 				0B09BFE18F025E5CF36B38B2 /* Strip signing-blocking xattrs from app bundle */,
 			);
 			buildRules = (
@@ -1151,6 +1152,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -eu\nAPP=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}\"\nif [ ! -d \"$APP\" ]; then\n  echo \"Loom: app bundle not present yet; skipping xattr cleanup.\"\n  exit 0\nfi\nif [ \"${CODE_SIGNING_ALLOWED:-YES}\" = \"NO\" ]; then\n  echo \"Loom: CODE_SIGNING_ALLOWED=NO — skipping signing xattr preflight.\"\n  exit 0\nfi\nif ! command -v xattr >/dev/null 2>&1; then\n  echo \"Loom: xattr unavailable; cannot strip signing detritus.\"\n  exit 1\nfi\nxattr -cr \"$APP\"\nif xattr -lr \"$APP\" 2>/dev/null | grep -E 'com\\.apple\\.(ResourceFork|FinderInfo)' >/dev/null; then\n  echo \"Loom: signing-blocking xattrs remain after xattr -cr.\"\n  echo \"      Grant Full Disk Access to the build host (Terminal, Xcode, or Codex) and rebuild.\"\n  xattr -lr \"$APP\" 2>/dev/null | grep -E 'com\\.apple\\.(ResourceFork|FinderInfo)' | head -40\n  exit 1\nfi\nPROVENANCE_COUNT=\"$(xattr -lr \"$APP\" 2>/dev/null | grep -c 'com\\.apple\\.provenance' || true)\"\nif [ \"$PROVENANCE_COUNT\" != \"0\" ]; then\n  echo \"Loom: com.apple.provenance remains on ${PROVENANCE_COUNT} bundle paths; leaving final judgment to codesign.\"\nfi\necho \"Loom: stripped signing-blocking extended attributes from app bundle.\"\n";
+		};
+		DD5EB918DC2B2FCC69649903 /* Rebuild high-resolution AppIcon.icns */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Rebuild high-resolution AppIcon.icns";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\nAPP=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}\"\nASSET_DIR=\"${PROJECT_DIR}/Assets.xcassets/AppIcon.appiconset\"\nICONSET=\"${TARGET_TEMP_DIR}/LoomAppIcon.iconset\"\nif [ ! -d \"$APP\" ]; then\n  echo \"Loom: app bundle not present yet; skipping AppIcon.icns rebuild.\"\n  exit 0\nfi\nif ! command -v iconutil >/dev/null 2>&1; then\n  echo \"Loom: iconutil unavailable; cannot rebuild high-resolution AppIcon.icns.\"\n  exit 1\nfi\nrm -rf \"$ICONSET\"\nmkdir -p \"$ICONSET\"\ncp \"$ASSET_DIR/icon_16.png\" \"$ICONSET/icon_16x16.png\"\ncp \"$ASSET_DIR/icon_32.png\" \"$ICONSET/icon_16x16@2x.png\"\ncp \"$ASSET_DIR/icon_32.png\" \"$ICONSET/icon_32x32.png\"\ncp \"$ASSET_DIR/icon_64.png\" \"$ICONSET/icon_32x32@2x.png\"\ncp \"$ASSET_DIR/icon_128.png\" \"$ICONSET/icon_128x128.png\"\ncp \"$ASSET_DIR/icon_256.png\" \"$ICONSET/icon_128x128@2x.png\"\ncp \"$ASSET_DIR/icon_256.png\" \"$ICONSET/icon_256x256.png\"\ncp \"$ASSET_DIR/icon_512.png\" \"$ICONSET/icon_256x256@2x.png\"\ncp \"$ASSET_DIR/icon_512.png\" \"$ICONSET/icon_512x512.png\"\ncp \"$ASSET_DIR/icon_1024.png\" \"$ICONSET/icon_512x512@2x.png\"\niconutil -c icns \"$ICONSET\" -o \"$APP/Contents/Resources/AppIcon.icns\"\nrm -rf \"$ICONSET\"\necho \"Loom: rebuilt high-resolution AppIcon.icns.\"\n";
 		};
 		EAA24BAD64D422687FA9EDE8 /* Stage Next.js static export into bundle Resources */ = {
 			isa = PBXShellScriptBuildPhase;

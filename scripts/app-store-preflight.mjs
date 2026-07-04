@@ -217,13 +217,18 @@ function checkMacStoreConfig() {
   expectMatch(infoPlist, /<key>LSApplicationCategoryType<\/key>\s*<string>public\.app-category\.education<\/string>/, 'Info.plist');
   expectMatch(project, /com\.apple\.security\.app-sandbox:\s*true/, 'project.yml entitlements');
   expectMatch(project, /com\.apple\.security\.network\.client:\s*true/, 'project.yml entitlements');
+  expectMatch(project, /com\.apple\.security\.files\.bookmarks\.app-scope:\s*true/, 'project.yml entitlements');
   expectNoMatch(project, /com\.apple\.security\.network\.server:\s*true/, 'project.yml entitlements');
 
   expectMatch(entitlements, /<key>com\.apple\.security\.app-sandbox<\/key>\s*<true\/>/, 'Loom.entitlements');
   expectMatch(entitlements, /<key>com\.apple\.security\.network\.client<\/key>\s*<true\/>/, 'Loom.entitlements');
   expectMatch(entitlements, /<key>com\.apple\.security\.files\.user-selected\.read-write<\/key>\s*<true\/>/, 'Loom.entitlements');
+  expectMatch(entitlements, /<key>com\.apple\.security\.files\.bookmarks\.app-scope<\/key>\s*<true\/>/, 'Loom.entitlements');
   expectNoMatch(entitlements, /com\.apple\.security\.network\.server/, 'Loom.entitlements');
   expectNoMatch(entitlements, /com\.apple\.security\.get-task-allow/, 'Loom.entitlements');
+  expectIncludes(project, 'Rebuild high-resolution AppIcon.icns', 'project.yml AppIcon pipeline');
+  expectIncludes(project, 'icon_512x512@2x.png', 'project.yml AppIcon pipeline');
+  expectIncludes(project, 'iconutil -c icns "$ICONSET"', 'project.yml AppIcon pipeline');
 
   expectMatch(privacyManifest, /<key>NSPrivacyTracking<\/key>\s*<false\/>/, 'PrivacyInfo.xcprivacy');
   expectIncludes(privacyManifest, 'NSPrivacyAccessedAPICategoryUserDefaults', 'PrivacyInfo.xcprivacy');

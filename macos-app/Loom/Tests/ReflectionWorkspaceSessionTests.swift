@@ -36,11 +36,13 @@ final class ReflectionWorkspaceSessionTests: XCTestCase {
         XCTAssertEqual(session.selectedSourceID, reflectionCase.sources.first?.id)
     }
 
-    func testEmptyRestoreFallsBackToSamples() {
+    func testEmptyRestoreFallsBackToBlankWorkbench() {
         let session = ReflectionWorkspaceSession(restored: nil)
 
-        XCTAssertEqual(session.cases.map(\.id), ReflectionCase.samples.map(\.id))
-        XCTAssertEqual(session.selectedCaseID, ReflectionCase.samples[0].id)
+        XCTAssertEqual(session.cases.count, 1)
+        XCTAssertEqual(session.cases[0].title, "Untitled product reflection")
+        XCTAssertTrue(session.cases[0].sources.isEmpty)
+        XCTAssertEqual(session.selectedCaseID, session.cases[0].id)
     }
 
     // NOTE deliberately absent: no test may touch ReflectionWorkspaceSession

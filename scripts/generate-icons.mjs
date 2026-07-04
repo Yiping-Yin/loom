@@ -12,6 +12,13 @@ const appIconDir = path.join(root, 'macos-app', 'Loom', 'Assets.xcassets', 'AppI
 const lunarSource = path.join(brandDir, 'loom_lunar_comet_icon.png');
 const lunarSvg = path.join(brandDir, 'loom_lunar_comet_icon.svg');
 
+function iconSvg() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Loom Moon icon">
+  <image href="/brand/loom_lunar_comet_icon.png" width="1024" height="1024" preserveAspectRatio="xMidYMid meet"/>
+</svg>
+`;
+}
+
 function resize(source, size, output) {
   execFileSync('sips', ['-s', 'format', 'png', '-z', String(size), String(size), source, '--out', output], {
     stdio: 'ignore',
@@ -29,12 +36,13 @@ mkdirSync(brandDir, { recursive: true });
 mkdirSync(appIconDir, { recursive: true });
 
 requireSource(lunarSource);
-requireSource(lunarSvg);
+writeFileSync(lunarSvg, iconSvg());
 
 copyFileSync(lunarSource, path.join(brandDir, 'loom_icon_var6.png'));
 copyFileSync(lunarSource, path.join(brandDir, 'loom_app_icon_macos.png'));
 copyFileSync(lunarSvg, path.join(publicDir, 'icon.svg'));
 
+resize(lunarSource, 256, path.join(brandDir, 'loom_lunar_orb.png'));
 resize(lunarSource, 512, path.join(publicDir, 'icon.png'));
 resize(lunarSource, 180, path.join(publicDir, 'apple-touch-icon.png'));
 resize(lunarSource, 64, path.join(publicDir, 'favicon-64.png'));

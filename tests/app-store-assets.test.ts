@@ -118,6 +118,10 @@ test('app store preflight covers submission artifacts', () => {
     'public/privacy.html',
     'public/support.html',
     'com\\.apple\\.security\\.app-sandbox',
+    'com\\.apple\\.security\\.files\\.bookmarks\\.app-scope',
+    'Rebuild high-resolution AppIcon.icns',
+    'icon_512x512@2x.png',
+    'iconutil -c icns "$ICONSET"',
     'ExportOptions-AppStore.plist',
     'app-store-connect',
     'LOOM_APPLE_TEAM_ID',
@@ -172,6 +176,9 @@ test('mac signing strips provenance xattrs before codesign', () => {
     'utf8',
   );
 
+  assert.match(project, /postBuildScripts:[\s\S]*Rebuild high-resolution AppIcon\.icns[\s\S]*Strip signing-blocking xattrs from app bundle/);
+  assert.match(project, /icon_512x512@2x\.png/);
+  assert.match(project, /iconutil -c icns "\$ICONSET" -o "\$APP\/Contents\/Resources\/AppIcon\.icns"/);
   assert.match(project, /postBuildScripts:[\s\S]*Strip signing-blocking xattrs from app bundle/);
   assert.match(project, /CODE_SIGNING_ALLOWED=NO/);
   assert.match(project, /xattr -cr "\$APP"/);
@@ -179,6 +186,7 @@ test('mac signing strips provenance xattrs before codesign', () => {
   assert.match(project, /PROVENANCE_COUNT=/);
   assert.match(project, /leaving final judgment to codesign/);
   assert.match(project, /Full Disk Access/);
+  assert.match(xcodeProject, /Rebuild high-resolution AppIcon\.icns/);
   assert.match(xcodeProject, /Strip signing-blocking xattrs from app bundle/);
   assert.match(
     xcodeProject,
@@ -230,12 +238,13 @@ test('Moon Ledger icon pipeline keeps web and macOS assets aligned', () => {
 
   assert.match(script, /loom_lunar_comet_icon\.png/);
   assert.match(script, /loom_lunar_comet_icon\.svg/);
+  assert.match(script, /loom_lunar_orb\.png/);
   assert.match(script, /Generated Loom Moon Ledger icons/);
-  assert.match(sourceSvg, /Moon Ledger icon/);
-  assert.match(sourceSvg, /signature-cyan meridian line/);
-  assert.match(sourceSvg, /#4BC5DE/);
+  assert.match(sourceSvg, /Loom Moon icon/);
+  assert.match(sourceSvg, /\/brand\/loom_lunar_comet_icon\.png/);
   assert.equal(publicSvg, sourceSvg);
   assert.deepEqual(pngSize('public/brand/loom_lunar_comet_icon.png'), { width: 1024, height: 1024 });
+  assert.deepEqual(pngSize('public/brand/loom_lunar_orb.png'), { width: 256, height: 256 });
   assert.deepEqual(pngSize('public/icon.png'), { width: 512, height: 512 });
   assert.deepEqual(pngSize('public/apple-touch-icon.png'), { width: 180, height: 180 });
   assert.deepEqual(pngSize('public/favicon-64.png'), { width: 64, height: 64 });

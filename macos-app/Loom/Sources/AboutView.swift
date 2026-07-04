@@ -1,10 +1,9 @@
 import SwiftUI
 
 /// Native "About Loom" window, replacing the default NSApp auto-generated
-/// one. A STAGE surface: self-luminous cool-black canvas, the bare moon
-/// disc as the brand mark, 青芒 cyan as the only signal colour, system
-/// serif throughout (custom fonts are never bundled here — .custom would
-/// silently fall back and lie).
+/// one. The surface follows the 2026 lunar-crystal app icon: a cold navy
+/// field, a full squircle icon, and compact desktop controls instead of the
+/// older book-frontispiece treatment.
 ///
 /// Opens via the App menu's "About Loom" item (standard macOS position).
 /// The menu item is registered via `CommandGroup(replacing: .appInfo)` in
@@ -17,80 +16,41 @@ struct AboutView: View {
     // window could only be dismissed via the title-bar close button.
     @Environment(\.dismissWindow) private var dismissWindow
 
-    // MARK: Stage palette — direct sRGB values so the window reads the
-    // same regardless of macOS appearance. About is a STAGE surface
-    // (self-luminous, black canvas); it does not flip with light/dark.
-    // Accent = 青芒 signature cyan (#4BC5DE) with the brighter data cyan
-    // (#6CE7F2) for link text — the gold era is over.
-    private let paper       = Color(.sRGB, red: 0x07/255.0, green: 0x09/255.0, blue: 0x0C/255.0, opacity: 1.0)
-    private let ink         = Color(.sRGB, red: 0xE6/255.0, green: 0xE9/255.0, blue: 0xEE/255.0, opacity: 1.0)
-    private let muted       = Color(.sRGB, red: 0x9B/255.0, green: 0xA3/255.0, blue: 0xAE/255.0, opacity: 1.0)
-    private let signalText  = Color(.sRGB, red: 0x6C/255.0, green: 0xE7/255.0, blue: 0xF2/255.0, opacity: 1.0)
+    // MARK: Icon-era palette — direct sRGB values so the window reads the
+    // same regardless of macOS appearance. About is an intentional brand
+    // surface; it does not flip with light/dark mode.
+    private let stageTop    = Color(.sRGB, red: 0x05/255.0, green: 0x0A/255.0, blue: 0x12/255.0, opacity: 1.0)
+    private let stageBottom = Color(.sRGB, red: 0x0B/255.0, green: 0x17/255.0, blue: 0x27/255.0, opacity: 1.0)
+    private let panel       = Color(.sRGB, red: 0x0D/255.0, green: 0x17/255.0, blue: 0x24/255.0, opacity: 1.0)
+    private let ink         = Color(.sRGB, red: 0xF2/255.0, green: 0xF7/255.0, blue: 0xFF/255.0, opacity: 1.0)
+    private let muted       = Color(.sRGB, red: 0x91/255.0, green: 0xA0/255.0, blue: 0xB2/255.0, opacity: 1.0)
+    private let signalText  = Color(.sRGB, red: 0x87/255.0, green: 0xDE/255.0, blue: 0xFF/255.0, opacity: 1.0)
+    private let rim         = Color(.sRGB, red: 0x41/255.0, green: 0x75/255.0, blue: 0xB1/255.0, opacity: 1.0)
 
     var body: some View {
         ZStack {
-            paper.ignoresSafeArea()
+            iconEraBackground
 
             VStack(spacing: 0) {
-                Spacer(minLength: 40)
+                Spacer(minLength: 30)
 
-                // The brand mark IS the moon — the bare disc, not the app
-                // icon's squircle container. applicationIconImage carries
-                // system margin (the disc is ~57% of its canvas), so draw
-                // it oversized inside a smaller frame and let the circular
-                // clip cut everything but the moon and its 青芒 arc.
-                Image(nsImage: NSApp.applicationIconImage)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .frame(width: 231, height: 231)
-                    .frame(width: 132, height: 132)
-                    .clipShape(Circle())
-                    .accessibilityHidden(true)
+                brandIcon
 
                 Text("Loom")
-                    .font(.system(size: 32, weight: .semibold, design: .serif))
+                    .font(.system(size: 38, weight: .semibold, design: .rounded))
                     .foregroundStyle(ink)
-                    .padding(.top, 4)
-
-                // Version line — monospaced, muted.
-                Text(versionString)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(muted)
-                    .padding(.top, 10)
-
-                // ONE tagline. (The platform restatement said the same
-                // thing twice; clean copy keeps the living line only.)
-                Text("A living knowledge identity.")
-                    .font(.system(size: 17, design: .serif).italic())
-                    .foregroundStyle(ink.opacity(0.88))
-                    .padding(.top, 22)
-
-                hairRule
-                    .padding(.top, 22)
-
-                // "Made by" block — small-caps eyebrow + body line.
-                VStack(spacing: 6) {
-                    Text("Made by")
-                        .font(.system(size: 10, weight: .medium))
-                        .kerning(3.2)
-                        .textCase(.uppercase)
-                        .foregroundStyle(muted)
-
-                    Text("One person, with care.")
-                        .font(.system(size: 14, design: .serif))
-                        .foregroundStyle(ink.opacity(0.82))
-                }
-                .padding(.top, 16)
-
-                hairRule
+                    .tracking(0)
                     .padding(.top, 18)
 
-                // Text links — Privacy + Help + History + Colophon, in the
-                // data cyan. Colophon is the book's back matter (type,
-                // palette, hand); it opens at /colophon so it stays
-                // consistent with the other reading surfaces.
-                HStack(spacing: 28) {
+                Text("Sources become clear drafts.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(ink.opacity(0.82))
+                    .padding(.top, 7)
+
+                versionBadge
+                    .padding(.top, 16)
+
+                HStack(spacing: 8) {
                     linkButton("Privacy") {
                         if let url = URL(string: "https://loom.app/privacy") {
                             NSWorkspace.shared.open(url)
@@ -113,17 +73,23 @@ struct AboutView: View {
                         )
                     }
                 }
-                .padding(.top, 16)
+                .padding(.top, 26)
 
                 Spacer(minLength: 20)
 
-                // Footer — serif italic, muted.
-                Text("© 2026 · All rights respected")
-                    .font(.system(size: 12, design: .serif).italic())
-                    .foregroundStyle(muted)
-                    .padding(.bottom, 26)
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(signalText)
+                        .frame(width: 5, height: 5)
+                        .shadow(color: signalText.opacity(0.75), radius: 6)
+                    Text("Local first · one archive · © 2026")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(muted)
+                }
+                .padding(.bottom, 24)
             }
             .frame(maxWidth: .infinity)
+            .padding(.horizontal, 28)
         }
         .frame(width: 420, height: 540)
         .onKeyPress(.escape) {
@@ -134,23 +100,86 @@ struct AboutView: View {
 
     // MARK: - Components
 
-    /// Hair-rule divider — a 1px line, ~88pt wide, muted. Never full-width:
-    /// stage rules breathe.
-    private var hairRule: some View {
-        Rectangle()
-            .fill(muted.opacity(0.35))
-            .frame(width: 88, height: 0.5)
+    private var iconEraBackground: some View {
+        ZStack {
+            LinearGradient(
+                colors: [stageTop, stageBottom],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            RadialGradient(
+                colors: [signalText.opacity(0.22), .clear],
+                center: UnitPoint(x: 0.52, y: 0.40),
+                startRadius: 12,
+                endRadius: 260
+            )
+            RadialGradient(
+                colors: [rim.opacity(0.28), .clear],
+                center: .bottom,
+                startRadius: 20,
+                endRadius: 320
+            )
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.22), rim.opacity(0.40), Color.black.opacity(0.32)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
+                .padding(1)
+        }
+        .ignoresSafeArea()
+    }
+
+    private var brandIcon: some View {
+        Image(nsImage: NSApp.applicationIconImage)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .frame(width: 174, height: 174)
+            .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 36, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+            }
+            .shadow(color: signalText.opacity(0.34), radius: 28, x: 0, y: 18)
+            .shadow(color: Color.black.opacity(0.62), radius: 22, x: 0, y: 16)
             .accessibilityHidden(true)
     }
 
-    /// Text link in the data cyan — 青芒 is the only signal colour on the
-    /// stage. Plain button so it never takes the system accent.
+    private var versionBadge: some View {
+        Text(versionString)
+            .font(.system(size: 11, weight: .medium, design: .monospaced))
+            .foregroundStyle(muted)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background {
+                Capsule()
+                    .fill(panel.opacity(0.72))
+                    .overlay {
+                        Capsule()
+                            .strokeBorder(rim.opacity(0.35), lineWidth: 0.8)
+                    }
+            }
+    }
+
     private func linkButton(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 13, design: .serif))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(signalText)
-                .underline(false)
+                .frame(minWidth: 64)
+                .padding(.vertical, 8)
+                .background {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(panel.opacity(0.70))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(rim.opacity(0.32), lineWidth: 0.8)
+                        }
+                }
         }
         .buttonStyle(.plain)
         .pointerStyleLink()

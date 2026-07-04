@@ -175,6 +175,42 @@ targets:
           fi
           echo "Loom: staged $(find "$DEST" -type f | wc -l | tr -d ' ') files to Resources/web"
     postBuildScripts:
+      - name: Rebuild high-resolution AppIcon.icns
+        # Xcode's asset-catalog linker can emit an AppIcon.icns capped at
+        # 256px even when the AppIcon.appiconset contains 512/1024 sources.
+        # Rebuild the icon file from the full iconset before signing so the
+        # installed app keeps crisp Dock/Launchpad imagery at large Retina
+        # sizes.
+        runOnlyWhenInstalling: false
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          APP="${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}"
+          ASSET_DIR="${PROJECT_DIR}/Assets.xcassets/AppIcon.appiconset"
+          ICONSET="${TARGET_TEMP_DIR}/LoomAppIcon.iconset"
+          if [ ! -d "$APP" ]; then
+            echo "Loom: app bundle not present yet; skipping AppIcon.icns rebuild."
+            exit 0
+          fi
+          if ! command -v iconutil >/dev/null 2>&1; then
+            echo "Loom: iconutil unavailable; cannot rebuild high-resolution AppIcon.icns."
+            exit 1
+          fi
+          rm -rf "$ICONSET"
+          mkdir -p "$ICONSET"
+          cp "$ASSET_DIR/icon_16.png" "$ICONSET/icon_16x16.png"
+          cp "$ASSET_DIR/icon_32.png" "$ICONSET/icon_16x16@2x.png"
+          cp "$ASSET_DIR/icon_32.png" "$ICONSET/icon_32x32.png"
+          cp "$ASSET_DIR/icon_64.png" "$ICONSET/icon_32x32@2x.png"
+          cp "$ASSET_DIR/icon_128.png" "$ICONSET/icon_128x128.png"
+          cp "$ASSET_DIR/icon_256.png" "$ICONSET/icon_128x128@2x.png"
+          cp "$ASSET_DIR/icon_256.png" "$ICONSET/icon_256x256.png"
+          cp "$ASSET_DIR/icon_512.png" "$ICONSET/icon_256x256@2x.png"
+          cp "$ASSET_DIR/icon_512.png" "$ICONSET/icon_512x512.png"
+          cp "$ASSET_DIR/icon_1024.png" "$ICONSET/icon_512x512@2x.png"
+          iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+          rm -rf "$ICONSET"
+          echo "Loom: rebuilt high-resolution AppIcon.icns."
       - name: Strip signing-blocking xattrs from app bundle
         # Xcode signs the bundle after target build phases. The staged
         # static export can inherit macOS resource-fork/Finder metadata from
@@ -228,6 +264,7 @@ targets:
         # any server, but keeping it off-by-default is fine — no listener
         # is created at runtime.
         com.apple.security.files.user-selected.read-write: true
+        com.apple.security.files.bookmarks.app-scope: true
 
   LoomAnchorHelper:
     # Non-sandboxed XPC service that resolves the source anchor (file URL +

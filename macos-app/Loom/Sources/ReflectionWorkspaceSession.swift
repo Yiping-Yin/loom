@@ -30,7 +30,7 @@ final class ReflectionWorkspaceSession: ObservableObject {
     /// The snapshot parameter is injectable for tests; production uses the
     /// hardened store (newer-wins replicas + v1→v2 migration).
     init(restored: ReflectionWorkspaceSnapshot? = ReflectionWorkspaceStore.load()) {
-        let initialCases = restored?.cases.isEmpty == false ? restored!.cases : ReflectionCase.samples
+        let initialCases = restored?.cases.isEmpty == false ? restored!.cases : [ReflectionCase.blank()]
         let initialSelectedCaseID: ReflectionCase.ID
         if let restoredSelectedCaseID = restored?.selectedCaseID,
            initialCases.contains(where: { $0.id == restoredSelectedCaseID }) {
