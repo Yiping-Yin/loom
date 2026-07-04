@@ -1853,6 +1853,23 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private func openSourceInNativeApp\(_ source: ReflectionSource\)/);
   assert.match(nativeRoot, /fileURL: url/);
   assert.match(nativeSurface, /var fileURL: URL\?/);
+  // Source↔note anchor (2026-07-05): clicking a source in the right rail —
+  // or a `loom://anchor` link in the note — pops the source in an in-app
+  // reader jumped to the passage. One click open, one Done (⎋) to close.
+  assert.match(nativeRoot, /private func jumpToAnchor\(sourceID: String, page: Int, rect: CGRect\)/);
+  assert.match(nativeRoot, /anchorPreview = AnchorPreviewTarget\(fileURL: resolved, page: page, rect: rect\)/);
+  assert.match(nativeRoot, /struct AnchorPreviewTarget: Identifiable/);
+  assert.match(nativeRoot, /static let loomReflectionAnchorJump = Notification\.Name/);
+  assert.match(nativeRoot, /\.sheet\(item: \$anchorPreview\)/);
+  assert.match(nativeRoot, /SourceFileView\(fileURL: target\.fileURL\) \{ anchorPreview = nil \}/);
+  assert.match(nativeRoot, /Button \{ anchorPreview = nil \} label: \{[\s\S]{0,60}Text\("Done"\)/);
+  assert.match(nativeRoot, /\.keyboardShortcut\(\.cancelAction\)/);
+  assert.match(nativeRoot, /raw\.hasPrefix\("loom:\/\/anchor"\)/);
+  assert.match(nativeRoot, /name: \.loomReflectionAnchorJump/);
+  // One click on a right-rail source reads it in-app (no hover-hunt for a
+  // hidden button); the old opt-in "Read in Loom" affordance is retired.
+  assert.match(nativeRoot, /jumpToAnchor\(sourceID: source\.id, page: 0, rect: \.zero\)/);
+  assert.doesNotMatch(nativeRoot, /onReadInApp/);
   assert.match(sourceFileView, /import PDFKit/);
   assert.match(sourceFileView, /import QuickLookUI/);
   assert.match(sourceFileView, /init\(fileURL: URL, onClose: @escaping \(\) -> Void\)/);
@@ -2734,6 +2751,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'the image card is honest solid paper — white fill with a real shadow',
   );
   assert.match(nativeRoot, /pasteAsPlainText\(sender\)/, 'textual pastes must not smuggle foreign fonts or colors onto the glass');
+  // TEXT WINS over an image representation: rich-text sources stamp both a string
+  // and a rendered image on the pasteboard; a text paste must stay editable text,
+  // never a non-editable image card (owner 2026-07-05).
+  assert.match(
+    nativeRoot,
+    /canReadObject\(forClasses: \[NSString\.self\][\s\S]{0,120}pasteAsPlainText\(sender\)/,
+    'a paste carrying any text is pasted as editable text before the image path is considered',
+  );
   assert.match(nativeRoot, /rtfdFileWrapper\(/, 'the rich case document persists as RTFD');
   assert.match(nativeRoot, /CaseDocuments/, 'case documents live in their own Application Support directory');
   assert.match(

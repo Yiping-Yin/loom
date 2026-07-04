@@ -113,6 +113,11 @@ struct LoomReflectionRootView: View {
     @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
 
     @State private var capturePayload: CapturePayload?
+    // Source↔note anchor: clicking a `loom://anchor` link in the note pops the
+    // source in an IN-APP PDF view jumped to its page+rect (owner 2026-07-05:
+    // 保持外部打开为主 — this overlay appears only on an anchor click; the right
+    // column and default external-open are untouched).
+    @State private var anchorPreview: AnchorPreviewTarget?
     @State private var lastHandledCaptureToken: UUID?
     @State private var lastHandledExternalFileToken: UUID?
     @State private var lastHandledExternalSelectionToken: UUID?
@@ -167,6 +172,7 @@ struct LoomReflectionRootView: View {
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
+                        onNewChat: createReflection,
                         onDelete: deleteReflection,
                         onRename: renameReflection
                     )
@@ -220,9 +226,13 @@ struct LoomReflectionRootView: View {
                             sources: visibleBridgeSources,
                             onFiles: importLocalSources,
                             onOpenSource: { source in
+                                // Simple &amp; easy (owner 2026-07-05): one click opens
+                                // the source right here, in-app. Editing in the
+                                // native app stays available from the top-bar
+                                // Open Source button.
                                 selectedSourceID = source.id
                                 if source.fileURL != nil {
-                                    openSourceInNativeApp(source)
+                                    jumpToAnchor(sourceID: source.id, page: 0, rect: .zero)
                                 } else {
                                     statusMessage = "Opened \(source.label)"
                                 }
@@ -269,6 +279,7 @@ struct LoomReflectionRootView: View {
                         onSelect: selectCase,
                         onCreate: createReflection,
                         onCreateLearning: createLearningProject,
+                        onNewChat: createReflection,
                         onDelete: deleteReflection,
                         onRename: renameReflection
                     )
@@ -334,6 +345,54 @@ struct LoomReflectionRootView: View {
             set: { if !$0 { capturePayload = nil } }
         )) {
             CaptureSheet(payload: $capturePayload, onSaved: handleCaptureSaved)
+        }
+        .sheet(item: $anchorPreview) { target in
+            // SourceFileView is a full-pane reader that never closes itself —
+            // the parent owns the dismiss control. Wrap it in a slim header
+            // with an obvious Done button (⎋) so reading is one click open,
+            // one click closed (owner 2026-07-05: "keep it simple &amp; easy").
+            VStack(spacing: 0) {
+                HStack(spacing: 8) {
+                    Image(systemName: "doc.richtext")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    Text(target.fileURL.lastPathComponent)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer(minLength: 12)
+                    Button { anchorPreview = nil } label: {
+                        Text("Done")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .keyboardShortcut(.cancelAction)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                Divider()
+                SourceFileView(fileURL: target.fileURL) { anchorPreview = nil }
+            }
+            .frame(minWidth: 820, minHeight: 640)
+            .onAppear {
+                // Give the PDF view a beat to mount, then scroll to page + rect
+                // via the viewer's existing anchor listener.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    NotificationCenter.default.post(
+                        name: .loomApplyPDFAnchor,
+                        object: nil,
+                        userInfo: ["page": target.page, "rect": NSValue(rect: target.rect)]
+                    )
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .loomReflectionAnchorJump)) { note in
+            guard let sourceID = note.userInfo?["sourceID"] as? String else { return }
+            let page = note.userInfo?["page"] as? Int ?? 0
+            let rect = (note.userInfo?["rect"] as? NSValue)?.rectValue ?? .zero
+            jumpToAnchor(sourceID: sourceID, page: page, rect: rect)
         }
         .onAppear {
             if normalizeUntouchedProductReflections() {
@@ -613,6 +672,7 @@ struct LoomReflectionRootView: View {
         importSources(from: panel.urls, openAfterImport: true)
     }
 
+
     /// The URL core of source import, shared by the Files panel and by
     /// files dropped/pasted into the case document. Dropping into the
     /// document should NOT bounce the user into another app, so opening
@@ -817,6 +877,37 @@ struct LoomReflectionRootView: View {
     private func openSelectedSourceInNativeApp() {
         guard let nativeSource else { return }
         openSourceInNativeApp(nativeSource)
+    }
+
+    /// Pop a source in an IN-APP PDF view jumped to an anchored page + rect (the
+    /// note-anchor destination). External-open stays the default; this is only
+    /// the anchor-click path. The security-scoped bookmark buys back sandbox
+    /// access the same way the native-app open does.
+    private func jumpToAnchor(sourceID: String, page: Int, rect: CGRect) {
+        guard let source = selectedCase.sources.first(where: { $0.id == sourceID })
+            ?? cases.flatMap(\.sources).first(where: { $0.id == sourceID }) else {
+            statusMessage = "That source is no longer in this project"
+            return
+        }
+        guard let fileURL = source.fileURL else {
+            statusMessage = "Opened \(source.label)"
+            return
+        }
+        var resolved = fileURL
+        if let bookmark = source.bookmarkData {
+            var isStale = false
+            if let scoped = try? URL(
+                resolvingBookmarkData: bookmark,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                _ = scoped.startAccessingSecurityScopedResource()
+                resolved = scoped
+            }
+        }
+        selectedSourceID = source.id
+        anchorPreview = AnchorPreviewTarget(fileURL: resolved, page: page, rect: rect)
     }
 
     private func openSourcesInNativeApps(_ sources: [ReflectionSource]) {
@@ -1942,6 +2033,7 @@ private struct ReflectionSidebar: View {
     let onSelect: (ReflectionCase) -> Void
     let onCreate: () -> Void
     let onCreateLearning: () -> Void
+    let onNewChat: () -> Void
     let onDelete: (ReflectionCase) -> Void
     let onRename: (ReflectionCase, String) -> Void
     @State private var query: String = ""
@@ -2101,8 +2193,7 @@ private struct ReflectionSidebar: View {
 
             SidebarUtilityStrip(
                 projectCount: cases.count,
-                onCreate: onCreate,
-                onCreateLearning: onCreateLearning
+                onNewChat: onNewChat
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -2681,78 +2772,20 @@ private struct MoonAvatar: View {
     }
 }
 
-// The + chooser is a SYSTEM MENU, not a popover: anchored at the far-left
-// corner, a popover's arrow could only sprout from the bubble's corner
-// and deformed it (owner 2026-07-04: 这个框有问题). The system's own
-// grammar for a "new item" chooser is NSMenu — no arrow, no deformation,
-// standard highlight — popped manually so the trigger keeps our own
-// SidebarRailIcon face (the SwiftUI Menu label traps stay avoided).
-private final class NewProjectMenuHost: NSObject {
-    weak var anchorView: NSView?
-    var onCreate: (() -> Void)?
-    var onCreateLearning: (() -> Void)?
-
-    func popUp() {
-        guard let anchorView else { return }
-        let menu = NSMenu()
-        menu.items = [
-            item(title: "Product reflection", symbol: "rectangle.and.text.magnifyingglass", action: #selector(createReflection)),
-            item(title: "Learning project", symbol: "book", action: #selector(createLearning)),
-        ]
-        // The strip lives at the window's bottom edge, so the menu opens
-        // UPWARD: place its top-left a menu-height above the button.
-        menu.popUp(
-            positioning: nil,
-            at: NSPoint(x: 0, y: anchorView.bounds.height + menu.size.height + 2),
-            in: anchorView
-        )
-    }
-
-    private func item(title: String, symbol: String, action: Selector) -> NSMenuItem {
-        let menuItem = NSMenuItem(title: title, action: action, keyEquivalent: "")
-        menuItem.target = self
-        let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
-        menuItem.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
-            .withSymbolConfiguration(configuration)
-        return menuItem
-    }
-
-    @objc private func createReflection() { onCreate?() }
-    @objc private func createLearning() { onCreateLearning?() }
-}
-
-/// Invisible anchor that hands the hosting NSView to the menu host so the
-/// menu can position itself at the trigger button.
-private struct NewProjectMenuAnchor: NSViewRepresentable {
-    let host: NewProjectMenuHost
-
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        host.anchorView = view
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        host.anchorView = nsView
-    }
-}
 
 private struct SidebarUtilityStrip: View {
     let projectCount: Int
-    let onCreate: () -> Void
-    let onCreateLearning: () -> Void
+    let onNewChat: () -> Void
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
-    @State private var menuHost = NewProjectMenuHost()
 
     var body: some View {
         HStack(spacing: 8) {
-            SidebarRailIcon(systemImage: "plus", help: "New project (⌘N)") {
-                menuHost.onCreate = onCreate
-                menuHost.onCreateLearning = onCreateLearning
-                menuHost.popUp()
+            // The simplest way in: start a new blank session (owner 2026-07-05:
+            // 开启新的 chat). Same as ⌘N, made a visible one-click affordance.
+            SidebarRailIcon(systemImage: "plus", help: "New chat (⌘N)") {
+                onNewChat()
             }
-            .background(NewProjectMenuAnchor(host: menuHost))
 
             Spacer(minLength: 0)
 
@@ -3800,6 +3833,21 @@ private struct GlassReadingCenter: View {
     }
 }
 
+/// The destination of a clicked note-anchor: a source file + the page/rect to
+/// scroll the in-app PDF viewer to.
+private struct AnchorPreviewTarget: Identifiable {
+    let fileURL: URL
+    let page: Int
+    let rect: CGRect
+    var id: String { "\(fileURL.path)#\(page)" }
+}
+
+extension Notification.Name {
+    /// A `loom://anchor` link clicked in the reflection note asks the workbench
+    /// to pop the source in an in-app PDF view jumped to its page + rect.
+    static let loomReflectionAnchorJump = Notification.Name("loomReflectionAnchorJump")
+}
+
 private struct WorkbenchEmptyLauncher: View {
     let onImportFiles: () -> Void
     let onCreateReflection: () -> Void
@@ -4227,9 +4275,29 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         /// the source through the workspace's own open path.
         func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
             let raw = (link as? URL)?.absoluteString ?? (link as? String ?? "")
-            guard raw.hasPrefix("loom-source://") else { return false }
-            onOpenSource(String(raw.dropFirst("loom-source://".count)))
-            return true
+            if raw.hasPrefix("loom-source://") {
+                onOpenSource(String(raw.dropFirst("loom-source://".count)))
+                return true
+            }
+            // A `loom://anchor?src=<sourceID>&page=N&rect=x,y,w,h` link asks the
+            // workbench to pop the source in an in-app PDF jumped to that passage.
+            if raw.hasPrefix("loom://anchor"), let comps = URLComponents(string: raw) {
+                let q = comps.queryItems ?? []
+                guard let sourceID = q.first(where: { $0.name == "src" })?.value, !sourceID.isEmpty else { return true }
+                let page = Int(q.first(where: { $0.name == "page" })?.value ?? "") ?? 0
+                var rect = CGRect.zero
+                if let parts = q.first(where: { $0.name == "rect" })?.value?
+                    .split(separator: ",").compactMap({ Double($0) }), parts.count == 4 {
+                    rect = CGRect(x: parts[0], y: parts[1], width: parts[2], height: parts[3])
+                }
+                NotificationCenter.default.post(
+                    name: .loomReflectionAnchorJump,
+                    object: nil,
+                    userInfo: ["sourceID": sourceID, "page": page, "rect": NSValue(rect: rect)]
+                )
+                return true
+            }
+            return false
         }
 
         /// Attachment-cell clicks route here (not through clickedOnLink) —
@@ -4343,6 +4411,16 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         override func paste(_ sender: Any?) {
             let pasteboard = NSPasteboard.general
             if routeFiles(from: pasteboard) { return }
+            // TEXT WINS. Rich-text sources (Word, browsers, chat apps) stamp BOTH
+            // the string AND a rendered IMAGE of it onto the pasteboard; without
+            // this guard the image hijacked the paste and the pasted words landed
+            // as a non-editable paper card (owner 2026-07-05: 复制粘贴过来的不能编辑).
+            // Only a genuine image copy — one with no text at all (a screenshot,
+            // a copied photo) — becomes a paper image card.
+            if pasteboard.canReadObject(forClasses: [NSString.self], options: [:]) {
+                pasteAsPlainText(sender)
+                return
+            }
             let images = Self.pasteboardImages(pasteboard)
             if images.isEmpty {
                 pasteAsPlainText(sender)
@@ -5815,6 +5893,9 @@ private struct BridgeResourceRow: View {
     }
 
     var body: some View {
+        // One click reads the source right here, in-app (owner 2026-07-05:
+        // "keep it simple &amp; easy"). External open lives on the top-bar
+        // Open Source button for editing in Preview / Word / Excel.
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: kindSymbol)
@@ -5827,26 +5908,26 @@ private struct BridgeResourceRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 0)
-                if isHovering {
-                    Image(systemName: "arrow.up.forward")
+                if isHovering, source.fileURL != nil {
+                    Image(systemName: "book.pages")
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 12)
             .frame(height: 34)
-            .background {
-                if justArrived {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
-                } else if isHovering {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(.quinary)
-                }
-            }
             .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
+        .background {
+            if justArrived {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
+            } else if isHovering {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(.quinary)
+            }
+        }
         .onHover { isHovering = $0 }
         .help(source.meta.isEmpty ? source.label : source.meta)
         .accessibilityLabel(source.label)
