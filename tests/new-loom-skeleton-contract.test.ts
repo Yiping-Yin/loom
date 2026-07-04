@@ -1682,7 +1682,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /HStack\(spacing:\s*0\)[\s\S]*\.frame\(maxWidth: \.infinity, maxHeight: \.infinity\)[\s\S]*ReflectionTopBar\(/,
     'native shell should keep one full-height body stack with the titlebar overlaid instead of adding a separate top row',
   );
-  assert.match(nativeRoot, /ReflectionTopBar\([\s\S]{0,520}\.zIndex\(1\)/);
+  assert.match(nativeRoot, /ReflectionTopBar\([\s\S]{0,1000}\)\s*\.zIndex\(1\)/);
   assert.match(nativeRoot, /private func deleteReflection\(_ reflectionCase: ReflectionCase\)/);
   assert.match(nativeRoot, /private func importLocalSources\(\)/);
   assert.match(nativeRoot, /let panel = NSOpenPanel\(\)/);
@@ -2000,7 +2000,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // Right pane = the launcher (owner-pointed design, 2026-07-03):
   // Review / Terminal / Browser / Files; Files wires to the local-file
   // importer. The old inspector face stays defined but unmounted.
-  assert.match(nativeRoot, /ReflectionBridgePanel\([\s\S]{0,120}sources: selectedCase\.sources[\s\S]{0,80}onFiles: importLocalSources/);
+  assert.match(nativeRoot, /ReflectionBridgePanel\([\s\S]{0,120}sources: visibleBridgeSources[\s\S]{0,80}onFiles: importLocalSources/);
   // Bridge v2: the lower half lists what has crossed — project-scoped
   // resources with the way back out to the original.
   assert.match(nativeRoot, /struct BridgeResourceRow: View/);
@@ -2533,6 +2533,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private struct ReflectionImportButton: View/);
   assert.match(nativeRoot, /ReflectionImportButton\(action: onImport\)/);
   assert.match(nativeRoot, /if cases\.isEmpty \{[\s\S]{0,80}cases = \[ReflectionCase\.blank\(\)\]/);
+  assert.match(
+    nativeSession,
+    /restored\?\.cases\.isEmpty == false \? restored!\.cases : \[ReflectionCase\.blank\(\)\]/,
+    'a no-restore workspace must land on the real no-files workbench, not demo cases',
+  );
+  assert.doesNotMatch(nativeSession, /: ReflectionCase\.samples/, 'sample projects must not be the default no-files state');
   assert.match(nativeRoot, /onDelete: deleteReflection/);
   assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,340}onDelete: \{ onDelete\(reflectionCase\) \}/);
   assert.match(nativeRoot, /SidebarRowActionButton\(systemImage: "trash", help: "Delete"\)/);
@@ -2548,10 +2554,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private let reflectionThreadTopPadding: CGFloat = 76/);
   assert.match(nativeRoot, /private let reflectionInspectorTopPadding: CGFloat = 74/);
   assert.doesNotMatch(nativeRoot, /VStack\(spacing:\s*0\)[\s\S]{0,260}ReflectionTopBar\(/, 'titlebar should overlay the workbench instead of occupying a row');
+  assert.match(topBarBlock, /let isWorkspaceEmpty: Bool/);
+  assert.match(topBarBlock, /if isWorkspaceEmpty \{[\s\S]{0,120}MoonAvatar\(size: 16\)/);
   assert.match(topBarBlock, /ReflectionFileTypeBadge\([\s\S]{0,140}kind: nativeSource\?\.kind \?\? reflectionCase\.sources\.first\?\.kind \?\? "document"/);
-  assert.match(topBarBlock, /Text\(reflectionCase\.title\)/);
+  assert.match(topBarBlock, /Text\(isWorkspaceEmpty \? "LOOM" : reflectionCase\.title\)/);
   assert.doesNotMatch(topBarBlock, /Text\(reflectionCase\.status\)/);
-  assert.match(topBarBlock, /Circle\(\)[\s\S]{0,180}\.fill\(reflectionCase\.status == "Second pass ready" \? LoomTokens\.dsSuccess : LoomTokens\.dsInk3\)[\s\S]{0,120}\.help\(reflectionCase\.status\)/);
+  assert.match(topBarBlock, /if !isWorkspaceEmpty \{[\s\S]{0,220}Circle\(\)[\s\S]{0,180}\.fill\(reflectionCase\.status == "Second pass ready" \? LoomTokens\.dsSuccess : LoomTokens\.dsInk3\)[\s\S]{0,120}\.help\(reflectionCase\.status\)/);
   assert.match(topBarBlock, /if sourceCount > 1 \{/);
   assert.match(topBarBlock, /systemImage: "folder"/);
   // The pane title is gone (owner 2026-07-03: 摘掉) — only the pane
@@ -2661,15 +2669,54 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /Paste a product event, user reaction, decision, or launch result/,
     'the reflection composer placeholder must not survive the composer removal',
   );
-  // The empty state (owner final call 2026-07-04, closing the moon arc):
-  // the blank case stages NOTHING — title, auto-focused cursor, quiet
-  // glass. No emblem of any kind mounts on it; the moon's craft lives on
-  // in the relief component and the Blender pipelines for the stage and
-  // the future pass-progress instrument.
+  // The no-files launcher owns the woven glass moon. Once the user opens a
+  // blank reflection document, the editor must be quiet: title, cursor, and
+  // writing surface only. Do not keep the moon as a giant document backdrop.
+  const emptyLauncherBlock = nativeRoot.slice(
+    nativeRoot.indexOf('private struct WorkbenchEmptyLauncher'),
+    nativeRoot.indexOf('// A heading line of the written document'),
+  );
   assert.doesNotMatch(nativeRoot, /MoonEmblem|BacklitMoon|ModeledMoon/);
-  assert.match(nativeRoot, /isBlankCase \{ editorFocusRequest \+= 1 \}/);
+  assert.match(nativeRoot, /var isUntouchedProductReflection: Bool/);
+  assert.match(nativeRoot, /private func normalizeUntouchedProductReflections\(\) -> Bool/);
+  assert.match(nativeRoot, /normalizeUntouchedProductReflections\(\)[\s\S]{0,220}persistWorkspace\(\)/, 'startup should clean persisted duplicate empty placeholder projects');
+  assert.match(nativeRoot, /if let existingIndex = cases\.firstIndex\(where: \{ \$0\.isUntouchedProductReflection \}\)/, 'New product reflection should reuse the existing empty placeholder instead of duplicating it');
+  assert.match(nativeRoot, /private var isWorkspaceEmpty: Bool/);
+  assert.match(nativeRoot, /cases\.allSatisfy \{ !\$0\.hasWorkbenchMaterial \}/, 'blank cases without sources/text/traces are treated as the no-files workbench');
+  assert.match(nativeRoot, /private var sidebarCases: \[ReflectionCase\]/);
+  assert.match(nativeRoot, /cases: sidebarCases/, 'the Explorer must hide fake blank rows in no-files state');
+  assert.match(nativeRoot, /sourceCount: isWorkspaceEmpty \? 0 : selectedCase\.sources\.count/);
+  assert.match(nativeRoot, /sources: visibleBridgeSources/);
+  assert.match(nativeRoot, /isWorkspaceEmpty: isWorkspaceEmpty/);
+  assert.match(nativeRoot, /\.preferredColorScheme\(isWorkspaceEmpty \? \.dark : nil\)/, 'the no-files workbench stays in dark glass so the woven moon is not washed out by light mode');
+  assert.match(nativeRoot, /if isWorkspaceEmpty \{[\s\S]{0,260}WorkbenchEmptyLauncher/);
+  assert.match(nativeRoot, /onImportLocalSources: importLocalSources/);
+  // Owner 2026-07-04 (again, closing the long arc): 直接拿掉 — the empty state is
+  // an INVITATION, not a stage. NO hero object in the centre: not a moon, not a
+  // glass orb, not a woven weave, not rendered glass debris. The centre belongs
+  // to the composer + the three ways in; 空即是风格. (The glass/moon craft lives
+  // on in design/blender for meaningful positions — loading, About, progress.)
+  assert.doesNotMatch(emptyLauncherBlock, /WorkbenchEmptyLunarScene/, 'no hero object is staged in the empty centre');
+  assert.doesNotMatch(nativeRoot, /private struct WorkbenchEmptyLunarScene/, 'the empty-state hero component is removed');
+  assert.doesNotMatch(emptyLauncherBlock, /Image\("WorkbenchGlassDebris"\)/, 'the rendered glass-debris hero is gone');
+  assert.doesNotMatch(emptyLauncherBlock, /Image\("WorkbenchLunarScene"\)/, 'the old sphere bitmap is not drawn');
+  assert.doesNotMatch(emptyLauncherBlock, /Canvas \{/, 'no procedural hero draw in the empty state');
+  assert.ok(!fs.existsSync(path.join(repoRoot, 'macos-app/Loom/Assets.xcassets/WorkbenchGlassDebris.imageset')), 'the dead glass-debris imageset is removed from the bundle');
+  assert.ok(fs.existsSync(path.join(repoRoot, 'design/blender/glass_debris.py')), 'the glass craft is archived in design/blender for reuse in meaningful positions');
+  // The empty state IS the composer + the three ways in.
+  assert.match(emptyLauncherBlock, /Add files or start a reflection/);
+  assert.match(emptyLauncherBlock, /Import local files/);
+  assert.match(emptyLauncherBlock, /New product reflection/);
+  assert.match(emptyLauncherBlock, /New learning project/);
+  assert.doesNotMatch(emptyLauncherBlock, /MoonGlassRelief\(size: 58\)/, 'the empty launcher must not fall back to the tiny relief mark');
+  assert.doesNotMatch(emptyLauncherBlock, /WorkbenchLunarGlassStage\(\)/, 'the empty launcher must not use the oversized editor-bed stage');
+  assert.doesNotMatch(nativeRoot, /WorkbenchLunarGlassStage\(\)/, 'blank reflection documents must not show the giant moon backdrop');
+  assert.doesNotMatch(nativeRoot, /private struct WorkbenchLunarGlassStage: View/);
+  assert.doesNotMatch(emptyLauncherBlock, /Image\(nsImage: NSApp\.applicationIconImage\)/, 'the empty state is not the app icon pasted into the glass');
+  assert.doesNotMatch(emptyLauncherBlock, /Circle\(\)[\s\S]{0,120}\.trim/, 'the no-files moon must not use circular framing arcs');
+  assert.match(nativeRoot, /isBlankCase && !isWorkspaceEmpty \{ editorFocusRequest \+= 1 \}/);
   assert.match(nativeRoot, /documentText\.isEmpty/, 'blankness is judged against the written document too');
-  assert.match(nativeRoot, /struct MoonGlassRelief: View/, 'the carved-glass craft stays for the progress moon and the stage');
+  assert.match(nativeRoot, /struct MoonGlassRelief: View/, 'the carved-glass craft stays available for the progress moon');
   const reliefBlock = nativeRoot.slice(
     nativeRoot.indexOf('struct MoonGlassRelief'),
     nativeRoot.indexOf('private struct MoonAvatar'),
@@ -2742,7 +2789,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // bar — an alpha mask on the reading scroll, never a painted scrim.
   assert.match(
     nativeRoot,
-    /\.mask\([\s\S]{0,400}LinearGradient[\s\S]{0,300}Rectangle\(\)\.fill\(Color\.black\)/,
+    /\.mask\([\s\S]{0,700}LinearGradient[\s\S]{0,700}Rectangle\(\)\.fill\(Color\.black\)/,
     'the reading scroll fades its own ink under the top chrome',
   );
 
@@ -2771,15 +2818,17 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'dropping into the document must not bounce the user into another app',
   );
 
-  // About window is a STAGE surface: the brand mark is the bare moon disc
-  // (not a letter, not the icon's squircle container), the accent is 青芒
-  // cyan (the gold era is over), ONE tagline, and system serif only — the
-  // Garamond custom fonts were never bundled and silently fell back.
+  // About window is an icon-era surface: the brand mark is now the full
+  // rounded-square lunar-crystal app icon, not the old clipped circular moon.
   const aboutView = read('macos-app/Loom/Sources/AboutView.swift');
-  assert.match(aboutView, /applicationIconImage[\s\S]{0,400}clipShape\(Circle\(\)\)/, 'the About hero is the bare moon disc');
-  assert.match(aboutView, /signalText/, 'links wear the 青芒 data cyan');
+  assert.match(aboutView, /iconEraBackground/, 'the About surface follows the new app icon system');
+  assert.match(aboutView, /brandIcon/, 'the About hero is its own brand-icon component');
+  assert.match(aboutView, /applicationIconImage[\s\S]{0,500}clipShape\(RoundedRectangle/, 'the About hero uses the full app-icon squircle');
+  assert.match(aboutView, /Sources become clear drafts\./, 'the About tagline is product-concrete');
+  assert.match(aboutView, /signalText/, 'links keep the cold signal cyan');
+  assert.doesNotMatch(aboutView, /clipShape\(Circle\(\)\)/, 'the clipped circular old mark is retired');
   assert.doesNotMatch(aboutView, /bronze|0xC8|0xE3/i, 'no gold-era ink survives');
-  assert.doesNotMatch(aboutView, /Cormorant|EB Garamond|\.custom\(/, 'system serif only — unbundled custom fonts are a silent lie');
+  assert.doesNotMatch(aboutView, /Cormorant|EB Garamond|\.custom\(/, 'unbundled custom fonts are a silent lie');
   assert.doesNotMatch(aboutView, /personal knowledge identity platform/, 'one tagline, not two');
 
   // History renders ON the main window's glass (owner 2026-07-04: 不要做成
@@ -5102,9 +5151,11 @@ test('default-visible product copy uses literal Sources Studio and Digital Me vo
   assert.match(files['app/product-history/page.tsx'], /Source-backed self\. Living archive\./);
   assert.match(files['app/product-history/page.tsx'], /Proof changed the line/);
   assert.match(files['app/about/AboutClient.tsx'], /Publish the artifact/);
-  // 2026-07-03 stage redesign: ONE tagline — the platform restatement
-  // was cut with the gold era.
-  assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /A living knowledge identity\./);
+  // 2026-07-04 icon-era redesign: About follows the full rounded-square
+  // lunar-crystal app icon instead of the old circular frontispiece mark.
+  assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /Sources become clear drafts\./);
+  assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /brandIcon/);
+  assert.doesNotMatch(files['macos-app/Loom/Sources/AboutView.swift'], /A living knowledge identity\./);
   assert.match(files['macos-app/Loom/Sources/AboutView.swift'], /History/);
   for (const pattern of [
     /RehearsalOverlay/,

@@ -50,6 +50,29 @@ private enum ReflectionCommitFocus: String {
     }
 }
 
+private extension ReflectionCase {
+    var hasWorkbenchMaterial: Bool {
+        if !sources.isEmpty { return true }
+        if steps.contains(where: { step in
+            step.items.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        }) {
+            return true
+        }
+        if let traceRecords, !traceRecords.isEmpty { return true }
+        if let documentText,
+           !documentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return true
+        }
+        return false
+    }
+
+    var isUntouchedProductReflection: Bool {
+        title == "Untitled product reflection"
+            && project == "New product practice"
+            && !hasWorkbenchMaterial
+    }
+}
+
 struct LoomReflectionRootView: View {
     @Environment(\.colorScheme) private var colorScheme
     // Stage 1 (LoomDomain): both mount paths (SwiftUI scene + AppKit
@@ -79,6 +102,7 @@ struct LoomReflectionRootView: View {
     @State private var isPresentingHistory = false
     @State private var composerFocus: ReflectionCommitFocus = .meaning
     @State private var statusMessage: String = "Local reflection workspace"
+    @State private var emptyWorkbenchDismissed = false
     // Stage 3 (workbench): the IDE-grammar chrome (tabs, OUTLINE/TIMELINE,
     // status bar) ships ON with a persisted rollback flag — flipping it off
     // restores the previous shell against identical data.
@@ -107,13 +131,29 @@ struct LoomReflectionRootView: View {
         let traces = ReflectionLearningTrace.from(selectedCase)
         return traces.first { $0.id == selectedLearningTraceID } ?? traces.last
     }
+    private var hasPendingDraftMaterial: Bool {
+        !draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    private var isWorkspaceEmpty: Bool {
+        !emptyWorkbenchDismissed
+            && !cases.isEmpty
+            && cases.allSatisfy { !$0.hasWorkbenchMaterial }
+            && workspace.principles.isEmpty
+            && !hasPendingDraftMaterial
+    }
+    private var sidebarCases: [ReflectionCase] {
+        isWorkspaceEmpty ? [] : cases
+    }
+    private var visibleBridgeSources: [ReflectionSource] {
+        isWorkspaceEmpty ? [] : selectedCase.sources
+    }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             HStack(spacing: 0) {
                 if isSidebarPresented {
                     ReflectionSidebar(
-                        cases: cases,
+                        cases: sidebarCases,
                         selectedCaseID: selectedCaseID,
                         panelsCase: nil,
                         onSelectTrace: selectLearningTrace,
@@ -140,12 +180,12 @@ struct LoomReflectionRootView: View {
                 }
 
                 HStack(spacing: 0) {
-                    // The center: a reading document ON the glass (owner-
-                    // approved 3-reference synthesis, 2026-07-03) — text
-                    // flows directly on the pane, evidence rides as solid
-                    // paper cards, the empty state is the backlit moon.
+                    // The center: a reading document ON the glass once the
+                    // user has material; before that it becomes a restrained
+                    // start surface instead of a fake project/document.
                     GlassReadingCenter(
                         reflectionCase: selectedCase,
+                        isWorkspaceEmpty: isWorkspaceEmpty,
                         draftText: $draftText,
                         commitFocus: $composerFocus,
                         onSelectTrace: selectLearningTrace,
@@ -155,6 +195,9 @@ struct LoomReflectionRootView: View {
                         onImportFiles: { urls in
                             importSources(from: urls, openAfterImport: false)
                         },
+                        onImportLocalSources: importLocalSources,
+                        onCreateReflection: createReflection,
+                        onCreateLearningProject: createLearningProject,
                         onOpenSourceID: { sourceID in
                             guard let source = selectedCase.sources.first(where: { $0.id == sourceID }) else {
                                 statusMessage = "That file is no longer in this case's sources"
@@ -174,7 +217,7 @@ struct LoomReflectionRootView: View {
                         // The old ReflectionSourceInspector face stays
                         // defined below for the machinery it still owns.
                         ReflectionBridgePanel(
-                            sources: selectedCase.sources,
+                            sources: visibleBridgeSources,
                             onFiles: importLocalSources,
                             onOpenSource: { source in
                                 selectedSourceID = source.id
@@ -199,9 +242,10 @@ struct LoomReflectionRootView: View {
             ReflectionTopBar(
                 reflectionCase: selectedCase,
                 nativeSource: nativeSource,
+                isWorkspaceEmpty: isWorkspaceEmpty,
                 isSidebarPresented: isSidebarPresented,
                 isInspectorPresented: isInspectorPresented,
-                sourceCount: selectedCase.sources.count,
+                sourceCount: isWorkspaceEmpty ? 0 : selectedCase.sources.count,
                 onToggleSidebar: toggleSidebar,
                 onToggleInspector: toggleInspector,
                 onOpenSourceInNativeApp: openSelectedSourceInNativeApp
@@ -211,7 +255,7 @@ struct LoomReflectionRootView: View {
             if shouldOverlaySidebar {
                 HStack(spacing: 0) {
                     ReflectionSidebar(
-                        cases: cases,
+                        cases: sidebarCases,
                         selectedCaseID: selectedCaseID,
                         panelsCase: nil,
                         onSelectTrace: selectLearningTrace,
@@ -272,6 +316,7 @@ struct LoomReflectionRootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .loomShowHistoryOnGlass)) { _ in
             isPresentingHistory = true
         }
+        .preferredColorScheme(isWorkspaceEmpty ? .dark : nil)
         .ignoresSafeArea(.container, edges: .top)
         .background(ReflectionMatteWorkbenchBackground().ignoresSafeArea())
         .background(
@@ -291,6 +336,9 @@ struct LoomReflectionRootView: View {
             CaptureSheet(payload: $capturePayload, onSaved: handleCaptureSaved)
         }
         .onAppear {
+            if normalizeUntouchedProductReflections() {
+                persistWorkspace()
+            }
             consumePendingCapture()
             consumePendingExternalFiles()
             consumePendingExternalSelection()
@@ -340,6 +388,7 @@ struct LoomReflectionRootView: View {
 
     private func selectCase(_ reflectionCase: ReflectionCase) {
         // Stage 3 (workbench): selecting from the Explorer opens a tab.
+        emptyWorkbenchDismissed = true
         workspace.openCase(reflectionCase.id)
         selectedSourceID = reflectionCase.sources.first?.id
         selectedLearningTraceID = nil
@@ -447,14 +496,55 @@ struct LoomReflectionRootView: View {
     }
 
     private func createReflection() {
+        normalizeUntouchedProductReflections()
+        if let existingIndex = cases.firstIndex(where: { $0.isUntouchedProductReflection }) {
+            let existing = cases.remove(at: existingIndex)
+            cases.insert(existing, at: 0)
+            selectedCaseID = existing.id
+            selectedSourceID = nil
+            selectedLearningTraceID = nil
+            draftText = ""
+            emptyWorkbenchDismissed = true
+            statusMessage = "Blank reflection ready"
+            persistWorkspace()
+            return
+        }
+
         let next = ReflectionCase.blank()
         cases.insert(next, at: 0)
         selectedCaseID = next.id
         selectedSourceID = nil
         selectedLearningTraceID = nil
         draftText = ""
+        emptyWorkbenchDismissed = true
         statusMessage = "New reflection created"
         persistWorkspace()
+    }
+
+    @discardableResult
+    private func normalizeUntouchedProductReflections() -> Bool {
+        var keptPlaceholder = false
+        var changed = false
+        let normalizedCases = cases.filter { reflectionCase in
+            guard reflectionCase.isUntouchedProductReflection else { return true }
+            if keptPlaceholder {
+                changed = true
+                return false
+            }
+            keptPlaceholder = true
+            return true
+        }
+
+        if changed {
+            cases = normalizedCases.isEmpty ? [ReflectionCase.blank()] : normalizedCases
+            if !cases.contains(where: { $0.id == selectedCaseID }) {
+                selectedCaseID = cases[0].id
+                selectedSourceID = cases[0].sources.first?.id
+                selectedLearningTraceID = nil
+            }
+        }
+
+        return changed
     }
 
     /// An INITIATION the user starts before touching any file: an empty
@@ -467,6 +557,7 @@ struct LoomReflectionRootView: View {
         selectedSourceID = nil
         selectedLearningTraceID = nil
         draftText = ""
+        emptyWorkbenchDismissed = true
         statusMessage = "New learning project started"
         persistWorkspace()
     }
@@ -502,6 +593,9 @@ struct LoomReflectionRootView: View {
         // The case's rich document (RTFD package) leaves with the case.
         try? FileManager.default.removeItem(at: GlassDocumentEditor.documentURL(for: reflectionCase.id))
 
+        if cases.allSatisfy({ !$0.hasWorkbenchMaterial }) {
+            emptyWorkbenchDismissed = false
+        }
         statusMessage = "Deleted \(reflectionCase.title)"
         persistWorkspace()
     }
@@ -528,6 +622,7 @@ struct LoomReflectionRootView: View {
         let importedSources = urls.map(Self.localSource)
         guard !importedSources.isEmpty else { return [] }
 
+        emptyWorkbenchDismissed = true
         let index = selectedIndex
         let inputLines = importedSources.map { source in
             "Imported local source: \(source.label). \(source.excerpt)"
@@ -585,6 +680,7 @@ struct LoomReflectionRootView: View {
         let material = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !material.isEmpty else { return }
 
+        emptyWorkbenchDismissed = true
         let index = selectedIndex
         if cases[index].project == "Learning pass" {
             let sourceLabel = selectedLearningTrace?.sourceAnchor
@@ -681,6 +777,7 @@ struct LoomReflectionRootView: View {
         selectedSourceID = importedSources[0].id
         selectedLearningTraceID = nil
         draftText = ""
+        emptyWorkbenchDismissed = true
         isSidebarPresented = false
         isSidebarPeeking = false
         isInspectorPresented = false
@@ -932,6 +1029,9 @@ struct LoomReflectionRootView: View {
         guard let index = cases.firstIndex(where: { $0.id == selectedCaseID }) else { return }
         if (cases[index].documentText ?? "") == text { return }
         cases[index].documentText = text
+        if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            emptyWorkbenchDismissed = true
+        }
         documentPersistWork?.cancel()
         let work = DispatchWorkItem { persistWorkspace() }
         documentPersistWork = work
@@ -1697,6 +1797,7 @@ private struct ReflectionLeftEdgePeekZone: View {
 private struct ReflectionTopBar: View {
     let reflectionCase: ReflectionCase
     let nativeSource: ReflectionSource?
+    let isWorkspaceEmpty: Bool
     let isSidebarPresented: Bool
     let isInspectorPresented: Bool
     let sourceCount: Int
@@ -1716,40 +1817,47 @@ private struct ReflectionTopBar: View {
             .frame(width: isSidebarPresented ? reflectionSidebarWidth : reflectionTrafficLightClearance + 36)
 
             HStack(spacing: 9) {
-                ReflectionFileTypeBadge(
-                    kind: nativeSource?.kind ?? reflectionCase.sources.first?.kind ?? "document",
-                    fallbackColor: LoomTokens.dsInk3
-                )
-                .scaleEffect(0.78)
-                .frame(width: 18, height: 18)
+                if isWorkspaceEmpty {
+                    MoonAvatar(size: 16)
+                        .frame(width: 18, height: 18)
+                } else {
+                    ReflectionFileTypeBadge(
+                        kind: nativeSource?.kind ?? reflectionCase.sources.first?.kind ?? "document",
+                        fallbackColor: LoomTokens.dsInk3
+                    )
+                    .scaleEffect(0.78)
+                    .frame(width: 18, height: 18)
+                }
 
-                Text(reflectionCase.title)
+                Text(isWorkspaceEmpty ? "LOOM" : reflectionCase.title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(LoomTokens.dsInk1)
                     .lineLimit(1)
 
-                Circle()
-                    .fill(reflectionCase.status == "Second pass ready" ? LoomTokens.dsSuccess : LoomTokens.dsInk3)
-                    .frame(width: 6, height: 6)
-                    .help(reflectionCase.status)
+                if !isWorkspaceEmpty {
+                    Circle()
+                        .fill(reflectionCase.status == "Second pass ready" ? LoomTokens.dsSuccess : LoomTokens.dsInk3)
+                        .frame(width: 6, height: 6)
+                        .help(reflectionCase.status)
 
-                if sourceCount > 1 {
-                    Label("\(sourceCount)", systemImage: "folder")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(LoomTokens.dsInk3)
-                }
-
-                if nativeSource?.fileURL != nil {
-                    Button(action: onOpenSourceInNativeApp) {
-                        Image(systemName: "arrow.up.forward.app")
-                            .font(.system(size: 12, weight: .medium))
-                            .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
+                    if sourceCount > 1 {
+                        Label("\(sourceCount)", systemImage: "folder")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(LoomTokens.dsInk3)
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(LoomTokens.dsInk3)
-                    .contentShape(Rectangle())
-                    .accessibilityLabel("Open Source")
-                    .help("Open original file in the default native app")
+
+                    if nativeSource?.fileURL != nil {
+                        Button(action: onOpenSourceInNativeApp) {
+                            Image(systemName: "arrow.up.forward.app")
+                                .font(.system(size: 12, weight: .medium))
+                                .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(LoomTokens.dsInk3)
+                        .contentShape(Rectangle())
+                        .accessibilityLabel("Open Source")
+                        .help("Open original file in the default native app")
+                    }
                 }
 
                 Spacer(minLength: 0)
@@ -1961,17 +2069,13 @@ private struct ReflectionSidebar: View {
             .overlay(alignment: .center) {
                 if cases.isEmpty {
                     VStack(spacing: 0) {
-                        Image(systemName: "square.stack")
+                        Image(systemName: "tray")
                             .font(.system(size: 15))
                             .foregroundStyle(.tertiary)
-                        Text("No projects")
+                        Text("No files")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                             .padding(.top, 8)
-                        Text("Create one with +")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.tertiary)
-                            .padding(.top, 4)
                     }
                 } else if !queryIsEmpty && visibleCases.isEmpty {
                     Text("No matches")
@@ -3492,9 +3596,10 @@ private struct SidebarRowActionButton: View {
 // The glass reading document (owner-approved synthesis 2026-07-03):
 // the owner's words flow directly on the glass in the system serif;
 // captured evidence rides as solid paper cards (the original's material);
-// empty projects show the backlit moon, no explanatory copy.
+// the true no-material workspace uses a separate launcher surface.
 private struct GlassReadingCenter: View {
     let reflectionCase: ReflectionCase
+    let isWorkspaceEmpty: Bool
     @Binding var draftText: String
     @Binding var commitFocus: ReflectionCommitFocus
     let onSelectTrace: (ReflectionLearningTrace) -> Void
@@ -3502,6 +3607,9 @@ private struct GlassReadingCenter: View {
     let onSubmit: () -> Void
     let onDocumentTextChange: (String) -> Void
     let onImportFiles: ([URL]) -> [ReflectionSource]
+    let onImportLocalSources: () -> Void
+    let onCreateReflection: () -> Void
+    let onCreateLearningProject: () -> Void
     let onOpenSourceID: (ReflectionSource.ID) -> Void
     @State private var editorFocusRequest = 0
     @State private var headingJumpTarget: Int?
@@ -3534,144 +3642,151 @@ private struct GlassReadingCenter: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 28) {
-                            Text(reflectionCase.title)
-                                .font(.system(size: 26, weight: .semibold, design: .serif))
-                                .foregroundStyle(.primary)
-                                .padding(.top, 8)
+        ZStack {
+            if isWorkspaceEmpty {
+                WorkbenchEmptyLauncher(
+                    onImportFiles: onImportLocalSources,
+                    onCreateReflection: onCreateReflection,
+                    onCreateLearningProject: onCreateLearningProject
+                )
+            } else {
+                VStack(spacing: 0) {
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 28) {
+                                Text(reflectionCase.title)
+                                    .font(.system(size: 26, weight: .semibold, design: .serif))
+                                    .foregroundStyle(.primary)
+                                    .padding(.top, 8)
 
-                            // The document IS the input: writing happens
-                            // directly on the glass, not in a box below.
-                            GlassDocumentEditor(
-                                caseID: reflectionCase.id,
-                                text: documentText,
-                                focusRequest: editorFocusRequest,
-                                jumpTarget: $headingJumpTarget,
-                                sources: reflectionCase.sources,
-                                onTextChange: onDocumentTextChange,
-                                onImportFiles: onImportFiles,
-                                onOpenSource: onOpenSourceID
-                            )
+                                // The document IS the input: writing happens
+                                // directly on the glass, not in a box below.
+                                GlassDocumentEditor(
+                                    caseID: reflectionCase.id,
+                                    text: documentText,
+                                    focusRequest: editorFocusRequest,
+                                    jumpTarget: $headingJumpTarget,
+                                    sources: reflectionCase.sources,
+                                    onTextChange: onDocumentTextChange,
+                                    onImportFiles: onImportFiles,
+                                    onOpenSource: onOpenSourceID
+                                )
 
-                            ForEach(traces) { trace in
-                                EvidencePaperCard(trace: trace) {
-                                    onSelectTrace(trace)
-                                }
-                            }
-
-                            ForEach(contentSteps) { step in
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text(step.title.uppercased())
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .tracking(0.8)
-                                        .foregroundStyle(.secondary)
-                                    ForEach(step.items, id: \.self) { item in
-                                        Text(item)
-                                            .font(.system(size: 15, design: .serif))
-                                            .lineSpacing(5)
-                                            .foregroundStyle(.primary)
-                                            .fixedSize(horizontal: false, vertical: true)
+                                ForEach(traces) { trace in
+                                    EvidencePaperCard(trace: trace) {
+                                        onSelectTrace(trace)
                                     }
                                 }
-                                .id(step.id)
+
+                                ForEach(contentSteps) { step in
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text(step.title.uppercased())
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .tracking(0.8)
+                                            .foregroundStyle(.secondary)
+                                        ForEach(step.items, id: \.self) { item in
+                                            Text(item)
+                                                .font(.system(size: 15, design: .serif))
+                                                .lineSpacing(5)
+                                                .foregroundStyle(.primary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
+                                    }
+                                    .id(step.id)
+                                }
+                            }
+                            .frame(maxWidth: 640, alignment: .leading)
+                            .padding(.horizontal, 48)
+                            .padding(.top, reflectionSidebarTopClearance)
+                            .padding(.bottom, 32)
+                            .frame(maxWidth: .infinity)
+                        }
+                        // Scrolled content dissolves before it reaches the top
+                        // chrome: an alpha mask, not a painted scrim — nothing
+                        // is drawn ON the glass, the ink itself fades.
+                        .mask(
+                            VStack(spacing: 0) {
+                                LinearGradient(
+                                    colors: [Color.black.opacity(0), .black],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                                .frame(height: 72)
+                                Rectangle().fill(Color.black)
+                            }
+                        )
+                        .overlay(alignment: .topTrailing) {
+                            // The quiet right-edge outline: the WRITTEN
+                            // document's headings first (click scrolls the
+                            // reading pane to the line), then any structured
+                            // step sections below the editor.
+                            if documentHeadings.count + contentSteps.count > 1 {
+                                VStack(alignment: .trailing, spacing: 8) {
+                                    ForEach(documentHeadings) { heading in
+                                        Button {
+                                            headingJumpTarget = heading.id
+                                        } label: {
+                                            Text(heading.title)
+                                                .font(.system(
+                                                    size: heading.level == 1 ? 10.5 : 10,
+                                                    weight: heading.level == 1 ? .medium : .regular
+                                                ))
+                                                .foregroundStyle(.tertiary)
+                                                .lineLimit(1)
+                                                .padding(.trailing, CGFloat(heading.level - 1) * 8)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                    ForEach(contentSteps) { step in
+                                        Button {
+                                            withAnimation { proxy.scrollTo(step.id, anchor: .top) }
+                                        } label: {
+                                            Text(step.title)
+                                                .font(.system(size: 10.5))
+                                                .foregroundStyle(.tertiary)
+                                                .lineLimit(1)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.top, reflectionSidebarTopClearance + 8)
+                                .padding(.trailing, 14)
+                                .frame(width: 132, alignment: .trailing)
                             }
                         }
-                        .frame(maxWidth: 640, alignment: .leading)
-                        .padding(.horizontal, 48)
-                        .padding(.top, reflectionSidebarTopClearance)
-                        .padding(.bottom, 32)
+                    }
+
+                    // Owner directive 2026-07-03: the reflection composer box is
+                    // gone — the document is the writing surface. Learning keeps
+                    // its typed-trace commit strip (a different function).
+                    if isLearningCase {
+                        ReflectionComposer(
+                            text: $draftText,
+                            commitFocus: $commitFocus,
+                            placeholder: composerPlaceholder,
+                            isLearningCase: true,
+                            onSubmit: onSubmit
+                        )
+                        .frame(maxWidth: 640)
+                        .padding(.horizontal, 32)
+                        .padding(.top, 6)
+                        .padding(.bottom, 14)
                         .frame(maxWidth: .infinity)
                     }
-                    // Scrolled content dissolves before it reaches the top
-                    // chrome: an alpha mask, not a painted scrim — nothing
-                    // is drawn ON the glass, the ink itself fades.
-                    .mask(
-                        VStack(spacing: 0) {
-                            LinearGradient(
-                                colors: [Color.black.opacity(0), .black],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 72)
-                            Rectangle().fill(Color.black)
-                        }
-                    )
-                    .overlay(alignment: .topTrailing) {
-                        // The quiet right-edge outline: the WRITTEN
-                        // document's headings first (click scrolls the
-                        // reading pane to the line), then any structured
-                        // step sections below the editor.
-                        if documentHeadings.count + contentSteps.count > 1 {
-                            VStack(alignment: .trailing, spacing: 8) {
-                                ForEach(documentHeadings) { heading in
-                                    Button {
-                                        headingJumpTarget = heading.id
-                                    } label: {
-                                        Text(heading.title)
-                                            .font(.system(
-                                                size: heading.level == 1 ? 10.5 : 10,
-                                                weight: heading.level == 1 ? .medium : .regular
-                                            ))
-                                            .foregroundStyle(.tertiary)
-                                            .lineLimit(1)
-                                            .padding(.trailing, CGFloat(heading.level - 1) * 8)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                                ForEach(contentSteps) { step in
-                                    Button {
-                                        withAnimation { proxy.scrollTo(step.id, anchor: .top) }
-                                    } label: {
-                                        Text(step.title)
-                                            .font(.system(size: 10.5))
-                                            .foregroundStyle(.tertiary)
-                                            .lineLimit(1)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.top, reflectionSidebarTopClearance + 8)
-                            .padding(.trailing, 14)
-                            .frame(width: 132, alignment: .trailing)
-                        }
-                    }
                 }
-
-                // Owner directive 2026-07-03: the reflection composer box is
-                // gone — the document is the writing surface. Learning keeps
-                // its typed-trace commit strip (a different function).
-                if isLearningCase {
-                    ReflectionComposer(
-                        text: $draftText,
-                        commitFocus: $commitFocus,
-                        placeholder: composerPlaceholder,
-                        isLearningCase: true,
-                        onSubmit: onSubmit
-                    )
-                    .frame(maxWidth: 640)
-                    .padding(.horizontal, 32)
-                    .padding(.top, 6)
-                    .padding(.bottom, 14)
-                    .frame(maxWidth: .infinity)
-                }
+            }
         }
-        // The blank case stages nothing (owner final call, 2026-07-04
-        // 2AM, closing the moon arc): title, auto-focused cursor, quiet
-        // glass. The moon's craft — the carved-glass laws, the relief
-        // component, the Blender pipelines — lives on for the stage and
-        // the future pass-progress instrument.
+        // The editor is a quiet writing surface. The woven glass moon belongs
+        // only to the true no-files launcher, never under a blank document.
         .contentShape(Rectangle())
         .onTapGesture {
-            editorFocusRequest += 1
+            if !isWorkspaceEmpty { editorFocusRequest += 1 }
         }
         .onAppear {
-            if isBlankCase { editorFocusRequest += 1 }
+            if isBlankCase && !isWorkspaceEmpty { editorFocusRequest += 1 }
         }
         .onChange(of: reflectionCase.id) {
-            if isBlankCase { editorFocusRequest += 1 }
+            if isBlankCase && !isWorkspaceEmpty { editorFocusRequest += 1 }
         }
     }
 
@@ -3682,6 +3797,134 @@ private struct GlassReadingCenter: View {
         case .correction: return "What did you get wrong — and what is right now?"
         case .principle: return "What holds beyond this file?"
         }
+    }
+}
+
+private struct WorkbenchEmptyLauncher: View {
+    let onImportFiles: () -> Void
+    let onCreateReflection: () -> Void
+    let onCreateLearningProject: () -> Void
+    @State private var promptHovering = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = min(680, max(320, geometry.size.width * 0.68))
+            let rowWidth = min(620, max(300, geometry.size.width * 0.60))
+
+            // No hero object — the empty state is an INVITATION, not a stage
+            // (owner 2026-07-04, again: 直接拿掉). The centre belongs to the
+            // composer and the three ways in; 空即是风格. The glass-debris /
+            // moon craft is preserved in design/blender for meaningful positions
+            // (loading, About, progress), never idle in the void.
+            VStack(spacing: 18) {
+                Spacer(minLength: 0)
+
+                Button(action: onImportFiles) {
+                    HStack(spacing: 14) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 16, weight: .medium))
+                            .frame(width: 22, height: 22)
+
+                        Text("Add files or start a reflection")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(LoomTokens.dsInk2)
+                            .lineLimit(1)
+
+                        Spacer(minLength: 18)
+
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundStyle(LoomTokens.dsInk3)
+                    }
+                    .padding(.horizontal, 22)
+                    .frame(width: width, height: 56)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(promptHovering ? Color.white.opacity(0.075) : Color.white.opacity(0.052))
+                    )
+                    .overlay(
+                        Capsule(style: .continuous)
+                            .stroke(Color.white.opacity(promptHovering ? 0.12 : 0.075), lineWidth: 0.5)
+                    )
+                    .shadow(color: Color.black.opacity(0.18), radius: 18, y: 12)
+                    .contentShape(Capsule(style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .onHover { promptHovering = $0 }
+                .accessibilityLabel("Import local files")
+                .help("Import local files")
+
+                VStack(spacing: 8) {
+                    WorkbenchEmptyActionRow(
+                        symbol: "doc.badge.plus",
+                        title: "Import local files",
+                        detail: "PDF, Word, Markdown, images",
+                        action: onImportFiles
+                    )
+                    WorkbenchEmptyActionRow(
+                        symbol: "rectangle.and.text.magnifyingglass",
+                        title: "New product reflection",
+                        detail: "Blank workbench",
+                        action: onCreateReflection
+                    )
+                    WorkbenchEmptyActionRow(
+                        symbol: "book",
+                        title: "New learning project",
+                        detail: "Capture thinking versions",
+                        action: onCreateLearningProject
+                    )
+                }
+                .frame(width: rowWidth, alignment: .leading)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.top, reflectionSidebarTopClearance)
+            .padding(.bottom, max(56, geometry.size.height * 0.18))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}
+
+private struct WorkbenchEmptyActionRow: View {
+    let symbol: String
+    let title: String
+    let detail: String
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .frame(width: 18, height: 18)
+
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(LoomTokens.dsInk2)
+                    .lineLimit(1)
+
+                Text(detail)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(LoomTokens.dsInk3)
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 32)
+            .background {
+                if hovering {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color.white.opacity(0.045))
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .accessibilityLabel(title)
     }
 }
 
