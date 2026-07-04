@@ -374,6 +374,9 @@ struct LoomReflectionRootView: View {
                 .padding(.vertical, 9)
                 Divider()
                 SourceFileView(fileURL: target.fileURL) { anchorPreview = nil }
+                    .onNotePassage { page, rect, text in
+                        noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text)
+                    }
             }
             .frame(minWidth: 820, minHeight: 640)
             .onAppear {
@@ -907,7 +910,36 @@ struct LoomReflectionRootView: View {
             }
         }
         selectedSourceID = source.id
-        anchorPreview = AnchorPreviewTarget(fileURL: resolved, page: page, rect: rect)
+        anchorPreview = AnchorPreviewTarget(sourceID: source.id, fileURL: resolved, page: page, rect: rect)
+    }
+
+    /// Hover-to-note lands here: the reader captured a passage. Turn it into a
+    /// clickable `loom://anchor` quote in the center note (so a later click
+    /// jumps back to the exact page + rect), close the reader, and let the
+    /// note take focus. One hover, one click, one note.
+    private func noteFromPassage(sourceID: String, page: Int, rect: CGRect, text: String) {
+        let quote = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !quote.isEmpty else { return }
+        let rectValue = "\(Int(rect.origin.x)),\(Int(rect.origin.y)),\(Int(rect.size.width)),\(Int(rect.size.height))"
+        var comps = URLComponents()
+        comps.scheme = "loom"
+        comps.host = "anchor"
+        comps.queryItems = [
+            URLQueryItem(name: "src", value: sourceID),
+            URLQueryItem(name: "page", value: String(page)),
+            URLQueryItem(name: "rect", value: rectValue),
+            URLQueryItem(name: "text", value: String(quote.prefix(120))),
+        ]
+        let anchorURL = comps.string ?? "loom://anchor?src=\(sourceID)&page=\(page)"
+        anchorPreview = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            NotificationCenter.default.post(
+                name: .loomReflectionInsertPassage,
+                object: nil,
+                userInfo: ["quote": quote, "url": anchorURL]
+            )
+        }
+        statusMessage = "Noted passage from page \(page + 1)"
     }
 
     private func openSourcesInNativeApps(_ sources: [ReflectionSource]) {
@@ -3836,6 +3868,7 @@ private struct GlassReadingCenter: View {
 /// The destination of a clicked note-anchor: a source file + the page/rect to
 /// scroll the in-app PDF viewer to.
 private struct AnchorPreviewTarget: Identifiable {
+    let sourceID: String
     let fileURL: URL
     let page: Int
     let rect: CGRect
@@ -3846,6 +3879,9 @@ extension Notification.Name {
     /// A `loom://anchor` link clicked in the reflection note asks the workbench
     /// to pop the source in an in-app PDF view jumped to its page + rect.
     static let loomReflectionAnchorJump = Notification.Name("loomReflectionAnchorJump")
+    /// Hover-to-note: the reader captured a passage; the center note editor
+    /// listens and inserts it as a clickable `loom://anchor` quote.
+    static let loomReflectionInsertPassage = Notification.Name("loomReflectionInsertPassage")
 }
 
 private struct WorkbenchEmptyLauncher: View {
@@ -4384,6 +4420,36 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             invalidateIntrinsicContentSize()
         }
 
+        /// The reader's hover-to-note badge posts a captured passage here; the
+        /// mounted center editor inserts it as a clickable anchored quote.
+        private var passageObserver: NSObjectProtocol?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if window != nil, passageObserver == nil {
+                passageObserver = NotificationCenter.default.addObserver(
+                    forName: .loomReflectionInsertPassage,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] note in
+                    guard let self,
+                          let quote = note.userInfo?["quote"] as? String,
+                          let url = note.userInfo?["url"] as? String else { return }
+                    self.window?.makeFirstResponder(self)
+                    self.insertPassageAnchor(quote: quote, anchorURL: url)
+                }
+            } else if window == nil, let observer = passageObserver {
+                NotificationCenter.default.removeObserver(observer)
+                passageObserver = nil
+            }
+        }
+
+        deinit {
+            if let observer = passageObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
+        }
+
         // A click that lands on a file chip opens its source directly —
         // deterministic hit-testing instead of AppKit's legacy attachment
         // click plumbing.
@@ -4531,6 +4597,30 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             let chip = NSMutableAttributedString(attributedString: NSAttributedString(attachment: attachment))
             chip.addAttribute(.link, value: "loom-source://\(sourceID)", range: NSRange(location: 0, length: chip.length))
             insertion.append(chip)
+            insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
+            insertText(insertion, replacementRange: selectedRange())
+        }
+
+        /// A passage captured by the reader's hover ❕: a quoted line that
+        /// links back to its exact page + rect via `loom://anchor`. Clicking
+        /// it later reopens the reader at that passage.
+        func insertPassageAnchor(quote: String, anchorURL: String) {
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: GlassDocumentEditor.documentFont,
+                .foregroundColor: NSColor.labelColor,
+                .paragraphStyle: GlassDocumentEditor.documentParagraphStyle,
+            ]
+            let insertion = NSMutableAttributedString()
+            let location = selectedRange().location
+            let text = string as NSString
+            if location > 0, text.character(at: location - 1) != 0x0A {
+                insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
+            }
+            var quoteAttributes = bodyAttributes
+            quoteAttributes[.link] = anchorURL
+            let quoteLine = NSAttributedString(string: "\u{201C}\(quote)\u{201D}", attributes: quoteAttributes)
+            insertion.append(quoteLine)
+            // Leave the cursor on a fresh line under the quote, ready to write.
             insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             insertText(insertion, replacementRange: selectedRange())
         }

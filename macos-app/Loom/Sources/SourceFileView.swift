@@ -19,6 +19,10 @@ struct SourceFileView: View {
     let loomURL: URL?
     let directFileURL: URL?
     let onClose: () -> Void
+    /// Hover-to-note: when set, the PDF surface floats a ❕ badge beside the
+    /// line under the cursor; clicking it hands (pageIndex, rect, text) back
+    /// so the parent can drop an anchored passage into its note. nil = off.
+    var notePassageHandler: ((Int, CGRect, String) -> Void)? = nil
 
     @State private var resolvedURL: URL?
     @State private var resolveError: String?
@@ -80,6 +84,14 @@ struct SourceFileView: View {
         self.onClose = onClose
     }
 
+    /// Opt into hover-to-note. Chainable so the pinned two-arg init stays
+    /// intact for callers that only read.
+    func onNotePassage(_ handler: @escaping (Int, CGRect, String) -> Void) -> SourceFileView {
+        var copy = self
+        copy.notePassageHandler = handler
+        return copy
+    }
+
     struct AskMessage: Identifiable, Equatable {
         let id: UUID
         let role: Role
@@ -102,7 +114,8 @@ struct SourceFileView: View {
                             LoomPDFView(
                                 fileURL: resolved,
                                 holder: pdfHolder,
-                                onNote: startNote
+                                onNote: startNote,
+                                onNotePassage: notePassageHandler
                             )
                         } else {
                             LoomQuickLookView(fileURL: resolved)
@@ -2538,6 +2551,7 @@ private struct LoomPDFView: NSViewRepresentable {
     let fileURL: URL
     let holder: PDFViewHolder
     let onNote: () -> Void
+    var onNotePassage: ((Int, CGRect, String) -> Void)? = nil
 
     func makeNSView(context: Context) -> LoomPDFKitView {
         let view = LoomPDFKitView()
@@ -2546,6 +2560,7 @@ private struct LoomPDFView: NSViewRepresentable {
         view.displayDirection = .vertical
         view.backgroundColor = NSColor.windowBackgroundColor
         view.onNote = onNote
+        view.onNotePassage = onNotePassage
         loadDocument(into: view, from: fileURL)
         DispatchQueue.main.async {
             holder.pdfView = view
@@ -2555,6 +2570,7 @@ private struct LoomPDFView: NSViewRepresentable {
 
     func updateNSView(_ nsView: LoomPDFKitView, context: Context) {
         nsView.onNote = onNote
+        nsView.onNotePassage = onNotePassage
         if nsView.document?.documentURL != fileURL {
             loadDocument(into: nsView, from: fileURL)
         }
@@ -2599,6 +2615,77 @@ private struct LoomPDFView: NSViewRepresentable {
 /// menu.
 final class LoomPDFKitView: PDFView {
     var onNote: (() -> Void)?
+    /// Hover-to-note (owner 2026-07-05): as the cursor moves over the text,
+    /// a ❕ badge tracks the line under it; a click hands the passage
+    /// (pageIndex, rect, text) back so the note can anchor to it.
+    var onNotePassage: ((Int, CGRect, String) -> Void)? {
+        didSet { noteBadge.isHidden = onNotePassage == nil }
+    }
+
+    private var pendingPassage: (page: Int, rect: CGRect, text: String)?
+    private var hoverTracking: NSTrackingArea?
+    private lazy var noteBadge: NoteHoverBadge = {
+        let badge = NoteHoverBadge()
+        badge.isHidden = true
+        badge.onClick = { [weak self] in self?.commitPendingPassage() }
+        return badge
+    }()
+
+    override func layout() {
+        super.layout()
+        // Keep the badge topmost — PDFView owns internal document subviews.
+        if noteBadge.superview !== self {
+            addSubview(noteBadge, positioned: .above, relativeTo: nil)
+        }
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let existing = hoverTracking { removeTrackingArea(existing) }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseMoved, .mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+        hoverTracking = area
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        guard onNotePassage != nil else { hideBadge(); return }
+        let viewPoint = convert(event.locationInWindow, from: nil)
+        // Freeze while the cursor is over the badge so it stays clickable.
+        if !noteBadge.isHidden, noteBadge.frame.insetBy(dx: -6, dy: -6).contains(viewPoint) { return }
+        guard let document,
+              let page = page(for: viewPoint, nearest: false) else { hideBadge(); return }
+        let pagePoint = convert(viewPoint, to: page)
+        guard let selection = page.selectionForLine(at: pagePoint),
+              let raw = selection.string?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !raw.isEmpty else { hideBadge(); return }
+        pendingPassage = (document.index(for: page), selection.bounds(for: page), raw)
+        let size: CGFloat = 22
+        let x = min(viewPoint.x + 12, bounds.maxX - size - 4)
+        noteBadge.frame = NSRect(x: x, y: viewPoint.y - size / 2, width: size, height: size)
+        noteBadge.isHidden = false
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        hideBadge()
+    }
+
+    private func hideBadge() {
+        noteBadge.isHidden = true
+        pendingPassage = nil
+    }
+
+    private func commitPendingPassage() {
+        guard let pending = pendingPassage else { return }
+        onNotePassage?(pending.page, pending.rect, pending.text)
+        hideBadge()
+    }
 
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = super.menu(for: event) ?? NSMenu()
@@ -2618,6 +2705,39 @@ final class LoomPDFKitView: PDFView {
     }
 
     @objc private func loomNoteAction() { onNote?() }
+}
+
+/// The ❕ that tracks the hovered line in the reader. A filled accent dot
+/// with a white mark; one click turns the line beneath it into an anchored
+/// note. Drawn (not an emoji glyph) so colour + size stay under control.
+final class NoteHoverBadge: NSView {
+    var onClick: (() -> Void)?
+
+    override var isFlipped: Bool { true }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let disc = bounds.insetBy(dx: 1, dy: 1)
+        let path = NSBezierPath(ovalIn: disc)
+        NSColor.controlAccentColor.setFill()
+        path.fill()
+        NSColor.white.withAlphaComponent(0.95).setStroke()
+        let mark = "!"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: disc.height * 0.6, weight: .bold),
+            .foregroundColor: NSColor.white,
+        ]
+        let markSize = mark.size(withAttributes: attrs)
+        mark.draw(
+            at: NSPoint(x: disc.midX - markSize.width / 2, y: disc.midY - markSize.height / 2),
+            withAttributes: attrs
+        )
+    }
+
+    override func mouseDown(with event: NSEvent) { onClick?() }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .pointingHand)
+    }
 }
 
 private struct LoomQuickLookView: NSViewRepresentable {

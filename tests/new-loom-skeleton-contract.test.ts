@@ -1857,7 +1857,22 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // or a `loom://anchor` link in the note — pops the source in an in-app
   // reader jumped to the passage. One click open, one Done (⎋) to close.
   assert.match(nativeRoot, /private func jumpToAnchor\(sourceID: String, page: Int, rect: CGRect\)/);
-  assert.match(nativeRoot, /anchorPreview = AnchorPreviewTarget\(fileURL: resolved, page: page, rect: rect\)/);
+  assert.match(nativeRoot, /anchorPreview = AnchorPreviewTarget\(sourceID: source\.id, fileURL: resolved, page: page, rect: rect\)/);
+  // Hover-to-note (owner 2026-07-05): the reader floats a ❕ that tracks the
+  // hovered line; a click turns that passage into a clickable `loom://anchor`
+  // quote in the center note — read the source, tag a line, keep writing.
+  assert.match(sourceFileView, /var notePassageHandler: \(\(Int, CGRect, String\) -> Void\)\? = nil/);
+  assert.match(sourceFileView, /func onNotePassage\(_ handler: @escaping \(Int, CGRect, String\) -> Void\) -> SourceFileView/);
+  assert.match(sourceFileView, /onNotePassage: notePassageHandler/);
+  assert.match(sourceFileView, /var onNotePassage: \(\(Int, CGRect, String\) -> Void\)\?/);
+  assert.match(sourceFileView, /final class NoteHoverBadge: NSView/);
+  assert.match(sourceFileView, /page\.selectionForLine\(at: pagePoint\)/);
+  assert.match(sourceFileView, /onNotePassage\?\(pending\.page, pending\.rect, pending\.text\)/);
+  assert.match(nativeRoot, /private func noteFromPassage\(sourceID: String, page: Int, rect: CGRect, text: String\)/);
+  assert.match(nativeRoot, /static let loomReflectionInsertPassage = Notification\.Name/);
+  assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text in/);
+  assert.match(nativeRoot, /func insertPassageAnchor\(quote: String, anchorURL: String\)/);
+  assert.match(nativeRoot, /quoteAttributes\[\.link\] = anchorURL/);
   assert.match(nativeRoot, /struct AnchorPreviewTarget: Identifiable/);
   assert.match(nativeRoot, /static let loomReflectionAnchorJump = Notification\.Name/);
   assert.match(nativeRoot, /\.sheet\(item: \$anchorPreview\)/);
