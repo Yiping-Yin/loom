@@ -2435,7 +2435,9 @@ private struct ReflectionSidebar: View {
             onMoveToProject: { onMoveChat(reflectionCase, $0) }
         )
         .id("\(reflectionCase.id)#\(reflectionCase.projectID ?? "-")#\(projectMenuFingerprint)")
-        .padding(.leading, indented ? 20 : 8)
+        // Icon-less chats already sit at the project-name column via their clear
+        // 22pt gutter, so nested + ungrouped share one leading — no extra indent.
+        .padding(.leading, 8)
         .padding(.trailing, 8)
         .padding(.bottom, 1)
     }
@@ -2517,10 +2519,13 @@ private struct SidebarSectionHeader: View {
         // 22pt leading spacer mirrors the icon column) so the left edge is one
         // clean grid; the folder/doc icons carry all the hierarchy.
         HStack(spacing: 10) {
-            Color.clear.frame(width: 22, height: 1)
+            // Left-margin group header (owner reference 2026-07-05): the label
+            // sits at the same left column as the project folder icons below,
+            // names indent from there — one clean left edge, no mid-float.
             Text(title)
                 .font(.system(size: 10.5))
                 .foregroundStyle(.secondary)
+                .padding(.leading, 6)
             Spacer(minLength: 0)
             if isHovering, let onAdd {
                 Button(action: onAdd) {
@@ -2588,17 +2593,9 @@ private struct SidebarProjectHeader: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Button { isExpanded.toggle() } label: {
-                Image(systemName: showsExpanded ? "chevron.down" : "chevron.right")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 12)
-            }
-            .buttonStyle(.plain)
-
-            // The folder glyph is the icon-first signal (owner 2026-07-05): a
-            // project reads as a container to open, no uppercase word needed.
-            // Filled when open / hollow when closed doubles the state cue.
+            // No chevron (owner reference 2026-07-05): the folder glyph itself
+            // carries open/closed — filled when showing its chats, hollow when
+            // collapsed — and the whole row toggles. One clean left column.
             Image(systemName: showsExpanded ? "folder.fill" : "folder")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
@@ -2617,7 +2614,6 @@ private struct SidebarProjectHeader: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .onTapGesture(count: 2) { beginRename() }
             }
 
             Spacer(minLength: 0)
@@ -2657,6 +2653,8 @@ private struct SidebarProjectHeader: View {
         .padding(.trailing, 12)
         .frame(height: 28)
         .contentShape(Rectangle())
+        .onTapGesture(count: 2) { if !isEditing { beginRename() } }
+        .onTapGesture { if !isEditing { isExpanded.toggle() } }
         .background {
             if isHovering {
                 RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.quinary)
@@ -3887,10 +3885,11 @@ private struct ReflectionSidebarRow: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(alignment: .center, spacing: 10) {
-                Image(systemName: isLearning ? "book" : "rectangle.and.text.magnifyingglass")
-                    .font(.system(size: 12))
-                    .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                    .frame(width: 22)
+                // Chats are icon-less leaves (owner reference 2026-07-05): only
+                // projects (containers) get a glyph; a chat is indented text
+                // aligned to the project-name column. The clear gutter holds
+                // that alignment so titles line up under the project names.
+                Color.clear.frame(width: 22, height: 1)
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
