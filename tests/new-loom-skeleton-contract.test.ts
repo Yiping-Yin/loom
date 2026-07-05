@@ -1921,6 +1921,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /document\?\.outlineRoot/);
   assert.match(sourceFileView, /func restorePosition\(for url: URL\)/);
   assert.match(sourceFileView, /private var readerSidebar: some View/);
+  // Display modes + night mode + first/last (owner 2026-07-06): PDFView's own
+  // layout modes, a Core Image invert for dark reading, keyboard page ends.
+  assert.match(sourceFileView, /func setDisplayMode\(_ mode: PDFDisplayMode\)/);
+  assert.match(sourceFileView, /func toggleNightMode\(\)/);
+  assert.match(sourceFileView, /layerUsesCoreImageFilters = true/);
+  assert.match(sourceFileView, /CIFilter\(name: "CIColorInvert"\)/);
+  assert.match(sourceFileView, /func goToFirstPage\(\)/);
+  assert.match(sourceFileView, /pdfHolder\.toggleNightMode\(\)/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered

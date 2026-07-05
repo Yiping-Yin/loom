@@ -1,6 +1,7 @@
 import SwiftUI
 import PDFKit
 import QuickLookUI
+import CoreImage
 
 /// Native viewer for a source file from the user's content root or a
 /// directly imported local file.
@@ -121,13 +122,17 @@ struct SourceFileView: View {
                 .help("Show pages & contents")
                 .foregroundStyle(sidebarMode != nil ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
             Divider().frame(height: 16)
+            Button { pdfHolder.goToFirstPage() } label: { Image(systemName: "chevron.up.to.line") }
+                .help("First page (⌘↑)").keyboardShortcut(.upArrow, modifiers: .command)
             Button { pdfHolder.goToPreviousPage() } label: { Image(systemName: "chevron.up") }
                 .help("Previous page")
-            Button { pdfHolder.goToNextPage() } label: { Image(systemName: "chevron.down") }
-                .help("Next page")
             Text(pdfHolder.pageLabel.isEmpty ? "—" : pdfHolder.pageLabel)
                 .font(.system(size: 11.5, design: .monospaced))
-                .frame(minWidth: 52, alignment: .leading)
+                .frame(minWidth: 52, alignment: .center)
+            Button { pdfHolder.goToNextPage() } label: { Image(systemName: "chevron.down") }
+                .help("Next page")
+            Button { pdfHolder.goToLastPage() } label: { Image(systemName: "chevron.down.to.line") }
+                .help("Last page (⌘↓)").keyboardShortcut(.downArrow, modifiers: .command)
 
             Spacer(minLength: 10)
 
@@ -148,6 +153,29 @@ struct SourceFileView: View {
                 .help("Actual size (⌘0)").keyboardShortcut("0", modifiers: .command)
 
             Spacer(minLength: 10)
+
+            Menu {
+                Picker("Layout", selection: Binding(
+                    get: { pdfHolder.displayModeRaw },
+                    set: { pdfHolder.setDisplayMode(PDFDisplayMode(rawValue: $0) ?? .singlePageContinuous) })
+                ) {
+                    Text("Continuous").tag(PDFDisplayMode.singlePageContinuous.rawValue)
+                    Text("Single Page").tag(PDFDisplayMode.singlePage.rawValue)
+                    Text("Two Pages").tag(PDFDisplayMode.twoUpContinuous.rawValue)
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Image(systemName: "rectangle.split.2x1")
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Page layout")
+            Button { pdfHolder.toggleNightMode() } label: {
+                Image(systemName: pdfHolder.isNightMode ? "moon.fill" : "moon")
+            }
+            .help("Night mode")
+            .foregroundStyle(pdfHolder.isNightMode ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
 
             Button { openFind() } label: { Image(systemName: "magnifyingglass") }
                 .help("Find in document (⌘F)").keyboardShortcut("f", modifiers: .command)
@@ -2719,6 +2747,12 @@ final class PDFViewHolder: ObservableObject {
     @Published var canZoomOut = false
     @Published var isFitting = true // autoScales on = fit-to-width
 
+    // Display layout + night mode (owner 2026-07-06): let readers pick
+    // continuous / single / two-up, and invert the page for dark reading —
+    // capabilities PDFView has but LOOM never surfaced.
+    @Published var displayModeRaw = PDFDisplayMode.singlePageContinuous.rawValue
+    @Published var isNightMode = false
+
     // In-document search (⌘F) — owner 2026-07-06: LOOM was hiding PDFKit's own
     // find. Synchronous findString is plenty for reading-sized docs and avoids
     // the async delegate dance.
@@ -2807,12 +2841,50 @@ final class PDFViewHolder: ObservableObject {
 
     func goToDestination(_ dest: PDFDestination) { pdfView?.go(to: dest); refresh() }
 
+    // MARK: Display layout + night mode
+
+    func setDisplayMode(_ mode: PDFDisplayMode) {
+        pdfView?.displayMode = mode
+        displayModeRaw = mode.rawValue
+        refresh()
+    }
+
+    func toggleNightMode() {
+        isNightMode.toggle()
+        applyNightMode()
+    }
+
+    /// PDFKit has no native invert. Composite a Core Image invert (+ a π hue
+    /// rotate so colored figures keep roughly their hue) onto the view's layer.
+    /// `layerUsesCoreImageFilters` is required for CIFilters on an NSView layer.
+    func applyNightMode() {
+        guard let view = pdfView else { return }
+        view.wantsLayer = true
+        view.layerUsesCoreImageFilters = true
+        if isNightMode {
+            let invert = CIFilter(name: "CIColorInvert")
+            let hue = CIFilter(name: "CIHueAdjust")
+            hue?.setValue(Double.pi, forKey: kCIInputAngleKey)
+            view.layer?.filters = [invert, hue].compactMap { $0 }
+        } else {
+            view.layer?.filters = nil
+        }
+    }
+
     func zoomIn()  { pdfView?.autoScales = false; pdfView?.zoomIn(nil);  refresh() }
     func zoomOut() { pdfView?.autoScales = false; pdfView?.zoomOut(nil); refresh() }
     func fitWidth() { pdfView?.autoScales = true; refresh() }
     func actualSize() { pdfView?.autoScales = false; pdfView?.scaleFactor = 1; refresh() }
     func goToPreviousPage() { pdfView?.goToPreviousPage(nil); refresh() }
     func goToNextPage() { pdfView?.goToNextPage(nil); refresh() }
+    func goToFirstPage() {
+        if let p = pdfView?.document?.page(at: 0) { pdfView?.go(to: p); refresh() }
+    }
+    func goToLastPage() {
+        guard let doc = pdfView?.document, doc.pageCount > 0,
+              let p = doc.page(at: doc.pageCount - 1) else { return }
+        pdfView?.go(to: p); refresh()
+    }
     func goToPage(_ oneBased: Int) {
         guard let view = pdfView, let doc = view.document else { return }
         let idx = max(0, min(oneBased - 1, doc.pageCount - 1))
@@ -2940,6 +3012,9 @@ private struct LoomPDFView: NSViewRepresentable {
         loadDocument(into: view, from: fileURL)
         DispatchQueue.main.async {
             holder.attach(view)
+            // Grab first responder so arrows / space / page-up-down scroll the
+            // document immediately, without a click first.
+            view.window?.makeFirstResponder(view)
         }
         return view
     }
