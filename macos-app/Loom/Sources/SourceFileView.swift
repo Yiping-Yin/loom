@@ -3102,16 +3102,19 @@ final class LoomPDFKitView: PDFView {
     /// a ❕ badge tracks the line under it; a click hands the passage
     /// (pageIndex, rect, text) back so the note can anchor to it.
     var onNotePassage: ((Int, CGRect, String, NSImage?) -> Void)? {
-        didSet { noteBadge.isHidden = onNotePassage == nil }
+        didSet { noteTick.isHidden = onNotePassage == nil }
     }
 
     private var pendingPassage: (page: Int, rect: CGRect, text: String)?
     private var hoverTracking: NSTrackingArea?
-    private lazy var noteBadge: NoteHoverBadge = {
-        let badge = NoteHoverBadge()
-        badge.isHidden = true
-        badge.onClick = { [weak self] in self?.commitPendingPassage() }
-        return badge
+    /// The margin tick (owner 2026-07-06 redesign): a single 青芒 hairline pinned
+    /// in the gutter at the hovered line's trailing edge — the same 2pt spine the
+    /// captured quote wears in the note. Non-interactive (hitTest nil); the whole
+    /// line is the click target, committed in mouseUp.
+    private lazy var noteTick: NoteHoverTick = {
+        let tick = NoteHoverTick()
+        tick.isHidden = true
+        return tick
     }()
 
     // Region snip (owner 2026-07-06, appshot iteration 2): ⌥-drag draws a box;
@@ -3145,8 +3148,8 @@ final class LoomPDFKitView: PDFView {
         if lineHighlight.superview !== self {
             addSubview(lineHighlight, positioned: .above, relativeTo: nil)
         }
-        if noteBadge.superview !== self {
-            addSubview(noteBadge, positioned: .above, relativeTo: nil)
+        if noteTick.superview !== self {
+            addSubview(noteTick, positioned: .above, relativeTo: nil)
         }
         if snipOverlay.superview !== self {
             addSubview(snipOverlay, positioned: .above, relativeTo: nil)
@@ -3193,10 +3196,12 @@ final class LoomPDFKitView: PDFView {
         lineHighlight.frame = bounds
         lineHighlight.lineRect = lineRect
         lineHighlight.isHidden = false
-        let size: CGFloat = 20
-        let bx = min(lineRect.maxX + 7, bounds.maxX - size - 4)
-        noteBadge.frame = NSRect(x: bx, y: lineRect.midY - size / 2, width: size, height: size)
-        noteBadge.isHidden = false
+        // Pin the tick just past the line's trailing edge; its height tracks the
+        // line so it reads as this row's mark, not a floating object.
+        let tw: CGFloat = 12
+        let tx = min(lineRect.maxX + 6, bounds.maxX - tw - 2)
+        noteTick.frame = NSRect(x: tx, y: lineRect.minY - 2, width: tw, height: lineRect.height + 4)
+        noteTick.isHidden = false
     }
 
     override func mouseExited(with event: NSEvent) {
@@ -3205,7 +3210,7 @@ final class LoomPDFKitView: PDFView {
     }
 
     private func hideBadge() {
-        noteBadge.isHidden = true
+        noteTick.isHidden = true
         lineHighlight.isHidden = true
         pendingPassage = nil
     }
@@ -3305,7 +3310,7 @@ final class LoomPDFKitView: PDFView {
         // Confirm the grab right on the page — the note lands behind the reader,
         // so the flash is the "it worked" you can feel.
         lineHighlight.flash()
-        noteBadge.isHidden = true
+        noteTick.isHidden = true
         pendingPassage = nil
         onNotePassage?(pending.page, pending.rect, pending.text, image)
     }
@@ -3354,36 +3359,35 @@ final class LoomPDFKitView: PDFView {
     @objc private func loomNoteAction() { onNote?() }
 }
 
-/// The ❕ that tracks the hovered line in the reader. A filled accent dot
-/// with a white mark; one click turns the line beneath it into an anchored
-/// note. Drawn (not an emoji glyph) so colour + size stay under control.
-final class NoteHoverBadge: NSView {
-    var onClick: (() -> Void)?
-
+/// The margin tick that marks the hovered line in the reader (owner 2026-07-06,
+/// replacing the old system-blue "!" disc). A single lit 青芒 hairline in the
+/// gutter — the exact 2pt spine the captured quote wears in the note, so reader
+/// and note speak one grammar. Cyan is the only saturated mark on the surface;
+/// it is signal, never decoration. Non-interactive — the whole line is the
+/// click target (committed in the view's mouseUp), so the tick just points.
+final class NoteHoverTick: NSView {
     override var isFlipped: Bool { true }
 
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
     override func draw(_ dirtyRect: NSRect) {
-        let disc = bounds.insetBy(dx: 1, dy: 1)
-        let path = NSBezierPath(ovalIn: disc)
-        NSColor.controlAccentColor.setFill()
+        // 青芒 #4BC5DE — inlined as calibrated RGB, matching the existing idiom.
+        // Fixed cyan (not the brighter dark pair) because the backdrop is the
+        // white PDF page, not dark glass.
+        let cyan = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
+        let h = min(max(bounds.height, 11), 22)
+        let bar = NSRect(x: bounds.midX - 1.25, y: (bounds.height - h) / 2, width: 2.5, height: h)
+        let path = NSBezierPath(roundedRect: bar, xRadius: 1.25, yRadius: 1.25)
+        NSGraphicsContext.saveGraphicsState()
+        // Lit, not plated — a soft cyan glow so it reads as light on the page.
+        let glow = NSShadow()
+        glow.shadowColor = cyan.withAlphaComponent(0.5)
+        glow.shadowBlurRadius = 3.5
+        glow.shadowOffset = .zero
+        glow.set()
+        cyan.setFill()
         path.fill()
-        NSColor.white.withAlphaComponent(0.95).setStroke()
-        let mark = "!"
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: disc.height * 0.6, weight: .bold),
-            .foregroundColor: NSColor.white,
-        ]
-        let markSize = mark.size(withAttributes: attrs)
-        mark.draw(
-            at: NSPoint(x: disc.midX - markSize.width / 2, y: disc.midY - markSize.height / 2),
-            withAttributes: attrs
-        )
-    }
-
-    override func mouseDown(with event: NSEvent) { onClick?() }
-
-    override func resetCursorRects() {
-        addCursorRect(bounds, cursor: .pointingHand)
+        NSGraphicsContext.restoreGraphicsState()
     }
 }
 
@@ -3433,49 +3437,69 @@ final class SnipOverlayView: NSView {
     }
 }
 
-/// A calm wash over the line under the cursor in the reader — the capture
-/// target made visible. `flash()` pulses it green to confirm a grab, since the
-/// note itself lands behind the reader sheet.
+/// A calm lift over the line under the cursor in the reader — the capture
+/// target made visible with light/ink, not a colour wash (owner 2026-07-06:
+/// cyan no longer floods the row; it lives only on the trailing tick). `flash()`
+/// gives a cyan receipt that slides toward the note, since the note itself lands
+/// behind the reader.
 final class LineHoverHighlight: NSView {
     var lineRect: CGRect = .zero {
         didSet {
             flashing = false
-            fillAlpha = 0.16
             alphaValue = 1
             needsDisplay = true
         }
     }
-    private var fillAlpha: CGFloat = 0.16
     private var flashing = false
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override func draw(_ dirtyRect: NSRect) {
         guard lineRect.width > 1, lineRect.height > 1 else { return }
-        let cyan = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
-        let green = NSColor(calibratedRed: 0.373, green: 0.812, blue: 0.561, alpha: 1)
-        let pad = lineRect.insetBy(dx: -4, dy: -2)
-        let path = NSBezierPath(roundedRect: pad, xRadius: 3, yRadius: 3)
-        (flashing ? green : cyan).withAlphaComponent(fillAlpha).setFill()
-        path.fill()
+        let box = lineRect.insetBy(dx: -5, dy: -2.5)
+        if flashing {
+            // Receipt: a single soft cyan pulse across the row — cyan, never a
+            // foreign green, so the instrument stays a two-colour (ink + cyan) tool.
+            let cyan = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
+            let pulse = NSBezierPath(roundedRect: box, xRadius: 4, yRadius: 4)
+            cyan.withAlphaComponent(0.22).setFill()
+            pulse.fill()
+            return
+        }
+        // Achromatic lift — a hair of ink so the row reads "lifted" on white
+        // paper (and inverts to a light lift under night mode). No cyan on content.
+        let lift = NSBezierPath(roundedRect: box, xRadius: 4, yRadius: 4)
+        NSColor.black.withAlphaComponent(0.05).setFill()
+        lift.fill()
+        // A 1pt baseline rule — the instrument's underline, made of ink.
+        let baseY = box.minY + 1
+        let under = NSBezierPath()
+        under.move(to: NSPoint(x: box.minX + 2, y: baseY))
+        under.line(to: NSPoint(x: box.maxX - 2, y: baseY))
+        under.lineWidth = 1
+        NSColor.black.withAlphaComponent(0.14).setStroke()
+        under.stroke()
     }
 
-    /// Pulse green over the captured line, then fade out and hide.
+    /// Cyan receipt: pulse the row, then carry it toward the note and fade —
+    /// mirroring the passage flowing into the centre editor.
     func flash() {
         flashing = true
-        fillAlpha = 0.85
         isHidden = false
         alphaValue = 1
         needsDisplay = true
+        let start = frame
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.55
+            context.duration = 0.4
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             animator().alphaValue = 0
+            animator().setFrameOrigin(NSPoint(x: start.origin.x + 14, y: start.origin.y))
         }, completionHandler: { [weak self] in
             guard let self else { return }
             self.isHidden = true
+            self.setFrameOrigin(start.origin)
             self.alphaValue = 1
             self.flashing = false
-            self.fillAlpha = 0.10
         })
     }
 }

@@ -1858,14 +1858,18 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // reader jumped to the passage. One click open, one Done (⎋) to close.
   assert.match(nativeRoot, /private func jumpToAnchor\(sourceID: String, page: Int, rect: CGRect\)/);
   assert.match(nativeRoot, /anchorPreview = AnchorPreviewTarget\(sourceID: source\.id, fileURL: resolved, page: page, rect: rect\)/);
-  // Hover-to-note (owner 2026-07-05): the reader floats a ❕ that tracks the
-  // hovered line; a click turns that passage into a clickable `loom://anchor`
-  // quote in the center note — read the source, tag a line, keep writing.
+  // Hover-to-note (owner 2026-07-05): the reader marks the hovered line; a click
+  // turns that passage into a clickable `loom://anchor` quote in the center note
+  // — read the source, tag a line, keep writing.
   assert.match(sourceFileView, /var notePassageHandler: \(\(Int, CGRect, String, NSImage\?\) -> Void\)\? = nil/);
   assert.match(sourceFileView, /func onNotePassage\(_ handler: @escaping \(Int, CGRect, String, NSImage\?\) -> Void\) -> SourceFileView/);
   assert.match(sourceFileView, /onNotePassage: notePassageHandler/);
   assert.match(sourceFileView, /var onNotePassage: \(\(Int, CGRect, String, NSImage\?\) -> Void\)\?/);
-  assert.match(sourceFileView, /final class NoteHoverBadge: NSView/);
+  // Margin-tick redesign (owner 2026-07-06): the off-brand system-blue "!" disc
+  // is gone — replaced by a single 青芒 hairline in the gutter (the quote's spine),
+  // non-interactive (the line owns the click). Cyan is signal, never a fill.
+  assert.match(sourceFileView, /final class NoteHoverTick: NSView/);
+  assert.doesNotMatch(sourceFileView, /NSColor\.controlAccentColor/);
   assert.match(sourceFileView, /page\.selectionForLine\(at: pagePoint\)/);
   assert.match(sourceFileView, /onNotePassage\?\(pending\.page, pending\.rect, pending\.text, image\)/);
   assert.match(nativeRoot, /private func noteFromPassage\(sourceID: String, page: Int, rect: CGRect, text: String, image: NSImage\? = nil, precise: Bool = true\)/);
