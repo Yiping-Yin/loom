@@ -3194,14 +3194,19 @@ private struct SidebarUtilityStrip: View {
             // same stroke language, brand whisper kept.
             SidebarRailIcon(
                 systemImage: "moon.stars",
-                help: "About Loom · Local, \(projectCount) project\(projectCount == 1 ? "" : "s") — on-device"
+                help: "About Loom · Local, \(projectCount) project\(projectCount == 1 ? "" : "s") — on-device",
+                tooltipAnchor: .leading
             ) {
                 openWindow(id: AboutWindow.id)
             }
 
             Spacer(minLength: 0)
 
-            SidebarRailIcon(systemImage: "gearshape", help: "Settings (⌘,)") {
+            SidebarRailIcon(
+                systemImage: "gearshape",
+                help: "Settings (⌘,)",
+                tooltipAnchor: .trailing
+            ) {
                 openSettings()
             }
         }
@@ -3216,6 +3221,7 @@ private struct SidebarUtilityStrip: View {
 private struct SidebarRailIcon: View {
     let systemImage: String
     let help: String
+    var tooltipAnchor: TooltipNotch = .center
     let action: () -> Void
     @State private var isHovering = false
 
@@ -3235,8 +3241,108 @@ private struct SidebarRailIcon: View {
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
-        .help(help)
-        .accessibilityLabel(help)
+        .glassTooltip(help, anchor: tooltipAnchor)
+    }
+}
+
+// A macOS Dock–style tooltip: a glass bubble with a small downward pointer,
+// shown above the element on hover (owner 2026-07-06: 被选中的玻璃提示要和系统
+// 对齐 — match the Dock's "Loom" bubble instead of the plain .help() tooltip).
+// .accessibilityLabel still carries the text for VoiceOver.
+private enum TooltipNotch { case leading, center, trailing }
+
+private struct GlassTooltipShape: Shape {
+    var notch: TooltipNotch = .center
+    var cornerRadius: CGFloat = 8
+    var notchWidth: CGFloat = 13
+    var notchHeight: CGFloat = 6
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let body = CGRect(
+            x: rect.minX, y: rect.minY,
+            width: rect.width, height: max(0, rect.height - notchHeight)
+        )
+        path.addRoundedRect(in: body, cornerSize: CGSize(width: cornerRadius, height: cornerRadius))
+        // Keep the pointer under the icon: near the edge for a leading/trailing
+        // anchor (an icon at the window's corner), centered otherwise.
+        let inset = cornerRadius + notchWidth / 2 + 2
+        let notchX: CGFloat
+        switch notch {
+        case .leading:  notchX = min(rect.minX + inset, rect.midX)
+        case .center:   notchX = rect.midX
+        case .trailing: notchX = max(rect.maxX - inset, rect.midX)
+        }
+        var tip = Path()
+        tip.move(to: CGPoint(x: notchX - notchWidth / 2, y: body.maxY - 0.5))
+        tip.addLine(to: CGPoint(x: notchX, y: rect.maxY))
+        tip.addLine(to: CGPoint(x: notchX + notchWidth / 2, y: body.maxY - 0.5))
+        tip.closeSubpath()
+        path.addPath(tip)
+        return path
+    }
+}
+
+private struct GlassTooltipModifier: ViewModifier {
+    let text: String
+    let anchor: TooltipNotch
+    @State private var isVisible = false
+    @State private var pending: DispatchWorkItem?
+
+    private var overlayAlignment: Alignment {
+        switch anchor {
+        case .leading:  return .topLeading
+        case .center:   return .top
+        case .trailing: return .topTrailing
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .onHover { hovering in
+                pending?.cancel()
+                if hovering {
+                    let work = DispatchWorkItem {
+                        withAnimation(.easeOut(duration: 0.12)) { isVisible = true }
+                    }
+                    pending = work
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55, execute: work)
+                } else {
+                    withAnimation(.easeOut(duration: 0.1)) { isVisible = false }
+                }
+            }
+            .overlay(alignment: overlayAlignment) {
+                if isVisible {
+                    Text(text)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.primary)
+                        .fixedSize()
+                        .padding(.horizontal, 10)
+                        .padding(.top, 5)
+                        .padding(.bottom, 5 + 6) // room for the pointer
+                        .background(.regularMaterial, in: GlassTooltipShape(notch: anchor))
+                        .overlay {
+                            GlassTooltipShape(notch: anchor)
+                                .stroke(Color.white.opacity(0.12), lineWidth: 0.5)
+                        }
+                        .shadow(color: .black.opacity(0.22), radius: 7, y: 3)
+                        .fixedSize()
+                        .alignmentGuide(.top) { $0[.bottom] }
+                        .offset(y: -6)
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
+                }
+            }
+            .accessibilityLabel(text)
+    }
+}
+
+private extension View {
+    /// Dock-style glass tooltip on hover (replaces the plain `.help()` bubble).
+    /// `anchor` keeps a corner icon's bubble inside the window: `.leading` for
+    /// a left-edge icon, `.trailing` for a right-edge one, `.center` otherwise.
+    func glassTooltip(_ text: String, anchor: TooltipNotch = .center) -> some View {
+        modifier(GlassTooltipModifier(text: text, anchor: anchor))
     }
 }
 
