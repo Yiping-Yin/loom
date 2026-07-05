@@ -1881,6 +1881,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /name: \.loomReflectionInsertPassageImage/);
   assert.match(nativeRoot, /static let loomReflectionInsertPassageImage = Notification\.Name/);
   assert.match(nativeRoot, /forName: \.loomReflectionInsertPassageImage[\s\S]{0,400}self\.insertPaperImage\(image\)/);
+  // Appshot iteration 2 (owner 2026-07-06): ⌥-drag snips an exact rectangular
+  // region — precise block/figure/table capture beyond the hovered line.
+  assert.match(sourceFileView, /final class SnipOverlayView: NSView/);
+  assert.match(sourceFileView, /event\.modifierFlags\.contains\(\.option\)/);
+  assert.match(sourceFileView, /private func captureRegion\(viewRect: CGRect\)/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered

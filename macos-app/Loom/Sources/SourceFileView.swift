@@ -2639,12 +2639,28 @@ final class LoomPDFKitView: PDFView {
         return badge
     }()
 
+    // Region snip (owner 2026-07-06, appshot iteration 2): ⌥-drag draws a box;
+    // on release the boxed region is rendered to an image and dropped into the
+    // note — precise block / figure / table capture, beyond the hovered line.
+    private var snipStart: CGPoint?
+    private var snipRect: CGRect?
+    private lazy var snipOverlay: SnipOverlayView = {
+        let overlay = SnipOverlayView()
+        overlay.isHidden = true
+        return overlay
+    }()
+
     override func layout() {
         super.layout()
-        // Keep the badge topmost — PDFView owns internal document subviews.
+        // Keep the badge + snip marquee topmost — PDFView owns internal
+        // document subviews.
         if noteBadge.superview !== self {
             addSubview(noteBadge, positioned: .above, relativeTo: nil)
         }
+        if snipOverlay.superview !== self {
+            addSubview(snipOverlay, positioned: .above, relativeTo: nil)
+        }
+        snipOverlay.frame = bounds
     }
 
     override func updateTrackingAreas() {
@@ -2689,13 +2705,75 @@ final class LoomPDFKitView: PDFView {
         pendingPassage = nil
     }
 
+    // ⌥-drag = snip a rectangular region. We take the drag over from PDFView's
+    // native marquee and draw our own cyan box, then appshot exactly it.
+    override func mouseDown(with event: NSEvent) {
+        if onNotePassage != nil, event.modifierFlags.contains(.option) {
+            snipStart = convert(event.locationInWindow, from: nil)
+            snipRect = nil
+            hideBadge()
+            return
+        }
+        super.mouseDown(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let start = snipStart else { super.mouseDragged(with: event); return }
+        let point = convert(event.locationInWindow, from: nil)
+        let rect = CGRect(
+            x: min(start.x, point.x), y: min(start.y, point.y),
+            width: abs(point.x - start.x), height: abs(point.y - start.y)
+        )
+        snipRect = rect
+        snipOverlay.frame = bounds
+        snipOverlay.selectionRect = rect
+        snipOverlay.isHidden = false
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        guard snipStart != nil else { super.mouseUp(with: event); return }
+        snipStart = nil
+        snipOverlay.isHidden = true
+        let rect = snipRect
+        snipRect = nil
+        if let rect, rect.width > 8, rect.height > 8 { captureRegion(viewRect: rect) }
+    }
+
+    /// Turn a view-space snip box into an appshot: find its page, map the box
+    /// into page space, render exactly that rect, and drop the image (plus the
+    /// text under it, if any) into the note.
+    private func captureRegion(viewRect: CGRect) {
+        let center = CGPoint(x: viewRect.midX, y: viewRect.midY)
+        guard let document, let page = page(for: center, nearest: true) else { return }
+        let a = convert(CGPoint(x: viewRect.minX, y: viewRect.minY), to: page)
+        let b = convert(CGPoint(x: viewRect.maxX, y: viewRect.maxY), to: page)
+        let pageRect = CGRect(
+            x: min(a.x, b.x), y: min(a.y, b.y),
+            width: abs(b.x - a.x), height: abs(b.y - a.y)
+        )
+        guard pageRect.width > 4, pageRect.height > 4,
+              let image = Self.regionImage(from: page, pageRect: pageRect) else { return }
+        NotificationCenter.default.post(
+            name: .loomReflectionInsertPassageImage,
+            object: nil,
+            userInfo: ["image": image]
+        )
+        let text = page.selection(for: pageRect)?.string?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !text.isEmpty {
+            onNotePassage?(document.index(for: page), pageRect, text)
+        }
+    }
+
     private func commitPendingPassage() {
         guard let pending = pendingPassage else { return }
         // Appshot (owner 2026-07-06): render the captured region to an image and
         // drop it into the note beside the quote. PDFPage rendering reads the
         // content stream directly — no screen-recording / TCC permission.
+        // The hovered line gets a little breathing room; a dragged snip box is
+        // captured exactly (see captureRegion).
         if let page = document?.page(at: pending.page),
-           let image = Self.regionImage(from: page, pageRect: pending.rect) {
+           let image = Self.regionImage(from: page, pageRect: pending.rect.insetBy(dx: -10, dy: -7)) {
             NotificationCenter.default.post(
                 name: .loomReflectionInsertPassageImage,
                 object: nil,
@@ -2706,15 +2784,14 @@ final class LoomPDFKitView: PDFView {
         hideBadge()
     }
 
-    /// Rasterize a page-space rect (as returned by `selection.bounds(for:)`)
-    /// to an image, with a little breathing room around the line. Drawn from
-    /// the PDF content stream via `PDFPage.draw` — no screen capture, no TCC
-    /// permission. NSImage's lockFocus renders at the backing scale, so the
-    /// card stays crisp on Retina.
+    /// Rasterize a page-space rect to an image. Drawn from the PDF content
+    /// stream via `PDFPage.draw` — no screen capture, no TCC permission.
+    /// NSImage's lockFocus renders at the backing scale, so the card stays
+    /// crisp on Retina. The caller decides padding.
     static func regionImage(from page: PDFPage, pageRect: CGRect) -> NSImage? {
         let box = PDFDisplayBox.cropBox
         let pageBounds = page.bounds(for: box)
-        let region = pageRect.insetBy(dx: -10, dy: -7).intersection(pageBounds).integral
+        let region = pageRect.intersection(pageBounds).integral
         guard region.width >= 6, region.height >= 6 else { return nil }
         let image = NSImage(size: region.size)
         image.lockFocusFlipped(false)
@@ -2781,6 +2858,27 @@ final class NoteHoverBadge: NSView {
 
     override func resetCursorRects() {
         addCursorRect(bounds, cursor: .pointingHand)
+    }
+}
+
+/// The cyan marquee drawn while ⌥-dragging an appshot region in the reader.
+/// A translucent fill + dashed border; it never steals events (hitTest nil)
+/// so the drag keeps reaching the PDF view.
+final class SnipOverlayView: NSView {
+    var selectionRect: CGRect = .zero { didSet { needsDisplay = true } }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override func draw(_ dirtyRect: NSRect) {
+        guard selectionRect.width > 1, selectionRect.height > 1 else { return }
+        let accent = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
+        accent.withAlphaComponent(0.10).setFill()
+        selectionRect.fill()
+        let path = NSBezierPath(rect: selectionRect)
+        path.lineWidth = 1.5
+        path.setLineDash([5, 3], count: 2, phase: 0)
+        accent.withAlphaComponent(0.95).setStroke()
+        path.stroke()
     }
 }
 
