@@ -2,6 +2,7 @@ import SwiftUI
 import PDFKit
 import QuickLookUI
 import CoreImage
+import Vision
 
 /// Native viewer for a source file from the user's content root or a
 /// directly imported local file.
@@ -3287,11 +3288,16 @@ final class LoomPDFKitView: PDFView {
         )
         guard pageRect.width > 4, pageRect.height > 4,
               let image = Self.regionImage(from: page, pageRect: pageRect) else { return }
-        // The box's text is rectangular-selection order (often scrambled) — it
-        // only seeds the anchor's findString fallback; the note shows the image,
-        // not a quote.
-        let text = page.selection(for: pageRect)?.string?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        // Give the appshot a real text layer: rectangular PDF selection returns
+        // scrambled, out-of-order words, so read the rendered region back with
+        // on-device Vision OCR (reading order preserved). It only seeds the
+        // anchor's findString fallback + makes the card searchable — the note
+        // still SHOWS the image, not a quote. Fall back to the raw selection if
+        // OCR finds nothing (e.g. a pure diagram).
+        let ocr = Self.ocrText(from: image)
+        let text = ocr.isEmpty
+            ? (page.selection(for: pageRect)?.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
+            : ocr
         onNotePassage?(document.index(for: page), pageRect, text, image)
     }
 
@@ -3337,6 +3343,20 @@ final class LoomPDFKitView: PDFView {
         page.draw(with: box, to: ctx)
         ctx.restoreGState()
         return image
+    }
+
+    /// Read text out of a rendered region with on-device Vision OCR — reading
+    /// order preserved, unlike a rectangular PDF selection. Runs locally (no
+    /// network, no permission); returns "" if nothing legible is found.
+    static func ocrText(from image: NSImage) -> String {
+        guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return "" }
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+        guard (try? handler.perform([request])) != nil else { return "" }
+        let lines = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+        return lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {

@@ -1882,6 +1882,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // CLICKABLE appshot card in the note — no scrambled auto-quote.
   assert.match(sourceFileView, /static func regionImage\(from page: PDFPage, pageRect: CGRect\) -> NSImage\?/);
   assert.match(sourceFileView, /page\.draw\(with: box, to: ctx\)/);
+  // Searchable appshot (owner 2026-07-06): give the ⌥-drag image card a real
+  // text layer via on-device Vision OCR (reading order), so the anchor's
+  // findString fallback is reliable and the card isn't a dead index.
+  assert.match(sourceFileView, /static func ocrText\(from image: NSImage\) -> String/);
+  assert.match(sourceFileView, /VNRecognizeTextRequest\(\)/);
   assert.match(nativeRoot, /static let loomReflectionInsertPassageImage = Notification\.Name/);
   assert.match(nativeRoot, /name: \.loomReflectionInsertPassageImage[\s\S]{0,90}"image": image, "url": anchorURL/);
   assert.match(nativeRoot, /func insertPaperImage\(_ image: NSImage, anchorURL: String\? = nil\)/);
