@@ -2621,7 +2621,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(topBarBlock, /let isWorkspaceEmpty: Bool/);
   assert.match(topBarBlock, /if isWorkspaceEmpty \{[\s\S]{0,120}MoonAvatar\(size: 16\)/);
   assert.match(topBarBlock, /ReflectionFileTypeBadge\([\s\S]{0,140}kind: nativeSource\?\.kind \?\? reflectionCase\.sources\.first\?\.kind \?\? "document"/);
-  assert.match(topBarBlock, /Text\(isWorkspaceEmpty \? "LOOM" : reflectionCase\.title\)/);
+  // An unnamed chat degrades to the app identity, never the fake "Untitled
+  // product reflection" placeholder (owner 2026-07-06).
+  assert.match(topBarBlock, /Text\(isWorkspaceEmpty \|\| reflectionCase\.title == ReflectionCase\.untitledPlaceholder[\s\S]{0,40}\? "LOOM" : reflectionCase\.title\)/);
   assert.doesNotMatch(topBarBlock, /Text\(reflectionCase\.status\)/);
   assert.match(topBarBlock, /if !isWorkspaceEmpty \{[\s\S]{0,220}Circle\(\)[\s\S]{0,180}\.fill\(reflectionCase\.status == "Second pass ready" \? LoomTokens\.dsSuccess : LoomTokens\.dsInk3\)[\s\S]{0,120}\.help\(reflectionCase\.status\)/);
   assert.match(topBarBlock, /if sourceCount > 1 \{/);

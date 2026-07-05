@@ -2063,7 +2063,11 @@ private struct ReflectionTopBar: View {
                     .frame(width: 18, height: 18)
                 }
 
-                Text(isWorkspaceEmpty ? "LOOM" : reflectionCase.title)
+                // An unnamed chat degrades to the app identity, not the fake
+                // "Untitled product reflection" placeholder (owner 2026-07-06);
+                // the real title appears once the user names it.
+                Text(isWorkspaceEmpty || reflectionCase.title == ReflectionCase.untitledPlaceholder
+                     ? "LOOM" : reflectionCase.title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(LoomTokens.dsInk1)
                     .lineLimit(1)
@@ -2321,7 +2325,7 @@ private struct ReflectionSidebar: View {
                                             Text("No chats yet")
                                                 .font(.system(size: 11))
                                                 .foregroundStyle(.tertiary)
-                                                .padding(.leading, 40)
+                                                .padding(.leading, 48)
                                                 .padding(.vertical, 4)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         } else {
@@ -2436,11 +2440,12 @@ private struct ReflectionSidebar: View {
             onMoveToProject: { onMoveChat(reflectionCase, $0) }
         )
         .id("\(reflectionCase.id)#\(reflectionCase.projectID ?? "-")#\(projectMenuFingerprint)")
-        // No wrapper inset (owner 2026-07-05: chat title sat 8pt right of the
-        // project/New-Chat titles). The row's OWN internal leading-8 puts its
-        // icon at the same 8pt column as the folder + pencil, its title at the
-        // 40pt name column, and its selection/hover wash fills the full row
-        // width flush — geometrically identical to the project + section rows.
+        // Inset the row 8pt so its selection/hover wash reads as a rounded pill
+        // with an even margin — one grammar with New Chat + the project +
+        // section rows (owner 2026-07-06: unify every wash to the inset pill).
+        // The row's own internal leading-8 then lands the icon at the 16pt
+        // column and the title at the 48pt name column, matching New Chat.
+        .padding(.horizontal, 8)
         .padding(.bottom, 1)
     }
 
@@ -2559,6 +2564,9 @@ private struct SidebarSectionHeader: View {
             transaction.disablesAnimations = true
             withTransaction(transaction) { isHovering = hovering }
         }
+        // Match the row pills' 8pt margin so the section's hover pill and the
+        // rows below it share one inset grid (owner 2026-07-06).
+        .padding(.horizontal, 8)
     }
 }
 
@@ -2667,6 +2675,9 @@ private struct SidebarProjectHeader: View {
             transaction.disablesAnimations = true
             withTransaction(transaction) { isHovering = hovering }
         }
+        // 8pt margin so the folder row's hover pill matches New Chat + the
+        // chat rows — one inset-pill grammar (owner 2026-07-06).
+        .padding(.horizontal, 8)
         .contextMenu {
             Button("New chat here", action: onNewChat)
             Button("Rename", action: beginRename)
