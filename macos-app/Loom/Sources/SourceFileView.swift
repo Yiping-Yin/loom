@@ -122,7 +122,7 @@ struct SourceFileView: View {
                 .help("Show pages & contents")
                 .foregroundStyle(sidebarMode != nil ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
             Divider().frame(height: 16)
-            Button { pdfHolder.goToFirstPage() } label: { Image(systemName: "chevron.up.to.line") }
+            Button { pdfHolder.goToFirstPage() } label: { Image(systemName: "arrow.up.to.line") }
                 .help("First page (⌘↑)").keyboardShortcut(.upArrow, modifiers: .command)
             Button { pdfHolder.goToPreviousPage() } label: { Image(systemName: "chevron.up") }
                 .help("Previous page")
@@ -131,7 +131,7 @@ struct SourceFileView: View {
                 .frame(minWidth: 52, alignment: .center)
             Button { pdfHolder.goToNextPage() } label: { Image(systemName: "chevron.down") }
                 .help("Next page")
-            Button { pdfHolder.goToLastPage() } label: { Image(systemName: "chevron.down.to.line") }
+            Button { pdfHolder.goToLastPage() } label: { Image(systemName: "arrow.down.to.line") }
                 .help("Last page (⌘↓)").keyboardShortcut(.downArrow, modifiers: .command)
 
             Spacer(minLength: 10)
@@ -2761,6 +2761,7 @@ final class PDFViewHolder: ObservableObject {
     @Published var findMatchLabel = ""  // "3 / 27" · "No results" · ""
     private var findMatches: [PDFSelection] = []
     private var findIndex = 0
+    private var findWorkItem: DispatchWorkItem?
 
     private var observers: [NSObjectProtocol] = []
 
@@ -2899,6 +2900,7 @@ final class PDFViewHolder: ObservableObject {
     }
 
     func closeFind() {
+        findWorkItem?.cancel()
         isFindOpen = false
         findText = ""
         findMatchLabel = ""
@@ -2908,13 +2910,25 @@ final class PDFViewHolder: ObservableObject {
     }
 
     /// Run a fresh search: highlight every hit, jump to the first.
+    ///
+    /// Debounced: the find bar re-fires this on every keystroke, and rapid
+    /// re-assignment of `highlightedSelections` makes PDFKit keep the FIRST
+    /// (single-character) set instead of the latest — so hits from "M" would
+    /// stay lit while typing "Master". Coalescing to the settled query fixes it.
     func runFind(_ raw: String) {
+        findWorkItem?.cancel()
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let doc = pdfView?.document, !text.isEmpty else {
             findMatches = []; findIndex = 0; findMatchLabel = ""
             pdfView?.highlightedSelections = nil
             return
         }
+        let work = DispatchWorkItem { [weak self] in self?.performFind(text, in: doc) }
+        findWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.16, execute: work)
+    }
+
+    private func performFind(_ text: String, in doc: PDFDocument) {
         let hits = doc.findString(text, withOptions: [.caseInsensitive, .diacriticInsensitive])
         findMatches = hits
         findIndex = 0
