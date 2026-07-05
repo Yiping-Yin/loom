@@ -22,7 +22,7 @@ struct SourceFileView: View {
     /// Hover-to-note: when set, the PDF surface floats a ❕ badge beside the
     /// line under the cursor; clicking it hands (pageIndex, rect, text) back
     /// so the parent can drop an anchored passage into its note. nil = off.
-    var notePassageHandler: ((Int, CGRect, String) -> Void)? = nil
+    var notePassageHandler: ((Int, CGRect, String, NSImage?) -> Void)? = nil
 
     @State private var resolvedURL: URL?
     @State private var resolveError: String?
@@ -86,7 +86,7 @@ struct SourceFileView: View {
 
     /// Opt into hover-to-note. Chainable so the pinned two-arg init stays
     /// intact for callers that only read.
-    func onNotePassage(_ handler: @escaping (Int, CGRect, String) -> Void) -> SourceFileView {
+    func onNotePassage(_ handler: @escaping (Int, CGRect, String, NSImage?) -> Void) -> SourceFileView {
         var copy = self
         copy.notePassageHandler = handler
         return copy
@@ -2559,7 +2559,7 @@ private struct LoomPDFView: NSViewRepresentable {
     let fileURL: URL
     let holder: PDFViewHolder
     let onNote: () -> Void
-    var onNotePassage: ((Int, CGRect, String) -> Void)? = nil
+    var onNotePassage: ((Int, CGRect, String, NSImage?) -> Void)? = nil
 
     func makeNSView(context: Context) -> LoomPDFKitView {
         let view = LoomPDFKitView()
@@ -2626,7 +2626,7 @@ final class LoomPDFKitView: PDFView {
     /// Hover-to-note (owner 2026-07-05): as the cursor moves over the text,
     /// a ❕ badge tracks the line under it; a click hands the passage
     /// (pageIndex, rect, text) back so the note can anchor to it.
-    var onNotePassage: ((Int, CGRect, String) -> Void)? {
+    var onNotePassage: ((Int, CGRect, String, NSImage?) -> Void)? {
         didSet { noteBadge.isHidden = onNotePassage == nil }
     }
 
@@ -2753,16 +2753,12 @@ final class LoomPDFKitView: PDFView {
         )
         guard pageRect.width > 4, pageRect.height > 4,
               let image = Self.regionImage(from: page, pageRect: pageRect) else { return }
-        NotificationCenter.default.post(
-            name: .loomReflectionInsertPassageImage,
-            object: nil,
-            userInfo: ["image": image]
-        )
+        // The box's text is rectangular-selection order (often scrambled) — it
+        // only seeds the anchor's findString fallback; the note shows the image,
+        // not a quote.
         let text = page.selection(for: pageRect)?.string?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !text.isEmpty {
-            onNotePassage?(document.index(for: page), pageRect, text)
-        }
+        onNotePassage?(document.index(for: page), pageRect, text, image)
     }
 
     private func commitPendingPassage() {
@@ -2771,16 +2767,13 @@ final class LoomPDFKitView: PDFView {
         // drop it into the note beside the quote. PDFPage rendering reads the
         // content stream directly — no screen-recording / TCC permission.
         // The hovered line gets a little breathing room; a dragged snip box is
-        // captured exactly (see captureRegion).
-        if let page = document?.page(at: pending.page),
-           let image = Self.regionImage(from: page, pageRect: pending.rect.insetBy(dx: -10, dy: -7)) {
-            NotificationCenter.default.post(
-                name: .loomReflectionInsertPassageImage,
-                object: nil,
-                userInfo: ["image": image]
-            )
+        // captured exactly (see captureRegion). The image rides along with the
+        // passage so the note lands ONE clickable appshot card (no scrambled
+        // auto-quote) — owner 2026-07-06.
+        let image = document?.page(at: pending.page).flatMap {
+            Self.regionImage(from: $0, pageRect: pending.rect.insetBy(dx: -10, dy: -7))
         }
-        onNotePassage?(pending.page, pending.rect, pending.text)
+        onNotePassage?(pending.page, pending.rect, pending.text, image)
         hideBadge()
     }
 

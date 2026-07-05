@@ -1861,26 +1861,29 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // Hover-to-note (owner 2026-07-05): the reader floats a ❕ that tracks the
   // hovered line; a click turns that passage into a clickable `loom://anchor`
   // quote in the center note — read the source, tag a line, keep writing.
-  assert.match(sourceFileView, /var notePassageHandler: \(\(Int, CGRect, String\) -> Void\)\? = nil/);
-  assert.match(sourceFileView, /func onNotePassage\(_ handler: @escaping \(Int, CGRect, String\) -> Void\) -> SourceFileView/);
+  assert.match(sourceFileView, /var notePassageHandler: \(\(Int, CGRect, String, NSImage\?\) -> Void\)\? = nil/);
+  assert.match(sourceFileView, /func onNotePassage\(_ handler: @escaping \(Int, CGRect, String, NSImage\?\) -> Void\) -> SourceFileView/);
   assert.match(sourceFileView, /onNotePassage: notePassageHandler/);
-  assert.match(sourceFileView, /var onNotePassage: \(\(Int, CGRect, String\) -> Void\)\?/);
+  assert.match(sourceFileView, /var onNotePassage: \(\(Int, CGRect, String, NSImage\?\) -> Void\)\?/);
   assert.match(sourceFileView, /final class NoteHoverBadge: NSView/);
   assert.match(sourceFileView, /page\.selectionForLine\(at: pagePoint\)/);
-  assert.match(sourceFileView, /onNotePassage\?\(pending\.page, pending\.rect, pending\.text\)/);
-  assert.match(nativeRoot, /private func noteFromPassage\(sourceID: String, page: Int, rect: CGRect, text: String, precise: Bool = true\)/);
+  assert.match(sourceFileView, /onNotePassage\?\(pending\.page, pending\.rect, pending\.text, image\)/);
+  assert.match(nativeRoot, /private func noteFromPassage\(sourceID: String, page: Int, rect: CGRect, text: String, image: NSImage\? = nil, precise: Bool = true\)/);
   assert.match(nativeRoot, /static let loomReflectionInsertPassage = Notification\.Name/);
-  assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text in/);
+  assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text, image in/);
   assert.match(nativeRoot, /func insertPassageAnchor\(quote: String, anchorURL: String, precise: Bool = true\)/);
   assert.match(nativeRoot, /quoteAttributes\[\.link\] = anchorURL/);
-  // Appshot (owner 2026-07-06): committing the hover ❕ ALSO renders the
-  // captured PDF region to an image (no screen-capture permission) and drops
-  // it into the note as a paper card above the quote.
+  // Appshot (owner 2026-07-06): the hover ❕ / ⌥-drag renders the captured PDF
+  // region to an image (no screen-capture permission) and lands ONE clean
+  // CLICKABLE appshot card in the note — no scrambled auto-quote.
   assert.match(sourceFileView, /static func regionImage\(from page: PDFPage, pageRect: CGRect\) -> NSImage\?/);
   assert.match(sourceFileView, /page\.draw\(with: box, to: ctx\)/);
-  assert.match(sourceFileView, /name: \.loomReflectionInsertPassageImage/);
   assert.match(nativeRoot, /static let loomReflectionInsertPassageImage = Notification\.Name/);
-  assert.match(nativeRoot, /forName: \.loomReflectionInsertPassageImage[\s\S]{0,400}self\.insertPaperImage\(image\)/);
+  assert.match(nativeRoot, /name: \.loomReflectionInsertPassageImage[\s\S]{0,90}"image": image, "url": anchorURL/);
+  assert.match(nativeRoot, /func insertPaperImage\(_ image: NSImage, anchorURL: String\? = nil\)/);
+  assert.match(nativeRoot, /card\.addAttribute\(\.link, value: anchorURL/);
+  assert.match(nativeRoot, /forName: \.loomReflectionInsertPassageImage[\s\S]{0,400}self\.insertPaperImage\(image, anchorURL: url\)/);
+  assert.match(nativeRoot, /private func routeAnchorLink\(_ raw: String\) -> Bool/);
   // Appshot iteration 2 (owner 2026-07-06): ⌥-drag snips an exact rectangular
   // region — precise block/figure/table capture beyond the hovered line.
   assert.match(sourceFileView, /final class SnipOverlayView: NSView/);

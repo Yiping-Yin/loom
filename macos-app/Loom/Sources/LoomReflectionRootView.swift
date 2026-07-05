@@ -386,8 +386,8 @@ struct LoomReflectionRootView: View {
                 .padding(.vertical, 9)
                 Divider()
                 SourceFileView(fileURL: target.fileURL) { anchorPreview = nil }
-                    .onNotePassage { page, rect, text in
-                        noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text)
+                    .onNotePassage { page, rect, text, image in
+                        noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text, image: image)
                     }
             }
             .frame(minWidth: 820, minHeight: 640)
@@ -999,9 +999,11 @@ struct LoomReflectionRootView: View {
     /// `precise` = the rect was recovered (reader will highlight the exact
     /// passage). false = page-only fallback: the status + landing flash say so
     /// honestly rather than pretending the anchor is exact.
-    private func noteFromPassage(sourceID: String, page: Int, rect: CGRect, text: String, precise: Bool = true) {
+    private func noteFromPassage(sourceID: String, page: Int, rect: CGRect, text: String, image: NSImage? = nil, precise: Bool = true) {
         let quote = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !quote.isEmpty else { return }
+        // The appshot image IS the excerpt — it needs no matchable text; a
+        // text-only (⌘U) capture still requires a quote.
+        guard image != nil || !quote.isEmpty else { return }
         let rectValue = "\(Int(rect.origin.x)),\(Int(rect.origin.y)),\(Int(rect.size.width)),\(Int(rect.size.height))"
         var comps = URLComponents()
         comps.scheme = "loom"
@@ -1015,11 +1017,23 @@ struct LoomReflectionRootView: View {
         let anchorURL = comps.string ?? "loom://anchor?src=\(sourceID)&page=\(page)"
         anchorPreview = nil
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            NotificationCenter.default.post(
-                name: .loomReflectionInsertPassage,
-                object: nil,
-                userInfo: ["quote": quote, "url": anchorURL, "precise": precise]
-            )
+            if let image {
+                // In-app appshot: ONE clean clickable card, no scrambled quote
+                // (owner 2026-07-06). The card carries the anchor so a click
+                // still jumps back to the exact page + rect.
+                NotificationCenter.default.post(
+                    name: .loomReflectionInsertPassageImage,
+                    object: nil,
+                    userInfo: ["image": image, "url": anchorURL]
+                )
+            } else {
+                // Text-only (⌘U from Preview): the clickable quote as before.
+                NotificationCenter.default.post(
+                    name: .loomReflectionInsertPassage,
+                    object: nil,
+                    userInfo: ["quote": quote, "url": anchorURL, "precise": precise]
+                )
+            }
         }
         statusMessage = precise
             ? "Noted passage from page \(page + 1)"
@@ -4982,37 +4996,46 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 onOpenSource(String(raw.dropFirst("loom-source://".count)))
                 return true
             }
-            // A `loom://anchor?src=<sourceID>&page=N&rect=x,y,w,h` link asks the
-            // workbench to pop the source in an in-app PDF jumped to that passage.
-            if raw.hasPrefix("loom://anchor"), let comps = URLComponents(string: raw) {
-                let q = comps.queryItems ?? []
-                guard let sourceID = q.first(where: { $0.name == "src" })?.value, !sourceID.isEmpty else { return true }
-                let page = Int(q.first(where: { $0.name == "page" })?.value ?? "") ?? 0
-                var rect = CGRect.zero
-                if let parts = q.first(where: { $0.name == "rect" })?.value?
-                    .split(separator: ",").compactMap({ Double($0) }), parts.count == 4 {
-                    rect = CGRect(x: parts[0], y: parts[1], width: parts[2], height: parts[3])
-                }
-                NotificationCenter.default.post(
-                    name: .loomReflectionAnchorJump,
-                    object: nil,
-                    userInfo: ["sourceID": sourceID, "page": page, "rect": NSValue(rect: rect)]
-                )
-                return true
-            }
-            return false
+            return routeAnchorLink(raw)
         }
 
-        /// Attachment-cell clicks route here (not through clickedOnLink) —
-        /// a chip click opens its source the same way.
+        /// Route a `loom://anchor?src=<sourceID>&page=N&rect=x,y,w,h` link — from
+        /// a quote OR an appshot card — to pop the source in an in-app PDF jumped
+        /// to that passage. Returns true when it is an anchor link.
+        @discardableResult
+        private func routeAnchorLink(_ raw: String) -> Bool {
+            guard raw.hasPrefix("loom://anchor"), let comps = URLComponents(string: raw) else { return false }
+            let q = comps.queryItems ?? []
+            guard let sourceID = q.first(where: { $0.name == "src" })?.value, !sourceID.isEmpty else { return true }
+            let page = Int(q.first(where: { $0.name == "page" })?.value ?? "") ?? 0
+            var rect = CGRect.zero
+            if let parts = q.first(where: { $0.name == "rect" })?.value?
+                .split(separator: ",").compactMap({ Double($0) }), parts.count == 4 {
+                rect = CGRect(x: parts[0], y: parts[1], width: parts[2], height: parts[3])
+            }
+            NotificationCenter.default.post(
+                name: .loomReflectionAnchorJump,
+                object: nil,
+                userInfo: ["sourceID": sourceID, "page": page, "rect": NSValue(rect: rect)]
+            )
+            return true
+        }
+
+        /// Attachment-cell clicks route here (not through clickedOnLink): a file
+        /// chip opens its source; an appshot card follows its loom://anchor link.
         func textView(
             _ textView: NSTextView,
             clickedOn cell: NSTextAttachmentCellProtocol,
             in cellFrame: NSRect,
             at charIndex: Int
         ) {
-            guard let chip = cell as? PaperFileAttachmentCell else { return }
-            onOpenSource(chip.sourceID)
+            if let chip = cell as? PaperFileAttachmentCell {
+                onOpenSource(chip.sourceID)
+                return
+            }
+            if let link = textView.textStorage?.attribute(.link, at: charIndex, effectiveRange: nil) {
+                routeAnchorLink((link as? URL)?.absoluteString ?? (link as? String ?? ""))
+            }
         }
 
         func textDidEndEditing(_ notification: Notification) {
@@ -5121,8 +5144,9 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                     queue: .main
                 ) { [weak self] note in
                     guard let self, let image = note.userInfo?["image"] as? NSImage else { return }
+                    let url = note.userInfo?["url"] as? String
                     self.window?.makeFirstResponder(self)
-                    self.insertPaperImage(image)
+                    self.insertPaperImage(image, anchorURL: url)
                 }
             } else if window == nil, let observer = passageImageObserver {
                 NotificationCenter.default.removeObserver(observer)
@@ -5293,7 +5317,7 @@ private struct GlassDocumentEditor: NSViewRepresentable {
 
         /// The image lands on its own paragraph as a solid white paper
         /// card — the same material language as captured evidence.
-        func insertPaperImage(_ image: NSImage) {
+        func insertPaperImage(_ image: NSImage, anchorURL: String? = nil) {
             guard let tiff = image.tiffRepresentation,
                   let bitmap = NSBitmapImageRep(data: tiff),
                   let png = bitmap.representation(using: .png, properties: [:]) else { return }
@@ -5313,7 +5337,14 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             if location > 0, text.character(at: location - 1) != 0x0A {
                 insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             }
-            insertion.append(NSAttributedString(attachment: attachment))
+            let card = NSMutableAttributedString(attributedString: NSAttributedString(attachment: attachment))
+            if let anchorURL {
+                // Click the appshot card to jump back to its source passage.
+                // Attachment clicks bypass clickedOnLink, so the link is read
+                // back in `clickedOn cell:` and routed there.
+                card.addAttribute(.link, value: anchorURL, range: NSRange(location: 0, length: card.length))
+            }
+            insertion.append(card)
             insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             insertText(insertion, replacementRange: selectedRange())
         }
