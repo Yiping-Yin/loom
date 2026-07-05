@@ -1868,18 +1868,31 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /final class NoteHoverBadge: NSView/);
   assert.match(sourceFileView, /page\.selectionForLine\(at: pagePoint\)/);
   assert.match(sourceFileView, /onNotePassage\?\(pending\.page, pending\.rect, pending\.text\)/);
-  assert.match(nativeRoot, /private func noteFromPassage\(sourceID: String, page: Int, rect: CGRect, text: String\)/);
+  assert.match(nativeRoot, /private func noteFromPassage\(sourceID: String, page: Int, rect: CGRect, text: String, precise: Bool = true\)/);
   assert.match(nativeRoot, /static let loomReflectionInsertPassage = Notification\.Name/);
   assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text in/);
-  assert.match(nativeRoot, /func insertPassageAnchor\(quote: String, anchorURL: String\)/);
+  assert.match(nativeRoot, /func insertPassageAnchor\(quote: String, anchorURL: String, precise: Bool = true\)/);
   assert.match(nativeRoot, /quoteAttributes\[\.link\] = anchorURL/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered
   // in-app via PDFKit findString, so the jump-back highlight is exact.
   assert.match(nativeRoot, /enum ReflectionPassageAnchoring/);
-  assert.match(nativeRoot, /func resolve\(\n\s*text: String,\n\s*sources: \[ReflectionSource\],\n\s*pageHint: Int\?\n\s*\) -> \(sourceID: String, page: Int, rect: CGRect\)\?/);
+  assert.match(nativeRoot, /func resolve\(\n\s*text: String,\n\s*sources: \[ReflectionSource\],\n\s*pageHint: Int\?\n\s*\) -> AnchorResolution/);
   assert.match(nativeRoot, /doc\.findString\(trimmed, withOptions: \[\.caseInsensitive, \.diacriticInsensitive\]\)/);
+  // Anchor loop hardened (owner-audit 2026-07-05): honest typed result, no
+  // silent overclaim; ligature-tolerant normalize; landing flash; stale bookmark.
+  assert.match(nativeRoot, /enum AnchorResolution \{[\s\S]{0,140}case exact\(sourceID: String, page: Int, rect: CGRect\)[\s\S]{0,80}case pageOnly\(sourceID: String, page: Int\)[\s\S]{0,40}case notFound/);
+  assert.match(nativeRoot, /precomposedStringWithCompatibilityMapping/);
+  assert.match(nativeRoot, /exact spot not found, will jump to the page/);
+  assert.match(nativeRoot, /private func flashAnchor\(range: NSRange, precise: Bool\)/);
+  assert.match(nativeRoot, /addTemporaryAttributes\(\[\.backgroundColor: tint\], forCharacterRange: range\)/);
+  assert.match(nativeRoot, /can't be found — it may have moved or been deleted/);
+  // Discoverable formatting: right-click Bold/Italic/Underline with ⌘ hints.
+  assert.match(nativeRoot, /\("Bold", "b", #selector\(GrowingGlassTextView\.loomToggleBold\)\)/);
+  assert.match(nativeRoot, /func textView\(_ view: NSTextView, menu: NSMenu, for event: NSEvent, at charIndex: Int\) -> NSMenu\?/);
+  // Per-project collapse persists across relaunch.
+  assert.match(nativeRoot, /@AppStorage\("loom\.sidebar\.collapsedProjectIDs"\)/);
   assert.match(nativeRoot, /static func matches\(text: String, sources: \[ReflectionSource\]\) -> Bool/);
   assert.match(nativeRoot, /private func handlePreviewPassageCapture\(_ capture: LoomExternalSelectionCapture\) -> Bool/);
   assert.match(nativeRoot, /if !handlePreviewPassageCapture\(capture\) \{/);

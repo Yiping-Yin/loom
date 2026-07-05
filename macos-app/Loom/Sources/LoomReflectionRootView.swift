@@ -965,6 +965,7 @@ struct LoomReflectionRootView: View {
             return
         }
         var resolved = fileURL
+        var wasStale = false
         if let bookmark = source.bookmarkData {
             var isStale = false
             if let scoped = try? URL(
@@ -975,7 +976,17 @@ struct LoomReflectionRootView: View {
             ) {
                 _ = scoped.startAccessingSecurityScopedResource()
                 resolved = scoped
+                wasStale = isStale
             }
+        }
+        // Honest failure (owner-audit 2026-07-05): a moved/deleted file used to
+        // open a blank reader silently. Tell the owner instead of pretending.
+        guard FileManager.default.fileExists(atPath: resolved.path) else {
+            statusMessage = "\(source.label) can't be found — it may have moved or been deleted"
+            return
+        }
+        if wasStale {
+            statusMessage = "\(source.label) moved — re-add it to Sources so jumps stay reliable"
         }
         selectedSourceID = source.id
         anchorPreview = AnchorPreviewTarget(sourceID: source.id, fileURL: resolved, page: page, rect: rect)
@@ -985,7 +996,10 @@ struct LoomReflectionRootView: View {
     /// clickable `loom://anchor` quote in the center note (so a later click
     /// jumps back to the exact page + rect), close the reader, and let the
     /// note take focus. One hover, one click, one note.
-    private func noteFromPassage(sourceID: String, page: Int, rect: CGRect, text: String) {
+    /// `precise` = the rect was recovered (reader will highlight the exact
+    /// passage). false = page-only fallback: the status + landing flash say so
+    /// honestly rather than pretending the anchor is exact.
+    private func noteFromPassage(sourceID: String, page: Int, rect: CGRect, text: String, precise: Bool = true) {
         let quote = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !quote.isEmpty else { return }
         let rectValue = "\(Int(rect.origin.x)),\(Int(rect.origin.y)),\(Int(rect.size.width)),\(Int(rect.size.height))"
@@ -1004,28 +1018,39 @@ struct LoomReflectionRootView: View {
             NotificationCenter.default.post(
                 name: .loomReflectionInsertPassage,
                 object: nil,
-                userInfo: ["quote": quote, "url": anchorURL]
+                userInfo: ["quote": quote, "url": anchorURL, "precise": precise]
             )
         }
-        statusMessage = "Noted passage from page \(page + 1)"
+        statusMessage = precise
+            ? "Noted passage from page \(page + 1)"
+            : "Noted from page \(page + 1) — exact spot not found, will jump to the page"
     }
 
-    /// External capture (⌘U from Preview): if the selection resolves to a
-    /// registered PDF source, land it as the SAME clickable anchor quote as an
-    /// in-app hover ❕ and return true. Return false to fall back to the generic
-    /// learning-trace capture path.
+    /// External capture (⌘U from Preview): resolve the selection against the
+    /// registered PDF sources and land it as the SAME clickable anchor quote as
+    /// an in-app hover ❕. Honest about precision. Returns false only when the
+    /// passage isn't in any source (caller falls back to the learning-trace path).
     private func handlePreviewPassageCapture(_ capture: LoomExternalSelectionCapture) -> Bool {
         let text = capture.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return false }
-        guard let anchor = ReflectionPassageAnchoring.resolve(
+        switch ReflectionPassageAnchoring.resolve(
             text: text,
             sources: selectedCase.sources,
             pageHint: capture.nativeContext?.pageNumber
-        ) else { return false }
-        emptyWorkbenchDismissed = true
-        selectedSourceID = anchor.sourceID
-        noteFromPassage(sourceID: anchor.sourceID, page: anchor.page, rect: anchor.rect, text: text)
-        return true
+        ) {
+        case let .exact(sourceID, page, rect):
+            emptyWorkbenchDismissed = true
+            selectedSourceID = sourceID
+            noteFromPassage(sourceID: sourceID, page: page, rect: rect, text: text, precise: true)
+            return true
+        case let .pageOnly(sourceID, page):
+            emptyWorkbenchDismissed = true
+            selectedSourceID = sourceID
+            noteFromPassage(sourceID: sourceID, page: page, rect: .zero, text: text, precise: false)
+            return true
+        case .notFound:
+            return false
+        }
     }
 
     private func openSourcesInNativeApps(_ sources: [ReflectionSource]) {
@@ -2166,7 +2191,17 @@ private struct ReflectionSidebar: View {
     @State private var projectsExpanded = true
     @State private var learningExpanded = true
     @State private var principlesExpanded = true
-    @State private var collapsedProjectIDs: Set<String> = []
+    // Per-project collapse persists across relaunch (owner-audit 2026-07-05:
+    // collapsing = "done with this for now"; @State lost it every launch).
+    // @AppStorage can't hold a Set, so it rides as a JSON-array string.
+    @AppStorage("loom.sidebar.collapsedProjectIDs") private var collapsedProjectIDsRaw: String = "[]"
+    private var collapsedProjectIDs: Set<String> {
+        get { Set((try? JSONDecoder().decode([String].self, from: Data(collapsedProjectIDsRaw.utf8))) ?? []) }
+        nonmutating set {
+            let data = (try? JSONEncoder().encode(Array(newValue).sorted())) ?? Data("[]".utf8)
+            collapsedProjectIDsRaw = String(data: data, encoding: .utf8) ?? "[]"
+        }
+    }
     @FocusState private var searchFocused: Bool
 
     private var orderedProjects: [ReflectionProject] {
@@ -4243,18 +4278,23 @@ enum ReflectionPassageAnchoring {
         return PDFDocument(url: url)
     }
 
+    /// Honest, typed result (owner-audit 2026-07-05): the loop must never
+    /// overclaim. `.exact` = findString gave a real rect the reader can
+    /// highlight; `.pageOnly` = only a fuzzy/normalized page match (rect
+    /// unknown, reader lands at page top); `.notFound` = no registered PDF
+    /// contains it (caller falls back to the generic capture path).
     static func resolve(
         text: String,
         sources: [ReflectionSource],
         pageHint: Int?
-    ) -> (sourceID: String, page: Int, rect: CGRect)? {
+    ) -> AnchorResolution {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.count >= 2 else { return nil }
+        guard trimmed.count >= 2 else { return .notFound }
         let pdfs: [(source: ReflectionSource, doc: PDFDocument)] = sources.compactMap { source in
             guard let doc = openDocument(for: source) else { return nil }
             return (source, doc)
         }
-        guard !pdfs.isEmpty else { return nil }
+        guard !pdfs.isEmpty else { return .notFound }
 
         for (source, doc) in pdfs {
             let hits = doc.findString(trimmed, withOptions: [.caseInsensitive, .diacriticInsensitive])
@@ -4270,42 +4310,45 @@ enum ReflectionPassageAnchoring {
                 chosen = hits[0]
             }
             if let page = chosen.pages.first {
-                return (source.id, doc.index(for: page), chosen.bounds(for: page))
+                return .exact(sourceID: source.id, page: doc.index(for: page), rect: chosen.bounds(for: page))
             }
         }
 
+        // Ligature/hyphenation-tolerant page fallback (normalize decomposes
+        // ﬁ→fi and strips soft hyphens + line-break hyphens).
         let query = normalize(trimmed)
-        guard !query.isEmpty else { return nil }
+        guard !query.isEmpty else { return .notFound }
         for (source, doc) in pdfs {
             for pageIndex in 0..<doc.pageCount {
                 guard let pageText = doc.page(at: pageIndex)?.string else { continue }
                 if normalize(pageText).contains(query) {
-                    return (source.id, pageIndex, .zero)
+                    return .pageOnly(sourceID: source.id, page: pageIndex)
                 }
             }
         }
-        return nil
+        return .notFound
     }
 
-    /// Fast yes/no: does the selection land in a registered PDF source? Used by
-    /// the AppDelegate to pick the quiet route without the full rect derivation.
+    /// Fast yes/no for the AppDelegate quiet-route decision — consistent with
+    /// resolve() so the companion is skipped exactly when the passage anchors.
     static func matches(text: String, sources: [ReflectionSource]) -> Bool {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.count >= 2 else { return false }
-        for source in sources {
-            guard let doc = openDocument(for: source) else { continue }
-            if !doc.findString(trimmed, withOptions: [.caseInsensitive, .diacriticInsensitive]).isEmpty {
-                return true
-            }
-        }
-        return false
+        if case .notFound = resolve(text: text, sources: sources, pageHint: nil) { return false }
+        return true
     }
 
     static func normalize(_ text: String) -> String {
-        String(text.lowercased().unicodeScalars.compactMap {
+        // Compatibility mapping (NFKC) decomposes Latin ligatures (ﬁ→fi, ﬂ→fl)
+        // so a copied "efficient" matches a rendered "eﬃcient".
+        String(text.precomposedStringWithCompatibilityMapping.lowercased().unicodeScalars.compactMap {
             CharacterSet.alphanumerics.contains($0) ? Character($0) : nil
         })
     }
+}
+
+enum AnchorResolution {
+    case exact(sourceID: String, page: Int, rect: CGRect)
+    case pageOnly(sourceID: String, page: Int)
+    case notFound
 }
 
 private struct AnchorPreviewTarget: Identifiable {
@@ -4765,6 +4808,25 @@ private struct GlassDocumentEditor: NSViewRepresentable {
 
         /// A file chip carries a loom-source:// link; clicking it opens
         /// the source through the workspace's own open path.
+        // Discoverable formatting: when text is selected, append Bold / Italic /
+        // Underline (with ⌘ hints) to the editor's right-click menu.
+        func textView(_ view: NSTextView, menu: NSMenu, for event: NSEvent, at charIndex: Int) -> NSMenu? {
+            guard view.selectedRange().length > 0, let editor = view as? GrowingGlassTextView else { return menu }
+            menu.addItem(.separator())
+            let formats: [(String, String, Selector)] = [
+                ("Bold", "b", #selector(GrowingGlassTextView.loomToggleBold)),
+                ("Italic", "i", #selector(GrowingGlassTextView.loomToggleItalic)),
+                ("Underline", "u", #selector(GrowingGlassTextView.loomToggleUnderline)),
+            ]
+            for (title, key, action) in formats {
+                let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
+                item.keyEquivalentModifierMask = .command
+                item.target = editor
+                menu.addItem(item)
+            }
+            return menu
+        }
+
         func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
             let raw = (link as? URL)?.absoluteString ?? (link as? String ?? "")
             if raw.hasPrefix("loom-source://") {
@@ -4891,8 +4953,9 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                     guard let self,
                           let quote = note.userInfo?["quote"] as? String,
                           let url = note.userInfo?["url"] as? String else { return }
+                    let precise = note.userInfo?["precise"] as? Bool ?? true
                     self.window?.makeFirstResponder(self)
-                    self.insertPassageAnchor(quote: quote, anchorURL: url)
+                    self.insertPassageAnchor(quote: quote, anchorURL: url, precise: precise)
                 }
             } else if window == nil, let observer = passageObserver {
                 NotificationCenter.default.removeObserver(observer)
@@ -4954,6 +5017,14 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             storage.endEditing()
             didChangeText()
         }
+
+        // Discoverability (owner-audit 2026-07-05): the ⌘B/⌘I/⌘U shortcuts were
+        // invisible. The Coordinator's textView(_:menu:for:at:) delegate appends
+        // Bold / Italic / Underline (with ⌘ hints) when text is selected — the
+        // canonical NSTextView way (menu(for:) additions get dropped).
+        @objc func loomToggleBold() { toggleEmphasis(.boldFontMask) }
+        @objc func loomToggleItalic() { toggleEmphasis(.italicFontMask) }
+        @objc func loomToggleUnderline() { toggleUnderline() }
 
         // A click that lands on a file chip opens its source directly —
         // deterministic hit-testing instead of AppKit's legacy attachment
@@ -5109,7 +5180,7 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         /// A passage captured by the reader's hover ❕: a quoted line that
         /// links back to its exact page + rect via `loom://anchor`. Clicking
         /// it later reopens the reader at that passage.
-        func insertPassageAnchor(quote: String, anchorURL: String) {
+        func insertPassageAnchor(quote: String, anchorURL: String, precise: Bool = true) {
             let bodyAttributes: [NSAttributedString.Key: Any] = [
                 .font: GlassDocumentEditor.documentFont,
                 .foregroundColor: NSColor.labelColor,
@@ -5118,7 +5189,8 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             let insertion = NSMutableAttributedString()
             let location = selectedRange().location
             let text = string as NSString
-            if location > 0, text.character(at: location - 1) != 0x0A {
+            let leadingNewline = location > 0 && text.character(at: location - 1) != 0x0A
+            if leadingNewline {
                 insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             }
             var quoteAttributes = bodyAttributes
@@ -5127,7 +5199,28 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             insertion.append(quoteLine)
             // Leave the cursor on a fresh line under the quote, ready to write.
             insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
+            let quoteStart = location + (leadingNewline ? 1 : 0)
             insertText(insertion, replacementRange: selectedRange())
+            // Confirm the landing (owner-audit 2026-07-05): flash the quote —
+            // teal for an exact-rect anchor, amber for a page-only one — so the
+            // owner sees WHERE it landed and how strong it is.
+            flashAnchor(range: NSRange(location: quoteStart, length: quoteLine.length), precise: precise)
+        }
+
+        /// A ~1.2s highlight on the just-landed quote, via display-only
+        /// TEMPORARY attributes — never enters textStorage, so it isn't saved
+        /// to RTFD and normalizeDocument never sees it.
+        private func flashAnchor(range: NSRange, precise: Bool) {
+            guard let layoutManager, let storage = textStorage,
+                  range.location >= 0, range.location + range.length <= storage.length else { return }
+            let tint = (precise ? NSColor.systemTeal : NSColor.systemOrange).withAlphaComponent(0.28)
+            layoutManager.addTemporaryAttributes([.backgroundColor: tint], forCharacterRange: range)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                guard let self, let lm = self.layoutManager, let storage = self.textStorage else { return }
+                let end = min(range.location + range.length, storage.length)
+                guard end > range.location else { return }
+                lm.removeTemporaryAttribute(.backgroundColor, forCharacterRange: NSRange(location: range.location, length: end - range.location))
+            }
         }
     }
 }
