@@ -2436,10 +2436,11 @@ private struct ReflectionSidebar: View {
             onMoveToProject: { onMoveChat(reflectionCase, $0) }
         )
         .id("\(reflectionCase.id)#\(reflectionCase.projectID ?? "-")#\(projectMenuFingerprint)")
-        // Icon-less chats already sit at the project-name column via their clear
-        // 22pt gutter, so nested + ungrouped share one leading — no extra indent.
-        .padding(.leading, 8)
-        .padding(.trailing, 8)
+        // No wrapper inset (owner 2026-07-05: chat title sat 8pt right of the
+        // project/New-Chat titles). The row's OWN internal leading-8 puts its
+        // icon at the same 8pt column as the folder + pencil, its title at the
+        // 40pt name column, and its selection/hover wash fills the full row
+        // width flush — geometrically identical to the project + section rows.
         .padding(.bottom, 1)
     }
 
@@ -3958,8 +3959,9 @@ private struct ReflectionSidebarRow: View {
                 }
                 // When hover actions appear at the trailing edge, the text
                 // column yields to them (VSCode label behavior) instead of
-                // being painted over.
-                .padding(.trailing, isHovering ? 34 : 8)
+                // being painted over. Resting trailing 12 matches the project +
+                // section count inset for a consistent right edge.
+                .padding(.trailing, isHovering ? 34 : 12)
             }
             .padding(.leading, 8)
             .frame(height: hasFacts ? 46 : 30)
