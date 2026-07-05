@@ -1905,6 +1905,13 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /private var pdfToolbar: some View/);
   assert.match(sourceFileView, /pdfHolder\.zoomIn\(\)/);
   assert.match(sourceFileView, /\.PDFViewPageChanged/);
+  // In-document find (owner 2026-07-06): ⌘F search bar over PDFKit's own
+  // findString — highlight all hits, ⏎/⇧⏎ cycle, Esc closes.
+  assert.match(sourceFileView, /private var pdfFindBar: some View/);
+  assert.match(sourceFileView, /func runFind\(_ raw: String\)/);
+  assert.match(sourceFileView, /doc\.findString\(text, withOptions:/);
+  assert.match(sourceFileView, /pdfHolder\.findNext\(\)/);
+  assert.match(sourceFileView, /highlightedSelections = hits/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered

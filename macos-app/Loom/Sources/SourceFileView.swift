@@ -44,6 +44,8 @@ struct SourceFileView: View {
     @State private var askIsThinking: Bool = false
     @State private var askError: String? = nil
     @FocusState private var askFieldFocused: Bool
+    /// ⌘F in-document find bar focus.
+    @FocusState private var findFieldFocused: Bool
     @Environment(\.openSettings) private var openSettingsEnv
 
     /// Phase A2 — AI-paste capture state. ⌘⇧V parses the clipboard
@@ -140,6 +142,8 @@ struct SourceFileView: View {
 
             Spacer(minLength: 10)
 
+            Button { openFind() } label: { Image(systemName: "magnifyingglass") }
+                .help("Find in document (⌘F)").keyboardShortcut("f", modifiers: .command)
             Button { pdfHolder.toggleFullScreen() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .help("Full screen (⌃⌘F)").keyboardShortcut("f", modifiers: [.control, .command])
         }
@@ -151,11 +155,56 @@ struct SourceFileView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// ⌘F find bar — slides in under the toolbar. Live-searches on each
+    /// keystroke, ⏎ / ⇧⏎ cycle matches, Esc closes and clears highlights.
+    @ViewBuilder private var pdfFindBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 11.5)).foregroundStyle(.secondary)
+            TextField("Find in document", text: $pdfHolder.findText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12.5))
+                .focused($findFieldFocused)
+                .frame(maxWidth: 280)
+                .onChange(of: pdfHolder.findText) { _, new in pdfHolder.runFind(new) }
+                .onSubmit { pdfHolder.findNext() }
+            Text(pdfHolder.findMatchLabel)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(minWidth: 56, alignment: .leading)
+
+            Spacer(minLength: 8)
+
+            Button { pdfHolder.findPrevious() } label: { Image(systemName: "chevron.up") }
+                .help("Previous match (⇧⏎)").disabled(pdfHolder.findMatchLabel.isEmpty || pdfHolder.findMatchLabel == "No results")
+            Button { pdfHolder.findNext() } label: { Image(systemName: "chevron.down") }
+                .help("Next match (⏎)").disabled(pdfHolder.findMatchLabel.isEmpty || pdfHolder.findMatchLabel == "No results")
+            Button { pdfHolder.closeFind() } label: { Image(systemName: "xmark") }
+                .help("Done (Esc)").keyboardShortcut(.cancelAction)
+        }
+        .buttonStyle(.plain)
+        .font(.system(size: 12.5))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 14)
+        .frame(height: 32)
+        .frame(maxWidth: .infinity)
+        .background(Color(nsColor: .textBackgroundColor).opacity(0.6))
+    }
+
+    private func openFind() {
+        pdfHolder.openFind()
+        findFieldFocused = true
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
                 if isPDF {
                     pdfToolbar
+                    if pdfHolder.isFindOpen {
+                        Divider()
+                        pdfFindBar
+                    }
                     Divider()
                 }
                 Group {
@@ -2577,6 +2626,16 @@ final class PDFViewHolder: ObservableObject {
     @Published var canZoomIn = false
     @Published var canZoomOut = false
     @Published var isFitting = true // autoScales on = fit-to-width
+
+    // In-document search (⌘F) — owner 2026-07-06: LOOM was hiding PDFKit's own
+    // find. Synchronous findString is plenty for reading-sized docs and avoids
+    // the async delegate dance.
+    @Published var isFindOpen = false
+    @Published var findText = ""
+    @Published var findMatchLabel = ""  // "3 / 27" · "No results" · ""
+    private var findMatches: [PDFSelection] = []
+    private var findIndex = 0
+
     private var observers: [NSObjectProtocol] = []
 
     /// Bind the holder to a live PDFView + observe its native notifications so
@@ -2621,8 +2680,62 @@ final class PDFViewHolder: ObservableObject {
         if let page = doc.page(at: idx) { view.go(to: page); refresh() }
     }
 
-    /// Native macOS fullscreen (⌃⌘F). The reader is a sheet, so toggle the
-    /// presenting window, not the sheet's own child window.
+    // MARK: In-document find
+
+    func openFind() {
+        isFindOpen = true
+        if !findText.isEmpty { runFind(findText) }
+    }
+
+    func closeFind() {
+        isFindOpen = false
+        findText = ""
+        findMatchLabel = ""
+        findMatches = []
+        findIndex = 0
+        pdfView?.highlightedSelections = nil
+    }
+
+    /// Run a fresh search: highlight every hit, jump to the first.
+    func runFind(_ raw: String) {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let doc = pdfView?.document, !text.isEmpty else {
+            findMatches = []; findIndex = 0; findMatchLabel = ""
+            pdfView?.highlightedSelections = nil
+            return
+        }
+        let hits = doc.findString(text, withOptions: [.caseInsensitive, .diacriticInsensitive])
+        findMatches = hits
+        findIndex = 0
+        for hit in hits { hit.color = NSColor.systemYellow.withAlphaComponent(0.42) }
+        pdfView?.highlightedSelections = hits
+        if hits.isEmpty {
+            findMatchLabel = "No results"
+        } else {
+            focusMatch(0)
+        }
+    }
+
+    func findNext() { advanceMatch(+1) }
+    func findPrevious() { advanceMatch(-1) }
+
+    private func advanceMatch(_ delta: Int) {
+        guard !findMatches.isEmpty else { return }
+        findIndex = (findIndex + delta + findMatches.count) % findMatches.count
+        focusMatch(findIndex)
+    }
+
+    private func focusMatch(_ i: Int) {
+        guard findMatches.indices.contains(i), let view = pdfView else { return }
+        findIndex = i
+        let sel = findMatches[i]
+        view.setCurrentSelection(sel, animate: true)
+        view.scrollSelectionToVisible(nil)
+        findMatchLabel = "\(i + 1) / \(findMatches.count)"
+    }
+
+    /// Native macOS fullscreen (⌃⌘F). The reader fills the window, so toggle the
+    /// reader's own (now main) window.
     func toggleFullScreen() {
         // The reader now fills the window (no longer a sheet), so its own window
         // IS the workbench window. Opt it into fullscreen (the window ships
