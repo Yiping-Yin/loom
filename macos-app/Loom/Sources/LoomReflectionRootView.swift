@@ -2187,10 +2187,9 @@ private struct ReflectionSidebar: View {
     var onNewChatInProject: (String) -> Void = { _ in }
     var onMoveChat: (ReflectionCase, String?) -> Void = { _, _ in }
     @State private var query: String = ""
-    @State private var reflectionsExpanded = true
-    @State private var projectsExpanded = true
-    @State private var learningExpanded = true
-    @State private var principlesExpanded = true
+    // Top-level sections are non-collapsible furniture now (owner 2026-07-05);
+    // only projects nest + collapse (collapsedProjectIDs above).
+    @State private var newChatHovering = false
     // Per-project collapse persists across relaunch (owner-audit 2026-07-05:
     // collapsing = "done with this for now"; @State lost it every launch).
     // @AppStorage can't hold a Set, so it rides as a JSON-array string.
@@ -2304,34 +2303,30 @@ private struct ReflectionSidebar: View {
                             Section(header: SidebarSectionHeader(
                                 title: "Projects",
                                 count: projects.count,
-                                isExpanded: $projectsExpanded,
-                                forceExpanded: !queryIsEmpty,
                                 onAdd: onCreateProject
                             )) {
-                                if projectsExpanded || !queryIsEmpty {
-                                    ForEach(orderedProjects) { project in
-                                        SidebarProjectHeader(
-                                            project: project,
-                                            count: chats(inProject: project.id).count,
-                                            isExpanded: projectExpansion(project.id),
-                                            forceExpanded: !queryIsEmpty,
-                                            onNewChat: { onNewChatInProject(project.id) },
-                                            onRename: { onRenameProject(project.id, $0) },
-                                            onDelete: { onDeleteProject(project.id) }
-                                        )
-                                        if projectExpansion(project.id).wrappedValue || !queryIsEmpty {
-                                            let grouped = chats(inProject: project.id)
-                                            if grouped.isEmpty {
-                                                Text("No chats yet")
-                                                    .font(.system(size: 11))
-                                                    .foregroundStyle(.tertiary)
-                                                    .padding(.leading, 32)
-                                                    .padding(.vertical, 4)
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                            } else {
-                                                ForEach(grouped) { reflectionCase in
-                                                    sidebarRow(reflectionCase, indented: true)
-                                                }
+                                ForEach(orderedProjects) { project in
+                                    SidebarProjectHeader(
+                                        project: project,
+                                        count: chats(inProject: project.id).count,
+                                        isExpanded: projectExpansion(project.id),
+                                        forceExpanded: !queryIsEmpty,
+                                        onNewChat: { onNewChatInProject(project.id) },
+                                        onRename: { onRenameProject(project.id, $0) },
+                                        onDelete: { onDeleteProject(project.id) }
+                                    )
+                                    if projectExpansion(project.id).wrappedValue || !queryIsEmpty {
+                                        let grouped = chats(inProject: project.id)
+                                        if grouped.isEmpty {
+                                            Text("No chats yet")
+                                                .font(.system(size: 11))
+                                                .foregroundStyle(.tertiary)
+                                                .padding(.leading, 40)
+                                                .padding(.vertical, 4)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                        } else {
+                                            ForEach(grouped) { reflectionCase in
+                                                sidebarRow(reflectionCase, indented: true)
                                             }
                                         }
                                     }
@@ -2342,29 +2337,21 @@ private struct ReflectionSidebar: View {
                         Section(header: SidebarSectionHeader(
                             title: "Chats",
                             count: reflectionCases.count,
-                            isExpanded: $reflectionsExpanded,
-                            forceExpanded: !queryIsEmpty,
                             onAdd: onCreate
                         )) {
-                            if reflectionsExpanded || !queryIsEmpty {
-                                ForEach(reflectionCases) { reflectionCase in
-                                    sidebarRow(reflectionCase)
-                                }
+                            ForEach(reflectionCases) { reflectionCase in
+                                sidebarRow(reflectionCase)
                             }
                         }
                         if hasLearningProjects {
                             Section(header: SidebarSectionHeader(
                                 title: "Learning",
                                 count: learningCases.count,
-                                isExpanded: $learningExpanded,
-                                forceExpanded: !queryIsEmpty,
                                 onAdd: onCreateLearning
                             )
                             .padding(.top, 8)) {
-                                if learningExpanded || !queryIsEmpty {
-                                    ForEach(learningCases) { reflectionCase in
-                                        sidebarRow(reflectionCase)
-                                    }
+                                ForEach(learningCases) { reflectionCase in
+                                    sidebarRow(reflectionCase)
                                 }
                             }
                         }
@@ -2373,19 +2360,15 @@ private struct ReflectionSidebar: View {
                             // with the first promoted principle.
                             Section(header: SidebarSectionHeader(
                                 title: "Principles",
-                                count: visiblePrinciples.count,
-                                isExpanded: $principlesExpanded,
-                                forceExpanded: !queryIsEmpty
+                                count: visiblePrinciples.count
                             )
                             .padding(.top, 8)) {
-                                if principlesExpanded || !queryIsEmpty {
-                                    ForEach(visiblePrinciples) { record in
-                                        SidebarPrincipleRow(record: record) {
-                                            onOpenPrinciple?(record)
-                                        }
-                                        .padding(.horizontal, 8)
-                                        .padding(.bottom, 1)
+                                ForEach(visiblePrinciples) { record in
+                                    SidebarPrincipleRow(record: record) {
+                                        onOpenPrinciple?(record)
                                     }
+                                    .padding(.horizontal, 8)
+                                    .padding(.bottom, 1)
                                 }
                             }
                         }
@@ -2479,8 +2462,13 @@ private struct ReflectionSidebar: View {
             }
             .buttonStyle(.plain)
             .background {
-                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.quinary)
+                // Hover-only .quinary — the one-pane glass law: no resting
+                // opaque fills; New Chat matches its neighbours (owner-audit).
+                if newChatHovering {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.quinary)
+                }
             }
+            .onHover { newChatHovering = $0 }
             .accessibilityLabel("New Chat")
 
             Button(action: onCreateProject) {
@@ -2517,53 +2505,48 @@ private struct ReflectionSidebar: View {
 private struct SidebarSectionHeader: View {
     let title: String
     let count: Int
-    @Binding var isExpanded: Bool
-    let forceExpanded: Bool
-    // VSCode explorer grammar: the section header exposes its own create
-    // action on hover — the mono count yields to a quiet plus.
+    // The section header exposes its own create action on hover — the mono
+    // count yields to a quiet plus.
     var onAdd: (() -> Void)? = nil
     @State private var isHovering = false
 
-    private var showsExpanded: Bool { forceExpanded || isExpanded }
-
     var body: some View {
-        Button {
-            isExpanded.toggle()
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: showsExpanded ? "chevron.down" : "chevron.right")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                // Quiet furniture (owner 2026-07-05: 图标语言优先): sentence
-                // case, regular weight, no tracking — the label just names the
-                // group; the folder/doc icons carry the hierarchy.
-                Text(title)
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-                if isHovering, let onAdd {
-                    Button {
-                        onAdd()
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 18, height: 18)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("New in \(title.capitalized)")
-                } else {
-                    Text("\(count)")
-                        .font(.system(size: 10.5, design: .monospaced))
+        // Pure furniture (owner 2026-07-05: 图标语言优先 + drop the disclosure
+        // chevron): no leading control, no collapse — the label just names the
+        // group. Its text aligns to the same 40pt column as the row NAMES (a
+        // 22pt leading spacer mirrors the icon column) so the left edge is one
+        // clean grid; the folder/doc icons carry all the hierarchy.
+        HStack(spacing: 10) {
+            Color.clear.frame(width: 22, height: 1)
+            Text(title)
+                .font(.system(size: 10.5))
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+            if isHovering, let onAdd {
+                Button(action: onAdd) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("New in \(title)")
+            } else {
+                Text("\(count)")
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 12)
-            .frame(height: 26)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .padding(.leading, 8)
+        .padding(.trailing, 12)
+        .frame(height: 26)
+        .contentShape(Rectangle())
+        .background {
+            if isHovering, onAdd != nil {
+                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.quinary)
+            }
+        }
         .onHover { hovering in
             var transaction = Transaction()
             transaction.disablesAnimations = true
@@ -2644,7 +2627,7 @@ private struct SidebarProjectHeader: View {
                     Image(systemName: "plus")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
-                        .frame(width: 18, height: 18)
+                        .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -2658,7 +2641,7 @@ private struct SidebarProjectHeader: View {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
-                        .frame(width: 18, height: 18)
+                        .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }
                 .menuStyle(.borderlessButton)
@@ -2674,6 +2657,11 @@ private struct SidebarProjectHeader: View {
         .padding(.trailing, 12)
         .frame(height: 28)
         .contentShape(Rectangle())
+        .background {
+            if isHovering {
+                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.quinary)
+            }
+        }
         .onHover { hovering in
             var transaction = Transaction()
             transaction.disablesAnimations = true
@@ -3900,7 +3888,7 @@ private struct ReflectionSidebarRow: View {
         Button(action: onSelect) {
             HStack(alignment: .center, spacing: 10) {
                 Image(systemName: isLearning ? "book" : "rectangle.and.text.magnifyingglass")
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                     .frame(width: 22)
 
@@ -3965,7 +3953,7 @@ private struct ReflectionSidebarRow: View {
                 .padding(.trailing, isHovering ? 34 : 8)
             }
             .padding(.leading, 8)
-            .frame(height: hasFacts ? 46 : 34)
+            .frame(height: hasFacts ? 46 : 30)
             .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)

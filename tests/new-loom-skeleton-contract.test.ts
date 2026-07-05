@@ -2755,6 +2755,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // A row's Menu/contextMenu is cached by identity — fold the projects into the
   // row id so "Move to" refreshes when projects change in-session, not on relaunch.
   assert.match(nativeRoot, /private var projectMenuFingerprint: String/);
+  // Sidebar craft polish (owner-audit 2026-07-05): drop the section-label
+  // disclosure chevron (labels = non-collapsible furniture aligned to the name
+  // column), hover-only New Chat fill, unified icon size + row-height ladder.
+  assert.match(nativeRoot, /Color\.clear\.frame\(width: 22, height: 1\)/);
+  assert.match(nativeRoot, /if newChatHovering \{/);
+  assert.match(nativeRoot, /hasFacts \? 46 : 30/);
   assert.match(nativeRoot, /struct SidebarProjectHeader: View/);
   assert.match(nativeRoot, /private func groupID\(for reflectionCase: ReflectionCase\) -> String\?/);
   assert.match(nativeRoot, /private func chats\(inProject id: String\) -> \[ReflectionCase\]/);
