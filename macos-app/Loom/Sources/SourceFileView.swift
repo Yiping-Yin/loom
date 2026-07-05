@@ -2650,16 +2650,33 @@ final class LoomPDFKitView: PDFView {
         return overlay
     }()
 
+    // Hover-to-note reliability (owner 2026-07-06): highlight the WHOLE hovered
+    // line so the target is obvious, pin the ❕ to the line's trailing edge
+    // (fixed, not chasing the cursor), and let a click anywhere on the line
+    // capture it — click vs drag distinguished in mouseUp so text drag-select
+    // still works. A success flash confirms the grab in place.
+    private var clickDownPoint: CGPoint?
+    private var didDrag = false
+    private lazy var lineHighlight: LineHoverHighlight = {
+        let view = LineHoverHighlight()
+        view.isHidden = true
+        return view
+    }()
+
     override func layout() {
         super.layout()
-        // Keep the badge + snip marquee topmost — PDFView owns internal
-        // document subviews.
+        // Keep the highlight + badge + snip marquee topmost — PDFView owns
+        // internal document subviews. Highlight sits under the badge.
+        if lineHighlight.superview !== self {
+            addSubview(lineHighlight, positioned: .above, relativeTo: nil)
+        }
         if noteBadge.superview !== self {
             addSubview(noteBadge, positioned: .above, relativeTo: nil)
         }
         if snipOverlay.superview !== self {
             addSubview(snipOverlay, positioned: .above, relativeTo: nil)
         }
+        lineHighlight.frame = bounds
         snipOverlay.frame = bounds
     }
 
@@ -2680,18 +2697,30 @@ final class LoomPDFKitView: PDFView {
         super.mouseMoved(with: event)
         guard onNotePassage != nil else { hideBadge(); return }
         let viewPoint = convert(event.locationInWindow, from: nil)
-        // Freeze while the cursor is over the badge so it stays clickable.
-        if !noteBadge.isHidden, noteBadge.frame.insetBy(dx: -6, dy: -6).contains(viewPoint) { return }
         guard let document,
               let page = page(for: viewPoint, nearest: false) else { hideBadge(); return }
         let pagePoint = convert(viewPoint, to: page)
         guard let selection = page.selectionForLine(at: pagePoint),
               let raw = selection.string?.trimmingCharacters(in: .whitespacesAndNewlines),
               !raw.isEmpty else { hideBadge(); return }
-        pendingPassage = (document.index(for: page), selection.bounds(for: page), raw)
-        let size: CGFloat = 22
-        let x = min(viewPoint.x + 12, bounds.maxX - size - 4)
-        noteBadge.frame = NSRect(x: x, y: viewPoint.y - size / 2, width: size, height: size)
+        let pageRect = selection.bounds(for: page)
+        pendingPassage = (document.index(for: page), pageRect, raw)
+        // Highlight the WHOLE line (the target) and pin the ❕ to its trailing
+        // edge — fixed while the cursor stays on this line, so it never chases.
+        // Convert via POINTs: the rect overload of convert(_:from:) lands the
+        // overlay in the wrong (document-view) space here.
+        let c1 = convert(CGPoint(x: pageRect.minX, y: pageRect.minY), from: page)
+        let c2 = convert(CGPoint(x: pageRect.maxX, y: pageRect.maxY), from: page)
+        let lineRect = CGRect(
+            x: min(c1.x, c2.x), y: min(c1.y, c2.y),
+            width: abs(c2.x - c1.x), height: abs(c2.y - c1.y)
+        )
+        lineHighlight.frame = bounds
+        lineHighlight.lineRect = lineRect
+        lineHighlight.isHidden = false
+        let size: CGFloat = 20
+        let bx = min(lineRect.maxX + 7, bounds.maxX - size - 4)
+        noteBadge.frame = NSRect(x: bx, y: lineRect.midY - size / 2, width: size, height: size)
         noteBadge.isHidden = false
     }
 
@@ -2702,6 +2731,7 @@ final class LoomPDFKitView: PDFView {
 
     private func hideBadge() {
         noteBadge.isHidden = true
+        lineHighlight.isHidden = true
         pendingPassage = nil
     }
 
@@ -2714,11 +2744,17 @@ final class LoomPDFKitView: PDFView {
             hideBadge()
             return
         }
+        clickDownPoint = convert(event.locationInWindow, from: nil)
+        didDrag = false
         super.mouseDown(with: event)
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let start = snipStart else { super.mouseDragged(with: event); return }
+        guard let start = snipStart else {
+            didDrag = true
+            super.mouseDragged(with: event)
+            return
+        }
         let point = convert(event.locationInWindow, from: nil)
         let rect = CGRect(
             x: min(start.x, point.x), y: min(start.y, point.y),
@@ -2731,12 +2767,23 @@ final class LoomPDFKitView: PDFView {
     }
 
     override func mouseUp(with event: NSEvent) {
-        guard snipStart != nil else { super.mouseUp(with: event); return }
-        snipStart = nil
-        snipOverlay.isHidden = true
-        let rect = snipRect
-        snipRect = nil
-        if let rect, rect.width > 8, rect.height > 8 { captureRegion(viewRect: rect) }
+        if snipStart != nil {
+            snipStart = nil
+            snipOverlay.isHidden = true
+            let rect = snipRect
+            snipRect = nil
+            if let rect, rect.width > 8, rect.height > 8 { captureRegion(viewRect: rect) }
+            return
+        }
+        super.mouseUp(with: event)
+        // A click (not a drag-select) on the highlighted line captures it — the
+        // whole line is the target, so it is hard to miss. Drag still selects.
+        let wasClick = !didDrag
+        clickDownPoint = nil
+        didDrag = false
+        if wasClick, onNotePassage != nil, pendingPassage != nil {
+            commitPendingPassage()
+        }
     }
 
     /// Turn a view-space snip box into an appshot: find its page, map the box
@@ -2773,8 +2820,12 @@ final class LoomPDFKitView: PDFView {
         let image = document?.page(at: pending.page).flatMap {
             Self.regionImage(from: $0, pageRect: pending.rect.insetBy(dx: -10, dy: -7))
         }
+        // Confirm the grab right on the page — the note lands behind the reader,
+        // so the flash is the "it worked" you can feel.
+        lineHighlight.flash()
+        noteBadge.isHidden = true
+        pendingPassage = nil
         onNotePassage?(pending.page, pending.rect, pending.text, image)
-        hideBadge()
     }
 
     /// Rasterize a page-space rect to an image. Drawn from the PDF content
@@ -2872,6 +2923,53 @@ final class SnipOverlayView: NSView {
         path.setLineDash([5, 3], count: 2, phase: 0)
         accent.withAlphaComponent(0.95).setStroke()
         path.stroke()
+    }
+}
+
+/// A calm wash over the line under the cursor in the reader — the capture
+/// target made visible. `flash()` pulses it green to confirm a grab, since the
+/// note itself lands behind the reader sheet.
+final class LineHoverHighlight: NSView {
+    var lineRect: CGRect = .zero {
+        didSet {
+            flashing = false
+            fillAlpha = 0.16
+            alphaValue = 1
+            needsDisplay = true
+        }
+    }
+    private var fillAlpha: CGFloat = 0.16
+    private var flashing = false
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override func draw(_ dirtyRect: NSRect) {
+        guard lineRect.width > 1, lineRect.height > 1 else { return }
+        let cyan = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
+        let green = NSColor(calibratedRed: 0.373, green: 0.812, blue: 0.561, alpha: 1)
+        let pad = lineRect.insetBy(dx: -4, dy: -2)
+        let path = NSBezierPath(roundedRect: pad, xRadius: 3, yRadius: 3)
+        (flashing ? green : cyan).withAlphaComponent(fillAlpha).setFill()
+        path.fill()
+    }
+
+    /// Pulse green over the captured line, then fade out and hide.
+    func flash() {
+        flashing = true
+        fillAlpha = 0.85
+        isHidden = false
+        alphaValue = 1
+        needsDisplay = true
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.55
+            animator().alphaValue = 0
+        }, completionHandler: { [weak self] in
+            guard let self else { return }
+            self.isHidden = true
+            self.alphaValue = 1
+            self.flashing = false
+            self.fillAlpha = 0.10
+        })
     }
 }
 

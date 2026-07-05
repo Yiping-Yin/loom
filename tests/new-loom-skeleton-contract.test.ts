@@ -1889,6 +1889,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /final class SnipOverlayView: NSView/);
   assert.match(sourceFileView, /event\.modifierFlags\.contains\(\.option\)/);
   assert.match(sourceFileView, /private func captureRegion\(viewRect: CGRect\)/);
+  // Hover-to-note reliability (owner 2026-07-06): highlight the whole line,
+  // click anywhere on it to capture (drag still selects), and flash to confirm.
+  assert.match(sourceFileView, /final class LineHoverHighlight: NSView/);
+  assert.match(sourceFileView, /lineHighlight\.flash\(\)/);
+  assert.match(sourceFileView, /if wasClick, onNotePassage != nil, pendingPassage != nil/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered
