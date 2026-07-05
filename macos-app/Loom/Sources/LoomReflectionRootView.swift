@@ -3146,6 +3146,8 @@ private struct SidebarUtilityStrip: View {
                 openWindow(id: AboutWindow.id)
             }
 
+            Spacer(minLength: 0)
+
             SidebarRailIcon(systemImage: "gearshape", help: "Settings (⌘,)") {
                 openSettings()
             }
