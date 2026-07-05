@@ -1873,6 +1873,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text in/);
   assert.match(nativeRoot, /func insertPassageAnchor\(quote: String, anchorURL: String, precise: Bool = true\)/);
   assert.match(nativeRoot, /quoteAttributes\[\.link\] = anchorURL/);
+  // Appshot (owner 2026-07-06): committing the hover ❕ ALSO renders the
+  // captured PDF region to an image (no screen-capture permission) and drops
+  // it into the note as a paper card above the quote.
+  assert.match(sourceFileView, /static func regionImage\(from page: PDFPage, pageRect: CGRect\) -> NSImage\?/);
+  assert.match(sourceFileView, /page\.draw\(with: box, to: ctx\)/);
+  assert.match(sourceFileView, /name: \.loomReflectionInsertPassageImage/);
+  assert.match(nativeRoot, /static let loomReflectionInsertPassageImage = Notification\.Name/);
+  assert.match(nativeRoot, /forName: \.loomReflectionInsertPassageImage[\s\S]{0,400}self\.insertPaperImage\(image\)/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered

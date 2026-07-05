@@ -4509,6 +4509,12 @@ extension Notification.Name {
     /// Hover-to-note: the reader captured a passage; the center note editor
     /// listens and inserts it as a clickable `loom://anchor` quote.
     static let loomReflectionInsertPassage = Notification.Name("loomReflectionInsertPassage")
+
+    /// Appshot (owner 2026-07-06): the reader rendered the captured region to
+    /// an image; the center note editor drops it in as a paper card next to the
+    /// quote. userInfo["image"] is an NSImage. Rendered from the PDF page — no
+    /// screen-recording permission.
+    static let loomReflectionInsertPassageImage = Notification.Name("loomReflectionInsertPassageImage")
 }
 
 private struct WorkbenchEmptyLauncher: View {
@@ -5084,6 +5090,7 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         /// The reader's hover-to-note badge posts a captured passage here; the
         /// mounted center editor inserts it as a clickable anchored quote.
         private var passageObserver: NSObjectProtocol?
+        private var passageImageObserver: NSObjectProtocol?
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
@@ -5104,10 +5111,30 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 NotificationCenter.default.removeObserver(observer)
                 passageObserver = nil
             }
+            // Appshot: the reader posts the rendered region image; drop it into
+            // the note as a paper card. It is enqueued BEFORE the quote note, so
+            // the card lands above its quote.
+            if window != nil, passageImageObserver == nil {
+                passageImageObserver = NotificationCenter.default.addObserver(
+                    forName: .loomReflectionInsertPassageImage,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] note in
+                    guard let self, let image = note.userInfo?["image"] as? NSImage else { return }
+                    self.window?.makeFirstResponder(self)
+                    self.insertPaperImage(image)
+                }
+            } else if window == nil, let observer = passageImageObserver {
+                NotificationCenter.default.removeObserver(observer)
+                passageImageObserver = nil
+            }
         }
 
         deinit {
             if let observer = passageObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            if let observer = passageImageObserver {
                 NotificationCenter.default.removeObserver(observer)
             }
         }

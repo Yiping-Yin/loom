@@ -2691,8 +2691,44 @@ final class LoomPDFKitView: PDFView {
 
     private func commitPendingPassage() {
         guard let pending = pendingPassage else { return }
+        // Appshot (owner 2026-07-06): render the captured region to an image and
+        // drop it into the note beside the quote. PDFPage rendering reads the
+        // content stream directly — no screen-recording / TCC permission.
+        if let page = document?.page(at: pending.page),
+           let image = Self.regionImage(from: page, pageRect: pending.rect) {
+            NotificationCenter.default.post(
+                name: .loomReflectionInsertPassageImage,
+                object: nil,
+                userInfo: ["image": image]
+            )
+        }
         onNotePassage?(pending.page, pending.rect, pending.text)
         hideBadge()
+    }
+
+    /// Rasterize a page-space rect (as returned by `selection.bounds(for:)`)
+    /// to an image, with a little breathing room around the line. Drawn from
+    /// the PDF content stream via `PDFPage.draw` — no screen capture, no TCC
+    /// permission. NSImage's lockFocus renders at the backing scale, so the
+    /// card stays crisp on Retina.
+    static func regionImage(from page: PDFPage, pageRect: CGRect) -> NSImage? {
+        let box = PDFDisplayBox.cropBox
+        let pageBounds = page.bounds(for: box)
+        let region = pageRect.insetBy(dx: -10, dy: -7).intersection(pageBounds).integral
+        guard region.width >= 6, region.height >= 6 else { return nil }
+        let image = NSImage(size: region.size)
+        image.lockFocusFlipped(false)
+        defer { image.unlockFocus() }
+        guard let ctx = NSGraphicsContext.current?.cgContext else { return nil }
+        ctx.setFillColor(NSColor.white.cgColor)
+        ctx.fill(CGRect(origin: .zero, size: region.size))
+        ctx.saveGState()
+        // Map the region's origin to the image origin, then draw the page in its
+        // own (bottom-left) coordinate space.
+        ctx.translateBy(x: -region.origin.x, y: -region.origin.y)
+        page.draw(with: box, to: ctx)
+        ctx.restoreGState()
+        return image
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {
