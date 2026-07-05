@@ -2744,8 +2744,17 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // section above a flat Chats list, ChatGPT/Claude-familiar, on one glass pane.
   assert.match(nativeRoot, /private var newChatRow: some View/);
   assert.match(nativeRoot, /Image\(systemName: "folder\.badge\.plus"\)/);
-  assert.match(nativeRoot, /title: "PROJECTS"/);
-  assert.match(nativeRoot, /title: "CHATS"/);
+  // Icon-first (owner 2026-07-05: 图标语言优先): a folder glyph on the project
+  // row is the primary "this is a group" signal; the section labels demote to
+  // quiet sentence case so a project instance no longer mimics a section header.
+  assert.match(nativeRoot, /title: "Projects"/);
+  assert.match(nativeRoot, /title: "Chats"/);
+  assert.match(nativeRoot, /Image\(systemName: showsExpanded \? "folder\.fill" : "folder"\)/);
+  assert.match(nativeRoot, /Text\(project\.name\)\n\s*\.font\(\.system\(size: 13, weight: \.medium\)\)/);
+  assert.doesNotMatch(nativeRoot, /Text\(project\.name\.uppercased\(\)\)/);
+  // A row's Menu/contextMenu is cached by identity — fold the projects into the
+  // row id so "Move to" refreshes when projects change in-session, not on relaunch.
+  assert.match(nativeRoot, /private var projectMenuFingerprint: String/);
   assert.match(nativeRoot, /struct SidebarProjectHeader: View/);
   assert.match(nativeRoot, /private func groupID\(for reflectionCase: ReflectionCase\) -> String\?/);
   assert.match(nativeRoot, /private func chats\(inProject id: String\) -> \[ReflectionCase\]/);

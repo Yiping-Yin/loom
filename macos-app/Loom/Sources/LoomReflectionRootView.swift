@@ -2302,7 +2302,7 @@ private struct ReflectionSidebar: View {
                     } else {
                         if !projects.isEmpty {
                             Section(header: SidebarSectionHeader(
-                                title: "PROJECTS",
+                                title: "Projects",
                                 count: projects.count,
                                 isExpanded: $projectsExpanded,
                                 forceExpanded: !queryIsEmpty,
@@ -2340,7 +2340,7 @@ private struct ReflectionSidebar: View {
                             .padding(.bottom, 2)
                         }
                         Section(header: SidebarSectionHeader(
-                            title: "CHATS",
+                            title: "Chats",
                             count: reflectionCases.count,
                             isExpanded: $reflectionsExpanded,
                             forceExpanded: !queryIsEmpty,
@@ -2354,7 +2354,7 @@ private struct ReflectionSidebar: View {
                         }
                         if hasLearningProjects {
                             Section(header: SidebarSectionHeader(
-                                title: "LEARNING",
+                                title: "Learning",
                                 count: learningCases.count,
                                 isExpanded: $learningExpanded,
                                 forceExpanded: !queryIsEmpty,
@@ -2372,7 +2372,7 @@ private struct ReflectionSidebar: View {
                             // The workspace's ARCHITECTURE frame — appears
                             // with the first promoted principle.
                             Section(header: SidebarSectionHeader(
-                                title: "PRINCIPLES",
+                                title: "Principles",
                                 count: visiblePrinciples.count,
                                 isExpanded: $principlesExpanded,
                                 forceExpanded: !queryIsEmpty
@@ -2433,6 +2433,14 @@ private struct ReflectionSidebar: View {
         .background { hiddenShortcutButtons }
     }
 
+    // SwiftUI caches a row's Menu/contextMenu content by identity, so a reused
+    // ForEach row keeps a STALE "Move to" list when projects change in-session
+    // (it only refreshed on relaunch). Fold the projects + this chat's own
+    // membership into the row identity so the menu rebuilds when either changes.
+    private var projectMenuFingerprint: String {
+        projects.map { "\($0.id):\($0.name)" }.joined(separator: "|")
+    }
+
     private func sidebarRow(_ reflectionCase: ReflectionCase, indented: Bool = false) -> some View {
         ReflectionSidebarRow(
             reflectionCase: reflectionCase,
@@ -2443,6 +2451,7 @@ private struct ReflectionSidebar: View {
             onRename: { onRename(reflectionCase, $0) },
             onMoveToProject: { onMoveChat(reflectionCase, $0) }
         )
+        .id("\(reflectionCase.id)#\(reflectionCase.projectID ?? "-")#\(projectMenuFingerprint)")
         .padding(.leading, indented ? 20 : 8)
         .padding(.trailing, 8)
         .padding(.bottom, 1)
@@ -2525,9 +2534,11 @@ private struct SidebarSectionHeader: View {
                 Image(systemName: showsExpanded ? "chevron.down" : "chevron.right")
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
+                // Quiet furniture (owner 2026-07-05: 图标语言优先): sentence
+                // case, regular weight, no tracking — the label just names the
+                // group; the folder/doc icons carry the hierarchy.
                 Text(title)
-                    .font(.system(size: 10.5, weight: .semibold))
-                    .tracking(0.8)
+                    .font(.system(size: 10.5))
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 0)
                 if isHovering, let onAdd {
@@ -2593,7 +2604,7 @@ private struct SidebarProjectHeader: View {
     }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 10) {
             Button { isExpanded.toggle() } label: {
                 Image(systemName: showsExpanded ? "chevron.down" : "chevron.right")
                     .font(.system(size: 9, weight: .semibold))
@@ -2602,18 +2613,25 @@ private struct SidebarProjectHeader: View {
             }
             .buttonStyle(.plain)
 
+            // The folder glyph is the icon-first signal (owner 2026-07-05): a
+            // project reads as a container to open, no uppercase word needed.
+            // Filled when open / hollow when closed doubles the state cue.
+            Image(systemName: showsExpanded ? "folder.fill" : "folder")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .frame(width: 22)
+
             if isEditing {
                 TextField("Project name", text: $draft)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .font(.system(size: 13, weight: .medium))
                     .focused($fieldFocused)
                     .onSubmit { commitRename() }
                     .onExitCommand { isEditing = false }
             } else {
-                Text(project.name.uppercased())
-                    .font(.system(size: 10.5, weight: .semibold))
-                    .tracking(0.6)
-                    .foregroundStyle(.secondary)
+                Text(project.name)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .onTapGesture(count: 2) { beginRename() }
@@ -2652,8 +2670,9 @@ private struct SidebarProjectHeader: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.horizontal, 12)
-        .frame(height: 26)
+        .padding(.leading, 8)
+        .padding(.trailing, 12)
+        .frame(height: 28)
         .contentShape(Rectangle())
         .onHover { hovering in
             var transaction = Transaction()
