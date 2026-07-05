@@ -1894,6 +1894,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /final class LineHoverHighlight: NSView/);
   assert.match(sourceFileView, /lineHighlight\.flash\(\)/);
   assert.match(sourceFileView, /if wasClick, onNotePassage != nil, pendingPassage != nil/);
+  // Snip polish (owner 2026-07-06): dim OUTSIDE the box (screenshot-style
+  // spotlight) + live dimensions + crosshair + a green flash on release.
+  assert.match(sourceFileView, /mask\.windingRule = \.evenOdd/);
+  assert.match(sourceFileView, /NSCursor\.crosshair\.set\(\)/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered

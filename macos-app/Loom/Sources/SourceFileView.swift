@@ -2742,6 +2742,7 @@ final class LoomPDFKitView: PDFView {
             snipStart = convert(event.locationInWindow, from: nil)
             snipRect = nil
             hideBadge()
+            NSCursor.crosshair.set()
             return
         }
         clickDownPoint = convert(event.locationInWindow, from: nil)
@@ -2770,9 +2771,15 @@ final class LoomPDFKitView: PDFView {
         if snipStart != nil {
             snipStart = nil
             snipOverlay.isHidden = true
+            NSCursor.arrow.set()
             let rect = snipRect
             snipRect = nil
-            if let rect, rect.width > 8, rect.height > 8 { captureRegion(viewRect: rect) }
+            if let rect, rect.width > 8, rect.height > 8 {
+                captureRegion(viewRect: rect)
+                // Confirm the grab: flash green over the box the user drew.
+                lineHighlight.lineRect = rect
+                lineHighlight.flash()
+            }
             return
         }
         super.mouseUp(with: event)
@@ -2916,13 +2923,38 @@ final class SnipOverlayView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         guard selectionRect.width > 1, selectionRect.height > 1 else { return }
         let accent = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
-        accent.withAlphaComponent(0.10).setFill()
+        // Dim everything OUTSIDE the box — a macOS screenshot-style spotlight so
+        // the region reads as precise. Even-odd = bounds minus the selection.
+        let mask = NSBezierPath(rect: bounds)
+        mask.append(NSBezierPath(rect: selectionRect))
+        mask.windingRule = .evenOdd
+        NSColor.black.withAlphaComponent(0.30).setFill()
+        mask.fill()
+        // The box: a whisper of accent wash + a crisp accent border.
+        accent.withAlphaComponent(0.06).setFill()
         selectionRect.fill()
-        let path = NSBezierPath(rect: selectionRect)
-        path.lineWidth = 1.5
-        path.setLineDash([5, 3], count: 2, phase: 0)
+        let border = NSBezierPath(rect: selectionRect)
+        border.lineWidth = 1.5
         accent.withAlphaComponent(0.95).setStroke()
-        path.stroke()
+        border.stroke()
+        // Live dimensions readout, like the system region grab.
+        let dims = "\(Int(selectionRect.width)) × \(Int(selectionRect.height))"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
+            .foregroundColor: NSColor.white,
+        ]
+        let textSize = dims.size(withAttributes: attrs)
+        let pad: CGFloat = 5
+        let boxW = textSize.width + pad * 2
+        let boxH = textSize.height + pad
+        var lx = selectionRect.midX - boxW / 2
+        var ly = selectionRect.minY - boxH - 6
+        if ly < 4 { ly = selectionRect.maxY + 6 }
+        lx = max(4, min(lx, bounds.maxX - boxW - 4))
+        let labelRect = CGRect(x: lx, y: ly, width: boxW, height: boxH)
+        NSColor.black.withAlphaComponent(0.72).setFill()
+        NSBezierPath(roundedRect: labelRect, xRadius: 4, yRadius: 4).fill()
+        dims.draw(at: CGPoint(x: labelRect.minX + pad, y: labelRect.minY + pad / 2), withAttributes: attrs)
     }
 }
 
