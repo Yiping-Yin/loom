@@ -358,51 +358,17 @@ struct LoomReflectionRootView: View {
         )) {
             CaptureSheet(payload: $capturePayload, onSaved: handleCaptureSaved)
         }
-        .sheet(item: $anchorPreview) { target in
-            // SourceFileView is a full-pane reader that never closes itself —
-            // the parent owns the dismiss control. Wrap it in a slim header
-            // with an obvious Done button (⎋) so reading is one click open,
-            // one click closed (owner 2026-07-05: "keep it simple &amp; easy").
-            VStack(spacing: 0) {
-                HStack(spacing: 8) {
-                    Image(systemName: "doc.richtext")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                    Text(target.fileURL.lastPathComponent)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    Spacer(minLength: 12)
-                    Button { anchorPreview = nil } label: {
-                        Text("Done")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .keyboardShortcut(.cancelAction)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
-                Divider()
-                SourceFileView(fileURL: target.fileURL) { anchorPreview = nil }
-                    .onNotePassage { page, rect, text, image in
-                        noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text, image: image)
-                    }
-            }
-            .frame(minWidth: 820, minHeight: 640)
-            .onAppear {
-                // Give the PDF view a beat to mount, then scroll to page + rect
-                // via the viewer's existing anchor listener.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-                    NotificationCenter.default.post(
-                        name: .loomApplyPDFAnchor,
-                        object: nil,
-                        userInfo: ["page": target.page, "rect": NSValue(rect: target.rect)]
-                    )
-                }
+        // Full-window reader (owner 2026-07-06: the PDF needs real fullscreen —
+        // a `.sheet` can never fill or go fullscreen, so present the reader as a
+        // top overlay that fills the whole window; the reader toolbar's ⌃⌘F then
+        // toggles macOS fullscreen on the now-unsheeted window).
+        .overlay {
+            if let target = anchorPreview {
+                readerFullScreen(target)
+                    .transition(.opacity)
             }
         }
+        .animation(.easeOut(duration: 0.16), value: anchorPreview != nil)
         .onReceive(NotificationCenter.default.publisher(for: .loomReflectionAnchorJump)) { note in
             guard let sourceID = note.userInfo?["sourceID"] as? String else { return }
             let page = note.userInfo?["page"] as? Int ?? 0
@@ -999,6 +965,50 @@ struct LoomReflectionRootView: View {
     /// `precise` = the rect was recovered (reader will highlight the exact
     /// passage). false = page-only fallback: the status + landing flash say so
     /// honestly rather than pretending the anchor is exact.
+    /// The reader as a full-window overlay (replaces the old sheet so it can
+    /// fill the window and go fullscreen). Slim header + Done; the reader's own
+    /// toolbar carries zoom / page / ⌃⌘F fullscreen.
+    @ViewBuilder
+    private func readerFullScreen(_ target: AnchorPreviewTarget) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Image(systemName: "doc.richtext")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                Text(target.fileURL.lastPathComponent)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 12)
+                Button { anchorPreview = nil } label: {
+                    Text("Done").font(.system(size: 12, weight: .semibold))
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .keyboardShortcut(.cancelAction)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            Divider()
+            SourceFileView(fileURL: target.fileURL) { anchorPreview = nil }
+                .onNotePassage { page, rect, text, image in
+                    noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text, image: image)
+                }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                NotificationCenter.default.post(
+                    name: .loomApplyPDFAnchor,
+                    object: nil,
+                    userInfo: ["page": target.page, "rect": NSValue(rect: target.rect)]
+                )
+            }
+        }
+    }
+
     private func noteFromPassage(sourceID: String, page: Int, rect: CGRect, text: String, image: NSImage? = nil, precise: Bool = true) {
         let quote = text.trimmingCharacters(in: .whitespacesAndNewlines)
         // The appshot image IS the excerpt — it needs no matchable text; a

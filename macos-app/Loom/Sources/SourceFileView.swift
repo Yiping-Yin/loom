@@ -105,9 +105,59 @@ struct SourceFileView: View {
         }
     }
 
+    private var isPDF: Bool { resolvedURL?.pathExtension.lowercased() == "pdf" }
+
+    /// Native reading controls (owner 2026-07-06): page nav + indicator, zoom
+    /// (fit / actual / ± with live %), and macOS fullscreen — all wired to the
+    /// PDFView LOOM already hosts, so the reader stops feeling hand-built.
+    @ViewBuilder private var pdfToolbar: some View {
+        HStack(spacing: 8) {
+            Button { pdfHolder.goToPreviousPage() } label: { Image(systemName: "chevron.up") }
+                .help("Previous page")
+            Button { pdfHolder.goToNextPage() } label: { Image(systemName: "chevron.down") }
+                .help("Next page")
+            Text(pdfHolder.pageLabel.isEmpty ? "—" : pdfHolder.pageLabel)
+                .font(.system(size: 11.5, design: .monospaced))
+                .frame(minWidth: 52, alignment: .leading)
+
+            Spacer(minLength: 10)
+
+            Button { pdfHolder.zoomOut() } label: { Image(systemName: "minus.magnifyingglass") }
+                .disabled(!pdfHolder.canZoomOut).help("Zoom out (⌘−)")
+                .keyboardShortcut("-", modifiers: .command)
+            Text(pdfHolder.scaleLabel.isEmpty ? "—" : pdfHolder.scaleLabel)
+                .font(.system(size: 11.5, design: .monospaced))
+                .frame(minWidth: 40)
+            Button { pdfHolder.zoomIn() } label: { Image(systemName: "plus.magnifyingglass") }
+                .disabled(!pdfHolder.canZoomIn).help("Zoom in (⌘+)")
+                .keyboardShortcut("+", modifiers: .command)
+            Button { pdfHolder.fitWidth() } label: {
+                Image(systemName: pdfHolder.isFitting ? "arrow.down.forward.and.arrow.up.backward" : "arrow.up.backward.and.arrow.down.forward")
+            }
+            .help("Fit width (⌘9)").keyboardShortcut("9", modifiers: .command)
+            Button { pdfHolder.actualSize() } label: { Text("1:1").font(.system(size: 11, weight: .semibold)) }
+                .help("Actual size (⌘0)").keyboardShortcut("0", modifiers: .command)
+
+            Spacer(minLength: 10)
+
+            Button { pdfHolder.toggleFullScreen() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+                .help("Full screen (⌃⌘F)").keyboardShortcut("f", modifiers: [.control, .command])
+        }
+        .buttonStyle(.plain)
+        .font(.system(size: 12.5))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 14)
+        .frame(height: 34)
+        .frame(maxWidth: .infinity)
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
+                if isPDF {
+                    pdfToolbar
+                    Divider()
+                }
                 Group {
                     if let resolved = resolvedURL {
                         if resolved.pathExtension.lowercased() == "pdf" {
@@ -2518,6 +2568,72 @@ enum LoomCompilePipeline {
 final class PDFViewHolder: ObservableObject {
     weak var pdfView: PDFView?
 
+    // Live reading state for the reader toolbar (owner 2026-07-06: wire the
+    // native PDFView controls LOOM wasn't surfacing). Updated off PDFKit's own
+    // page/scale/document notifications.
+    @Published var hasPDF = false
+    @Published var pageLabel = ""   // "3 / 12"
+    @Published var scaleLabel = ""  // "120%"
+    @Published var canZoomIn = false
+    @Published var canZoomOut = false
+    @Published var isFitting = true // autoScales on = fit-to-width
+    private var observers: [NSObjectProtocol] = []
+
+    /// Bind the holder to a live PDFView + observe its native notifications so
+    /// the toolbar's page/zoom readouts stay in sync.
+    func attach(_ view: PDFView) {
+        guard pdfView !== view else { return }
+        pdfView = view
+        observers.forEach { NotificationCenter.default.removeObserver($0) }
+        observers.removeAll()
+        let nc = NotificationCenter.default
+        for name: Notification.Name in [.PDFViewPageChanged, .PDFViewScaleChanged, .PDFViewDocumentChanged] {
+            observers.append(nc.addObserver(forName: name, object: view, queue: .main) { [weak self] _ in
+                self?.refresh()
+            })
+        }
+        refresh()
+    }
+
+    func refresh() {
+        guard let view = pdfView, let doc = view.document, doc.pageCount > 0 else {
+            hasPDF = false; pageLabel = ""; scaleLabel = ""; canZoomIn = false; canZoomOut = false
+            return
+        }
+        hasPDF = true
+        let current = view.currentPage.map { doc.index(for: $0) + 1 } ?? 1
+        pageLabel = "\(current) / \(doc.pageCount)"
+        scaleLabel = "\(Int((view.scaleFactor * 100).rounded()))%"
+        canZoomIn = view.canZoomIn
+        canZoomOut = view.canZoomOut
+        isFitting = view.autoScales
+    }
+
+    func zoomIn()  { pdfView?.autoScales = false; pdfView?.zoomIn(nil);  refresh() }
+    func zoomOut() { pdfView?.autoScales = false; pdfView?.zoomOut(nil); refresh() }
+    func fitWidth() { pdfView?.autoScales = true; refresh() }
+    func actualSize() { pdfView?.autoScales = false; pdfView?.scaleFactor = 1; refresh() }
+    func goToPreviousPage() { pdfView?.goToPreviousPage(nil); refresh() }
+    func goToNextPage() { pdfView?.goToNextPage(nil); refresh() }
+    func goToPage(_ oneBased: Int) {
+        guard let view = pdfView, let doc = view.document else { return }
+        let idx = max(0, min(oneBased - 1, doc.pageCount - 1))
+        if let page = doc.page(at: idx) { view.go(to: page); refresh() }
+    }
+
+    /// Native macOS fullscreen (⌃⌘F). The reader is a sheet, so toggle the
+    /// presenting window, not the sheet's own child window.
+    func toggleFullScreen() {
+        // The reader now fills the window (no longer a sheet), so its own window
+        // IS the workbench window. Opt it into fullscreen (the window ships
+        // without .fullScreenPrimary, so toggleFullScreen would otherwise no-op).
+        let win = pdfView?.window ?? NSApp.mainWindow ?? NSApp.keyWindow
+        win?.collectionBehavior.insert(.fullScreenPrimary)
+        win?.toggleFullScreen(nil)
+    }
+
+    deinit { observers.forEach { NotificationCenter.default.removeObserver($0) } }
+
     /// Snapshot the current selection — page index (0-based), bounds in
     /// page coordinates, and the selected text — when the user has
     /// highlighted something in the PDF. Returns nil when no selection.
@@ -2571,7 +2687,7 @@ private struct LoomPDFView: NSViewRepresentable {
         view.onNotePassage = onNotePassage
         loadDocument(into: view, from: fileURL)
         DispatchQueue.main.async {
-            holder.pdfView = view
+            holder.attach(view)
         }
         return view
     }
@@ -2582,10 +2698,8 @@ private struct LoomPDFView: NSViewRepresentable {
         if nsView.document?.documentURL != fileURL {
             loadDocument(into: nsView, from: fileURL)
         }
-        if holder.pdfView !== nsView {
-            DispatchQueue.main.async {
-                holder.pdfView = nsView
-            }
+        DispatchQueue.main.async {
+            holder.attach(nsView)
         }
     }
 
@@ -2610,6 +2724,7 @@ private struct LoomPDFView: NSViewRepresentable {
                 // one the view wants.
                 guard view.window != nil || view.superview != nil else { return }
                 view.document = doc
+                holder.refresh()
             }
         }
     }

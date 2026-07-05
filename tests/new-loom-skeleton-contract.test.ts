@@ -1898,6 +1898,13 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // spotlight) + live dimensions + crosshair + a green flash on release.
   assert.match(sourceFileView, /mask\.windingRule = \.evenOdd/);
   assert.match(sourceFileView, /NSCursor\.crosshair\.set\(\)/);
+  // PDF reader native controls (owner 2026-07-06): a toolbar wiring PDFView's
+  // own zoom / page / fullscreen so the reader stops feeling hand-built.
+  assert.match(sourceFileView, /func attach\(_ view: PDFView\)/);
+  assert.match(sourceFileView, /func toggleFullScreen\(\)/);
+  assert.match(sourceFileView, /private var pdfToolbar: some View/);
+  assert.match(sourceFileView, /pdfHolder\.zoomIn\(\)/);
+  assert.match(sourceFileView, /\.PDFViewPageChanged/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered
@@ -1930,7 +1937,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /if rect\.isEmpty \{[\s\S]{0,220}bounds\.maxY/);
   assert.match(nativeRoot, /struct AnchorPreviewTarget: Identifiable/);
   assert.match(nativeRoot, /static let loomReflectionAnchorJump = Notification\.Name/);
-  assert.match(nativeRoot, /\.sheet\(item: \$anchorPreview\)/);
+  // Full-window reader overlay (owner 2026-07-06): the reader is no longer a
+  // .sheet (a sheet can't fill/fullscreen) — it's a top overlay that fills the
+  // window so ⌃⌘F can toggle real macOS fullscreen.
+  assert.match(nativeRoot, /if let target = anchorPreview \{[\s\S]{0,60}readerFullScreen\(target\)/);
+  assert.match(nativeRoot, /private func readerFullScreen\(_ target: AnchorPreviewTarget\) -> some View/);
   assert.match(nativeRoot, /SourceFileView\(fileURL: target\.fileURL\) \{ anchorPreview = nil \}/);
   assert.match(nativeRoot, /Button \{ anchorPreview = nil \} label: \{[\s\S]{0,60}Text\("Done"\)/);
   assert.match(nativeRoot, /\.keyboardShortcut\(\.cancelAction\)/);
