@@ -1873,6 +1873,23 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text in/);
   assert.match(nativeRoot, /func insertPassageAnchor\(quote: String, anchorURL: String\)/);
   assert.match(nativeRoot, /quoteAttributes\[\.link\] = anchorURL/);
+  // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
+  // lands the passage in the center note as the SAME clickable loom://anchor
+  // quote as the in-app hover ❕. The rect Preview never exposes is recovered
+  // in-app via PDFKit findString, so the jump-back highlight is exact.
+  assert.match(nativeRoot, /enum ReflectionPassageAnchoring/);
+  assert.match(nativeRoot, /func resolve\(\n\s*text: String,\n\s*sources: \[ReflectionSource\],\n\s*pageHint: Int\?\n\s*\) -> \(sourceID: String, page: Int, rect: CGRect\)\?/);
+  assert.match(nativeRoot, /doc\.findString\(trimmed, withOptions: \[\.caseInsensitive, \.diacriticInsensitive\]\)/);
+  assert.match(nativeRoot, /static func matches\(text: String, sources: \[ReflectionSource\]\) -> Bool/);
+  assert.match(nativeRoot, /private func handlePreviewPassageCapture\(_ capture: LoomExternalSelectionCapture\) -> Bool/);
+  assert.match(nativeRoot, /if !handlePreviewPassageCapture\(capture\) \{/);
+  assert.match(nativeRoot, /if !handlePreviewPassageCapture\(pending\) \{/);
+  // The quiet route: a registered-PDF passage skips the companion window +
+  // main-window parking so the owner stays in Preview and the mounted note
+  // picks up the anchor.
+  assert.match(loomApp, /ReflectionPassageAnchoring\.matches\(text: capture\.text, sources: activeSources\)/);
+  // Page-only anchors (rect .zero) land at the TOP of the page, never bottom.
+  assert.match(sourceFileView, /if rect\.isEmpty \{[\s\S]{0,220}bounds\.maxY/);
   assert.match(nativeRoot, /struct AnchorPreviewTarget: Identifiable/);
   assert.match(nativeRoot, /static let loomReflectionAnchorJump = Notification\.Name/);
   assert.match(nativeRoot, /\.sheet\(item: \$anchorPreview\)/);

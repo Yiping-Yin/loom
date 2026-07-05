@@ -2538,6 +2538,14 @@ final class PDFViewHolder: ObservableObject {
         guard let view = pdfView, let document = view.document else { return }
         guard pageIndex >= 0, pageIndex < document.pageCount else { return }
         guard let page = document.page(at: pageIndex) else { return }
+        // Page-only anchor (a Preview capture where no rect was recovered):
+        // land at the TOP of the page, no highlight — never the bottom-left.
+        if rect.isEmpty {
+            let bounds = page.bounds(for: view.displayBox)
+            view.go(to: PDFDestination(page: page, at: NSPoint(x: bounds.minX, y: bounds.maxY)))
+            view.setCurrentSelection(nil, animate: false)
+            return
+        }
         // Center the rect in the visible viewport
         let dest = PDFDestination(page: page, at: NSPoint(x: rect.minX, y: rect.maxY))
         view.go(to: dest)

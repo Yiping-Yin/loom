@@ -427,7 +427,9 @@ struct LoomReflectionRootView: View {
                 return
             }
             lastHandledExternalSelectionToken = capture.token
-            handleExternalSelectionCapture(capture)
+            if !handlePreviewPassageCapture(capture) {
+                handleExternalSelectionCapture(capture)
+            }
             LoomExternalSelectionCaptureRelay.clear(ifToken: capture.token)
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomShuttleNavigate)) { note in
@@ -821,7 +823,9 @@ struct LoomReflectionRootView: View {
                 continue
             }
             lastHandledExternalSelectionToken = pending.token
-            handleExternalSelectionCapture(pending)
+            if !handlePreviewPassageCapture(pending) {
+                handleExternalSelectionCapture(pending)
+            }
             LoomExternalSelectionCaptureRelay.clear(ifToken: pending.token)
         }
     }
@@ -940,6 +944,24 @@ struct LoomReflectionRootView: View {
             )
         }
         statusMessage = "Noted passage from page \(page + 1)"
+    }
+
+    /// External capture (⌘U from Preview): if the selection resolves to a
+    /// registered PDF source, land it as the SAME clickable anchor quote as an
+    /// in-app hover ❕ and return true. Return false to fall back to the generic
+    /// learning-trace capture path.
+    private func handlePreviewPassageCapture(_ capture: LoomExternalSelectionCapture) -> Bool {
+        let text = capture.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return false }
+        guard let anchor = ReflectionPassageAnchoring.resolve(
+            text: text,
+            sources: selectedCase.sources,
+            pageHint: capture.nativeContext?.pageNumber
+        ) else { return false }
+        emptyWorkbenchDismissed = true
+        selectedSourceID = anchor.sourceID
+        noteFromPassage(sourceID: anchor.sourceID, page: anchor.page, rect: anchor.rect, text: text)
+        return true
     }
 
     private func openSourcesInNativeApps(_ sources: [ReflectionSource]) {
@@ -3867,6 +3889,105 @@ private struct GlassReadingCenter: View {
 
 /// The destination of a clicked note-anchor: a source file + the page/rect to
 /// scroll the in-app PDF viewer to.
+/// Locates a captured text passage inside a registered PDF source and returns
+/// its 0-based page + rect — the SAME PDFKit coordinate the in-app reader jumps
+/// with, so a Preview capture highlights exactly like an in-app hover ❕.
+/// System Preview never vends a selection rect; we recover it here by searching
+/// LOOM's own copy of the file. Shared by the AppDelegate (quiet-route
+/// decision) and the workbench root (the actual landing).
+enum ReflectionPassageAnchoring {
+    /// 0-based page + rect of `text` within one of `sources`, or nil.
+    /// Pass 1 — exact `findString` (case/diacritic-insensitive) → page + rect.
+    /// Pass 2 — normalized substring page match → page, rect `.zero`.
+    /// `pageHint` is 1-based (from a "Page N of M" title) to disambiguate
+    /// duplicate matches.
+    /// Opens the source's PDF, resolving the security-scoped bookmark first —
+    /// under sandbox the bare fileURL is unreadable unless we re-enter the
+    /// bookmark's access scope (same pattern jumpToAnchor uses).
+    static func openDocument(for source: ReflectionSource) -> PDFDocument? {
+        guard let baseURL = source.fileURL,
+              baseURL.pathExtension.lowercased() == "pdf" else { return nil }
+        var url = baseURL
+        if let bookmark = source.bookmarkData {
+            var isStale = false
+            if let scoped = try? URL(
+                resolvingBookmarkData: bookmark,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                _ = scoped.startAccessingSecurityScopedResource()
+                url = scoped
+            }
+        }
+        return PDFDocument(url: url)
+    }
+
+    static func resolve(
+        text: String,
+        sources: [ReflectionSource],
+        pageHint: Int?
+    ) -> (sourceID: String, page: Int, rect: CGRect)? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else { return nil }
+        let pdfs: [(source: ReflectionSource, doc: PDFDocument)] = sources.compactMap { source in
+            guard let doc = openDocument(for: source) else { return nil }
+            return (source, doc)
+        }
+        guard !pdfs.isEmpty else { return nil }
+
+        for (source, doc) in pdfs {
+            let hits = doc.findString(trimmed, withOptions: [.caseInsensitive, .diacriticInsensitive])
+            guard !hits.isEmpty else { continue }
+            let chosen: PDFSelection
+            if let hint = pageHint,
+               let hinted = hits.first(where: { sel in
+                   guard let page = sel.pages.first else { return false }
+                   return doc.index(for: page) == hint - 1
+               }) {
+                chosen = hinted
+            } else {
+                chosen = hits[0]
+            }
+            if let page = chosen.pages.first {
+                return (source.id, doc.index(for: page), chosen.bounds(for: page))
+            }
+        }
+
+        let query = normalize(trimmed)
+        guard !query.isEmpty else { return nil }
+        for (source, doc) in pdfs {
+            for pageIndex in 0..<doc.pageCount {
+                guard let pageText = doc.page(at: pageIndex)?.string else { continue }
+                if normalize(pageText).contains(query) {
+                    return (source.id, pageIndex, .zero)
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Fast yes/no: does the selection land in a registered PDF source? Used by
+    /// the AppDelegate to pick the quiet route without the full rect derivation.
+    static func matches(text: String, sources: [ReflectionSource]) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else { return false }
+        for source in sources {
+            guard let doc = openDocument(for: source) else { continue }
+            if !doc.findString(trimmed, withOptions: [.caseInsensitive, .diacriticInsensitive]).isEmpty {
+                return true
+            }
+        }
+        return false
+    }
+
+    static func normalize(_ text: String) -> String {
+        String(text.lowercased().unicodeScalars.compactMap {
+            CharacterSet.alphanumerics.contains($0) ? Character($0) : nil
+        })
+    }
+}
+
 private struct AnchorPreviewTarget: Identifiable {
     let sourceID: String
     let fileURL: URL

@@ -957,6 +957,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func captureExternalSelection(_ capture: LoomExternalSelectionCapture) {
         LoomExternalSelectionCaptureRelay.savePending(capture)
+
+        // Quiet route (owner 2026-07-05: 简单容易 / 自动到 LOOM): a selection that
+        // resolves to a passage in a registered PDF source lands straight in the
+        // center note as a clickable anchor — no companion window, no parking, so
+        // the owner stays in Preview and the still-mounted note picks it up.
+        let session = ReflectionWorkspaceSession.shared
+        let activeSources = session.cases.first(where: { $0.id == session.selectedCaseID })?.sources ?? []
+        if ReflectionPassageAnchoring.matches(text: capture.text, sources: activeSources) {
+            postExternalSelectionCapture(capture)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+                self?.postExternalSelectionCapture(capture)
+            }
+            return
+        }
+
         externalCompanionKeepsMainParked = true
 
         postExternalSelectionCapture(capture)
