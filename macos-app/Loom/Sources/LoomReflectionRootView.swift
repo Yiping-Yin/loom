@@ -2428,6 +2428,7 @@ private struct ReflectionSidebar: View {
         ReflectionSidebarRow(
             reflectionCase: reflectionCase,
             isSelected: reflectionCase.id == selectedCaseID,
+            showsLeafIcon: !indented,
             projects: projects,
             onSelect: { onSelect(reflectionCase) },
             onDelete: { onDelete(reflectionCase) },
@@ -3831,6 +3832,7 @@ private struct ReflectionSidebarSearchField: View {
 private struct ReflectionSidebarRow: View {
     let reflectionCase: ReflectionCase
     let isSelected: Bool
+    var showsLeafIcon: Bool = true
     var projects: [ReflectionProject] = []
     let onSelect: () -> Void
     let onDelete: () -> Void
@@ -3885,11 +3887,19 @@ private struct ReflectionSidebarRow: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(alignment: .center, spacing: 10) {
-                // Chats are icon-less leaves (owner reference 2026-07-05): only
-                // projects (containers) get a glyph; a chat is indented text
-                // aligned to the project-name column. The clear gutter holds
-                // that alignment so titles line up under the project names.
-                Color.clear.frame(width: 22, height: 1)
+                // Consistent left icon column (owner mockup 2026-07-05): a
+                // top-level chat (in the Chats section) leads with a subtle
+                // bubble/book glyph aligned to the project-icon column; a chat
+                // NESTED under a project stays icon-less (the folder above it
+                // carries the signal), its title indented to the name column.
+                if showsLeafIcon {
+                    Image(systemName: isLearning ? "book" : "bubble.left")
+                        .font(.system(size: 12))
+                        .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                        .frame(width: 22)
+                } else {
+                    Color.clear.frame(width: 22, height: 1)
+                }
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
@@ -3985,7 +3995,7 @@ private struct ReflectionSidebarRow: View {
                 // selection, transparent like glass. (.selection material
                 // emphasized renders opaque accent — measured live.)
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(nsColor: .controlAccentColor).opacity(0.30))
+                    .fill(LoomTokens.dsThread.opacity(0.18))
             } else if isHovering {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(.quinary)
