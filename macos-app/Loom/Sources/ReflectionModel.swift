@@ -80,10 +80,16 @@ struct ReflectionCase: Identifiable, Codable, Equatable {
     // blobs decode as ungrouped and the memberwise init keeps compiling.
     var projectID: String? = nil
 
+    /// The default title of a never-named product reflection. It is a
+    /// placeholder, not a real title — the center view hides it as a heading
+    /// (the blank case is an invitation, "no emblem, no words") and it only
+    /// appears once the user renames the chat.
+    static let untitledPlaceholder = "Untitled product reflection"
+
     static func blank() -> ReflectionCase {
         ReflectionCase(
             id: UUID().uuidString,
-            title: "Untitled product reflection",
+            title: untitledPlaceholder,
             project: "New product practice",
             status: "Collecting input",
             updatedAt: "now",

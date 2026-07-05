@@ -67,7 +67,7 @@ private extension ReflectionCase {
     }
 
     var isUntouchedProductReflection: Bool {
-        title == "Untitled product reflection"
+        title == ReflectionCase.untitledPlaceholder
             && project == "New product practice"
             && !hasWorkbenchMaterial
     }
@@ -4114,10 +4114,18 @@ private struct GlassReadingCenter: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(alignment: .leading, spacing: 28) {
-                                Text(reflectionCase.title)
-                                    .font(.system(size: 26, weight: .semibold, design: .serif))
-                                    .foregroundStyle(.primary)
-                                    .padding(.top, 8)
+                                // The heading shows the case's REAL title. While
+                                // it is still the untouched "Untitled product
+                                // reflection" placeholder, show nothing — the
+                                // blank case is an invitation, not a stage (owner
+                                // 2026-07-06: 初始不要这个文字). The title appears
+                                // once the user names the chat.
+                                if reflectionCase.title != ReflectionCase.untitledPlaceholder {
+                                    Text(reflectionCase.title)
+                                        .font(.system(size: 26, weight: .semibold, design: .serif))
+                                        .foregroundStyle(.primary)
+                                        .padding(.top, 8)
+                                }
 
                                 // The document IS the input: writing happens
                                 // directly on the glass, not in a box below.
