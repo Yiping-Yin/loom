@@ -2799,6 +2799,13 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // and normalizeDocument PRESERVES them (single ink governs family/size only).
   assert.match(nativeRoot, /private static func applyBodySerifPreservingEmphasis\(_ storage: NSTextStorage, range: NSRange\)/);
   assert.match(nativeRoot, /applyBodySerifPreservingEmphasis\(storage, range: paragraphRange\)/);
+  // Two-altitude reading-note form (owner 2026-07-06): a captured quote is
+  // EVIDENCE — normalize keeps it at an indented "evidence altitude" (detected
+  // by its loom://anchor link, which survives RTFD) instead of flattening it to
+  // baseline authored text.
+  assert.match(nativeRoot, /static var quoteParagraphStyle: NSParagraphStyle/);
+  assert.match(nativeRoot, /func isAnchorParagraph\(_ storage: NSTextStorage, at loc: Int\) -> Bool/);
+  assert.match(nativeRoot, /\} else if isAnchorParagraph\(storage, at: paragraphRange\.location\)/);
   assert.match(nativeRoot, /case "b": toggleEmphasis\(\.boldFontMask\); return true/);
   assert.match(nativeRoot, /private func toggleEmphasis\(_ trait: NSFontTraitMask\)/);
   assert.match(nativeRoot, /private func toggleUnderline\(\)/);

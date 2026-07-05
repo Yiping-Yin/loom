@@ -4707,6 +4707,29 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         return style
     }
 
+    /// Evidence altitude (owner 2026-07-06, the two-altitude reading-note form):
+    /// a captured quote is the SOURCE's words, so it sits indented + quiet BELOW
+    /// your own baseline claim. Indent-only via NSParagraphStyle so it survives
+    /// RTFD; the quiet ink is a separate colour attribute.
+    static var quoteParagraphStyle: NSParagraphStyle {
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = 5
+        style.firstLineHeadIndent = 22
+        style.headIndent = 22
+        style.paragraphSpacingBefore = 2
+        return style
+    }
+
+    /// A paragraph is EVIDENCE (a captured quote / image card) if it carries a
+    /// `loom://anchor` link — a standard attribute that survives the RTFD round
+    /// trip, so the altitude persists across reload without a custom marker.
+    static func isAnchorParagraph(_ storage: NSTextStorage, at loc: Int) -> Bool {
+        guard loc < storage.length,
+              let link = storage.attribute(.link, at: loc, effectiveRange: nil) else { return false }
+        let s = (link as? String) ?? (link as? URL)?.absoluteString ?? (link as? NSURL)?.absoluteString ?? ""
+        return s.hasPrefix("loom://anchor")
+    }
+
     static func headingFont(level: Int) -> NSFont {
         switch level {
         case 1: return serifFont(size: 22, weight: .semibold)
@@ -4816,6 +4839,15 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                     value: NSColor.tertiaryLabelColor,
                     range: NSRange(location: paragraphRange.location, length: markerLength)
                 )
+            } else if isAnchorParagraph(storage, at: paragraphRange.location) {
+                // Evidence altitude — a captured quote. Preserve its indent +
+                // quiet ink instead of flattening it to baseline authored text,
+                // so the source's words read as evidence below your own claim.
+                storage.addAttributes([
+                    .foregroundColor: NSColor.secondaryLabelColor,
+                    .paragraphStyle: quoteParagraphStyle,
+                ], range: paragraphRange)
+                applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
             } else {
                 storage.addAttributes([
                     .foregroundColor: NSColor.labelColor,
@@ -5406,6 +5438,10 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             }
             var quoteAttributes = bodyAttributes
             quoteAttributes[.link] = anchorURL
+            // Land at evidence altitude immediately (indented + quiet); normalize
+            // then keeps it there via the loom://anchor link.
+            quoteAttributes[.paragraphStyle] = GlassDocumentEditor.quoteParagraphStyle
+            quoteAttributes[.foregroundColor] = NSColor.secondaryLabelColor
             let quoteLine = NSAttributedString(string: "\u{201C}\(quote)\u{201D}", attributes: quoteAttributes)
             insertion.append(quoteLine)
             // Leave the cursor on a fresh line under the quote, ready to write.
