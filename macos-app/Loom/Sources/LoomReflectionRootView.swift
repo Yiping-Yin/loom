@@ -4600,10 +4600,10 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 )
             } else {
                 storage.addAttributes([
-                    .font: documentFont,
                     .foregroundColor: NSColor.labelColor,
                     .paragraphStyle: documentParagraphStyle,
                 ], range: paragraphRange)
+                applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
             }
             location = NSMaxRange(paragraphRange)
         }
@@ -4614,6 +4614,21 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             .foregroundColor: NSColor.labelColor,
             .paragraphStyle: documentParagraphStyle,
         ]
+    }
+
+    /// Enforce the one serif family + body size on a paragraph while PRESERVING
+    /// the bold/italic emphasis the owner applied (⌘B/⌘I) — so the single-ink
+    /// discipline holds for family/size/colour, but Word-class emphasis lives.
+    /// Underline + links are separate attributes normalize never touches.
+    private static func applyBodySerifPreservingEmphasis(_ storage: NSTextStorage, range: NSRange) {
+        let manager = NSFontManager.shared
+        storage.enumerateAttribute(.font, in: range) { value, subRange, _ in
+            let symbolic = (value as? NSFont)?.fontDescriptor.symbolicTraits ?? []
+            var font = serifFont(size: 15, weight: .regular)
+            if symbolic.contains(.bold) { font = manager.convert(font, toHaveTrait: .boldFontMask) }
+            if symbolic.contains(.italic) { font = manager.convert(font, toHaveTrait: .italicFontMask) }
+            storage.addAttribute(.font, value: font, range: subRange)
+        }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -4887,6 +4902,55 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             if let observer = passageObserver {
                 NotificationCenter.default.removeObserver(observer)
             }
+        }
+
+        // Word-class emphasis with no permanent chrome: the standard ⌘B/⌘I/⌘U
+        // toggle bold/italic/underline on the selection. normalizeDocument
+        // preserves them; the single-ink discipline still governs family/size.
+        override func performKeyEquivalent(with event: NSEvent) -> Bool {
+            if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+               let key = event.charactersIgnoringModifiers?.lowercased() {
+                switch key {
+                case "b": toggleEmphasis(.boldFontMask); return true
+                case "i": toggleEmphasis(.italicFontMask); return true
+                case "u": toggleUnderline(); return true
+                default: break
+                }
+            }
+            return super.performKeyEquivalent(with: event)
+        }
+
+        private func toggleEmphasis(_ trait: NSFontTraitMask) {
+            let range = selectedRange()
+            guard range.length > 0, let storage = textStorage else { return }
+            let manager = NSFontManager.shared
+            let existing = storage.attribute(.font, at: range.location, effectiveRange: nil) as? NSFont
+            let symbolic = existing?.fontDescriptor.symbolicTraits ?? []
+            let isOn = trait == .boldFontMask ? symbolic.contains(.bold) : symbolic.contains(.italic)
+            storage.beginEditing()
+            storage.enumerateAttribute(.font, in: range) { value, subRange, _ in
+                let base = (value as? NSFont) ?? GlassDocumentEditor.documentFont
+                let font = isOn
+                    ? manager.convert(base, toNotHaveTrait: trait)
+                    : manager.convert(base, toHaveTrait: trait)
+                storage.addAttribute(.font, value: font, range: subRange)
+            }
+            storage.endEditing()
+            didChangeText()
+        }
+
+        private func toggleUnderline() {
+            let range = selectedRange()
+            guard range.length > 0, let storage = textStorage else { return }
+            let current = storage.attribute(.underlineStyle, at: range.location, effectiveRange: nil) as? Int ?? 0
+            storage.beginEditing()
+            if current == 0 {
+                storage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+            } else {
+                storage.removeAttribute(.underlineStyle, range: range)
+            }
+            storage.endEditing()
+            didChangeText()
         }
 
         // A click that lands on a file chip opens its source directly —

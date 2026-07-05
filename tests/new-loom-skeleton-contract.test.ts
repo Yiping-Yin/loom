@@ -2710,6 +2710,14 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'the editor grows with its content inside the outer reading scroll — no nested scroller',
   );
   assert.match(nativeModel, /var documentText: String\? = nil/);
+  // Center formatting Phase 1 (2026-07-05): Word-class emphasis with no
+  // permanent chrome — ⌘B/⌘I/⌘U toggle bold/italic/underline on the selection,
+  // and normalizeDocument PRESERVES them (single ink governs family/size only).
+  assert.match(nativeRoot, /private static func applyBodySerifPreservingEmphasis\(_ storage: NSTextStorage, range: NSRange\)/);
+  assert.match(nativeRoot, /applyBodySerifPreservingEmphasis\(storage, range: paragraphRange\)/);
+  assert.match(nativeRoot, /case "b": toggleEmphasis\(\.boldFontMask\); return true/);
+  assert.match(nativeRoot, /private func toggleEmphasis\(_ trait: NSFontTraitMask\)/);
+  assert.match(nativeRoot, /private func toggleUnderline\(\)/);
   // Chats-in-Projects (2026-07-05): a Projects grouping layer over a still-flat
   // Chats list, added via two optional+LAST fields — zero migration.
   assert.match(nativeModel, /var projectID: String\? = nil/);
