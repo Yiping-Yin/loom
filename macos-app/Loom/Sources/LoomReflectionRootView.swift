@@ -174,7 +174,13 @@ struct LoomReflectionRootView: View {
                         onCreateLearning: createLearningProject,
                         onNewChat: createReflection,
                         onDelete: deleteReflection,
-                        onRename: renameReflection
+                        onRename: renameReflection,
+                        projects: projects,
+                        onCreateProject: createProject,
+                        onRenameProject: renameProject,
+                        onDeleteProject: deleteProject,
+                        onNewChatInProject: createChat(inProject:),
+                        onMoveChat: moveChat
                     )
                     .frame(width: reflectionSidebarWidth)
                     .transition(.move(edge: .leading).combined(with: .opacity))
@@ -281,7 +287,13 @@ struct LoomReflectionRootView: View {
                         onCreateLearning: createLearningProject,
                         onNewChat: createReflection,
                         onDelete: deleteReflection,
-                        onRename: renameReflection
+                        onRename: renameReflection,
+                        projects: projects,
+                        onCreateProject: createProject,
+                        onRenameProject: renameProject,
+                        onDeleteProject: deleteProject,
+                        onNewChatInProject: createChat(inProject:),
+                        onMoveChat: moveChat
                     )
                     .frame(width: reflectionSidebarWidth)
                     .background(ReflectionSidebarPeekBackdrop())
@@ -582,6 +594,58 @@ struct LoomReflectionRootView: View {
         draftText = ""
         emptyWorkbenchDismissed = true
         statusMessage = "New reflection created"
+        persistWorkspace()
+    }
+
+    // MARK: - Chats-in-Projects (2026-07-05)
+
+    private var projects: [ReflectionProject] {
+        get { workspace.projects }
+        nonmutating set { workspace.projects = newValue }
+    }
+
+    private func createProject() {
+        let order = (projects.map(\.order).max() ?? -1) + 1
+        projects.append(ReflectionProject(name: "New project", order: order))
+        persistWorkspace()
+        statusMessage = "New project"
+    }
+
+    private func renameProject(_ id: String, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let index = projects.firstIndex(where: { $0.id == id }) else { return }
+        projects[index].name = trimmed
+        persistWorkspace()
+    }
+
+    private func deleteProject(_ id: String) {
+        // A project is a container, never an owner: deleting it only ungroups
+        // its chats — it never deletes a chat.
+        for index in cases.indices where cases[index].projectID == id {
+            cases[index].projectID = nil
+        }
+        projects.removeAll { $0.id == id }
+        persistWorkspace()
+        statusMessage = "Project removed — its chats are now ungrouped"
+    }
+
+    private func moveChat(_ reflectionCase: ReflectionCase, toProjectID projectID: String?) {
+        guard let index = cases.firstIndex(where: { $0.id == reflectionCase.id }) else { return }
+        cases[index].projectID = projectID
+        persistWorkspace()
+        statusMessage = projectID == nil ? "Moved to Chats" : "Moved into project"
+    }
+
+    private func createChat(inProject projectID: String) {
+        var next = ReflectionCase.blank()
+        next.projectID = projectID
+        cases.insert(next, at: 0)
+        selectedCaseID = next.id
+        selectedSourceID = nil
+        selectedLearningTraceID = nil
+        draftText = ""
+        emptyWorkbenchDismissed = true
+        statusMessage = "New chat in project"
         persistWorkspace()
     }
 
@@ -2090,27 +2154,57 @@ private struct ReflectionSidebar: View {
     let onNewChat: () -> Void
     let onDelete: (ReflectionCase) -> Void
     let onRename: (ReflectionCase, String) -> Void
+    // Chats-in-Projects (2026-07-05).
+    var projects: [ReflectionProject] = []
+    var onCreateProject: () -> Void = {}
+    var onRenameProject: (String, String) -> Void = { _, _ in }
+    var onDeleteProject: (String) -> Void = { _ in }
+    var onNewChatInProject: (String) -> Void = { _ in }
+    var onMoveChat: (ReflectionCase, String?) -> Void = { _, _ in }
     @State private var query: String = ""
     @State private var reflectionsExpanded = true
+    @State private var projectsExpanded = true
     @State private var learningExpanded = true
     @State private var principlesExpanded = true
+    @State private var collapsedProjectIDs: Set<String> = []
     @FocusState private var searchFocused: Bool
+
+    private var orderedProjects: [ReflectionProject] {
+        projects.sorted { $0.order < $1.order }
+    }
+
+    private var projectIDSet: Set<String> { Set(projects.map(\.id)) }
+
+    /// A chat's grouping key — nil (ungrouped) if it has no projectID or points
+    /// at a project that no longer exists (defensive against dangling refs).
+    private func groupID(for reflectionCase: ReflectionCase) -> String? {
+        guard let id = reflectionCase.projectID, projectIDSet.contains(id) else { return nil }
+        return id
+    }
 
     private var visibleCases: [ReflectionCase] {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !needle.isEmpty else { return cases }
+        let matchingProjectIDs = Set(projects.filter { $0.name.lowercased().contains(needle) }.map(\.id))
         return cases.filter { item in
             ([item.title, item.project, item.summary] + item.tags)
                 .contains { $0.lowercased().contains(needle) }
+                || (item.projectID.map { matchingProjectIDs.contains($0) } ?? false)
         }
     }
 
+    private func chats(inProject id: String) -> [ReflectionCase] {
+        visibleCases.filter { groupID(for: $0) == id }
+    }
+
+    // CHATS + LEARNING sections show only UNGROUPED chats; a grouped chat lives
+    // under its project instead (so it never appears twice).
     private var reflectionCases: [ReflectionCase] {
-        visibleCases.filter { $0.project != "Learning pass" }
+        visibleCases.filter { groupID(for: $0) == nil && $0.project != "Learning pass" }
     }
 
     private var learningCases: [ReflectionCase] {
-        visibleCases.filter { $0.project == "Learning pass" }
+        visibleCases.filter { groupID(for: $0) == nil && $0.project == "Learning pass" }
     }
 
     private var queryIsEmpty: Bool {
@@ -2125,7 +2219,16 @@ private struct ReflectionSidebar: View {
     }
 
     private var showsSectionHeaders: Bool {
-        hasLearningProjects || !panelPrinciples.isEmpty
+        !projects.isEmpty || hasLearningProjects || !panelPrinciples.isEmpty
+    }
+
+    private func projectExpansion(_ id: String) -> Binding<Bool> {
+        Binding(
+            get: { !collapsedProjectIDs.contains(id) },
+            set: { expanded in
+                if expanded { collapsedProjectIDs.remove(id) } else { collapsedProjectIDs.insert(id) }
+            }
+        )
     }
 
     private var visiblePrinciples: [ReflectionPrincipleRecord] {
@@ -2148,7 +2251,11 @@ private struct ReflectionSidebar: View {
             ReflectionSidebarSearchField(text: $query, focus: $searchFocused)
                 .padding(.top, reflectionSidebarTopClearance)
                 .padding(.horizontal, 10)
-                .padding(.bottom, 10)
+                .padding(.bottom, 6)
+
+            newChatRow
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
 
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
@@ -2158,8 +2265,47 @@ private struct ReflectionSidebar: View {
                             sidebarRow(reflectionCase)
                         }
                     } else {
+                        if !projects.isEmpty {
+                            Section(header: SidebarSectionHeader(
+                                title: "PROJECTS",
+                                count: projects.count,
+                                isExpanded: $projectsExpanded,
+                                forceExpanded: !queryIsEmpty,
+                                onAdd: onCreateProject
+                            )) {
+                                if projectsExpanded || !queryIsEmpty {
+                                    ForEach(orderedProjects) { project in
+                                        SidebarProjectHeader(
+                                            project: project,
+                                            count: chats(inProject: project.id).count,
+                                            isExpanded: projectExpansion(project.id),
+                                            forceExpanded: !queryIsEmpty,
+                                            onNewChat: { onNewChatInProject(project.id) },
+                                            onRename: { onRenameProject(project.id, $0) },
+                                            onDelete: { onDeleteProject(project.id) }
+                                        )
+                                        if projectExpansion(project.id).wrappedValue || !queryIsEmpty {
+                                            let grouped = chats(inProject: project.id)
+                                            if grouped.isEmpty {
+                                                Text("No chats yet")
+                                                    .font(.system(size: 11))
+                                                    .foregroundStyle(.tertiary)
+                                                    .padding(.leading, 32)
+                                                    .padding(.vertical, 4)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                            } else {
+                                                ForEach(grouped) { reflectionCase in
+                                                    sidebarRow(reflectionCase, indented: true)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.bottom, 2)
+                        }
                         Section(header: SidebarSectionHeader(
-                            title: "REFLECTIONS",
+                            title: "CHATS",
                             count: reflectionCases.count,
                             isExpanded: $reflectionsExpanded,
                             forceExpanded: !queryIsEmpty,
@@ -2245,26 +2391,65 @@ private struct ReflectionSidebar: View {
                 )
             }
 
-            SidebarUtilityStrip(
-                projectCount: cases.count,
-                onNewChat: onNewChat
-            )
+            SidebarUtilityStrip(projectCount: cases.count)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
         .background { hiddenShortcutButtons }
     }
 
-    private func sidebarRow(_ reflectionCase: ReflectionCase) -> some View {
+    private func sidebarRow(_ reflectionCase: ReflectionCase, indented: Bool = false) -> some View {
         ReflectionSidebarRow(
             reflectionCase: reflectionCase,
             isSelected: reflectionCase.id == selectedCaseID,
+            projects: projects,
             onSelect: { onSelect(reflectionCase) },
             onDelete: { onDelete(reflectionCase) },
-            onRename: { onRename(reflectionCase, $0) }
+            onRename: { onRename(reflectionCase, $0) },
+            onMoveToProject: { onMoveChat(reflectionCase, $0) }
         )
-        .padding(.horizontal, 8)
+        .padding(.leading, indented ? 20 : 8)
+        .padding(.trailing, 8)
         .padding(.bottom, 1)
+    }
+
+    /// The primary create action (owner 2026-07-05), moved out of the bottom
+    /// strip so there is exactly one New-Chat entry. A trailing folder+ makes
+    /// the FIRST project (before the PROJECTS section — with its own + — exists).
+    private var newChatRow: some View {
+        HStack(spacing: 4) {
+            Button(action: onNewChat) {
+                HStack(spacing: 10) {
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 22)
+                    Text("New Chat")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.primary)
+                    Spacer(minLength: 0)
+                }
+                .padding(.leading, 8)
+                .frame(height: 34)
+                .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.quinary)
+            }
+            .accessibilityLabel("New Chat")
+
+            Button(action: onCreateProject) {
+                Image(systemName: "folder.badge.plus")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30, height: 34)
+                    .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .help("New project")
+            .accessibilityLabel("New project")
+        }
     }
 
     // View-local shortcuts — zero new data, zero new callbacks. Docked and
@@ -2337,6 +2522,120 @@ private struct SidebarSectionHeader: View {
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) { isHovering = hovering }
+        }
+    }
+}
+
+/// A collapsible Project group header — chevron + name + child-count, with a
+/// hover "+" (new chat here) and a "···" overflow (new chat / rename / delete).
+/// Reuses the SidebarSectionHeader grammar so the two-level hierarchy stays one
+/// visual family on the glass. Delete never deletes chats — it ungroups them.
+private struct SidebarProjectHeader: View {
+    let project: ReflectionProject
+    let count: Int
+    @Binding var isExpanded: Bool
+    let forceExpanded: Bool
+    let onNewChat: () -> Void
+    let onRename: (String) -> Void
+    let onDelete: () -> Void
+    @State private var isHovering = false
+    @State private var isEditing = false
+    @State private var draft = ""
+    @State private var confirmingDelete = false
+    @FocusState private var fieldFocused: Bool
+
+    private var showsExpanded: Bool { forceExpanded || isExpanded }
+
+    private func beginRename() {
+        draft = project.name
+        isEditing = true
+        fieldFocused = true
+    }
+
+    private func commitRename() {
+        isEditing = false
+        onRename(draft)
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button { isExpanded.toggle() } label: {
+                Image(systemName: showsExpanded ? "chevron.down" : "chevron.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 12)
+            }
+            .buttonStyle(.plain)
+
+            if isEditing {
+                TextField("Project name", text: $draft)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .focused($fieldFocused)
+                    .onSubmit { commitRename() }
+                    .onExitCommand { isEditing = false }
+            } else {
+                Text(project.name.uppercased())
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .tracking(0.6)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .onTapGesture(count: 2) { beginRename() }
+            }
+
+            Spacer(minLength: 0)
+
+            if isHovering {
+                Button(action: onNewChat) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 18, height: 18)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("New chat in this project")
+
+                Menu {
+                    Button("New chat here", action: onNewChat)
+                    Button("Rename", action: beginRename)
+                    Button("Delete project", role: .destructive) { confirmingDelete = true }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 18, height: 18)
+                        .contentShape(Rectangle())
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+            } else {
+                Text("\(count)")
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 26)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { isHovering = hovering }
+        }
+        .contextMenu {
+            Button("New chat here", action: onNewChat)
+            Button("Rename", action: beginRename)
+            Button("Delete project", role: .destructive) { confirmingDelete = true }
+        }
+        .confirmationDialog(
+            "Delete project \u{201C}\(project.name)\u{201D}? Its chats stay — they just become ungrouped.",
+            isPresented: $confirmingDelete
+        ) {
+            Button("Delete project", role: .destructive, action: onDelete)
+            Button("Cancel", role: .cancel) {}
         }
     }
 }
@@ -2829,20 +3128,13 @@ private struct MoonAvatar: View {
 
 private struct SidebarUtilityStrip: View {
     let projectCount: Int
-    let onNewChat: () -> Void
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         HStack(spacing: 8) {
-            // The simplest way in: start a new blank session (owner 2026-07-05:
-            // 开启新的 chat). Same as ⌘N, made a visible one-click affordance.
-            SidebarRailIcon(systemImage: "plus", help: "New chat (⌘N)") {
-                onNewChat()
-            }
-
-            Spacer(minLength: 0)
-
+            // New Chat now lives at the top of the rail (one entry point); the
+            // bottom strip is identity + settings only.
             // The About button speaks the strip's own ink (owner
             // 2026-07-04: the photographic moon avatar was a material
             // clash next to the line-art gear) — a moon glyph in the
@@ -3497,9 +3789,11 @@ private struct ReflectionSidebarSearchField: View {
 private struct ReflectionSidebarRow: View {
     let reflectionCase: ReflectionCase
     let isSelected: Bool
+    var projects: [ReflectionProject] = []
     let onSelect: () -> Void
     let onDelete: () -> Void
     let onRename: (String) -> Void
+    var onMoveToProject: (String?) -> Void = { _ in }
     @State private var isHovering = false
     @State private var isEditingTitle = false
     @State private var titleDraft = ""
@@ -3520,6 +3814,23 @@ private struct ReflectionSidebarRow: View {
     }
 
     private var isLearning: Bool { reflectionCase.project == "Learning pass" }
+
+    // Built fresh each time the menu opens (unlike a reused row's cached
+    // contextMenu), so the project list is always current.
+    @ViewBuilder
+    private var rowMoveToMenu: some View {
+        if !projects.isEmpty || reflectionCase.projectID != nil {
+            Menu("Move to") {
+                ForEach(projects) { project in
+                    Button(project.name) { onMoveToProject(project.id) }
+                }
+                if reflectionCase.projectID != nil {
+                    Divider()
+                    Button("Ungrouped (Chats)") { onMoveToProject(nil) }
+                }
+            }
+        }
+    }
 
     private var openQuestionCount: Int {
         ReflectionLearningTrace.from(reflectionCase).filter { $0.focus == "question" }.count
@@ -3595,7 +3906,7 @@ private struct ReflectionSidebarRow: View {
                 // When hover actions appear at the trailing edge, the text
                 // column yields to them (VSCode label behavior) instead of
                 // being painted over.
-                .padding(.trailing, isHovering ? 58 : 8)
+                .padding(.trailing, isHovering ? 34 : 8)
             }
             .padding(.leading, 8)
             .frame(height: hasFacts ? 46 : 34)
@@ -3604,15 +3915,21 @@ private struct ReflectionSidebarRow: View {
         .buttonStyle(.plain)
         .overlay(alignment: .trailing) {
             if isHovering {
-                HStack(spacing: 4) {
-                    SidebarRowActionButton(systemImage: "pencil", help: "Rename") {
-                        beginRename()
-                    }
-                    SidebarRowActionButton(systemImage: "trash", help: "Delete") {
-                        confirmingDelete = true
-                    }
+                Menu {
+                    Button("Rename") { beginRename() }
+                    rowMoveToMenu
+                    Button("Delete", role: .destructive) { confirmingDelete = true }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
-                .padding(.trailing, 6)
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .padding(.trailing, 8)
             }
         }
         .background {
@@ -3638,6 +3955,7 @@ private struct ReflectionSidebarRow: View {
         }
         .contextMenu {
             Button("Rename") { beginRename() }
+            rowMoveToMenu
             Button("Delete", role: .destructive) { confirmingDelete = true }
         }
         .confirmationDialog(

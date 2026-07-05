@@ -1660,7 +1660,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(nativeRoot, /fill\(LoomTokens\.dsPaperCard\)/);
   assert.match(nativeRoot, /private func updateSidebarPeek\(_ shouldPeek: Bool\)/);
   assert.match(nativeRoot, /guard !isSidebarPresented else \{ return \}/);
-  assert.match(nativeRoot, /ReflectionSidebar\([\s\S]{0,1200}\.onHover \{ hovering in[\s\S]{0,100}updateSidebarPeek\(hovering\)/);
+  assert.match(nativeRoot, /ReflectionSidebar\([\s\S]{0,1600}\.onHover \{ hovering in[\s\S]{0,100}updateSidebarPeek\(hovering\)/);
   assert.match(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: isSidebarPresented/);
   assert.doesNotMatch(nativeRoot, /ReflectionTopBar\([\s\S]{0,220}isSidebarPresented: shouldShowSidebar/);
   assert.match(nativeRoot, /private let reflectionSidebarWidth: CGFloat = 248/);
@@ -2590,7 +2590,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.doesNotMatch(nativeSession, /: ReflectionCase\.samples/, 'sample projects must not be the default no-files state');
   assert.match(nativeRoot, /onDelete: deleteReflection/);
   assert.match(nativeRoot, /ReflectionSidebarRow\([\s\S]{0,340}onDelete: \{ onDelete\(reflectionCase\) \}/);
-  assert.match(nativeRoot, /SidebarRowActionButton\(systemImage: "trash", help: "Delete"\)/);
+  // The chat row's actions now live in a single hover ··· Menu (rebuilds
+  // fresh) — Rename / Move to / Delete — matching the ChatGPT/Claude reference.
+  assert.match(nativeRoot, /Button\("Delete", role: \.destructive\) \{ confirmingDelete = true \}/);
   assert.match(nativeRoot, /private let reflectionTopBarHeight: CGFloat = 52/);
   assert.match(nativeRoot, /private let reflectionSidebarTopClearance: CGFloat = 60/);
   assert.match(nativeRoot, /private let reflectionTitlebarControlSize: CGFloat = 16/);
@@ -2717,6 +2719,23 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeStore, /snapshot\.projects = projects\.isEmpty \? nil : projects/);
   assert.match(nativeSession, /@Published var projects: \[ReflectionProject\] = \[\]/);
   assert.match(nativeSession, /projects: projects/);
+  // Left rail UI (2026-07-05): a prominent New Chat + a Projects grouping
+  // section above a flat Chats list, ChatGPT/Claude-familiar, on one glass pane.
+  assert.match(nativeRoot, /private var newChatRow: some View/);
+  assert.match(nativeRoot, /Image\(systemName: "folder\.badge\.plus"\)/);
+  assert.match(nativeRoot, /title: "PROJECTS"/);
+  assert.match(nativeRoot, /title: "CHATS"/);
+  assert.match(nativeRoot, /struct SidebarProjectHeader: View/);
+  assert.match(nativeRoot, /private func groupID\(for reflectionCase: ReflectionCase\) -> String\?/);
+  assert.match(nativeRoot, /private func chats\(inProject id: String\) -> \[ReflectionCase\]/);
+  assert.match(nativeRoot, /private func createProject\(\)/);
+  assert.match(nativeRoot, /private func moveChat\(_ reflectionCase: ReflectionCase, toProjectID projectID: String\?\)/);
+  assert.match(nativeRoot, /private func createChat\(inProject projectID: String\)/);
+  // Deleting a project only ungroups its chats — it never deletes a chat.
+  assert.match(nativeRoot, /for index in cases\.indices where cases\[index\]\.projectID == id \{\n\s*cases\[index\]\.projectID = nil/);
+  // Move-to lives in a Menu (rebuilds fresh) — not a stale reused contextMenu.
+  assert.match(nativeRoot, /private var rowMoveToMenu: some View/);
+  assert.match(nativeRoot, /SidebarUtilityStrip\(projectCount: cases\.count\)/);
   assert.match(
     nativeRoot,
     /if isLearningCase \{[\s\S]{0,240}ReflectionComposer\(/,
