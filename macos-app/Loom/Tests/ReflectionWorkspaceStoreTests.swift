@@ -47,6 +47,50 @@ final class ReflectionWorkspaceStoreTests: XCTestCase {
         XCTAssertEqual(restored?.selectedCaseID, saved.id)
     }
 
+    // Chats-in-Projects (2026-07-05): the new grouping layer round-trips.
+    func testProjectsAndProjectIDRoundTrip() {
+        var chat = makeCase(titled: "Grouped Chat")
+        chat.projectID = "proj-1"
+        let project = ReflectionProject(
+            id: "proj-1",
+            name: "Trading course",
+            order: 0,
+            createdAt: Date(timeIntervalSince1970: 1)
+        )
+        ReflectionWorkspaceStore.save(
+            cases: [chat],
+            selectedCaseID: chat.id,
+            selectedSourceID: nil,
+            projects: [project],
+            defaults: defaults,
+            mirrorURL: mirrorURL
+        )
+
+        let restored = ReflectionWorkspaceStore.load(defaults: defaults, mirrorURL: mirrorURL)
+
+        XCTAssertEqual(restored?.projects?.map(\.name), ["Trading course"])
+        XCTAssertEqual(restored?.projects?.first?.id, "proj-1")
+        XCTAssertEqual(restored?.cases.first?.projectID, "proj-1")
+    }
+
+    // A pre-Projects blob (no projectID on cases, no projects on the snapshot)
+    // must decode cleanly as ungrouped — the whole point of the optional+LAST
+    // change is zero migration.
+    func testLegacyBlobWithoutProjectsDecodesAsUngrouped() {
+        let legacy = """
+        {"cases":[{"id":"c1","title":"Legacy Chat","project":"New product practice",\
+        "status":"x","updatedAt":"now","summary":"s","tags":[],"sources":[],\
+        "steps":[],"messages":[]}],"selectedCaseID":"c1"}
+        """
+        defaults.set(Data(legacy.utf8), forKey: "loom.reflectionWorkspaceSnapshot")
+
+        let restored = ReflectionWorkspaceStore.load(defaults: defaults, mirrorURL: mirrorURL)
+
+        XCTAssertEqual(restored?.cases.first?.title, "Legacy Chat")
+        XCTAssertNil(restored?.cases.first?.projectID, "legacy chats decode as ungrouped")
+        XCTAssertNil(restored?.projects, "a legacy snapshot has no projects array")
+    }
+
     func testMirrorRecoversTheWorkspaceWhenDefaultsAreLost() {
         let saved = makeCase(titled: "Mirror Rescue")
         ReflectionWorkspaceStore.save(

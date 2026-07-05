@@ -60,6 +60,7 @@ enum ReflectionWorkspaceStore {
                 cases: result.cases,
                 selectedCaseID: result.selectedCaseID,
                 selectedSourceID: result.selectedSourceID,
+                projects: result.projects ?? [],
                 defaults: defaults,
                 mirrorURL: mirrorURL
             )
@@ -73,6 +74,7 @@ enum ReflectionWorkspaceStore {
         cases: [ReflectionCase],
         selectedCaseID: ReflectionCase.ID,
         selectedSourceID: ReflectionSource.ID?,
+        projects: [ReflectionProject] = [],
         defaults: UserDefaults = .standard,
         mirrorURL: URL? = ReflectionWorkspaceStore.defaultMirrorURL
     ) {
@@ -83,6 +85,8 @@ enum ReflectionWorkspaceStore {
         )
         snapshot.schemaVersion = currentSchemaVersion
         snapshot.savedAt = Date()
+        // Empty stays nil so a projectless workspace round-trips like a legacy blob.
+        snapshot.projects = projects.isEmpty ? nil : projects
         let data: Data
         do {
             data = try JSONEncoder().encode(snapshot)

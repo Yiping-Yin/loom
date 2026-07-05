@@ -2708,6 +2708,15 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     'the editor grows with its content inside the outer reading scroll — no nested scroller',
   );
   assert.match(nativeModel, /var documentText: String\? = nil/);
+  // Chats-in-Projects (2026-07-05): a Projects grouping layer over a still-flat
+  // Chats list, added via two optional+LAST fields — zero migration.
+  assert.match(nativeModel, /var projectID: String\? = nil/);
+  assert.match(nativeModel, /var projects: \[ReflectionProject\]\? = nil/);
+  assert.match(nativeModel, /struct ReflectionProject: Identifiable, Codable, Equatable/);
+  assert.match(nativeStore, /projects: \[ReflectionProject\] = \[\]/);
+  assert.match(nativeStore, /snapshot\.projects = projects\.isEmpty \? nil : projects/);
+  assert.match(nativeSession, /@Published var projects: \[ReflectionProject\] = \[\]/);
+  assert.match(nativeSession, /projects: projects/);
   assert.match(
     nativeRoot,
     /if isLearningCase \{[\s\S]{0,240}ReflectionComposer\(/,

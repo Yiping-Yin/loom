@@ -26,6 +26,9 @@ final class ReflectionWorkspaceSession: ObservableObject {
     // Stage 4 (融会贯通): the cross-case principle store — file-primary,
     // loaded once, mutated only through the user-signed gate below.
     @Published var principles: [ReflectionPrincipleRecord] = []
+    // Chats-in-Projects (2026-07-05): the authored project groups. Chats point
+    // at these by projectID; this array holds their names + order.
+    @Published var projects: [ReflectionProject] = []
 
     /// The snapshot parameter is injectable for tests; production uses the
     /// hardened store (newer-wins replicas + v1→v2 migration).
@@ -53,6 +56,9 @@ final class ReflectionWorkspaceSession: ObservableObject {
         selectedLearningTraceID = nil
         openCaseIDs = [initialSelectedCaseID]
         principles = ReflectionPrincipleStore.load()
+        // Drop any project a rename/delete left dangling references to; keep
+        // authored order stable.
+        projects = (restored?.projects ?? []).sorted { $0.order < $1.order }
     }
 
     func openCase(_ id: ReflectionCase.ID) {
@@ -73,7 +79,8 @@ final class ReflectionWorkspaceSession: ObservableObject {
         ReflectionWorkspaceStore.save(
             cases: cases,
             selectedCaseID: selectedCaseID,
-            selectedSourceID: selectedSourceID
+            selectedSourceID: selectedSourceID,
+            projects: projects
         )
     }
 

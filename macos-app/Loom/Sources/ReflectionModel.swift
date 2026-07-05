@@ -41,6 +41,20 @@ struct ReflectionWorkspaceSnapshot: Codable, Equatable {
     // Stage 1 (LoomDomain): optional so legacy v1 blobs keep decoding.
     var schemaVersion: Int? = nil
     var savedAt: Date? = nil
+    // Chats-in-Projects (2026-07-05): the authored project groups. Optional +
+    // LAST so legacy blobs decode as nil (no projects) with no migration.
+    var projects: [ReflectionProject]? = nil
+}
+
+/// A left-rail Project: a stable-identity container that groups Chats
+/// (ReflectionCases). Chats point at it by `projectID`; renaming a project is
+/// O(1) and an empty project persists. Order + name travel in the snapshot;
+/// per-project expand state stays local in @AppStorage.
+struct ReflectionProject: Identifiable, Codable, Equatable {
+    var id: String = UUID().uuidString
+    var name: String
+    var order: Int
+    var createdAt: Date = Date()
 }
 
 struct ReflectionCase: Identifiable, Codable, Equatable {
@@ -61,6 +75,10 @@ struct ReflectionCase: Identifiable, Codable, Equatable {
     // Center document: the owner's own writing surface for this case.
     // Optional + LAST for the same legacy-decoding reason as above.
     var documentText: String? = nil
+    // Chats-in-Projects (2026-07-05): which Project this Chat belongs to, or
+    // nil = ungrouped (a first-class permanent home). Optional + LAST so legacy
+    // blobs decode as ungrouped and the memberwise init keeps compiling.
+    var projectID: String? = nil
 
     static func blank() -> ReflectionCase {
         ReflectionCase(
