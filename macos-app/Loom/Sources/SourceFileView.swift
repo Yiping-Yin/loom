@@ -46,6 +46,9 @@ struct SourceFileView: View {
     @FocusState private var askFieldFocused: Bool
     /// ⌘F in-document find bar focus.
     @FocusState private var findFieldFocused: Bool
+    /// Left sidebar: page thumbnails / table of contents.
+    @State private var sidebarMode: ReaderSidebar? = nil
+    @State private var outline: [ReaderOutlineItem] = []
     @Environment(\.openSettings) private var openSettingsEnv
 
     /// Phase A2 — AI-paste capture state. ⌘⇧V parses the clipboard
@@ -114,6 +117,10 @@ struct SourceFileView: View {
     /// PDFView LOOM already hosts, so the reader stops feeling hand-built.
     @ViewBuilder private var pdfToolbar: some View {
         HStack(spacing: 8) {
+            Button { toggleSidebar() } label: { Image(systemName: "sidebar.left") }
+                .help("Show pages & contents")
+                .foregroundStyle(sidebarMode != nil ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
+            Divider().frame(height: 16)
             Button { pdfHolder.goToPreviousPage() } label: { Image(systemName: "chevron.up") }
                 .help("Previous page")
             Button { pdfHolder.goToNextPage() } label: { Image(systemName: "chevron.down") }
@@ -196,6 +203,69 @@ struct SourceFileView: View {
         findFieldFocused = true
     }
 
+    private func toggleSidebar() {
+        if sidebarMode == nil {
+            outline = pdfHolder.outlineItems()
+            sidebarMode = .pages
+        } else {
+            sidebarMode = nil
+        }
+    }
+
+    /// Left sidebar: a Pages/Contents segmented switch over the page-thumbnail
+    /// grid or the document's table of contents.
+    @ViewBuilder private var readerSidebar: some View {
+        VStack(spacing: 0) {
+            Picker("", selection: Binding(
+                get: { sidebarMode ?? .pages },
+                set: { sidebarMode = $0 })
+            ) {
+                Text("Pages").tag(ReaderSidebar.pages)
+                if pdfHolder.hasOutline { Text("Contents").tag(ReaderSidebar.contents) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(8)
+            Divider()
+            if sidebarMode == .contents && pdfHolder.hasOutline {
+                readerOutlineList
+            } else {
+                LoomPDFThumbnailSidebar(holder: pdfHolder)
+                    .padding(.vertical, 6)
+            }
+        }
+        .frame(width: 194)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    @ViewBuilder private var readerOutlineList: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(outline) { item in
+                    Button {
+                        if let dest = item.destination { pdfHolder.goToDestination(dest) }
+                    } label: {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text(item.label)
+                                .font(.system(size: 11.5))
+                                .lineLimit(2)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text(item.pageLabel)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.leading, CGFloat(item.depth) * 12 + 12)
+                        .padding(.trailing, 10)
+                        .padding(.vertical, 5)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
@@ -207,7 +277,12 @@ struct SourceFileView: View {
                     }
                     Divider()
                 }
-                Group {
+                HStack(spacing: 0) {
+                    if isPDF, sidebarMode != nil, pdfHolder.hasPDF {
+                        readerSidebar
+                        Divider()
+                    }
+                    Group {
                     if let resolved = resolvedURL {
                         if resolved.pathExtension.lowercased() == "pdf" {
                             LoomPDFView(
@@ -231,6 +306,7 @@ struct SourceFileView: View {
                     } else {
                         ProgressView()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                     }
                 }
             }
@@ -2614,8 +2690,24 @@ enum LoomCompilePipeline {
 /// the live PDFKit instance (current selection, jump-to-page) without
 /// relying on private NSViewRepresentable internals.
 @MainActor
+/// The reader's left sidebar can show page thumbnails or the document's
+/// table of contents (nil = hidden).
+enum ReaderSidebar { case pages, contents }
+
+/// One entry in the reader's Contents (outline) sidebar — a flattened
+/// PDFOutline node with its nesting depth and destination page.
+struct ReaderOutlineItem: Identifiable {
+    let id = UUID()
+    let label: String
+    let depth: Int
+    let pageLabel: String
+    let destination: PDFDestination?
+}
+
 final class PDFViewHolder: ObservableObject {
     weak var pdfView: PDFView?
+    /// Set once the document is loaded — used to key per-file scroll memory.
+    var documentURL: URL?
 
     // Live reading state for the reader toolbar (owner 2026-07-06: wire the
     // native PDFView controls LOOM wasn't surfacing). Updated off PDFKit's own
@@ -2666,7 +2758,54 @@ final class PDFViewHolder: ObservableObject {
         canZoomIn = view.canZoomIn
         canZoomOut = view.canZoomOut
         isFitting = view.autoScales
+        persistPosition()
     }
+
+    // MARK: Per-file scroll memory (owner 2026-07-06: reopen a PDF where you
+    // left off, not at page 1).
+
+    private func positionKey(_ url: URL) -> String { "loom.pdf.page." + url.absoluteString }
+
+    private func persistPosition() {
+        guard let url = documentURL, let view = pdfView, let doc = view.document,
+              let page = view.currentPage else { return }
+        UserDefaults.standard.set(doc.index(for: page), forKey: positionKey(url))
+    }
+
+    /// Jump to the last page this file was left on (no-op the first time).
+    func restorePosition(for url: URL) {
+        documentURL = url
+        guard let view = pdfView, let doc = view.document else { return }
+        let saved = UserDefaults.standard.object(forKey: positionKey(url)) as? Int
+        guard let idx = saved, idx > 0, idx < doc.pageCount, let page = doc.page(at: idx) else { return }
+        view.go(to: page)
+        refresh()
+    }
+
+    // MARK: Contents (outline) sidebar
+
+    var hasOutline: Bool { (pdfView?.document?.outlineRoot?.numberOfChildren ?? 0) > 0 }
+
+    /// Flatten the PDF's outline tree into an indented list for the sidebar.
+    func outlineItems() -> [ReaderOutlineItem] {
+        guard let doc = pdfView?.document, let root = doc.outlineRoot else { return [] }
+        var out: [ReaderOutlineItem] = []
+        func walk(_ node: PDFOutline, depth: Int) {
+            for i in 0..<node.numberOfChildren {
+                guard let child = node.child(at: i) else { continue }
+                let dest = child.destination
+                var pageLabel = ""
+                if let page = dest?.page { pageLabel = "\(doc.index(for: page) + 1)" }
+                out.append(ReaderOutlineItem(label: child.label ?? "", depth: depth,
+                                             pageLabel: pageLabel, destination: dest))
+                if child.numberOfChildren > 0 { walk(child, depth: depth + 1) }
+            }
+        }
+        walk(root, depth: 0)
+        return out
+    }
+
+    func goToDestination(_ dest: PDFDestination) { pdfView?.go(to: dest); refresh() }
 
     func zoomIn()  { pdfView?.autoScales = false; pdfView?.zoomIn(nil);  refresh() }
     func zoomOut() { pdfView?.autoScales = false; pdfView?.zoomOut(nil); refresh() }
@@ -2837,9 +2976,28 @@ private struct LoomPDFView: NSViewRepresentable {
                 // one the view wants.
                 guard view.window != nil || view.superview != nil else { return }
                 view.document = doc
+                holder.restorePosition(for: url)
                 holder.refresh()
             }
         }
+    }
+}
+
+/// PDFKit's own page-thumbnail grid, bound to the reader's live PDFView so
+/// clicking a thumbnail navigates and the current page stays highlighted.
+private struct LoomPDFThumbnailSidebar: NSViewRepresentable {
+    let holder: PDFViewHolder
+
+    func makeNSView(context: Context) -> PDFThumbnailView {
+        let tv = PDFThumbnailView()
+        tv.pdfView = holder.pdfView
+        tv.thumbnailSize = NSSize(width: 118, height: 152)
+        tv.backgroundColor = .clear
+        return tv
+    }
+
+    func updateNSView(_ nsView: PDFThumbnailView, context: Context) {
+        if nsView.pdfView !== holder.pdfView { nsView.pdfView = holder.pdfView }
     }
 }
 

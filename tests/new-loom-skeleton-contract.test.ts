@@ -1912,6 +1912,15 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /doc\.findString\(text, withOptions:/);
   assert.match(sourceFileView, /pdfHolder\.findNext\(\)/);
   assert.match(sourceFileView, /highlightedSelections = hits/);
+  // Thumbnails + contents + scroll memory (owner 2026-07-06): a left sidebar
+  // with PDFThumbnailView pages / outlineRoot table of contents, and per-file
+  // last-page restore so a reopened PDF lands where you left off.
+  assert.match(sourceFileView, /struct LoomPDFThumbnailSidebar: NSViewRepresentable/);
+  assert.match(sourceFileView, /PDFThumbnailView\(\)/);
+  assert.match(sourceFileView, /func outlineItems\(\) -> \[ReaderOutlineItem\]/);
+  assert.match(sourceFileView, /document\?\.outlineRoot/);
+  assert.match(sourceFileView, /func restorePosition\(for url: URL\)/);
+  assert.match(sourceFileView, /private var readerSidebar: some View/);
   // Preview → note (owner 2026-07-05): ⌘U on a selection in system Preview
   // lands the passage in the center note as the SAME clickable loom://anchor
   // quote as the in-app hover ❕. The rect Preview never exposes is recovered
