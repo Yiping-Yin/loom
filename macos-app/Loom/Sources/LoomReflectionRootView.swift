@@ -2106,6 +2106,20 @@ private struct ReflectionTopBar: View {
     // The Evidence strip tracks the resizable pane width live.
     @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
 
+    /// The top-bar title: the chat's real name once named; otherwise the SOURCE
+    /// it's about (Week 1 Notes) — not the app brand "LOOM" (owner 2026-07-06:
+    /// 这里不应该是 LOOM). The file-type badge already carries the kind, so the
+    /// filename shows without its extension. "LOOM" only for a truly empty app.
+    private var barTitle: String {
+        if !isWorkspaceEmpty, reflectionCase.title != ReflectionCase.untitledPlaceholder {
+            return reflectionCase.title
+        }
+        if let label = nativeSource?.label ?? reflectionCase.sources.first?.label, !label.isEmpty {
+            return (label as NSString).deletingPathExtension
+        }
+        return "LOOM"
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             HStack(spacing: 8) {
@@ -2128,11 +2142,10 @@ private struct ReflectionTopBar: View {
                     .frame(width: 18, height: 18)
                 }
 
-                // An unnamed chat degrades to the app identity, not the fake
-                // "Untitled product reflection" placeholder (owner 2026-07-06);
-                // the real title appears once the user names it.
-                Text(isWorkspaceEmpty || reflectionCase.title == ReflectionCase.untitledPlaceholder
-                     ? "LOOM" : reflectionCase.title)
+                // An unnamed chat shows the SOURCE it's about (Week 1 Notes), not
+                // the app brand "LOOM" and not the fake placeholder — the real
+                // title appears once the user names it (owner 2026-07-06).
+                Text(barTitle)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(LoomTokens.dsInk1)
                     .lineLimit(1)
