@@ -2663,7 +2663,16 @@ private struct SidebarProjectHeader: View {
 
     private func commitRename() {
         isEditing = false
-        onRename(draft)
+        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Only commit a REAL change — so a reverted/empty draft (e.g. after
+        // Escape) can never silently rename the project (owner 2026-07-06).
+        guard !trimmed.isEmpty, trimmed != project.name else { return }
+        onRename(trimmed)
+    }
+
+    private func cancelRename() {
+        draft = project.name   // discard edits so nothing can commit them
+        isEditing = false
     }
 
     var body: some View {
@@ -2682,7 +2691,12 @@ private struct SidebarProjectHeader: View {
                     .font(.system(size: 13, weight: .medium))
                     .focused($fieldFocused)
                     .onSubmit { commitRename() }
-                    .onExitCommand { isEditing = false }
+                    .onExitCommand { cancelRename() }
+                    // Focus RELIABLY once the field is actually in the tree —
+                    // setting @FocusState in beginRename (before the field exists,
+                    // esp. from the menu) silently failed, so rename never took
+                    // keyboard focus and looked broken (owner 2026-07-06).
+                    .onAppear { DispatchQueue.main.async { fieldFocused = true } }
             } else {
                 Text(project.name)
                     .font(.system(size: 13, weight: .medium))
@@ -4040,6 +4054,11 @@ private struct ReflectionSidebarRow: View {
         onRename(trimmed)
     }
 
+    private func cancelRename() {
+        titleDraft = reflectionCase.title   // discard edits — Escape never commits
+        isEditingTitle = false
+    }
+
     private var isLearning: Bool { reflectionCase.project == "Learning pass" }
 
     // Built fresh each time the menu opens (unlike a reused row's cached
@@ -4087,12 +4106,16 @@ private struct ReflectionSidebarRow: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
                         if isEditingTitle {
-                            TextField("Project name", text: $titleDraft)
+                            TextField("Chat name", text: $titleDraft)
                                 .textFieldStyle(.plain)
                                 .font(.system(size: 13, weight: .medium))
                                 .focused($titleFieldFocused)
                                 .onSubmit { commitRename() }
-                                .onExitCommand { isEditingTitle = false }
+                                .onExitCommand { cancelRename() }
+                                // Focus reliably once the field exists (see the
+                                // project row) — the synchronous focus in
+                                // beginRename silently failed, esp. from the menu.
+                                .onAppear { DispatchQueue.main.async { titleFieldFocused = true } }
                         } else {
                             Text(reflectionCase.title)
                                 .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
