@@ -47,6 +47,12 @@ private let reflectionTitlebarControlCenterY: CGFloat = 16
 private let reflectionTitlebarContentTop: CGFloat = reflectionTitlebarControlCenterY - (reflectionTitlebarControlSize / 2)
 private let reflectionThreadTopPadding: CGFloat = 76
 private let reflectionInspectorTopPadding: CGFloat = 74
+private let reflectionBridgePanelTopPadding: CGFloat = 116
+private let reflectionReadingNoteRailLeading: CGFloat = 20
+private let reflectionReadingNoteRailWidth: CGFloat = 18
+private let reflectionReadingNoteContentLeading: CGFloat = 60
+private let reflectionReadingNoteContentTrailing: CGFloat = 18
+private let reflectionReadingNoteContentMaxWidth: CGFloat = 400
 // Stage 3 (workbench): tab strip clears the overlay top bar; the thread's
 // own clearance shrinks to this when the strip is present.
 private let workbenchTabStripTopClearance: CGFloat = 56
@@ -147,6 +153,10 @@ struct LoomReflectionRootView: View {
     // 保持外部打开为主 — this overlay appears only on an anchor click; the right
     // column and default external-open are untouched).
     @State private var anchorPreview: AnchorPreviewTarget?
+    @State private var readerPageStateSourceID: ReflectionSource.ID?
+    @State private var readerCurrentPageIndex: Int = 0
+    @State private var readerPageCount: Int = 0
+    @State private var sessionTraceRailItemsBySourceID: [ReflectionSource.ID: [SourceTraceRailItem]] = [:]
     @State private var lastHandledCaptureToken: UUID?
     @State private var lastHandledExternalFileToken: UUID?
     @State private var lastHandledExternalSelectionToken: UUID?
@@ -178,10 +188,6 @@ struct LoomReflectionRootView: View {
     private var sidebarCases: [ReflectionCase] {
         isWorkspaceEmpty ? [] : cases
     }
-    private var visibleBridgeSources: [ReflectionSource] {
-        isWorkspaceEmpty ? [] : selectedCase.sources
-    }
-
     var body: some View {
         ZStack(alignment: .topLeading) {
             HStack(spacing: 0) {
@@ -254,30 +260,42 @@ struct LoomReflectionRootView: View {
                     // Hidden only while a source is open AND the note is
                     // collapsed (owner 2026-07-06) — then the reader fills.
                     if !(anchorPreview != nil && isReadingNoteCollapsed) {
-                        GlassReadingCenter(
-                            reflectionCase: selectedCase,
-                            isWorkspaceEmpty: isWorkspaceEmpty,
-                            draftText: $draftText,
-                            commitFocus: $composerFocus,
-                            onSelectTrace: selectLearningTrace,
-                            onPromotePrinciple: promoteCandidatePrinciple,
-                            onSubmit: submitMaterial,
-                            onDocumentTextChange: updateCaseDocumentText,
-                            onImportFiles: { urls in
-                                importSources(from: urls, openAfterImport: false)
-                            },
-                            onImportLocalSources: importLocalSources,
-                            onCreateReflection: createReflection,
-                            onCreateLearningProject: createLearningProject,
-                            onOpenSourceID: { sourceID in
-                                guard let source = selectedCase.sources.first(where: { $0.id == sourceID }) else {
-                                    statusMessage = "That file is no longer in this case's sources"
-                                    return
-                                }
-                                selectedSourceID = source.id
-                                openSourceInNativeApp(source)
+                        ZStack(alignment: .leading) {
+                            if anchorPreview != nil {
+                                ReflectionReadingNoteBackdrop()
                             }
-                        )
+
+                            GlassReadingCenter(
+                                reflectionCase: selectedCase,
+                                selectedSourceID: selectedSourceID,
+                                isReadingSource: anchorPreview != nil,
+                                isWorkspaceEmpty: isWorkspaceEmpty,
+                                draftText: $draftText,
+                                commitFocus: $composerFocus,
+                                onSelectTrace: selectLearningTrace,
+                                onPromotePrinciple: promoteCandidatePrinciple,
+                                onSubmit: submitMaterial,
+                                onDocumentTextChange: updateCaseDocumentText,
+                                onImportFiles: { urls in
+                                    importSources(from: urls, openAfterImport: false)
+                                },
+                                onImportLocalSources: importLocalSources,
+                                onCreateReflection: createReflection,
+                                onCreateLearningProject: createLearningProject,
+                                onOpenSourceID: { sourceID in
+                                    guard let source = selectedCase.sources.first(where: { $0.id == sourceID }) else {
+                                        statusMessage = "That file is no longer in this case's sources"
+                                        return
+                                    }
+                                    selectedSourceID = source.id
+                                    openSourceInReader(source)
+                                }
+                            )
+
+                            if let target = anchorPreview {
+                                rightColumnTraceRail(target)
+                            }
+                        }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
 
@@ -289,20 +307,9 @@ struct LoomReflectionRootView: View {
                         // The old ReflectionSourceInspector face stays
                         // defined below for the machinery it still owns.
                         ReflectionBridgePanel(
-                            sources: visibleBridgeSources,
+                            status: statusMessage,
                             onFiles: importLocalSources,
-                            onOpenSource: { source in
-                                // Simple &amp; easy (owner 2026-07-05): one click opens
-                                // the source right here, in-app. Editing in the
-                                // native app stays available from the top-bar
-                                // Open Source button.
-                                selectedSourceID = source.id
-                                if source.fileURL != nil {
-                                    jumpToAnchor(sourceID: source.id, page: 0, rect: .zero)
-                                } else {
-                                    statusMessage = "Opened \(source.label)"
-                                }
-                            },
+                            onReview: reviewSelectedCase,
                             onUnwired: { statusMessage = $0 }
                         )
                         .frame(width: clampedInspectorWidth(inspectorWidth))
@@ -588,6 +595,38 @@ struct LoomReflectionRootView: View {
         statusMessage = "Inspecting \(trace.version) \(trace.versionTitle.lowercased())"
     }
 
+    private func reviewSelectedCase() {
+        guard selectedCase.project == "Learning pass" else {
+            statusMessage = "Review is available after a source has learning traces"
+            return
+        }
+
+        let traces = ReflectionLearningTrace.from(selectedCase)
+        guard !traces.isEmpty else {
+            composerFocus = .question
+            statusMessage = "Add a question, correction, or principle to start review"
+            return
+        }
+
+        let reviewTrace = traces.first { trace in
+            trace.focus == "question" || trace.focus == "correction" || trace.focus == "principle"
+        } ?? traces.last
+
+        guard let reviewTrace else { return }
+        switch reviewTrace.focus {
+        case "question":
+            composerFocus = .question
+        case "correction":
+            composerFocus = .correction
+        case "principle":
+            composerFocus = .principle
+        default:
+            composerFocus = .question
+        }
+        selectLearningTrace(reviewTrace)
+        statusMessage = "Reviewing \(reviewTrace.version) \(reviewTrace.versionTitle.lowercased())"
+    }
+
     private func toggleInspector() {
         withAnimation(.easeInOut(duration: 0.18)) {
             // While a source is open the right pane IS the note, so this button
@@ -637,9 +676,9 @@ struct LoomReflectionRootView: View {
 
     private func createProject() {
         let order = (projects.map(\.order).max() ?? -1) + 1
-        projects.append(ReflectionProject(name: "New project", order: order))
+        projects.append(ReflectionProject(name: ReflectionProject.untitledName, order: order))
         persistWorkspace()
-        statusMessage = "New project"
+        statusMessage = "Project created"
     }
 
     private func renameProject(_ id: String, to name: String) {
@@ -651,20 +690,20 @@ struct LoomReflectionRootView: View {
 
     private func deleteProject(_ id: String) {
         // A project is a container, never an owner: deleting it only ungroups
-        // its chats — it never deletes a chat.
+        // its drafts — it never deletes a draft.
         for index in cases.indices where cases[index].projectID == id {
             cases[index].projectID = nil
         }
         projects.removeAll { $0.id == id }
         persistWorkspace()
-        statusMessage = "Project removed — its chats are now ungrouped"
+        statusMessage = "Project removed — its drafts are now ungrouped"
     }
 
     private func moveChat(_ reflectionCase: ReflectionCase, toProjectID projectID: String?) {
         guard let index = cases.firstIndex(where: { $0.id == reflectionCase.id }) else { return }
         cases[index].projectID = projectID
         persistWorkspace()
-        statusMessage = projectID == nil ? "Moved to Chats" : "Moved into project"
+        statusMessage = projectID == nil ? "Moved to Drafts" : "Moved into project"
     }
 
     private func createChat(inProject projectID: String) {
@@ -676,7 +715,7 @@ struct LoomReflectionRootView: View {
         selectedLearningTraceID = nil
         draftText = ""
         emptyWorkbenchDismissed = true
-        statusMessage = "New chat in project"
+        statusMessage = "New draft in project"
         persistWorkspace()
     }
 
@@ -980,6 +1019,46 @@ struct LoomReflectionRootView: View {
         statusMessage = "Opened \(source.label) in the native app"
     }
 
+    private func openSourceInReader(_ source: ReflectionSource) {
+        guard let fileURL = source.fileURL else {
+            statusMessage = "\(source.label) has no local file to open"
+            return
+        }
+
+        var resolved = fileURL
+        var wasStale = false
+        if let bookmark = source.bookmarkData {
+            var isStale = false
+            if let scoped = try? URL(
+                resolvingBookmarkData: bookmark,
+                options: .withSecurityScope,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                _ = scoped.startAccessingSecurityScopedResource()
+                resolved = scoped
+                wasStale = isStale
+            }
+        }
+
+        guard FileManager.default.fileExists(atPath: resolved.path) else {
+            statusMessage = "\(source.label) can't be found — it may have moved or been deleted"
+            return
+        }
+
+        selectedSourceID = source.id
+        readerPageStateSourceID = source.id
+        readerCurrentPageIndex = 0
+        readerPageCount = 0
+        if anchorPreview == nil {
+            isReadingNoteCollapsed = false
+        }
+        anchorPreview = AnchorPreviewTarget(sourceID: source.id, fileURL: resolved, page: 0, rect: .zero)
+        statusMessage = wasStale
+            ? "\(source.label) moved — re-add it to Sources so jumps stay reliable"
+            : "Reading \(source.label)"
+    }
+
     private func openSelectedSourceInNativeApp() {
         guard let nativeSource else { return }
         openSourceInNativeApp(nativeSource)
@@ -1024,6 +1103,9 @@ struct LoomReflectionRootView: View {
             statusMessage = "\(source.label) moved — re-add it to Sources so jumps stay reliable"
         }
         selectedSourceID = source.id
+        readerPageStateSourceID = source.id
+        readerCurrentPageIndex = max(0, page)
+        readerPageCount = 0
         // Opening a source from a CLOSED reader starts with the note visible —
         // a stale collapse from a previous reading session shouldn't hide the
         // note of a freshly-opened source (owner 2026-07-06). Jumping between
@@ -1057,7 +1139,14 @@ struct LoomReflectionRootView: View {
         let barLabel: String? = (readerBase == topTitle) ? nil : target.fileURL.lastPathComponent
         return SourceFileView(fileURL: target.fileURL) { anchorPreview = nil }
             .onNotePassage { page, rect, text, image in
+                rememberTraceRailCapture(sourceID: target.sourceID, page: page, rect: rect, text: text)
                 noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text, image: image)
+            }
+            .onReaderPageStateChange { pageIndex, pageCount in
+                guard anchorPreview?.sourceID == target.sourceID else { return }
+                readerPageStateSourceID = target.sourceID
+                readerCurrentPageIndex = pageIndex
+                readerPageCount = pageCount
             }
             .readerChrome(label: barLabel, showsClose: true)
             .padding(.top, reflectionReaderTopClearance)
@@ -1074,6 +1163,165 @@ struct LoomReflectionRootView: View {
                 object: nil,
                 userInfo: ["page": target.page, "rect": NSValue(rect: target.rect)]
             )
+        }
+    }
+
+    @ViewBuilder
+    private func rightColumnTraceRail(_ target: AnchorPreviewTarget) -> some View {
+        let items = traceRailItems(for: target.sourceID)
+        if !items.isEmpty {
+            SourceTraceRail(
+                items: items,
+                currentPageIndex: traceRailCurrentPage(for: target),
+                pageCount: traceRailPageCount(for: items),
+                onJump: { item in
+                    readerPageStateSourceID = target.sourceID
+                    readerCurrentPageIndex = item.pageIndex
+                    NotificationCenter.default.post(
+                        name: .loomApplyPDFAnchor,
+                        object: nil,
+                        userInfo: ["page": item.pageIndex, "rect": NSValue(rect: item.rect)]
+                    )
+                }
+            )
+            .frame(width: reflectionReadingNoteRailWidth)
+            .padding(.top, reflectionThreadTopPadding)
+            .padding(.bottom, 28)
+            .padding(.leading, reflectionReadingNoteRailLeading)
+            .transition(.opacity)
+        }
+    }
+
+    private func traceRailCurrentPage(for target: AnchorPreviewTarget) -> Int {
+        readerPageStateSourceID == target.sourceID ? readerCurrentPageIndex : max(0, target.page)
+    }
+
+    private func traceRailPageCount(for items: [SourceTraceRailItem]) -> Int {
+        let estimated = (items.map(\.pageIndex).max() ?? 0) + 1
+        return max(readerPageCount, estimated, 1)
+    }
+
+    private func rememberTraceRailCapture(sourceID: String, page: Int, rect: CGRect, text: String) {
+        let item = SourceTraceRailItem.sessionCapture(pageIndex: page, rect: rect, text: text)
+        var items = sessionTraceRailItemsBySourceID[sourceID] ?? []
+        items.removeAll { $0.id == item.id }
+        items.append(item)
+        if items.count > 80 {
+            items.removeFirst(items.count - 80)
+        }
+        sessionTraceRailItemsBySourceID[sourceID] = items
+    }
+
+    private func traceRailItems(for sourceID: String) -> [SourceTraceRailItem] {
+        guard let source = selectedCase.sources.first(where: { $0.id == sourceID }) else { return [] }
+        let persisted: [SourceTraceRailItem] = ReflectionLearningTrace.from(selectedCase).compactMap { trace in
+            guard trace.matches(source: source), let pageNumber = trace.pageNumber else { return nil }
+            let pageIndex = max(0, pageNumber - 1)
+            let kind = traceRailKind(for: trace)
+            let title = "\(traceRailTitle(for: kind)) · Page \(pageNumber)"
+            return SourceTraceRailItem(
+                id: "trace-\(trace.id)",
+                pageIndex: pageIndex,
+                rect: .zero,
+                kind: kind,
+                title: title,
+                excerpt: String(trace.displayText.prefix(140))
+            )
+        }
+        return mergedTraceRailItems(
+            persisted
+                + documentAnchorTraceRailItems(for: sourceID)
+                + (sessionTraceRailItemsBySourceID[sourceID] ?? [])
+        )
+    }
+
+    private func documentAnchorTraceRailItems(for sourceID: String) -> [SourceTraceRailItem] {
+        let url = GlassDocumentEditor.documentURL(for: selectedCase.id)
+        guard let attributed = try? NSAttributedString(
+            url: url,
+            options: [.documentType: NSAttributedString.DocumentType.rtfd],
+            documentAttributes: nil
+        ), attributed.length > 0 else { return [] }
+        let text = attributed.string as NSString
+        let full = NSRange(location: 0, length: attributed.length)
+        var items: [SourceTraceRailItem] = []
+        attributed.enumerateAttribute(.link, in: full) { value, range, _ in
+            let raw = (value as? URL)?.absoluteString
+                ?? (value as? NSURL)?.absoluteString
+                ?? (value as? String)
+                ?? ""
+            guard raw.hasPrefix("loom://anchor"),
+                  let comps = URLComponents(string: raw),
+                  comps.queryItems?.first(where: { $0.name == "src" })?.value == sourceID else { return }
+            let pageIndex = max(0, Int(comps.queryItems?.first(where: { $0.name == "page" })?.value ?? "") ?? 0)
+            let rect = traceRailRect(from: comps.queryItems?.first(where: { $0.name == "rect" })?.value)
+            let paragraph = text.paragraphRange(for: NSRange(location: min(range.location, max(text.length - 1, 0)), length: 0))
+            let excerpt = text.substring(with: paragraph)
+                .replacingOccurrences(of: "\u{25C6}", with: "")
+                .replacingOccurrences(of: "\u{25C7}", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let rectKey = "\(Int(rect.origin.x)),\(Int(rect.origin.y)),\(Int(rect.width)),\(Int(rect.height))"
+            items.append(SourceTraceRailItem(
+                id: "document-anchor-\(sourceID)-\(pageIndex)-\(rectKey)-\(range.location)",
+                pageIndex: pageIndex,
+                rect: rect,
+                kind: .draft,
+                title: "Note anchor · Page \(pageIndex + 1)",
+                excerpt: String(excerpt.prefix(140))
+            ))
+        }
+        return items
+    }
+
+    private func traceRailRect(from value: String?) -> CGRect {
+        guard let parts = value?.split(separator: ",").compactMap({ Double($0) }), parts.count == 4 else {
+            return .zero
+        }
+        return CGRect(x: parts[0], y: parts[1], width: parts[2], height: parts[3])
+    }
+
+    private func mergedTraceRailItems(_ items: [SourceTraceRailItem]) -> [SourceTraceRailItem] {
+        var seen: Set<String> = []
+        var merged: [SourceTraceRailItem] = []
+        for item in items {
+            let key = traceRailDedupeKey(for: item)
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+            merged.append(item)
+        }
+        return merged.sorted {
+            if $0.pageIndex != $1.pageIndex { return $0.pageIndex < $1.pageIndex }
+            return $0.kind.rawValue < $1.kind.rawValue
+        }
+    }
+
+    private func traceRailDedupeKey(for item: SourceTraceRailItem) -> String {
+        let excerpt = item.excerpt
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .prefix(48)
+        let rect = item.rect
+        return "\(item.pageIndex)|\(Int(rect.origin.x)),\(Int(rect.origin.y)),\(Int(rect.width)),\(Int(rect.height))|\(excerpt)"
+    }
+
+    private func traceRailKind(for trace: ReflectionLearningTrace) -> SourceTraceRailItem.Kind {
+        if trace.focus == "question" { return .question }
+        if trace.focus == "principle" { return .principle }
+        return .capture
+    }
+
+    private func traceRailTitle(for kind: SourceTraceRailItem.Kind) -> String {
+        switch kind {
+        case .question:
+            return "Question"
+        case .principle:
+            return "Principle"
+        case .draft:
+            return "Draft reference"
+        case .transient:
+            return "Unsaved"
+        case .capture:
+            return "Captured"
         }
     }
 
@@ -2443,7 +2691,7 @@ private struct ReflectionSidebar: View {
                                     if projectExpansion(project.id).wrappedValue || !queryIsEmpty {
                                         let grouped = chats(inProject: project.id)
                                         if grouped.isEmpty {
-                                            Text("No chats yet")
+                                            Text("No drafts yet")
                                                 .font(.system(size: 11))
                                                 .foregroundStyle(.tertiary)
                                                 .padding(.leading, 48)
@@ -2459,13 +2707,15 @@ private struct ReflectionSidebar: View {
                             }
                             .padding(.bottom, 2)
                         }
-                        Section(header: SidebarSectionHeader(
-                            title: "Chats",
-                            count: reflectionCases.count,
-                            onAdd: onCreate
-                        )) {
-                            ForEach(reflectionCases) { reflectionCase in
-                                sidebarRow(reflectionCase)
+                        if !reflectionCases.isEmpty || !queryIsEmpty {
+                            Section(header: SidebarSectionHeader(
+                                title: "Drafts",
+                                count: reflectionCases.count,
+                                onAdd: onCreate
+                            )) {
+                                ForEach(reflectionCases) { reflectionCase in
+                                    sidebarRow(reflectionCase)
+                                }
                             }
                         }
                         if hasLearningProjects {
@@ -2562,17 +2812,17 @@ private struct ReflectionSidebar: View {
         )
         .id("\(reflectionCase.id)#\(reflectionCase.projectID ?? "-")#\(projectMenuFingerprint)")
         // Inset the row 8pt so its selection/hover wash reads as a rounded pill
-        // with an even margin — one grammar with New Chat + the project +
+        // with an even margin — one grammar with New Draft + the project +
         // section rows (owner 2026-07-06: unify every wash to the inset pill).
         // The row's own internal leading-8 then lands the icon at the 16pt
-        // column and the title at the 48pt name column, matching New Chat.
+        // column and the title at the 48pt name column, matching New Draft.
         .padding(.horizontal, 8)
         .padding(.bottom, 1)
     }
 
     /// The primary create action (owner 2026-07-05), moved out of the bottom
-    /// strip so there is exactly one New-Chat entry. A trailing folder+ makes
-    /// the FIRST project (before the PROJECTS section — with its own + — exists).
+    /// strip so there is exactly one draft entry. A trailing folder+ makes the
+    /// first project before the Projects section exists.
     private var newChatRow: some View {
         HStack(spacing: 4) {
             Button(action: onNewChat) {
@@ -2581,7 +2831,7 @@ private struct ReflectionSidebar: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .frame(width: 22)
-                    Text("New Chat")
+                    Text("New Draft")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.primary)
                     Spacer(minLength: 0)
@@ -2591,15 +2841,16 @@ private struct ReflectionSidebar: View {
                 .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
             .buttonStyle(.plain)
+            .help("New draft")
             .background {
                 // Hover-only .quinary — the one-pane glass law: no resting
-                // opaque fills; New Chat matches its neighbours (owner-audit).
+                // opaque fills; the draft entry matches its neighbours.
                 if newChatHovering {
                     RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.quinary)
                 }
             }
             .onHover { newChatHovering = $0 }
-            .accessibilityLabel("New Chat")
+            .accessibilityLabel("New Draft")
 
             Button(action: onCreateProject) {
                 Image(systemName: "folder.badge.plus")
@@ -2692,7 +2943,7 @@ private struct SidebarSectionHeader: View {
 }
 
 /// A collapsible Project group header — chevron + name + child-count, with a
-/// hover "+" (new chat here) and a "···" overflow (new chat / rename / delete).
+/// hover "+" (new draft here) and a "···" overflow (new draft / rename / delete).
 /// Reuses the SidebarSectionHeader grammar so the two-level hierarchy stays one
 /// visual family on the glass. Delete never deletes chats — it ungroups them.
 private struct SidebarProjectHeader: View {
@@ -2712,7 +2963,7 @@ private struct SidebarProjectHeader: View {
     private var showsExpanded: Bool { forceExpanded || isExpanded }
 
     private func beginRename() {
-        draft = project.name
+        draft = project.displayName
         isEditing = true
         fieldFocused = true
     }
@@ -2722,12 +2973,12 @@ private struct SidebarProjectHeader: View {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         // Only commit a REAL change — so a reverted/empty draft (e.g. after
         // Escape) can never silently rename the project (owner 2026-07-06).
-        guard !trimmed.isEmpty, trimmed != project.name else { return }
+        guard !trimmed.isEmpty, trimmed != project.displayName else { return }
         onRename(trimmed)
     }
 
     private func cancelRename() {
-        draft = project.name   // discard edits so nothing can commit them
+        draft = project.displayName   // discard edits so nothing can commit them
         isEditing = false
     }
 
@@ -2754,7 +3005,7 @@ private struct SidebarProjectHeader: View {
                     // keyboard focus and looked broken (owner 2026-07-06).
                     .onAppear { DispatchQueue.main.async { fieldFocused = true } }
             } else {
-                Text(project.name)
+                Text(project.displayName)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -2779,10 +3030,10 @@ private struct SidebarProjectHeader: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("New chat in this project")
+                .help("New draft in this project")
 
                 Menu {
-                    Button("New chat here", action: onNewChat)
+                    Button("New draft here", action: onNewChat)
                     Button("Rename", action: beginRename)
                     Button("Delete project", role: .destructive) { confirmingDelete = true }
                 } label: {
@@ -2813,16 +3064,16 @@ private struct SidebarProjectHeader: View {
             transaction.disablesAnimations = true
             withTransaction(transaction) { isHovering = hovering }
         }
-        // 8pt margin so the folder row's hover pill matches New Chat + the
+        // 8pt margin so the folder row's hover pill matches New Draft + the
         // chat rows — one inset-pill grammar (owner 2026-07-06).
         .padding(.horizontal, 8)
         .contextMenu {
-            Button("New chat here", action: onNewChat)
+            Button("New draft here", action: onNewChat)
             Button("Rename", action: beginRename)
             Button("Delete project", role: .destructive) { confirmingDelete = true }
         }
         .confirmationDialog(
-            "Delete project \u{201C}\(project.name)\u{201D}? Its chats stay — they just become ungrouped.",
+            "Delete project \u{201C}\(project.displayName)\u{201D}? Its drafts stay — they just become ungrouped.",
             isPresented: $confirmingDelete
         ) {
             Button("Delete project", role: .destructive, action: onDelete)
@@ -3324,7 +3575,7 @@ private struct SidebarUtilityStrip: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            // New Chat now lives at the top of the rail (one entry point); the
+            // New Draft now lives at the top of the rail (one entry point); the
             // bottom strip is identity + settings only.
             // The About button speaks the strip's own ink (owner
             // 2026-07-04: the photographic moon avatar was a material
@@ -3939,6 +4190,34 @@ private struct ReflectionSidebarPeekBackdrop: View {
     }
 }
 
+private struct ReflectionReadingNoteBackdrop: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Rectangle()
+                .fill(
+                    colorScheme == .dark
+                        ? LoomTokens.dsPaperDeep.opacity(0.18)
+                        : LoomTokens.dsPaper.opacity(0.36)
+                )
+            LinearGradient(
+                colors: [
+                    LoomTokens.dsPaperDeep.opacity(colorScheme == .dark ? 0.28 : 0.12),
+                    Color.clear,
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(width: 124)
+            Rectangle()
+                .fill(LoomTokens.dsHair)
+                .frame(width: 0.5)
+        }
+        .allowsHitTesting(false)
+    }
+}
+
 private struct ReflectionMatteWorkbenchBackground: View {
     // Glass has nothing to transmit in fullscreen (only the space wallpaper
     // sits behind the window), so the material degrades into a muddy slab
@@ -4101,7 +4380,7 @@ private struct ReflectionSidebarRow: View {
     @FocusState private var titleFieldFocused: Bool
 
     private func beginRename() {
-        titleDraft = reflectionCase.title
+        titleDraft = displayTitle
         isEditingTitle = true
         titleFieldFocused = true
     }
@@ -4114,11 +4393,21 @@ private struct ReflectionSidebarRow: View {
     }
 
     private func cancelRename() {
-        titleDraft = reflectionCase.title   // discard edits — Escape never commits
+        titleDraft = displayTitle   // discard edits — Escape never commits
         isEditingTitle = false
     }
 
     private var isLearning: Bool { reflectionCase.project == "Learning pass" }
+
+    private var displayTitle: String {
+        guard reflectionCase.title == ReflectionCase.untitledPlaceholder else {
+            return reflectionCase.title
+        }
+        if let sourceTitle = reflectionCase.sources.first?.label, !sourceTitle.isEmpty {
+            return (sourceTitle as NSString).deletingPathExtension
+        }
+        return "Untitled draft"
+    }
 
     // Built fresh each time the menu opens (unlike a reused row's cached
     // contextMenu), so the project list is always current.
@@ -4127,11 +4416,11 @@ private struct ReflectionSidebarRow: View {
         if !projects.isEmpty || reflectionCase.projectID != nil {
             Menu("Move to") {
                 ForEach(projects) { project in
-                    Button(project.name) { onMoveToProject(project.id) }
+                    Button(project.displayName) { onMoveToProject(project.id) }
                 }
                 if reflectionCase.projectID != nil {
                     Divider()
-                    Button("Ungrouped (Chats)") { onMoveToProject(nil) }
+                    Button("Unfiled drafts") { onMoveToProject(nil) }
                 }
             }
         }
@@ -4169,13 +4458,12 @@ private struct ReflectionSidebarRow: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(alignment: .center, spacing: 10) {
-                // Consistent left icon column (owner mockup 2026-07-05): a
-                // top-level chat (in the Chats section) leads with a subtle
-                // bubble/book glyph aligned to the project-icon column; a chat
-                // NESTED under a project stays icon-less (the folder above it
-                // carries the signal), its title indented to the name column.
+                // Consistent left icon column: a top-level draft leads with a
+                // subtle document/book glyph aligned to the project-icon column;
+                // a draft nested under a project stays icon-less because the
+                // folder above it carries the grouping signal.
                 if showsLeafIcon {
-                    Image(systemName: isLearning ? "book" : "bubble.left")
+                    Image(systemName: isLearning ? "book" : "doc.text")
                         .font(.system(size: 12))
                         .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                         .frame(width: 22)
@@ -4185,7 +4473,7 @@ private struct ReflectionSidebarRow: View {
 
                 HStack(spacing: 8) {
                     if isEditingTitle {
-                        TextField("Chat name", text: $titleDraft)
+                        TextField("Draft name", text: $titleDraft)
                             .textFieldStyle(.plain)
                             .font(.system(size: 13, weight: .medium))
                             .focused($titleFieldFocused)
@@ -4196,7 +4484,7 @@ private struct ReflectionSidebarRow: View {
                             // beginRename silently failed, esp. from the menu.
                             .onAppear { DispatchQueue.main.async { titleFieldFocused = true } }
                     } else {
-                        Text(reflectionCase.title)
+                        Text(displayTitle)
                             .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
@@ -4284,14 +4572,14 @@ private struct ReflectionSidebarRow: View {
             Button("Delete", role: .destructive) { confirmingDelete = true }
         }
         .confirmationDialog(
-            "Delete \u{201C}\(reflectionCase.title)\u{201D}?",
+            "Delete \u{201C}\(displayTitle)\u{201D}?",
             isPresented: $confirmingDelete
         ) {
             Button("Delete", role: .destructive, action: onDelete)
             Button("Cancel", role: .cancel) {}
         }
-        .help(reflectionCase.summary)
-        .accessibilityLabel(reflectionCase.title)
+        .help(reflectionCase.summary.isEmpty ? displayTitle : reflectionCase.summary)
+        .accessibilityLabel(displayTitle)
         .accessibilityValue(openQuestionCount > 0 ? "\(openQuestionCount) open questions" : "")
     }
 }
@@ -4329,6 +4617,8 @@ private struct SidebarRowActionButton: View {
 // the true no-material workspace uses a separate launcher surface.
 private struct GlassReadingCenter: View {
     let reflectionCase: ReflectionCase
+    let selectedSourceID: ReflectionSource.ID?
+    let isReadingSource: Bool
     let isWorkspaceEmpty: Bool
     @Binding var draftText: String
     @Binding var commitFocus: ReflectionCommitFocus
@@ -4387,6 +4677,26 @@ private struct GlassReadingCenter: View {
         contentSteps.isEmpty && traces.isEmpty && documentText.isEmpty
     }
 
+    private var contentMaxWidth: CGFloat {
+        isReadingSource ? reflectionReadingNoteContentMaxWidth : 640
+    }
+
+    private var contentLeadingPadding: CGFloat {
+        isReadingSource ? reflectionReadingNoteContentLeading : 48
+    }
+
+    private var contentTrailingPadding: CGFloat {
+        isReadingSource ? reflectionReadingNoteContentTrailing : 48
+    }
+
+    private var contentOuterAlignment: Alignment {
+        isReadingSource ? .leading : .center
+    }
+
+    private var shouldShowSourceList: Bool {
+        !reflectionCase.sources.isEmpty
+    }
+
     var body: some View {
         ZStack {
             if isWorkspaceEmpty {
@@ -4431,6 +4741,14 @@ private struct GlassReadingCenter: View {
                                     .padding(.top, 8)
                                 }
 
+                                if shouldShowSourceList {
+                                    ProjectSourcesList(
+                                        sources: reflectionCase.sources,
+                                        selectedSourceID: selectedSourceID,
+                                        onOpenSource: onOpenSourceID
+                                    )
+                                }
+
                                 // The document IS the input: writing happens
                                 // directly on the glass, not in a box below.
                                 GlassDocumentEditor(
@@ -4467,11 +4785,12 @@ private struct GlassReadingCenter: View {
                                     .id(step.id)
                                 }
                             }
-                            .frame(maxWidth: 640, alignment: .leading)
-                            .padding(.horizontal, 48)
+                            .frame(maxWidth: contentMaxWidth, alignment: .leading)
+                            .padding(.leading, contentLeadingPadding)
+                            .padding(.trailing, contentTrailingPadding)
                             .padding(.top, reflectionSidebarTopClearance)
                             .padding(.bottom, 32)
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, alignment: contentOuterAlignment)
                         }
                         // Scrolled content dissolves before it reaches the top
                         // chrome: an alpha mask, not a painted scrim — nothing
@@ -4496,7 +4815,7 @@ private struct GlassReadingCenter: View {
                             // document's headings first (click scrolls the
                             // reading pane to the line), then any structured
                             // step sections below the editor.
-                            if documentHeadings.count + contentSteps.count > 1 {
+                            if !isReadingSource, documentHeadings.count + contentSteps.count > 1 {
                                 VStack(alignment: .trailing, spacing: 8) {
                                     ForEach(documentHeadings) { heading in
                                         Button {
@@ -4573,6 +4892,119 @@ private struct GlassReadingCenter: View {
         case .correction: return "What did you get wrong — and what is right now?"
         case .principle: return "What holds beyond this file?"
         }
+    }
+}
+
+private struct ProjectSourcesList: View {
+    let sources: [ReflectionSource]
+    let selectedSourceID: ReflectionSource.ID?
+    let onOpenSource: (ReflectionSource.ID) -> Void
+
+    private var title: String {
+        sources.count == 1 ? "Source" : "Sources"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                    .tracking(0.8)
+                    .textCase(.uppercase)
+                    .foregroundStyle(.secondary)
+                Text("\(sources.count)")
+                    .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+                Spacer(minLength: 0)
+            }
+
+            VStack(spacing: 4) {
+                ForEach(sources) { source in
+                    ProjectSourceRow(
+                        source: source,
+                        isSelected: source.id == selectedSourceID,
+                        onOpen: { onOpenSource(source.id) }
+                    )
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+}
+
+private struct ProjectSourceRow: View {
+    let source: ReflectionSource
+    let isSelected: Bool
+    let onOpen: () -> Void
+    @State private var isHovering = false
+
+    private var subtitle: String {
+        [source.kind.uppercased(), source.meta]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+
+    private var canOpen: Bool {
+        source.fileURL != nil
+    }
+
+    var body: some View {
+        Button(action: onOpen) {
+            HStack(spacing: 10) {
+                ReflectionFileTypeBadge(kind: source.kind, fallbackColor: LoomTokens.dsInk3)
+                    .scaleEffect(0.74)
+                    .frame(width: 18, height: 18)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(source.label)
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    if !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer(minLength: 0)
+
+                if canOpen {
+                    Label("Open", systemImage: "book")
+                        .font(.system(size: 11.5, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .labelStyle(.titleAndIcon)
+                } else {
+                    Text("Captured")
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 38)
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .background {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(LoomTokens.dsThread.opacity(isHovering ? 0.18 : 0.12))
+            } else if isHovering {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(.quinary)
+            }
+        }
+        .onHover { hovering in
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { isHovering = hovering }
+        }
+        .help(canOpen ? "Open source in Loom" : "Captured source; original file is not available")
+        .accessibilityLabel(source.label)
+        .accessibilityValue(canOpen ? "Open source" : "Captured source")
     }
 }
 
@@ -4965,6 +5397,24 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                     .paragraphStyle: quoteParagraphStyle,
                 ], range: paragraphRange)
                 applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
+                // Restore the trailing locator glyph's footnote size + raised
+                // baseline (the body-serif pass above reset it to 15pt baseline).
+                // Its cyan is painted by linkTextAttributes at display time.
+                storage.enumerateAttribute(.link, in: paragraphRange) { value, subRange, _ in
+                    let s = (value as? String) ?? (value as? URL)?.absoluteString
+                        ?? (value as? NSURL)?.absoluteString ?? ""
+                    guard s.hasPrefix("loom://anchor") else { return }
+                    // Only the locator run (hair-space + one diamond, ≤ 2 chars) —
+                    // never an OLD note whose whole quote text still carries the link,
+                    // even if that quote happens to contain a ◆ (that would shrink
+                    // the entire quote). Guard on BOTH length and the diamond.
+                    let sub = (storage.string as NSString).substring(with: subRange)
+                    guard subRange.length <= 2, sub.contains("\u{25C6}") || sub.contains("\u{25C7}") else { return }
+                    storage.addAttributes([
+                        .font: serifFont(size: 9.5, weight: .regular),
+                        .baselineOffset: 4.0,
+                    ], range: subRange)
+                }
             } else {
                 storage.addAttributes([
                     .foregroundColor: NSColor.labelColor,
@@ -4988,6 +5438,10 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     /// discipline holds for family/size/colour, but Word-class emphasis lives.
     /// Underline + links are separate attributes normalize never touches.
     private static func applyBodySerifPreservingEmphasis(_ storage: NSTextStorage, range: NSRange) {
+        // Flatten the baseline across the paragraph so a raised offset (leaked
+        // from typing right after the superscript locator) heals like font/size
+        // does — the anchor branch re-raises only the locator glyph afterwards.
+        storage.removeAttribute(.baselineOffset, range: range)
         let manager = NSFontManager.shared
         storage.enumerateAttribute(.font, in: range) { value, subRange, _ in
             let symbolic = (value as? NSFont)?.fontDescriptor.symbolicTraits ?? []
@@ -5029,6 +5483,22 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             .font: Self.documentFont,
             .foregroundColor: NSColor.labelColor,
             .paragraphStyle: Self.documentParagraphStyle,
+        ]
+        // Anchor links must NOT read as web hyperlinks — no blue, no underline.
+        // Their only colour is the dynamic 青芒 cyan (dark #4BC5DE / light #2F8CA0,
+        // mirroring LoomTokens.indigo), and it lands only on the small locator glyph
+        // that now carries the link. Set once, globally, for every loom:// link.
+        view.linkTextAttributes = [
+            .foregroundColor: NSColor(name: nil) { appearance in
+                let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                // 青芒 #4BC5DE (dark) / #2F8CA0 (light), inlined as calibrated sRGB —
+                // matching the existing idiom (fromHex is fileprivate to the tokens).
+                return isDark
+                    ? NSColor(srgbRed: 75 / 255, green: 197 / 255, blue: 222 / 255, alpha: 0.85)
+                    : NSColor(srgbRed: 47 / 255, green: 140 / 255, blue: 160 / 255, alpha: 0.85)
+            },
+            .underlineStyle: 0,
+            .cursor: NSCursor.pointingHand,
         ]
         view.delegate = context.coordinator
         context.coordinator.loadDocument(into: view, fallback: text)
@@ -5579,13 +6049,28 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             }
             var quoteAttributes = bodyAttributes
-            quoteAttributes[.link] = anchorURL
-            // Land at evidence altitude immediately (indented + quiet); normalize
-            // then keeps it there via the loom://anchor link.
+            // The quote is EVIDENCE — quiet serif ink, indented, and NOT a link, so
+            // it never renders as a hyperlink. Land at evidence altitude immediately;
+            // normalize keeps it there via the loom://anchor on the locator below.
             quoteAttributes[.paragraphStyle] = GlassDocumentEditor.quoteParagraphStyle
             quoteAttributes[.foregroundColor] = NSColor.secondaryLabelColor
-            let quoteLine = NSAttributedString(string: "\u{201C}\(quote)\u{201D}", attributes: quoteAttributes)
+            // One evidence paragraph — collapse a multi-line selection so the
+            // trailing locator shares the quote's paragraph (else earlier lines
+            // lose the evidence altitude).
+            let quoteText = ReflectionDocumentFormat.collapsedQuote(quote)
+            let quoteLine = NSAttributedString(string: "\u{201C}\(quoteText)\u{201D}", attributes: quoteAttributes)
             insertion.append(quoteLine)
+            // The return-to-source locator: a hair-space + a small superscript
+            // diamond carrying the loom://anchor — filled ◆ = exact-rect anchor,
+            // hollow ◇ = page-only. Its cyan comes from linkTextAttributes; here we
+            // set only the footnote size + raised baseline (normalize restores them).
+            var locatorAttributes = quoteAttributes
+            locatorAttributes[.link] = anchorURL
+            locatorAttributes[.font] = GlassDocumentEditor.serifFont(size: 9.5, weight: .regular)
+            locatorAttributes[.baselineOffset] = 4.0
+            locatorAttributes[.toolTip] = precise ? "Return to source — exact passage" : "Return to source — page"
+            let locatorGlyph = precise ? "\u{25C6}" : "\u{25C7}"
+            insertion.append(NSAttributedString(string: "\u{200A}\(locatorGlyph)", attributes: locatorAttributes))
             // Leave the cursor on a fresh line under the quote, ready to write.
             insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             let quoteStart = location + (leadingNewline ? 1 : 0)
@@ -6928,143 +7413,89 @@ private struct ReflectionComposer: View {
     }
 }
 
-// The right pane as a launcher (owner-pointed reference design,
-// 2026-07-03): a centered stack of bridge rows. System semantics
-// throughout — quinary row fill, quaternary hover/chips, secondary icons.
+// The right pane as a material panel (owner-pointed reference design,
+// 2026-07-03): top-aligned system actions, then a light status footer.
+// System semantics throughout — quinary row fill, quaternary hover/chips,
+// secondary icons.
 private struct ReflectionBridgePanel: View {
     // Scope law v2 (owner 2026-07-03): the pane is PROJECT-scoped — the
-    // bridge between THIS project and the world. Upper half = the gate
-    // (invoke rows); lower half = what has crossed (attached resources,
-    // click = back out to the original). Never a filesystem tree.
-    var sources: [ReflectionSource] = []
+    // bridge between THIS project and the world. It is not a source list; the
+    // selected file identity already lives in the main bar and the project list.
+    let status: String
     let onFiles: () -> Void
-    let onOpenSource: (ReflectionSource) -> Void
+    let onReview: () -> Void
     let onUnwired: (String) -> Void
-    @State private var knownSourceIDs: Set<String> = []
-    @State private var arrivedSourceID: String? = nil
 
     var body: some View {
-        VStack(spacing: 10) {
-            Spacer(minLength: 0)
-            BridgeRow(
-                systemImage: "plus.forwardslash.minus",
-                title: "Review",
-                shortcut: "⌃⇧G",
-                action: { onUnwired("Review arrives with the workbench bridge") }
-            )
-            .keyboardShortcut("g", modifiers: [.control, .shift])
-            BridgeRow(
-                systemImage: "apple.terminal",
-                title: "Terminal",
-                shortcut: nil,
-                action: { onUnwired("Terminal arrives with the practice ground") }
-            )
-            BridgeRow(
-                systemImage: "globe",
-                title: "Browser",
-                shortcut: "⌘T",
-                action: { onUnwired("Browser bridge arrives next") }
-            )
-            .keyboardShortcut("t", modifiers: .command)
-            BridgeRow(
-                systemImage: "folder",
-                title: "Files",
-                shortcut: "⌘P",
-                action: onFiles
-            )
-            .keyboardShortcut("p", modifiers: .command)
-
-            if !sources.isEmpty {
-                VStack(spacing: 2) {
-                    ForEach(sources) { source in
-                        BridgeResourceRow(
-                            source: source,
-                            justArrived: source.id == arrivedSourceID,
-                            action: { onOpenSource(source) }
-                        )
-                    }
-                }
-                .padding(.top, 18)
+        VStack(spacing: 12) {
+            VStack(spacing: 8) {
+                BridgeRow(
+                    systemImage: "folder.badge.plus",
+                    title: "Files",
+                    shortcut: "⌘P",
+                    action: onFiles
+                )
+                .keyboardShortcut("p", modifiers: .command)
+                BridgeRow(
+                    systemImage: "checklist",
+                    title: "Review",
+                    shortcut: "⌃⇧G",
+                    help: "Review the current learning record",
+                    action: onReview
+                )
+                .keyboardShortcut("g", modifiers: [.control, .shift])
+                BridgeRow(
+                    systemImage: "globe",
+                    title: "Browser",
+                    shortcut: "⌘T",
+                    action: { onUnwired("Browser bridge arrives next") }
+                )
+                .keyboardShortcut("t", modifiers: .command)
+                BridgeRow(
+                    systemImage: "apple.terminal",
+                    title: "Terminal",
+                    shortcut: nil,
+                    action: { onUnwired("Terminal arrives with the practice ground") }
+                )
             }
 
             Spacer(minLength: 0)
+
+            BridgeStatusFooter(
+                status: status
+            )
         }
+        .padding(.top, reflectionBridgePanelTopPadding)
+        .padding(.bottom, 18)
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            knownSourceIDs = Set(sources.map(\.id))
-        }
-        .onChange(of: sources.map(\.id)) { _, ids in
-            // The arrival moment: a source just crossed the bridge (⌘⇧U
-            // capture or Files import) — mark its row briefly.
-            if let fresh = ids.first(where: { !knownSourceIDs.contains($0) }) {
-                arrivedSourceID = fresh
-                Task { @MainActor in
-                    try? await Task.sleep(nanoseconds: 1_400_000_000)
-                    if arrivedSourceID == fresh { arrivedSourceID = nil }
-                }
-            }
-            knownSourceIDs = Set(ids)
-        }
     }
 }
 
-// A resource that has crossed the bridge: quiet list row; click goes back
-// OUT to the original (native app / browser).
-private struct BridgeResourceRow: View {
-    let source: ReflectionSource
-    let justArrived: Bool
-    let action: () -> Void
-    @State private var isHovering = false
+private struct BridgeStatusFooter: View {
+    let status: String
 
-    private var kindSymbol: String {
-        let kind = source.kind.lowercased()
-        if kind.contains("web") || kind.contains("http") || kind.contains("url") { return "globe" }
-        if kind.contains("pdf") { return "doc.richtext" }
-        if kind.contains("sheet") || kind.contains("xls") || kind.contains("csv") { return "tablecells" }
-        if kind.contains("slide") || kind.contains("ppt") || kind.contains("key") { return "rectangle.on.rectangle" }
-        return "doc.text"
+    private var trimmedStatus: String {
+        status.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var displayStatus: String {
+        trimmedStatus == "Local reflection workspace" ? "Ready" : trimmedStatus
     }
 
     var body: some View {
-        // One click reads the source right here, in-app (owner 2026-07-05:
-        // "keep it simple &amp; easy"). External open lives on the top-bar
-        // Open Source button for editing in Preview / Word / Excel.
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: kindSymbol)
-                    .font(.system(size: 12))
+        HStack(spacing: 7) {
+            if !displayStatus.isEmpty {
+                Text(displayStatus)
+                    .font(.system(size: 11.5))
                     .foregroundStyle(.secondary)
-                    .frame(width: 16)
-                Text(source.label)
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(.primary)
                     .lineLimit(1)
-                    .truncationMode(.middle)
-                Spacer(minLength: 0)
-                if isHovering, source.fileURL != nil {
-                    Image(systemName: "book.pages")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.horizontal, 12)
-            .frame(height: 34)
-            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .background {
-            if justArrived {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
-            } else if isHovering {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(.quinary)
+                    .truncationMode(.tail)
             }
         }
-        .onHover { isHovering = $0 }
-        .help(source.meta.isEmpty ? source.label : source.meta)
-        .accessibilityLabel(source.label)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 24)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -7072,6 +7503,7 @@ private struct BridgeRow: View {
     let systemImage: String
     let title: String
     let shortcut: String?
+    var help: String? = nil
     let action: () -> Void
     @State private var isHovering = false
 
@@ -7096,16 +7528,16 @@ private struct BridgeRow: View {
                 }
             }
             .padding(.horizontal, 14)
-            .frame(height: 46)
+            .frame(height: 38)
             .background(
                 isHovering ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.quinary),
-                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
             )
-            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
-        .help(title)
+        .help(help ?? title)
         .accessibilityLabel(title)
     }
 }
@@ -7519,15 +7951,20 @@ private struct ReflectionPaneResizer: View {
     var clamp: (Double) -> CGFloat = { clampedInspectorWidth($0) }
     var label: String = "Resize sources inspector"
     // The 1pt hairline was too faint to find (owner 2026-07-06: 右栏"无法调整" =
-    // 没看见拖区). On hover the seam thickens + brightens so it reads as grabbable;
-    // the 9pt hit-zone and its resize cursor were already there.
+    // 没看见拖区). On hover it thickens, but stays at tertiary contrast so it
+    // doesn't read like a selected border beside the inspector.
     @State private var isHovering = false
+
+    private var seamColor: Color {
+        Color(nsColor: isHovering ? .tertiaryLabelColor : .separatorColor)
+            .opacity(isHovering ? 0.72 : 0.42)
+    }
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 1.25, style: .continuous)
-                .fill(isHovering ? AnyShapeStyle(.secondary) : AnyShapeStyle(Color(nsColor: .separatorColor)))
-                .frame(width: isHovering ? 2.5 : 1)
+                .fill(seamColor)
+                .frame(width: isHovering ? 2 : 1)
                 .animation(.easeOut(duration: 0.12), value: isHovering)
             ReflectionResizeHandle(width: $width, growsRightward: growsRightward, clamp: clamp)
         }

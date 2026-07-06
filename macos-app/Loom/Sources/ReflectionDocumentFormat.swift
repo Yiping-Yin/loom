@@ -47,10 +47,29 @@ enum ReflectionDocumentFormat {
     /// `loom://anchor` link — a standard attribute that survives the RTFD round
     /// trip, so the altitude persists across reload without a custom marker.
     static func isAnchorParagraph(_ storage: NSTextStorage, at loc: Int) -> Bool {
-        guard loc < storage.length,
-              let link = storage.attribute(.link, at: loc, effectiveRange: nil) else { return false }
-        let s = (link as? String) ?? (link as? URL)?.absoluteString ?? (link as? NSURL)?.absoluteString ?? ""
-        return s.hasPrefix("loom://anchor")
+        guard loc < storage.length else { return false }
+        // Scan the WHOLE paragraph, not just `loc`: the anchor's loom://anchor
+        // link now lives on a trailing locator glyph (so the quote text renders as
+        // quiet evidence, not a hyperlink), which sits AFTER the first character.
+        let paragraph = (storage.string as NSString).paragraphRange(for: NSRange(location: loc, length: 0))
+        var found = false
+        storage.enumerateAttribute(.link, in: paragraph) { value, _, stop in
+            let s = (value as? String) ?? (value as? URL)?.absoluteString ?? (value as? NSURL)?.absoluteString ?? ""
+            if s.hasPrefix("loom://anchor") {
+                found = true
+                stop.pointee = true
+            }
+        }
+        return found
+    }
+
+    /// A captured quote renders as ONE evidence paragraph — the trailing locator
+    /// glyph that carries its anchor must live in the same paragraph. Collapse
+    /// internal newlines + whitespace runs (from a multi-line PDF selection) to
+    /// single spaces so the quote never splits into paragraphs that lose the
+    /// indent + quiet ink.
+    static func collapsedQuote(_ raw: String) -> String {
+        raw.split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
     }
 
     static func headingFont(level: Int) -> NSFont {

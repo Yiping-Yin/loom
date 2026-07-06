@@ -51,10 +51,17 @@ struct ReflectionWorkspaceSnapshot: Codable, Equatable {
 /// O(1) and an empty project persists. Order + name travel in the snapshot;
 /// per-project expand state stays local in @AppStorage.
 struct ReflectionProject: Identifiable, Codable, Equatable {
+    static let untitledName = "Untitled project"
+    static let legacyNewProjectName = "New project"
+
     var id: String = UUID().uuidString
     var name: String
     var order: Int
     var createdAt: Date = Date()
+
+    var displayName: String {
+        name == Self.legacyNewProjectName ? Self.untitledName : name
+    }
 }
 
 struct ReflectionCase: Identifiable, Codable, Equatable {

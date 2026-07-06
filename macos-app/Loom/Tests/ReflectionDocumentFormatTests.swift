@@ -31,6 +31,34 @@ final class ReflectionDocumentFormatTests: XCTestCase {
         XCTAssertFalse(ReflectionDocumentFormat.isAnchorParagraph(storage, at: claimStart))
     }
 
+    func testCollapsedQuoteFlattensNewlinesToOneParagraph() {
+        // A captured quote must be ONE paragraph so the trailing locator glyph
+        // shares it (else the earlier lines lose the evidence altitude). Internal
+        // newlines + whitespace runs from a multi-line PDF selection collapse to
+        // single spaces, trimmed at the edges.
+        XCTAssertEqual(ReflectionDocumentFormat.collapsedQuote("a market\norder\nbuys speed"),
+                       "a market order buys speed")
+        XCTAssertEqual(ReflectionDocumentFormat.collapsedQuote("  spaced   out \n line "),
+                       "spaced out line")
+        XCTAssertEqual(ReflectionDocumentFormat.collapsedQuote("single"), "single")
+    }
+
+    func testAnchorDetectedWhenLinkIsATrailingLocatorNotAtParagraphStart() {
+        // New anchor form: the quote TEXT carries no link; a trailing superscript
+        // locator glyph does. The whole paragraph must still read as evidence, or
+        // normalize would flatten its indent/quiet-ink back to authored baseline.
+        let storage = NSTextStorage(string: "\u{201C}a captured quote\u{201D} \u{25C6}\nmy own claim\n")
+        let glyphLoc = (storage.string as NSString).range(of: "\u{25C6}").location
+        storage.addAttribute(.link, value: "loom://anchor?src=abc&page=2",
+                             range: NSRange(location: glyphLoc, length: 1))
+        // The paragraph START (the opening quote) has NO link, but the paragraph
+        // CONTAINS the anchor locator → still detected as evidence.
+        XCTAssertTrue(ReflectionDocumentFormat.isAnchorParagraph(storage, at: 0))
+        // The other paragraph carries no anchor → not evidence.
+        let claimStart = (storage.string as NSString).range(of: "my own claim").location
+        XCTAssertFalse(ReflectionDocumentFormat.isAnchorParagraph(storage, at: claimStart))
+    }
+
     func testAnchorDetectionAcceptsURLValuesAndRejectsOtherSchemes() {
         let urlLink = NSTextStorage(string: "x")
         urlLink.addAttribute(.link, value: URL(string: "loom://anchor?x")!,

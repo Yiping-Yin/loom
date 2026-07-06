@@ -25,6 +25,10 @@ struct SourceFileView: View {
     /// line under the cursor; clicking it hands (pageIndex, rect, text) back
     /// so the parent can drop an anchored passage into its note. nil = off.
     var notePassageHandler: ((Int, CGRect, String, NSImage?) -> Void)? = nil
+    /// Emits live PDF page state to the parent workspace. The trace rail belongs
+    /// in the right column, so the source reader reports state instead of drawing
+    /// navigation furniture beside the document.
+    var readerPageStateHandler: ((Int, Int) -> Void)? = nil
     /// In-window reader chrome (owner 2026-07-06: "空的太多 · 去掉重复信息").
     /// The single-window reader used to stack its own header (filename + Done)
     /// ABOVE the toolbar, duplicating the global top bar and leaving a dead
@@ -110,6 +114,13 @@ struct SourceFileView: View {
         return copy
     }
 
+    /// Report live page position to a parent-owned trace rail.
+    func onReaderPageStateChange(_ handler: @escaping (Int, Int) -> Void) -> SourceFileView {
+        var copy = self
+        copy.readerPageStateHandler = handler
+        return copy
+    }
+
     /// Opt into the in-window split-reader chrome: a leading file label (nil to
     /// stay silent when the top bar already names it) and a trailing ✕ close.
     /// Chainable, like `onNotePassage`, so the standalone-window callers are
@@ -136,9 +147,9 @@ struct SourceFileView: View {
 
     private var isPDF: Bool { resolvedURL?.pathExtension.lowercased() == "pdf" }
 
-    /// Native reading controls (owner 2026-07-06): page nav + indicator, zoom
-    /// (fit / actual / ± with live %), and macOS fullscreen — all wired to the
-    /// PDFView LOOM already hosts, so the reader stops feeling hand-built.
+    /// Native reading controls (owner 2026-07-06): keep source navigation exposed,
+    /// but fold view/scale details into one menu so the toolbar reads as a reader,
+    /// not a PDF inspector.
     @ViewBuilder private var pdfToolbar: some View {
         HStack(spacing: 8) {
             // Leading file identity — the reader's ONE name (owner 2026-07-06),
@@ -162,39 +173,54 @@ struct SourceFileView: View {
                 .help("Show pages & contents")
                 .foregroundStyle(sidebarMode != nil ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
             Divider().frame(height: 16)
-            Button { pdfHolder.goToFirstPage() } label: { Image(systemName: "arrow.up.to.line") }
-                .help("First page (⌘↑)").keyboardShortcut(.upArrow, modifiers: .command)
-            Button { pdfHolder.goToPreviousPage() } label: { Image(systemName: "chevron.up") }
-                .help("Previous page")
-            Text(pdfHolder.pageLabel.isEmpty ? "—" : pdfHolder.pageLabel)
-                .font(.system(size: 11.5, design: .monospaced))
-                .frame(minWidth: 52, alignment: .center)
-            Button { pdfHolder.goToNextPage() } label: { Image(systemName: "chevron.down") }
-                .help("Next page")
-            Button { pdfHolder.goToLastPage() } label: { Image(systemName: "arrow.down.to.line") }
-                .help("Last page (⌘↓)").keyboardShortcut(.downArrow, modifiers: .command)
-
-            Spacer(minLength: 10)
-
-            Button { pdfHolder.zoomOut() } label: { Image(systemName: "minus.magnifyingglass") }
-                .disabled(!pdfHolder.canZoomOut).help("Zoom out (⌘−)")
-                .keyboardShortcut("-", modifiers: .command)
-            Text(pdfHolder.scaleLabel.isEmpty ? "—" : pdfHolder.scaleLabel)
-                .font(.system(size: 11.5, design: .monospaced))
-                .frame(minWidth: 40)
-            Button { pdfHolder.zoomIn() } label: { Image(systemName: "plus.magnifyingglass") }
-                .disabled(!pdfHolder.canZoomIn).help("Zoom in (⌘+)")
-                .keyboardShortcut("+", modifiers: .command)
-            Button { pdfHolder.fitWidth() } label: {
-                Image(systemName: pdfHolder.isFitting ? "arrow.down.forward.and.arrow.up.backward" : "arrow.up.backward.and.arrow.down.forward")
+            HStack(spacing: 6) {
+                Button { pdfHolder.goToFirstPage() } label: { Image(systemName: "arrow.up.to.line") }
+                    .help("First page (⌘↑)").keyboardShortcut(.upArrow, modifiers: .command)
+                Button { pdfHolder.goToPreviousPage() } label: { Image(systemName: "chevron.up") }
+                    .help("Previous page")
+                Text(pdfHolder.pageLabel.isEmpty ? "—" : pdfHolder.pageLabel)
+                    .font(.system(size: 11.5, design: .monospaced))
+                    .frame(minWidth: 52, alignment: .center)
+                Button { pdfHolder.goToNextPage() } label: { Image(systemName: "chevron.down") }
+                    .help("Next page")
+                Button { pdfHolder.goToLastPage() } label: { Image(systemName: "arrow.down.to.line") }
+                    .help("Last page (⌘↓)").keyboardShortcut(.downArrow, modifiers: .command)
             }
-            .help("Fit width (⌘9)").keyboardShortcut("9", modifiers: .command)
-            Button { pdfHolder.actualSize() } label: { Text("1:1").font(.system(size: 11, weight: .semibold)) }
-                .help("Actual size (⌘0)").keyboardShortcut("0", modifiers: .command)
+            .fixedSize()
 
             Spacer(minLength: 10)
 
             Menu {
+                Text(pdfHolder.scaleLabel.isEmpty ? "Scale" : "Scale \(pdfHolder.scaleLabel)")
+                Divider()
+                Button {
+                    pdfHolder.fitWidth()
+                } label: {
+                    Label("Fit Width", systemImage: "arrow.up.backward.and.arrow.down.forward")
+                }
+                .keyboardShortcut("9", modifiers: .command)
+                Button {
+                    pdfHolder.actualSize()
+                } label: {
+                    Label("Actual Size", systemImage: "1.magnifyingglass")
+                }
+                .keyboardShortcut("0", modifiers: .command)
+                Divider()
+                Button {
+                    pdfHolder.zoomOut()
+                } label: {
+                    Label("Zoom Out", systemImage: "minus.magnifyingglass")
+                }
+                .disabled(!pdfHolder.canZoomOut)
+                .keyboardShortcut("-", modifiers: .command)
+                Button {
+                    pdfHolder.zoomIn()
+                } label: {
+                    Label("Zoom In", systemImage: "plus.magnifyingglass")
+                }
+                .disabled(!pdfHolder.canZoomIn)
+                .keyboardShortcut("+", modifiers: .command)
+                Divider()
                 Picker("Layout", selection: Binding(
                     get: { pdfHolder.displayModeRaw },
                     set: { pdfHolder.setDisplayMode(PDFDisplayMode(rawValue: $0) ?? .singlePageContinuous) })
@@ -204,17 +230,19 @@ struct SourceFileView: View {
                     Text("Two Pages").tag(PDFDisplayMode.twoUpContinuous.rawValue)
                 }
                 .pickerStyle(.inline)
+                Divider()
+                Button {
+                    pdfHolder.toggleNightMode()
+                } label: {
+                    Label(pdfHolder.isNightMode ? "Night Mode On" : "Night Mode", systemImage: pdfHolder.isNightMode ? "moon.fill" : "moon")
+                }
             } label: {
-                Image(systemName: "rectangle.split.2x1")
+                Image(systemName: "slider.horizontal.3")
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-            .help("Page layout")
-            Button { pdfHolder.toggleNightMode() } label: {
-                Image(systemName: pdfHolder.isNightMode ? "moon.fill" : "moon")
-            }
-            .help("Night mode")
+            .help("View options")
             .foregroundStyle(pdfHolder.isNightMode ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
 
             Button { openFind() } label: { Image(systemName: "magnifyingglass") }
@@ -362,30 +390,31 @@ struct SourceFileView: View {
                         Divider()
                     }
                     Group {
-                    if let resolved = resolvedURL {
-                        if resolved.pathExtension.lowercased() == "pdf" {
-                            LoomPDFView(
-                                fileURL: resolved,
-                                holder: pdfHolder,
-                                onNote: startNote,
-                                onNotePassage: notePassageHandler
-                            )
-                        } else {
-                            LoomQuickLookView(fileURL: resolved)
-                        }
-                    } else if let resolveError {
-                        VStack(spacing: 6) {
-                            Text("Couldn't open this file")
-                                .font(.system(size: 13))
-                            Text(resolveError)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        ProgressView()
+                        if let resolved = resolvedURL {
+                            if resolved.pathExtension.lowercased() == "pdf" {
+                                LoomPDFView(
+                                    fileURL: resolved,
+                                    holder: pdfHolder,
+                                    onNote: startNote,
+                                    onNotePassage: handleReaderPassage
+                                )
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            } else {
+                                LoomQuickLookView(fileURL: resolved)
+                            }
+                        } else if let resolveError {
+                            VStack(spacing: 6) {
+                                Text("Couldn't open this file")
+                                    .font(.system(size: 13))
+                                Text(resolveError)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
+                        } else {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
                     }
                 }
             }
@@ -470,6 +499,15 @@ struct SourceFileView: View {
             let rect = rectVal.rectValue
             pdfHolder.go(toPage: page, rect: rect)
         }
+        .onAppear {
+            readerPageStateHandler?(pdfHolder.currentPageIndex, pdfHolder.pageCount)
+        }
+        .onChange(of: pdfHolder.currentPageIndex) { _, pageIndex in
+            readerPageStateHandler?(pageIndex, pdfHolder.pageCount)
+        }
+        .onChange(of: pdfHolder.pageCount) { _, pageCount in
+            readerPageStateHandler?(pdfHolder.currentPageIndex, pageCount)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .loomTriggerNote)) { _ in
             startNote()
         }
@@ -500,6 +538,10 @@ struct SourceFileView: View {
 
     private var sourceIdentity: URL? {
         directFileURL ?? loomURL
+    }
+
+    private func handleReaderPassage(page: Int, rect: CGRect, text: String, image: NSImage?) {
+        notePassageHandler?(page, rect, text, image)
     }
 
     // MARK: - Note panel (⌘E)
@@ -2783,6 +2825,40 @@ struct ReaderOutlineItem: Identifiable {
     let destination: PDFDestination?
 }
 
+struct SourceTraceRailItem: Identifiable, Equatable {
+    enum Kind: String, Equatable {
+        case capture
+        case question
+        case draft
+        case principle
+        case transient
+    }
+
+    let id: String
+    let pageIndex: Int
+    let rect: CGRect
+    let kind: Kind
+    let title: String
+    let excerpt: String
+
+    static func sessionCapture(pageIndex: Int, rect: CGRect, text: String) -> SourceTraceRailItem {
+        let rectKey = "\(Int(rect.origin.x)),\(Int(rect.origin.y)),\(Int(rect.size.width)),\(Int(rect.size.height))"
+        let textKey = text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .prefix(48)
+            .map { $0.isLetter || $0.isNumber ? String($0) : "-" }
+            .joined()
+        return SourceTraceRailItem(
+            id: "session-capture-\(pageIndex)-\(rectKey)-\(textKey)",
+            pageIndex: pageIndex,
+            rect: rect,
+            kind: .capture,
+            title: "Captured · Page \(pageIndex + 1)",
+            excerpt: String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(140))
+        )
+    }
+}
+
 final class PDFViewHolder: ObservableObject {
     weak var pdfView: PDFView?
     /// Set once the document is loaded — used to key per-file scroll memory.
@@ -2793,6 +2869,8 @@ final class PDFViewHolder: ObservableObject {
     // page/scale/document notifications.
     @Published var hasPDF = false
     @Published var pageLabel = ""   // "3 / 12"
+    @Published var currentPageIndex = 0
+    @Published var pageCount = 0
     @Published var scaleLabel = ""  // "120%"
     @Published var canZoomIn = false
     @Published var canZoomOut = false
@@ -2835,10 +2913,13 @@ final class PDFViewHolder: ObservableObject {
     func refresh() {
         guard let view = pdfView, let doc = view.document, doc.pageCount > 0 else {
             hasPDF = false; pageLabel = ""; scaleLabel = ""; canZoomIn = false; canZoomOut = false
+            currentPageIndex = 0; pageCount = 0
             return
         }
         hasPDF = true
         let current = view.currentPage.map { doc.index(for: $0) + 1 } ?? 1
+        currentPageIndex = max(0, current - 1)
+        pageCount = doc.pageCount
         pageLabel = "\(current) / \(doc.pageCount)"
         scaleLabel = "\(Int((view.scaleFactor * 100).rounded()))%"
         canZoomIn = view.canZoomIn
@@ -3125,6 +3206,134 @@ private struct LoomPDFView: NSViewRepresentable {
     }
 }
 
+struct SourceTraceRail: View {
+    let items: [SourceTraceRailItem]
+    let currentPageIndex: Int
+    let pageCount: Int
+    let onJump: (SourceTraceRailItem) -> Void
+    @State private var hoveredItemID: SourceTraceRailItem.ID?
+
+    var body: some View {
+        GeometryReader { proxy in
+            let height = max(proxy.size.height, 1)
+            let width = max(proxy.size.width, 1)
+            ZStack(alignment: .topLeading) {
+                Rectangle()
+                    .fill(Color.primary.opacity(0.044))
+                    .frame(width: 0.5, height: height)
+                    .position(x: width - 4, y: height / 2)
+
+                Circle()
+                    .fill(LoomTokens.dsThread.opacity(0.58))
+                    .frame(width: 4, height: 4)
+                    .position(
+                        x: width - 4,
+                        y: yPosition(for: currentPageIndex, height: height)
+                    )
+
+                ForEach(items) { item in
+                    let isHovered = hoveredItemID == item.id
+                    Button {
+                        onJump(item)
+                    } label: {
+                        Capsule()
+                            .fill(tint(for: item.kind))
+                            .frame(
+                                width: tickWidth(for: item.kind) + (isHovered ? 5 : 0),
+                                height: max(tickHeight(for: item.kind), isHovered ? 4 : 0)
+                            )
+                            .shadow(
+                                color: tint(for: item.kind).opacity(isHovered ? 0.42 : 0.24),
+                                radius: isHovered ? 3.5 : 1.8,
+                                x: 0,
+                                y: 0
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .help(helpText(for: item))
+                    .accessibilityLabel(item.title)
+                    .accessibilityValue(item.excerpt)
+                    .onHover { hovering in
+                        var transaction = Transaction()
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) {
+                            hoveredItemID = hovering ? item.id : nil
+                        }
+                    }
+                    .position(
+                        x: xPosition(for: item.kind, width: width),
+                        y: yPosition(for: item.pageIndex, height: height)
+                    )
+                }
+            }
+            .frame(width: width, height: height)
+            .animation(.easeOut(duration: 0.12), value: hoveredItemID)
+        }
+        .frame(maxHeight: .infinity)
+        .background(Color.clear)
+        .accessibilityLabel("Evidence rail")
+    }
+
+    private func yPosition(for page: Int, height: CGFloat) -> CGFloat {
+        let count = max(pageCount, 1)
+        guard count > 1 else { return height / 2 }
+        let usable = max(height - 16, 1)
+        let bounded = min(max(page, 0), count - 1)
+        return 8 + (CGFloat(bounded) / CGFloat(count - 1)) * usable
+    }
+
+    private func xPosition(for kind: SourceTraceRailItem.Kind, width: CGFloat) -> CGFloat {
+        switch kind {
+        case .capture, .transient:
+            return width - 4
+        case .question:
+            return width - 3
+        case .draft:
+            return width - 5
+        case .principle:
+            return width - 6
+        }
+    }
+
+    private func tickWidth(for kind: SourceTraceRailItem.Kind) -> CGFloat {
+        switch kind {
+        case .principle:
+            return 5
+        case .question:
+            return 8
+        case .draft:
+            return 6
+        default:
+            return 7
+        }
+    }
+
+    private func tickHeight(for kind: SourceTraceRailItem.Kind) -> CGFloat {
+        kind == .principle ? 5 : 2.5
+    }
+
+    private func tint(for kind: SourceTraceRailItem.Kind) -> Color {
+        switch kind {
+        case .capture:
+            return LoomTokens.dsThread
+        case .question:
+            return Color(red: 0.96, green: 0.56, blue: 0.22)
+        case .draft:
+            return Color(red: 0.46, green: 0.58, blue: 0.68)
+        case .principle:
+            return Color(red: 0.88, green: 0.62, blue: 0.20)
+        case .transient:
+            return LoomTokens.dsThread.opacity(0.52)
+        }
+    }
+
+    private func helpText(for item: SourceTraceRailItem) -> String {
+        let excerpt = item.excerpt.trimmingCharacters(in: .whitespacesAndNewlines)
+        if excerpt.isEmpty { return item.title }
+        return "\(item.title)\n\(excerpt)"
+    }
+}
+
 /// PDFKit's own page-thumbnail grid, bound to the reader's live PDFView so
 /// clicking a thumbnail navigates and the current page stays highlighted.
 private struct LoomPDFThumbnailSidebar: NSViewRepresentable {
@@ -3160,10 +3369,9 @@ final class LoomPDFKitView: PDFView {
 
     private var pendingPassage: (page: Int, rect: CGRect, text: String)?
     private var hoverTracking: NSTrackingArea?
-    /// The margin tick (owner 2026-07-06 redesign): a single 青芒 hairline pinned
-    /// in the gutter at the hovered line's trailing edge — the same 2pt spine the
-    /// captured quote wears in the note. Non-interactive (hitTest nil); the whole
-    /// line is the click target, committed in mouseUp.
+    /// The reader capture mark for hovered lines. A live text selection draws no
+    /// extra mark: the native blue selection is already the target, and adding a
+    /// cyan tick beside punctuation reads like a stray cursor.
     private lazy var noteTick: NoteHoverTick = {
         let tick = NoteHoverTick()
         tick.isHidden = true
@@ -3234,8 +3442,8 @@ final class LoomPDFKitView: PDFView {
     override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
         guard onNotePassage != nil else { hideBadge(); return }
-        // A live selection owns the mark — hovering must not steal the target
-        // away from the words you just selected.
+        // A live selection owns the target — hovering must not steal capture
+        // away from the words you just selected. It draws no extra marker.
         if liveSelectionTarget() != nil { return }
         let viewPoint = convert(event.locationInWindow, from: nil)
         guard let document,
@@ -3286,19 +3494,20 @@ final class LoomPDFKitView: PDFView {
         return CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y), width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
     }
 
-    /// Pin the cyan tick to the thing you could grab right now — the live
-    /// SELECTION if any, else the hovered line. Never paints a full-line wash at
-    /// rest (that read as "take the whole row"); the wash survives only as the
-    /// commit flash on the exact captured rect.
+    /// Pin the capture mark to the hovered line. A live SELECTION wins the
+    /// capture target but intentionally draws no extra mark; the blue highlight
+    /// itself is enough, and the click target remains the selection rectangle.
+    /// Never paints a full-line wash at rest (that read as "take the whole row");
+    /// the wash survives only as the commit flash on the exact captured rect.
     private func relightMark() {
         guard onNotePassage != nil else { hideBadge(); return }
-        // Where the tick sits: the trailing edge of the selection's LAST line (so
-        // a multi-line grab pins where the selection ends, not a tall bar down the
-        // margin), else the hovered line. Selection still WINS.
+        if liveSelectionTarget() != nil {
+            lineHighlight.isHidden = true
+            noteTick.isHidden = true
+            return
+        }
         let v: CGRect?
-        if let sel = currentSelection, liveSelectionTarget() != nil {
-            v = lastLineViewRect(of: sel)
-        } else if let p = pendingPassage, let document, let page = document.page(at: p.page) {
+        if let p = pendingPassage, let document, let page = document.page(at: p.page) {
             let c1 = convert(CGPoint(x: p.rect.minX, y: p.rect.minY), from: page)
             let c2 = convert(CGPoint(x: p.rect.maxX, y: p.rect.maxY), from: page)
             v = CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y), width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
@@ -3311,17 +3520,6 @@ final class LoomPDFKitView: PDFView {
         let tx = min(r.maxX + 6, bounds.maxX - tw - 2)
         noteTick.frame = NSRect(x: tx, y: r.minY - 2, width: tw, height: r.height + 4)
         noteTick.isHidden = false
-    }
-
-    /// The selection's LAST line as a view-space rect (for pinning the tick to
-    /// where a multi-line selection ends). Falls back to the whole-selection box.
-    private func lastLineViewRect(of sel: PDFSelection) -> CGRect? {
-        let line = sel.selectionsByLine().last ?? sel
-        guard let page = line.pages.first else { return nil }
-        let b = line.bounds(for: page)
-        let c1 = convert(CGPoint(x: b.minX, y: b.minY), from: page)
-        let c2 = convert(CGPoint(x: b.maxX, y: b.maxY), from: page)
-        return CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y), width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
     }
 
     /// Capture EXACTLY the given target (selection or line) — flash its exact
@@ -3378,13 +3576,12 @@ final class LoomPDFKitView: PDFView {
         clickDownPoint = down
         didDrag = false
         // The text view collapses a selection on mouse-down, so decide NOW whether
-        // this press grabs the lit selection: it does if it lands on the tick or
-        // inside the selection. Otherwise remember a selection stood (so a click
+        // this press grabs the lit selection: it does only if it lands inside the
+        // native blue selection. Otherwise remember a selection stood (so a click
         // that collapses it doesn't fall through to grabbing the line).
         if let sel = liveSelectionTarget() {
             hadSelectionAtDown = true
-            let onSelection = noteTick.frame.contains(down)
-                || (selectionViewRect()?.insetBy(dx: -6, dy: -4).contains(down) ?? false)
+            let onSelection = selectionViewRect()?.insetBy(dx: -6, dy: -4).contains(down) ?? false
             armedSelection = onSelection ? sel : nil
         } else {
             hadSelectionAtDown = false
@@ -3446,8 +3643,9 @@ final class LoomPDFKitView: PDFView {
             return
         }
         // 2. Text is now selected (a drag just selected it, a double-click picked
-        //    a word, or a selection stands) → NEVER auto-commit. Light the tick;
-        //    the user grabs it deliberately by clicking the selection/tick or ⌘E.
+        //    a word, or a selection stands) → NEVER auto-commit. Keep the blue
+        //    native selection as the only marker; grab it by clicking inside it
+        //    or using ⌘E.
         //    THIS is the fix: selecting no longer captures on its own.
         if liveSelectionTarget() != nil {
             relightMark()
@@ -3552,12 +3750,10 @@ final class LoomPDFKitView: PDFView {
     @objc private func loomNoteAction() { onNote?() }
 }
 
-/// The margin tick that marks the hovered line in the reader (owner 2026-07-06,
-/// replacing the old system-blue "!" disc). A single lit 青芒 hairline in the
-/// gutter — the exact 2pt spine the captured quote wears in the note, so reader
-/// and note speak one grammar. Cyan is the only saturated mark on the surface;
-/// it is signal, never decoration. Non-interactive — the whole line is the
-/// click target (committed in the view's mouseUp), so the tick just points.
+/// The reader capture mark (owner 2026-07-06, refined 2026-07-07). Hovered lines
+/// get the quote-spine hairline. Live selections draw no mark; their blue native
+/// highlight is already the capture target. Non-interactive — the line owns the
+/// click target, so the mark just points.
 final class NoteHoverTick: NSView {
     override var isFlipped: Bool { true }
 
@@ -3574,11 +3770,11 @@ final class NoteHoverTick: NSView {
         NSGraphicsContext.saveGraphicsState()
         // Lit, not plated — a soft cyan glow so it reads as light on the page.
         let glow = NSShadow()
-        glow.shadowColor = cyan.withAlphaComponent(0.5)
-        glow.shadowBlurRadius = 3.5
+        glow.shadowColor = cyan.withAlphaComponent(0.36)
+        glow.shadowBlurRadius = 2.5
         glow.shadowOffset = .zero
         glow.set()
-        cyan.setFill()
+        cyan.withAlphaComponent(0.95).setFill()
         path.fill()
         NSGraphicsContext.restoreGraphicsState()
     }
