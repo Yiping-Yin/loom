@@ -3376,33 +3376,37 @@ final class LoomPDFKitView: PDFView {
             return
         }
         super.mouseUp(with: event)
-        let wasClick = !didDrag
-        let hadSelection = hadSelectionAtDown
+        let up = convert(event.locationInWindow, from: nil)
+        // Detect a drag by DISTANCE, not didDrag: PDFView tracks text drag-select
+        // in its own internal loop, so mouseDragged (and didDrag) may never fire —
+        // which made a drag-select fall through and auto-grab the whole line
+        // (owner 2026-07-06: "selecting a sentence chooses it into notes directly").
+        let moved = clickDownPoint.map { hypot(up.x - $0.x, up.y - $0.y) > 4 } ?? didDrag
         let armed = armedSelection
         clickDownPoint = nil
         didDrag = false
         armedSelection = nil
         hadSelectionAtDown = false
         guard onNotePassage != nil else { return }
-        if !wasClick {
-            // A drag settled. If it produced a selection, light the tick on it
-            // (the selection-change observer also fires); never auto-commit — the
-            // user may still be adjusting the range.
+
+        // 1. A real CLICK (no drag) on a standing selection or its tick → grab
+        //    exactly those words.
+        if let armed, !moved {
+            commit(page: armed.page, rect: armed.rect, text: armed.text)
+            return
+        }
+        // 2. Text is now selected (a drag just selected it, a double-click picked
+        //    a word, or a selection stands) → NEVER auto-commit. Light the tick;
+        //    the user grabs it deliberately by clicking the selection/tick or ⌘E.
+        //    THIS is the fix: selecting no longer captures on its own.
+        if liveSelectionTarget() != nil {
             relightMark()
             return
         }
-        // A click.
-        if let armed {
-            // Clicked the lit selection (or its tick) → grab exactly those words.
-            commit(page: armed.page, rect: armed.rect, text: armed.text)
-        } else if hadSelection {
-            // Clicked away from a selection → it just collapsed; don't grab the
-            // line under the click. Return to hover/line mode.
-            relightMark()
-        } else if pendingPassage != nil {
-            // Plain click on a hovered line, nothing selected → grab the line.
-            commitPendingPassage()
-        }
+        // 3. A drag that selected nothing → do nothing.
+        if moved { return }
+        // 4. A plain click on a hovered line, nothing selected → grab the line.
+        if pendingPassage != nil { commitPendingPassage() }
     }
 
     /// Turn a view-space snip box into an appshot: find its page, map the box

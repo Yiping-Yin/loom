@@ -1909,7 +1909,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /if let sel = currentSelection, liveSelectionTarget\(\) != nil/);
   assert.match(sourceFileView, /func lastLineViewRect\(of sel: PDFSelection\) -> CGRect\?/);
   assert.match(sourceFileView, /\.PDFViewSelectionChanged, object: self/);
-  assert.match(sourceFileView, /if let armed \{[\s\S]{0,120}commit\(page: armed\.page/);
+  // Drag-select must NOT auto-capture (owner 2026-07-06): detect the drag by
+  // distance, and if a selection now exists, light the tick instead of grabbing.
+  assert.match(sourceFileView, /if let armed, !moved \{[\s\S]{0,120}commit\(page: armed\.page/);
+  assert.match(sourceFileView, /if liveSelectionTarget\(\) != nil \{[\s\S]{0,60}relightMark\(\)/);
   // Snip polish (owner 2026-07-06): dim OUTSIDE the box (screenshot-style
   // spotlight) + live dimensions + crosshair + a green flash on release.
   assert.match(sourceFileView, /mask\.windingRule = \.evenOdd/);
