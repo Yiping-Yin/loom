@@ -63,6 +63,13 @@ final class ReflectionDocumentFormatTests: XCTestCase {
         XCTAssertTrue(outline.isEmpty)
     }
 
+    func testOpenQuestionLineDetection() {
+        XCTAssertTrue(ReflectionDocumentFormat.isOpenQuestionLine("\u{2753} Open — does a stop-loss behave like a market order?"))
+        XCTAssertTrue(ReflectionDocumentFormat.isOpenQuestionLine("   \u{2753} to confirm: check week 2"))
+        XCTAssertFalse(ReflectionDocumentFormat.isOpenQuestionLine("A market order buys speed."))
+        XCTAssertFalse(ReflectionDocumentFormat.isOpenQuestionLine("Is this a question?"))
+    }
+
     func testHeadingLevelParsing() {
         XCTAssertEqual(ReflectionDocumentFormat.headingLevel(of: "# Title").level, 1)
         XCTAssertEqual(ReflectionDocumentFormat.headingLevel(of: "## Sub").level, 2)

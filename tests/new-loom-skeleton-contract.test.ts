@@ -2814,6 +2814,11 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /static var quoteParagraphStyle: NSParagraphStyle/);
   assert.match(nativeRoot, /func isAnchorParagraph\(_ storage: NSTextStorage, at loc: Int\) -> Bool/);
   assert.match(nativeRoot, /\} else if isAnchorParagraph\(storage, at: paragraphRange\.location\)/);
+  // Block D (owner 2026-07-06): a ❓-prefixed line is an OPEN QUESTION — a warm
+  // "unresolved" amber that survives normalize, the read薄 invitation to return.
+  // (isOpenQuestionLine's def lives in ReflectionDocumentFormat + its unit test.)
+  assert.match(nativeRoot, /\} else if ReflectionDocumentFormat\.isOpenQuestionLine\(line\)/);
+  assert.match(nativeRoot, /static var openQuestionColor: NSColor/);
   assert.match(nativeRoot, /case "b": toggleEmphasis\(\.boldFontMask\); return true/);
   assert.match(nativeRoot, /private func toggleEmphasis\(_ trait: NSFontTraitMask\)/);
   assert.match(nativeRoot, /private func toggleUnderline\(\)/);

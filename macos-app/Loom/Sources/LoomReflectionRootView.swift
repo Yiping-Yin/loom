@@ -4727,6 +4727,12 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         ReflectionDocumentFormat.serifFont(size: size, weight: weight)
     }
     static var documentFont: NSFont { ReflectionDocumentFormat.documentFont }
+    /// Block D open-question tint — LOOM's page-only/partial amber, muted toward
+    /// ink so an open thread reads as "unresolved" without shouting; adapts to
+    /// appearance via labelColor.
+    static var openQuestionColor: NSColor {
+        NSColor.systemOrange.blended(withFraction: 0.34, of: .labelColor) ?? .systemOrange
+    }
     static var documentParagraphStyle: NSParagraphStyle { ReflectionDocumentFormat.documentParagraphStyle }
     static var quoteParagraphStyle: NSParagraphStyle { ReflectionDocumentFormat.quoteParagraphStyle }
     static func isAnchorParagraph(_ storage: NSTextStorage, at loc: Int) -> Bool {
@@ -4806,6 +4812,16 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                     value: NSColor.tertiaryLabelColor,
                     range: NSRange(location: paragraphRange.location, length: markerLength)
                 )
+            } else if ReflectionDocumentFormat.isOpenQuestionLine(line) {
+                // Block D — an open question / to-confirm (line starts with ❓). A
+                // warm "unresolved" amber (LOOM's page-only/partial signal) so it
+                // reads as a thread to return to, not settled prose. Authored
+                // altitude (baseline), emphasis preserved.
+                storage.addAttributes([
+                    .foregroundColor: openQuestionColor,
+                    .paragraphStyle: documentParagraphStyle,
+                ], range: paragraphRange)
+                applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
             } else if isAnchorParagraph(storage, at: paragraphRange.location) {
                 // Evidence altitude — a captured quote. Preserve its indent +
                 // quiet ink instead of flattening it to baseline authored text,

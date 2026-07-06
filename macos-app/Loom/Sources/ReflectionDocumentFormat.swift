@@ -82,6 +82,14 @@ enum ReflectionDocumentFormat {
         return (hashes, hashes + 1)
     }
 
+    /// Block D of the reading-note form (owner 2026-07-06): a line beginning with
+    /// ❓ is an OPEN QUESTION / to-confirm — the thing that pulls you back to the
+    /// note (elaboration). Detected by the ❓ prefix (text, so it survives RTFD),
+    /// the same way headings are detected.
+    static func isOpenQuestionLine(_ line: String) -> Bool {
+        line.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("\u{2753}")
+    }
+
     /// The live outline is derived from the WRITTEN document — every heading
     /// line, with its character location for click-to-jump. Locations count
     /// UTF-16 units (+1 per newline) to match NSTextView's indexing.
