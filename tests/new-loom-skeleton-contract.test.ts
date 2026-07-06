@@ -1986,9 +1986,40 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /if let target = anchorPreview \{[\s\S]{0,80}readerColumn\(target\)/);
   assert.match(nativeRoot, /private func readerColumn\(_ target: AnchorPreviewTarget\) -> some View/);
   assert.match(nativeRoot, /if isInspectorPresented && anchorPreview == nil/);
+  // Right-pane flexibility while reading (owner 2026-07-06: 右栏要能调整+收展). The
+  // top-bar right toggle collapses/expands the NOTE while a source is open (the
+  // note IS the right pane then); collapsed -> the reader fills the window and the
+  // resizer is dropped; the resizer seam brightens on hover so it's findable.
+  assert.match(nativeRoot, /if anchorPreview != nil \{\n\s*isReadingNoteCollapsed\.toggle\(\)/);
+  // A freshly-opened source starts with the note visible (no stale collapse).
+  assert.match(nativeRoot, /if anchorPreview == nil \{ isReadingNoteCollapsed = false \}/);
+  assert.match(nativeRoot, /isActive: isReadingSource \? !isNoteCollapsed : isInspectorPresented/);
+  assert.match(nativeRoot, /isReadingNoteCollapsed\n\s*\? geo\.size\.width/);
+  assert.match(nativeRoot, /if !\(anchorPreview != nil && isReadingNoteCollapsed\)/);
+  // The note's title+provenance header shows ONLY for a NAMED case (owner
+  // 2026-07-06: 去掉重复信息). Unnamed -> nothing: the top bar already shows the
+  // source name, and a blank case is just the cursor. The old `|| provenanceLabel
+  // != nil` leak (which repeated the source name in the empty note) is gone.
+  assert.match(nativeRoot, /if reflectionCase\.title != ReflectionCase\.untitledPlaceholder \{\n\s*VStack\(alignment: \.leading, spacing: 3\) \{\n\s*Text\(reflectionCase\.title\)/);
+  assert.match(nativeRoot, /isHovering \? AnyShapeStyle\(\.secondary\) : AnyShapeStyle\(Color\(nsColor: \.separatorColor\)\)/);
   assert.match(nativeRoot, /SourceFileView\(fileURL: target\.fileURL\) \{ anchorPreview = nil \}/);
-  assert.match(nativeRoot, /Button \{ anchorPreview = nil \} label: \{[\s\S]{0,60}Text\("Done"\)/);
-  assert.match(nativeRoot, /\.keyboardShortcut\(\.cancelAction\)/);
+  // Reader top redesign (owner 2026-07-06: "空的太多 · 去掉重复信息"). The reader's
+  // own header row (filename + blue borderedProminent "Done") is DELETED: no
+  // opaque accent block, no duplicate title, no dead band. The toolbar itself
+  // carries file identity + a quiet ✕, and the reader sits FLUSH under the
+  // floating top bar. The filename reaches the toolbar ONLY when the top bar
+  // isn't already showing it (readerBase == topTitle -> nil).
+  assert.doesNotMatch(nativeRoot, /borderedProminent/);
+  assert.match(nativeRoot, /let barLabel: String\? = \(readerBase == topTitle\) \? nil : target\.fileURL\.lastPathComponent/);
+  assert.match(nativeRoot, /\.readerChrome\(label: barLabel, showsClose: true\)/);
+  assert.match(nativeRoot, /private let reflectionReaderTopClearance: CGFloat = reflectionTopBarHeight/);
+  assert.match(nativeRoot, /\.padding\(\.top, reflectionReaderTopClearance\)/);
+  // The reader chrome lives in SourceFileView, opt-in (chainable) so the two
+  // standalone-window callers keep their titlebar chrome: a leading file label
+  // and a trailing ✕ close (Esc), never an accent-filled button.
+  assert.match(sourceFileView, /func readerChrome\(label: String\?, showsClose: Bool\) -> SourceFileView/);
+  assert.match(sourceFileView, /if let barSourceLabel \{/);
+  assert.match(sourceFileView, /if showsReaderClose \{[\s\S]{0,160}Image\(systemName: "xmark"\)/);
   assert.match(nativeRoot, /raw\.hasPrefix\("loom:\/\/anchor"\)/);
   assert.match(nativeRoot, /name: \.loomReflectionAnchorJump/);
   // One click on a right-rail source reads it in-app (no hover-hunt for a
@@ -2856,7 +2887,22 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // column), hover-only New Chat fill, unified icon size + row-height ladder.
   assert.match(nativeRoot, /Color\.clear\.frame\(width: 22, height: 1\)/);
   assert.match(nativeRoot, /if newChatHovering \{/);
-  assert.match(nativeRoot, /hasFacts \? 46 : 30/);
+  // Study index (2026-07-06): the week row collapses to ONE constant single
+  // line — the two-line facts form (📄 N / ❓ N / HH:mm) is deleted. hasFacts is
+  // gone; height is a constant 30 (not 46/30 branched); the row derives a
+  // date-aware relative stamp from a real touchedAt Date and shows a numberless
+  // amber question cue at rest only when an open question remains.
+  assert.doesNotMatch(nativeRoot, /hasFacts/);
+  assert.match(nativeRoot, /\.frame\(height: 30\)\n\s*\.contentShape\(RoundedRectangle/);
+  assert.match(nativeRoot, /private var hasOpenQuestion: Bool \{ openQuestionCount > 0 \}/);
+  assert.match(nativeRoot, /private var relativeStamp: String/);
+  assert.match(nativeModel, /var touchedAt: Date\? = nil/);
+  // Hover shows ONLY the date (owner 2026-07-06: the source label over-truncated
+  // to "W...s" and the stamp wrapped in the narrow rail) — pinned non-wrapping.
+  assert.match(nativeRoot, /Text\(relativeStamp\)[\s\S]{0,300}\.lineLimit\(1\)\n\s*\.fixedSize\(\)/);
+  // Weeks read in study order (W 1 … W 10), not recency, via Finder-style
+  // numeric collation.
+  assert.match(nativeRoot, /\.sorted \{ \$0\.title\.localizedStandardCompare\(\$1\.title\) == \.orderedAscending \}/);
   assert.match(nativeRoot, /struct SidebarProjectHeader: View/);
   assert.match(nativeRoot, /private func groupID\(for reflectionCase: ReflectionCase\) -> String\?/);
   assert.match(nativeRoot, /private func chats\(inProject id: String\) -> \[ReflectionCase\]/);

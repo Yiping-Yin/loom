@@ -35,6 +35,11 @@ private let reflectionReaderFractionKey = "loom.reflection.readerFraction"
 private func clampedReaderFraction(_ f: Double) -> Double { min(max(f, 0.30), 0.68) }
 private let reflectionTopBarHeight: CGFloat = 52
 private let reflectionSidebarTopClearance: CGFloat = 60
+// The in-window reader sits FLUSH under the floating top bar (owner 2026-07-06:
+// "空的太多"). Its own header row is gone, so it only needs to clear the bar's
+// height — not the larger note-column clearance above. Kept separate so tuning
+// the reader never disturbs the four note/thread call sites of the 60 constant.
+private let reflectionReaderTopClearance: CGFloat = reflectionTopBarHeight
 private let reflectionThreadMaxWidth: CGFloat = 720
 private let reflectionTrafficLightClearance: CGFloat = 88
 private let reflectionTitlebarControlSize: CGFloat = 16
@@ -128,6 +133,10 @@ struct LoomReflectionRootView: View {
     @State private var isSidebarPresented: Bool = true
     @State private var isSidebarPeeking: Bool = false
     @State private var isInspectorPresented: Bool = true
+    // While a source is open, the right pane IS the note. This collapses it so
+    // the PDF reads full-width in-window (owner 2026-07-06: 右栏要能收展). Session
+    // state, not persisted — reopening a source starts with the note visible.
+    @State private var isReadingNoteCollapsed: Bool = false
     @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
     @AppStorage(reflectionReaderWidthKey) private var readerWidth: Double = Double(reflectionReaderDefaultWidth)
     @AppStorage(reflectionReaderFractionKey) private var readerFraction: Double = 0.52
@@ -220,46 +229,57 @@ struct LoomReflectionRootView: View {
                     // size (fullscreen included), draggable; the note keeps ≥32%.
                     if let target = anchorPreview {
                         readerColumn(target)
-                            .frame(width: geo.size.width * CGFloat(clampedReaderFraction(readerFraction)))
+                            // Collapsed note (owner 2026-07-06): the reader fills
+                            // the whole in-window area for a distraction-free read;
+                            // otherwise it's its usual draggable fraction.
+                            .frame(width: isReadingNoteCollapsed
+                                   ? geo.size.width
+                                   : geo.size.width * CGFloat(clampedReaderFraction(readerFraction)))
                             .transition(.move(edge: .leading).combined(with: .opacity))
-                        ReflectionPaneResizer(
-                            width: Binding(
-                                get: { Double(geo.size.width) * clampedReaderFraction(readerFraction) },
-                                set: { readerFraction = clampedReaderFraction($0 / Double(max(geo.size.width, 1))) }
-                            ),
-                            growsRightward: true,
-                            clamp: { min(max($0, Double(geo.size.width) * 0.30), Double(geo.size.width) * 0.68) },
-                            label: "Resize reader"
-                        )
+                        if !isReadingNoteCollapsed {
+                            ReflectionPaneResizer(
+                                width: Binding(
+                                    get: { Double(geo.size.width) * clampedReaderFraction(readerFraction) },
+                                    set: { readerFraction = clampedReaderFraction($0 / Double(max(geo.size.width, 1))) }
+                                ),
+                                growsRightward: true,
+                                clamp: { min(max($0, Double(geo.size.width) * 0.30), Double(geo.size.width) * 0.68) },
+                                label: "Resize reader"
+                            )
+                        }
                     }
                     // The center: a reading document ON the glass once the
                     // user has material; before that it becomes a restrained
                     // start surface instead of a fake project/document.
-                    GlassReadingCenter(
-                        reflectionCase: selectedCase,
-                        isWorkspaceEmpty: isWorkspaceEmpty,
-                        draftText: $draftText,
-                        commitFocus: $composerFocus,
-                        onSelectTrace: selectLearningTrace,
-                        onPromotePrinciple: promoteCandidatePrinciple,
-                        onSubmit: submitMaterial,
-                        onDocumentTextChange: updateCaseDocumentText,
-                        onImportFiles: { urls in
-                            importSources(from: urls, openAfterImport: false)
-                        },
-                        onImportLocalSources: importLocalSources,
-                        onCreateReflection: createReflection,
-                        onCreateLearningProject: createLearningProject,
-                        onOpenSourceID: { sourceID in
-                            guard let source = selectedCase.sources.first(where: { $0.id == sourceID }) else {
-                                statusMessage = "That file is no longer in this case's sources"
-                                return
+                    // Hidden only while a source is open AND the note is
+                    // collapsed (owner 2026-07-06) — then the reader fills.
+                    if !(anchorPreview != nil && isReadingNoteCollapsed) {
+                        GlassReadingCenter(
+                            reflectionCase: selectedCase,
+                            isWorkspaceEmpty: isWorkspaceEmpty,
+                            draftText: $draftText,
+                            commitFocus: $composerFocus,
+                            onSelectTrace: selectLearningTrace,
+                            onPromotePrinciple: promoteCandidatePrinciple,
+                            onSubmit: submitMaterial,
+                            onDocumentTextChange: updateCaseDocumentText,
+                            onImportFiles: { urls in
+                                importSources(from: urls, openAfterImport: false)
+                            },
+                            onImportLocalSources: importLocalSources,
+                            onCreateReflection: createReflection,
+                            onCreateLearningProject: createLearningProject,
+                            onOpenSourceID: { sourceID in
+                                guard let source = selectedCase.sources.first(where: { $0.id == sourceID }) else {
+                                    statusMessage = "That file is no longer in this case's sources"
+                                    return
+                                }
+                                selectedSourceID = source.id
+                                openSourceInNativeApp(source)
                             }
-                            selectedSourceID = source.id
-                            openSourceInNativeApp(source)
-                        }
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
 
                     if isInspectorPresented && anchorPreview == nil {
                         ReflectionPaneResizer(width: $inspectorWidth)
@@ -302,6 +322,8 @@ struct LoomReflectionRootView: View {
                 isWorkspaceEmpty: isWorkspaceEmpty,
                 isSidebarPresented: isSidebarPresented,
                 isInspectorPresented: isInspectorPresented,
+                isReadingSource: anchorPreview != nil,
+                isNoteCollapsed: isReadingNoteCollapsed,
                 sourceCount: isWorkspaceEmpty ? 0 : selectedCase.sources.count,
                 onToggleSidebar: toggleSidebar,
                 onToggleInspector: toggleInspector,
@@ -568,7 +590,15 @@ struct LoomReflectionRootView: View {
 
     private func toggleInspector() {
         withAnimation(.easeInOut(duration: 0.18)) {
-            isInspectorPresented.toggle()
+            // While a source is open the right pane IS the note, so this button
+            // (the top bar's right-pane toggle) collapses/expands it — read the
+            // PDF full-width, or bring the note back. With no reader open it
+            // toggles the evidence pane as before (owner 2026-07-06).
+            if anchorPreview != nil {
+                isReadingNoteCollapsed.toggle()
+            } else {
+                isInspectorPresented.toggle()
+            }
         }
     }
 
@@ -695,6 +725,7 @@ struct LoomReflectionRootView: View {
         guard let index = cases.firstIndex(where: { $0.id == reflectionCase.id }) else { return }
         cases[index].title = title
         cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+        cases[index].touchedAt = Date()
         statusMessage = "Renamed to \(title)"
         persistWorkspace()
     }
@@ -759,6 +790,7 @@ struct LoomReflectionRootView: View {
         }
 
         cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+        cases[index].touchedAt = Date()
         if cases[index].status != "Memory ready" {
             cases[index].status = "In reflection"
         }
@@ -819,6 +851,7 @@ struct LoomReflectionRootView: View {
                 ?? cases[index].title
             cases[index].status = "Reading"
             cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+            cases[index].touchedAt = Date()
             let focus = Self.commitFocus(for: material, fallback: composerFocus)
             let manualLine = Self.manualLearningInputLine(material, sourceLabel: sourceLabel, focus: focus)
             cases[index].steps[0].items.append(manualLine)
@@ -848,6 +881,7 @@ struct LoomReflectionRootView: View {
 
         cases[index].status = "In reflection"
         cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+        cases[index].touchedAt = Date()
         cases[index].steps[0].items.append(material)
         cases[index].messages.append(ReflectionMessage(role: .human, eyebrow: "New material", body: material))
         cases[index].messages.append(
@@ -990,6 +1024,11 @@ struct LoomReflectionRootView: View {
             statusMessage = "\(source.label) moved — re-add it to Sources so jumps stay reliable"
         }
         selectedSourceID = source.id
+        // Opening a source from a CLOSED reader starts with the note visible —
+        // a stale collapse from a previous reading session shouldn't hide the
+        // note of a freshly-opened source (owner 2026-07-06). Jumping between
+        // passages within an already-open reader preserves the collapse.
+        if anchorPreview == nil { isReadingNoteCollapsed = false }
         anchorPreview = AnchorPreviewTarget(sourceID: source.id, fileURL: resolved, page: page, rect: rect)
     }
 
@@ -1006,33 +1045,22 @@ struct LoomReflectionRootView: View {
     /// quote land in the note to the right.
     @ViewBuilder
     private func readerColumn(_ target: AnchorPreviewTarget) -> some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                Image(systemName: "doc.richtext")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                Text(target.fileURL.lastPathComponent)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                Spacer(minLength: 12)
-                Button { anchorPreview = nil } label: {
-                    Text("Done").font(.system(size: 12, weight: .semibold))
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .keyboardShortcut(.cancelAction)
+        // Don't say the filename twice (owner 2026-07-06: 去掉重复信息). The
+        // global top bar shows the chat's name, or — when the chat is unnamed —
+        // the source's own name. Only when the top bar isn't ALREADY showing
+        // THIS file's name does the reader toolbar carry it (a named week, or a
+        // 2nd source in the week); otherwise it stays silent (barLabel = nil).
+        let topTitle = selectedCase.title != ReflectionCase.untitledPlaceholder
+            ? selectedCase.title
+            : (((nativeSource?.label ?? selectedCase.sources.first?.label) as NSString?)?.deletingPathExtension ?? "")
+        let readerBase = (target.fileURL.lastPathComponent as NSString).deletingPathExtension
+        let barLabel: String? = (readerBase == topTitle) ? nil : target.fileURL.lastPathComponent
+        return SourceFileView(fileURL: target.fileURL) { anchorPreview = nil }
+            .onNotePassage { page, rect, text, image in
+                noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text, image: image)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
-            Divider()
-            SourceFileView(fileURL: target.fileURL) { anchorPreview = nil }
-                .onNotePassage { page, rect, text, image in
-                    noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text, image: image)
-                }
-        }
-        .padding(.top, reflectionSidebarTopClearance)
+            .readerChrome(label: barLabel, showsClose: true)
+            .padding(.top, reflectionReaderTopClearance)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
         .task(id: "\(target.page):\(target.rect.origin.x),\(target.rect.origin.y),\(target.rect.width),\(target.rect.height)") {
@@ -1268,6 +1296,7 @@ struct LoomReflectionRootView: View {
             }
             cases[index].status = "Reading"
             cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+            cases[index].touchedAt = Date()
             selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
             draftText = ""
             isSidebarPresented = false
@@ -1280,6 +1309,7 @@ struct LoomReflectionRootView: View {
 
         cases[index].status = "Reading"
         cases[index].updatedAt = Self.timeFormatter.string(from: Date())
+        cases[index].touchedAt = Date()
         cases[index].steps[0].items.append(inputLine)
         // Stage 1 (LoomDomain): dual-write the typed record for new captures.
         cases[index].appendTraceRecord(forLegacyItem: inputLine, sourceLabel: sourceLabel)
@@ -1499,7 +1529,8 @@ struct LoomReflectionRootView: View {
                     eyebrow: "Loom sidecar",
                     body: "Use native file tools first. Capture only selected words, phrases, questions, corrections, or principles that change your understanding."
                 )
-            ]
+            ],
+            touchedAt: Date()
         )
     }
 
@@ -2099,6 +2130,10 @@ private struct ReflectionTopBar: View {
     let isWorkspaceEmpty: Bool
     let isSidebarPresented: Bool
     let isInspectorPresented: Bool
+    // While a source is open, the right-pane toggle drives the NOTE (which IS
+    // the right pane then), not the hidden evidence pane (owner 2026-07-06).
+    let isReadingSource: Bool
+    let isNoteCollapsed: Bool
     let sourceCount: Int
     let onToggleSidebar: () -> Void
     let onToggleInspector: () -> Void
@@ -2207,8 +2242,10 @@ private struct ReflectionTopBar: View {
     private var inspectorButton: some View {
         ReflectionTopBarButton(
             systemName: "sidebar.right",
-            isActive: isInspectorPresented,
-            help: isInspectorPresented ? "Hide evidence" : "Show evidence",
+            isActive: isReadingSource ? !isNoteCollapsed : isInspectorPresented,
+            help: isReadingSource
+                ? (isNoteCollapsed ? "Show notes" : "Hide notes")
+                : (isInspectorPresented ? "Hide evidence" : "Show evidence"),
             action: onToggleInspector
         )
     }
@@ -2310,7 +2347,13 @@ private struct ReflectionSidebar: View {
     }
 
     private func chats(inProject id: String) -> [ReflectionCase] {
-        visibleCases.filter { groupID(for: $0) == id }
+        // Study index (2026-07-06): weeks inside a course read in STUDY order,
+        // not recency — W 1, W 2, … W 10 (Finder-style numeric collation, so
+        // "W 10" sorts after "W 2", not between "W 1" and "W 2"). Ungrouped
+        // chats keep their recency order elsewhere.
+        visibleCases
+            .filter { groupID(for: $0) == id }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
 
     // CHATS + LEARNING sections show only UNGROUPED chats; a grouped chat lives
@@ -2721,6 +2764,13 @@ private struct SidebarProjectHeader: View {
             Spacer(minLength: 0)
 
             if isHovering {
+                // Study index (2026-07-06): the week-count surfaces ONLY on
+                // hover, beside the actions. A course at rest is just its name —
+                // its weeks are the list right below it, so a resting "3" is
+                // furniture the reader doesn't need.
+                Text("\(count)")
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundStyle(.tertiary)
                 Button(action: onNewChat) {
                     Image(systemName: "plus")
                         .font(.system(size: 10, weight: .medium))
@@ -2745,10 +2795,6 @@ private struct SidebarProjectHeader: View {
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
                 .fixedSize()
-            } else {
-                Text("\(count)")
-                    .font(.system(size: 10.5, design: .monospaced))
-                    .foregroundStyle(.secondary)
             }
         }
         .padding(.leading, 8)
@@ -4095,8 +4141,29 @@ private struct ReflectionSidebarRow: View {
         ReflectionLearningTrace.from(reflectionCase).filter { $0.focus == "question" }.count
     }
 
-    private var hasFacts: Bool {
-        openQuestionCount > 0 || !reflectionCase.sources.isEmpty
+    // Study index (2026-07-06): the ONE resting study cue. Not a count — a
+    // numberless amber mark meaning "an open question still lives here, come
+    // back". Everything else (source count, timestamp) hides until hover.
+    private var hasOpenQuestion: Bool { openQuestionCount > 0 }
+
+    // Date-aware relative stamp — the core fix. `updatedAt` is a pre-formatted
+    // "HH:mm" String that threw the day away; `touchedAt` is a real Date, so we
+    // can say now / Today / Yesterday / Mon / Jul 3 / Jul '25. Legacy cases with
+    // no touchedAt fall back to the old string until next touched.
+    private var relativeStamp: String {
+        guard let t = reflectionCase.touchedAt else { return reflectionCase.updatedAt }
+        let cal = Calendar.current
+        let now = Date()
+        if now.timeIntervalSince(t) < 60 { return "now" }
+        if cal.isDateInToday(t) { return "Today" }
+        if cal.isDateInYesterday(t) { return "Yesterday" }
+        if let days = cal.dateComponents([.day], from: t, to: now).day, days < 7 {
+            return t.formatted(.dateTime.weekday(.abbreviated))
+        }
+        if cal.isDate(t, equalTo: now, toGranularity: .year) {
+            return t.formatted(.dateTime.month(.abbreviated).day())
+        }
+        return t.formatted(.dateTime.month(.abbreviated).year(.twoDigits))
     }
 
     var body: some View {
@@ -4116,73 +4183,58 @@ private struct ReflectionSidebarRow: View {
                     Color.clear.frame(width: 22, height: 1)
                 }
 
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 8) {
-                        if isEditingTitle {
-                            TextField("Chat name", text: $titleDraft)
-                                .textFieldStyle(.plain)
-                                .font(.system(size: 13, weight: .medium))
-                                .focused($titleFieldFocused)
-                                .onSubmit { commitRename() }
-                                .onExitCommand { cancelRename() }
-                                // Focus reliably once the field exists (see the
-                                // project row) — the synchronous focus in
-                                // beginRename silently failed, esp. from the menu.
-                                .onAppear { DispatchQueue.main.async { titleFieldFocused = true } }
-                        } else {
-                            Text(reflectionCase.title)
-                                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
-                                .foregroundStyle(.primary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .onTapGesture(count: 2) { beginRename() }
-                        }
-                        Spacer(minLength: 0)
-                        // Compact form: no machine facts -> the time sits on
-                        // the title line and the row stays single-line.
-                        if !hasFacts && !isHovering {
-                            Text(reflectionCase.updatedAt)
-                                .font(.system(size: 10.5, design: .monospaced))
-                                .foregroundStyle(isSelected ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tertiary))
-                        }
+                HStack(spacing: 8) {
+                    if isEditingTitle {
+                        TextField("Chat name", text: $titleDraft)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 13, weight: .medium))
+                            .focused($titleFieldFocused)
+                            .onSubmit { commitRename() }
+                            .onExitCommand { cancelRename() }
+                            // Focus reliably once the field exists (see the
+                            // project row) — the synchronous focus in
+                            // beginRename silently failed, esp. from the menu.
+                            .onAppear { DispatchQueue.main.async { titleFieldFocused = true } }
+                    } else {
+                        Text(reflectionCase.title)
+                            .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .onTapGesture(count: 2) { beginRename() }
                     }
-                    if hasFacts {
-                        HStack(spacing: 10) {
-                            if openQuestionCount > 0 {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "questionmark.circle")
-                                        .font(.system(size: 10))
-                                    Text("\(openQuestionCount)")
-                                        .font(.system(size: 10.5, design: .monospaced))
-                                }
-                                .foregroundStyle(LoomTokens.dsWarning)
-                            }
-                            if !reflectionCase.sources.isEmpty {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "doc")
-                                        .font(.system(size: 10))
-                                    Text("\(reflectionCase.sources.count)")
-                                        .font(.system(size: 10.5, design: .monospaced))
-                                }
-                                .foregroundStyle(.secondary)
-                            }
-                            Spacer(minLength: 0)
-                            if !isHovering {
-                                Text(reflectionCase.updatedAt)
-                                    .font(.system(size: 10.5, design: .monospaced))
-                                    .foregroundStyle(isSelected ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tertiary))
-                            }
-                        }
+                    Spacer(minLength: 0)
+                    // The study index (2026-07-06): a week is one 30pt line —
+                    // its name. At rest the ONLY mark is a numberless amber
+                    // question cue when an open question remains (no doc/HH:mm
+                    // counts). On hover the metadata slot reveals `source ·
+                    // relative-date`; the ⋯ menu overlays the reserved trailing.
+                    if isHovering {
+                        // Just the date at hover (owner 2026-07-06: "时间显示效果不好").
+                        // The source name over-truncated to "W...s" in this narrow
+                        // rail and the stamp wrapped mid-digit — so the source is
+                        // dropped (it belongs in the reader, not the index) and the
+                        // stamp is pinned to ONE non-wrapping line.
+                        Text(relativeStamp)
+                            .font(.system(size: 10.5, design: .monospaced))
+                            .foregroundStyle(isSelected ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tertiary))
+                            .lineLimit(1)
+                            .fixedSize()
+                    } else if hasOpenQuestion {
+                        Image(systemName: "questionmark.circle")
+                            .font(.system(size: 10))
+                            .foregroundStyle(LoomTokens.dsWarning)
                     }
                 }
-                // When hover actions appear at the trailing edge, the text
-                // column yields to them (VSCode label behavior) instead of
-                // being painted over. Resting trailing 12 matches the project +
-                // section count inset for a consistent right edge.
+                // When the ⋯ menu appears at the trailing edge on hover, the
+                // text column yields to it (VSCode label behavior). Resting
+                // trailing 12 matches the project + section-count inset.
                 .padding(.trailing, isHovering ? 34 : 12)
             }
             .padding(.leading, 8)
-            .frame(height: hasFacts ? 46 : 30)
+            // Study index: every week is one constant single line — the
+            // two-line facts form (📄 N / ❓ N / HH:mm) is gone.
+            .frame(height: 30)
             .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -4359,13 +4411,17 @@ private struct GlassReadingCenter: View {
                                 // title, replacing the machine "INPUT: Imported local
                                 // file. Type: pdf; size…" log. Empty for a blank,
                                 // unnamed case — the invitation is the cursor.
-                                if reflectionCase.title != ReflectionCase.untitledPlaceholder || provenanceLabel != nil {
+                                // NAMED case only: the note shows its title and a
+                                // whisper-quiet source line under it. UNNAMED →
+                                // NOTHING: the top bar already shows the source
+                                // name, so a provenance line here just repeats it
+                                // (owner 2026-07-06: 去掉重复信息), and a blank case
+                                // is an invitation — the cursor is the whole of it.
+                                if reflectionCase.title != ReflectionCase.untitledPlaceholder {
                                     VStack(alignment: .leading, spacing: 3) {
-                                        if reflectionCase.title != ReflectionCase.untitledPlaceholder {
-                                            Text(reflectionCase.title)
-                                                .font(.system(size: 26, weight: .semibold, design: .serif))
-                                                .foregroundStyle(.primary)
-                                        }
+                                        Text(reflectionCase.title)
+                                            .font(.system(size: 26, weight: .semibold, design: .serif))
+                                            .foregroundStyle(.primary)
                                         if let provenanceLabel {
                                             Text(provenanceLabel)
                                                 .font(.system(size: 12, design: .serif))
@@ -7385,15 +7441,22 @@ private struct ReflectionPaneResizer: View {
     var growsRightward: Bool = false
     var clamp: (Double) -> CGFloat = { clampedInspectorWidth($0) }
     var label: String = "Resize sources inspector"
+    // The 1pt hairline was too faint to find (owner 2026-07-06: 右栏"无法调整" =
+    // 没看见拖区). On hover the seam thickens + brightens so it reads as grabbable;
+    // the 9pt hit-zone and its resize cursor were already there.
+    @State private var isHovering = false
 
     var body: some View {
         ZStack {
-            Rectangle()
-                .fill(Color(nsColor: .separatorColor))
-                .frame(width: 1)
+            RoundedRectangle(cornerRadius: 1.25, style: .continuous)
+                .fill(isHovering ? AnyShapeStyle(.secondary) : AnyShapeStyle(Color(nsColor: .separatorColor)))
+                .frame(width: isHovering ? 2.5 : 1)
+                .animation(.easeOut(duration: 0.12), value: isHovering)
             ReflectionResizeHandle(width: $width, growsRightward: growsRightward, clamp: clamp)
         }
         .frame(width: 9)
+        .contentShape(Rectangle())
+        .onHover { isHovering = $0 }
         .accessibilityLabel(label)
     }
 }

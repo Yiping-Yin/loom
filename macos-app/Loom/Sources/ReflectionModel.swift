@@ -79,6 +79,12 @@ struct ReflectionCase: Identifiable, Codable, Equatable {
     // nil = ungrouped (a first-class permanent home). Optional + LAST so legacy
     // blobs decode as ungrouped and the memberwise init keeps compiling.
     var projectID: String? = nil
+    // Study index (2026-07-06): a real timestamp so the sidebar can show a
+    // date-aware relative stamp ("Today" / "Mon" / "Jul 3") instead of the bare
+    // `updatedAt` "HH:mm" String, which discards the day. Optional + LAST so
+    // legacy blobs decode as nil (the row then falls back to `updatedAt`) and
+    // the synthesized memberwise init keeps every existing call site compiling.
+    var touchedAt: Date? = nil
 
     /// The default title of a never-named product reflection. It is a
     /// placeholder, not a real title — the center view hides it as a heading

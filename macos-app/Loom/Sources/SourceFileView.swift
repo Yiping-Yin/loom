@@ -25,6 +25,17 @@ struct SourceFileView: View {
     /// line under the cursor; clicking it hands (pageIndex, rect, text) back
     /// so the parent can drop an anchored passage into its note. nil = off.
     var notePassageHandler: ((Int, CGRect, String, NSImage?) -> Void)? = nil
+    /// In-window reader chrome (owner 2026-07-06: "空的太多 · 去掉重复信息").
+    /// The single-window reader used to stack its own header (filename + Done)
+    /// ABOVE the toolbar, duplicating the global top bar and leaving a dead
+    /// band. Instead the toolbar itself carries file identity + close, but ONLY
+    /// in the split-reader context: `barSourceLabel` names the file at the
+    /// toolbar's leading edge — and is left nil when the top bar ALREADY shows
+    /// that name (so nothing is said twice); `showsReaderClose` adds a quiet ✕
+    /// (Esc) at the trailing edge. Both default off, so the two standalone-window
+    /// callers keep their window titlebar chrome unchanged.
+    var barSourceLabel: String? = nil
+    var showsReaderClose: Bool = false
 
     @State private var resolvedURL: URL?
     @State private var resolveError: String?
@@ -99,6 +110,17 @@ struct SourceFileView: View {
         return copy
     }
 
+    /// Opt into the in-window split-reader chrome: a leading file label (nil to
+    /// stay silent when the top bar already names it) and a trailing ✕ close.
+    /// Chainable, like `onNotePassage`, so the standalone-window callers are
+    /// untouched.
+    func readerChrome(label: String?, showsClose: Bool) -> SourceFileView {
+        var copy = self
+        copy.barSourceLabel = label
+        copy.showsReaderClose = showsClose
+        return copy
+    }
+
     struct AskMessage: Identifiable, Equatable {
         let id: UUID
         let role: Role
@@ -119,6 +141,23 @@ struct SourceFileView: View {
     /// PDFView LOOM already hosts, so the reader stops feeling hand-built.
     @ViewBuilder private var pdfToolbar: some View {
         HStack(spacing: 8) {
+            // Leading file identity — the reader's ONE name (owner 2026-07-06),
+            // shown only when the global top bar isn't already saying it (the
+            // parent passes nil to stay silent). Capped + middle-truncated so a
+            // long filename can't shove the page controls off-centre.
+            if let barSourceLabel {
+                Image(systemName: "doc.richtext")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                Text(barSourceLabel)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: 200, alignment: .leading)
+                    .layoutPriority(1)
+                Divider().frame(height: 16)
+            }
             Button { toggleSidebar() } label: { Image(systemName: "sidebar.left") }
                 .help("Show pages & contents")
                 .foregroundStyle(sidebarMode != nil ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
@@ -182,6 +221,17 @@ struct SourceFileView: View {
                 .help("Find in document (⌘F)").keyboardShortcut("f", modifiers: .command)
             Button { pdfHolder.toggleFullScreen() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .help("Full screen (⌃⌘F)").keyboardShortcut("f", modifiers: [.control, .command])
+
+            // The reader's close (owner 2026-07-06): a quiet ✕ that reuses the
+            // find bar's own close glyph — NOT a filled accent block (青芒 =
+            // signal only). Replaces the deleted header's blue "Done". Esc yields
+            // to the find bar first when it's open, then closes the reader.
+            if showsReaderClose {
+                Divider().frame(height: 16)
+                Button { onClose() } label: { Image(systemName: "xmark") }
+                    .help("Close reader (Esc)")
+                    .keyboardShortcut(pdfHolder.isFindOpen ? nil : .cancelAction)
+            }
         }
         .buttonStyle(.plain)
         .font(.system(size: 12.5))
