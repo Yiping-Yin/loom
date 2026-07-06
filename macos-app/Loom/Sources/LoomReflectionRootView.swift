@@ -4349,7 +4349,11 @@ private struct GlassReadingCenter: View {
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )
-                                .frame(height: 72)
+                                // 52 (≈ top chrome), not 72: resting content clears
+                                // the bar by 60, so it stays fully opaque and a
+                                // capture card at the document top no longer looks
+                                // clipped; only scrolled ink dissolves (owner 2026-07-06).
+                                .frame(height: 52)
                                 Rectangle().fill(Color.black)
                             }
                         )
@@ -5351,7 +5355,7 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             }
             insertion.append(card)
             insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
-            insertText(insertion, replacementRange: selectedRange())
+            insertText(insertion, replacementRange: NSRange(location: location, length: 0))
         }
 
         /// A non-image file in the flow: a compact white paper chip
@@ -5371,7 +5375,10 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 .paragraphStyle: GlassDocumentEditor.documentParagraphStyle,
             ]
             let insertion = NSMutableAttributedString()
-            let location = selectedRange().location
+            // Land the capture where the cursor is — but if it was never placed
+            // (still at the very start), append at the end so captures accumulate
+            // in reading order and land fully in view, not stacked above the note.
+            let location = selectedRange().location == 0 ? (string as NSString).length : selectedRange().location
             let text = string as NSString
             if location > 0, text.character(at: location - 1) != 0x0A {
                 insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
@@ -5393,7 +5400,9 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 .paragraphStyle: GlassDocumentEditor.documentParagraphStyle,
             ]
             let insertion = NSMutableAttributedString()
-            let location = selectedRange().location
+            // Land at the cursor, or append at the end if it was never placed
+            // (so captures accumulate in reading order, fully in view).
+            let location = selectedRange().location == 0 ? (string as NSString).length : selectedRange().location
             let text = string as NSString
             let leadingNewline = location > 0 && text.character(at: location - 1) != 0x0A
             if leadingNewline {
