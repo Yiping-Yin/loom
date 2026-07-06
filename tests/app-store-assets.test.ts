@@ -230,18 +230,18 @@ test('mac app launch scene presents the main window by default', () => {
   assert.doesNotMatch(source, /WindowGroup\("Loom",\s*id:\s*MainWindow\.id\)/);
 });
 
-test('Moon Ledger icon pipeline keeps web and macOS assets aligned', () => {
+test('Loom interlaced L icon pipeline keeps web and macOS assets aligned', () => {
   const script = fs.readFileSync(path.join(repoRoot, 'scripts', 'generate-icons.mjs'), 'utf8');
   const publicSvg = fs.readFileSync(path.join(repoRoot, 'public', 'icon.svg'), 'utf8');
   const sourceSvg = fs.readFileSync(path.join(repoRoot, 'public', 'brand', 'loom_lunar_comet_icon.svg'), 'utf8');
   const sourcePng = fs.readFileSync(path.join(repoRoot, 'public', 'brand', 'loom_lunar_comet_icon.png'));
 
+  assert.match(script, /loom-clever-interlaced-l\.svg/);
   assert.match(script, /loom_lunar_comet_icon\.png/);
-  assert.match(script, /loom_lunar_comet_icon\.svg/);
   assert.match(script, /loom_lunar_orb\.png/);
-  assert.match(script, /Generated Loom Moon Ledger icons/);
-  assert.match(sourceSvg, /Loom Moon icon/);
-  assert.match(sourceSvg, /\/brand\/loom_lunar_comet_icon\.png/);
+  assert.match(script, /Generated Loom interlaced L icons/);
+  assert.match(sourceSvg, /LOOM interlaced L mark/);
+  assert.match(sourceSvg, /one woven thread interlaces/);
   assert.equal(publicSvg, sourceSvg);
   assert.deepEqual(pngSize('public/brand/loom_lunar_comet_icon.png'), { width: 1024, height: 1024 });
   assert.deepEqual(pngSize('public/brand/loom_lunar_orb.png'), { width: 256, height: 256 });

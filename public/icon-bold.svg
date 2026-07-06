@@ -1,55 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">LOOM interlaced L mark</title>
+  <desc id="desc">A reduced LOOM app icon where one woven thread interlaces with a clean L mark.</desc>
   <defs>
-    <linearGradient id="strokeSilver" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#d5d7db" />
-      <stop offset="16%" stop-color="#f5f6f8" />
-      <stop offset="50%" stop-color="#9fa3aa" />
-      <stop offset="84%" stop-color="#f5f6f8" />
-      <stop offset="100%" stop-color="#d5d7db" />
+    <linearGradient id="tile" x1="14%" y1="7%" x2="88%" y2="96%">
+      <stop offset="0%" stop-color="#2ac8dc" />
+      <stop offset="48%" stop-color="#146d9c" />
+      <stop offset="100%" stop-color="#082038" />
     </linearGradient>
-    <linearGradient id="beamSilver" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#9da0a6" />
-      <stop offset="18%" stop-color="#f7f7f8" />
-      <stop offset="50%" stop-color="#7c7f86" />
-      <stop offset="82%" stop-color="#f7f7f8" />
-      <stop offset="100%" stop-color="#9da0a6" />
+    <radialGradient id="tileLight" cx="30%" cy="16%" r="78%">
+      <stop offset="0%" stop-color="#bafcff" stop-opacity="0.58" />
+      <stop offset="42%" stop-color="#3bc2e7" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#082038" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="silver" x1="20%" y1="8%" x2="86%" y2="96%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="62%" stop-color="#dcecf2" />
+      <stop offset="100%" stop-color="#aec7d2" />
     </linearGradient>
-    <filter id="blueGlowWide" x="-80%" y="-100%" width="260%" height="300%">
-      <feGaussianBlur stdDeviation="8" />
+    <linearGradient id="thread" x1="16%" y1="44%" x2="90%" y2="68%">
+      <stop offset="0%" stop-color="#3ee1ff" />
+      <stop offset="42%" stop-color="#f6fdff" />
+      <stop offset="100%" stop-color="#58b9ff" />
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#00101f" flood-opacity="0.42" />
     </filter>
-    <filter id="beamGlow" x="-40%" y="-300%" width="180%" height="700%">
-      <feGaussianBlur stdDeviation="4" />
+    <filter id="glow" x="-40%" y="-95%" width="180%" height="290%">
+      <feGaussianBlur stdDeviation="10" />
     </filter>
   </defs>
-  <rect width="512" height="512" fill="#020407" />
-  <g opacity="0.18" stroke="#d9dde6" stroke-width="1">
-    <line x1="0" y1="138" x2="512" y2="138" />
-    <line x1="0" y1="256" x2="512" y2="256" />
-    <line x1="0" y1="374" x2="512" y2="374" />
-    <line x1="77" y1="0" x2="77" y2="512" />
-    <line x1="173" y1="0" x2="173" y2="512" />
-    <line x1="256" y1="0" x2="256" y2="512" />
-    <line x1="339" y1="0" x2="339" y2="512" />
-    <line x1="435" y1="0" x2="435" y2="512" />
-  </g>
-  <g transform="translate(62 83)">
-    <rect x="0" y="168" width="388" height="6" rx="3" fill="#5daeff" filter="url(#beamGlow)" opacity="0.7" />
-    <g opacity="0.92">
-      <rect x="24" y="20" width="8" height="166" rx="4" fill="#72bcff" filter="url(#blueGlowWide)" />
-      <rect x="314" y="16" width="8" height="174" rx="4" fill="#72bcff" filter="url(#blueGlowWide)" />
-      <rect x="458" y="16" width="8" height="174" rx="4" fill="#72bcff" filter="url(#blueGlowWide)" />
-    </g>
-    <g fill="none" stroke="url(#strokeSilver)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M 28 18 L 28 190 L 114 190" />
-      <path d="M 98 170
-               C 98 73, 184 73, 256 170
-               C 328 267, 414 267, 414 170
-               C 414 73, 328 73, 256 170
-               C 184 267, 98 267, 98 170" />
-      <path d="M 318 16 L 318 190" />
-      <path d="M 318 16 L 388 86 L 458 16" />
-      <path d="M 458 16 L 458 190" />
-    </g>
-    <rect x="63" y="167" width="289" height="7" rx="3.5" fill="url(#beamSilver)" opacity="0.94" />
+
+  <rect x="96" y="96" width="832" height="832" rx="190" fill="url(#tile)" />
+  <rect x="96" y="96" width="832" height="832" rx="190" fill="url(#tileLight)" />
+  <rect x="97.5" y="97.5" width="829" height="829" rx="188.5" fill="none" stroke="#c1f6ff" stroke-width="3" opacity="0.32" />
+
+  <g filter="url(#shadow)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 352 294 V 704 H 768" stroke="url(#silver)" stroke-width="76" />
+    <path d="M 236 524 C 350 442, 486 456, 578 536 C 654 602, 720 638, 838 638" stroke="#087faa" stroke-width="92" opacity="0.22" filter="url(#glow)" />
+    <path d="M 236 524 C 350 442, 486 456, 578 536 C 654 602, 720 638, 838 638" stroke="url(#thread)" stroke-width="64" />
+    <path d="M 352 294 V 470" stroke="url(#silver)" stroke-width="76" />
+    <path d="M 352 616 V 704 H 768" stroke="url(#silver)" stroke-width="76" />
   </g>
 </svg>

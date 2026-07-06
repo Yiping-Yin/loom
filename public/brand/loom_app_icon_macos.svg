@@ -1,74 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
-  <title id="title">Loom macOS app icon</title>
-  <desc id="desc">Compact Loom monogram app icon optimized for macOS Dock sizes.</desc>
+  <title id="title">LOOM interlaced L mark</title>
+  <desc id="desc">A reduced LOOM app icon where one woven thread interlaces with a clean L mark.</desc>
   <defs>
-    <linearGradient id="panelFill" x1="8%" y1="6%" x2="92%" y2="94%">
-      <stop offset="0%" stop-color="#08111f"></stop>
-      <stop offset="58%" stop-color="#050910"></stop>
-      <stop offset="100%" stop-color="#030507"></stop>
+    <linearGradient id="tile" x1="14%" y1="7%" x2="88%" y2="96%">
+      <stop offset="0%" stop-color="#2ac8dc" />
+      <stop offset="48%" stop-color="#146d9c" />
+      <stop offset="100%" stop-color="#082038" />
     </linearGradient>
-    <linearGradient id="panelStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#17395b"></stop>
-      <stop offset="45%" stop-color="#0f2238"></stop>
-      <stop offset="100%" stop-color="#1e4468"></stop>
-    </linearGradient>
-    <radialGradient id="panelBloom" cx="50%" cy="18%" r="92%">
-      <stop offset="0%" stop-color="#1b4d83" stop-opacity="0.46"></stop>
-      <stop offset="36%" stop-color="#0f2744" stop-opacity="0.2"></stop>
-      <stop offset="100%" stop-color="#09121f" stop-opacity="0"></stop>
+    <radialGradient id="tileLight" cx="30%" cy="16%" r="78%">
+      <stop offset="0%" stop-color="#bafcff" stop-opacity="0.58" />
+      <stop offset="42%" stop-color="#3bc2e7" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#082038" stop-opacity="0" />
     </radialGradient>
-    <linearGradient id="silverStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#d0d2d8"></stop>
-      <stop offset="20%" stop-color="#f5f6f8"></stop>
-      <stop offset="50%" stop-color="#a1a5ae"></stop>
-      <stop offset="82%" stop-color="#f5f6f8"></stop>
-      <stop offset="100%" stop-color="#d0d2d8"></stop>
+    <linearGradient id="silver" x1="20%" y1="8%" x2="86%" y2="96%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="62%" stop-color="#dcecf2" />
+      <stop offset="100%" stop-color="#aec7d2" />
     </linearGradient>
-    <linearGradient id="beamSilver" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#868b95"></stop>
-      <stop offset="18%" stop-color="#f7f7f8"></stop>
-      <stop offset="50%" stop-color="#70747d"></stop>
-      <stop offset="82%" stop-color="#f7f7f8"></stop>
-      <stop offset="100%" stop-color="#868b95"></stop>
+    <linearGradient id="thread" x1="16%" y1="44%" x2="90%" y2="68%">
+      <stop offset="0%" stop-color="#3ee1ff" />
+      <stop offset="42%" stop-color="#f6fdff" />
+      <stop offset="100%" stop-color="#58b9ff" />
     </linearGradient>
-    <filter id="blueGlowWide" x="-100%" y="-100%" width="300%" height="300%">
-      <feGaussianBlur stdDeviation="18"></feGaussianBlur>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#00101f" flood-opacity="0.42" />
     </filter>
-    <filter id="beamGlow" x="-60%" y="-400%" width="220%" height="900%">
-      <feGaussianBlur stdDeviation="10"></feGaussianBlur>
-    </filter>
-    <filter id="halo" x="-120%" y="-120%" width="340%" height="340%">
-      <feGaussianBlur stdDeviation="16"></feGaussianBlur>
-    </filter>
-    <filter id="panelShadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="18"></feGaussianBlur>
+    <filter id="glow" x="-40%" y="-95%" width="180%" height="290%">
+      <feGaussianBlur stdDeviation="10" />
     </filter>
   </defs>
 
-  <rect width="1024" height="1024" fill="#05070a"></rect>
-  <rect x="96" y="96" width="832" height="832" rx="214" fill="#000000" opacity="0.24" filter="url(#panelShadow)"></rect>
-  <rect x="108" y="108" width="808" height="808" rx="206" fill="url(#panelFill)"></rect>
-  <rect x="108" y="108" width="808" height="808" rx="206" fill="url(#panelBloom)"></rect>
-  <rect x="108.5" y="108.5" width="807" height="807" rx="205.5" fill="none" stroke="url(#panelStroke)" stroke-width="3"></rect>
+  <rect x="96" y="96" width="832" height="832" rx="190" fill="url(#tile)" />
+  <rect x="96" y="96" width="832" height="832" rx="190" fill="url(#tileLight)" />
+  <rect x="97.5" y="97.5" width="829" height="829" rx="188.5" fill="none" stroke="#c1f6ff" stroke-width="3" opacity="0.32" />
 
-  <g transform="translate(154 196)">
-    <rect x="18" y="302" width="642" height="12" rx="6" fill="#63b2ff" opacity="0.72" filter="url(#beamGlow)"></rect>
-    <rect x="108" y="305" width="536" height="8" rx="4" fill="url(#beamSilver)" opacity="0.95"></rect>
-
-    <rect x="54" y="58" width="18" height="504" rx="9" fill="#74bdff" opacity="0.88" filter="url(#blueGlowWide)"></rect>
-    <rect x="528" y="50" width="18" height="520" rx="9" fill="#74bdff" opacity="0.72" filter="url(#blueGlowWide)"></rect>
-    <rect x="684" y="50" width="18" height="520" rx="9" fill="#74bdff" opacity="0.72" filter="url(#blueGlowWide)"></rect>
-
-    <g fill="none" stroke="url(#silverStroke)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M 66 64 L 66 554 L 206 554"></path>
-      <path d="M 156 308&#xA;               C 156 146, 288 146, 400 308&#xA;               C 512 470, 644 470, 644 308&#xA;               C 644 146, 512 146, 400 308&#xA;               C 288 470, 156 470, 156 308"></path>
-      <path d="M 536 56 L 536 562"></path>
-      <path d="M 536 56 L 610 140 L 684 56"></path>
-      <path d="M 684 56 L 684 562"></path>
-    </g>
-
-    <circle cx="66" cy="64" r="14" fill="#f2f7ff" opacity="0.68" filter="url(#halo)"></circle>
-    <circle cx="536" cy="56" r="14" fill="#f2f7ff" opacity="0.62" filter="url(#halo)"></circle>
-    <circle cx="684" cy="56" r="14" fill="#f2f7ff" opacity="0.62" filter="url(#halo)"></circle>
+  <g filter="url(#shadow)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 352 294 V 704 H 768" stroke="url(#silver)" stroke-width="76" />
+    <path d="M 236 524 C 350 442, 486 456, 578 536 C 654 602, 720 638, 838 638" stroke="#087faa" stroke-width="92" opacity="0.22" filter="url(#glow)" />
+    <path d="M 236 524 C 350 442, 486 456, 578 536 C 654 602, 720 638, 838 638" stroke="url(#thread)" stroke-width="64" />
+    <path d="M 352 294 V 470" stroke="url(#silver)" stroke-width="76" />
+    <path d="M 352 616 V 704 H 768" stroke="url(#silver)" stroke-width="76" />
   </g>
 </svg>
