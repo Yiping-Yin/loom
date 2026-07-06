@@ -4245,7 +4245,23 @@ private struct GlassReadingCenter: View {
     @State private var headingJumpTarget: Int?
 
     private var contentSteps: [ReflectionStep] {
-        reflectionCase.steps.filter { !$0.items.isEmpty }
+        // Machine import logs ("Imported local source: … Type: pdf; size: …")
+        // are chrome, not the book (owner 2026-07-06 — cover the chrome test).
+        // Drop them at render; the source lives quietly in the provenance line +
+        // the right rail. Steps that are ONLY import logs disappear entirely.
+        reflectionCase.steps.compactMap { step in
+            let kept = step.items.filter { !$0.hasPrefix("Imported local source:") }
+            guard !kept.isEmpty else { return nil }
+            guard kept.count != step.items.count else { return step }
+            return ReflectionStep(id: step.id, title: step.title, subtitle: step.subtitle, items: kept)
+        }
+    }
+
+    /// Block A provenance: the source(s) this note is about, as a whisper-quiet
+    /// one-liner under the title — not a machine "INPUT" import log.
+    private var provenanceLabel: String? {
+        let labels = reflectionCase.sources.map(\.label).filter { !$0.isEmpty }
+        return labels.isEmpty ? nil : labels.joined(separator: " · ")
     }
 
     private var traces: [ReflectionLearningTrace] {
@@ -4290,11 +4306,25 @@ private struct GlassReadingCenter: View {
                                 // blank case is an invitation, not a stage (owner
                                 // 2026-07-06: 初始不要这个文字). The title appears
                                 // once the user names the chat.
-                                if reflectionCase.title != ReflectionCase.untitledPlaceholder {
-                                    Text(reflectionCase.title)
-                                        .font(.system(size: 26, weight: .semibold, design: .serif))
-                                        .foregroundStyle(.primary)
-                                        .padding(.top, 8)
+                                // Title + Block A provenance, tight (owner 2026-07-06):
+                                // the source is a whisper-quiet one-liner under the
+                                // title, replacing the machine "INPUT: Imported local
+                                // file. Type: pdf; size…" log. Empty for a blank,
+                                // unnamed case — the invitation is the cursor.
+                                if reflectionCase.title != ReflectionCase.untitledPlaceholder || provenanceLabel != nil {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        if reflectionCase.title != ReflectionCase.untitledPlaceholder {
+                                            Text(reflectionCase.title)
+                                                .font(.system(size: 26, weight: .semibold, design: .serif))
+                                                .foregroundStyle(.primary)
+                                        }
+                                        if let provenanceLabel {
+                                            Text(provenanceLabel)
+                                                .font(.system(size: 12, design: .serif))
+                                                .foregroundStyle(.tertiary)
+                                        }
+                                    }
+                                    .padding(.top, 8)
                                 }
 
                                 // The document IS the input: writing happens
