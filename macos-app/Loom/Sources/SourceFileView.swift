@@ -3242,18 +3242,36 @@ final class LoomPDFKitView: PDFView {
     /// commit flash on the exact captured rect.
     private func relightMark() {
         guard onNotePassage != nil else { hideBadge(); return }
-        guard let t = liveSelectionTarget() ?? pendingPassage,
-              let document, let page = document.page(at: t.page) else {
-            noteTick.isHidden = true; lineHighlight.isHidden = true; return
+        // Where the tick sits: the trailing edge of the selection's LAST line (so
+        // a multi-line grab pins where the selection ends, not a tall bar down the
+        // margin), else the hovered line. Selection still WINS.
+        let v: CGRect?
+        if let sel = currentSelection, liveSelectionTarget() != nil {
+            v = lastLineViewRect(of: sel)
+        } else if let p = pendingPassage, let document, let page = document.page(at: p.page) {
+            let c1 = convert(CGPoint(x: p.rect.minX, y: p.rect.minY), from: page)
+            let c2 = convert(CGPoint(x: p.rect.maxX, y: p.rect.maxY), from: page)
+            v = CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y), width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
+        } else {
+            v = nil
         }
-        let c1 = convert(CGPoint(x: t.rect.minX, y: t.rect.minY), from: page)
-        let c2 = convert(CGPoint(x: t.rect.maxX, y: t.rect.maxY), from: page)
-        let v = CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y), width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
+        guard let r = v else { noteTick.isHidden = true; lineHighlight.isHidden = true; return }
         lineHighlight.isHidden = true
         let tw: CGFloat = 12
-        let tx = min(v.maxX + 6, bounds.maxX - tw - 2)
-        noteTick.frame = NSRect(x: tx, y: v.minY - 2, width: tw, height: v.height + 4)
+        let tx = min(r.maxX + 6, bounds.maxX - tw - 2)
+        noteTick.frame = NSRect(x: tx, y: r.minY - 2, width: tw, height: r.height + 4)
         noteTick.isHidden = false
+    }
+
+    /// The selection's LAST line as a view-space rect (for pinning the tick to
+    /// where a multi-line selection ends). Falls back to the whole-selection box.
+    private func lastLineViewRect(of sel: PDFSelection) -> CGRect? {
+        let line = sel.selectionsByLine().last ?? sel
+        guard let page = line.pages.first else { return nil }
+        let b = line.bounds(for: page)
+        let c1 = convert(CGPoint(x: b.minX, y: b.minY), from: page)
+        let c2 = convert(CGPoint(x: b.maxX, y: b.maxY), from: page)
+        return CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y), width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
     }
 
     /// Capture EXACTLY the given target (selection or line) — flash its exact

@@ -1904,7 +1904,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /final class LineHoverHighlight: NSView/);
   assert.match(sourceFileView, /lineHighlight\.flash\(\)/);
   assert.match(sourceFileView, /func liveSelectionTarget\(\) -> \(page: Int, rect: CGRect, text: String\)\?/);
-  assert.match(sourceFileView, /liveSelectionTarget\(\) \?\? pendingPassage/);
+  assert.match(sourceFileView, /if let sel = currentSelection, liveSelectionTarget\(\) != nil/);
+  assert.match(sourceFileView, /func lastLineViewRect\(of sel: PDFSelection\) -> CGRect\?/);
   assert.match(sourceFileView, /\.PDFViewSelectionChanged, object: self/);
   assert.match(sourceFileView, /if let armed \{[\s\S]{0,120}commit\(page: armed\.page/);
   // Snip polish (owner 2026-07-06): dim OUTSIDE the box (screenshot-style
