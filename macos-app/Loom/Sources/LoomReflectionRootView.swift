@@ -192,6 +192,18 @@ struct LoomReflectionRootView: View {
                 }
 
                 HStack(spacing: 0) {
+                    // In-window reader (owner 2026-07-06): when a source is open
+                    // it docks as a COLUMN to the LEFT of the note — read beside
+                    // write, both visible. The note editor never unmounts, so its
+                    // capture observer stays alive (the exact thing a docked
+                    // auxiliary window would have broken). Done / ⌃⌘F live in the
+                    // reader's own header + toolbar.
+                    if let target = anchorPreview {
+                        readerColumn(target)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .transition(.move(edge: .leading).combined(with: .opacity))
+                        ReflectionDivider()
+                    }
                     // The center: a reading document ON the glass once the
                     // user has material; before that it becomes a restrained
                     // start surface instead of a fake project/document.
@@ -221,7 +233,7 @@ struct LoomReflectionRootView: View {
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    if isInspectorPresented {
+                    if isInspectorPresented && anchorPreview == nil {
                         ReflectionPaneResizer(width: $inspectorWidth)
                         // Owner directive 2026-07-03: the right pane wears the
                         // launcher design — Review / Terminal / Browser /
@@ -358,16 +370,10 @@ struct LoomReflectionRootView: View {
         )) {
             CaptureSheet(payload: $capturePayload, onSaved: handleCaptureSaved)
         }
-        // Full-window reader (owner 2026-07-06: the PDF needs real fullscreen —
-        // a `.sheet` can never fill or go fullscreen, so present the reader as a
-        // top overlay that fills the whole window; the reader toolbar's ⌃⌘F then
-        // toggles macOS fullscreen on the now-unsheeted window).
-        .overlay {
-            if let target = anchorPreview {
-                readerFullScreen(target)
-                    .transition(.opacity)
-            }
-        }
+        // Reader is an in-window COLUMN beside the note now (owner 2026-07-06),
+        // not a full-window overlay — see the center HStack above. Read-beside-
+        // write: the note editor stays mounted the whole time, so its capture
+        // observer never drops. The animation drives the column sliding in.
         .animation(.easeOut(duration: 0.16), value: anchorPreview != nil)
         .onReceive(NotificationCenter.default.publisher(for: .loomReflectionAnchorJump)) { note in
             guard let sourceID = note.userInfo?["sourceID"] as? String else { return }
@@ -965,11 +971,12 @@ struct LoomReflectionRootView: View {
     /// `precise` = the rect was recovered (reader will highlight the exact
     /// passage). false = page-only fallback: the status + landing flash say so
     /// honestly rather than pretending the anchor is exact.
-    /// The reader as a full-window overlay (replaces the old sheet so it can
-    /// fill the window and go fullscreen). Slim header + Done; the reader's own
-    /// toolbar carries zoom / page / ⌃⌘F fullscreen.
+    /// The reader as an in-window COLUMN beside the note (owner 2026-07-06 —
+    /// read beside write). Slim header + Done; the reader's own toolbar carries
+    /// zoom / page / ⌃⌘F fullscreen. Stays open across captures so you watch each
+    /// quote land in the note to the right.
     @ViewBuilder
-    private func readerFullScreen(_ target: AnchorPreviewTarget) -> some View {
+    private func readerColumn(_ target: AnchorPreviewTarget) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 Image(systemName: "doc.richtext")
@@ -996,6 +1003,7 @@ struct LoomReflectionRootView: View {
                     noteFromPassage(sourceID: target.sourceID, page: page, rect: rect, text: text, image: image)
                 }
         }
+        .padding(.top, reflectionSidebarTopClearance)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
@@ -1025,7 +1033,8 @@ struct LoomReflectionRootView: View {
             URLQueryItem(name: "text", value: String(quote.prefix(120))),
         ]
         let anchorURL = comps.string ?? "loom://anchor?src=\(sourceID)&page=\(page)"
-        anchorPreview = nil
+        // Keep the reader open — it's a column beside the note now, so you watch
+        // the quote land to the right and keep reading (read-beside-write).
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             if let image {
                 // In-app appshot: ONE clean clickable card, no scrambled quote

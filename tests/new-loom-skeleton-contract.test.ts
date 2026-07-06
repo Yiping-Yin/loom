@@ -1970,11 +1970,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /if rect\.isEmpty \{[\s\S]{0,220}bounds\.maxY/);
   assert.match(nativeRoot, /struct AnchorPreviewTarget: Identifiable/);
   assert.match(nativeRoot, /static let loomReflectionAnchorJump = Notification\.Name/);
-  // Full-window reader overlay (owner 2026-07-06): the reader is no longer a
-  // .sheet (a sheet can't fill/fullscreen) — it's a top overlay that fills the
-  // window so ⌃⌘F can toggle real macOS fullscreen.
-  assert.match(nativeRoot, /if let target = anchorPreview \{[\s\S]{0,60}readerFullScreen\(target\)/);
-  assert.match(nativeRoot, /private func readerFullScreen\(_ target: AnchorPreviewTarget\) -> some View/);
+  // In-window split reader (owner 2026-07-06): the reader is no longer a
+  // full-window overlay — it docks as a COLUMN beside the note (read beside
+  // write) so the note editor never unmounts and its capture observer survives.
+  assert.match(nativeRoot, /if let target = anchorPreview \{[\s\S]{0,80}readerColumn\(target\)/);
+  assert.match(nativeRoot, /private func readerColumn\(_ target: AnchorPreviewTarget\) -> some View/);
+  assert.match(nativeRoot, /if isInspectorPresented && anchorPreview == nil/);
   assert.match(nativeRoot, /SourceFileView\(fileURL: target\.fileURL\) \{ anchorPreview = nil \}/);
   assert.match(nativeRoot, /Button \{ anchorPreview = nil \} label: \{[\s\S]{0,60}Text\("Done"\)/);
   assert.match(nativeRoot, /\.keyboardShortcut\(\.cancelAction\)/);
