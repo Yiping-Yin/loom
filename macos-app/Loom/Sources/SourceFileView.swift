@@ -3277,10 +3277,14 @@ final class LoomPDFKitView: PDFView {
     /// Capture EXACTLY the given target (selection or line) — flash its exact
     /// rect as the receipt (never the whole row), clear the selection, and hand
     /// it to the note through the same sink as ⌘E / right-click.
+    ///
+    /// Owner 2026-07-06: linear text (a whole line or a drag-selection) lands as
+    /// a CLEAN TEXT QUOTE at evidence altitude (image = nil → insertPassageAnchor
+    /// → indented, searchable, editable, clickable). Only ⌥-drag (captureRegion)
+    /// stays an image card, since a rectangular selection scrambles word order.
     private func commit(page: Int, rect: CGRect, text: String) {
-        let image = document?.page(at: page).flatMap {
-            Self.regionImage(from: $0, pageRect: rect.insetBy(dx: -10, dy: -7))
-        }
+        let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty else { return }
         if let pg = document?.page(at: page) {
             let c1 = convert(CGPoint(x: rect.minX, y: rect.minY), from: pg)
             let c2 = convert(CGPoint(x: rect.maxX, y: rect.maxY), from: pg)
@@ -3291,7 +3295,7 @@ final class LoomPDFKitView: PDFView {
         noteTick.isHidden = true
         pendingPassage = nil
         clearSelection()
-        onNotePassage?(page, rect, text, image)
+        onNotePassage?(page, rect, clean, nil)
     }
 
     /// Re-light the mark whenever the selection changes — covers keyboard

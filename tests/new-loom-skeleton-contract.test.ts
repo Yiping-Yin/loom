@@ -1871,7 +1871,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /final class NoteHoverTick: NSView/);
   assert.doesNotMatch(sourceFileView, /NSColor\.controlAccentColor/);
   assert.match(sourceFileView, /page\.selectionForLine\(at: pagePoint\)/);
-  assert.match(sourceFileView, /onNotePassage\?\(page, rect, text, image\)/);
+  // Linear text (line / drag-selection) lands as a clean TEXT QUOTE at evidence
+  // altitude (image = nil); only ⌥-drag stays an image card (owner 2026-07-06).
+  assert.match(sourceFileView, /onNotePassage\?\(page, rect, clean, nil\)/);
   assert.match(nativeRoot, /private func noteFromPassage\(sourceID: String, page: Int, rect: CGRect, text: String, image: NSImage\? = nil, precise: Bool = true\)/);
   assert.match(nativeRoot, /static let loomReflectionInsertPassage = Notification\.Name/);
   assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text, image in/);
