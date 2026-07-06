@@ -1871,7 +1871,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /final class NoteHoverTick: NSView/);
   assert.doesNotMatch(sourceFileView, /NSColor\.controlAccentColor/);
   assert.match(sourceFileView, /page\.selectionForLine\(at: pagePoint\)/);
-  assert.match(sourceFileView, /onNotePassage\?\(pending\.page, pending\.rect, pending\.text, image\)/);
+  assert.match(sourceFileView, /onNotePassage\?\(page, rect, text, image\)/);
   assert.match(nativeRoot, /private func noteFromPassage\(sourceID: String, page: Int, rect: CGRect, text: String, image: NSImage\? = nil, precise: Bool = true\)/);
   assert.match(nativeRoot, /static let loomReflectionInsertPassage = Notification\.Name/);
   assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text, image in/);
@@ -1898,11 +1898,15 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /final class SnipOverlayView: NSView/);
   assert.match(sourceFileView, /event\.modifierFlags\.contains\(\.option\)/);
   assert.match(sourceFileView, /private func captureRegion\(viewRect: CGRect\)/);
-  // Hover-to-note reliability (owner 2026-07-06): highlight the whole line,
-  // click anywhere on it to capture (drag still selects), and flash to confirm.
+  // Grab what's lit (owner 2026-07-06): a live text SELECTION wins the tick over
+  // the hovered line — you can grab part of a line, not just the whole row — and
+  // the full-line wash is gone; the flash confirms the exact captured rect.
   assert.match(sourceFileView, /final class LineHoverHighlight: NSView/);
   assert.match(sourceFileView, /lineHighlight\.flash\(\)/);
-  assert.match(sourceFileView, /if wasClick, onNotePassage != nil, pendingPassage != nil/);
+  assert.match(sourceFileView, /func liveSelectionTarget\(\) -> \(page: Int, rect: CGRect, text: String\)\?/);
+  assert.match(sourceFileView, /liveSelectionTarget\(\) \?\? pendingPassage/);
+  assert.match(sourceFileView, /\.PDFViewSelectionChanged, object: self/);
+  assert.match(sourceFileView, /if let armed \{[\s\S]{0,120}commit\(page: armed\.page/);
   // Snip polish (owner 2026-07-06): dim OUTSIDE the box (screenshot-style
   // spotlight) + live dimensions + crosshair + a green flash on release.
   assert.match(sourceFileView, /mask\.windingRule = \.evenOdd/);

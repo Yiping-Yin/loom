@@ -3024,6 +3024,7 @@ private struct LoomPDFView: NSViewRepresentable {
         view.backgroundColor = NSColor.windowBackgroundColor
         view.onNote = onNote
         view.onNotePassage = onNotePassage
+        view.startSelectionObserverIfNeeded()
         loadDocument(into: view, from: fileURL)
         DispatchQueue.main.async {
             holder.attach(view)
@@ -3137,6 +3138,13 @@ final class LoomPDFKitView: PDFView {
     // still works. A success flash confirms the grab in place.
     private var clickDownPoint: CGPoint?
     private var didDrag = false
+    // "Grab what's lit" (owner 2026-07-06): a live text SELECTION wins the tick
+    // over the hovered line, so you can grab part of a line — the whole-line wash
+    // is gone. Armed at mouse-down (the text view collapses the selection on click,
+    // so we capture it before that) when the press lands on the lit selection/tick.
+    private var selectionObserver: NSObjectProtocol?
+    private var armedSelection: (page: Int, rect: CGRect, text: String)?
+    private var hadSelectionAtDown = false
     private lazy var lineHighlight: LineHoverHighlight = {
         let view = LineHoverHighlight()
         view.isHidden = true
@@ -3176,6 +3184,9 @@ final class LoomPDFKitView: PDFView {
     override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
         guard onNotePassage != nil else { hideBadge(); return }
+        // A live selection owns the mark — hovering must not steal the target
+        // away from the words you just selected.
+        if liveSelectionTarget() != nil { return }
         let viewPoint = convert(event.locationInWindow, from: nil)
         guard let document,
               let page = page(for: viewPoint, nearest: false) else { hideBadge(); return }
@@ -3183,27 +3194,11 @@ final class LoomPDFKitView: PDFView {
         guard let selection = page.selectionForLine(at: pagePoint),
               let raw = selection.string?.trimmingCharacters(in: .whitespacesAndNewlines),
               !raw.isEmpty else { hideBadge(); return }
-        let pageRect = selection.bounds(for: page)
-        pendingPassage = (document.index(for: page), pageRect, raw)
-        // Highlight the WHOLE line (the target) and pin the ❕ to its trailing
-        // edge — fixed while the cursor stays on this line, so it never chases.
-        // Convert via POINTs: the rect overload of convert(_:from:) lands the
-        // overlay in the wrong (document-view) space here.
-        let c1 = convert(CGPoint(x: pageRect.minX, y: pageRect.minY), from: page)
-        let c2 = convert(CGPoint(x: pageRect.maxX, y: pageRect.maxY), from: page)
-        let lineRect = CGRect(
-            x: min(c1.x, c2.x), y: min(c1.y, c2.y),
-            width: abs(c2.x - c1.x), height: abs(c2.y - c1.y)
-        )
-        lineHighlight.frame = bounds
-        lineHighlight.lineRect = lineRect
-        lineHighlight.isHidden = false
-        // Pin the tick just past the line's trailing edge; its height tracks the
-        // line so it reads as this row's mark, not a floating object.
-        let tw: CGFloat = 12
-        let tx = min(lineRect.maxX + 6, bounds.maxX - tw - 2)
-        noteTick.frame = NSRect(x: tx, y: lineRect.minY - 2, width: tw, height: lineRect.height + 4)
-        noteTick.isHidden = false
+        // Fallback target = the hovered line. The tick pins to its trailing edge
+        // (relightMark), but no full-line wash is painted — that read as "take the
+        // whole row" (owner 2026-07-06).
+        pendingPassage = (document.index(for: page), selection.bounds(for: page), raw)
+        relightMark()
     }
 
     override func mouseExited(with event: NSEvent) {
@@ -3217,6 +3212,86 @@ final class LoomPDFKitView: PDFView {
         pendingPassage = nil
     }
 
+    // MARK: Grab-what's-lit target resolution
+
+    /// The live text selection as a capture target (page index, page-space rect,
+    /// text), or nil. A selection always WINS the tick over the hovered line, so
+    /// you can grab a phrase — not just a whole row.
+    private func liveSelectionTarget() -> (page: Int, rect: CGRect, text: String)? {
+        guard let document, let sel = currentSelection, let page = sel.pages.first,
+              let text = sel.string?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !text.isEmpty else { return nil }
+        let b = sel.bounds(for: page)
+        guard b.width > 1, b.height > 1 else { return nil }
+        return (document.index(for: page), b, text)
+    }
+
+    /// The current selection's bounds in this view's space (for hit-testing a
+    /// click that lands inside it).
+    private func selectionViewRect() -> CGRect? {
+        guard let sel = currentSelection, let page = sel.pages.first else { return nil }
+        let b = sel.bounds(for: page)
+        let c1 = convert(CGPoint(x: b.minX, y: b.minY), from: page)
+        let c2 = convert(CGPoint(x: b.maxX, y: b.maxY), from: page)
+        return CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y), width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
+    }
+
+    /// Pin the cyan tick to the thing you could grab right now — the live
+    /// SELECTION if any, else the hovered line. Never paints a full-line wash at
+    /// rest (that read as "take the whole row"); the wash survives only as the
+    /// commit flash on the exact captured rect.
+    private func relightMark() {
+        guard onNotePassage != nil else { hideBadge(); return }
+        guard let t = liveSelectionTarget() ?? pendingPassage,
+              let document, let page = document.page(at: t.page) else {
+            noteTick.isHidden = true; lineHighlight.isHidden = true; return
+        }
+        let c1 = convert(CGPoint(x: t.rect.minX, y: t.rect.minY), from: page)
+        let c2 = convert(CGPoint(x: t.rect.maxX, y: t.rect.maxY), from: page)
+        let v = CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y), width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
+        lineHighlight.isHidden = true
+        let tw: CGFloat = 12
+        let tx = min(v.maxX + 6, bounds.maxX - tw - 2)
+        noteTick.frame = NSRect(x: tx, y: v.minY - 2, width: tw, height: v.height + 4)
+        noteTick.isHidden = false
+    }
+
+    /// Capture EXACTLY the given target (selection or line) — flash its exact
+    /// rect as the receipt (never the whole row), clear the selection, and hand
+    /// it to the note through the same sink as ⌘E / right-click.
+    private func commit(page: Int, rect: CGRect, text: String) {
+        let image = document?.page(at: page).flatMap {
+            Self.regionImage(from: $0, pageRect: rect.insetBy(dx: -10, dy: -7))
+        }
+        if let pg = document?.page(at: page) {
+            let c1 = convert(CGPoint(x: rect.minX, y: rect.minY), from: pg)
+            let c2 = convert(CGPoint(x: rect.maxX, y: rect.maxY), from: pg)
+            lineHighlight.lineRect = CGRect(x: min(c1.x, c2.x), y: min(c1.y, c2.y),
+                                            width: abs(c2.x - c1.x), height: abs(c2.y - c1.y))
+            lineHighlight.flash()
+        }
+        noteTick.isHidden = true
+        pendingPassage = nil
+        clearSelection()
+        onNotePassage?(page, rect, text, image)
+    }
+
+    /// Re-light the mark whenever the selection changes — covers keyboard
+    /// (shift-arrow) and double-click-word selections, not just mouse drags.
+    /// Registered from makeNSView (NOT viewDidMoveToWindow, to avoid touching
+    /// PDFView's own window-move display setup).
+    func startSelectionObserverIfNeeded() {
+        guard selectionObserver == nil else { return }
+        selectionObserver = NotificationCenter.default.addObserver(
+            forName: .PDFViewSelectionChanged, object: self, queue: .main
+        ) { [weak self] _ in
+            guard let self, self.onNotePassage != nil else { return }
+            self.relightMark()
+        }
+    }
+
+    deinit { if let o = selectionObserver { NotificationCenter.default.removeObserver(o) } }
+
     // ⌥-drag = snip a rectangular region. We take the drag over from PDFView's
     // native marquee and draw our own cyan box, then appshot exactly it.
     override func mouseDown(with event: NSEvent) {
@@ -3227,8 +3302,22 @@ final class LoomPDFKitView: PDFView {
             NSCursor.crosshair.set()
             return
         }
-        clickDownPoint = convert(event.locationInWindow, from: nil)
+        let down = convert(event.locationInWindow, from: nil)
+        clickDownPoint = down
         didDrag = false
+        // The text view collapses a selection on mouse-down, so decide NOW whether
+        // this press grabs the lit selection: it does if it lands on the tick or
+        // inside the selection. Otherwise remember a selection stood (so a click
+        // that collapses it doesn't fall through to grabbing the line).
+        if let sel = liveSelectionTarget() {
+            hadSelectionAtDown = true
+            let onSelection = noteTick.frame.contains(down)
+                || (selectionViewRect()?.insetBy(dx: -6, dy: -4).contains(down) ?? false)
+            armedSelection = onSelection ? sel : nil
+        } else {
+            hadSelectionAtDown = false
+            armedSelection = nil
+        }
         super.mouseDown(with: event)
     }
 
@@ -3265,12 +3354,31 @@ final class LoomPDFKitView: PDFView {
             return
         }
         super.mouseUp(with: event)
-        // A click (not a drag-select) on the highlighted line captures it — the
-        // whole line is the target, so it is hard to miss. Drag still selects.
         let wasClick = !didDrag
+        let hadSelection = hadSelectionAtDown
+        let armed = armedSelection
         clickDownPoint = nil
         didDrag = false
-        if wasClick, onNotePassage != nil, pendingPassage != nil {
+        armedSelection = nil
+        hadSelectionAtDown = false
+        guard onNotePassage != nil else { return }
+        if !wasClick {
+            // A drag settled. If it produced a selection, light the tick on it
+            // (the selection-change observer also fires); never auto-commit — the
+            // user may still be adjusting the range.
+            relightMark()
+            return
+        }
+        // A click.
+        if let armed {
+            // Clicked the lit selection (or its tick) → grab exactly those words.
+            commit(page: armed.page, rect: armed.rect, text: armed.text)
+        } else if hadSelection {
+            // Clicked away from a selection → it just collapsed; don't grab the
+            // line under the click. Return to hover/line mode.
+            relightMark()
+        } else if pendingPassage != nil {
+            // Plain click on a hovered line, nothing selected → grab the line.
             commitPendingPassage()
         }
     }
@@ -3303,23 +3411,11 @@ final class LoomPDFKitView: PDFView {
     }
 
     private func commitPendingPassage() {
+        // The whole-line grab is just a commit whose target is the hovered line;
+        // commit() renders the appshot, flashes the exact rect, and hands it to
+        // the note (same path as a selection grab / ⌘E / right-click).
         guard let pending = pendingPassage else { return }
-        // Appshot (owner 2026-07-06): render the captured region to an image and
-        // drop it into the note beside the quote. PDFPage rendering reads the
-        // content stream directly — no screen-recording / TCC permission.
-        // The hovered line gets a little breathing room; a dragged snip box is
-        // captured exactly (see captureRegion). The image rides along with the
-        // passage so the note lands ONE clickable appshot card (no scrambled
-        // auto-quote) — owner 2026-07-06.
-        let image = document?.page(at: pending.page).flatMap {
-            Self.regionImage(from: $0, pageRect: pending.rect.insetBy(dx: -10, dy: -7))
-        }
-        // Confirm the grab right on the page — the note lands behind the reader,
-        // so the flash is the "it worked" you can feel.
-        lineHighlight.flash()
-        noteTick.isHidden = true
-        pendingPassage = nil
-        onNotePassage?(pending.page, pending.rect, pending.text, image)
+        commit(page: pending.page, rect: pending.rect, text: pending.text)
     }
 
     /// Rasterize a page-space rect to an image. Drawn from the PDF content
