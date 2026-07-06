@@ -26,6 +26,13 @@ private let reflectionReaderWidthKey = "loom.reflection.readerWidth"
 private func clampedReaderWidth(_ value: Double) -> CGFloat {
     min(max(CGFloat(value), reflectionReaderMinWidth), reflectionReaderMaxWidth)
 }
+
+// The reader column is a FRACTION of the available width (owner 2026-07-06), so
+// the read-beside-write split stays balanced at ANY window size — including
+// fullscreen, where a fixed max-width reader left the note a huge empty pane.
+// Draggable 30–68%; the note always keeps ≥32%.
+private let reflectionReaderFractionKey = "loom.reflection.readerFraction"
+private func clampedReaderFraction(_ f: Double) -> Double { min(max(f, 0.30), 0.68) }
 private let reflectionTopBarHeight: CGFloat = 52
 private let reflectionSidebarTopClearance: CGFloat = 60
 private let reflectionThreadMaxWidth: CGFloat = 720
@@ -123,6 +130,7 @@ struct LoomReflectionRootView: View {
     @State private var isInspectorPresented: Bool = true
     @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
     @AppStorage(reflectionReaderWidthKey) private var readerWidth: Double = Double(reflectionReaderDefaultWidth)
+    @AppStorage(reflectionReaderFractionKey) private var readerFraction: Double = 0.52
 
     @State private var capturePayload: CapturePayload?
     // Source↔note anchor: clicking a `loom://anchor` link in the note pops the
@@ -203,21 +211,24 @@ struct LoomReflectionRootView: View {
                     ReflectionDivider()
                 }
 
+                GeometryReader { geo in
                 HStack(spacing: 0) {
-                    // In-window reader (owner 2026-07-06): when a source is open
-                    // it docks as a COLUMN to the LEFT of the note — read beside
-                    // write, both visible. The note editor never unmounts, so its
-                    // capture observer stays alive (the exact thing a docked
-                    // auxiliary window would have broken). Done / ⌃⌘F live in the
-                    // reader's own header + toolbar.
+                    // In-window reader (owner 2026-07-06): a COLUMN to the LEFT of
+                    // the note — read beside write, both visible; the editor never
+                    // unmounts (capture observer stays alive). Its width is a
+                    // FRACTION of the window so the split stays balanced at ANY
+                    // size (fullscreen included), draggable; the note keeps ≥32%.
                     if let target = anchorPreview {
                         readerColumn(target)
-                            .frame(width: clampedReaderWidth(readerWidth))
+                            .frame(width: geo.size.width * CGFloat(clampedReaderFraction(readerFraction)))
                             .transition(.move(edge: .leading).combined(with: .opacity))
                         ReflectionPaneResizer(
-                            width: $readerWidth,
+                            width: Binding(
+                                get: { Double(geo.size.width) * clampedReaderFraction(readerFraction) },
+                                set: { readerFraction = clampedReaderFraction($0 / Double(max(geo.size.width, 1))) }
+                            ),
                             growsRightward: true,
-                            clamp: clampedReaderWidth,
+                            clamp: { min(max($0, Double(geo.size.width) * 0.30), Double(geo.size.width) * 0.68) },
                             label: "Resize reader"
                         )
                     }
@@ -277,6 +288,7 @@ struct LoomReflectionRootView: View {
                         .frame(width: clampedInspectorWidth(inspectorWidth))
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
+                }
                 }
                 // Glass law (2026-07-03): exactly ONE glass pane per window —
                 // the root matte below. Columns never stack their own
