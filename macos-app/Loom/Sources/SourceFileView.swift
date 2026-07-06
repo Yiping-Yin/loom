@@ -3060,11 +3060,12 @@ private struct LoomPDFView: NSViewRepresentable {
         Task.detached(priority: .userInitiated) {
             let doc = PDFDocument(url: url)
             await MainActor.run {
-                // The view may already be assigned a different fileURL
-                // by the time this completes (rapid switches). Bail
-                // quietly when the document we loaded is no longer the
-                // one the view wants.
-                guard view.window != nil || view.superview != nil else { return }
+                // Set the document even if the view hasn't mounted yet: a fast
+                // load (small PDF) often completes BEFORE SwiftUI attaches the
+                // view, and the old mount-state guard bailed there, leaving the
+                // reader permanently blank until reopened (owner 2026-07-06, hit
+                // consistently once the reader became a docked column). Any
+                // rapid-switch staleness is corrected by updateNSView's URL check.
                 view.document = doc
                 holder.restorePosition(for: url)
                 holder.refresh()

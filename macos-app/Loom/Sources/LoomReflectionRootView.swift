@@ -15,6 +15,17 @@ private let reflectionInspectorWidthKey = "loom.reflection.inspectorWidth"
 private func clampedInspectorWidth(_ value: Double) -> CGFloat {
     min(max(CGFloat(value), reflectionInspectorMinWidth), reflectionInspectorMaxWidth)
 }
+
+// The in-window reader column's width (owner 2026-07-06): draggable + persisted,
+// bounded so the note beside it always keeps a usable measure.
+private let reflectionReaderDefaultWidth: CGFloat = 560
+private let reflectionReaderMinWidth: CGFloat = 380
+private let reflectionReaderMaxWidth: CGFloat = 760
+private let reflectionReaderWidthKey = "loom.reflection.readerWidth"
+
+private func clampedReaderWidth(_ value: Double) -> CGFloat {
+    min(max(CGFloat(value), reflectionReaderMinWidth), reflectionReaderMaxWidth)
+}
 private let reflectionTopBarHeight: CGFloat = 52
 private let reflectionSidebarTopClearance: CGFloat = 60
 private let reflectionThreadMaxWidth: CGFloat = 720
@@ -111,6 +122,7 @@ struct LoomReflectionRootView: View {
     @State private var isSidebarPeeking: Bool = false
     @State private var isInspectorPresented: Bool = true
     @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
+    @AppStorage(reflectionReaderWidthKey) private var readerWidth: Double = Double(reflectionReaderDefaultWidth)
 
     @State private var capturePayload: CapturePayload?
     // Source↔note anchor: clicking a `loom://anchor` link in the note pops the
@@ -200,9 +212,14 @@ struct LoomReflectionRootView: View {
                     // reader's own header + toolbar.
                     if let target = anchorPreview {
                         readerColumn(target)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(width: clampedReaderWidth(readerWidth))
                             .transition(.move(edge: .leading).combined(with: .opacity))
-                        ReflectionDivider()
+                        ReflectionPaneResizer(
+                            width: $readerWidth,
+                            growsRightward: true,
+                            clamp: clampedReaderWidth,
+                            label: "Resize reader"
+                        )
                     }
                     // The center: a reading document ON the glass once the
                     // user has material; before that it becomes a restrained
@@ -1006,14 +1023,17 @@ struct LoomReflectionRootView: View {
         .padding(.top, reflectionSidebarTopClearance)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-                NotificationCenter.default.post(
-                    name: .loomApplyPDFAnchor,
-                    object: nil,
-                    userInfo: ["page": target.page, "rect": NSValue(rect: target.rect)]
-                )
-            }
+        .task(id: "\(target.page):\(target.rect.origin.x),\(target.rect.origin.y),\(target.rect.width),\(target.rect.height)") {
+            // Scroll to the anchor on open AND on every jump to a new passage
+            // while the reader stays open — onAppear alone misses same-file jumps
+            // (clicking a second quote while the reader column is already up).
+            try? await Task.sleep(nanoseconds: 450_000_000)
+            guard !Task.isCancelled else { return }
+            NotificationCenter.default.post(
+                name: .loomApplyPDFAnchor,
+                object: nil,
+                userInfo: ["page": target.page, "rect": NSValue(rect: target.rect)]
+            )
         }
     }
 
@@ -7257,37 +7277,48 @@ private struct ReflectionDivider: View {
 /// mouseDownCanMoveWindow = false.
 private struct ReflectionPaneResizer: View {
     @Binding var width: Double
+    /// The reader sits LEFT of its seam (drag right grows it); the inspector
+    /// sits RIGHT of its seam (drag left grows it — the default).
+    var growsRightward: Bool = false
+    var clamp: (Double) -> CGFloat = { clampedInspectorWidth($0) }
+    var label: String = "Resize sources inspector"
 
     var body: some View {
         ZStack {
             Rectangle()
                 .fill(Color(nsColor: .separatorColor))
                 .frame(width: 1)
-            ReflectionResizeHandle(width: $width)
+            ReflectionResizeHandle(width: $width, growsRightward: growsRightward, clamp: clamp)
         }
         .frame(width: 9)
-        .accessibilityLabel("Resize sources inspector")
+        .accessibilityLabel(label)
     }
 }
 
 private struct ReflectionResizeHandle: NSViewRepresentable {
     @Binding var width: Double
+    var growsRightward: Bool = false
+    var clamp: (Double) -> CGFloat = { clampedInspectorWidth($0) }
+
+    private func apply(_ view: ReflectionResizeHandleNSView) {
+        view.onDragBegan = { clamp(width) }
+        view.onDragChanged = { startWidth, deltaX in
+            // Right-of-seam panes grow when dragged left; left-of-seam panes grow
+            // when dragged right.
+            let raw = growsRightward ? Double(startWidth) + Double(deltaX)
+                                     : Double(startWidth) - Double(deltaX)
+            width = Double(clamp(raw))
+        }
+    }
 
     func makeNSView(context: Context) -> ReflectionResizeHandleNSView {
         let view = ReflectionResizeHandleNSView()
-        view.onDragBegan = { clampedInspectorWidth(width) }
-        view.onDragChanged = { startWidth, deltaX in
-            // The pane sits right of the seam: dragging left grows it.
-            width = Double(clampedInspectorWidth(Double(startWidth - deltaX)))
-        }
+        apply(view)
         return view
     }
 
     func updateNSView(_ nsView: ReflectionResizeHandleNSView, context: Context) {
-        nsView.onDragBegan = { clampedInspectorWidth(width) }
-        nsView.onDragChanged = { startWidth, deltaX in
-            width = Double(clampedInspectorWidth(Double(startWidth - deltaX)))
-        }
+        apply(nsView)
     }
 }
 
