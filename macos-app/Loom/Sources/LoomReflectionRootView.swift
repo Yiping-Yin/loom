@@ -5213,6 +5213,9 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             } else {
                 view.string = fallback
             }
+            // The text view is reused across documents — cancel any in-flight
+            // anchor-flash fade so its queued frames don't paint onto this one.
+            (view as? GrowingGlassTextView)?.cancelInFlightAnchorFlashes()
             GlassDocumentEditor.normalizeDocument(view, sources: sources)
             view.invalidateIntrinsicContentSize()
         }
@@ -5250,6 +5253,23 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     }
 
     final class GrowingGlassTextView: NSTextView {
+        /// Bumped when a new anchor flash starts or the document is swapped, so a
+        /// stale fade frame (a superseded flash, a moved range, or the previous
+        /// document — this view is reused across documents) early-returns instead
+        /// of painting the wrong characters.
+        private var flashGeneration = 0
+
+        /// Cancel any in-flight anchor-flash fade and clear its tint — called when
+        /// the document content is replaced, so queued fade frames don't paint
+        /// onto the incoming document's text.
+        func cancelInFlightAnchorFlashes() {
+            flashGeneration += 1
+            if let lm = layoutManager, let storage = textStorage, storage.length > 0 {
+                lm.removeTemporaryAttribute(.backgroundColor,
+                                            forCharacterRange: NSRange(location: 0, length: storage.length))
+            }
+        }
+
         override var intrinsicContentSize: NSSize {
             guard let container = textContainer, let manager = layoutManager else {
                 return super.intrinsicContentSize
@@ -5576,20 +5596,77 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             flashAnchor(range: NSRange(location: quoteStart, length: quoteLine.length), precise: precise)
         }
 
-        /// A ~1.2s highlight on the just-landed quote, via display-only
-        /// TEMPORARY attributes — never enters textStorage, so it isn't saved
-        /// to RTFD and normalizeDocument never sees it.
+        /// A highlight on the just-landed quote — teal for an exact-rect anchor,
+        /// amber for a page-only one — so you see WHERE it landed and how strong
+        /// it is. It appears at once (the confirmation), holds ~1.2s, then FADES
+        /// OUT over the `.effect` motion token: the anchor landing is the
+        /// meaningful arrival that earns the 10% of motion LOOM spends. Display-
+        /// only TEMPORARY attributes — never enters textStorage, so it isn't
+        /// saved to RTFD and normalizeDocument never sees it. Under Reduce Motion
+        /// the fade collapses to today's instant removal.
         private func flashAnchor(range: NSRange, precise: Bool) {
             guard let layoutManager, let storage = textStorage,
                   range.location >= 0, range.location + range.length <= storage.length else { return }
-            let tint = (precise ? NSColor.systemTeal : NSColor.systemOrange).withAlphaComponent(0.28)
-            layoutManager.addTemporaryAttributes([.backgroundColor: tint], forCharacterRange: range)
+            // Supersede any prior flash: bump the generation (its queued frames
+            // early-return) AND clear its tint so an overlapping capture never
+            // orphans an earlier highlight at peak.
+            cancelInFlightAnchorFlashes()
+            let generation = flashGeneration
+            let color = precise ? NSColor.systemTeal : NSColor.systemOrange
+            let peak: CGFloat = 0.28
+            layoutManager.addTemporaryAttributes([.backgroundColor: color.withAlphaComponent(peak)],
+                                                 forCharacterRange: range)
+            let spec = MotionTokens.spec(for: .effect, reduceMotion: Self.prefersReducedMotion)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-                guard let self, let lm = self.layoutManager, let storage = self.textStorage else { return }
-                let end = min(range.location + range.length, storage.length)
-                guard end > range.location else { return }
-                lm.removeTemporaryAttribute(.backgroundColor, forCharacterRange: NSRange(location: range.location, length: end - range.location))
+                self?.fadeOutAnchorTint(range: range, color: color, from: peak,
+                                        over: spec.duration, generation: generation)
             }
+        }
+
+        /// Ramp the flash tint's alpha to zero over `duration`, then remove it.
+        /// `duration == 0` (Reduce Motion) removes in a single step. The range is
+        /// re-clamped every frame because the text may have changed during the
+        /// hold or the fade.
+        private func fadeOutAnchorTint(range: NSRange, color: NSColor, from peak: CGFloat,
+                                       over duration: Double, generation: Int) {
+            guard generation == flashGeneration else { return }  // superseded by a newer flash / doc swap
+            guard duration > 0 else {
+                if let lm = layoutManager, let r = clampedTintRange(range) {
+                    lm.removeTemporaryAttribute(.backgroundColor, forCharacterRange: r)
+                }
+                return
+            }
+            let steps = 12
+            let interval = duration / Double(steps)
+            for step in 1...steps {
+                DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(step)) { [weak self] in
+                    guard let self, self.flashGeneration == generation,
+                          let lm = self.layoutManager, let r = self.clampedTintRange(range) else { return }
+                    if let alpha = AnchorFlashFade.alpha(atStep: step, of: steps, peak: peak) {
+                        lm.addTemporaryAttributes([.backgroundColor: color.withAlphaComponent(alpha)],
+                                                  forCharacterRange: r)
+                    } else {
+                        lm.removeTemporaryAttribute(.backgroundColor, forCharacterRange: r)
+                    }
+                }
+            }
+        }
+
+        /// The still-valid intersection of `range` with the current text, or nil
+        /// if the text shrank past it — so a late fade frame never touches an
+        /// out-of-bounds range.
+        private func clampedTintRange(_ range: NSRange) -> NSRange? {
+            guard let storage = textStorage else { return nil }
+            let end = min(range.location + range.length, storage.length)
+            guard range.location >= 0, end > range.location else { return nil }
+            return NSRange(location: range.location, length: end - range.location)
+        }
+
+        /// Reduce Motion — the app's own toggle OR the system setting. The
+        /// central gate: when on, motion collapses to instant.
+        private static var prefersReducedMotion: Bool {
+            UserDefaults.standard.string(forKey: "wiki:reduce-motion") == "1"
+                || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         }
     }
 }
