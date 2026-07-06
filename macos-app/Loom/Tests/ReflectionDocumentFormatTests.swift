@@ -48,6 +48,21 @@ final class ReflectionDocumentFormatTests: XCTestCase {
         XCTAssertFalse(ReflectionDocumentFormat.isAnchorParagraph(sourceLink, at: 99))
     }
 
+    func testDocumentHeadingsDerivesOutlineWithLocations() {
+        let text = "# Order types\nsome prose\n## Market orders\nmore prose\n### Edge case\n"
+        let outline = ReflectionDocumentFormat.documentHeadings(in: text)
+        XCTAssertEqual(outline.map(\.title), ["Order types", "Market orders", "Edge case"])
+        XCTAssertEqual(outline.map(\.level), [1, 2, 3])
+        // Locations are UTF-16 offsets (+1 per newline) so click-to-jump lands.
+        XCTAssertEqual(outline[0].id, 0)
+        XCTAssertEqual(outline[1].id, ("# Order types\nsome prose\n" as NSString).length)
+    }
+
+    func testDocumentHeadingsSkipsEmptyTitlesAndNonHeadings() {
+        let outline = ReflectionDocumentFormat.documentHeadings(in: "##   \nplain\n#\n")
+        XCTAssertTrue(outline.isEmpty)
+    }
+
     func testHeadingLevelParsing() {
         XCTAssertEqual(ReflectionDocumentFormat.headingLevel(of: "# Title").level, 1)
         XCTAssertEqual(ReflectionDocumentFormat.headingLevel(of: "## Sub").level, 2)

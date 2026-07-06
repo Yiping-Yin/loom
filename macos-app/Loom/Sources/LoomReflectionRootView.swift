@@ -4670,12 +4670,6 @@ private struct WorkbenchEmptyActionRow: View {
 }
 
 // A heading line of the written document — the unit of the live outline.
-private struct DocumentHeading: Identifiable, Equatable {
-    let id: Int      // character location in the document
-    let level: Int   // 1...3
-    let title: String
-}
-
 // The writing surface of the center document: a borderless, transparent
 // NSTextView that draws its ink directly on the glass and grows with its
 // content inside the outer reading scroll (no nested scroller). Pasted or
@@ -4714,19 +4708,7 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     /// The live outline is derived from the WRITTEN document — every
     /// heading line, with its character location for click-to-jump.
     static func documentHeadings(in text: String) -> [DocumentHeading] {
-        var headings: [DocumentHeading] = []
-        var location = 0
-        for line in text.components(separatedBy: "\n") {
-            let (level, markerLength) = headingLevel(of: line)
-            if level > 0 {
-                let title = String(line.dropFirst(markerLength)).trimmingCharacters(in: .whitespaces)
-                if !title.isEmpty {
-                    headings.append(DocumentHeading(id: location, level: level, title: title))
-                }
-            }
-            location += line.utf16.count + 1
-        }
-        return headings
+        ReflectionDocumentFormat.documentHeadings(in: text)
     }
 
     static var documentsDirectory: URL {

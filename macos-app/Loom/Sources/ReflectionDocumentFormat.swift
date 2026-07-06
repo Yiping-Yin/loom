@@ -1,5 +1,13 @@
 import AppKit
 
+/// One heading in the centre document's live outline — its character location
+/// (for click-to-jump), nesting level (1…3), and title.
+struct DocumentHeading: Identifiable, Equatable {
+    let id: Int      // character location in the document
+    let level: Int   // 1...3
+    let title: String
+}
+
 /// The typographic law of THE BOOK's centre editor — the single serif ink,
 /// heading scale, and the two reading-note altitudes (baseline authored text
 /// vs indented source evidence). Extracted out of the ~8k-line workspace file
@@ -72,5 +80,24 @@ enum ReflectionDocumentFormat {
         }
         guard hashes > 0, index < line.endIndex, line[index] == " " else { return (0, 0) }
         return (hashes, hashes + 1)
+    }
+
+    /// The live outline is derived from the WRITTEN document — every heading
+    /// line, with its character location for click-to-jump. Locations count
+    /// UTF-16 units (+1 per newline) to match NSTextView's indexing.
+    static func documentHeadings(in text: String) -> [DocumentHeading] {
+        var headings: [DocumentHeading] = []
+        var location = 0
+        for line in text.components(separatedBy: "\n") {
+            let (level, markerLength) = headingLevel(of: line)
+            if level > 0 {
+                let title = String(line.dropFirst(markerLength)).trimmingCharacters(in: .whitespaces)
+                if !title.isEmpty {
+                    headings.append(DocumentHeading(id: location, level: level, title: title))
+                }
+            }
+            location += line.utf16.count + 1
+        }
+        return headings
     }
 }
