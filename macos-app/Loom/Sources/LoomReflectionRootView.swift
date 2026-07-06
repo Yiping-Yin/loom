@@ -4692,71 +4692,23 @@ private struct GlassDocumentEditor: NSViewRepresentable {
     let onImportFiles: ([URL]) -> [ReflectionSource]
     let onOpenSource: (ReflectionSource.ID) -> Void
 
+    // The typographic law moved to ReflectionDocumentFormat (build-order step ①,
+    // 2026-07-06) so it is small, focused, and unit-testable in isolation. These
+    // thin forwarders keep every existing call site byte-identical; the logic and
+    // its tests now live in that enum. (Forwarders retire as call sites migrate.)
     static func serifFont(size: CGFloat, weight: NSFont.Weight) -> NSFont {
-        let base = NSFont.systemFont(ofSize: size, weight: weight)
-        guard let descriptor = base.fontDescriptor.withDesign(.serif),
-              let serif = NSFont(descriptor: descriptor, size: size) else { return base }
-        return serif
+        ReflectionDocumentFormat.serifFont(size: size, weight: weight)
     }
-
-    static var documentFont: NSFont { serifFont(size: 15, weight: .regular) }
-
-    static var documentParagraphStyle: NSParagraphStyle {
-        let style = NSMutableParagraphStyle()
-        style.lineSpacing = 5
-        return style
-    }
-
-    /// Evidence altitude (owner 2026-07-06, the two-altitude reading-note form):
-    /// a captured quote is the SOURCE's words, so it sits indented + quiet BELOW
-    /// your own baseline claim. Indent-only via NSParagraphStyle so it survives
-    /// RTFD; the quiet ink is a separate colour attribute.
-    static var quoteParagraphStyle: NSParagraphStyle {
-        let style = NSMutableParagraphStyle()
-        style.lineSpacing = 5
-        style.firstLineHeadIndent = 22
-        style.headIndent = 22
-        style.paragraphSpacingBefore = 2
-        return style
-    }
-
-    /// A paragraph is EVIDENCE (a captured quote / image card) if it carries a
-    /// `loom://anchor` link — a standard attribute that survives the RTFD round
-    /// trip, so the altitude persists across reload without a custom marker.
+    static var documentFont: NSFont { ReflectionDocumentFormat.documentFont }
+    static var documentParagraphStyle: NSParagraphStyle { ReflectionDocumentFormat.documentParagraphStyle }
+    static var quoteParagraphStyle: NSParagraphStyle { ReflectionDocumentFormat.quoteParagraphStyle }
     static func isAnchorParagraph(_ storage: NSTextStorage, at loc: Int) -> Bool {
-        guard loc < storage.length,
-              let link = storage.attribute(.link, at: loc, effectiveRange: nil) else { return false }
-        let s = (link as? String) ?? (link as? URL)?.absoluteString ?? (link as? NSURL)?.absoluteString ?? ""
-        return s.hasPrefix("loom://anchor")
+        ReflectionDocumentFormat.isAnchorParagraph(storage, at: loc)
     }
-
-    static func headingFont(level: Int) -> NSFont {
-        switch level {
-        case 1: return serifFont(size: 22, weight: .semibold)
-        case 2: return serifFont(size: 18, weight: .semibold)
-        default: return serifFont(size: 15.5, weight: .semibold)
-        }
-    }
-
-    static var headingParagraphStyle: NSParagraphStyle {
-        let style = NSMutableParagraphStyle()
-        style.lineSpacing = 4
-        style.paragraphSpacingBefore = 12
-        style.paragraphSpacing = 4
-        return style
-    }
-
-    /// `# ` / `## ` / `### ` at line start makes a heading. Returns the
-    /// level and the marker length (hashes + space), or (0, 0).
+    static func headingFont(level: Int) -> NSFont { ReflectionDocumentFormat.headingFont(level: level) }
+    static var headingParagraphStyle: NSParagraphStyle { ReflectionDocumentFormat.headingParagraphStyle }
     static func headingLevel(of line: String) -> (level: Int, markerLength: Int) {
-        var hashes = 0
-        var index = line.startIndex
-        while index < line.endIndex, line[index] == "#", hashes < 3 {
-            hashes += 1
-            index = line.index(after: index)
-        }
-        guard hashes > 0, index < line.endIndex, line[index] == " " else { return (0, 0) }
-        return (hashes, hashes + 1)
+        ReflectionDocumentFormat.headingLevel(of: line)
     }
 
     /// The live outline is derived from the WRITTEN document — every
