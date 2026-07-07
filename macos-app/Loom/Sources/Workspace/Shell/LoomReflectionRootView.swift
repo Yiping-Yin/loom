@@ -334,7 +334,12 @@ struct LoomReflectionRootView: View {
                 sourceCount: isWorkspaceEmpty ? 0 : selectedCase.sources.count,
                 onToggleSidebar: toggleSidebar,
                 onToggleInspector: toggleInspector,
-                onOpenSourceInNativeApp: openSelectedSourceInNativeApp
+                onOpenSourceInNativeApp: openSelectedSourceInNativeApp,
+                onReopenSourceInReader: {
+                    if let source = nativeSource ?? selectedCase.sources.first {
+                        openSourceInReader(source)
+                    }
+                }
             )
             .zIndex(1)
 
@@ -846,11 +851,27 @@ struct LoomReflectionRootView: View {
         )
 
         selectedSourceID = importedSources[0].id
-        if openAfterImport {
-            openSourcesInNativeApps(importedSources)
-            statusMessage = importedSources.count == 1
-                ? "Imported \(importedSources[0].label) and opened it in the native app"
-                : "Imported \(importedSources.count) local sources and opened them in native apps"
+        if openAfterImport, let first = importedSources.first {
+            // Read the added file INSIDE Loom (owner 2026-07-08: 加的文件要能在
+            // Loom 里也能打开). The in-app reader — SourceFileView: PDFKit for
+            // PDFs, QuickLook for everything else — is where the note's
+            // anchor-capture loop lives; popping the file out to Preview broke
+            // "read beside write". The separate "record beside the native app"
+            // flow still opens Preview/Word deliberately, and the reader chrome
+            // keeps an "open in native app" affordance — so external stays
+            // reachable. Only the first of a multi-file add opens; the rest wait
+            // in Sources.
+            openSourceInReader(first)
+            // Only claim "reading in Loom" when the reader ACTUALLY opened this
+            // source. openSourceInReader returns early — leaving anchorPreview
+            // untouched — and sets its own honest "can't be found" / "moved —
+            // re-add it" status when the first file is missing or its bookmark
+            // is stale; don't clobber that honest failure (owner-audit
+            // 2026-07-05). For a single-file add, openSourceInReader's own
+            // "Reading …" (or honest-failure) status stands as-is.
+            if importedSources.count > 1, anchorPreview?.sourceID == first.id {
+                statusMessage = "Imported \(importedSources.count) local sources — reading \(first.label) in Loom"
+            }
         } else {
             statusMessage = importedSources.count == 1
                 ? "Imported \(importedSources[0].label) into Sources"
@@ -1156,6 +1177,12 @@ struct LoomReflectionRootView: View {
             // Scroll to the anchor on open AND on every jump to a new passage
             // while the reader stays open — onAppear alone misses same-file jumps
             // (clicking a second quote while the reader column is already up).
+            // But a PLAIN open (page 0, empty rect — openSourceInReader, the
+            // "read this source" path, not an anchor jump) must NOT post: doing
+            // so force-scrolled the reader to page 1 and clobbered its own
+            // per-file scroll memory (SourceFileView restorePosition). Only a
+            // real anchor (a later page, or a rect to highlight) re-applies.
+            guard target.page > 0 || !target.rect.isEmpty else { return }
             try? await Task.sleep(nanoseconds: 450_000_000)
             guard !Task.isCancelled else { return }
             NotificationCenter.default.post(
@@ -1341,6 +1368,14 @@ struct LoomReflectionRootView: View {
             URLQueryItem(name: "text", value: String(quote.prefix(120))),
         ]
         let anchorURL = comps.string ?? "loom://anchor?src=\(sourceID)&page=\(page)"
+        // Honesty (owner-audit): while the note is collapsed the reader fills the
+        // window and the center editor (with the insert observer) is UNMOUNTED —
+        // a posted passage would vanish into the void yet still report "Noted".
+        // Un-collapse first so the observer is mounted before the post fires, and
+        // you watch the quote land beside the reader (read-beside-write).
+        if isReadingNoteCollapsed {
+            withAnimation(.easeInOut(duration: 0.16)) { isReadingNoteCollapsed = false }
+        }
         // Keep the reader open — it's a column beside the note now, so you watch
         // the quote land to the right and keep reading (read-beside-write).
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -2386,6 +2421,12 @@ private struct ReflectionTopBar: View {
     let onToggleSidebar: () -> Void
     let onToggleInspector: () -> Void
     let onOpenSourceInNativeApp: () -> Void
+    // Reopen the source INSIDE Loom's reader (the anchor-capture surface). The
+    // center provenance Open only shows for a NAMED case (owner 2026-07-06:
+    // unnamed = invitation), so a freshly-imported unnamed draft had no in-app
+    // way back into the reader once closed — this always-present top-bar
+    // affordance is that way back, without staging the empty center.
+    let onReopenSourceInReader: () -> Void
     // The Evidence strip tracks the resizable pane width live.
     @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
 
@@ -2446,6 +2487,18 @@ private struct ReflectionTopBar: View {
                     }
 
                     if nativeSource?.fileURL != nil {
+                        if !isReadingSource {
+                            Button(action: onReopenSourceInReader) {
+                                Image(systemName: "book")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(LoomTokens.dsInk3)
+                            .contentShape(Rectangle())
+                            .accessibilityLabel("Open in Loom")
+                            .help("Open this source in Loom's reader")
+                        }
                         Button(action: onOpenSourceInNativeApp) {
                             Image(systemName: "arrow.up.forward.app")
                                 .font(.system(size: 12, weight: .medium))
@@ -3191,7 +3244,7 @@ private struct HistoryGlassSurface: View {
                                             .foregroundStyle(tagline.current ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                                         if tagline.current {
                                             Circle()
-                                                .fill(LoomTokens.dsThread)
+                                                .fill(Color.accentColor)
                                                 .frame(width: 5, height: 5)
                                                 .accessibilityLabel("Current")
                                         }
@@ -3935,58 +3988,10 @@ private struct SidebarPrincipleRow: View {
     }
 }
 
-private struct SidebarIdentityFooter: View {
-    // The utility strip (vertical-tabs bottom-bar grammar, owner-pointed
-    // reference 2026-07-03): identity at left, machine count, Settings at
-    // right. Every icon wires to something real.
-    let projectCount: Int
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.openSettings) private var openSettings
-    @State private var hoveringAvatar = false
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Button {
-                openWindow(id: AboutWindow.id)
-            } label: {
-                MoonAvatar()
-                    .opacity(hoveringAvatar ? 1.0 : 0.9)
-            }
-            .buttonStyle(.plain)
-            .onHover { hoveringAvatar = $0 }
-            .help("About Loom — local, on-device")
-            .accessibilityLabel("About Loom")
-
-            Spacer(minLength: 0)
-
-            Text("\(projectCount) project\(projectCount == 1 ? "" : "s")")
-                .font(.system(size: 10.5, design: .monospaced))
-                .foregroundStyle(.tertiary)
-
-            Button {
-                // SettingsLink and the legacy showSettingsWindow: selector
-                // both refuse to fire from this hosting context on macOS 27
-                // (verified live 2026-07-03); the openSettings environment
-                // action is the modern reliable route.
-                openSettings()
-            } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 24, height: 24)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help("Settings")
-            .accessibilityLabel("Settings")
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 44)
-        .overlay(alignment: .top) {
-            Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 1)
-        }
-    }
-}
+// (Removed SidebarIdentityFooter — the pre-decision bottom-left identity strip
+// that was fully superseded by SidebarUtilityStrip's "You" row + gear. It had
+// zero references. MoonAvatar stays; it's still used by the empty-workspace
+// title badge.)
 
 private struct WorkbenchSidebarPanels: View {
     let reflectionCase: ReflectionCase
@@ -4129,7 +4134,7 @@ private struct WorkbenchSidebarPanels: View {
                         ForEach(reuseSuggestions) { principle in
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 Circle()
-                                    .fill(LoomTokens.dsThread)
+                                    .fill(Color.accentColor)
                                     .frame(width: 5, height: 5)
                                     .padding(.top, 3)
                                 VStack(alignment: .leading, spacing: 1) {
@@ -4147,7 +4152,7 @@ private struct WorkbenchSidebarPanels: View {
                                             }
                                             .buttonStyle(.plain)
                                             .font(.system(size: 10, weight: .semibold))
-                                            .foregroundStyle(LoomTokens.dsThread)
+                                            .foregroundStyle(Color.accentColor)
                                             .help("Cite this principle into the open project")
                                         }
                                     }
@@ -4164,7 +4169,7 @@ private struct WorkbenchSidebarPanels: View {
                             .foregroundStyle(sectionText)
                         if !reuseSuggestions.isEmpty {
                             Circle()
-                                .fill(LoomTokens.dsThread)
+                                .fill(Color.accentColor)
                                 .frame(width: 5, height: 5)
                                 .accessibilityLabel("Reusable principles match this project")
                         }
@@ -4585,7 +4590,7 @@ private struct ReflectionSidebarRow: View {
                 // selection, transparent like glass. (.selection material
                 // emphasized renders opaque accent — measured live.)
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(LoomTokens.dsThread.opacity(0.18))
+                    .fill(Color.accentColor.opacity(0.18))
             } else if isHovering {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(.quinary)
@@ -4688,6 +4693,20 @@ private struct GlassReadingCenter: View {
         ReflectionLearningTrace.from(reflectionCase)
     }
 
+    /// The-book ordering (owner north star): captured evidence reads in the
+    /// SOURCE's own order — by page — not in capture (clock) order, so the note
+    /// re-presents the source's structure. Stable: same-page captures keep their
+    /// capture order; page-less traces sink to the end. Mirrors the existing
+    /// page comparator used by the (dead) digest surface — now on the LIVE center.
+    private var orderedTraces: [ReflectionLearningTrace] {
+        traces.enumerated().sorted { lhs, rhs in
+            let lhsPage = lhs.element.pageNumber ?? Int.max
+            let rhsPage = rhs.element.pageNumber ?? Int.max
+            if lhsPage != rhsPage { return lhsPage < rhsPage }
+            return lhs.offset < rhs.offset
+        }.map(\.element)
+    }
+
     private var isLearningCase: Bool {
         reflectionCase.project == "Learning pass"
     }
@@ -4771,21 +4790,39 @@ private struct GlassReadingCenter: View {
                                             // project↔world bridge, NOT a source list (owner
                                             // 2026-07-03 scope law), so the source's reader home is
                                             // Open, not a right-rail list.
-                                            Button {
-                                                if let sourceID = selectedSourceID ?? reflectionCase.sources.first?.id {
-                                                    onOpenSourceID(sourceID)
-                                                }
-                                            } label: {
-                                                HStack(spacing: 5) {
-                                                    Image(systemName: "book")
-                                                        .font(.system(size: 10))
-                                                    Text(provenanceLabel)
-                                                        .font(.system(size: 12, design: .serif))
-                                                }
-                                                .foregroundStyle(.tertiary)
+                                            let provenanceGlyph = HStack(spacing: 5) {
+                                                Image(systemName: "book")
+                                                    .font(.system(size: 10))
+                                                Text(provenanceLabel)
+                                                    .font(.system(size: 12, design: .serif))
                                             }
-                                            .buttonStyle(.plain)
-                                            .help("Open source")
+                                            .foregroundStyle(.tertiary)
+                                            if reflectionCase.sources.count > 1 {
+                                                // Multiple sources: the line named them all but
+                                                // used to open only one (:4790 audit). A quiet menu
+                                                // lets each source open its own reader.
+                                                Menu {
+                                                    ForEach(reflectionCase.sources) { source in
+                                                        Button(source.label) { onOpenSourceID(source.id) }
+                                                    }
+                                                } label: {
+                                                    provenanceGlyph
+                                                }
+                                                .buttonStyle(.plain)
+                                                .menuIndicator(.hidden)
+                                                .fixedSize()
+                                                .help("Open a source")
+                                            } else {
+                                                Button {
+                                                    if let sourceID = selectedSourceID ?? reflectionCase.sources.first?.id {
+                                                        onOpenSourceID(sourceID)
+                                                    }
+                                                } label: {
+                                                    provenanceGlyph
+                                                }
+                                                .buttonStyle(.plain)
+                                                .help("Open source")
+                                            }
                                         }
                                     }
                                     .padding(.top, 8)
@@ -4804,7 +4841,9 @@ private struct GlassReadingCenter: View {
                                     onOpenSource: onOpenSourceID
                                 )
 
-                                ForEach(traces) { trace in
+                                // Book order, not clock order (owner north star):
+                                // evidence reads by the source's own page sequence.
+                                ForEach(orderedTraces) { trace in
                                     EvidencePaperCard(trace: trace) {
                                         onSelectTrace(trace)
                                     }
@@ -5011,7 +5050,7 @@ private struct ProjectSourceRow: View {
         .background {
             if isSelected {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(LoomTokens.dsThread.opacity(isHovering ? 0.18 : 0.12))
+                    .fill(Color.accentColor.opacity(isHovering ? 0.18 : 0.12))
             } else if isHovering {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(.quinary)
@@ -6343,7 +6382,7 @@ private struct EvidencePaperCard: View {
         Button(action: action) {
             HStack(alignment: .top, spacing: 12) {
                 Rectangle()
-                    .fill(isHovering ? AnyShapeStyle(LoomTokens.dsThread.opacity(0.55)) : AnyShapeStyle(.quaternary))
+                    .fill(isHovering ? AnyShapeStyle(LoomTokens.dsAnchor.opacity(0.55)) : AnyShapeStyle(.quaternary))
                     .frame(width: 1.5)
                     .frame(maxHeight: .infinity)
                 (
@@ -6352,7 +6391,7 @@ private struct EvidencePaperCard: View {
                         .foregroundStyle(.secondary)
                     + Text(locatorSuffix)
                         .font(.system(size: 10))
-                        .foregroundStyle(LoomTokens.dsThread)
+                        .foregroundStyle(LoomTokens.dsAnchor)
                         .baselineOffset(3)
                 )
                 .lineSpacing(4)
@@ -6956,7 +6995,7 @@ private struct ReflectionLearningPrincipleCandidate: View {
             Text(principle)
                 .font(.system(size: 13, weight: .semibold))
                 .lineSpacing(3)
-                .foregroundStyle(LoomTokens.dsThread)
+                .foregroundStyle(Color.accentColor)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -6966,7 +7005,7 @@ private struct ReflectionLearningPrincipleCandidate: View {
                 Button("Promote", action: onPromote)
                     .buttonStyle(.plain)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(LoomTokens.dsThread)
+                    .foregroundStyle(Color.accentColor)
                     .help("Promote into workspace memory (blocked while the anchor is weak)")
             }
         }
@@ -7131,7 +7170,7 @@ private struct ReflectionLearningReviewLine: View {
             Text(value)
                 .font(.system(size: 13, weight: accent ? .semibold : .regular))
                 .lineSpacing(3)
-                .foregroundStyle(accent ? LoomTokens.dsThread : LoomTokens.dsInk1)
+                .foregroundStyle(accent ? Color.accentColor : LoomTokens.dsInk1)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -7233,13 +7272,14 @@ private struct ReflectionTraceList: View {
     }
 
     // A committed entry as a Colab cell: left gutter marker + bordered
-    // rounded card; the border wakes on hover (青芒, never Colab blue).
+    // rounded card; the border wakes on hover (system accent, never Colab blue —
+    // cyan is reserved for the loom:// locator).
     private func entryCell(_ item: String, key: String) -> some View {
         let isHovered = hoveredCell == key
         return HStack(alignment: .top, spacing: 10) {
             Image(systemName: "circle")
                 .font(.system(size: 11, weight: .regular))
-                .foregroundStyle(isHovered ? LoomTokens.dsThread : LoomTokens.dsInk3.opacity(0.7))
+                .foregroundStyle(isHovered ? Color.accentColor : LoomTokens.dsInk3.opacity(0.7))
                 .padding(.top, 12)
             Text(item)
                 .font(.system(size: 12.5))
@@ -7256,7 +7296,7 @@ private struct ReflectionTraceList: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(
-                            isHovered ? LoomTokens.dsThread.opacity(0.55) : LoomTokens.dsHair,
+                            isHovered ? Color.accentColor.opacity(0.55) : LoomTokens.dsHair,
                             lineWidth: 1
                         )
                 )
@@ -7298,7 +7338,7 @@ private struct ReflectionMessages: View {
                     Text(message.body)
                         .font(.system(size: 13))
                         .lineSpacing(3)
-                        .foregroundStyle(message.role == .loom ? LoomTokens.dsThread : LoomTokens.dsInk1)
+                        .foregroundStyle(message.role == .loom ? Color.accentColor : LoomTokens.dsInk1)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }

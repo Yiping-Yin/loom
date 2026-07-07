@@ -56,10 +56,10 @@ struct SelectableTextEditor: NSViewRepresentable {
         // warm candle-white in dark mode. Matches Vellum's intent of
         // "earth ink, never neon" without hard-coding per mode.
         textView.textColor = .labelColor
-        textView.insertionPointColor = NSColor(red: 0xC8 / 255.0,
-                                               green: 0xA2 / 255.0,
-                                               blue: 0x4A / 255.0,
-                                               alpha: 1.0) // LoomTokens.dsThread — watch-hand gold caret
+        // Caret follows the system accent (no hard-coded hue) — matches the
+        // center editor and the system-unity law; the old gold override was
+        // both off-canon and mislabeled as dsThread.
+        textView.insertionPointColor = .controlAccentColor
         textView.font = font ?? .systemFont(ofSize: 13)
         textView.textContainerInset = NSSize(width: 4, height: 6)
         textView.textContainer?.widthTracksTextView = true

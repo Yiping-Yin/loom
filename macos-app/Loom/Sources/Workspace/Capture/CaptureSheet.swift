@@ -2337,7 +2337,7 @@ struct CaptureSheet: View {
                 Image(systemName: "link.circle")
                     .font(.system(size: 10))
                     .foregroundStyle(LoomTokens.dsInk2)
-                Text("类似既有捕获 · \(similarHits.count)")
+                Text("Similar to existing · \(similarHits.count)")
                     .font(.system(size: 10, design: .serif).smallCaps())
                     .foregroundStyle(LoomTokens.dsInk2)
                 Spacer(minLength: 0)

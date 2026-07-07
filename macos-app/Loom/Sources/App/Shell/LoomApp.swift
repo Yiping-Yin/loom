@@ -159,8 +159,12 @@ struct LoomApp: App {
 
         .commands {
             CommandGroup(after: .textEditing) {
-                Button("Review") { NotificationCenter.default.post(name: .loomLearn, object: nil) }
-                    .keyboardShortcut("e", modifiers: .command)
+                // (Removed dead web-nav menu items — Review ⌘E/⌘/, Reload ⌘R,
+                // Open in Browser, Back/Forward, and the ⌘+/-/0 zoom triplet —
+                // whose only observer was the retired, never-instantiated
+                // ContentView web surface. They did nothing when clicked and
+                // shadowed the reader's own ⌘0/⌘-/⌘+/⌘E. The live "Review" lives
+                // in the right-pane Bridge; the launchers below open real windows.)
                 AskAIMenuItem()
                 AskAboutFileMenuItem()
                 HoldQuestionMenuItem()
@@ -171,18 +175,6 @@ struct LoomApp: App {
                 ReconstructionsMenuItem()
                 IngestionMenuItem()
                 ShuttleMenuItem()
-                Button("Review") { NotificationCenter.default.post(name: .loomReview, object: nil) }
-                    .keyboardShortcut("/", modifiers: .command)
-                Button("Reload") { NotificationCenter.default.post(name: .loomReload, object: nil) }
-                    .keyboardShortcut("r", modifiers: .command)
-                Button("Open in Browser") { NotificationCenter.default.post(name: .loomOpenInBrowser, object: nil) }
-                    .keyboardShortcut("o", modifiers: [.command, .shift])
-            }
-            CommandGroup(after: .toolbar) {
-                Button("Back") { NotificationCenter.default.post(name: .loomGoBack, object: nil) }
-                    .keyboardShortcut("[", modifiers: .command)
-                Button("Forward") { NotificationCenter.default.post(name: .loomGoForward, object: nil) }
-                    .keyboardShortcut("]", modifiers: .command)
             }
             // Workspace shortcuts for the native reflection surface and
             // compatibility routes that still exist behind it.
@@ -191,23 +183,11 @@ struct LoomApp: App {
                 WorkspaceShortcutsCommands()
                 Divider()
             }
-            // Standard Mac View menu zoom triplet — ⌘+ / ⌘- / ⌘0. Every
-            // professional Mac app has these; bumps the webview's page
-            // zoom so users with smaller displays / older eyes can scale.
+            // Reload Sources rescans the local library (live — observed by
+            // KnowledgeSidebarView). The old ⌘+/-/0 webview zoom triplet that
+            // sat here was dead (ContentView-only) and shadowed the reader's own
+            // zoom, so it's gone.
             CommandGroup(after: .sidebar) {
-                Button("Zoom In") {
-                    NotificationCenter.default.post(name: .loomZoomIn, object: nil)
-                }
-                .keyboardShortcut("+", modifiers: .command)
-                Button("Zoom Out") {
-                    NotificationCenter.default.post(name: .loomZoomOut, object: nil)
-                }
-                .keyboardShortcut("-", modifiers: .command)
-                Button("Actual Size") {
-                    NotificationCenter.default.post(name: .loomZoomReset, object: nil)
-                }
-                .keyboardShortcut("0", modifiers: .command)
-                Divider()
                 Button("Reload Sources") {
                     NotificationCenter.default.post(name: .loomRescanLibrary, object: nil)
                 }

@@ -48,6 +48,12 @@ enum LoomTokens {
 
     /// Comet-ice accent · single source of truth.  Evidence Desk: --gold alias.
     static let dsThread      = Color(hex: 0x4BC5DE)
+    /// The one sanctioned in-app cyan: the loom:// anchor locator (◆/◇) + the
+    /// brand mark. Ink-discipline law (owner 2026-07-07 system-unity): cyan is
+    /// RESERVED for the locator — all other chrome uses `Color.accentColor`.
+    /// Same hue as `dsThread`, but a distinct name so chrome can't relapse into
+    /// the anchor colour by grabbing `dsThread`.
+    static let dsAnchor      = Color(hex: 0x4BC5DE)
     /// Comet-ice accent · 55% alpha for de-emphasised states.
     static let dsThreadMuted = Color(.sRGB,
                                      red:    75/255,

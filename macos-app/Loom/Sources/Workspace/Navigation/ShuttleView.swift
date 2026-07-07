@@ -406,13 +406,14 @@ struct ShuttleView: View {
             .padding(.bottom, 4)
     }
 
-    /// Result row — custom painting so we can land exact bronze-soft
-    /// active fill + 2pt bronze leading rule. Hover adds a 4% bronze
-    /// tint so the row reads as reachable before it's selected.
+    /// Result row — custom painting so we can land an exact system-accent
+    /// active fill + 2pt accent leading rule. Hover adds a 4% accent tint so
+    /// the row reads as reachable before it's selected. (Accent, not the brand
+    /// cyan: system-unity + ink-discipline reserve cyan for the loom:// locator.)
     private func row(hit: ShuttleHit, flatIndex: Int) -> some View {
         let isActive = flatIndex == selectedIndex
         let isHover = hoverIndex == flatIndex
-        let bronze = LoomTokens.thread
+        let accent = Color.accentColor
         let display = hit.display
 
         return HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -450,10 +451,10 @@ struct ShuttleView: View {
         .background(
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(rowFill(isActive: isActive, isHover: isHover, bronze: bronze))
+                    .fill(rowFill(isActive: isActive, isHover: isHover, accent: accent))
                 if isActive {
                     Rectangle()
-                        .fill(bronze)
+                        .fill(accent)
                         .frame(width: 2)
                         .clipShape(
                             UnevenRoundedRectangle(
@@ -477,12 +478,12 @@ struct ShuttleView: View {
         .id(hit.scrollId)
     }
 
-    private func rowFill(isActive: Bool, isHover: Bool, bronze: Color) -> Color {
+    private func rowFill(isActive: Bool, isHover: Bool, accent: Color) -> Color {
         if isActive {
-            return bronze.opacity(0.18) // bronze-soft
+            return accent.opacity(0.18) // accent-soft
         }
         if isHover {
-            return bronze.opacity(0.04)
+            return accent.opacity(0.04)
         }
         return .clear
     }

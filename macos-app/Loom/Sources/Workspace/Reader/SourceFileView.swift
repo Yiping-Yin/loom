@@ -171,20 +171,21 @@ struct SourceFileView: View {
             }
             Button { toggleSidebar() } label: { Image(systemName: "sidebar.left") }
                 .help("Show pages & contents")
-                .foregroundStyle(sidebarMode != nil ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
+                .accessibilityLabel("Show pages & contents")
+                .foregroundStyle(sidebarMode != nil ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.secondary))
             Divider().frame(height: 16)
             HStack(spacing: 6) {
                 Button { pdfHolder.goToFirstPage() } label: { Image(systemName: "arrow.up.to.line") }
-                    .help("First page (⌘↑)").keyboardShortcut(.upArrow, modifiers: .command)
+                    .help("First page (⌘↑)").accessibilityLabel("First page").keyboardShortcut(.upArrow, modifiers: .command)
                 Button { pdfHolder.goToPreviousPage() } label: { Image(systemName: "chevron.up") }
-                    .help("Previous page")
+                    .help("Previous page").accessibilityLabel("Previous page")
                 Text(pdfHolder.pageLabel.isEmpty ? "—" : pdfHolder.pageLabel)
                     .font(.system(size: 11.5, design: .monospaced))
                     .frame(minWidth: 52, alignment: .center)
                 Button { pdfHolder.goToNextPage() } label: { Image(systemName: "chevron.down") }
-                    .help("Next page")
+                    .help("Next page").accessibilityLabel("Next page")
                 Button { pdfHolder.goToLastPage() } label: { Image(systemName: "arrow.down.to.line") }
-                    .help("Last page (⌘↓)").keyboardShortcut(.downArrow, modifiers: .command)
+                    .help("Last page (⌘↓)").accessibilityLabel("Last page").keyboardShortcut(.downArrow, modifiers: .command)
             }
             .fixedSize()
 
@@ -243,12 +244,13 @@ struct SourceFileView: View {
             .menuIndicator(.hidden)
             .fixedSize()
             .help("View options")
-            .foregroundStyle(pdfHolder.isNightMode ? AnyShapeStyle(LoomTokens.dsThread) : AnyShapeStyle(.secondary))
+            .accessibilityLabel("View options")
+            .foregroundStyle(pdfHolder.isNightMode ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.secondary))
 
             Button { openFind() } label: { Image(systemName: "magnifyingglass") }
-                .help("Find in document (⌘F)").keyboardShortcut("f", modifiers: .command)
+                .help("Find in document (⌘F)").accessibilityLabel("Find in document").keyboardShortcut("f", modifiers: .command)
             Button { pdfHolder.toggleFullScreen() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
-                .help("Full screen (⌃⌘F)").keyboardShortcut("f", modifiers: [.control, .command])
+                .help("Full screen (⌃⌘F)").accessibilityLabel("Full screen").keyboardShortcut("f", modifiers: [.control, .command])
 
             // The reader's close (owner 2026-07-06): a quiet ✕ that reuses the
             // find bar's own close glyph — NOT a filled accent block (青芒 =
@@ -258,6 +260,7 @@ struct SourceFileView: View {
                 Divider().frame(height: 16)
                 Button { onClose() } label: { Image(systemName: "xmark") }
                     .help("Close reader (Esc)")
+                    .accessibilityLabel("Close reader")
                     .keyboardShortcut(pdfHolder.isFindOpen ? nil : .cancelAction)
             }
         }
@@ -400,7 +403,7 @@ struct SourceFileView: View {
                                 )
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                             } else {
-                                LoomQuickLookView(fileURL: resolved)
+                                nonPDFReader(resolved)
                             }
                         } else if let resolveError {
                             VStack(spacing: 6) {
@@ -544,6 +547,25 @@ struct SourceFileView: View {
         notePassageHandler?(page, rect, text, image)
     }
 
+    /// Non-PDF sources render through QuickLook, which has no passage capture.
+    /// Extracted into its own builder so the big reader body stays inside
+    /// SwiftUI's type-inference budget. Carries an honest "reading only" footer
+    /// so the user isn't left wondering why capture does nothing here.
+    @ViewBuilder
+    private func nonPDFReader(_ resolved: URL) -> some View {
+        VStack(spacing: 0) {
+            LoomQuickLookView(fileURL: resolved)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            Divider()
+            Text("Reading only — passage capture is available for PDF sources.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 7)
+        }
+    }
+
     // MARK: - Note panel (⌘E)
 
     @ViewBuilder
@@ -684,7 +706,22 @@ struct SourceFileView: View {
         // quote", same outcome as the old Quote menu item.
         if noteSelection == nil && trimmed.isEmpty { return }
         guard let rootID = parentRootID else {
-            showToast("Couldn't find this file's page.")
+            // Docked reader (opened by fileURL — the live workbench path): there
+            // is no loom://content Loom.md identity here, so the old code dead-
+            // ended with "Couldn't find this file's page." Route an anchored note
+            // to the SAME center-document sink the hover-❕ capture uses, so ⌘E /
+            // right-click "Note this passage" actually lands instead of failing.
+            if let info = noteSelection, let handler = notePassageHandler {
+                handler(info.pageIndex, info.rect, info.text, nil)
+                cancelNote()
+                showToast(trimmed.isEmpty
+                    ? "Quote noted into your document."
+                    : "Quote noted — write your thought in the document.")
+            } else {
+                // Free-form thought with no passage can't anchor here; say so
+                // honestly rather than pretend a page lookup failed.
+                showToast("Select a passage to note it into your document.")
+            }
             return
         }
         let target = LoomFileStore.loomMDURL(for: rootID)
