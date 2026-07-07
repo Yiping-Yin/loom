@@ -2785,7 +2785,6 @@ private struct ReflectionSidebar: View {
             }
 
             SidebarUtilityStrip(
-                projectCount: cases.count,
                 sourceCount: cases.reduce(0) { $0 + $1.sources.count },
                 noteCount: cases.reduce(0) { $0 + $1.messages.filter { $0.role == .human }.count }
             )
@@ -3573,7 +3572,6 @@ private struct MoonAvatar: View {
 
 
 private struct SidebarUtilityStrip: View {
-    let projectCount: Int
     let sourceCount: Int
     let noteCount: Int
     @Environment(\.openWindow) private var openWindow
@@ -3594,27 +3592,16 @@ private struct SidebarUtilityStrip: View {
                 .padding(.top, 8)
 
             HStack(spacing: 8) {
-            // New Draft now lives at the top of the rail (one entry point); the
-            // bottom strip is identity + settings only.
-            // The About button speaks the strip's own ink (owner
-            // 2026-07-04: the photographic moon avatar was a material
-            // clash next to the line-art gear) — a moon glyph in the
-            // same stroke language, brand whisper kept.
-            SidebarRailIcon(
-                systemImage: "moon.stars",
-                help: "About Loom · Local, \(projectCount) project\(projectCount == 1 ? "" : "s") — on-device",
-                tooltipAnchor: .leading
-            ) {
-                openWindow(id: AboutWindow.id)
-            }
-
+            // Bottom strip = identity + settings only. About lives in the App
+            // menu (⌘ → About Loom, its macOS-standard home), NOT here — owner
+            // 2026-07-07 dropped the strip glyph to keep the footer clean and
+            // avoid duplicating the App-menu entry.
             // "You" — the evidenced-self dossier (Education · Experience ·
-            // Digital Me). Same-stroke SF glyph, no accent tint; sits beside
-            // About as the identity cluster. Opens the standalone dossier room.
+            // Digital Me). Same-stroke SF glyph, no accent tint.
             SidebarRailIcon(
                 systemImage: "person.crop.circle",
                 help: "You · your evidenced self — Local, on-device",
-                tooltipAnchor: .center
+                tooltipAnchor: .leading
             ) {
                 openWindow(id: DossierWindow.id)
             }
