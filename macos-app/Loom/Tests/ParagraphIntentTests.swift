@@ -47,4 +47,21 @@ final class ParagraphIntentTests: XCTestCase {
     func testStampPreservesLeadingWhitespace() {
         XCTAssertEqual(F.stampParagraph("  Foo", as: .question), "  \u{2753} Foo")
     }
+
+    // MARK: leading token (for prefix-only editor stamping)
+    func testLeadingTokenMeaningIsEmpty() {
+        XCTAssertEqual(F.leadingIntentToken(of: "Foo bar"), "")
+    }
+    func testLeadingTokenQuestion() {
+        XCTAssertEqual(F.leadingIntentToken(of: "\u{2753} Foo"), "\u{2753} ")
+    }
+    func testLeadingTokenQuestionNoSpace() {
+        XCTAssertEqual(F.leadingIntentToken(of: "\u{2753}Foo"), "\u{2753}")
+    }
+    func testLeadingTokenPrinciple() {
+        XCTAssertEqual(F.leadingIntentToken(of: "principle: Foo"), "principle: ")
+    }
+    func testLeadingTokenCorrectionPreservesCasing() {
+        XCTAssertEqual(F.leadingIntentToken(of: "Correction: Foo"), "Correction: ")
+    }
 }

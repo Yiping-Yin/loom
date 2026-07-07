@@ -163,6 +163,35 @@ enum ReflectionDocumentFormat {
         return leading + intent.token + String(body)
     }
 
+    /// The exact leading intent token as it appears at the START of a paragraph
+    /// (casing preserved), so a stamp can replace ONLY the token region and keep
+    /// the body's inline attributes — emphasis and loom://anchor links — intact.
+    /// Assumes the paragraph begins at column 0 (editor lines do).
+    static func leadingIntentToken(of paragraph: String) -> String {
+        switch paragraphIntent(of: paragraph) {
+        case .meaning:
+            return ""
+        case .question:
+            var token = ""
+            var seenMark = false
+            for ch in paragraph {
+                if ch == "\u{2753}" { token.append(ch); seenMark = true }
+                else if ch == " " && seenMark { token.append(ch) }
+                else { break }
+            }
+            return token
+        case .correction, .principle:
+            guard let colon = paragraph.firstIndex(of: ":") else { return "" }
+            var token = String(paragraph[paragraph.startIndex...colon])
+            var i = paragraph.index(after: colon)
+            while i < paragraph.endIndex, paragraph[i] == " " {
+                token.append(" ")
+                i = paragraph.index(after: i)
+            }
+            return token
+        }
+    }
+
     /// The live outline is derived from the WRITTEN document — every heading
     /// line, with its character location for click-to-jump. Locations count
     /// UTF-16 units (+1 per newline) to match NSTextView's indexing.
