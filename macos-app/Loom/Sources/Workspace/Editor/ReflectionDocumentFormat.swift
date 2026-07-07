@@ -109,6 +109,60 @@ enum ReflectionDocumentFormat {
         line.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("\u{2753}")
     }
 
+    /// The four intents a reading-note paragraph can carry, expressed as leading
+    /// TEXT tokens so they survive RTFD round-trips (the same trick as the ❓
+    /// open-question prefix and #/## headings). The gutter type-namer STAMPS
+    /// these; `normalizeDocument` renders each altitude from the token — so the
+    /// namer and the renderer agree by construction, and the state lives in the
+    /// book, not in chrome. This is the grammar that lets the composer dissolve.
+    enum ParagraphIntent: String, CaseIterable {
+        case meaning
+        case question
+        case correction
+        case principle
+
+        /// The leading token this intent writes (meaning writes none).
+        var token: String {
+            switch self {
+            case .meaning: return ""
+            case .question: return "\u{2753} "
+            case .correction: return "correction: "
+            case .principle: return "principle: "
+            }
+        }
+    }
+
+    /// Classify a paragraph by its leading token; meaning is the default. Pure.
+    static func paragraphIntent(of paragraph: String) -> ParagraphIntent {
+        let trimmed = paragraph.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasPrefix("\u{2753}") { return .question }
+        let lowered = trimmed.lowercased()
+        if lowered.hasPrefix("principle:") { return .principle }
+        if lowered.hasPrefix("correction:") { return .correction }
+        return .meaning
+    }
+
+    /// Re-stamp a paragraph with an intent: strip its current intent token, then
+    /// prefix the target's token (meaning strips to bare prose). Leading
+    /// whitespace preserved; idempotent, so the gutter can toggle freely.
+    static func stampParagraph(_ paragraph: String, as intent: ParagraphIntent) -> String {
+        let leading = String(paragraph.prefix { $0 == " " || $0 == "\t" })
+        var body = Substring(paragraph.dropFirst(leading.count))
+        switch paragraphIntent(of: String(body)) {
+        case .meaning:
+            break
+        case .question:
+            body = body.drop(while: { $0 == "\u{2753}" })
+            body = body.drop(while: { $0 == " " })
+        case .correction, .principle:
+            if let colon = body.firstIndex(of: ":") {
+                body = body[body.index(after: colon)...]
+                body = body.drop(while: { $0 == " " })
+            }
+        }
+        return leading + intent.token + String(body)
+    }
+
     /// The live outline is derived from the WRITTEN document — every heading
     /// line, with its character location for click-to-jump. Locations count
     /// UTF-16 units (+1 per newline) to match NSTextView's indexing.
