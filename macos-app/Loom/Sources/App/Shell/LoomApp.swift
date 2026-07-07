@@ -76,6 +76,13 @@ struct LoomApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: 560, height: 540)
 
+        Window("Loom Help", id: LoomHelpWindow.id) {
+            LoomHelpView()
+                .paperChrome()
+        }
+        .windowResizability(.contentSize)
+        .defaultSize(width: 460, height: 560)
+
         Window("About Loom", id: AboutWindow.id) {
             AboutView()
         }
@@ -212,6 +219,8 @@ struct LoomApp: App {
                 EveningMenuItem()
             }
             CommandGroup(replacing: .help) {
+                LoomHelpMenuItem()
+                Divider()
                 KeyboardShortcutsMenuItem()
                 CaptureHelpMenuItem()
             }
@@ -2215,6 +2224,23 @@ struct CaptureHelpMenuItem: View {
 /// Help-menu item that opens the native Keyboard Shortcuts window. Wrapped
 /// in its own view so it can use `@Environment(\.openWindow)` — only
 /// available inside a `Scene.commands` body via a SwiftUI view.
+struct LoomHelpMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
+    var body: some View {
+        Button("Loom Help") {
+            let existing = NSApp.windows.first {
+                $0.identifier?.rawValue == LoomHelpWindow.id && $0.isVisible
+            }
+            if existing != nil {
+                dismissWindow(id: LoomHelpWindow.id)
+            } else {
+                openWindow(id: LoomHelpWindow.id)
+            }
+        }
+    }
+}
+
 struct KeyboardShortcutsMenuItem: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow

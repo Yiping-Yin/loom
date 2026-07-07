@@ -2784,7 +2784,11 @@ private struct ReflectionSidebar: View {
                 )
             }
 
-            SidebarUtilityStrip(projectCount: cases.count)
+            SidebarUtilityStrip(
+                projectCount: cases.count,
+                sourceCount: cases.reduce(0) { $0 + $1.sources.count },
+                noteCount: cases.reduce(0) { $0 + $1.messages.filter { $0.role == .human }.count }
+            )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
@@ -3570,11 +3574,26 @@ private struct MoonAvatar: View {
 
 private struct SidebarUtilityStrip: View {
     let projectCount: Int
+    let sourceCount: Int
+    let noteCount: Int
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 4) {
+            // form A — the quiet colophon signature: a STATIC, system-ink line
+            // that honestly names the local corpus (sources + notes). No motion,
+            // pull-only; the text is the source of truth and passes the mute-test.
+            Text(ColophonStatus.text(sourceCount: sourceCount, noteCount: noteCount))
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+
+            HStack(spacing: 8) {
             // New Draft now lives at the top of the rail (one entry point); the
             // bottom strip is identity + settings only.
             // The About button speaks the strip's own ink (owner
@@ -3609,9 +3628,10 @@ private struct SidebarUtilityStrip: View {
             ) {
                 openSettings()
             }
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 40)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 44)
         .overlay(alignment: .top) {
             Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 1)
         }
