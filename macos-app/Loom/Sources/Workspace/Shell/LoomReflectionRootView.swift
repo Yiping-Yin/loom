@@ -3589,6 +3589,17 @@ private struct SidebarUtilityStrip: View {
                 openWindow(id: AboutWindow.id)
             }
 
+            // "You" — the evidenced-self dossier (Education · Experience ·
+            // Digital Me). Same-stroke SF glyph, no accent tint; sits beside
+            // About as the identity cluster. Opens the standalone dossier room.
+            SidebarRailIcon(
+                systemImage: "person.crop.circle",
+                help: "You · your evidenced self — Local, on-device",
+                tooltipAnchor: .center
+            ) {
+                openWindow(id: DossierWindow.id)
+            }
+
             Spacer(minLength: 0)
 
             SidebarRailIcon(

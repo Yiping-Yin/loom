@@ -1,5 +1,12 @@
 import SwiftUI
 
+/// Window id for the standalone "You" dossier room — the evidenced-self surface
+/// reached from the sidebar's bottom-left identity cluster. Registered in
+/// `LoomApp` next to `AboutWindow`; opened via `openWindow(id:)`.
+enum DossierWindow {
+    static let id = "com.loom.window.dossier"
+}
+
 /// Native root that presents the LATEST Loom — the web identity product
 /// (Home · About · Education · Experience · Digital Me, plus the cool-black
 /// working surfaces) — as a single full-window WebView.

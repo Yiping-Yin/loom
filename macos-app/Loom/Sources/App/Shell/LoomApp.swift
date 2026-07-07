@@ -84,6 +84,17 @@ struct LoomApp: App {
         .defaultPosition(.center)
         .defaultSize(width: 420, height: 540)
 
+        // "You" — the evidenced-self dossier room (Education · Experience ·
+        // Digital Me). Reached from the sidebar bottom-left identity cluster,
+        // beside About. Local, no account: the webview is the on-device product.
+        Window("You", id: DossierWindow.id) {
+            LoomDossierRootView()
+                .environmentObject(delegate.server)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .defaultPosition(.center)
+        .defaultSize(width: 1080, height: 760)
+
         Window("Shuttle", id: ShuttleWindow.id) {
             ShuttleView()
         }
