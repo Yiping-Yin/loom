@@ -7469,8 +7469,9 @@ private struct ReflectionBridgePanel: View {
             VStack(spacing: 8) {
                 BridgeRow(
                     systemImage: "folder.badge.plus",
-                    title: "Files",
+                    title: "Add files",
                     shortcut: "⌘P",
+                    help: "Import local files as sources for this draft (or drag a file onto the document)",
                     action: onFiles
                 )
                 .keyboardShortcut("p", modifiers: .command)
