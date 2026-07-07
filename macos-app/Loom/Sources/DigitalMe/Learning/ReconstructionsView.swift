@@ -121,7 +121,7 @@ struct ReconstructionsView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .tint(LoomTokens.thread)
+                    .tint(Color.accentColor)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)

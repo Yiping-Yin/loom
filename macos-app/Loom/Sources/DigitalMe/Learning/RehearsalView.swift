@@ -82,7 +82,7 @@ struct RehearsalView: View {
         // blue) leaks in and reads as neon on the vellum surface.
         // The footer buttons keep their own `.tint(LoomTokens.thread)`
         // which is redundant now but preserved for explicit clarity.
-        .tint(LoomTokens.thread)
+        .tint(Color.accentColor)
         .frame(minWidth: 520, idealWidth: 620, minHeight: 440, idealHeight: 560)
         .onAppear {
             bodyFocused = true
@@ -158,14 +158,14 @@ struct RehearsalView: View {
             Button("Save & Check") { saveAndAsk() }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .tint(LoomTokens.thread)
+                .tint(Color.accentColor)
                 .help("Save the draft, then open Source check seeded with this topic")
                 .disabled(body_.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
             Button("Save draft") { save() }
                 .keyboardShortcut("s", modifiers: .command)
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .tint(LoomTokens.thread)
+                .tint(Color.accentColor)
                 .disabled(body_.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
         }
         .padding(.horizontal, 16)
@@ -198,7 +198,7 @@ struct RehearsalView: View {
         }
         .menuStyle(.button)
         .controlSize(.small)
-        .tint(LoomTokens.thread)
+        .tint(Color.accentColor)
         .disabled(body_.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || transformIsRunning)
     }
 

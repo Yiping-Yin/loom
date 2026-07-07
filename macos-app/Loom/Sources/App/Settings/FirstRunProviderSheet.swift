@@ -43,7 +43,7 @@ struct FirstRunProviderSheet: View {
         .padding(28)
         .frame(width: 480)
         .background(LoomTokens.paper)
-        .tint(LoomTokens.thread)
+        .tint(Color.accentColor)
     }
 
     private var providerStep: some View {

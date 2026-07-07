@@ -462,7 +462,7 @@ struct FragmentDestinationPicker: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
-            .tint(LoomTokens.thread)
+            .tint(Color.accentColor)
             .keyboardShortcut(.defaultAction)
             .disabled(!canSave)
             .help(canSave

@@ -124,11 +124,11 @@ struct IngestionView: View {
                 Button("Pick a file…") { pickFile() }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .tint(LoomTokens.thread)
+                    .tint(Color.accentColor)
                 Button("Paste fragment") { pasteClipboardText() }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .tint(LoomTokens.thread)
+                    .tint(Color.accentColor)
                     .help("Quote a paragraph from anywhere — pick a destination at capture time.")
             }
             .padding(.top, 6)
@@ -207,7 +207,7 @@ struct IngestionView: View {
             Button("Add") { submitURL() }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .tint(LoomTokens.thread)
+                .tint(Color.accentColor)
                 .disabled(!isValidURL(urlText))
         }
         .padding(.horizontal, 16)
@@ -1638,7 +1638,7 @@ private struct TextExtractedPane: View {
                 Button(extractButtonTitle) { onExtract() }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.regular)
-                    .tint(LoomTokens.thread)
+                    .tint(Color.accentColor)
                     .disabled(extractDisabled)
                     .help(extractDisabled
                           ? "AI provider disabled in Settings"

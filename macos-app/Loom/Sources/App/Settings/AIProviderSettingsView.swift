@@ -205,7 +205,7 @@ struct AIProviderSettingsView: View {
         .frame(minWidth: 520, idealWidth: 560, minHeight: 360)
         .scrollContentBackground(.hidden)
         .background(LoomTokens.paper)
-        .tint(LoomTokens.thread)
+        .tint(Color.accentColor)
         .onAppear {
             if AIProviderKind(rawValue: providerRaw) == nil {
                 providerRaw = AIProviderKind.codexCli.rawValue

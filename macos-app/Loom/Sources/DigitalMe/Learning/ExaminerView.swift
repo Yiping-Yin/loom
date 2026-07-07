@@ -67,7 +67,7 @@ struct ExaminerView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .tint(LoomTokens.thread)
+                    .tint(Color.accentColor)
                 }
                 .padding(12)
             }
@@ -76,7 +76,7 @@ struct ExaminerView: View {
         // Bronze tint cascades into every TextField / TextEditor cursor
         // + selection inside this view. System blue accent would leak in
         // otherwise and read as neon on the vellum paper.
-        .tint(LoomTokens.thread)
+        .tint(Color.accentColor)
         .frame(minWidth: 540, idealWidth: 620, minHeight: 480)
         .onAppear {
             if let handedOff = context.consume(), !handedOff.isEmpty {
@@ -157,7 +157,7 @@ struct ExaminerView: View {
             Button("Begin") { startQuestion() }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.regular)
-                .tint(LoomTokens.thread)
+                .tint(Color.accentColor)
                 .keyboardShortcut(.defaultAction)
                 .disabled(topic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
@@ -194,7 +194,7 @@ struct ExaminerView: View {
                 Button("Submit") { submitAnswer() }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
-                    .tint(LoomTokens.thread)
+                    .tint(Color.accentColor)
                     .keyboardShortcut(.return, modifiers: .command)
                     .disabled(answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
@@ -234,7 +234,7 @@ struct ExaminerView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .tint(LoomTokens.thread)
+                .tint(Color.accentColor)
                 if !v.pass {
                     Button("Back to Source practice") {
                         RehearsalContext.shared.pendingTopic = topic
@@ -242,7 +242,7 @@ struct ExaminerView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .tint(LoomTokens.thread)
+                    .tint(Color.accentColor)
                     .help("Rebuild the gap by writing from memory; comes back here with Save & Ask")
                 }
                 Button("New topic") {
@@ -253,7 +253,7 @@ struct ExaminerView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .tint(LoomTokens.thread)
+                .tint(Color.accentColor)
                 Spacer()
                 Button("Close") { dismissWindow(id: ExaminerWindow.id) }
                     .buttonStyle(.plain)
@@ -267,7 +267,7 @@ struct ExaminerView: View {
     @ViewBuilder
     private func stageBanner(label: String, systemImage: String) -> some View {
         HStack(spacing: 8) {
-            MoonPhaseIndicator(size: 14)
+            ProgressView().controlSize(.small)
             Label(label, systemImage: systemImage)
                 .font(LoomTokens.serif(size: 13, italic: true))
                 .foregroundStyle(LoomTokens.ink3)

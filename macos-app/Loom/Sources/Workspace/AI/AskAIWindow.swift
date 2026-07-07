@@ -133,12 +133,12 @@ struct AskAIView: View {
                     Button("Stop") { runner.cancel() }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
-                        .tint(LoomTokens.thread)
+                        .tint(Color.accentColor)
                 } else {
                     Button("Ask") { submit() }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
-                        .tint(LoomTokens.thread)
+                        .tint(Color.accentColor)
                         .disabled(prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
@@ -238,7 +238,7 @@ struct AskAIView: View {
         // Bronze tint cascades into the prompt TextEditor + reference
         // picker search field — otherwise system blue leaks in and
         // reads as neon on the vellum surface.
-        .tint(LoomTokens.thread)
+        .tint(Color.accentColor)
         .frame(minWidth: 480, idealWidth: 560, minHeight: 420, idealHeight: 520)
         .onAppear {
             fieldFocused = true
@@ -330,7 +330,7 @@ struct AskAIView: View {
                 }
 
                 if isStreamingAssistant {
-                    MoonPhaseIndicator(size: 14)
+                    ProgressView().controlSize(.small)
                         .padding(.vertical, 2)
                 } else if msg.role == .assistant {
                     renderMarkdown(msg.content)

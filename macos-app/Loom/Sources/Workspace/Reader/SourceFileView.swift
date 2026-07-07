@@ -2067,7 +2067,7 @@ struct SourceFileView: View {
             HStack(spacing: 8) {
                 Button("Compile") { startCompile() }
                     .buttonStyle(.borderedProminent)
-                    .tint(LoomTokens.dsThread)
+                    .tint(Color.accentColor)
                     .disabled(!hasCompilableScratch || isCompiling)
                     .help(hasCompilableScratch
                           ? "Compile your scratch into a typeset artifact"

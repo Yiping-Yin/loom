@@ -44,7 +44,7 @@ struct AppearanceSettingsView: View {
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .background(LoomTokens.paper)
-        .tint(LoomTokens.thread)
+        .tint(Color.accentColor)
         .padding()
         .frame(minWidth: 480, idealWidth: 520, minHeight: 260)
     }

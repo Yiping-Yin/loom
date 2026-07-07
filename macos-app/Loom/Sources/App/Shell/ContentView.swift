@@ -1507,12 +1507,12 @@ struct FailedView: View {
                 Button("Try Again") { onRetry() }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
-                    .tint(LoomTokens.thread)
+                    .tint(Color.accentColor)
                 Button("Open Settings") {
                     openSettings()
                 }
                 .buttonStyle(.bordered)
-                .tint(LoomTokens.thread)
+                .tint(Color.accentColor)
             }
             .padding(.top, 2)
 

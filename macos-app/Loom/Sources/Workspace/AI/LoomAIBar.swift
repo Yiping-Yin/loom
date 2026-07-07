@@ -125,7 +125,7 @@ struct LoomAIBar: View {
                     }
                     if isThinking {
                         HStack(spacing: 6) {
-                            MoonPhaseIndicator(size: 14)
+                            ProgressView().controlSize(.small)
                             Text("Thinking…")
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
