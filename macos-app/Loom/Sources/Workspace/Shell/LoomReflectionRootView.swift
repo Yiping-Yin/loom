@@ -4763,20 +4763,32 @@ private struct GlassReadingCenter: View {
                                             .font(.system(size: 26, weight: .semibold, design: .serif))
                                             .foregroundStyle(.primary)
                                         if let provenanceLabel {
-                                            Text(provenanceLabel)
-                                                .font(.system(size: 12, design: .serif))
+                                            // The source is a whisper-quiet one-liner under the
+                                            // title, and it now carries the Open affordance: the
+                                            // SOURCE card is gone (owner 2026-07-07 — it just
+                                            // repeated the main bar + this line and put a source
+                                            // list in the center). The right pane stays a
+                                            // project↔world bridge, NOT a source list (owner
+                                            // 2026-07-03 scope law), so the source's reader home is
+                                            // Open, not a right-rail list.
+                                            Button {
+                                                if let sourceID = selectedSourceID ?? reflectionCase.sources.first?.id {
+                                                    onOpenSourceID(sourceID)
+                                                }
+                                            } label: {
+                                                HStack(spacing: 5) {
+                                                    Image(systemName: "book")
+                                                        .font(.system(size: 10))
+                                                    Text(provenanceLabel)
+                                                        .font(.system(size: 12, design: .serif))
+                                                }
                                                 .foregroundStyle(.tertiary)
+                                            }
+                                            .buttonStyle(.plain)
+                                            .help("Open source")
                                         }
                                     }
                                     .padding(.top, 8)
-                                }
-
-                                if shouldShowSourceList {
-                                    ProjectSourcesList(
-                                        sources: reflectionCase.sources,
-                                        selectedSourceID: selectedSourceID,
-                                        onOpenSource: onOpenSourceID
-                                    )
                                 }
 
                                 // The document IS the input: writing happens
@@ -4798,22 +4810,11 @@ private struct GlassReadingCenter: View {
                                     }
                                 }
 
-                                ForEach(contentSteps) { step in
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        Text(step.title.uppercased())
-                                            .font(.system(size: 11, weight: .semibold))
-                                            .tracking(0.8)
-                                            .foregroundStyle(.secondary)
-                                        ForEach(step.items, id: \.self) { item in
-                                            Text(item)
-                                                .font(.system(size: 15, design: .serif))
-                                                .lineSpacing(5)
-                                                .foregroundStyle(.primary)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                        }
-                                    }
-                                    .id(step.id)
-                                }
+                                // The raw INPUT step log is gone (owner 2026-07-07): captured
+                                // passages + manual entries already surface as EvidencePaperCards
+                                // above (ReflectionLearningTrace.from parses them); only the
+                                // non-parsing machine process lines lived here, and those are
+                                // chrome, not the book. (evidence→document is a later transform.)
                             }
                             .frame(maxWidth: contentMaxWidth, alignment: .leading)
                             .padding(.leading, contentLeadingPadding)
@@ -4845,7 +4846,7 @@ private struct GlassReadingCenter: View {
                             // document's headings first (click scrolls the
                             // reading pane to the line), then any structured
                             // step sections below the editor.
-                            if !isReadingSource, documentHeadings.count + contentSteps.count > 1 {
+                            if !isReadingSource, documentHeadings.count > 1 {
                                 VStack(alignment: .trailing, spacing: 8) {
                                     ForEach(documentHeadings) { heading in
                                         Button {
@@ -4859,17 +4860,6 @@ private struct GlassReadingCenter: View {
                                                 .foregroundStyle(.tertiary)
                                                 .lineLimit(1)
                                                 .padding(.trailing, CGFloat(heading.level - 1) * 8)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    ForEach(contentSteps) { step in
-                                        Button {
-                                            withAnimation { proxy.scrollTo(step.id, anchor: .top) }
-                                        } label: {
-                                            Text(step.title)
-                                                .font(.system(size: 10.5))
-                                                .foregroundStyle(.tertiary)
-                                                .lineLimit(1)
                                         }
                                         .buttonStyle(.plain)
                                     }
