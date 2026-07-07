@@ -5623,53 +5623,18 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         // Discoverable formatting: when text is selected, append Bold / Italic /
         // Underline (with ⌘ hints) to the editor's right-click menu.
         func textView(_ view: NSTextView, menu: NSMenu, for event: NSEvent, at charIndex: Int) -> NSMenu? {
-            guard let editor = view as? GrowingGlassTextView else { return menu }
-
-            // N2 (owner 2026-07-07): name THIS paragraph's intent — the four
-            // reading-note states as a context-menu affordance (the gutter
-            // type-namer's job, no text field). Stamps only a leading TEXT token
-            // via the tested ReflectionDocumentFormat.stampParagraph; ❓ questions
-            // render amber through the normalize pass. Acts on the paragraph, so
-            // it is offered with or without a selection.
-            editor.stampTargetLocation = charIndex
-            let ns = view.string as NSString
-            let ploc = min(max(charIndex, 0), ns.length)
-            let paraRange = ns.paragraphRange(for: NSRange(location: ploc, length: 0))
-            let currentIntent = ReflectionDocumentFormat.paragraphIntent(of: ns.substring(with: paraRange))
+            guard view.selectedRange().length > 0, let editor = view as? GrowingGlassTextView else { return menu }
             menu.addItem(.separator())
-            let intents: [(String, ReflectionDocumentFormat.ParagraphIntent)] = [
-                ("Meaning", .meaning),
-                ("Question", .question),
-                ("Correction", .correction),
-                ("Principle", .principle),
+            let formats: [(String, String, Selector)] = [
+                ("Bold", "b", #selector(GrowingGlassTextView.loomToggleBold)),
+                ("Italic", "i", #selector(GrowingGlassTextView.loomToggleItalic)),
+                ("Underline", "u", #selector(GrowingGlassTextView.loomToggleUnderline)),
             ]
-            for (title, intent) in intents {
-                let item = NSMenuItem(
-                    title: title,
-                    action: #selector(GrowingGlassTextView.loomStampParagraph(_:)),
-                    keyEquivalent: ""
-                )
+            for (title, key, action) in formats {
+                let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
+                item.keyEquivalentModifierMask = .command
                 item.target = editor
-                item.representedObject = intent
-                item.state = intent == currentIntent ? .on : .off
                 menu.addItem(item)
-            }
-
-            // Discoverable formatting: Bold / Italic / Underline only with a
-            // selection (unchanged).
-            if view.selectedRange().length > 0 {
-                menu.addItem(.separator())
-                let formats: [(String, String, Selector)] = [
-                    ("Bold", "b", #selector(GrowingGlassTextView.loomToggleBold)),
-                    ("Italic", "i", #selector(GrowingGlassTextView.loomToggleItalic)),
-                    ("Underline", "u", #selector(GrowingGlassTextView.loomToggleUnderline)),
-                ]
-                for (title, key, action) in formats {
-                    let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
-                    item.keyEquivalentModifierMask = .command
-                    item.target = editor
-                    menu.addItem(item)
-                }
             }
             return menu
         }
@@ -5923,34 +5888,6 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         @objc func loomToggleBold() { toggleEmphasis(.boldFontMask) }
         @objc func loomToggleItalic() { toggleEmphasis(.italicFontMask) }
         @objc func loomToggleUnderline() { toggleUnderline() }
-
-        // N2: paragraph-intent stamping (the gutter type-namer's write path,
-        // surfaced as a right-click action for now). The menu records the
-        // clicked location; the action re-stamps ONLY the paragraph's leading
-        // token, so the body's inline attributes and loom://anchor links survive.
-        // didChangeText() runs the same normalize + save path as typing.
-        var stampTargetLocation: Int = 0
-
-        @objc func loomStampParagraph(_ sender: NSMenuItem) {
-            guard let intent = sender.representedObject as? ReflectionDocumentFormat.ParagraphIntent,
-                  let storage = textStorage else { return }
-            let ns = string as NSString
-            let loc = min(max(stampTargetLocation, 0), ns.length)
-            let paraRange = ns.paragraphRange(for: NSRange(location: loc, length: 0))
-            // The paragraph body without any trailing separator (\n = 10).
-            var bodyLen = paraRange.length
-            if bodyLen > 0, ns.character(at: paraRange.location + bodyLen - 1) == 10 {
-                bodyLen -= 1
-            }
-            let body = ns.substring(with: NSRange(location: paraRange.location, length: bodyLen))
-            let currentToken = ReflectionDocumentFormat.leadingIntentToken(of: body)
-            let newToken = intent.token
-            guard currentToken != newToken else { return }
-            let tokenRange = NSRange(location: paraRange.location, length: (currentToken as NSString).length)
-            guard shouldChangeText(in: tokenRange, replacementString: newToken) else { return }
-            storage.replaceCharacters(in: tokenRange, with: newToken)
-            didChangeText()
-        }
 
         // A click that lands on a file chip opens its source directly —
         // deterministic hit-testing instead of AppKit's legacy attachment
