@@ -6334,31 +6334,49 @@ private struct EvidencePaperCard: View {
     @State private var isHovering = false
 
     var body: some View {
+        // The captured source quote at the SOURCE altitude (owner 2026-07-07:
+        // the white card read as an inbox item; now it is indented book prose
+        // behind a quote-spine hairline, the way a quotation sits in a research
+        // note). The ◆ (precise rect) / ◇ (page-only) locator is the one
+        // sanctioned cyan on the page — signal, not decoration; click opens the
+        // source. Data unchanged: still the parsed trace, only the rendering.
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(trace.displayText)
-                    .font(.system(size: 14, design: .serif))
-                    .lineSpacing(4)
-                    .foregroundStyle(Color.black.opacity(0.85))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                if !trace.sourceAnchor.isEmpty {
-                    Text(trace.sourceAnchor)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(Color.black.opacity(0.45))
-                }
+            HStack(alignment: .top, spacing: 12) {
+                Rectangle()
+                    .fill(isHovering ? AnyShapeStyle(LoomTokens.dsThread.opacity(0.55)) : AnyShapeStyle(.quaternary))
+                    .frame(width: 1.5)
+                    .frame(maxHeight: .infinity)
+                (
+                    Text(trace.displayText)
+                        .font(.system(size: 14.5, design: .serif))
+                        .foregroundStyle(.secondary)
+                    + Text(locatorSuffix)
+                        .font(.system(size: 10))
+                        .foregroundStyle(LoomTokens.dsThread)
+                        .baselineOffset(3)
+                )
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white)
-                    .shadow(color: .black.opacity(isHovering ? 0.22 : 0.12), radius: isHovering ? 14 : 8, y: 3)
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.vertical, 3)
+            .padding(.leading, 8)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
         .accessibilityLabel(trace.displayText)
+    }
+
+    /// The trailing anchor locator: ◆ = precise rect, ◇ = page-only (weak),
+    /// with the page label when known. The one place cyan lives in the body.
+    private var locatorSuffix: String {
+        let mark = trace.isWeakAnchor ? "◇" : "◆"
+        if let page = trace.pageAnchorLabel {
+            return "  \(mark) \(page)"
+        }
+        return "  \(mark)"
     }
 }
 
