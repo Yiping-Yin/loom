@@ -3576,38 +3576,51 @@ private struct SidebarUtilityStrip: View {
     let noteCount: Int
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
+    @State private var identityHovering = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // form A — the quiet colophon signature: a STATIC, system-ink line
-            // that honestly names the local corpus (sources + notes). No motion,
-            // pull-only; the text is the source of truth and passes the mute-test.
-            Text(ColophonStatus.text(sourceCount: sourceCount, noteCount: noteCount))
-                .font(.system(size: 11))
-                .foregroundStyle(.tertiary)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.top, 8)
-
-            HStack(spacing: 8) {
-            // Bottom strip = identity + settings only. About lives in the App
-            // menu (⌘ → About Loom, its macOS-standard home), NOT here — owner
-            // 2026-07-07 dropped the strip glyph to keep the footer clean and
-            // avoid duplicating the App-menu entry.
-            // "You" — the evidenced-self dossier (Education · Experience ·
-            // Digital Me). Same-stroke SF glyph, no accent tint.
-            SidebarRailIcon(
-                systemImage: "person.crop.circle",
-                help: "You · your evidenced self — Local, on-device",
-                tooltipAnchor: .leading
-            ) {
+        HStack(spacing: 8) {
+            // Identity row — the bottom-left "self" entry, borrowing the
+            // Codex/Claude/Atlas avatar→row pattern but ACCOUNT-FREE (LOOM is
+            // local-first, no login). The whole left cluster is the door to your
+            // evidenced self (dossier). "You" is literal — there is no account
+            // name; person.crop.circle, never a photo/initials/brand moon. The
+            // form A colophon is promoted to the honest subtitle (sources + notes).
+            Button {
                 openWindow(id: DossierWindow.id)
+            } label: {
+                HStack(spacing: 9) {
+                    Image(systemName: "person.crop.circle")
+                        .font(.system(size: 20, weight: .regular))
+                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("You")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.primary)
+                        Text(ColophonStatus.text(sourceCount: sourceCount, noteCount: noteCount))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 5)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background {
+                    if identityHovering {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.quinary)
+                    }
+                }
+                .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
+            .buttonStyle(.plain)
+            .onHover { identityHovering = $0 }
+            .glassTooltip("You · your evidenced self — Local, on-device", anchor: .leading)
 
-            Spacer(minLength: 0)
-
+            // Settings stays a first-class, one-click entry (⌘, also global).
+            // Distinct control from the identity door — VS Code's Accounts vs
+            // Manage split. About lives in the App menu (macOS-standard home).
             SidebarRailIcon(
                 systemImage: "gearshape",
                 help: "Settings (⌘,)",
@@ -3615,10 +3628,9 @@ private struct SidebarUtilityStrip: View {
             ) {
                 openSettings()
             }
-            }
-            .padding(.horizontal, 12)
-            .frame(height: 40)
         }
+        .padding(.horizontal, 8)
+        .frame(minHeight: 50)
         .overlay(alignment: .top) {
             Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 1)
         }
