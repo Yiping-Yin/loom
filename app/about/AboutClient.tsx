@@ -85,7 +85,7 @@ const ABOUT_POSITIONING_PHRASES = [
   'UNSW, WQU, QuantNet, and Claude learning evidence.',
   'One inspectable profile.',
   'Proof and process are surfaced across home modules.',
-  'Product story at /product-history.',
+  'Product story preserved in the Loom archive.',
   'How Loom serves the archive.',
   'source-bound memory system.',
   'Publish the artifact.',
@@ -219,13 +219,9 @@ export default function AboutClient() {
         </div>
       </section>
 
-      <section className={`${styles.historySection} ${styles.reveal}`} aria-labelledby="history-title">
-        <p className={styles.kicker}>Archive</p>
-        <a id="history-title" className={styles.historyLink} href="/product-history">
-          Loom history
-          <ArrowRight className={styles.historyLinkIcon} aria-hidden="true" size={14} strokeWidth={1.8} />
-        </a>
-      </section>
+      {/* (The "Loom history" archive link retired with the /product-history
+          support page — web-retirement 5/7, 2026-07-08. The story data lives
+          on in lib/new-loom/personal-platform.) */}
       </div>
     </main>
   );

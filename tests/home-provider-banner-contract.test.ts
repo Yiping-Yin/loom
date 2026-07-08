@@ -9,29 +9,16 @@ test('AI key missing banner does not render on public presentation pages', () =>
   assert.match(source, /function isPresentationPath\(pathname: string\)/);
   assert.match(source, /pathname === ['"]\/['"]/);
   assert.match(source, /pathname === ['"]\/sources['"]/);
-  assert.match(source, /pathname === ['"]\/draft['"]/);
-  assert.match(source, /pathname === ['"]\/drafts['"]/);
   assert.match(source, /pathname === ['"]\/loom['"]/);
+  // (Dead-route suppressions pruned with web-retirement 5/7.)
   for (const supportPath of [
-    '/help',
-    '/system',
-    '/discipline',
-    '/year',
-    '/hour',
-    '/connections',
-    '/colophon',
     '/offline',
-    '/onboarding',
-    '/llm-wiki',
-    '/quizzes',
     '/doc',
     '/panel',
-    '/pursuit',
   ]) {
     assert.match(source, new RegExp(`pathname === ['"]${supportPath.replace('/', '\\/')}['"]`));
   }
   assert.match(source, /pathname\.startsWith\(['"]\/panel\/['"]\)/);
-  assert.match(source, /pathname\.startsWith\(['"]\/pursuit\/['"]\)/);
   assert.match(source, /pathname === ['"]\/about['"]/);
   assert.match(source, /const shouldShow = visible && !isPresentationPath\(pathname\) && !isReadingPath\(pathname\)/);
   assert.match(source, /position: 'fixed'/);

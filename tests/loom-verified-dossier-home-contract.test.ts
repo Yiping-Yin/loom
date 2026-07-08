@@ -72,7 +72,6 @@ const SAFE_INTERNAL_HREFS = new Set([
   '/knowledge/quantnet/python-foundations',
   '/knowledge/wqu/wqu-index',
   '/knowledge/claude/claude-certificate',
-  '/product-history',
   // Real evidence documents served from public/ and the Optibook replica
   // build that a later integration step copies into public/optibook/.
   '/verified-sources/about/cv-yiping-yin.pdf',

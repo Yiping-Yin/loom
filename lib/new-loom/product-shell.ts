@@ -73,26 +73,11 @@ export const NEW_LOOM_LEGACY_ROUTES = [
 
 export const NEW_LOOM_SUPPORT_ROUTES: readonly string[] = [
   '/about',
-  '/help',
   '/offline',
-  '/colophon',
-  '/product-history',
-  '/system',
-  '/discipline',
-  '/year',
-  '/hour',
-  '/connections',
 ];
 
 export const NEW_LOOM_INTERNAL_ROUTES: readonly string[] = [
-  '/demo',
-  '/dev/principles',
-  '/dev/traces',
   '/doc',
-  '/graph',
-  '/kesi',
-  '/llm-wiki',
-  '/quizzes',
 ];
 
 export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES: readonly string[] = [
