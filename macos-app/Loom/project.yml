@@ -35,6 +35,14 @@ targets:
     sources:
       - Sources
       - Assets.xcassets
+      # Icon Composer layered icon (charter W0-12, macOS 26+ canon format):
+      # actool compiles it into Assets.car IconImageStacks (Aqua/DarkAqua/
+      # Tintable) — the system renders Default/Dark/Clear/Tinted natively,
+      # which permanently retires the gray-plate problem. Same basename as
+      # the legacy AppIcon.appiconset, which stays as fallback. The postBuild
+      # icns rebuild still runs (in-flight tests pin it); on macOS 27 the
+      # Dock reads the stacks, not the .icns — retire that phase in Wave 1.
+      - path: AppIcon.icon
       - Resources
       # Shared XPC contract with the non-sandboxed anchor helper — the one
       # file both processes compile (docs/projects/active/

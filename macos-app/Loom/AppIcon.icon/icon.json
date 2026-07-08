@@ -1,0 +1,25 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "srgb:0.16471,0.78431,0.86275,1.00000",
+      "srgb:0.03137,0.12549,0.21961,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : true,
+          "image-name" : "glyph.png",
+          "name" : "interlaced-L",
+          "position" : { "scale" : 1, "translation-in-points" : [ 0, 0 ] }
+        }
+      ],
+      "name" : "mark",
+      "shadow" : { "kind" : "neutral", "opacity" : 0.4 },
+      "specular" : true,
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    }
+  ],
+  "supported-platforms" : { "squares" : [ "macOS" ] }
+}
