@@ -55,6 +55,8 @@ final class NavigationBridgeHandler: NSObject, WKScriptMessageHandler {
             handleOpenReference(body: payload)
         case "startCapture":
             postProductNavigation("/sources")
+        case "captureWikiSelection":
+            handleCaptureWikiSelection(body: payload)
         default:
             NSLog("[NavigationBridgeHandler] unknown action: \(action)")
         }
@@ -352,6 +354,64 @@ final class NavigationBridgeHandler: NSObject, WKScriptMessageHandler {
         }
     }
 
+    /// Wiki capture (wiki-migration step 5): the in-page WikiCaptureChip
+    /// posts `{ action: "captureWikiSelection", selection, slug,
+    /// articleTitle, sectionHeading?, fragment? }`. We shape it into the
+    /// same CaptureWebPayload the bookmarklet path uses (honest
+    /// section-level anchor — never page+rect) and broadcast it; the view
+    /// hosting the wiki page (WikiReaderColumn) presents the sheet.
+    private func handleCaptureWikiSelection(body: [String: Any]) {
+        guard let webPayload = Self.makeWikiCapturePayload(
+            selection: body["selection"] as? String ?? "",
+            slug: body["slug"] as? String ?? "",
+            articleTitle: body["articleTitle"] as? String ?? "",
+            sectionHeading: body["sectionHeading"] as? String,
+            fragment: body["fragment"] as? String
+        ) else {
+            NSLog("[Loom] captureWikiSelection: payload rejected (empty selection or slug)")
+            return
+        }
+        NotificationCenter.default.post(
+            name: .loomCaptureWikiSelection,
+            object: nil,
+            userInfo: ["webPayload": webPayload]
+        )
+    }
+
+    /// Pure, testable payload builder. Title carries "Article § heading"
+    /// so the capture anchor's label reads `Wiki · Article § heading`;
+    /// URL is the bundled page (+ fragment) so provenance can reopen the
+    /// exact section.
+    nonisolated static func makeWikiCapturePayload(
+        selection: String,
+        slug: String,
+        articleTitle: String,
+        sectionHeading: String?,
+        fragment: String?
+    ) -> CaptureWebPayload? {
+        let trimmed = selection.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !slug.isEmpty else { return nil }
+        let title: String = {
+            guard let heading = sectionHeading, !heading.isEmpty else { return articleTitle }
+            return "\(articleTitle) § \(heading)"
+        }()
+        var url = "loom://bundle/wiki/\(slug).html"
+        if let fragment, !fragment.isEmpty { url += "#\(fragment)" }
+        let json: [String: Any] = [
+            "url": url,
+            "title": title,
+            "selection": trimmed,
+            "body": trimmed,
+            "siteName": "LLM Wiki",
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: json),
+              var payload = try? JSONDecoder().decode(CaptureWebPayload.self, from: data) else {
+            return nil
+        }
+        payload.rawJSON = String(data: data, encoding: .utf8) ?? ""
+        return payload
+    }
+
     /// Opens the SwiftUI `Settings` scene. On macOS 14+ the legacy
     /// `showSettingsWindow:` selector is unreliable — the only path
     /// guaranteed to work is `@Environment(\.openSettings)`, which
@@ -380,4 +440,7 @@ extension Notification.Name {
     /// Draft reference points at a capture artifact / artifact-state quote so
     /// the capture reader surface opens instead of a webview reload.
     static let loomOpenCapture = Notification.Name("loomOpenCapture")
+    /// Posted by the navigation bridge when a wiki page's capture chip
+    /// fires; the hosting WikiReaderColumn presents the CaptureSheet.
+    static let loomCaptureWikiSelection = Notification.Name("loomCaptureWikiSelection")
 }

@@ -6,6 +6,7 @@ import { DocOutline } from './DocOutline';
 import { PrevNext } from './PrevNext';
 import { LiveArtifact } from './LiveArtifact';
 import { AnchorLayer } from './AnchorLayer';
+import { WikiCaptureChip } from './WikiCaptureChip';
 import { PinButton } from './PinButton';
 import Ornament from './Ornament';
 import { chapters } from '../lib/nav';
@@ -160,6 +161,7 @@ export async function ChapterShell({
 
         <LiveArtifact docId={`wiki/${slug}`} />
         <AnchorLayer docId={`wiki/${slug}`} />
+        <WikiCaptureChip slug={slug} articleTitle={ch?.title ?? slug} />
         <PrevNext slug={slug} />
       </div>
     </div>

@@ -119,7 +119,10 @@ enum CaptureAnchor: Identifiable, Hashable {
         case .inbox(_, let r):           return "Inbox · \(r)"
         case .page(_, _, let l):         return l
         case .passage(_, _, let f, _, let p, _, _): return "\(f) · p.\(p + 1)"
-        case .web(_, _, let d, _, _):    return "Web · \(d)"
+        case .web(_, _, let d, _, let t):
+            // Wiki captures read as the book's own vocabulary: the title
+            // carries "Article § heading" (honest section-level anchor).
+            return d == "wiki" ? "Wiki · \(t)" : "Web · \(d)"
         }
     }
     var rootID: UUID {
@@ -768,7 +771,10 @@ struct CaptureWebPayload: Decodable {
     /// anchor folder (`Web/<domain>/Loom.md`). Strips `www.`. Falls
     /// back to "unknown" if URL parsing fails.
     var domain: String {
-        guard let host = URL(string: url)?.host else { return "unknown" }
+        guard let u = URL(string: url), let host = u.host else { return "unknown" }
+        // Bundled wiki pages land in Web/wiki/ — never a "bundle"
+        // pseudo-domain folder (wiki-migration design graft ③).
+        if u.scheme == "loom", host == "bundle", u.path.hasPrefix("/wiki/") { return "wiki" }
         if host.hasPrefix("www.") { return String(host.dropFirst(4)) }
         return host
     }

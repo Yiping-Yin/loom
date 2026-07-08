@@ -190,6 +190,7 @@
 		B351E55C3FFE484CC1E83682 /* SchemaCorrectionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B93DF6C04DC3FE7FBEBFB0A /* SchemaCorrectionsStore.swift */; };
 		B39A8C3A65FD91D78C8503F6 /* math-1241.input.txt in Resources */ = {isa = PBXBuildFile; fileRef = B19335A7F16CAD7D4F2DB7F2 /* math-1241.input.txt */; };
 		B4263D778256347A59CD7E7A /* semicolon-stitch-duedate.expected-verdict.json in Resources */ = {isa = PBXBuildFile; fileRef = BEAC34CC567106620EC2BCCC /* semicolon-stitch-duedate.expected-verdict.json */; };
+		B6579540528E058EDC121949 /* WikiReaderColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65CFC24E8706DB3F1A7E604F /* WikiReaderColumn.swift */; };
 		B6FF72B4587A7349C5C55E54 /* semicolon-stitch-duedate.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = 56DBB53D0B4C211EBFBE980D /* semicolon-stitch-duedate.schema.json */; };
 		B7DA08668A1564CE06CA5F9E /* ColophonStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF2DD1C732251052F6A49FB /* ColophonStatusTests.swift */; };
 		B8B8C97E6FE0672756447FF8 /* EmbeddingClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98677EAB28D6F8769007F99 /* EmbeddingClientTests.swift */; };
@@ -223,6 +224,7 @@
 		DA7181DB2107C663F5F2E484 /* ContentRootStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A5887D754D7E6CFE10302B /* ContentRootStore.swift */; };
 		DAD1E4E09155B63DFD48EFFB /* LoomWebViewInteractionPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FC617DEBD32A159754CD61 /* LoomWebViewInteractionPolicyTests.swift */; };
 		DBE32BBD99881BD3998DEC4C /* TranscriptSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C61DCFAA1CA0DE69CB046E /* TranscriptSchema.swift */; };
+		DC3FC8FBEBD2F1E2115FE62D /* WikiCurriculumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FF399DF8C6EC99AB35DBF50 /* WikiCurriculumTests.swift */; };
 		DE9430E6CD27F39640372441 /* CaptureURLRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8063D162F8C70BE55DD578 /* CaptureURLRouter.swift */; };
 		DEF8AE3073612EF2B44196D2 /* FirstRunProviderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CE8771B9AD7E5D9580EE84 /* FirstRunProviderSheet.swift */; };
 		DF7D7410A0DFA5C593CCBBE7 /* comm-3030.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 10D2D413F2722292ADA71EA5 /* comm-3030.meta.json */; };
@@ -253,6 +255,7 @@
 		F826674C74C72163A103D620 /* SyllabusSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B91632129DF079E21EA3998 /* SyllabusSchema.swift */; };
 		F92CF08597DBAC45005E1A17 /* FieldResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A60E82E70A76BBDA00BCF8 /* FieldResultRow.swift */; };
 		FAC78B3207977E733B3CF14C /* MarkdownNotesSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29341FF987414D79B04F931 /* MarkdownNotesSchema.swift */; };
+		FAF7FA6880714B0AC7E10EE0 /* WikiCurriculum.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FBD4F69267016E74918481 /* WikiCurriculum.swift */; };
 		FBDF64EA2AEC8C505206F1E1 /* ReflectionSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4EF9B21E3A71AE8BDF39279 /* ReflectionSearchTests.swift */; };
 		FE031F3AD14881552266F829 /* IngestExtractorResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39CE02DF29E1E7FB32A25646 /* IngestExtractorResultView.swift */; };
 		FF22D10202DF4425ED3F335B /* fins-3666-assessment.input.txt in Resources */ = {isa = PBXBuildFile; fileRef = BFA113B1D695FD62468C5B5B /* fins-3666-assessment.input.txt */; };
@@ -306,6 +309,7 @@
 		0DCC4BC0CA44A965804B6379 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
 		0F16121B4C6D7ABDA517BBD8 /* LoomRuntimePaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomRuntimePaths.swift; sourceTree = "<group>"; };
 		0F5103652C09A725C807DE50 /* minimal.xlsx */ = {isa = PBXFileReference; path = minimal.xlsx; sourceTree = "<group>"; };
+		0FF399DF8C6EC99AB35DBF50 /* WikiCurriculumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiCurriculumTests.swift; sourceTree = "<group>"; };
 		101CA92B18FB9B2E0D99C548 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		10D2D413F2722292ADA71EA5 /* comm-3030.meta.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "comm-3030.meta.json"; sourceTree = "<group>"; };
 		1156569530AB7717DB156134 /* DataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsView.swift; sourceTree = "<group>"; };
@@ -394,6 +398,7 @@
 		6468F0FCB91AC16AF43228DB /* IngestExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngestExtractor.swift; sourceTree = "<group>"; };
 		647FF37B7BA5CAEB107E857E /* LoomPrintBuilders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomPrintBuilders.swift; sourceTree = "<group>"; };
 		65036FF139D3B67C9469E4C2 /* WindowConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowConfigurator.swift; sourceTree = "<group>"; };
+		65CFC24E8706DB3F1A7E604F /* WikiReaderColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiReaderColumn.swift; sourceTree = "<group>"; };
 		66095B5A375EDFBFF4ABF616 /* CustomEndpointClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomEndpointClient.swift; sourceTree = "<group>"; };
 		66BFF8C822FD44301022C930 /* PursuitSpawnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PursuitSpawnerTests.swift; sourceTree = "<group>"; };
 		673C5C09CB13F4C00F4B5AD1 /* EmbeddingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingClient.swift; sourceTree = "<group>"; };
@@ -504,6 +509,7 @@
 		D7E6A838CAA269D2A0AE45BB /* slide-deck-filename-leak.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "slide-deck-filename-leak.schema.json"; sourceTree = "<group>"; };
 		D897DA71A4178E322EEF1C20 /* slide-deck-filename-leak.expected-verdict.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "slide-deck-filename-leak.expected-verdict.json"; sourceTree = "<group>"; };
 		D8CF9C3C775507819114BD99 /* SchemaResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchemaResolverTests.swift; sourceTree = "<group>"; };
+		D8FBD4F69267016E74918481 /* WikiCurriculum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiCurriculum.swift; sourceTree = "<group>"; };
 		D98677EAB28D6F8769007F99 /* EmbeddingClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingClientTests.swift; sourceTree = "<group>"; };
 		DAAD769B1D0E66F5C5AD683E /* SyllabusPDFExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyllabusPDFExtractor.swift; sourceTree = "<group>"; };
 		DB463CB820B0E0DFDC61FAA3 /* PageRangeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageRangeTests.swift; sourceTree = "<group>"; };
@@ -753,6 +759,15 @@
 			path = Print;
 			sourceTree = "<group>";
 		};
+		8104A12E58C2E22DA312FBDB /* Wiki */ = {
+			isa = PBXGroup;
+			children = (
+				D8FBD4F69267016E74918481 /* WikiCurriculum.swift */,
+				65CFC24E8706DB3F1A7E604F /* WikiReaderColumn.swift */,
+			);
+			path = Wiki;
+			sourceTree = "<group>";
+		};
 		839250020C8CB3E2942C39AE /* spreadsheet */ = {
 			isa = PBXGroup;
 			children = (
@@ -953,6 +968,7 @@
 				7E7CAA2863B5CBA3BC86015F /* TodayDigestTests.swift */,
 				3F1008A20D6B8EEAEBF8D9E8 /* TranscriptExtractorTests.swift */,
 				90920894513DAA8F66E9A987 /* TypedExtractorMatchTests.swift */,
+				0FF399DF8C6EC99AB35DBF50 /* WikiCurriculumTests.swift */,
 				46CF0562200DE1B9C768F570 /* fixtures */,
 			);
 			path = Tests;
@@ -1039,6 +1055,7 @@
 				9584325C6F08E34CA969A4B3 /* Search */,
 				C68C9B441F9509A2FE42F0FC /* Shell */,
 				FCCCD70B44731912F6A027B4 /* Today */,
+				8104A12E58C2E22DA312FBDB /* Wiki */,
 			);
 			path = Workspace;
 			sourceTree = "<group>";
@@ -1412,7 +1429,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -eu\nif [ \"${LOOM_SKIP_WEB_STAGE:-}\" = \"1\" ]; then\n  echo \"Loom: LOOM_SKIP_WEB_STAGE=1 — skipping web bundle stage.\"\n  exit 0\nfi\nREPO=\"${PROJECT_DIR}/../..\"\nEXPORT=\"${REPO}/.next-export\"\nDEST=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Resources/web\"\nif [ ! -d \"$EXPORT\" ]; then\n  echo \"Loom: .next-export/ not found — skipping web bundle stage.\"\n  echo \"       Run 'node scripts/build-static-export.mjs' from the repo root\"\n  echo \"       before a Release build to bundle the pre-rendered pages.\"\n  if [ \"${CONFIGURATION:-}\" = \"Release\" ]; then\n    exit 1\n  fi\n  exit 0\nfi\nmkdir -p \"$DEST\"\n# Slim CV/dossier staging (2026-07-08 web retirement 7/7): the bundle\n# exists to serve the owner dossier + its evidence, so only those\n# surfaces ship. Excluded:\n# - derived search/RAG indexes: the only native consumers were the\n#   born-broken loom:// URLSession loaders (URLSession cannot resolve\n#   a WKWebView custom scheme) — zero readers.\n#   (related/atlas now name the actual .json files; the bare names\n#   never matched anything.)\n# - wiki/: study notes are a Workspace concern queued for native\n#   content-root migration; no dossier surface links there. ~18MB.\n# - design/, icon-apple-preview-8k.png, brand explorations/wordmark\n#   archive: zero references from any staged page — only the seven\n#   institution/brand images the dossier actually renders stay.\n# Kept deliberately: optibook/ (owner CV evidence artifact linked\n# from the dossier) and loom/history (product story behind the\n# dossier brand link).\nEXCLUDES=\"--exclude=rag-index.json --exclude=search-index.json --exclude=pagefind --exclude=related.json --exclude=atlas.json\"\nEXCLUDES=\"$EXCLUDES --exclude=wiki --exclude=wiki.html --exclude=wiki.txt\"\nEXCLUDES=\"$EXCLUDES --exclude=design --exclude=icon-apple-preview-8k.png\"\nEXCLUDES=\"$EXCLUDES --exclude=brand/explorations --exclude=brand/loom_app_icon* --exclude=brand/loom_wordmark* --exclude=brand/loom_icon_var6.png --exclude=brand/loom_lunar_comet_icon.* --exclude=brand/lunar-comet-ledger-*\"\nif command -v rsync >/dev/null 2>&1; then\n  if ! rsync -a --delete $EXCLUDES \"$EXPORT/\" \"$DEST/\"; then\n    echo \"Loom: rsync failed — falling back to cp -R\"\n    rm -rf \"$DEST\"\n    mkdir -p \"$DEST\"\n    cp -R \"$EXPORT\"/. \"$DEST\"/\n  fi\nelse\n  rm -rf \"$DEST\"\n  mkdir -p \"$DEST\"\n  cp -R \"$EXPORT\"/. \"$DEST\"/\nfi\necho \"Loom: staged $(find \"$DEST\" -type f | wc -l | tr -d ' ') files to Resources/web\"\n";
+			shellScript = "set -eu\nif [ \"${LOOM_SKIP_WEB_STAGE:-}\" = \"1\" ]; then\n  echo \"Loom: LOOM_SKIP_WEB_STAGE=1 — skipping web bundle stage.\"\n  exit 0\nfi\nREPO=\"${PROJECT_DIR}/../..\"\nEXPORT=\"${REPO}/.next-export\"\nDEST=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Resources/web\"\nif [ ! -d \"$EXPORT\" ]; then\n  echo \"Loom: .next-export/ not found — skipping web bundle stage.\"\n  echo \"       Run 'node scripts/build-static-export.mjs' from the repo root\"\n  echo \"       before a Release build to bundle the pre-rendered pages.\"\n  if [ \"${CONFIGURATION:-}\" = \"Release\" ]; then\n    exit 1\n  fi\n  exit 0\nfi\nmkdir -p \"$DEST\"\n# Slim CV/dossier staging (2026-07-08 web retirement 7/7): the bundle\n# exists to serve the owner dossier + its evidence, so only those\n# surfaces ship. Excluded:\n# - derived search/RAG indexes: the only native consumers were the\n#   born-broken loom:// URLSession loaders (URLSession cannot resolve\n#   a WKWebView custom scheme) — zero readers.\n#   (related/atlas now name the actual .json files; the bare names\n#   never matched anything.)\n# - (wiki/ was excluded 2026-07-08 pending migration; owner approved\n#   re-staging it 2026-07-09 — the wiki IS the book, served bundled.)\n# - design/, icon-apple-preview-8k.png, brand explorations/wordmark\n#   archive: zero references from any staged page — only the seven\n#   institution/brand images the dossier actually renders stay.\n# Kept deliberately: optibook/ (owner CV evidence artifact linked\n# from the dossier) and loom/history (product story behind the\n# dossier brand link).\nEXCLUDES=\"--exclude=rag-index.json --exclude=search-index.json --exclude=pagefind --exclude=related.json --exclude=atlas.json\"\nEXCLUDES=\"$EXCLUDES --exclude=design --exclude=icon-apple-preview-8k.png\"\nEXCLUDES=\"$EXCLUDES --exclude=brand/explorations --exclude=brand/loom_app_icon* --exclude=brand/loom_wordmark* --exclude=brand/loom_icon_var6.png --exclude=brand/loom_lunar_comet_icon.* --exclude=brand/lunar-comet-ledger-*\"\nif command -v rsync >/dev/null 2>&1; then\n  if ! rsync -a --delete $EXCLUDES \"$EXPORT/\" \"$DEST/\"; then\n    echo \"Loom: rsync failed — falling back to cp -R\"\n    rm -rf \"$DEST\"\n    mkdir -p \"$DEST\"\n    cp -R \"$EXPORT\"/. \"$DEST\"/\n  fi\nelse\n  rm -rf \"$DEST\"\n  mkdir -p \"$DEST\"\n  cp -R \"$EXPORT\"/. \"$DEST\"/\nfi\necho \"Loom: staged $(find \"$DEST\" -type f | wc -l | tr -d ' ') files to Resources/web\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1539,6 +1556,8 @@
 				3B1D85FA7AD0496C8E064A87 /* TranscriptExtractor.swift in Sources */,
 				DBE32BBD99881BD3998DEC4C /* TranscriptSchema.swift in Sources */,
 				B0FC4227A4354BF2A22A5C0E /* TranscriptSchemaView.swift in Sources */,
+				FAF7FA6880714B0AC7E10EE0 /* WikiCurriculum.swift in Sources */,
+				B6579540528E058EDC121949 /* WikiReaderColumn.swift in Sources */,
 				36EB61CA77CDC9435408F5E6 /* WindowConfigurator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1593,6 +1612,7 @@
 				102336E4F46DEE1AE3241782 /* TodayDigestTests.swift in Sources */,
 				84DF520DC0478D1613F993DD /* TranscriptExtractorTests.swift in Sources */,
 				C91A01CF2B4FAF291818CA40 /* TypedExtractorMatchTests.swift in Sources */,
+				DC3FC8FBEBD2F1E2115FE62D /* WikiCurriculumTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
