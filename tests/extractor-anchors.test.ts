@@ -195,15 +195,15 @@ test('extractor-anchors API returns an empty list in dev mode (Swift owns the re
 
 test('native bridge files expose the extractor-anchors endpoints and dismissal handler', () => {
   const handler = fs.readFileSync(
-    path.join(repoRoot, 'macos-app/Loom/Sources/LoomURLSchemeHandler.swift'),
+    path.join(repoRoot, 'macos-app/Loom/Sources/App/Runtime/LoomURLSchemeHandler.swift'),
     'utf8',
   );
   const contentView = fs.readFileSync(
-    path.join(repoRoot, 'macos-app/Loom/Sources/ContentView.swift'),
+    path.join(repoRoot, 'macos-app/Loom/Sources/App/Runtime/LoomWebView.swift'),
     'utf8',
   );
   const bridge = fs.readFileSync(
-    path.join(repoRoot, 'macos-app/Loom/Sources/LoomExtractorAnchorsBridgeHandler.swift'),
+    path.join(repoRoot, 'macos-app/Loom/Sources/Shared/Bridge/LoomExtractorAnchorsBridgeHandler.swift'),
     'utf8',
   );
   const docClient = fs.readFileSync(

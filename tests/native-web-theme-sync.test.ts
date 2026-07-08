@@ -11,10 +11,13 @@ function read(relativePath: string) {
 }
 
 test('native shell explicitly syncs the resolved theme into the webview', () => {
-  const source = read('macos-app/Loom/Sources/ContentView.swift');
+  // Post-partition homes: the webview stack lives at App/Runtime/LoomWebView.swift
+  // and its one live host is the You dossier window.
+  const source = read('macos-app/Loom/Sources/App/Runtime/LoomWebView.swift');
+  const host = read('macos-app/Loom/Sources/DigitalMe/Dossier/LoomDossierRootView.swift');
 
-  assert.match(source, /private var webThemeMode: String/);
-  assert.match(source, /LoomWebView\(url: server\.webviewURL, debugState: webState, forcedTheme: webThemeMode\)/);
+  assert.match(host, /private var forcedTheme: String/);
+  assert.match(host, /LoomWebView\(url: server\.webviewURL, debugState: webState, forcedTheme: forcedTheme\)/);
   assert.match(source, /let forcedTheme: String/);
   assert.match(source, /static func themeSyncScript\(mode: String\) -> String/);
   assert.match(source, /localStorage\.setItem\('wiki:theme', mode\)/);
@@ -29,7 +32,7 @@ test('native shell explicitly syncs the resolved theme into the webview', () => 
 });
 
 test('native shell reveals committed bundle content if didFinish does not clear the launch mask', () => {
-  const source = read('macos-app/Loom/Sources/ContentView.swift');
+  const source = read('macos-app/Loom/Sources/App/Runtime/LoomWebView.swift');
 
   assert.match(source, /private func revealFirstPaintIfNeeded\(in webView: WKWebView, reason: String\)/);
   assert.match(source, /debugState\.didFirstLoad = true/);

@@ -11,8 +11,9 @@ function read(relativePath: string) {
 }
 
 test('native url scheme exposes direct panel and pursuit detail endpoints', () => {
-  const handler = read('macos-app/Loom/Sources/LoomURLSchemeHandler.swift');
-  const contentView = read('macos-app/Loom/Sources/ContentView.swift');
+  // Post-partition homes (the payload builders live on LoomWebView.Coordinator).
+  const handler = read('macos-app/Loom/Sources/App/Runtime/LoomURLSchemeHandler.swift');
+  const contentView = read('macos-app/Loom/Sources/App/Runtime/LoomWebView.swift');
 
   assert.match(handler, /if requestURL\.host == "native"/);
   assert.match(handler, /case panel/);

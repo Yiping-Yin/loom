@@ -281,9 +281,9 @@ test('source-library group management uses inline controls instead of browser pr
 test('native Loom app routes source-library shelf edits through a reply bridge', () => {
   const sourceLibraryClient = readText('lib/source-library-client.ts');
   const knowledgeNavClient = readText('lib/knowledge-nav-client.ts');
-  const contentView = readText('macos-app/Loom/Sources/ContentView.swift');
-  const bridge = readText('macos-app/Loom/Sources/SourceLibraryBridgeHandler.swift');
-  const scheme = readText('macos-app/Loom/Sources/LoomURLSchemeHandler.swift');
+  const contentView = readText('macos-app/Loom/Sources/App/Runtime/LoomWebView.swift');
+  const bridge = readText('macos-app/Loom/Sources/Shared/Bridge/SourceLibraryBridgeHandler.swift');
+  const scheme = readText('macos-app/Loom/Sources/App/Runtime/LoomURLSchemeHandler.swift');
 
   assert.match(sourceLibraryClient, /isNativeMode\(\)/);
   assert.match(sourceLibraryClient, /loomSourceLibrary/);

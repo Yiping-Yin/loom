@@ -6,9 +6,12 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-test('native ContentView exposes core objects through loom://native endpoints without mirrored web state', () => {
+test('native webview stack exposes core objects through loom://native endpoints without mirrored web state', () => {
+  // The mirror-authority machinery lives in the extracted live webview stack
+  // (App/Runtime/LoomWebView.swift) since the 2026-07-08 partition; the old
+  // ContentView shell that used to host it is deleted.
   const source = fs.readFileSync(
-    path.join(repoRoot, 'macos-app/Loom/Sources/ContentView.swift'),
+    path.join(repoRoot, 'macos-app/Loom/Sources/App/Runtime/LoomWebView.swift'),
     'utf8',
   );
 

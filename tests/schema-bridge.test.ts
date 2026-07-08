@@ -204,11 +204,11 @@ test('schema corrections API validates input and persists sidecars in dev mode',
 
 test('native schema bridge files expose schema endpoints and correction reply bridge', () => {
   const handler = fs.readFileSync(
-    path.join(repoRoot, 'macos-app/Loom/Sources/LoomURLSchemeHandler.swift'),
+    path.join(repoRoot, 'macos-app/Loom/Sources/App/Runtime/LoomURLSchemeHandler.swift'),
     'utf8',
   );
   const contentView = fs.readFileSync(
-    path.join(repoRoot, 'macos-app/Loom/Sources/ContentView.swift'),
+    path.join(repoRoot, 'macos-app/Loom/Sources/App/Runtime/LoomWebView.swift'),
     'utf8',
   );
   const strip = fs.readFileSync(
@@ -220,7 +220,7 @@ test('native schema bridge files expose schema endpoints and correction reply br
     'utf8',
   );
   const bridge = fs.readFileSync(
-    path.join(repoRoot, 'macos-app/Loom/Sources/LoomSchemaBridgeHandler.swift'),
+    path.join(repoRoot, 'macos-app/Loom/Sources/Shared/Bridge/LoomSchemaBridgeHandler.swift'),
     'utf8',
   );
 

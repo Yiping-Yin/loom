@@ -11,8 +11,10 @@ function read(relativePath: string) {
 }
 
 test('main Loom window disables automatic tabbing so the system title pill does not reappear', () => {
-  const appSource = read('macos-app/Loom/Sources/LoomApp.swift');
-  const contentSource = read('macos-app/Loom/Sources/ContentView.swift');
+  // Post-partition homes: the app scene lives at App/Shell/LoomApp.swift and
+  // the window styler was extracted to App/Shell/WindowConfigurator.swift.
+  const appSource = read('macos-app/Loom/Sources/App/Shell/LoomApp.swift');
+  const contentSource = read('macos-app/Loom/Sources/App/Shell/WindowConfigurator.swift');
 
   assert.match(appSource, /Window\("Loom"/);
   assert.doesNotMatch(appSource, /WindowGroup \{/);

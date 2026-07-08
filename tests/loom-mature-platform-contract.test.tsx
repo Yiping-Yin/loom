@@ -269,7 +269,8 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
 
 test('Sources Studio and Digital Me remain canonical across product shell copy', () => {
   const productShell = readRepo('lib/new-loom/product-shell.ts');
-  const nativeShell = readRepo('macos-app/Loom/Sources/LoomMinimalRootView.swift');
+  // (The native minimal shell this contract used to cross-check was retired in
+  // the 2026-07-08 partition — the web product-shell copy is the sole subject.)
 
   assert.match(productShell, /Sources/);
   assert.match(productShell, /Studio/);
@@ -277,11 +278,6 @@ test('Sources Studio and Digital Me remain canonical across product shell copy',
   assert.match(productShell, /context/i);
   assert.match(productShell, /portfolio/i);
   assert.match(productShell, /process/i);
-
-  // Native minimal shell is still retained as a migration source, so it can keep
-  // Draft internals while the web product shell exposes Studio.
-  assert.match(nativeShell, /Sources/);
-  assert.match(nativeShell, /pageDraft/);
 
   assert.match(productShell, /claims|quotes|examples|contradictions|gaps|questions/);
   assert.doesNotMatch(productShell, /Collect, organize, draft/);

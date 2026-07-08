@@ -15,8 +15,8 @@ test('static-export-safe doc route exists for native source reading', () => {
   assert.ok(fs.existsSync(path.join(repoRoot, 'app/DocClient.tsx')));
 });
 
-test('native ContentView rewrites source-doc bundle navigations onto /doc?href=', () => {
-  const source = read('macos-app/Loom/Sources/ContentView.swift');
+test('native webview stack rewrites source-doc bundle navigations onto /doc?href=', () => {
+  const source = read('macos-app/Loom/Sources/App/Runtime/LoomWebView.swift');
 
   assert.match(source, /flatDocPathIfNeeded/);
   assert.match(source, /components\.path = "\/doc"/);
@@ -26,8 +26,8 @@ test('native ContentView rewrites source-doc bundle navigations onto /doc?href='
   assert.match(source, /if routed != relative, let target = Self\.bundleURL\(for: relative\)/);
 });
 
-test('native ContentView keeps static-export fallback shells for path-based panel and pursuit urls', () => {
-  const source = read('macos-app/Loom/Sources/ContentView.swift');
+test('native webview stack keeps static-export fallback shells for path-based panel and pursuit urls', () => {
+  const source = read('macos-app/Loom/Sources/App/Runtime/LoomWebView.swift');
   const exportScript = read('scripts/build-static-export.mjs');
 
   assert.match(source, /if path\.hasPrefix\("\/panel\/"\), path\.count > "\/panel\/"\.count/);
