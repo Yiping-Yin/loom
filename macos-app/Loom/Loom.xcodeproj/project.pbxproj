@@ -90,6 +90,7 @@
 		5493357030DB1DA58E365583 /* LoomDraftStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329A7AC3FC4696AE00284416 /* LoomDraftStoreTests.swift */; };
 		556D7AC3A8A44EC2B84EC984 /* ReflectionDocumentFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BFB387DEADC799485B3163C /* ReflectionDocumentFormat.swift */; };
 		57B5D9DC1353AFD625AAEF5D /* LoomDataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15ABB1ACE29DE47CE756B2F /* LoomDataModelTests.swift */; };
+		57F79C9D6A934E7FE0A34D65 /* LoomExportWorkspaceSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA46721A6010B3D16B37BE84 /* LoomExportWorkspaceSnapshotTests.swift */; };
 		59ECA12F77B3142F785B1A04 /* fins-3616-assessment.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 51F26DB1A6CD370D46C85750 /* fins-3616-assessment.meta.json */; };
 		5C000C0DACB750E7BBA689E8 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 68032E5E382233290D4C5592 /* ZIPFoundation */; };
 		5CADAB0A6C9A2E635142D7B6 /* fins-3635.input.txt in Resources */ = {isa = PBXBuildFile; fileRef = E486F9C429D8D60EA7A197A0 /* fins-3635.input.txt */; };
@@ -449,6 +450,7 @@
 		A7A60E82E70A76BBDA00BCF8 /* FieldResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldResultRow.swift; sourceTree = "<group>"; };
 		A87FAF953904D7676C1AEDF9 /* LoomTraceWriterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomTraceWriterTests.swift; sourceTree = "<group>"; };
 		A90F61D4D4FCB8EAAC60C140 /* LoomApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomApp.swift; sourceTree = "<group>"; };
+		AA46721A6010B3D16B37BE84 /* LoomExportWorkspaceSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomExportWorkspaceSnapshotTests.swift; sourceTree = "<group>"; };
 		AA6F11B4CDC32C007A9FCA12 /* LoomExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomExport.swift; sourceTree = "<group>"; };
 		AB83653308F1E2866F3A9740 /* MoonPhaseIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPhaseIndicator.swift; sourceTree = "<group>"; };
 		ADAACE9D84B2BD1493396FAC /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
@@ -897,6 +899,7 @@
 				7838A33BEFC23E835A507546 /* KeychainStoreTests.swift */,
 				F15ABB1ACE29DE47CE756B2F /* LoomDataModelTests.swift */,
 				329A7AC3FC4696AE00284416 /* LoomDraftStoreTests.swift */,
+				AA46721A6010B3D16B37BE84 /* LoomExportWorkspaceSnapshotTests.swift */,
 				2A400D99F31C6B036AD121E3 /* LoomRuntimePathsTests.swift */,
 				A87FAF953904D7676C1AEDF9 /* LoomTraceWriterTests.swift */,
 				E248B305C252056D2D519F4D /* LoomURLSchemeHandlerTests.swift */,
@@ -1369,7 +1372,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -eu\nif [ \"${LOOM_SKIP_WEB_STAGE:-}\" = \"1\" ]; then\n  echo \"Loom: LOOM_SKIP_WEB_STAGE=1 — skipping web bundle stage.\"\n  exit 0\nfi\nREPO=\"${PROJECT_DIR}/../..\"\nEXPORT=\"${REPO}/.next-export\"\nDEST=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Resources/web\"\nif [ ! -d \"$EXPORT\" ]; then\n  echo \"Loom: .next-export/ not found — skipping web bundle stage.\"\n  echo \"       Run 'node scripts/build-static-export.mjs' from the repo root\"\n  echo \"       before a Release build to bundle the pre-rendered pages.\"\n  if [ \"${CONFIGURATION:-}\" = \"Release\" ]; then\n    exit 1\n  fi\n  exit 0\nfi\nmkdir -p \"$DEST\"\nif command -v rsync >/dev/null 2>&1; then\n  if ! rsync -a --delete \"$EXPORT/\" \"$DEST/\"; then\n    echo \"Loom: rsync failed — falling back to cp -R\"\n    rm -rf \"$DEST\"\n    mkdir -p \"$DEST\"\n    cp -R \"$EXPORT\"/. \"$DEST\"/\n  fi\nelse\n  rm -rf \"$DEST\"\n  mkdir -p \"$DEST\"\n  cp -R \"$EXPORT\"/. \"$DEST\"/\nfi\necho \"Loom: staged $(find \"$DEST\" -type f | wc -l | tr -d ' ') files to Resources/web\"\n";
+			shellScript = "set -eu\nif [ \"${LOOM_SKIP_WEB_STAGE:-}\" = \"1\" ]; then\n  echo \"Loom: LOOM_SKIP_WEB_STAGE=1 — skipping web bundle stage.\"\n  exit 0\nfi\nREPO=\"${PROJECT_DIR}/../..\"\nEXPORT=\"${REPO}/.next-export\"\nDEST=\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Resources/web\"\nif [ ! -d \"$EXPORT\" ]; then\n  echo \"Loom: .next-export/ not found — skipping web bundle stage.\"\n  echo \"       Run 'node scripts/build-static-export.mjs' from the repo root\"\n  echo \"       before a Release build to bundle the pre-rendered pages.\"\n  if [ \"${CONFIGURATION:-}\" = \"Release\" ]; then\n    exit 1\n  fi\n  exit 0\nfi\nmkdir -p \"$DEST\"\n# Derived search/RAG indexes are excluded (2026-07-08 partition):\n# the only native consumers were the born-broken loom:// URLSession\n# loaders, now deleted — ~8MB per Release for zero readers.\nEXCLUDES=\"--exclude=rag-index.json --exclude=search-index.json --exclude=pagefind --exclude=related --exclude=atlas\"\nif command -v rsync >/dev/null 2>&1; then\n  if ! rsync -a --delete $EXCLUDES \"$EXPORT/\" \"$DEST/\"; then\n    echo \"Loom: rsync failed — falling back to cp -R\"\n    rm -rf \"$DEST\"\n    mkdir -p \"$DEST\"\n    cp -R \"$EXPORT\"/. \"$DEST\"/\n  fi\nelse\n  rm -rf \"$DEST\"\n  mkdir -p \"$DEST\"\n  cp -R \"$EXPORT\"/. \"$DEST\"/\nfi\necho \"Loom: staged $(find \"$DEST\" -type f | wc -l | tr -d ' ') files to Resources/web\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1519,6 +1522,7 @@
 				0A33CF69C9CB7A623FC846CC /* KeychainStoreTests.swift in Sources */,
 				57B5D9DC1353AFD625AAEF5D /* LoomDataModelTests.swift in Sources */,
 				5493357030DB1DA58E365583 /* LoomDraftStoreTests.swift in Sources */,
+				57F79C9D6A934E7FE0A34D65 /* LoomExportWorkspaceSnapshotTests.swift in Sources */,
 				C369B8DA4409AA0965A62B10 /* LoomRuntimePathsTests.swift in Sources */,
 				02EC41AE8D104B4D2F7FF029 /* LoomTraceWriterTests.swift in Sources */,
 				979AE8B7341A7872167406D8 /* LoomURLSchemeHandlerTests.swift in Sources */,

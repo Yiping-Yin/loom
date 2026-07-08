@@ -161,8 +161,12 @@ targets:
             exit 0
           fi
           mkdir -p "$DEST"
+          # Derived search/RAG indexes are excluded (2026-07-08 partition):
+          # the only native consumers were the born-broken loom:// URLSession
+          # loaders, now deleted — ~8MB per Release for zero readers.
+          EXCLUDES="--exclude=rag-index.json --exclude=search-index.json --exclude=pagefind --exclude=related --exclude=atlas"
           if command -v rsync >/dev/null 2>&1; then
-            if ! rsync -a --delete "$EXPORT/" "$DEST/"; then
+            if ! rsync -a --delete $EXCLUDES "$EXPORT/" "$DEST/"; then
               echo "Loom: rsync failed — falling back to cp -R"
               rm -rf "$DEST"
               mkdir -p "$DEST"

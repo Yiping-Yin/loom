@@ -29,6 +29,12 @@ enum LoomExport {
         var soanCards: [SoanCardDTO]
         var soanEdges: [SoanEdgeDTO]
         var weaves: [WeaveDTO]
+        /// v2 (2026-07-08): the LIVE reflection workspace, verbatim
+        /// (reflection-workspace-snapshot.json). Before this, "Export Loom…"
+        /// only backed up the legacy SwiftData store — the workbench the
+        /// owner actually writes in had NO export path at all (the backup
+        /// blind spot from the partition audit). Optional so v1 files decode.
+        var workspaceSnapshotJSON: String?
     }
 
     struct Meta: Codable {
@@ -36,11 +42,20 @@ enum LoomExport {
         var exportedAt: Double
         var appVersion: String?
 
-        init(version: String = "1", exportedAt: Double, appVersion: String?) {
+        init(version: String = "2", exportedAt: Double, appVersion: String?) {
             self.version = version
             self.exportedAt = exportedAt
             self.appVersion = appVersion
         }
+    }
+
+    /// Raw contents of the live workspace snapshot at `url`, or nil when the
+    /// file (or the url itself) is absent. Pure + injectable for tests.
+    nonisolated static func workspaceSnapshotJSON(at url: URL?) -> String? {
+        guard let url,
+              let data = try? Data(contentsOf: url),
+              !data.isEmpty else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 
     struct PursuitDTO: Codable {
@@ -186,7 +201,10 @@ enum LoomExport {
                     createdAt: $0.createdAt,
                     updatedAt: $0.updatedAt
                 )
-            }
+            },
+            workspaceSnapshotJSON: workspaceSnapshotJSON(
+                at: ReflectionWorkspaceStore.defaultMirrorURL
+            )
         )
     }
 
@@ -258,6 +276,17 @@ enum LoomExport {
                         ExportBundle.self, from: data
                     )
                     try applyImport(decoded)
+                    // The live-workspace snapshot restores SIDE-BY-SIDE, never
+                    // over the current workspace: clobbering the mirror on
+                    // import would silently destroy the owner's open notes.
+                    if let snapshot = decoded.workspaceSnapshotJSON,
+                       let mirror = ReflectionWorkspaceStore.defaultMirrorURL {
+                        let stamp = ISO8601DateFormatter().string(from: Date()).prefix(19)
+                        let target = mirror.deletingLastPathComponent()
+                            .appendingPathComponent("reflection-workspace-snapshot.imported-\(stamp).json")
+                        try? Data(snapshot.utf8).write(to: target, options: [.atomic])
+                        NSLog("[Loom] Import carried a live-workspace snapshot — saved beside the mirror as \(target.lastPathComponent) (not applied automatically)")
+                    }
                     NSLog("[Loom] Imported bundle · \(decoded.pursuits.count) pursuits · \(decoded.traces.count) traces · \(decoded.soanCards.count) cards · \(decoded.soanEdges.count) edges · \(decoded.weaves.count) weaves")
                 } catch {
                     NSLog("[Loom] Import failed: \(error)")
