@@ -2198,15 +2198,3 @@ struct LoomMarkdownView: View {
     }
 }
 
-extension Notification.Name {
-    /// Posted by sidebar (clicking a folder name) or LoomFolderHomeView
-    /// (clicking a sub-folder in the Files listing). Carries `userInfo`
-    /// `["url": loom://content/<root-id>/<sub-path>]`. ContentView
-    /// listens and swaps the main pane to `LoomFolderHomeView` for that
-    /// folder.
-    static let loomShowFolderHome = Notification.Name("loomShowFolderHome")
-    /// Posted by the toolbar refresh button / ⌘R / app-became-active.
-    /// LoomFolderHomeView listens to re-scan its source folder so
-    /// changes the user made in Finder appear without restarting.
-    static let loomRefreshActivePage = Notification.Name("loomRefreshActivePage")
-}
