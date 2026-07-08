@@ -1,0 +1,443 @@
+{
+  "generatedFrom": "lib/nav.ts",
+  "version": 1,
+  "sections": [
+    "Start",
+    "Foundations",
+    "Transformer",
+    "Architecture",
+    "Training",
+    "Data",
+    "Inference",
+    "Finetuning",
+    "Agents",
+    "Evaluation",
+    "Frontier",
+    "Safety"
+  ],
+  "chapters": [
+    {
+      "slug": "llm101n",
+      "title": "LLM101n Overview",
+      "section": "Start",
+      "order": 0,
+      "positionInSection": 1,
+      "sectionSize": 1,
+      "href": "/wiki/llm101n"
+    },
+    {
+      "slug": "micrograd",
+      "title": "1 · Micrograd",
+      "section": "Foundations",
+      "order": 1,
+      "positionInSection": 1,
+      "sectionSize": 6,
+      "href": "/wiki/micrograd"
+    },
+    {
+      "slug": "makemore-bigram",
+      "title": "2 · Bigram LM",
+      "section": "Foundations",
+      "order": 2,
+      "positionInSection": 2,
+      "sectionSize": 6,
+      "href": "/wiki/makemore-bigram"
+    },
+    {
+      "slug": "mlp",
+      "title": "3 · MLP (Bengio 2003)",
+      "section": "Foundations",
+      "order": 3,
+      "positionInSection": 3,
+      "sectionSize": 6,
+      "href": "/wiki/mlp"
+    },
+    {
+      "slug": "batchnorm",
+      "title": "4 · BatchNorm & Init",
+      "section": "Foundations",
+      "order": 4,
+      "positionInSection": 4,
+      "sectionSize": 6,
+      "href": "/wiki/batchnorm"
+    },
+    {
+      "slug": "backprop-ninja",
+      "title": "5 · Backprop Ninja",
+      "section": "Foundations",
+      "order": 5,
+      "positionInSection": 5,
+      "sectionSize": 6,
+      "href": "/wiki/backprop-ninja"
+    },
+    {
+      "slug": "wavenet",
+      "title": "6 · WaveNet",
+      "section": "Foundations",
+      "order": 6,
+      "positionInSection": 6,
+      "sectionSize": 6,
+      "href": "/wiki/wavenet"
+    },
+    {
+      "slug": "attention",
+      "title": "7 · Attention",
+      "section": "Transformer",
+      "order": 7,
+      "positionInSection": 1,
+      "sectionSize": 4,
+      "href": "/wiki/attention"
+    },
+    {
+      "slug": "transformer",
+      "title": "8 · Reproduce GPT-2",
+      "section": "Transformer",
+      "order": 8,
+      "positionInSection": 2,
+      "sectionSize": 4,
+      "href": "/wiki/transformer"
+    },
+    {
+      "slug": "tokenization",
+      "title": "9 · Tokenization (BPE)",
+      "section": "Transformer",
+      "order": 9,
+      "positionInSection": 3,
+      "sectionSize": 4,
+      "href": "/wiki/tokenization"
+    },
+    {
+      "slug": "state-of-gpt",
+      "title": "10 · State of GPT",
+      "section": "Transformer",
+      "order": 10,
+      "positionInSection": 4,
+      "sectionSize": 4,
+      "href": "/wiki/state-of-gpt"
+    },
+    {
+      "slug": "rope",
+      "title": "RoPE",
+      "section": "Architecture",
+      "order": 11,
+      "positionInSection": 1,
+      "sectionSize": 7,
+      "href": "/wiki/rope"
+    },
+    {
+      "slug": "alibi",
+      "title": "ALiBi",
+      "section": "Architecture",
+      "order": 12,
+      "positionInSection": 2,
+      "sectionSize": 7,
+      "href": "/wiki/alibi"
+    },
+    {
+      "slug": "rmsnorm",
+      "title": "RMSNorm",
+      "section": "Architecture",
+      "order": 13,
+      "positionInSection": 3,
+      "sectionSize": 7,
+      "href": "/wiki/rmsnorm"
+    },
+    {
+      "slug": "swiglu",
+      "title": "SwiGLU & Gated Activations",
+      "section": "Architecture",
+      "order": 14,
+      "positionInSection": 4,
+      "sectionSize": 7,
+      "href": "/wiki/swiglu"
+    },
+    {
+      "slug": "moe",
+      "title": "Mixture of Experts",
+      "section": "Architecture",
+      "order": 15,
+      "positionInSection": 5,
+      "sectionSize": 7,
+      "href": "/wiki/moe"
+    },
+    {
+      "slug": "mamba",
+      "title": "Mamba & SSMs",
+      "section": "Architecture",
+      "order": 16,
+      "positionInSection": 6,
+      "sectionSize": 7,
+      "href": "/wiki/mamba"
+    },
+    {
+      "slug": "gqa-mqa",
+      "title": "GQA & MQA",
+      "section": "Architecture",
+      "order": 17,
+      "positionInSection": 7,
+      "sectionSize": 7,
+      "href": "/wiki/gqa-mqa"
+    },
+    {
+      "slug": "scaling-laws",
+      "title": "Scaling Laws",
+      "section": "Training",
+      "order": 18,
+      "positionInSection": 1,
+      "sectionSize": 5,
+      "href": "/wiki/scaling-laws"
+    },
+    {
+      "slug": "fsdp-zero",
+      "title": "FSDP & ZeRO",
+      "section": "Training",
+      "order": 19,
+      "positionInSection": 2,
+      "sectionSize": 5,
+      "href": "/wiki/fsdp-zero"
+    },
+    {
+      "slug": "tensor-pipeline-parallel",
+      "title": "Tensor & Pipeline Parallel",
+      "section": "Training",
+      "order": 20,
+      "positionInSection": 3,
+      "sectionSize": 5,
+      "href": "/wiki/tensor-pipeline-parallel"
+    },
+    {
+      "slug": "mixed-precision",
+      "title": "Mixed Precision (bf16/fp8)",
+      "section": "Training",
+      "order": 21,
+      "positionInSection": 4,
+      "sectionSize": 5,
+      "href": "/wiki/mixed-precision"
+    },
+    {
+      "slug": "muP",
+      "title": "μP — Maximal Update",
+      "section": "Training",
+      "order": 22,
+      "positionInSection": 5,
+      "sectionSize": 5,
+      "href": "/wiki/muP"
+    },
+    {
+      "slug": "data-curation",
+      "title": "Pretraining Data Curation",
+      "section": "Data",
+      "order": 23,
+      "positionInSection": 1,
+      "sectionSize": 2,
+      "href": "/wiki/data-curation"
+    },
+    {
+      "slug": "synthetic-data",
+      "title": "Synthetic Data & Distillation",
+      "section": "Data",
+      "order": 24,
+      "positionInSection": 2,
+      "sectionSize": 2,
+      "href": "/wiki/synthetic-data"
+    },
+    {
+      "slug": "kv-cache",
+      "title": "11 · KV-Cache",
+      "section": "Inference",
+      "order": 25,
+      "positionInSection": 1,
+      "sectionSize": 6,
+      "href": "/wiki/kv-cache"
+    },
+    {
+      "slug": "quantization",
+      "title": "12 · Quantization",
+      "section": "Inference",
+      "order": 26,
+      "positionInSection": 2,
+      "sectionSize": 6,
+      "href": "/wiki/quantization"
+    },
+    {
+      "slug": "flash-attention",
+      "title": "FlashAttention",
+      "section": "Inference",
+      "order": 27,
+      "positionInSection": 3,
+      "sectionSize": 6,
+      "href": "/wiki/flash-attention"
+    },
+    {
+      "slug": "speculative-decoding",
+      "title": "Speculative Decoding",
+      "section": "Inference",
+      "order": 28,
+      "positionInSection": 4,
+      "sectionSize": 6,
+      "href": "/wiki/speculative-decoding"
+    },
+    {
+      "slug": "vllm-paged",
+      "title": "vLLM & PagedAttention",
+      "section": "Inference",
+      "order": 29,
+      "positionInSection": 5,
+      "sectionSize": 6,
+      "href": "/wiki/vllm-paged"
+    },
+    {
+      "slug": "yarn-rope-scaling",
+      "title": "YaRN — Long Context",
+      "section": "Inference",
+      "order": 30,
+      "positionInSection": 6,
+      "sectionSize": 6,
+      "href": "/wiki/yarn-rope-scaling"
+    },
+    {
+      "slug": "lora",
+      "title": "13 · LoRA / SFT",
+      "section": "Finetuning",
+      "order": 31,
+      "positionInSection": 1,
+      "sectionSize": 6,
+      "href": "/wiki/lora"
+    },
+    {
+      "slug": "rlhf",
+      "title": "14 · RLHF / DPO",
+      "section": "Finetuning",
+      "order": 32,
+      "positionInSection": 2,
+      "sectionSize": 6,
+      "href": "/wiki/rlhf"
+    },
+    {
+      "slug": "dpo",
+      "title": "DPO",
+      "section": "Finetuning",
+      "order": 33,
+      "positionInSection": 3,
+      "sectionSize": 6,
+      "href": "/wiki/dpo"
+    },
+    {
+      "slug": "grpo",
+      "title": "GRPO",
+      "section": "Finetuning",
+      "order": 34,
+      "positionInSection": 4,
+      "sectionSize": 6,
+      "href": "/wiki/grpo"
+    },
+    {
+      "slug": "constitutional-ai",
+      "title": "Constitutional AI / RLAIF",
+      "section": "Finetuning",
+      "order": 35,
+      "positionInSection": 5,
+      "sectionSize": 6,
+      "href": "/wiki/constitutional-ai"
+    },
+    {
+      "slug": "instruction-tuning",
+      "title": "Instruction Tuning Data",
+      "section": "Finetuning",
+      "order": 36,
+      "positionInSection": 6,
+      "sectionSize": 6,
+      "href": "/wiki/instruction-tuning"
+    },
+    {
+      "slug": "react-agents",
+      "title": "ReAct & Tool Use",
+      "section": "Agents",
+      "order": 37,
+      "positionInSection": 1,
+      "sectionSize": 3,
+      "href": "/wiki/react-agents"
+    },
+    {
+      "slug": "reflexion",
+      "title": "Reflexion",
+      "section": "Agents",
+      "order": 38,
+      "positionInSection": 2,
+      "sectionSize": 3,
+      "href": "/wiki/reflexion"
+    },
+    {
+      "slug": "reasoning-models",
+      "title": "Reasoning Models (o1, R1)",
+      "section": "Agents",
+      "order": 39,
+      "positionInSection": 3,
+      "sectionSize": 3,
+      "href": "/wiki/reasoning-models"
+    },
+    {
+      "slug": "benchmarks",
+      "title": "LLM Benchmarks",
+      "section": "Evaluation",
+      "order": 40,
+      "positionInSection": 1,
+      "sectionSize": 2,
+      "href": "/wiki/benchmarks"
+    },
+    {
+      "slug": "llm-as-judge",
+      "title": "LLM-as-a-Judge",
+      "section": "Evaluation",
+      "order": 41,
+      "positionInSection": 2,
+      "sectionSize": 2,
+      "href": "/wiki/llm-as-judge"
+    },
+    {
+      "slug": "multimodal",
+      "title": "15 · Multimodal",
+      "section": "Frontier",
+      "order": 42,
+      "positionInSection": 1,
+      "sectionSize": 3,
+      "href": "/wiki/multimodal"
+    },
+    {
+      "slug": "nanochat",
+      "title": "16 · nanochat",
+      "section": "Frontier",
+      "order": 43,
+      "positionInSection": 2,
+      "sectionSize": 3,
+      "href": "/wiki/nanochat"
+    },
+    {
+      "slug": "interpretability",
+      "title": "Mech Interpretability",
+      "section": "Frontier",
+      "order": 44,
+      "positionInSection": 3,
+      "sectionSize": 3,
+      "href": "/wiki/interpretability"
+    },
+    {
+      "slug": "watermarking",
+      "title": "Watermarking",
+      "section": "Safety",
+      "order": 45,
+      "positionInSection": 1,
+      "sectionSize": 2,
+      "href": "/wiki/watermarking"
+    },
+    {
+      "slug": "jailbreaks",
+      "title": "Jailbreaks & Injection",
+      "section": "Safety",
+      "order": 46,
+      "positionInSection": 2,
+      "sectionSize": 2,
+      "href": "/wiki/jailbreaks"
+    }
+  ]
+}
