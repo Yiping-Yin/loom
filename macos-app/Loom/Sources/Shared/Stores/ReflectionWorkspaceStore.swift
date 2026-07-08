@@ -67,6 +67,7 @@ enum ReflectionWorkspaceStore {
         } else {
             writeMirror(result, mirrorURL: mirrorURL)
         }
+        syncSpotlight(with: result.cases, reconcile: true)
         return result
     }
 
@@ -99,6 +100,31 @@ enum ReflectionWorkspaceStore {
         }
         defaults.set(data, forKey: defaultsKey)
         writeMirror(snapshot, encodedData: data, mirrorURL: mirrorURL)
+        syncSpotlight(with: cases)
+    }
+
+    // MARK: Spotlight (charter §22)
+    //
+    // Notes are findable from system Spotlight like Notes' are. Fire-and-
+    // forget: indexing failures never interrupt a save. Result deep-linking
+    // (loom://note routing back to the case) lands with the Wave-1 URL
+    // batch — until then a Spotlight hit launches/raises Loom.
+    private static var spotlightIndexedIDs: Set<String> = []
+
+    /// Upsert the current cases; delete entries for cases that vanished
+    /// since the last sync this session. `reconcile` (used at load) wipes
+    /// the domain first so entries orphaned while the app was closed go too.
+    static func syncSpotlight(with cases: [ReflectionCase], reconcile: Bool = false) {
+        let currentIDs = Set(cases.map { $0.id })
+        if reconcile {
+            LoomSpotlightIndexer.deleteAll()
+        } else {
+            for removed in spotlightIndexedIDs.subtracting(currentIDs) {
+                LoomSpotlightIndexer.delete(caseID: removed)
+            }
+        }
+        LoomSpotlightIndexer.index(cases)
+        spotlightIndexedIDs = currentIDs
     }
 
     /// Stage 1 (LoomDomain) one-time v1→v2 migration: derive typed trace
