@@ -1,6 +1,7 @@
 # LOOM 工作台 macOS 标准宪章(WORKBENCH MACOS STANDARDS)
 
-> 状态:**PROPOSED** — 22 条标准由 owner 既有法律 + macOS 27 官方标准派生,四个拍板问题(文末)未决。
+> 状态:**RATIFIED 2026-07-08** — 22 条标准生效;四个拍板问题 owner 已裁决:
+> ① 壳迁移**分两刀**(先 split view 骨架,后玻璃/工具栏语法,每刀独立验收) ② Today **最小版**(Reading now/Open questions/Recent 纯聚合)+ 冷启动**记住上次 destination** ③ 三个自定发明**全按系统标准清理**(peek 只在全屏保留、glassTooltip 回归 .help()、空态跟随系统明暗) ④ Shuttle ⌘K **先退役**(侧栏 .searchable 接管;以后需要再原生重建)。
 > 来源:2026-07-08 owner 最高标准「先以 mac 系统标准为主」+「按照最新的27来」;
 > 由 2 路 macOS 26/27 官方研究(HIG/Liquid Glass/TextKit 2/Writing Tools)+ 7 维代码审计(109 条 file:line 证据发现)综合。
 > 用法:像玻璃语法一样,每轮工作台设计/评审先过这 22 条;保护清单(第三节)防止已做对的回归。
