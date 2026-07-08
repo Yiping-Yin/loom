@@ -145,6 +145,50 @@ enum ReflectionDocumentFormat {
         return .body
     }
 
+    /// The attribute set normalize asserts for a paragraph of the given
+    /// role — the write-side twin of `paragraphRole(of:)`. Evidence
+    /// paragraphs are handled separately (quote style keyed off
+    /// `isAnchorParagraph`); this covers the text-derived roles.
+    static func attributes(for role: ParagraphRole) -> [NSAttributedString.Key: Any] {
+        switch role {
+        case .heading(let level, _):
+            return [
+                .font: headingFont(level: level),
+                .paragraphStyle: headingParagraphStyle,
+                .foregroundColor: NSColor.labelColor,
+            ]
+        case .openQuestion:
+            return [
+                .font: documentFont,
+                .paragraphStyle: documentParagraphStyle,
+                .foregroundColor: openQuestionColor,
+            ]
+        case .body:
+            return [
+                .font: documentFont,
+                .paragraphStyle: documentParagraphStyle,
+                .foregroundColor: NSColor.labelColor,
+            ]
+        }
+    }
+
+    /// Charter §8: typingAttributes are the system's cursor-carried style
+    /// and the editor may override them ONLY at structural boundaries — a
+    /// new line after a heading or an open question starts as body. After
+    /// a body paragraph the answer is nil: leave the cursor's attributes
+    /// alone, which is exactly what keeps a live ⌘B bold (or italic)
+    /// running as the writer keeps typing. The old normalize pass reset
+    /// typingAttributes unconditionally every keystroke — that is the bug
+    /// this function exists to replace.
+    static func typingAttributesAfterNewline(previousRole: ParagraphRole) -> [NSAttributedString.Key: Any]? {
+        switch previousRole {
+        case .heading, .openQuestion:
+            return attributes(for: .body)
+        case .body:
+            return nil
+        }
+    }
+
     // MARK: - W1-pre · open-condition slot (north-star block D)
 
     /// Block D's open-condition slot: "❓ question · closes when: <condition>".

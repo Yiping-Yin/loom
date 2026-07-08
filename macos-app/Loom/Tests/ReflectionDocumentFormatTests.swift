@@ -159,4 +159,53 @@ final class ReflectionDocumentFormatTests: XCTestCase {
         let expected = NSColor.systemOrange.blended(withFraction: 0.34, of: .labelColor) ?? .systemOrange
         XCTAssertEqual(ReflectionDocumentFormat.openQuestionColor, expected)
     }
+
+    // MARK: - W1-pre layer 2 · role → attribute set (charter §8)
+
+    func testAttributesForBodyAssertBaselineInkAndParagraphStyle() {
+        let attrs = ReflectionDocumentFormat.attributes(for: .body)
+        XCTAssertEqual(attrs[.font] as? NSFont, ReflectionDocumentFormat.documentFont)
+        XCTAssertEqual(attrs[.paragraphStyle] as? NSParagraphStyle,
+                       ReflectionDocumentFormat.documentParagraphStyle)
+        XCTAssertEqual(attrs[.foregroundColor] as? NSColor, .labelColor)
+    }
+
+    func testAttributesForHeadingCarryLevelFont() {
+        let attrs = ReflectionDocumentFormat.attributes(for: .heading(level: 2, markerLength: 3))
+        XCTAssertEqual(attrs[.font] as? NSFont, ReflectionDocumentFormat.headingFont(level: 2))
+        XCTAssertEqual(attrs[.paragraphStyle] as? NSParagraphStyle,
+                       ReflectionDocumentFormat.headingParagraphStyle)
+        XCTAssertEqual(attrs[.foregroundColor] as? NSColor, .labelColor)
+    }
+
+    func testAttributesForOpenQuestionUseTheSanctionedInk() {
+        let attrs = ReflectionDocumentFormat.attributes(for: .openQuestion)
+        XCTAssertEqual(attrs[.foregroundColor] as? NSColor,
+                       ReflectionDocumentFormat.openQuestionColor)
+        XCTAssertEqual(attrs[.font] as? NSFont, ReflectionDocumentFormat.documentFont)
+    }
+
+    // MARK: - W1-pre layer 2 · boundary typing attributes (charter §8)
+    //
+    // typingAttributes are the system's cursor-carried style. The ONLY
+    // sanctioned override is at structural boundaries (a new line after a
+    // heading or question types as body). After a body paragraph the
+    // answer is nil — leave the cursor's attributes ALONE, which is
+    // exactly what keeps ⌘B bold alive as you keep typing.
+
+    func testTypingAfterHeadingResetsToBody() {
+        let attrs = ReflectionDocumentFormat.typingAttributesAfterNewline(
+            previousRole: .heading(level: 1, markerLength: 2))
+        XCTAssertNotNil(attrs)
+        XCTAssertEqual(attrs?[.font] as? NSFont, ReflectionDocumentFormat.documentFont)
+    }
+
+    func testTypingAfterOpenQuestionResetsToBody() {
+        let attrs = ReflectionDocumentFormat.typingAttributesAfterNewline(previousRole: .openQuestion)
+        XCTAssertEqual(attrs?[.foregroundColor] as? NSColor, .labelColor)
+    }
+
+    func testTypingAfterBodyLeavesCursorAttributesAlone() {
+        XCTAssertNil(ReflectionDocumentFormat.typingAttributesAfterNewline(previousRole: .body))
+    }
 }
