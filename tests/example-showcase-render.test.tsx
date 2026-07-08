@@ -206,38 +206,28 @@ test('product-shell registers /example as an internal route prefix', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Conversational cosmos entry — the DEFAULT `/` is the two-door home.
+// The DEFAULT `/` is the owner dossier (ONE-digital-me, owner 2026-07-08).
 //
-// renderToStaticMarkup never mounts, so HomeGate's localStorage useEffect never
-// runs and the profile-storage stub reads null: the SSR output is exactly the
-// no-profile front door a new user first sees — the conversation-first cosmic
-// cover (HomeConversationalCover), NOT the retired neutral landing and NOT the
-// owner dossier (which lives only at /example*, asserted above). A returning
-// user with a profile is redirected to /digital-me after mount, covered by
-// home-gate-redirect.test.ts.
+// The two-door funnel (HomeGate -> cosmic cover for strangers) was GTM-era
+// product and is deleted: LOOM is a local-first single-owner app, so the
+// front door renders the verified dossier directly — the same surface the
+// native You window opens at /you.
 // ---------------------------------------------------------------------------
 
-test('/ (no profile) renders the cosmic cover front door, NOT the owner dossier', () => {
+test('/ renders the owner dossier front door (funnel retired)', () => {
   const { default: HomePage } = require('../app/page') as { default: React.ComponentType };
   const html = render(<HomePage />);
   const text = visibleText(html);
 
-  // The conversational cosmos cover: the single answer input + whisper links.
-  assert.match(html, /Type your answer/i);
-  assert.match(html, /aria-label="Your answer"/);
-  assert.match(html, /loom-cosmic-field/);
-  assert.match(text, /See an example/);
-  assert.match(html, /href="\/example"/);
-  assert.match(text, /Prefer a form\?/i);
+  // The verified owner dossier renders directly.
+  assert.match(text, /Yiping Yin/);
+  assert.match(html, /class="lcv-shell"/);
+  assert.match(html, /class="lcv-ledger"/);
 
-  // The retired neutral landing must be GONE from the default home.
-  assert.doesNotMatch(text, /verifiable identity/);
-  assert.doesNotMatch(text, /Build your LOOM/);
-
-  // Owner dossier markers must be ABSENT from the default home.
-  assert.doesNotMatch(text, /Yiping Yin/);
-  assert.doesNotMatch(html, /class="lcv-shell"/);
-  assert.doesNotMatch(html, /class="lcv-ledger"/);
+  // The retired funnel must be GONE from the default home.
+  assert.doesNotMatch(html, /Type your answer/i);
+  assert.doesNotMatch(html, /loom-cosmic-field/);
+  assert.doesNotMatch(text, /Prefer a form\?/i);
 });
 
 test('default /about (no profile) renders a neutral empty state, not the owner About dossier', () => {
