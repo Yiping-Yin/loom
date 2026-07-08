@@ -115,9 +115,9 @@ struct ReflectionLearningTrace: Identifiable, Equatable {
 
     var signalColor: Color {
         if isWeakAnchor || isLanguageSelection || isDataOrDocumentSelection || focus == "question" {
-            return Color(red: 0.72, green: 0.47, blue: 0.12)
+            return Color(nsColor: .systemBrown)
         }
-        return LoomTokens.dsThread
+        return LoomTokens.dsAnchor
     }
 
     var isWeakAnchor: Bool {

@@ -115,7 +115,7 @@ struct SourcePreviewPane: NSViewRepresentable {
         guard safeLength > 0, range.location >= 0,
               range.location + safeLength <= storage.length else { return }
         let safeRange = NSRange(location: range.location, length: safeLength)
-        let flashColor = NSColor(LoomTokens.thread).withAlphaComponent(0.22)
+        let flashColor = LoomTokens.dsAnchorNSColor.withAlphaComponent(0.22)
         storage.addAttribute(.backgroundColor, value: flashColor, range: safeRange)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
             guard textView.textStorage === storage,

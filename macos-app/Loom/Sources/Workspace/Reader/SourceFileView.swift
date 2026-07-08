@@ -2186,7 +2186,7 @@ struct SourceFileView: View {
     /// Loom, shown once before the user's first compile.
     private var compileFirstPulseDot: some View {
         Circle()
-            .fill(LoomTokens.dsThread)
+            .fill(Color.accentColor)
             .frame(width: 6, height: 6)
             .opacity(compilePulseActive ? 0.35 : 1.0)
             .animation(
@@ -3261,7 +3261,7 @@ struct SourceTraceRail: View {
                     .position(x: width - 4, y: height / 2)
 
                 Circle()
-                    .fill(LoomTokens.dsThread.opacity(0.58))
+                    .fill(Color.accentColor.opacity(0.58))
                     .frame(width: 4, height: 4)
                     .position(
                         x: width - 4,
@@ -3352,15 +3352,15 @@ struct SourceTraceRail: View {
     private func tint(for kind: SourceTraceRailItem.Kind) -> Color {
         switch kind {
         case .capture:
-            return LoomTokens.dsThread
+            return LoomTokens.dsAnchor
         case .question:
-            return Color(red: 0.96, green: 0.56, blue: 0.22)
+            return Color(nsColor: .systemOrange)
         case .draft:
-            return Color(red: 0.46, green: 0.58, blue: 0.68)
+            return Color(nsColor: .systemIndigo)
         case .principle:
-            return Color(red: 0.88, green: 0.62, blue: 0.20)
+            return Color(nsColor: .systemBrown)
         case .transient:
-            return LoomTokens.dsThread.opacity(0.52)
+            return LoomTokens.dsAnchor.opacity(0.52)
         }
     }
 
@@ -3797,10 +3797,9 @@ final class NoteHoverTick: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override func draw(_ dirtyRect: NSRect) {
-        // 青芒 #4BC5DE — inlined as calibrated RGB, matching the existing idiom.
-        // Fixed cyan (not the brighter dark pair) because the backdrop is the
-        // white PDF page, not dark glass.
-        let cyan = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
+        // Anchor locator on the PDF page — dynamic pair (charter §5): the
+        // darker light-mode teal reads on the white page, cyan on dark.
+        let cyan = LoomTokens.dsAnchorNSColor
         let h = min(max(bounds.height, 11), 22)
         let bar = NSRect(x: bounds.midX - 1.25, y: (bounds.height - h) / 2, width: 2.5, height: h)
         let path = NSBezierPath(roundedRect: bar, xRadius: 1.25, yRadius: 1.25)
@@ -3827,7 +3826,7 @@ final class SnipOverlayView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         guard selectionRect.width > 1, selectionRect.height > 1 else { return }
-        let accent = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
+        let accent = LoomTokens.dsAnchorNSColor
         // Dim everything OUTSIDE the box — a macOS screenshot-style spotlight so
         // the region reads as precise. Even-odd = bounds minus the selection.
         let mask = NSBezierPath(rect: bounds)
@@ -3886,7 +3885,7 @@ final class LineHoverHighlight: NSView {
         if flashing {
             // Receipt: a single soft cyan pulse across the row — cyan, never a
             // foreign green, so the instrument stays a two-colour (ink + cyan) tool.
-            let cyan = NSColor(calibratedRed: 0.294, green: 0.773, blue: 0.871, alpha: 1)
+            let cyan = LoomTokens.dsAnchorNSColor
             let pulse = NSBezierPath(roundedRect: box, xRadius: 4, yRadius: 4)
             cyan.withAlphaComponent(0.22).setFill()
             pulse.fill()

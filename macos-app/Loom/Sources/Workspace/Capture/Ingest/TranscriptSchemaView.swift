@@ -111,7 +111,7 @@ struct TranscriptSchemaView: View {
         HStack(alignment: .top, spacing: 12) {
             Text(segment.timecode)
                 .font(LoomTokens.mono(size: 11))
-                .foregroundStyle(LoomTokens.thread)
+                .foregroundStyle(Color.accentColor)
                 .frame(width: 72, alignment: .leading)
                 .padding(.top, 2)
             VStack(alignment: .leading, spacing: 4) {
@@ -162,7 +162,7 @@ struct TranscriptSchemaView: View {
             .font(.system(size: 11, design: .serif).smallCaps())
             .fontWeight(.medium)
             .tracking(0.8)
-            .foregroundStyle(LoomTokens.thread)
+            .foregroundStyle(Color.accentColor)
     }
 
     private var sectionDivider: some View {

@@ -69,7 +69,7 @@ struct SpreadsheetSchemaView: View {
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                         Rectangle()
-                            .fill(selectedSheetIndex == idx ? LoomTokens.thread : Color.clear)
+                            .fill(selectedSheetIndex == idx ? Color.accentColor : Color.clear)
                             .frame(height: 1.5)
                     }
                 }

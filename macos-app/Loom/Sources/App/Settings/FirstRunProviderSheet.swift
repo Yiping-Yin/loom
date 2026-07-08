@@ -12,7 +12,7 @@ import AppKit
 ///
 /// Vellum styled: paper background, Cormorant-italic header, hair borders,
 /// thread accent for selection/focus. No system-blue leaks — every accent
-/// goes through `LoomTokens.thread`.
+/// goes through `Color.accentColor`.
 struct FirstRunProviderSheet: View {
     @Binding var isPresented: Bool
     @AppStorage("loom.ai.provider") private var providerRaw: String = AIProviderKind.anthropic.rawValue
@@ -236,7 +236,7 @@ struct FirstRunProviderSheet: View {
         HStack(spacing: 6) {
             ForEach(0..<2, id: \.self) { index in
                 Circle()
-                    .fill(index == current ? LoomTokens.thread : LoomTokens.hair)
+                    .fill(index == current ? Color.accentColor : LoomTokens.hair)
                     .frame(width: 6, height: 6)
             }
         }
@@ -271,7 +271,7 @@ private struct ProviderRow: View {
         Button(action: onTap) {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: kind.systemImage)
-                    .foregroundStyle(isSelected ? LoomTokens.thread : LoomTokens.muted)
+                    .foregroundStyle(isSelected ? Color.accentColor : LoomTokens.muted)
                     .frame(width: 20)
                     .padding(.top, 2)
                 VStack(alignment: .leading, spacing: 3) {
@@ -287,7 +287,7 @@ private struct ProviderRow: View {
                 Spacer(minLength: 0)
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .foregroundStyle(LoomTokens.thread)
+                        .foregroundStyle(Color.accentColor)
                         .font(.system(size: 11, weight: .bold))
                 }
             }
@@ -296,7 +296,7 @@ private struct ProviderRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(isSelected ? LoomTokens.thread.opacity(0.10) : Color.clear)
+        .background(isSelected ? Color.accentColor.opacity(0.10) : Color.clear)
     }
 }
 
@@ -322,7 +322,7 @@ private struct VellumPrimaryButton: View {
                 .foregroundStyle(LoomTokens.ink)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 9)
-                .background(hover ? LoomTokens.thread.opacity(0.08) : Color.clear)
+                .background(hover ? Color.accentColor.opacity(0.08) : Color.clear)
                 .overlay(
                     Rectangle()
                         .stroke(LoomTokens.ink, lineWidth: 0.5)
@@ -352,7 +352,7 @@ private struct VellumTextButton: View {
             Text(label)
                 .font(LoomTokens.serif(size: 13, italic: true))
                 .foregroundStyle(hover ? LoomTokens.ink : LoomTokens.ink3)
-                .underline(hover, color: LoomTokens.thread)
+                .underline(hover, color: Color.accentColor)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
         }

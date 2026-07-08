@@ -113,7 +113,7 @@ struct IngestionView: View {
         VStack(spacing: 8) {
             Image(systemName: "square.and.arrow.down")
                 .font(.system(size: 32, weight: .light))
-                .foregroundStyle(isDragging ? LoomTokens.thread : LoomTokens.muted)
+                .foregroundStyle(isDragging ? Color.accentColor : LoomTokens.muted)
             Text(isDragging ? "Drop to read" : "Drop Markdown, PDF, DOCX, slides, Pages, or images")
                 .font(LoomTokens.serif(size: 15, italic: true))
                 .foregroundStyle(LoomTokens.ink)
@@ -169,13 +169,13 @@ struct IngestionView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 10)
                 .stroke(
-                    isDragging ? LoomTokens.thread : LoomTokens.hair,
+                    isDragging ? Color.accentColor : LoomTokens.hair,
                     style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
                 )
                 .padding(16)
         )
         .background(
-            (isDragging ? LoomTokens.thread.opacity(0.06) : Color.clear)
+            (isDragging ? Color.accentColor.opacity(0.06) : Color.clear)
                 .padding(16)
         )
         .onDrop(of: [.fileURL], isTargeted: $isDragging) { providers in
@@ -286,7 +286,7 @@ struct IngestionView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 6) {
                                 Image(systemName: "doc.text")
-                                    .foregroundStyle(LoomTokens.thread)
+                                    .foregroundStyle(Color.accentColor)
                                     .font(.system(size: 10))
                                 Text(item.filename)
                                     .font(LoomTokens.serif(size: 12, weight: .medium))
@@ -1610,7 +1610,7 @@ private struct TextExtractedPane: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
                 Image(systemName: "doc.text.magnifyingglass")
-                    .foregroundStyle(LoomTokens.thread)
+                    .foregroundStyle(Color.accentColor)
                     .font(.system(size: 12))
                 Text(extracted.filename)
                     .font(LoomTokens.serif(size: 13, weight: .medium))
@@ -1669,7 +1669,7 @@ private struct TextExtractedPane: View {
                     .font(.system(size: 10))
             } else {
                 Image(systemName: "checkmark.seal")
-                    .foregroundStyle(LoomTokens.thread)
+                    .foregroundStyle(Color.accentColor)
                     .font(.system(size: 10))
             }
             Text("Will extract as: \(extracted.description.title)")
@@ -1718,7 +1718,7 @@ private struct ExtractingPane: View {
     var body: some View {
         HStack(spacing: 10) {
             Circle()
-                .fill(LoomTokens.thread)
+                .fill(Color.accentColor)
                 .frame(width: 6, height: 6)
                 .opacity(pulse ? 0.3 : 1.0)
                 .animation(

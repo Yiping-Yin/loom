@@ -35,7 +35,7 @@ struct LoomContentGroup<Content: View>: View {
 
             if count == 0 {
                 Text(emptyCopy)
-                    .font(Font.custom("EB Garamond", size: 13).italic())
+                    .font(Font.system(size: 13, design: .serif).italic())
                     .foregroundStyle(LoomTokens.muted)
                     .padding(.vertical, 6)
             } else {
@@ -67,7 +67,7 @@ struct LoomManagementRow: View {
     var body: some View {
         HStack(spacing: 8) {
             Text(title)
-                .font(Font.custom("Cormorant Garamond", size: 14).italic())
+                .font(Font.system(size: 14, design: .serif).italic())
                 .foregroundStyle(LoomTokens.ink)
                 .lineLimit(1)
                 .truncationMode(.tail)

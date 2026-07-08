@@ -1,99 +1,92 @@
 import SwiftUI
 import AppKit
 
-/// Loom Vellum tokens — mirror of `loom-tokens.jsx` V object.
-/// The single source of truth for palette + type across native SwiftUI.
-/// Web side gets the same values via CSS variables injected at document-start
-/// (see `LoomTokens.cssInjectionScript`).
+/// Loom tokens — the native design-token seam.
 ///
-/// **Design System v1.0 — 2026-04-28.** New canonical tokens live under the
-/// `ds*` prefix and mirror `lib/loom-design-system.ts` + `app/globals-v2.css`
-/// exactly. The legacy `paper / ink / hair / thread / ...` surface area is
-/// preserved as backward-compat aliases that now point at the canonical
-/// values, so existing call sites pick up the new palette without rewrites.
-/// Per the plan (night 1), call sites are not edited; surface migration
-/// happens on night 4.
+/// **Contract (macOS-standards charter §5/§6, ratified 2026-07-08):**
+/// system semantics first. Neutral surfaces, inks, hairlines, and state
+/// colors are SYSTEM SEMANTIC COLORS (labelColor…, separatorColor,
+/// windowBackground…, systemRed/Green/Orange) so they auto-adapt to
+/// appearance, vibrancy on glass, and Increase Contrast. Interactive /
+/// signal chrome is `Color.accentColor` — never a token from this file.
+/// The ONLY sanctioned custom colors here are:
+///   · `dsAnchor` / `dsAnchorNSColor` — the loom:// anchor locator cyan
+///     (dynamic: #2F8CA0 light / #4BC5DE dark), reserved for anchor
+///     evidence, capture receipts, and the locator glyphs;
+///   · `dsThread` — deprecated in-flight-caller alias of the anchor hue,
+///     scheduled for deletion once the remaining parallel-session files
+///     land (charter W1-3; deletion turns relapse into a compile error).
+/// The CSS-injection block at the bottom is the web-bridge mirror and
+/// migrates together with `LoomWebView.themeSyncScript` (also W1-3).
 enum LoomTokens {
 
-    // MARK: - Design System v1.0 · canonical color tokens
+    // MARK: - Neutral ramp → system semantic colors (charter §6)
     //
-    // Mirrors `lib/loom-design-system.ts` and `app/globals-v2.css`. Eleven
-    // colors, no others. Any new surface should use these directly.
-    // Light and dark values are both live. Auto theme is time-based at
-    // the shell level, then these dynamic colors resolve from the
-    // NSWindow appearance.
+    // One definition-site change, ~370 call sites inherit. These resolve
+    // from the window's effective appearance and pick up vibrancy on
+    // glass + Increase Contrast for free.
 
-    /// Paper · root background, deepest layer.  Evidence Desk: --ink-0.
-    static let dsPaperDeep   = Color.dynamic(light: 0xEEF1F4, dark: 0x07090C)
-    /// Paper · default surface (one layer up from root).
-    static let dsPaper       = Color.dynamic(light: 0xF6F8FA, dark: 0x10141A)
-    /// Paper · raised surface (two layers up).  Evidence Desk: --ink-3.
-    static let dsPaperUp     = Color.dynamic(light: 0xFBFCFD, dark: 0x161B22)
-    /// Paper · card surface (three layers up).  Evidence Desk: --ink-4.
-    static let dsPaperCard   = Color.dynamic(light: 0xE6EAEF, dark: 0x1E242D)
+    /// Root background, deepest layer.
+    static let dsPaperDeep   = Color(nsColor: .underPageBackgroundColor)
+    /// Default surface (one layer up from root).
+    static let dsPaper       = Color(nsColor: .windowBackgroundColor)
+    /// Raised surface (two layers up).
+    static let dsPaperUp     = Color(nsColor: .controlBackgroundColor)
+    /// Card surface (three layers up).
+    static let dsPaperCard   = Color(nsColor: .quaternarySystemFill)
 
-    /// Ink · primary body text + iconography.  Evidence Desk: --text-1.
-    static let dsInk1        = Color.dynamic(light: 0x1A1F26, dark: 0xE6E9EE)
-    /// Ink · secondary / metadata.  Evidence Desk: --text-2.
-    static let dsInk2        = Color.dynamic(light: 0x46505B, dark: 0x9BA3AE)
-    /// Ink · muted / chrome.  Evidence Desk: --text-3.
-    static let dsInk3        = Color.dynamic(light: 0x8A929C, dark: 0x5E6671)
+    /// Primary body text + iconography.
+    static let dsInk1        = Color(nsColor: .labelColor)
+    /// Secondary / metadata.
+    static let dsInk2        = Color(nsColor: .secondaryLabelColor)
+    /// Muted / chrome.
+    static let dsInk3        = Color(nsColor: .tertiaryLabelColor)
 
-    /// Hairline border · default 0.5px stroke.  Evidence Desk: --line.
-    static let dsHair        = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.10,
-                                                  dark: 0xE6E9EE, darkAlpha: 0.10)
+    /// Hairline border · default 0.5px stroke.
+    static let dsHair        = Color(nsColor: .separatorColor)
     /// Hairline border · faintest layer.
-    static let dsHairFaint   = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.05,
-                                                  dark: 0xE6E9EE, darkAlpha: 0.05)
+    static let dsHairFaint   = Color(nsColor: .separatorColor).opacity(0.5)
 
-    /// Comet-ice accent · single source of truth.  Evidence Desk: --gold alias.
+    /// @deprecated Anchor-hue alias kept ONLY for the parallel-session
+    /// in-flight files that still reference it (9 call sites). Chrome uses
+    /// `Color.accentColor`; anchor visuals use `dsAnchor`. Deleted in W1-3.
     static let dsThread      = Color(hex: 0x4BC5DE)
-    /// The one sanctioned in-app cyan: the loom:// anchor locator (◆/◇) + the
-    /// brand mark. Ink-discipline law (owner 2026-07-07 system-unity): cyan is
-    /// RESERVED for the locator — all other chrome uses `Color.accentColor`.
-    /// Same hue as `dsThread`, but a distinct name so chrome can't relapse into
-    /// the anchor colour by grabbing `dsThread`.
-    static let dsAnchor      = Color(hex: 0x4BC5DE)
+    /// The one sanctioned in-app cyan: the loom:// anchor locator (◆/◇),
+    /// anchored-quote evidence, and capture receipts. Ink-discipline law
+    /// (owner 2026-07-07 system-unity): cyan is RESERVED for the anchor
+    /// family — all other chrome uses `Color.accentColor`. Dynamic pair
+    /// per charter §5: #2F8CA0 in light (contrast on white paper/PDF),
+    /// #4BC5DE in dark.
+    static let dsAnchor      = Color(nsColor: dsAnchorNSColor)
+    /// AppKit-side dynamic anchor color for NSView drawing / text
+    /// attributes (PDF locator bar, capture flash receipts).
+    static let dsAnchorNSColor: NSColor = NSColor(name: nil) { appearance in
+        let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        return NSColor.fromHex(isDark ? 0x4BC5DE : 0x2F8CA0, alpha: 1.0)
+    }
     // (dsThreadMuted removed — zero callers; muted cyan invited chrome back
     // into the anchor colour.)
 
-    // MARK: - Design System v1.0 · semantic state colors
+    // MARK: - Semantic state colors → system palette (charter §6)
     //
-    // Added 2026-04-27. Four state colors + their muted (55% alpha)
-    // variants. Mirror of `lib/loom-design-system.ts` and `globals-v2.css`.
-    // Use these for destructive / success / info / caution surfaces —
-    // never `Color.red` / ad-hoc hex / `LoomTokens.rose` for new code.
+    // Destructive / positive / caution surfaces use the system state
+    // colors so they match every other Mac app and adapt to Increase
+    // Contrast. Never `Color.red` / ad-hoc hex for new code. Need a
+    // de-emphasised variant? Use `.opacity(0.55)` at the call site.
 
-    /// Destructive — market down red. Delete / cancel / error states.
-    static let dsAlert        = Color(hex: 0xE06A6A)
-    /// Destructive · 55% alpha for de-emphasised state.
-    static let dsAlertMuted   = Color(.sRGB,
-                                      red:   224/255,
-                                      green: 106/255,
-                                      blue:  106/255,
-                                      opacity: 0.55)
+    /// Destructive — delete / cancel / error states.
+    static let dsAlert        = Color(nsColor: .systemRed)
 
-    /// Positive — market up green. Confirmations, complete states.
-    static let dsSuccess      = Color(hex: 0x3FB37A)
-    /// Positive · 55% alpha for de-emphasised state.
-    static let dsSuccessMuted = Color(.sRGB,
-                                      red:    63/255,
-                                      green: 179/255,
-                                      blue:  122/255,
-                                      opacity: 0.55)
+    /// Positive — confirmations, complete states.
+    static let dsSuccess      = Color(nsColor: .systemGreen)
 
     // (dsInfo/dsInfoMuted removed — zero callers, and a cyan "info" tint
     // conflated the semantic state colour with the reserved anchor cyan.
-    // New informational chrome should use Color.accentColor.)
+    // New informational chrome should use Color.accentColor.
+    // dsAlertMuted/dsSuccessMuted/dsWarningMuted removed — zero callers.)
 
-    /// Caution — restrained amber, distinct from the comet accent.
-    static let dsWarning      = Color(hex: 0xCB9A3F)
-    /// Caution · 55% alpha for de-emphasised state.
-    static let dsWarningMuted = Color(.sRGB,
-                                      red:   203/255,
-                                      green: 154/255,
-                                      blue:   63/255,
-                                      opacity: 0.55)
+    /// Caution — warnings, unsaved/attention states.
+    static let dsWarning      = Color(nsColor: .systemOrange)
 
     // MARK: - Design System v1.0 · hex string constants
     //
@@ -150,23 +143,21 @@ enum LoomTokens {
     // surfaces will pick up automatically.
 
     /// @deprecated Use `dsPaper`.
-    static let paper      = Color.dynamic(light: 0xF6F8FA, dark: 0x10141A)
+    static let paper      = dsPaper
     /// @deprecated Use `dsPaperDeep`.
-    static let paperDeep  = Color.dynamic(light: 0xEEF1F4, dark: 0x07090C)
+    static let paperDeep  = dsPaperDeep
     /// @deprecated Use `dsInk1`.
-    static let ink        = Color.dynamic(light: 0x1A1F26, dark: 0xE6E9EE)
+    static let ink        = dsInk1
     /// @deprecated Use `dsInk2`.
-    static let ink2       = Color.dynamic(light: 0x46505B, dark: 0x9BA3AE)
+    static let ink2       = dsInk2
     /// @deprecated Use `dsInk3`.
-    static let ink3       = Color.dynamic(light: 0x6B7480, dark: 0x5E6671)
+    static let ink3       = dsInk3
     /// @deprecated Use `dsInk3`.
-    static let muted      = Color.dynamic(light: 0x8A929C, dark: 0x5E6671)
+    static let muted      = dsInk3
     /// @deprecated Use `dsHair`.
-    static let hair       = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.10,
-                                               dark: 0xE6E9EE, darkAlpha: 0.10)
+    static let hair       = dsHair
     /// @deprecated Use `dsHairFaint`.
-    static let hairFaint  = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.04,
-                                               dark: 0xE6E9EE, darkAlpha: 0.05)
+    static let hairFaint  = dsHairFaint
 
     // (Night ink-wash family removed — zero callers since the web-era
     // surfaces retired.)
@@ -184,13 +175,13 @@ enum LoomTokens {
     // `dsThread` (#4BC5DE). The old gold value is gone; single source of
     // truth for comet accent going forward.
 
-    /// @deprecated Use `dsAnchor` for the loom:// locator; `Color.accentColor`
-    /// for chrome. Still aliased because ~40 parked-surface call sites remain
-    /// (FirstRun wizard, rescued extractor UI, Ingest views) — migrate on touch.
+    /// @deprecated Anchor-hue alias for in-flight parallel-session callers
+    /// only (see `dsThread`). Everything editable migrated to
+    /// `Color.accentColor` / `dsAnchor` in charter W0-1. Deleted in W1-3.
     static let thread   = Color(hex: 0x4BC5DE)
-    static let ochre    = Color.dynamic(light: 0xB68A3C, dark: 0xDDBA6A)
-    static let rose     = Color.dynamic(light: 0xC0504E, dark: 0xE06A6A)
-    static let sage     = Color.dynamic(light: 0x3E9466, dark: 0x3FB37A)
+    static let ochre    = Color(nsColor: .systemOrange)
+    static let rose     = Color(nsColor: .systemRed)
+    static let sage     = Color(nsColor: .systemGreen)
     // (threadHi / gold / indigo / plum / umber removed — zero code callers;
     // threadHi and indigo were cyan-family leak inviters.)
 
@@ -202,16 +193,18 @@ enum LoomTokens {
     static let scriptStack  = #"\"Caveat\", \"Homemade Apple\", \"Bradley Hand\", \"Segoe Print\", cursive"#
     static let monoStack    = #"\"JetBrains Mono\", \"SF Mono\", ui-monospace, Menlo, monospace"#
 
-    /// Native-side font for display (Cormorant fallback chain). SwiftUI doesn't
-    /// accept CSS-style cascades, so we ask for the first available.
+    /// Native-side display serif. Charter §17: `Font.custom("Cormorant
+    /// Garamond")` was a lie — the font is not bundled, so every call
+    /// silently fell back to SF sans. System serif (New York) is the
+    /// standard, Apple-tuned-for-reading face.
     static func display(size: CGFloat, italic: Bool = false, weight: Font.Weight = .regular) -> Font {
-        let base = Font.custom("Cormorant Garamond", size: size)
-            .weight(weight)
+        let base = Font.system(size: size, weight: weight, design: .serif)
         return italic ? base.italic() : base
     }
 
+    /// Native-side body serif — same §17 fix as `display(size:)`.
     static func serif(size: CGFloat, italic: Bool = false, weight: Font.Weight = .regular) -> Font {
-        let base = Font.custom("EB Garamond", size: size).weight(weight)
+        let base = Font.system(size: size, weight: weight, design: .serif)
         return italic ? base.italic() : base
     }
 
@@ -236,10 +229,8 @@ enum LoomTokens {
     // Mirrors the 6-step spacing scale from the plan. Use `DSSpace.md.value`
     // anywhere a CGFloat is expected.
 
-    // MARK: - Design System v1.0 · motion durations
-    //
-    // Mirrors the 3-step motion scale (fast / normal / slow). Use
-    // `.animation(.easeOut(duration: DSMotion.normal.duration), value: x)`.
+    // (Motion durations: use MotionTokens — it carries the Reduce-Motion
+    // gate required by charter §18. The old DSMotion enum is deleted.)
 
     // MARK: - Design System v1.0 · corner radii
 
@@ -557,24 +548,9 @@ enum DSSpace: CGFloat {
     var value: CGFloat { rawValue }
 }
 
-// MARK: - Design System v1.0 · motion
+// (DSMotion removed — zero callers; motion timing lives in MotionTokens,
+// which carries the Reduce-Motion gate the charter §18 requires.)
 
-/// Three-step motion scale — fast / normal / slow, all `ease-out`. Use
-/// `.animation(.easeOut(duration: DSMotion.fast.duration), value: x)`.
-enum DSMotion {
-    case fast       // 140ms · hover, active, button-press
-    case normal     // 220ms · layout-shift, expand/collapse
-    case slow       // 400ms · route-transition, modal-open
-
-    /// Duration in seconds for use with `Animation.easeOut(duration:)`.
-    var duration: TimeInterval {
-        switch self {
-        case .fast:   return 0.140
-        case .normal: return 0.220
-        case .slow:   return 0.400
-        }
-    }
-}
 
 // MARK: - Design System v1.0 · corner radii
 

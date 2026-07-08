@@ -52,7 +52,7 @@ struct AskAIView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(LoomTokens.thread)
+                    .foregroundStyle(Color.accentColor)
                     .font(.system(size: 14))
                 Text("Ask AI")
                     .font(LoomTokens.display(size: 18, italic: true))
@@ -82,7 +82,7 @@ struct AskAIView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "text.quote")
                             .font(.system(size: 10))
-                            .foregroundStyle(LoomTokens.thread)
+                            .foregroundStyle(Color.accentColor)
                         if let passageTitle {
                             Text("From: \(passageTitle)")
                                 .font(LoomTokens.sans(size: 10))
@@ -109,7 +109,7 @@ struct AskAIView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(LoomTokens.thread.opacity(0.06))
+                .background(Color.accentColor.opacity(0.06))
                 .overlay(alignment: .bottom) { vellumHairline }
             }
 
@@ -292,7 +292,7 @@ struct AskAIView: View {
     @ViewBuilder
     private func transcriptBubble(_ msg: AskAIMessage) -> some View {
         // User turns are signed in ink; assistant turns in bronze thread.
-        let roleColor: Color = msg.role == .user ? LoomTokens.ink3 : LoomTokens.thread
+        let roleColor: Color = msg.role == .user ? LoomTokens.ink3 : Color.accentColor
         let isStreamingAssistant = msg.role == .assistant && msg.content.isEmpty
 
         HStack(alignment: .top, spacing: 0) {
@@ -444,7 +444,7 @@ struct AskAIView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "at")
                             .font(.system(size: 9))
-                            .foregroundStyle(LoomTokens.thread)
+                            .foregroundStyle(Color.accentColor)
                         Text(ref.title)
                             .font(LoomTokens.serif(size: 12))
                             .foregroundStyle(LoomTokens.ink2)
@@ -463,7 +463,7 @@ struct AskAIView: View {
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(LoomTokens.thread.opacity(0.1))
+                            .fill(Color.accentColor.opacity(0.1))
                     )
                 }
             }
@@ -912,7 +912,7 @@ struct DocReferencePicker: View {
                         Spacer()
                         if alreadyReferenced.contains(doc.href) {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(LoomTokens.thread)
+                                .foregroundStyle(Color.accentColor)
                                 .font(.system(size: 11))
                         }
                     }

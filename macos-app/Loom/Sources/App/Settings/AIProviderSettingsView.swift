@@ -399,7 +399,7 @@ enum AIProviderKind: String, CaseIterable, Identifiable {
     var footerBlurb: String {
         switch self {
         case .appleFoundation:
-            return "On-device Apple Intelligence — no API key, no internet, no setup. Works on Apple Silicon Macs running macOS 26+ with Apple Intelligence enabled. Best for quick lookups, translations, and short questions; the on-device model is small (~3B params) so deeper analysis or long passages benefit from Anthropic / OpenAI / a custom endpoint."
+            return "On-device Apple Intelligence — no API key, no internet, no setup. Works on Apple Silicon Macs running macOS 27+ with Apple Intelligence enabled. Best for quick lookups, translations, and short questions; the on-device model is small (~3B params) so deeper analysis or long passages benefit from Anthropic / OpenAI / a custom endpoint."
         case .anthropic:
             return "Loom calls Anthropic's Messages API directly with the key you provide. Keys stay in Keychain; no server sees them."
         case .openai:

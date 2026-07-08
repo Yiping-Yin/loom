@@ -101,7 +101,7 @@ struct KeyboardHelpView: View {
                                     .frame(minWidth: 108, alignment: .trailing)
                                     .foregroundStyle(LoomTokens.ink)
                                 Text(item.label)
-                                    .font(Font.custom("EB Garamond", size: 13))
+                                    .font(Font.system(size: 13, design: .serif))
                                     .foregroundStyle(LoomTokens.ink2)
                                 Spacer(minLength: 0)
                             }

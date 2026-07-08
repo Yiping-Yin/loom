@@ -61,13 +61,13 @@ struct IngestExtractorResultView: View {
     private var kindHeader: some View {
         HStack(spacing: 6) {
             Image(systemName: "checkmark.seal")
-                .foregroundStyle(LoomTokens.thread)
+                .foregroundStyle(Color.accentColor)
                 .font(.system(size: 11))
             Text(schemaKindLabel)
                 .font(.system(size: 11, design: .serif).smallCaps())
                 .fontWeight(.medium)
                 .tracking(0.8)
-                .foregroundStyle(LoomTokens.thread)
+                .foregroundStyle(Color.accentColor)
             Spacer(minLength: 0)
             // "Verified" ribbon when this schema is typed + has at least
             // one verified source span — the honest positive signal.

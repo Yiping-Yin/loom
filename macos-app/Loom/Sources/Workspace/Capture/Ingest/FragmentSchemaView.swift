@@ -59,7 +59,7 @@ struct FragmentSchemaView: View {
                         .stroke(LoomTokens.hair, lineWidth: 0.5)
                 )
                 .overlay(alignment: .leading) {
-                    LoomTokens.thread.opacity(0.35)
+                    Color.accentColor.opacity(0.35)
                         .frame(width: 2)
                         .padding(.vertical, 2)
                 }
@@ -136,7 +136,7 @@ struct FragmentSchemaView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.right.circle")
-                    .foregroundStyle(LoomTokens.thread)
+                    .foregroundStyle(Color.accentColor)
                     .font(.system(size: 11))
                 Text(destinationLabel)
                     .font(LoomTokens.serif(size: 12, italic: true))
@@ -148,11 +148,11 @@ struct FragmentSchemaView: View {
             .padding(.vertical, 6)
             .background(
                 Capsule(style: .continuous)
-                    .fill(LoomTokens.thread.opacity(0.08))
+                    .fill(Color.accentColor.opacity(0.08))
             )
             .overlay(
                 Capsule(style: .continuous)
-                    .stroke(LoomTokens.thread.opacity(0.25), lineWidth: 0.5)
+                    .stroke(Color.accentColor.opacity(0.25), lineWidth: 0.5)
             )
         }
         .buttonStyle(.plain)

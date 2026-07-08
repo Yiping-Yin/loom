@@ -1897,14 +1897,14 @@ struct CaptureSheet: View {
                                     .background(
                                         Capsule().fill(
                                             binding.wrappedValue.anchor.id == a.id
-                                                ? LoomTokens.dsThread.opacity(0.18)
+                                                ? LoomTokens.dsAnchor.opacity(0.18)
                                                 : LoomTokens.dsHairFaint
                                         )
                                     )
                                     .overlay(
                                         Capsule().stroke(
                                             binding.wrappedValue.anchor.id == a.id
-                                                ? LoomTokens.dsThread.opacity(0.45)
+                                                ? LoomTokens.dsAnchor.opacity(0.45)
                                                 : LoomTokens.dsHair,
                                             lineWidth: 1
                                         )
@@ -1969,7 +1969,7 @@ struct CaptureSheet: View {
                     )
                     .overlay(
                         Rectangle()
-                            .fill(LoomTokens.dsThread.opacity(0.4))
+                            .fill(LoomTokens.dsAnchor.opacity(0.4))
                             .frame(width: 2),
                         alignment: .leading
                     )
@@ -2008,10 +2008,10 @@ struct CaptureSheet: View {
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: DSRadius.sm.value)
-                .fill(LoomTokens.dsThread.opacity(0.06))
+                .fill(LoomTokens.dsAnchor.opacity(0.06))
                 .overlay(
                     RoundedRectangle(cornerRadius: DSRadius.sm.value)
-                        .stroke(LoomTokens.dsThread.opacity(0.2), lineWidth: 0.5)
+                        .stroke(LoomTokens.dsAnchor.opacity(0.2), lineWidth: 0.5)
                 )
         )
     }
@@ -2033,7 +2033,7 @@ struct CaptureSheet: View {
                 }
                 .font(.system(size: 10, design: .serif))
                 .buttonStyle(.plain)
-                .foregroundStyle(LoomTokens.dsThread)
+                .foregroundStyle(Color.accentColor)
             }
         }
     }
@@ -2062,7 +2062,7 @@ struct CaptureSheet: View {
                 }
                 .font(.system(size: 10, design: .serif))
                 .buttonStyle(.plain)
-                .foregroundStyle(LoomTokens.dsThread)
+                .foregroundStyle(Color.accentColor)
                 Spacer(minLength: 0)
             }
         } label: {
@@ -2140,14 +2140,14 @@ struct CaptureSheet: View {
                     .background(
                         Capsule().fill(
                             bodyEditMode == mode
-                                ? LoomTokens.dsThread.opacity(0.18)
+                                ? LoomTokens.dsAnchor.opacity(0.18)
                                 : LoomTokens.dsHairFaint
                         )
                     )
                     .overlay(
                         Capsule().stroke(
                             bodyEditMode == mode
-                                ? LoomTokens.dsThread.opacity(0.4)
+                                ? LoomTokens.dsAnchor.opacity(0.4)
                                 : LoomTokens.dsHair,
                             lineWidth: 1
                         )
@@ -2201,7 +2201,7 @@ struct CaptureSheet: View {
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: p.kept ? "checkmark.circle.fill" : "circle.dashed")
                                 .font(.system(size: 11))
-                                .foregroundStyle(p.kept ? LoomTokens.dsThread : LoomTokens.dsInk2)
+                                .foregroundStyle(p.kept ? LoomTokens.dsAnchor : LoomTokens.dsInk2)
                                 .padding(.top, 3)
                             Text(p.text)
                                 .font(.system(size: 13, design: .serif))
@@ -2349,7 +2349,7 @@ struct CaptureSheet: View {
                     HStack(alignment: .top, spacing: 8) {
                         Text("\(Int(hit.similarity * 100))%")
                             .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(LoomTokens.dsThread)
+                            .foregroundStyle(LoomTokens.dsAnchor)
                             .frame(width: 36, alignment: .leading)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(hit.record.anchorLabel)
@@ -2378,11 +2378,11 @@ struct CaptureSheet: View {
         .padding(DSSpace.sm.value)
         .background(
             RoundedRectangle(cornerRadius: DSRadius.sm.value)
-                .fill(LoomTokens.dsThread.opacity(0.04))
+                .fill(LoomTokens.dsAnchor.opacity(0.04))
         )
         .overlay(
             RoundedRectangle(cornerRadius: DSRadius.sm.value)
-                .stroke(LoomTokens.dsThread.opacity(0.2), lineWidth: 1)
+                .stroke(LoomTokens.dsAnchor.opacity(0.2), lineWidth: 1)
         )
     }
 

@@ -250,7 +250,7 @@ struct SyllabusSchemaView: View {
             .font(.system(size: 11, design: .serif).smallCaps())
             .fontWeight(.medium)
             .tracking(0.8)
-            .foregroundStyle(LoomTokens.thread)
+            .foregroundStyle(Color.accentColor)
     }
 
     private var sectionDivider: some View {

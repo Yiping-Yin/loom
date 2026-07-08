@@ -189,7 +189,7 @@ struct FragmentDestinationPicker: View {
                 .font(.system(size: 10, design: .serif).smallCaps())
                 .fontWeight(.medium)
                 .tracking(1.2)
-                .foregroundStyle(LoomTokens.thread)
+                .foregroundStyle(Color.accentColor)
             Text("Where does this land?")
                 .font(LoomTokens.serif(size: 17, italic: true, weight: .medium))
                 .foregroundStyle(LoomTokens.ink)
@@ -286,7 +286,7 @@ struct FragmentDestinationPicker: View {
                       ? "largecircle.fill.circle"
                       : "circle")
                     .foregroundStyle(selectedPursuitId == row.id
-                                     ? LoomTokens.thread
+                                     ? Color.accentColor
                                      : LoomTokens.muted)
                     .font(.system(size: 12))
                 VStack(alignment: .leading, spacing: 2) {
@@ -315,7 +315,7 @@ struct FragmentDestinationPicker: View {
         .buttonStyle(.plain)
         .background(
             selectedPursuitId == row.id
-            ? LoomTokens.thread.opacity(0.06)
+            ? Color.accentColor.opacity(0.06)
             : Color.clear
         )
     }
@@ -360,7 +360,7 @@ struct FragmentDestinationPicker: View {
                       ? "largecircle.fill.circle"
                       : "circle")
                     .foregroundStyle(selectedPanelId == row.id
-                                     ? LoomTokens.thread
+                                     ? Color.accentColor
                                      : LoomTokens.muted)
                     .font(.system(size: 12))
                 VStack(alignment: .leading, spacing: 2) {
@@ -393,7 +393,7 @@ struct FragmentDestinationPicker: View {
         .buttonStyle(.plain)
         .background(
             selectedPanelId == row.id
-            ? LoomTokens.thread.opacity(0.06)
+            ? Color.accentColor.opacity(0.06)
             : Color.clear
         )
     }
@@ -409,7 +409,7 @@ struct FragmentDestinationPicker: View {
                     .foregroundStyle(
                         newQuestionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         ? LoomTokens.muted
-                        : LoomTokens.thread
+                        : Color.accentColor
                     )
                     .font(.system(size: 12))
                 TextField(
@@ -482,7 +482,7 @@ struct FragmentDestinationPicker: View {
                 .font(.system(size: 10, design: .serif).smallCaps())
                 .fontWeight(.medium)
                 .tracking(1.0)
-                .foregroundStyle(LoomTokens.thread)
+                .foregroundStyle(Color.accentColor)
             if let count {
                 Text("· \(count)")
                     .font(LoomTokens.mono(size: 10))

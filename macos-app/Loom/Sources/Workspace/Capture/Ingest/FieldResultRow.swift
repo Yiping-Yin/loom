@@ -196,7 +196,7 @@ struct FieldResultRow<T: CustomStringConvertible & Codable>: View {
             HStack(spacing: 4) {
                 Image(systemName: "quote.opening")
                     .font(.system(size: 8, weight: .regular))
-                    .foregroundStyle(span.verified ? LoomTokens.thread : LoomTokens.rose)
+                    .foregroundStyle(span.verified ? Color.accentColor : LoomTokens.rose)
                 if let page = span.pageNum {
                     Text("p. \(page)")
                         .font(LoomTokens.mono(size: 9))

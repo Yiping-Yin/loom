@@ -156,7 +156,7 @@ struct LoomDossierRootView: View {
                             .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(LoomTokens.dsThread)
+                    .foregroundStyle(Color.accentColor)
                     Button {
                         NSWorkspace.shared.open(url)
                     } label: {
@@ -165,7 +165,7 @@ struct LoomDossierRootView: View {
                             .labelStyle(.titleAndIcon)
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(LoomTokens.dsThread)
+                    .foregroundStyle(Color.accentColor)
                 }
             }
             .padding(.horizontal, DSSpace.md.value - 2)
