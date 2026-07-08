@@ -160,10 +160,26 @@ targets:
             exit 0
           fi
           mkdir -p "$DEST"
-          # Derived search/RAG indexes are excluded (2026-07-08 partition):
-          # the only native consumers were the born-broken loom:// URLSession
-          # loaders, now deleted — ~8MB per Release for zero readers.
-          EXCLUDES="--exclude=rag-index.json --exclude=search-index.json --exclude=pagefind --exclude=related --exclude=atlas"
+          # Slim CV/dossier staging (2026-07-08 web retirement 7/7): the bundle
+          # exists to serve the owner dossier + its evidence, so only those
+          # surfaces ship. Excluded:
+          # - derived search/RAG indexes: the only native consumers were the
+          #   born-broken loom:// URLSession loaders (URLSession cannot resolve
+          #   a WKWebView custom scheme) — zero readers.
+          #   (related/atlas now name the actual .json files; the bare names
+          #   never matched anything.)
+          # - wiki/: study notes are a Workspace concern queued for native
+          #   content-root migration; no dossier surface links there. ~18MB.
+          # - design/, icon-apple-preview-8k.png, brand explorations/wordmark
+          #   archive: zero references from any staged page — only the seven
+          #   institution/brand images the dossier actually renders stay.
+          # Kept deliberately: optibook/ (owner CV evidence artifact linked
+          # from the dossier) and loom/history (product story behind the
+          # dossier brand link).
+          EXCLUDES="--exclude=rag-index.json --exclude=search-index.json --exclude=pagefind --exclude=related.json --exclude=atlas.json"
+          EXCLUDES="$EXCLUDES --exclude=wiki --exclude=wiki.html --exclude=wiki.txt"
+          EXCLUDES="$EXCLUDES --exclude=design --exclude=icon-apple-preview-8k.png"
+          EXCLUDES="$EXCLUDES --exclude=brand/explorations --exclude=brand/loom_app_icon* --exclude=brand/loom_wordmark* --exclude=brand/loom_icon_var6.png --exclude=brand/loom_lunar_comet_icon.* --exclude=brand/lunar-comet-ledger-*"
           if command -v rsync >/dev/null 2>&1; then
             if ! rsync -a --delete $EXCLUDES "$EXPORT/" "$DEST/"; then
               echo "Loom: rsync failed — falling back to cp -R"

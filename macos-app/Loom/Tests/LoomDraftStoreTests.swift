@@ -1102,40 +1102,6 @@ final class LoomDraftStoreTests: XCTestCase {
         )
     }
 
-    func testDocReferenceIndexParsesNativeBundleSearchIndex() throws {
-        // `load()` is now an async URLSession fetch from
-        // `loom://bundle/search-index.json`; the corpus-shaping logic lives in
-        // the pure `parse(_:)` helper, which is what this exercises (entries
-        // without an href are dropped; the rest sort by title).
-        let payload = """
-        {
-          "index": {
-            "storedFields": {
-              "flipdisc": {
-                "title": "Flipdisc Display Build and Software Guide",
-                "href": "/wiki/flipdisc-tutorial",
-                "category": "Web capture"
-              },
-              "missingHref": {
-                "title": "Ignored"
-              }
-            }
-          }
-        }
-        """
-
-        let docs = AskAIDocReferenceIndex.parse(Data(payload.utf8))
-
-        XCTAssertEqual(docs, [
-            AskAIDocRef(
-                id: "/wiki/flipdisc-tutorial",
-                title: "Flipdisc Display Build and Software Guide",
-                href: "/wiki/flipdisc-tutorial",
-                category: "Web capture"
-            )
-        ])
-    }
-
     func testDraftInlineEditPromptAndApplyReplaceOnlySelectedPassage() throws {
         let body = "Opening claim.\n\nThis sentence is vague and too long.\n\nClosing claim."
         let original = "This sentence is vague and too long."

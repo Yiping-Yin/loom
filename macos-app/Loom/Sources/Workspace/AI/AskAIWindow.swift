@@ -801,48 +801,10 @@ enum AskAIWindow {
 /// lazily fetches the doc's body at submit time from the same cache path
 /// `LinkPreview` uses under native mode — stays fresh even if the user
 /// re-ingests content between picking and asking.
-/// Loads the full searchable doc corpus as `AskAIDocRef` entries for the
-/// Draft reference picker. Mirrors `AskAIDocPicker.loadIndex()` but as a
-/// reusable, awaitable loader so the Draft surface can preload the index
-/// off-screen. Returns an empty list (not an error) for an absent/empty
-/// index so callers degrade quietly.
-enum AskAIDocReferenceIndex {
-    static func load() async throws -> [AskAIDocRef] {
-        guard let url = URL(string: "loom://bundle/search-index.json") else { return [] }
-        let (data, _) = try await URLSession.shared.data(from: url)
-        return parse(data)
-    }
-
-    /// Pure parse of a Pagefind-style `search-index.json` payload into sorted
-    /// `AskAIDocRef`s. Split out of `load()` so the corpus-shaping logic stays
-    /// unit-testable without a live `loom://` scheme handler. Malformed or
-    /// empty payloads return `[]` so callers degrade quietly.
-    static func parse(_ data: Data) -> [AskAIDocRef] {
-        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let index = root["index"] as? [String: Any],
-              let stored = index["storedFields"] as? [String: Any] else { return [] }
-        var out: [AskAIDocRef] = []
-        for (_, value) in stored {
-            guard let fields = value as? [String: Any],
-                  let title = fields["title"] as? String,
-                  let href = fields["href"] as? String,
-                  !title.isEmpty, !href.isEmpty else { continue }
-            out.append(
-                AskAIDocRef(
-                    id: href,
-                    title: title,
-                    href: href,
-                    category: (fields["category"] as? String) ?? "",
-                    sourcePath: (fields["sourcePath"] as? String).flatMap { $0.isEmpty ? nil : $0 },
-                    artifactState: AskAIDocRef.artifactState(from: fields)
-                )
-            )
-        }
-        out.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
-        return out
-    }
-}
-
+// (AskAIDocReferenceIndex is gone: its load() fetched
+// loom://bundle/search-index.json through URLSession, which cannot resolve
+// the loom:// scheme — and search-index.json is no longer staged into the
+// bundle at all. Nothing called load(); parse() existed only for load().)
 struct AskAIDocRef: Identifiable, Hashable {
     let id: String  // href — unique
     let title: String
@@ -872,33 +834,6 @@ struct AskAIDocRef: Identifiable, Hashable {
         self.category = category
         self.sourcePath = sourcePath
         self.artifactState = artifactState
-    }
-
-    /// Parse the artifact state out of a stored search-index field map.
-    /// Accepts either a nested `artifactState` object or the flattened
-    /// `artifactTargetId` / `artifactStateData` columns the index writer
-    /// emits, so both shapes ground the prompt identically.
-    static func artifactState(from fields: [String: Any]) -> LoomDraftArtifactState? {
-        if let nested = fields["artifactState"] as? [String: Any],
-           let targetId = nested["targetId"] as? String, !targetId.isEmpty {
-            return LoomDraftArtifactState(
-                targetId: targetId,
-                kind: nested["kind"] as? String,
-                label: nested["label"] as? String,
-                state: nested["state"] as? String,
-                stateLabel: nested["stateLabel"] as? String
-            )
-        }
-        guard let targetId = fields["artifactTargetId"] as? String, !targetId.isEmpty else {
-            return nil
-        }
-        return LoomDraftArtifactState(
-            targetId: targetId,
-            kind: fields["artifactKind"] as? String,
-            label: fields["artifactLabel"] as? String,
-            state: fields["artifactState"] as? String,
-            stateLabel: fields["artifactStateData"] as? String
-        )
     }
 
     func resolveBody() async -> String? {
