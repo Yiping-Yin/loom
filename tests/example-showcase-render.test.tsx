@@ -89,12 +89,12 @@ test('ExampleBanner renders the showcase label text', () => {
   assert.match(text, /finished LOOM/);
 });
 
-test('ExampleBanner CTA links to /onboarding/profile', () => {
+test('ExampleBanner carries no build-CTA (beginner funnel retired)', () => {
   const { ExampleBanner } = require('../components/ExampleBanner') as typeof import('../components/ExampleBanner');
   const html = render(<ExampleBanner />);
 
-  assert.match(html, /href="\/onboarding\/profile"/);
-  assert.match(html, /Build yours/);
+  assert.doesNotMatch(html, /onboarding/);
+  assert.doesNotMatch(html, /Build yours/);
 });
 
 test('ExampleBanner has aria-label for accessibility', () => {
@@ -124,21 +124,6 @@ test('/example page renders owner dossier markers', () => {
   assert.match(text, /About/);
   assert.match(text, /Education/);
   assert.match(text, /Experience/);
-  assert.match(text, /Digital Me/);
-});
-
-test('/example page banner CTA links to /onboarding/profile', () => {
-  const { ExampleBanner } = require('../components/ExampleBanner') as typeof import('../components/ExampleBanner');
-  const { HomeClient } = require('../app/HomeClient') as typeof import('../app/HomeClient');
-  const html = render(
-    <>
-      <ExampleBanner />
-      <HomeClient />
-    </>,
-  );
-
-  assert.match(html, /href="\/onboarding\/profile"/);
-  assert.match(html, /Build yours/);
 });
 
 test('/example page renders the owner ledger cover shell', () => {
@@ -160,36 +145,7 @@ test('/example page renders the owner ledger cover shell', () => {
 // /example/digital-me page — renders owner DigitalMeRoleOSClient + ExampleBanner
 // ---------------------------------------------------------------------------
 
-test('/example/digital-me page renders Role-OS markers', () => {
-  const { ExampleBanner } = require('../components/ExampleBanner') as typeof import('../components/ExampleBanner');
-  const DigitalMeRoleOSClient = (require('../app/digital-me/DigitalMeRoleOSClient') as { default: React.ComponentType }).default;
-  const html = render(
-    <>
-      <ExampleBanner />
-      <DigitalMeRoleOSClient />
-    </>,
-  );
-  const text = visibleText(html);
 
-  // Owner Role-OS surface markers (from DigitalMeRoleOSClient).
-  assert.match(text, /Digital Me/);
-  // The Ask widget section is always rendered.
-  assert.match(html, /ask-yiping/i);
-});
-
-test('/example/digital-me page banner CTA links to /onboarding/profile', () => {
-  const { ExampleBanner } = require('../components/ExampleBanner') as typeof import('../components/ExampleBanner');
-  const DigitalMeRoleOSClient = (require('../app/digital-me/DigitalMeRoleOSClient') as { default: React.ComponentType }).default;
-  const html = render(
-    <>
-      <ExampleBanner />
-      <DigitalMeRoleOSClient />
-    </>,
-  );
-
-  assert.match(html, /href="\/onboarding\/profile"/);
-  assert.match(html, /Build yours/);
-});
 
 // ---------------------------------------------------------------------------
 // product-shell.ts — /example prefix is registered as internal
@@ -230,44 +186,17 @@ test('/ renders the owner dossier front door (funnel retired)', () => {
   assert.doesNotMatch(text, /Prefer a form\?/i);
 });
 
-test('default /about (no profile) renders a neutral empty state, not the owner About dossier', () => {
+test('/about renders the owner directly (beginner gate retired)', () => {
   const { default: AboutPage } = require('../app/about/page') as { default: React.ComponentType };
   const html = render(<AboutPage />);
   const text = visibleText(html);
 
-  // Neutral empty state with build / see-example CTAs.
-  assert.match(text, /This is your About page/);
-  assert.match(html, /href="\/onboarding\/profile"/);
-  assert.match(html, /href="\/example"/);
-
-  // Owner About dossier content must be absent.
-  assert.doesNotMatch(text, /Yiping Yin/);
-  assert.doesNotMatch(text, /Curriculum Vitae/);
+  // ONE-digital-me: the owner IS the default; no stranger empty state.
+  assert.match(text, /Yiping Yin/);
+  assert.doesNotMatch(text, /This is your About page/);
+  assert.doesNotMatch(html, /onboarding/);
 });
 
-test('default /digital-me first paint is a neutral cosmic skeleton, not the owner Role-OS + Ask', () => {
-  // CE-T5 (clean returning door): returning users are routed straight to
-  // /digital-me, so the pre-mount first paint must NOT flash the stranger empty
-  // state (it would look wrong to a returning user) — nor the owner Role-OS.
-  // SSR (renderToStaticMarkup) never mounts, so this captures that first paint:
-  // a neutral cosmic field. The stranger empty state / returning view only
-  // resolve AFTER mount, once localStorage has been read.
-  const { default: DigitalMePage } = require('../app/digital-me/page') as {
-    default: React.ComponentType;
-  };
-  const html = render(<DigitalMePage />);
-  const text = visibleText(html);
-
-  // First paint is the neutral cosmic skeleton (aria-hidden, no copy).
-  assert.match(html, /loom-cosmic-field/);
-  assert.doesNotMatch(text, /This is your Digital Me page/);
-
-  // Owner Role-OS markers AND the owner-corpus Ask widget must be absent on the
-  // default route (the owner Ask only mounts at /example/digital-me).
-  assert.doesNotMatch(text, /Role Lens/);
-  assert.doesNotMatch(text, /Capability Map/);
-  assert.doesNotMatch(html, /ask-yiping/i);
-});
 
 test('default /education (courses authoring) and /experience (no profile) do not leak owner dossiers', () => {
   const { default: EducationPage } = require('../app/education/page') as {
@@ -287,12 +216,9 @@ test('default /education (courses authoring) and /experience (no profile) do not
   assert.doesNotMatch(eduText, /Evidence files/);
   assert.doesNotMatch(eduText, /UNSW courses/);
 
+  // /experience renders the owner directly (beginner gate retired).
   const expHtml = render(<ExperiencePage />);
   const expText = visibleText(expHtml);
-  assert.match(expText, /This is your Experience page/);
-  assert.match(expHtml, /href="\/onboarding\/profile"/);
-  assert.match(expHtml, /href="\/example"/);
-  // Owner experience evidence content must be absent.
-  assert.doesNotMatch(expText, /Optiver &(amp;)? UNSW/);
-  assert.doesNotMatch(expText, /Experience evidence\./);
+  assert.doesNotMatch(expText, /This is your Experience page/);
+  assert.doesNotMatch(expHtml, /onboarding/);
 });

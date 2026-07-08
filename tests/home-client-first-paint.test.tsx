@@ -48,7 +48,6 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
     'About',
     'Education',
     'Experience',
-    'Digital Me',
     'ECON 3202',
     'MATH 2991',
     'Data and Algorithms in Trading',
@@ -63,7 +62,7 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
 
   assert.match(html, /Trading &amp; Market Making/);
 
-  for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
+  for (const label of ['Home', 'About', 'Education', 'Experience']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
 
@@ -98,8 +97,9 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(html, /\/brand\/loom_lunar_orb\.png/);
   assert.match(html, /class="new-loom-home-capabilities"/);
   assert.match(html, /data-capability="sources"/);
-  assert.match(html, /data-capability="studio"/);
-  assert.match(html, /data-capability="digital-me"/);
+  // studio + digital-me capability tiles retired (ONE-digital-me, 2026-07-08).
+  assert.doesNotMatch(html, /data-capability="studio"/);
+  assert.doesNotMatch(html, /data-capability="digital-me"/);
   assert.doesNotMatch(html, /<nav class="new-loom-home-capabilities"/);
   assert.doesNotMatch(html, /aria-label="Loom workspaces"/);
 
@@ -222,25 +222,24 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(html, /class="lcv-shell"/);
   assert.match(html, /class="lcv-rail"/);
   assert.match(html, /class="lcv-ledger"/);
-  // Exactly four numbered ledger rows, one per presentation category.
-  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 4);
+  // Exactly three numbered ledger rows, one per presentation category
+  // (the Digital Me row retired with the web digital-me — ONE-digital-me).
+  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 3);
   assert.match(html, /class="lcv-row lcv-row--about"/);
   assert.match(html, /class="lcv-row lcv-row--education"/);
   assert.match(html, /class="lcv-row lcv-row--experience"/);
-  assert.match(html, /class="lcv-row lcv-row--digital-me"/);
-  assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 4);
+  assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 3);
   assert.match(html, />01</);
-  assert.match(html, />04</);
+  assert.match(html, />03</);
   // Each ledger row is itself a link to its category destination (the whole
   // row is clickable; there is no separate floating "View details" element).
   assert.doesNotMatch(html, /class="lcv-view"/);
-  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 4);
+  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 3);
   assert.match(html, /<a class="lcv-row lcv-row--about" href="\/about"/);
   assert.match(html, /<a class="lcv-row lcv-row--education" href="\/education"/);
   assert.match(html, /<a class="lcv-row lcv-row--experience" href="\/experience"/);
-  assert.match(html, /<a class="lcv-row lcv-row--digital-me" href="\/digital-me"/);
-  // Inline "Open →" affordance lives inside each label block (4 total).
-  assert.equal((html.match(/class="lcv-row__open"/g) ?? []).length, 4);
+  // Inline "Open →" affordance lives inside each label block (3 total).
+  assert.equal((html.match(/class="lcv-row__open"/g) ?? []).length, 3);
   // Identity rail: photo, three profile links (LinkedIn icon variant).
   assert.match(html, /class="lcv-photo"/);
   assert.match(html, /\/profile\/yiping-profile-photo\.png/);
@@ -261,13 +260,9 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(html, /class="lcv-edu__chips"/);
   assert.match(html, /more courses/);
   assert.equal((html.match(/class="lcv-exp__card"/g) ?? []).length, 2);
-  assert.match(html, /class="lcv-panel lcv-dm"/);
-  assert.match(html, /class="lcv-dm__flow"/);
-  assert.match(html, /class="lcv-dm__table"/);
-  assert.match(html, /class="lcv-dm__graph"/);
-  assert.match(text, /How does concavity connect to optimisation/);
-  // Verified-source pills: four ledger rows plus the two experience cards.
-  assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 6);
+  // Verified-source pills: three ledger rows plus the two experience cards
+  // (the Digital Me row retired with the web digital-me — ONE-digital-me).
+  assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 5);
   assert.match(text, /Verified source/);
   assert.match(text, /Verified sources/);
   // Footer source-of-truth callout.
@@ -405,7 +400,6 @@ test('white dashboard homepage is retired into the hybrid evidence cover design'
   assert.match(homeSource, /lcv-panel lcv-about/);
   assert.match(homeSource, /lcv-panel lcv-edu/);
   assert.match(homeSource, /lcv-exp__card/);
-  assert.match(homeSource, /lcv-panel lcv-dm/);
   assert.match(homeSource, /lcv-link-icon--linkedin/);
   // The retired cover/asset-grid implementations must be gone from the component.
   assert.doesNotMatch(homeSource, /vd-hybrid-grid|vd-hybrid-covers/);

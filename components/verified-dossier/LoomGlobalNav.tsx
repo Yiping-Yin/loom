@@ -14,12 +14,11 @@ type LoomGlobalNavProps = {
   brandCurrent?: boolean;
 };
 
+// Web retirement (owner, 2026-07-08): Studio/Draft died with the web
+// workbench; /today was already a legacy route. Sources remains the one web
+// workspace until its own retirement cluster.
 const LOOM_WORKSPACE_NAV = [
   { label: 'Sources', href: '/sources' },
-  { label: 'Studio', href: '/studio' },
-  // /draft stays a redirect stub for legacy links; Studio is the user-facing
-  // form workbench.
-  { label: 'Today', href: '/today' },
 ];
 
 export function LoomGlobalNav({

@@ -3,21 +3,15 @@
 import { useEffect, useState } from 'react';
 
 import { type BeginnerProfile } from '../../lib/profile/beginner-profile';
-import { readBeginnerProfileLocal } from '../../lib/profile/profile-storage';
+import { OWNER_PROFILE } from '../../lib/profile/owner-profile';
 import { decodeProfileFromHash } from '../../lib/profile/profile-share';
-import { safeHref } from '../../lib/profile/safe-href';
 import { LoomGlobalNav } from '../../components/verified-dossier/LoomGlobalNav';
 import { DigitalPostcard } from './DigitalPostcard';
 import styles from './CardPage.module.css';
 
-const ONBOARDING_HREF = '/onboarding/profile';
-const EXAMPLE_HREF = '/example';
-const MOON_SRC = '/brand/loom_lunar_orb.png';
-
 type Resolved =
   | { kind: 'shared'; profile: BeginnerProfile }
-  | { kind: 'own'; profile: BeginnerProfile }
-  | { kind: 'empty' };
+  | { kind: 'own'; profile: BeginnerProfile };
 
 /**
  * Decide what the card should show, AFTER mount (never during render — no window
@@ -40,11 +34,9 @@ function resolveFromEnvironment(): Resolved {
       return { kind: 'shared', profile: shared };
     }
   }
-  const own = readBeginnerProfileLocal();
-  if (own && hasContent(own)) {
-    return { kind: 'own', profile: own };
-  }
-  return { kind: 'empty' };
+  // ONE-digital-me: the owner IS the default card; the beginner localStorage
+  // layer and its empty-CTA state are retired.
+  return { kind: 'own', profile: OWNER_PROFILE };
 }
 
 /** A profile has content worth showing a card for if it has at least a name. */
@@ -82,26 +74,6 @@ export function CardGate() {
 
         {resolved?.kind === 'own' && (
           <DigitalPostcard profile={resolved.profile} isOwnCard />
-        )}
-
-        {resolved?.kind === 'empty' && (
-          <section className={styles.empty} aria-label="No card yet">
-            <img className={styles.emptyMoon} src={MOON_SRC} alt="" draggable={false} />
-            <p className={styles.emptyEyebrow}>Digital postcard</p>
-            <h1 className={styles.emptyTitle}>Build your LOOM to get a shareable card.</h1>
-            <p className={styles.emptyBody}>
-              Add your name, work, and experience to get a shareable card.
-            </p>
-            <a className={styles.emptyCta} href={safeHref(ONBOARDING_HREF) || ONBOARDING_HREF}>
-              Start your LOOM →
-            </a>
-            <p className={styles.emptySecondaryLinks}>
-              <a href={safeHref(EXAMPLE_HREF) || EXAMPLE_HREF} className={styles.emptySecondaryLink}>
-                See a finished example →
-              </a>
-              <a href="/" className={styles.emptySecondaryLink}>Home</a>
-            </p>
-          </section>
         )}
       </main>
     </>

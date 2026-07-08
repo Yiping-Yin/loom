@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import styles from './ExampleBanner.module.css';
 
 /**
@@ -14,9 +13,6 @@ export function ExampleBanner() {
         <span className={styles.eyebrow}>Example LOOM</span>
         {' '}— this is what a finished LOOM looks like.
       </span>
-      <Link href="/onboarding/profile" className={styles.cta}>
-        Build yours →
-      </Link>
     </div>
   );
 }

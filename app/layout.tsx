@@ -1,7 +1,6 @@
 import './globals.css';
 import '../components/verified-dossier/LoomGlobalNav.module.css';
 import './about/AboutClient.module.css';
-import './digital-me/DigitalMeRoleOS.module.css';
 import type { ReactNode } from 'react';
 import { FocusLayerProvider } from '../lib/focus-layer';
 import { CopyButtonInjector } from '../components/CopyButton';

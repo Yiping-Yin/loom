@@ -19,7 +19,6 @@ const CATEGORY_NUMBER: Record<VerifiedDossierPresentationCategory['id'], string>
   about: '01',
   education: '02',
   experience: '03',
-  'digital-me': '04',
 };
 
 const category = (id: VerifiedDossierPresentationCategory['id']) =>
@@ -353,7 +352,6 @@ export function VerifiedDossierHome() {
   const about = category('about');
   const education = category('education');
   const experience = category('experience');
-  const digitalMe = category('digital-me');
 
   return (
     <main className="vd-home lcv" aria-labelledby="verified-dossier-title">
@@ -415,7 +413,6 @@ export function VerifiedDossierHome() {
           <LedgerRow category={about} verifiedLabel="Verified source" />
           <LedgerRow category={education} verifiedLabel="Verified sources" />
           <LedgerRow category={experience} verifiedLabel="Verified sources" />
-          <LedgerRow category={digitalMe} verifiedLabel="Verified sources" />
         </div>
       </div>
 

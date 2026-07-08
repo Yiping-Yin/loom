@@ -83,20 +83,18 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(html, /class="lcv-shell"/);
   assert.match(html, /class="lcv-rail"/);
   assert.match(html, /class="lcv-ledger"/);
-  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 4);
+  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 3);
   assert.match(html, /class="lcv-row lcv-row--about"/);
   assert.match(html, /class="lcv-row lcv-row--education"/);
   assert.match(html, /class="lcv-row lcv-row--experience"/);
-  assert.match(html, /class="lcv-row lcv-row--digital-me"/);
-  assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 4);
+  assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 3);
   // The whole row is the link to its category — no separate "View details" element.
   assert.doesNotMatch(html, /class="lcv-view"/);
-  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 4);
+  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 3);
   assert.match(html, /<a class="lcv-row lcv-row--about" href="\/about"/);
   assert.match(html, /<a class="lcv-row lcv-row--education" href="\/education"/);
   assert.match(html, /<a class="lcv-row lcv-row--experience" href="\/experience"/);
-  assert.match(html, /<a class="lcv-row lcv-row--digital-me" href="\/digital-me"/);
-  assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 6);
+  assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 5);
   assert.match(html, /class="lcv-photo"/);
   assert.match(html, /\/profile\/yiping-profile-photo\.png/);
   assert.equal((html.match(/class="lcv-link-icon/g) ?? []).length, 3);
@@ -110,8 +108,6 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.match(html, /\/brand\/quantnet\/quantnet-logo\.png/);
   assert.match(html, /\/brand\/claude\/claude-icon\.png/);
   assert.equal((html.match(/class="lcv-exp__card"/g) ?? []).length, 2);
-  assert.match(html, /class="lcv-panel lcv-dm"/);
-  assert.match(html, /class="lcv-dm__flow"/);
   // The identity rail now lists real memberships (UNSW Sydney / WorldQuant /
   // QuantNet) as source-backed affiliations — legitimate profile content that
   // fills the rail instead of leaving it hollow below the pull-quote.
@@ -151,7 +147,7 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.doesNotMatch(html, /vd-home-route-rail/);
   assert.doesNotMatch(html, /vd-home-provenance/);
 
-  for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
+  for (const label of ['Home', 'About', 'Education', 'Experience']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
   for (const menuLabel of ['Identity', 'Workspaces', 'Sources']) {
@@ -166,7 +162,6 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
     'About',
     'Education',
     'Experience',
-    'Digital Me',
   ]) {
     assert.match(html, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
@@ -185,9 +180,6 @@ test('home first paint frames Loom as an inspectable personal knowledge identity
   assert.doesNotMatch(html, />Evidence Portal</);
   assert.doesNotMatch(html, />Live system</);
   assert.doesNotMatch(html, /Sources → Reasoning → Artifact/);
-  // The Digital Me preview frames the concavity question as the inspectable
-  // Sources → Studio → Digital Me flow, so the prompt is expected to render.
-  assert.match(html, /How does concavity connect to optimisation/);
   assert.doesNotMatch(html, /Problem Set 02\.pdf/);
   assert.doesNotMatch(html, /W8 A Concave-Functions\.pdf/);
   assert.doesNotMatch(html, /Source Dossier/);
@@ -225,8 +217,6 @@ test('Sources Studio and Digital Me descriptions serve learning paths, resources
 
   assert.match(productShell, /learning paths/i);
   assert.match(productShell, /resources/i);
-  assert.match(productShell, /portfolio/i);
-  assert.match(productShell, /process/i);
   assert.doesNotMatch(productShell, /one workspace/i);
 });
 

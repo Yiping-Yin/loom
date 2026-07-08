@@ -28,15 +28,6 @@ test('product-wide light theme is opt-in per content surface (data-surface-theme
   assert.match(toggle, /delete document\.body\.dataset\.surfaceTheme/);
 });
 
-test('Studio (first content surface) opts into the light theme', () => {
-  const draftClient = read('app/draft/DraftClient.tsx');
-  const draftCss = read('app/draft/draft-evidence-desk.module.css');
-
-  // The Studio top bar mounts the shared toggle.
-  assert.match(draftClient, /SurfaceThemeToggle/);
-
-  // The Studio re-points its few hardcoded-dark tokens for light mode (the rest of the
-  // ramp flips via the global token override).
-  assert.match(draftCss, /data-surface-theme='light'/);
-  assert.match(draftCss, /--draft-glass-bg/);
-});
+// (Studio surface-theme contract retired with app/draft — web Studio/Draft
+// died in the 2026-07-08 web retirement; the shared toggle contract above
+// still guards the mechanism.)

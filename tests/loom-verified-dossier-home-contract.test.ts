@@ -117,11 +117,11 @@ test('verified dossier home data preserves approved evidence workbench definitio
 test('verified dossier home keeps canonical navigation and profile identity', () => {
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.label),
-    ['Home', 'About', 'Education', 'Experience', 'Digital Me'],
+    ['Home', 'About', 'Education', 'Experience'],
   );
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.map((item) => item.href),
-    ['/', '/about', '/education', '/experience', '/digital-me'],
+    ['/', '/about', '/education', '/experience'],
   );
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'Sources'));
   assert.ok(!VERIFIED_DOSSIER_TOP_NAV.some((item) => item.label === 'UNSW'));
@@ -137,20 +137,17 @@ test('personal IA routes exist as importable app pages', async () => {
   for (const routePage of [
     'app/education/page.tsx',
     'app/experience/page.tsx',
-    'app/digital-me/page.tsx',
   ]) {
     assert.ok(existsSync(join(repoRoot, routePage)), `${routePage} should exist`);
   }
 
-  const [educationPage, experiencePage, digitalMePage] = await Promise.all([
+  const [educationPage, experiencePage] = await Promise.all([
     import('../app/education/page'),
     import('../app/experience/page'),
-    import('../app/digital-me/page'),
   ]);
 
   assert.equal(typeof educationPage.default, 'function');
   assert.equal(typeof experiencePage.default, 'function');
-  assert.equal(typeof digitalMePage.default, 'function');
 });
 
 test('verified dossier home explains Loom as the underlying trust mechanism', () => {
@@ -169,7 +166,7 @@ test('verified dossier home groups source shelves into presentation categories',
 
   assert.deepEqual(
     VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.map((category) => category.label),
-    ['About', 'Education', 'Experience', 'Digital Me'],
+    ['About', 'Education', 'Experience'],
   );
   assert.deepEqual(
     VERIFIED_DOSSIER_TOP_NAV.filter((item) => item.label !== 'Home').map(
@@ -210,13 +207,8 @@ test('verified dossier home groups source shelves into presentation categories',
     );
   }
 
-  const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find(
-    (category) => category.id === 'digital-me',
-  );
-  assert.ok(digitalMe, 'Digital Me presentation category should exist');
-  assert.deepEqual(digitalMe.foundationCategoryIds, ['about', 'education', 'experience']);
-  assert.ok(digitalMe.capabilities.some((capability) => /citation/i.test(capability)));
-  assert.ok(digitalMe.capabilities.some((capability) => /process/i.test(capability)));
+  // (The Digital Me presentation category retired with the web digital-me —
+  // ONE-digital-me, 2026-07-08; the native You dossier owns that capability.)
 });
 
 test('presentation categories expose real homepage visual assets', () => {
@@ -241,130 +233,8 @@ test('presentation categories expose real homepage visual assets', () => {
   }
 });
 
-test('Digital Me is based on About, Education, and Experience layers', async () => {
-  const digitalMe = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find(
-    (category) => category.id === 'digital-me',
-  );
-  assert.ok(digitalMe, 'Digital Me presentation category should exist');
-  assert.deepEqual(digitalMe.foundationCategoryIds, ['about', 'education', 'experience']);
 
-  const foundations = digitalMe.foundationCategoryIds.map((categoryId) => {
-    const foundation = VERIFIED_DOSSIER_PRESENTATION_CATEGORIES.find(
-      (category) => category.id === categoryId,
-    );
-    assert.ok(foundation, `${categoryId} should resolve to a presentation category`);
-    return foundation;
-  });
 
-  assert.deepEqual(
-    foundations.map((foundation) => foundation.label),
-    ['About', 'Education', 'Experience'],
-  );
-  assert.deepEqual(
-    foundations.map((foundation) => foundation.href),
-    ['/about', '/education', '/experience'],
-  );
-  assert.ok(digitalMe.sourceSectionIds.includes('about'));
-  for (const educationSection of ['unsw', 'quantnet', 'wqu', 'claude'] as const) {
-    assert.ok(digitalMe.sourceSectionIds.includes(educationSection));
-  }
-
-  // F2 step 2: the owner Role-OS dossier no longer renders on the DEFAULT
-  // /digital-me route (a stranger now gets a neutral empty state). It renders at
-  // the /example/digital-me showcase, which mounts DigitalMeRoleOSClient — so we
-  // assert the owner dossier content against that component (the example route).
-  const { default: DigitalMeRoleOSClient } = await import(
-    '../app/digital-me/DigitalMeRoleOSClient'
-  );
-  const { renderToStaticMarkup } = require('react-dom/server') as {
-    renderToStaticMarkup: (node: React.ReactElement) => string;
-  };
-  const html = renderToStaticMarkup(React.createElement(DigitalMeRoleOSClient));
-
-  assert.match(html, /Quant Researcher \/ Trader|Quant Trader|Quant T\/R/);
-  assert.match(html, /Role Lens/);
-  assert.match(html, /Evidence Graph/);
-  assert.match(html, /Claim Engine/);
-  assert.match(html, /Artifact Runtime/);
-  assert.match(html, /Boundary/);
-  assert.match(html, /Next Growth Action/);
-  assert.match(html, /Built from About, Education, and Experience/);
-  assert.match(html, /About foundation/);
-  assert.match(html, /Education foundation/);
-  assert.match(html, /Experience foundation/);
-  assert.doesNotMatch(html, /A living personal interface/);
-  assert.doesNotMatch(html, /interactive representation of a person/i);
-});
-
-test('Digital Me exposes role-lens artifact runtime actions', async () => {
-  const {
-    DIGITAL_ME_ARTIFACT_MODES,
-    DIGITAL_ME_PROOF_PATH,
-  } = await import('../lib/new-loom/digital-me-role-os');
-
-  assert.deepEqual(
-    DIGITAL_ME_ARTIFACT_MODES.map((mode) => mode.label),
-    ['Capability Map', 'Interview Answer', 'Gap Roadmap', 'Source Graph', 'Portfolio Case'],
-  );
-  assert.ok(DIGITAL_ME_PROOF_PATH.claims.length >= 5);
-
-  // F2 step 2: owner Role-OS renders at /example/digital-me (DigitalMeRoleOSClient).
-  const { default: DigitalMeRoleOSClient } = await import(
-    '../app/digital-me/DigitalMeRoleOSClient'
-  );
-  const { renderToStaticMarkup } = require('react-dom/server') as {
-    renderToStaticMarkup: (node: React.ReactElement) => string;
-  };
-  const html = renderToStaticMarkup(React.createElement(DigitalMeRoleOSClient));
-
-  for (const mode of DIGITAL_ME_ARTIFACT_MODES) {
-    assert.match(html, new RegExp(mode.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  }
-  assert.match(html, /Capability Map/);
-  assert.match(html, /Interview Answer/);
-  assert.match(html, /Gap Roadmap/);
-});
-
-test('Digital Me renders the Quant proof path with evidence statuses and gaps', async () => {
-  const {
-    DIGITAL_ME_PROOF_PATH,
-    getDigitalMeClaimById,
-    getDigitalMeEvidenceForClaim,
-  } = await import('../lib/new-loom/digital-me-role-os');
-
-  assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'strong'));
-  assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'partial'));
-  assert.ok(DIGITAL_ME_PROOF_PATH.claims.some((claim) => claim.evidenceStatus === 'direction'));
-  assert.ok(getDigitalMeEvidenceForClaim('mathematical-reasoning').length > 0);
-
-  // The Optibook screenshot upgraded live-market proof from missing to partial.
-  assert.equal(getDigitalMeClaimById('live-market-project-proof')?.evidenceStatus, 'partial');
-  assert.ok(
-    getDigitalMeEvidenceForClaim('live-market-project-proof').some(
-      (evidence) => evidence.artifactId === 'optibook-market-lens',
-    ),
-  );
-
-  // F2 step 2: owner Role-OS renders at /example/digital-me (DigitalMeRoleOSClient).
-  const { default: DigitalMeRoleOSClient } = await import(
-    '../app/digital-me/DigitalMeRoleOSClient'
-  );
-  const { renderToStaticMarkup } = require('react-dom/server') as {
-    renderToStaticMarkup: (node: React.ReactElement) => string;
-  };
-  const html = renderToStaticMarkup(React.createElement(DigitalMeRoleOSClient));
-
-  assert.match(html, /Mathematical reasoning/);
-  assert.match(html, /Optimisation thinking/);
-  assert.match(html, /Programming foundations/);
-  assert.match(html, /Market structure/);
-  assert.match(html, /Research output gap/);
-  assert.match(html, /Strong evidence/);
-  assert.match(html, /Partial evidence/);
-  assert.match(html, /Direction only/);
-  assert.doesNotMatch(html, /Missing proof/);
-  assert.match(html, /Create a small quant research project/);
-});
 
 test('education and experience section heroes expose compact evidence summaries', async () => {
   // F2 step 2: the owner Education/Experience dossier no longer renders on the
@@ -559,47 +429,6 @@ test('QBook documentation screens keep the cold Loom documentation skin', {
   assert.doesNotMatch(cssText, /\.docs-content h1 code\{[^}]*color:#e06a6a/);
 });
 
-test('Digital Me page ships professional section-page layout styles', () => {
-  const cssPath = join(repoRoot, 'app/globals.css');
-  const css = existsSync(cssPath)
-    ? (require('node:fs').readFileSync(cssPath, 'utf8') as string)
-    : '';
-
-  for (const selector of [
-    '.vd-section-page',
-    '.vd-section-page__nav',
-    '.vd-section-page__hero',
-    '.vd-section-page__hero-copy',
-    '.vd-section-page__hero-proof',
-    '.vd-section-page__list',
-  ]) {
-    assert.match(css, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  }
-
-  const roleCssPath = join(repoRoot, 'app/digital-me/DigitalMeRoleOS.module.css');
-  const roleCss = existsSync(roleCssPath)
-    ? (require('node:fs').readFileSync(roleCssPath, 'utf8') as string)
-    : '';
-
-  for (const selector of [
-    '.roleOsPage',
-    '.roleLens',
-    '.proofPath',
-    '.claimRail',
-    '.artifactStage',
-    '.evidencePanel',
-    '.boundaryPanel',
-  ]) {
-    assert.match(roleCss, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  }
-
-  assert.match(css, /\.vd-section-page__hero\s*{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(15rem, 21rem\)/);
-  assert.match(css, /\.vd-section-page__hero h1\s*{[\s\S]*font-size:\s*clamp\(2\.45rem, 4\.55vw, 4\.35rem\)/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page__hero\s*{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page__hero\s*{[\s\S]*padding:\s*clamp\(2\.4rem, 9vw, 3\.5rem\) 0 clamp\(1rem, 5vw, 1\.4rem\)/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page__hero h1\s*{[\s\S]*font-size:\s*clamp\(2\.25rem, 10\.5vw, 2\.9rem\)/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.vd-section-page/);
-});
 
 test('verified dossier profile photo points to a tracked public asset path', () => {
   assert.match(VERIFIED_DOSSIER_PROFILE.photoSrc, /^\/profile\/.+\.png$/);

@@ -304,8 +304,7 @@ export type VerifiedDossierSection = {
 export type VerifiedDossierPresentationCategoryId =
   | 'about'
   | 'education'
-  | 'experience'
-  | 'digital-me';
+  | 'experience';
 
 export type VerifiedDossierVisualAsset = {
   kind: 'document-preview' | 'logo-strip' | 'source-thumbnails' | 'ui-preview';
@@ -328,7 +327,7 @@ export type VerifiedDossierPresentationCategory = {
   sourceSectionIds: readonly VerifiedDossierSection['id'][];
   artifactIds: readonly VerifiedDossierArtifactId[];
   capabilities: readonly string[];
-  foundationCategoryIds?: readonly Exclude<VerifiedDossierPresentationCategoryId, 'digital-me'>[];
+  foundationCategoryIds?: readonly VerifiedDossierPresentationCategoryId[];
 };
 
 export type VerifiedDossierExperienceCategory = 'work' | 'trading-program' | 'project';
@@ -454,7 +453,6 @@ export const VERIFIED_DOSSIER_TOP_NAV: VerifiedDossierNavItem[] = [
   { label: 'About', href: '/about' },
   { label: 'Education', href: '/education' },
   { label: 'Experience', href: '/experience' },
-  { label: 'Digital Me', href: '/digital-me' },
 ];
 
 export const VERIFIED_DOSSIER_HOME_COPY = {
@@ -694,40 +692,6 @@ export const VERIFIED_DOSSIER_PRESENTATION_CATEGORIES = [
     sourceSectionIds: ['about', 'unsw', 'quantnet'],
     artifactIds: ['about-doc', 'optibook-market-lens', 'quantnet-python-foundations'],
     capabilities: ['Work experience', 'Trading-program evidence', 'Project records'],
-  },
-  {
-    id: 'digital-me',
-    label: 'Digital Me',
-    href: '/digital-me',
-    summary: 'Answers with citations.',
-    proof: 'About + Education + Experience',
-    visualAsset: {
-      kind: 'ui-preview',
-      label: 'Answer canvas',
-      caption: 'Cited answer routed into a personal interface',
-      srcs: [
-        '/verified-sources/econ3202/problem-set-02.png',
-        '/verified-sources/econ3202/w8-a-concave-functions.png',
-      ],
-      artifactIds: ['econ-ps2', 'econ-slides', 'claude-certificate'],
-    },
-    sourceSectionIds: ['about', 'unsw', 'quantnet', 'wqu', 'claude'],
-    artifactIds: [
-      'about-doc',
-      'econ-ps2',
-      'econ-slides',
-      'quantnet-python-foundations',
-      'claude-certificate',
-      'optibook-market-lens',
-    ],
-    capabilities: [
-      'Citation-backed answers',
-      'Topic-to-canvas routing',
-      'Process replay',
-      'Knowledge and experience display',
-      'Studio-backed output generation',
-    ],
-    foundationCategoryIds: ['about', 'education', 'experience'],
   },
 ] as const satisfies readonly VerifiedDossierPresentationCategory[];
 

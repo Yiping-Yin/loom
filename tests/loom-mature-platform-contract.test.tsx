@@ -82,21 +82,20 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.match(html, /🇦🇺 Sydney/);
   assert.match(html, /Quant T\/R/);
   assert.match(html, /AI Founder/);
-  // Home v12 ledger cover: identity rail + four numbered evidence rows.
+  // Home v12 ledger cover: identity rail + three numbered evidence rows
+  // (the Digital Me row retired with the web digital-me — ONE-digital-me).
   assert.match(html, /<main class="vd-home lcv" aria-labelledby="verified-dossier-title">/);
   assert.match(html, /class="lcv-shell"/);
   assert.match(html, /class="lcv-rail"/);
   assert.match(html, /class="lcv-ledger"/);
-  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 4);
+  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 3);
   assert.match(html, /class="lcv-row lcv-row--about"/);
   assert.match(html, /class="lcv-row lcv-row--education"/);
   assert.match(html, /class="lcv-row lcv-row--experience"/);
-  assert.match(html, /class="lcv-row lcv-row--digital-me"/);
-  assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 4);
+  assert.equal((html.match(/class="lcv-row__num"/g) ?? []).length, 3);
   // Whole-row links replace the retired floating "View details" element.
   assert.doesNotMatch(html, /class="lcv-view"/);
-  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 4);
-  assert.match(html, /<a class="lcv-row lcv-row--digital-me" href="\/digital-me"/);
+  assert.equal((html.match(/<a class="lcv-row lcv-row--[a-z-]+" href="/g) ?? []).length, 3);
   assert.doesNotMatch(html, /class="vd-avatar"/);
   assert.doesNotMatch(html, /vd-personal-stage/);
   assert.match(html, /class="lcv-photo"/);
@@ -110,7 +109,6 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.match(html, /class="lcv-panel lcv-about"/);
   assert.match(html, /class="lcv-cv"/);
   assert.match(html, /class="lcv-panel lcv-edu"/);
-  assert.match(html, /class="lcv-panel lcv-dm"/);
   assert.equal((html.match(/class="lcv-exp__card"/g) ?? []).length, 2);
   // Experience cards: Optiver work + the UNSW Research Assistant entry (its
   // CV-backed role, not the retired "UNSW RA" preview label).
@@ -167,16 +165,15 @@ test('HomeClient renders mature platform modules on first paint', () => {
   assert.doesNotMatch(html, />Open Digital Me/);
   assert.doesNotMatch(html, />Live system</);
   assert.doesNotMatch(html, /Sources → Reasoning → Artifact/);
-  // The Digital Me preview renders the concavity prompt and the member/footer
+  // The member/footer
   // lines are part of the ledger cover, so they are expected to be present.
-  assert.match(html, /How does concavity connect to optimisation/);
   assert.match(html, /class="lcv-member">MEMBER SINCE APRIL 2024/);
   assert.match(html, /LOOM — PERSONAL KNOWLEDGE, BACKED BY REAL SOURCES/);
   // The retired source-file row labels must still not leak onto the home cover.
   assert.doesNotMatch(html, /Problem Set 02\.pdf/);
   assert.doesNotMatch(html, /W8 A Concave-Functions\.pdf/);
 
-  for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
+  for (const label of ['Home', 'About', 'Education', 'Experience']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
 
@@ -214,25 +211,19 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   assert.match(html, /Yiping Yin/);
   assert.match(html, /Quant T\/R/);
   assert.match(html, /AI Founder/);
-  assert.match(html, /Digital Me/);
   // The mixed-case "UNSW Sydney" label appears exactly once: only in the
   // canonical identity-rail memberships list, never re-introduced elsewhere.
   assert.equal((html.match(/UNSW Sydney/g) ?? []).length, 1);
   assert.match(html, /class="lcv-members__item lcv-members__item--unsw">[\s\S]*?UNSW Sydney/);
   // The evidence model surfaces four numbered ledger rows: an About CV preview,
   // an Education course/logo strip, two CV-backed Experience cards, and a
-  // Digital Me Sources → Studio → Digital Me flow — each with a verified pill.
-  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 4);
+  assert.equal((html.match(/class="lcv-row lcv-row--/g) ?? []).length, 3);
   assert.match(html, /class="lcv-cv"/);
   assert.match(html, /ECON 3202/);
   assert.match(html, /class="lcv-edu__logos"/);
   assert.match(html, /more courses/);
   assert.equal((html.match(/class="lcv-exp__card"/g) ?? []).length, 2);
-  assert.match(html, /class="lcv-dm__flow"/);
-  assert.match(html, /class="lcv-dm__table"/);
-  assert.match(html, /class="lcv-dm__graph"/);
-  assert.match(html, /How does concavity connect to optimisation/);
-  assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 6);
+  assert.equal((html.match(/class="lcv-verified"/g) ?? []).length, 5);
   assert.doesNotMatch(html, /class="vd-home-optibook-shot"/);
   assert.doesNotMatch(html, /class="vd-home-answer-canvas"/);
   assert.doesNotMatch(html, /class="vd-home-proof-steps"/);
@@ -251,7 +242,7 @@ test('repo homepage exposes the personal knowledge identity evidence model', () 
   assert.doesNotMatch(html, /vd-loom-intro/);
   assert.doesNotMatch(html, /id="cited-answer"/);
   assert.doesNotMatch(html, /aria-label="Identity sidebar"/);
-  for (const label of ['Home', 'About', 'Education', 'Experience', 'Digital Me']) {
+  for (const label of ['Home', 'About', 'Education', 'Experience']) {
     assert.match(primaryNavHtml, new RegExp(`>${label}<`));
   }
   for (const retiredPrimaryNav of ['UNSW', 'QuantNet', 'WQU', 'Claude']) {
@@ -273,11 +264,11 @@ test('Sources Studio and Digital Me remain canonical across product shell copy',
   // the 2026-07-08 partition — the web product-shell copy is the sole subject.)
 
   assert.match(productShell, /Sources/);
-  assert.match(productShell, /Studio/);
-  assert.match(productShell, /Digital Me/);
+  // Studio + the web Digital Me retired (ONE-digital-me, 2026-07-08): the
+  // native workbench and the native You dossier own those jobs now.
+  assert.doesNotMatch(productShell, /'studio'/);
+  assert.doesNotMatch(productShell, /'digital-me'/);
   assert.match(productShell, /context/i);
-  assert.match(productShell, /portfolio/i);
-  assert.match(productShell, /process/i);
 
   assert.match(productShell, /claims|quotes|examples|contradictions|gaps|questions/);
   assert.doesNotMatch(productShell, /Collect, organize, draft/);

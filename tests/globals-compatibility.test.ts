@@ -9,8 +9,6 @@ const rootLayoutSource = fs.readFileSync(path.join(repoRoot, 'app/layout.tsx'), 
 const deckBuildSource = fs.readFileSync(path.join(repoRoot, 'docs/deck/build-loom-deck.mjs'), 'utf8');
 const knowledgeSurfaceCss = [
   'app/about/AboutClient.module.css',
-  'app/digital-me/DigitalMeRoleOS.module.css',
-  'app/draft/draft-evidence-desk.module.css',
   'app/knowledge/KnowledgeHomeStatic.module.css',
   'app/knowledge/[category]/CategoryDossier.module.css',
   'app/knowledge/unsw/UnswDossier.module.css',
@@ -19,7 +17,6 @@ const coldInterfacePaletteSource = [
   'app/globals.css',
   'lib/loom-design-system.ts',
   'app/PanelDetailClient.tsx',
-  'app/draft/DraftBoardClient.tsx',
   'components/BPETokenizer.tsx',
   'components/LoomDiagram.tsx',
   'components/LoomCursor.tsx',

@@ -1,10 +1,13 @@
-export type NewLoomCapabilityId = 'sources' | 'studio' | 'digital-me';
+// ONE-digital-me + web-retirement (owner, 2026-07-08): Studio/Draft and the
+// web Digital Me elevation retired — the native workbench and the native You
+// dossier won. Sources remains the one web workspace until its own cluster.
+export type NewLoomCapabilityId = 'sources';
 export type NewLoomRouteClass = 'primary' | 'runtime' | 'legacy' | 'support' | 'internal';
 
 export type NewLoomCapability = {
   id: NewLoomCapabilityId;
-  label: 'Sources' | 'Studio' | 'Digital Me';
-  shortLabel: 'Source context' | 'Form workbench' | 'Living representation';
+  label: 'Sources';
+  shortLabel: 'Source context';
   href: string;
   description: string;
   primaryAction: string;
@@ -20,37 +23,19 @@ export const NEW_LOOM_CAPABILITIES: NewLoomCapability[] = [
     description: 'Collect resources for learning paths, projects, captures, notes, and prior work, then resolve them into claims, quotes, examples, contradictions, gaps, and questions that can shape the next form.',
     primaryAction: 'Open Sources',
   },
-  {
-    id: 'studio',
-    label: 'Studio',
-    shortLabel: 'Form workbench',
-    href: '/studio',
-    description: 'Shape resolved source pieces into block documents, cited answers, process pages, portfolio explanations, proofs, and artifacts. Draft remains the compatibility storage name; Studio is the product surface.',
-    primaryAction: 'Open Studio',
-  },
-  {
-    id: 'digital-me',
-    label: 'Digital Me',
-    shortLabel: 'Living representation',
-    href: '/digital-me',
-    description: 'Present selected Studio forms and source-backed claims as a living representation that can answer with citations to the real work behind it.',
-    primaryAction: 'Open Digital Me',
-  },
 ];
 
-export const NEW_LOOM_PRIMARY_ROUTES = [
+export const NEW_LOOM_PRIMARY_ROUTES: readonly string[] = [
   '/',
   '/sources',
-  '/studio',
-  '/digital-me',
   '/reflection',
-] as const;
+];
 
-export const NEW_LOOM_RUNTIME_ROUTES = [
+export const NEW_LOOM_RUNTIME_ROUTES: readonly string[] = [
   '/loom-render/capture',
   '/loom-render/captures',
   '/loom-render/snapshot',
-] as const;
+];
 
 export const NEW_LOOM_LEGACY_ROUTES = [
   '/knowledge',
@@ -88,14 +73,10 @@ export const NEW_LOOM_LEGACY_ROUTES = [
   '/frontispiece',
 ] as const;
 
-export const NEW_LOOM_SUPPORT_ROUTES = [
+export const NEW_LOOM_SUPPORT_ROUTES: readonly string[] = [
   '/about',
-  '/draft',
   '/help',
   '/offline',
-  '/onboarding',
-  '/onboarding/profile',
-  '/onboarding/profile/form',
   '/colophon',
   '/product-history',
   '/system',
@@ -103,10 +84,9 @@ export const NEW_LOOM_SUPPORT_ROUTES = [
   '/year',
   '/hour',
   '/connections',
-] as const;
+];
 
-export const NEW_LOOM_INTERNAL_ROUTES = [
-  '/account',
+export const NEW_LOOM_INTERNAL_ROUTES: readonly string[] = [
   '/demo',
   '/dev/principles',
   '/dev/traces',
@@ -114,14 +94,12 @@ export const NEW_LOOM_INTERNAL_ROUTES = [
   '/graph',
   '/kesi',
   '/llm-wiki',
-  '/me',
   '/quizzes',
-] as const;
+];
 
-export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES = [
+export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES: readonly string[] = [
   '/wiki',
   '/card',
-  '/drafts',
   '/education',
   '/example',
   '/experience',
@@ -130,7 +108,7 @@ export const NEW_LOOM_INTERNAL_ROUTE_PREFIXES = [
   '/knowledge/unsw',
   '/loom',
   '/uploads/[name]',
-] as const;
+];
 
 export const NEW_LOOM_ROUTE_CLASSIFICATION = {
   primary: NEW_LOOM_PRIMARY_ROUTES,
