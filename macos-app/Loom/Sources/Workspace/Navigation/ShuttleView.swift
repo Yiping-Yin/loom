@@ -74,8 +74,6 @@ struct ShuttleView: View {
         .init(label: "Draft",           subtitle: "Writing with the loom visible", path: "/draft", keywords: ["draft", "studio", "writing", "compose", "document"]),
         .init(label: "Sources",         subtitle: "Your materials, grouped", path: "/sources",    keywords: ["sources", "source", "library", "materials", "bookshelf", "shelf", "browse", "knowledge"]),
         .init(label: "Example",         subtitle: "A finished LOOM",          path: "/example",     keywords: ["example", "showcase", "demo", "finished", "sample"]),
-        .init(label: "Help",            subtitle: "Usage guide",              path: "/help",        keywords: ["help", "manual", "docs"]),
-        .init(label: "System",          subtitle: "The whole product on one sheet", path: "/system", keywords: ["system", "ia", "architecture", "map", "overview", "sheet"]),
         // Inspector tabs — native source tools (not web routes).
         .init(label: "Source practice", subtitle: "⌘⇧R",                      path: "",             keywords: ["rehearsal", "recall", "practice", "source"], inspectorTab: "rehearsal"),
         .init(label: "Source check",    subtitle: "⌘⇧X",                      path: "",             keywords: ["examiner", "quiz", "check", "source"],        inspectorTab: "examiner"),
@@ -215,7 +213,6 @@ struct ShuttleView: View {
         .background(ShuttleWindowTransparencyConfigurator())
         .onAppear {
             fieldFocused = true
-            Task { await loadIndex() }
             loadSwiftData()
         }
         // Live refresh — if the user records a reading or mints a weave
@@ -561,35 +558,11 @@ struct ShuttleView: View {
         s.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? s
     }
 
-    /// Load the static search index (`loom://bundle/search-index.json`)
-    /// into memory so user queries can match document titles. The index
-    /// is the MiniSearch dump produced by `scripts/build-search-index`,
-    /// from which we only read `storedFields` entries with `title` +
-    /// `href` + `category`.
-    private func loadIndex() async {
-        guard docIndex.isEmpty else { return }
-        guard let url = URL(string: "loom://bundle/search-index.json") else { return }
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let index = root["index"] as? [String: Any],
-                  let storedFields = index["storedFields"] as? [String: Any] else {
-                return
-            }
-            var out: [ShuttleDoc] = []
-            for (_, value) in storedFields {
-                guard let fields = value as? [String: Any],
-                      let title = fields["title"] as? String,
-                      let href = fields["href"] as? String,
-                      !title.isEmpty, !href.isEmpty else { continue }
-                let category = (fields["category"] as? String) ?? ""
-                out.append(ShuttleDoc(title: title, href: href, category: category))
-            }
-            await MainActor.run { self.docIndex = out }
-        } catch {
-            // Silent — the index isn't critical; fall back to static nav.
-        }
-    }
+    // (The old search-index loader is gone: it fetched
+    // loom://bundle/search-index.json through URLSession, which cannot
+    // resolve the loom:// scheme — it threw NSURLErrorUnsupportedURL on
+    // every launch since the day it was written. docIndex simply stays
+    // empty, exactly as it always effectively was.)
 
     /// Load + project the reading-trace and weave SwiftData writers into
     /// immutable `@State` slices used by the filter pipeline. `try?` with empty-array

@@ -1020,40 +1020,11 @@ struct DocReferencePicker: View {
         .frame(width: 480, height: 420)
         .onAppear {
             focused = true
-            Task { await loadIndex() }
         }
     }
 
-    private func loadIndex() async {
-        guard docs.isEmpty,
-              let url = URL(string: "loom://bundle/search-index.json") else { return }
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let index = root["index"] as? [String: Any],
-                  let stored = index["storedFields"] as? [String: Any] else { return }
-            var out: [AskAIDocRef] = []
-            for (_, value) in stored {
-                guard let fields = value as? [String: Any],
-                      let title = fields["title"] as? String,
-                      let href = fields["href"] as? String,
-                      !title.isEmpty, !href.isEmpty else { continue }
-                let category = (fields["category"] as? String) ?? ""
-                out.append(
-                    AskAIDocRef(
-                        id: href,
-                        title: title,
-                        href: href,
-                        category: category,
-                        sourcePath: (fields["sourcePath"] as? String).flatMap { $0.isEmpty ? nil : $0 },
-                        artifactState: AskAIDocRef.artifactState(from: fields)
-                    )
-                )
-            }
-            out.sort { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
-            await MainActor.run { self.docs = out }
-        } catch {
-            // Silent — empty list is the honest fallback.
-        }
-    }
+    // (The old loadIndex is gone: it fetched loom://bundle/search-index.json
+    // through URLSession, which cannot resolve the loom:// scheme — it threw
+    // NSURLErrorUnsupportedURL on every open since the day it was written.
+    // `docs` stays empty, exactly as it always effectively was.)
 }

@@ -167,14 +167,14 @@ struct LoomApp: App {
                 // in the right-pane Bridge; the launchers below open real windows.)
                 AskAIMenuItem()
                 AskAboutFileMenuItem()
-                HoldQuestionMenuItem()
-                AddSoanCardMenuItem()
-                ConnectSoanCardsMenuItem()
                 RehearsalMenuItem()
-                ExaminerMenuItem()
-                ReconstructionsMenuItem()
-                IngestionMenuItem()
                 ShuttleMenuItem()
+                // (Removed six more stone-dead launchers — Hold Question ⌘⇧P,
+                // Add/Connect Sōan Cards ⌘⇧D/⌘⇧L, Source check ⌘⇧X, Add files
+                // ⌘⇧I, Practice notes — whose only observers lived in the
+                // never-instantiated ContentView shell: clicking them did
+                // nothing. Ask Selection and Source practice stay: their
+                // observers are conditionally live while the You window is open.)
             }
             // Workspace shortcuts for the native reflection surface and
             // compatibility routes that still exist behind it.
@@ -183,16 +183,12 @@ struct LoomApp: App {
                 WorkspaceShortcutsCommands()
                 Divider()
             }
-            // Reload Sources rescans the local library (live — observed by
-            // KnowledgeSidebarView). The old ⌘+/-/0 webview zoom triplet that
-            // sat here was dead (ContentView-only) and shadowed the reader's own
-            // zoom, so it's gone.
-            CommandGroup(after: .sidebar) {
-                Button("Reload Sources") {
-                    NotificationCenter.default.post(name: .loomRescanLibrary, object: nil)
-                }
-                .keyboardShortcut("r", modifiers: [.command, .shift, .option])
-            }
+            // (Removed "Reload Sources" ⌘⇧⌥R: its observer lived in
+            // KnowledgeSidebarView, whose only host — the ContentView shell —
+            // is never instantiated, so the command was a silent no-op. An
+            // earlier comment here claimed it was live; that check only found
+            // an observer, not a mounted host. The live workbench has no
+            // library-rescan mechanism to rewire it to.)
             CommandGroup(replacing: .appInfo) {
                 AboutMenuItem()
                 Divider()
@@ -1854,100 +1850,20 @@ enum EveningWindow {
     static let id = "com.loom.window.evening"
 }
 
-/// ⌘⇧P — "Hold a Question…". Mints a top-level `LoomPursuit` via a
-/// sheet dialog. Pursuits are the mind-room's primary object; the
-/// shortcut lives on the Edit-menu group so it sits alongside the other
-/// Loom-native capture shortcuts (⌘E, ⌘⇧E, ⌘⇧R). Posts
-/// `.loomShowHoldQuestionDialog`; ContentView owns the `.sheet` binding.
-struct HoldQuestionMenuItem: View {
-    var body: some View {
-        Button("Add Question…") {
-            NotificationCenter.default.post(name: .loomShowHoldQuestionDialog, object: nil)
-        }
-        .keyboardShortcut("p", modifiers: [.command, .shift])
-    }
-}
+// (Six dead menu-item shims removed — Hold Question, Add/Connect Sōan
+// Cards, Source check ⌘⇧X, Add files ⌘⇧I, Practice notes. Their
+// notifications' only observers lived in the never-instantiated
+// ContentView shell.)
 
-/// ⌘⇧D — "Add a Sōan Card…". Mints a `LoomSoanCard` at a random-ish
-/// position on the thinking-draft table via a sheet dialog. Sibling of
-/// `HoldQuestionMenuItem` on the Edit menu; kind + body + optional
-/// source are chosen in the sheet. Posts `.loomShowAddSoanCardDialog`;
-/// ContentView owns the `.sheet` binding.
-struct AddSoanCardMenuItem: View {
-    var body: some View {
-        Button("Add Draft Card…") {
-            NotificationCenter.default.post(name: .loomShowAddSoanCardDialog, object: nil)
-        }
-        .keyboardShortcut("d", modifiers: [.command, .shift])
-    }
-}
-
-/// ⌘⇧L — "Connect Sōan Cards…". Mints a `LoomSoanEdge` between two
-/// existing cards via a sheet dialog. Sibling of `AddSoanCardMenuItem`
-/// on the Edit menu; the sheet lists every card and lets the learner
-/// pick `from` / `to` / relation kind. Posts
-/// `.loomShowConnectSoanCardsDialog`; ContentView owns the `.sheet`
-/// binding.
-struct ConnectSoanCardsMenuItem: View {
-    var body: some View {
-        Button("Connect Draft Cards…") {
-            NotificationCenter.default.post(name: .loomShowConnectSoanCardsDialog, object: nil)
-        }
-        .keyboardShortcut("l", modifiers: [.command, .shift])
-    }
-}
-
-/// ⌘⇧X — opens Inspector to Examiner tab. Single-window consolidation.
-struct ExaminerMenuItem: View {
-    var body: some View {
-        Button("Source check") {
-            NotificationCenter.default.post(
-                name: .loomShowInspectorTab,
-                object: nil,
-                userInfo: ["tab": "examiner"]
-            )
-        }
-        .keyboardShortcut("x", modifiers: [.command, .shift])
-    }
-}
-
-/// ⌘⇧R — opens the Inspector panel to the Rehearsal tab instead of a
-/// separate window. Single-window consolidation. Coordinator still
-/// seeds `RehearsalContext.pendingTopic` from webview title before
-/// surfacing the panel.
+/// ⌘⇧R — Coordinator seeds `RehearsalContext.pendingTopic` from the
+/// webview title before surfacing the panel; conditionally live while
+/// the You window is open.
 struct RehearsalMenuItem: View {
     var body: some View {
         Button("Source practice") {
             NotificationCenter.default.post(name: .loomOpenRehearsal, object: nil)
         }
         .keyboardShortcut("r", modifiers: [.command, .shift])
-    }
-}
-
-/// ⌘⇧I — opens Inspector to Ingestion tab.
-struct IngestionMenuItem: View {
-    var body: some View {
-        Button("Add files") {
-            NotificationCenter.default.post(
-                name: .loomShowInspectorTab,
-                object: nil,
-                userInfo: ["tab": "ingestion"]
-            )
-        }
-        .keyboardShortcut("i", modifiers: [.command, .shift])
-    }
-}
-
-/// Menu-only — opens Inspector to Reconstructions tab.
-struct ReconstructionsMenuItem: View {
-    var body: some View {
-        Button("Practice notes") {
-            NotificationCenter.default.post(
-                name: .loomShowInspectorTab,
-                object: nil,
-                userInfo: ["tab": "reconstructions"]
-            )
-        }
     }
 }
 
