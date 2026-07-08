@@ -28,14 +28,12 @@ export const NEW_LOOM_CAPABILITIES: NewLoomCapability[] = [
 export const NEW_LOOM_PRIMARY_ROUTES: readonly string[] = [
   '/',
   '/sources',
-  '/reflection',
 ];
 
-export const NEW_LOOM_RUNTIME_ROUTES: readonly string[] = [
-  '/loom-render/capture',
-  '/loom-render/captures',
-  '/loom-render/snapshot',
-];
+// (The /loom-render runtime magazine retired in web-retirement 3/7: its only
+// native mounts died with the minimal shell; snapshot html still lands on
+// disk next to each capture and opens via QuickLook / the in-app reader.)
+export const NEW_LOOM_RUNTIME_ROUTES: readonly string[] = [];
 
 export const NEW_LOOM_LEGACY_ROUTES = [
   '/knowledge',
