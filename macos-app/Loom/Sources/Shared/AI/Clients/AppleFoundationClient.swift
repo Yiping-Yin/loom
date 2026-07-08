@@ -4,7 +4,7 @@ import FoundationModels
 #endif
 
 /// Thin wrapper around Apple's on-device `FoundationModels` framework
-/// (macOS 26+, Apple Intelligence-enabled hardware). No API key, no
+/// (macOS 27+, Apple Intelligence-enabled hardware). No API key, no
 /// network, no installation — just works on supported Macs.
 ///
 /// Falls back with a clear `notAvailable` error on unsupported
@@ -67,53 +67,50 @@ enum AppleFoundationClient {
     /// strings, we diff to emit only the new portion per call).
     static func send(prompt: String, options: Options = Options()) async throws -> String {
         #if canImport(FoundationModels)
-        if #available(macOS 26.0, *) {
-            // Probe model availability — `SystemLanguageModel.default`
-            // exposes `.availability` so we can refuse cleanly when
-            // Apple Intelligence isn't enabled or supported.
-            let availability = SystemLanguageModel.default.availability
-            switch availability {
-            case .available:
-                break
-            case .unavailable(let reason):
-                throw Failure.notAvailable(String(describing: reason))
-            @unknown default:
-                throw Failure.notAvailable("unknown availability state")
-            }
+        // Probe model availability — `SystemLanguageModel.default`
+        // exposes `.availability` so we can refuse cleanly when
+        // Apple Intelligence isn't enabled or supported. (No runtime
+        // version gate: the project floor IS macOS 27.)
+        let availability = SystemLanguageModel.default.availability
+        switch availability {
+        case .available:
+            break
+        case .unavailable(let reason):
+            throw Failure.notAvailable(String(describing: reason))
+        @unknown default:
+            throw Failure.notAvailable("unknown availability state")
+        }
 
-            let session = LanguageModelSession()
-            do {
-                if let onChunk = options.onChunk {
-                    var lastEmitted = ""
-                    let stream = session.streamResponse(to: prompt)
-                    for try await snapshot in stream {
-                        // Apple's stream yields a snapshot struct; the
-                        // generated text lives on `.content`. Earlier
-                        // we used `String(describing:)` which dumped
-                        // the whole struct ("Snapshot(content: ..., rawContent: ...)")
-                        // into the chat. Extract the actual content.
-                        let snapshotString = extractContent(from: snapshot)
-                        // Snapshots are cumulative — emit just the
-                        // delta so callers can treat onChunk like a
-                        // regular SSE token feed.
-                        if snapshotString.hasPrefix(lastEmitted) {
-                            let delta = String(snapshotString.dropFirst(lastEmitted.count))
-                            if !delta.isEmpty { onChunk(delta) }
-                        } else {
-                            onChunk(snapshotString)
-                        }
-                        lastEmitted = snapshotString
+        let session = LanguageModelSession()
+        do {
+            if let onChunk = options.onChunk {
+                var lastEmitted = ""
+                let stream = session.streamResponse(to: prompt)
+                for try await snapshot in stream {
+                    // Apple's stream yields a snapshot struct; the
+                    // generated text lives on `.content`. Earlier
+                    // we used `String(describing:)` which dumped
+                    // the whole struct ("Snapshot(content: ..., rawContent: ...)")
+                    // into the chat. Extract the actual content.
+                    let snapshotString = extractContent(from: snapshot)
+                    // Snapshots are cumulative — emit just the
+                    // delta so callers can treat onChunk like a
+                    // regular SSE token feed.
+                    if snapshotString.hasPrefix(lastEmitted) {
+                        let delta = String(snapshotString.dropFirst(lastEmitted.count))
+                        if !delta.isEmpty { onChunk(delta) }
+                    } else {
+                        onChunk(snapshotString)
                     }
-                    return lastEmitted
-                } else {
-                    let response = try await session.respond(to: prompt)
-                    return extractContent(from: response.content)
+                    lastEmitted = snapshotString
                 }
-            } catch {
-                throw Failure.generationFailed(error.localizedDescription)
+                return lastEmitted
+            } else {
+                let response = try await session.respond(to: prompt)
+                return extractContent(from: response.content)
             }
-        } else {
-            throw Failure.notAvailable("requires macOS 26 or later")
+        } catch {
+            throw Failure.generationFailed(error.localizedDescription)
         }
         #else
         throw Failure.notAvailable("FoundationModels framework not available in this build")

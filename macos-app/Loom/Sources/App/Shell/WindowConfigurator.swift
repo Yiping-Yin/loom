@@ -37,7 +37,7 @@ struct WindowConfigurator: NSViewRepresentable {
         // Hide the NSWindow-rendered title entirely. macOS draws
         // that text using a mechanism that doesn't follow our
         // `.toolbarColorScheme`/`containerBackground` stack on
-        // macOS 26 — we saw "Loom" stay dark on night chrome even
+        // current macOS — we saw "Loom" stay dark on night chrome even
         // with window.appearance = .darkAqua set. The title is
         // re-rendered in-window so it inherits the chrome's color
         // scheme cleanly.
@@ -57,9 +57,7 @@ struct WindowConfigurator: NSViewRepresentable {
             window.backgroundColor = .clear
             window.contentView?.wantsLayer = true
             window.contentView?.layer?.cornerRadius = contentCornerRadius
-            if #available(macOS 10.15, *) {
-                window.contentView?.layer?.cornerCurve = .continuous
-            }
+            window.contentView?.layer?.cornerCurve = .continuous
             window.contentView?.layer?.masksToBounds = true
         } else {
             window.backgroundColor = NSColor.windowBackgroundColor
@@ -172,4 +170,3 @@ struct WindowConfigurator: NSViewRepresentable {
         }
     }
 }
-

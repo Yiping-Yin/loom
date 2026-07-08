@@ -40,12 +40,8 @@ enum EmbeddingClient {
         "apple-nl-sentence-english"
     }
 
-    private static let embedding: NLEmbedding? = {
-        if #available(macOS 11.0, *) {
-            return NLEmbedding.sentenceEmbedding(for: .english)
-        }
-        return nil
-    }()
+    private static let embedding: NLEmbedding? =
+        NLEmbedding.sentenceEmbedding(for: .english)
 
     static func embed(_ raw: String) throws -> Result {
         let trimmed = String(raw.prefix(maxTextLength))
