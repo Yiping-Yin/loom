@@ -46,6 +46,7 @@ function removeStaleNamedProjects() {
 }
 
 async function buildReleaseApp() {
+  nodeScript('scripts/ensure-xcode27-environment.mjs');
   run('npm', ['run', 'build']);
   nodeScript('scripts/build-static-export.mjs');
   await assertNoStaleBuildArtifacts(path.join(repoRoot, '.next-export'), '.next-export after static export');
@@ -57,7 +58,7 @@ async function buildReleaseApp() {
   // app and the LoomAnchorHelper XPC service). Fall back to AD-HOC signing on
   // CI — it embeds the entitlements (installed-app-smoke asserts app-sandbox)
   // and matches CI behavior from before the team pin. Local builds keep real
-  // signing — macOS 26 suppresses NSServices from ad-hoc-signed apps.
+  // signing — current macOS suppresses NSServices from ad-hoc-signed apps.
   const signingArgs = process.env.CI
     ? ['CODE_SIGN_STYLE=Manual', 'CODE_SIGN_IDENTITY=-', 'DEVELOPMENT_TEAM=']
     : [];

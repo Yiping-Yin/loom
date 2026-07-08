@@ -1162,7 +1162,6 @@ struct LoomReflectionRootView: View {
     /// read beside write). Slim header + Done; the reader's own toolbar carries
     /// zoom / page / ⌃⌘F fullscreen. Stays open across captures so you watch each
     /// quote land in the note to the right.
-    @ViewBuilder
     private func readerColumn(_ target: AnchorPreviewTarget) -> some View {
         // Don't say the filename twice (owner 2026-07-06: 去掉重复信息). The
         // global top bar shows the chat's name, or — when the chat is unnamed —
@@ -5844,15 +5843,14 @@ private struct EvidencePaperCard: View {
                     .fill(isHovering ? AnyShapeStyle(LoomTokens.dsAnchor.opacity(0.55)) : AnyShapeStyle(.quaternary))
                     .frame(width: 1.5)
                     .frame(maxHeight: .infinity)
-                (
-                    Text(trace.displayText)
-                        .font(.system(size: 14.5, design: .serif))
-                        .foregroundStyle(.secondary)
-                    + Text(locatorSuffix)
-                        .font(.system(size: 10))
-                        .foregroundStyle(LoomTokens.dsAnchor)
-                        .baselineOffset(3)
-                )
+                let traceText = Text(trace.displayText)
+                    .font(.system(size: 14.5, design: .serif))
+                    .foregroundStyle(.secondary)
+                let locatorText = Text(locatorSuffix)
+                    .font(.system(size: 10))
+                    .foregroundStyle(LoomTokens.dsAnchor)
+                    .baselineOffset(3)
+                Text("\(traceText)\(locatorText)")
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -6326,4 +6324,3 @@ final class ReflectionResizeHandleNSView: NSView {
         dragStartWidth = nil
     }
 }
-

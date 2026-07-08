@@ -489,7 +489,7 @@ final class LoomURLSchemeHandler: NSObject, WKURLSchemeHandler {
             case .capturesList:
                 payload = Self.buildCapturesListPayload()
             case .reflectionWorkspaceSnapshot:
-                payload = await Self.buildReflectionWorkspaceSnapshotPayload()
+                payload = Self.buildReflectionWorkspaceSnapshotPayload()
             case .captureSnapshot:
                 payload = Self.buildCaptureSnapshotPayload(query: requestURL.query ?? "")
             case .captureMetadata:
@@ -585,17 +585,21 @@ final class LoomURLSchemeHandler: NSObject, WKURLSchemeHandler {
             guard let self else { return }
             do {
                 let summary = try await Self.invokeAIProvider(prompt: prompt, provider: provider)
-                self.respondJSON(task, requestURL: requestURL, payload: [
-                    "success": true,
-                    "summary": summary,
-                    "provider": provider.rawValue,
-                ])
+                await MainActor.run {
+                    self.respondJSON(task, requestURL: requestURL, payload: [
+                        "success": true,
+                        "summary": summary,
+                        "provider": provider.rawValue,
+                    ])
+                }
             } catch {
-                self.respondJSON(task, requestURL: requestURL, payload: [
-                    "success": false,
-                    "error": error.localizedDescription,
-                    "provider": provider.rawValue,
-                ])
+                await MainActor.run {
+                    self.respondJSON(task, requestURL: requestURL, payload: [
+                        "success": false,
+                        "error": error.localizedDescription,
+                        "provider": provider.rawValue,
+                    ])
+                }
             }
         }
     }

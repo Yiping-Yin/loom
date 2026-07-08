@@ -97,8 +97,9 @@ final class AIStreamBridgeHandler: NSObject, WKScriptMessageHandler {
                 onChunk: onChunk,
                 webView: webView
             )
+            let ownerForCleanup = owner
             await MainActor.run {
-                _ = owner?.tasks.removeValue(forKey: streamId)
+                _ = ownerForCleanup?.tasks.removeValue(forKey: streamId)
             }
         }
     }

@@ -187,8 +187,8 @@ struct AboutView: View {
     }
 }
 
-/// Tiny cross-version helper so the link buttons show the pointing-hand
-/// cursor on hover without requiring macOS 15's `.pointerStyle` API.
+/// Tiny helper so link buttons show the pointing-hand cursor consistently
+/// inside Loom's custom chrome.
 private extension View {
     @ViewBuilder
     func pointerStyleLink() -> some View {

@@ -52,6 +52,7 @@ function requireInputs() {
 
 function main() {
   requireInputs();
+  run(process.execPath, [path.join(repoRoot, 'scripts/ensure-xcode27-environment.mjs')]);
   fs.rmSync(exportPath, { recursive: true, force: true });
   fs.mkdirSync(exportPath, { recursive: true });
 

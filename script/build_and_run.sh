@@ -19,6 +19,8 @@ stop_app() {
 }
 
 build_app() {
+  /usr/bin/env node "$ROOT_DIR/scripts/ensure-xcode27-environment.mjs"
+
   if command -v xcodegen >/dev/null 2>&1; then
     (cd "$PROJECT_DIR" && xcodegen generate)
   fi

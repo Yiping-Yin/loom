@@ -336,7 +336,6 @@ test('installed app smoke rejects stale macOS metadata in bundled web resources'
     fs.writeFileSync(path.join(webRoot, 'index.html'), '<!doctype html><script src="/_next/static/chunk.js"></script>');
     fs.writeFileSync(path.join(webRoot, 'digital-me.html'), '<!doctype html>');
     fs.writeFileSync(path.join(webRoot, 'knowledge.html'), '<!doctype html>');
-    fs.writeFileSync(path.join(webRoot, 'search-index.json'), '{}');
     for (let index = 0; index < 55; index += 1) {
       fs.writeFileSync(path.join(webRoot, `asset-${index}.txt`), 'asset');
     }
@@ -385,6 +384,7 @@ test('release app scripts build the static export before Xcode Release packaging
   assert.equal(xcodeIndex < installIndex, true, 'xcodebuild must run before install');
   assert.match(buildInstallSource, /assertNoStaleBuildArtifacts\(path\.join\(repoRoot, '\.next-export'\), '\.next-export after static export'\)/);
   assert.match(buildInstallSource, /assertNoStaleBuildArtifacts\(path\.join\(repoRoot, '\.next-export'\), '\.next-export after Xcode staging'\)/);
+  assert.match(buildInstallSource, /ensure-xcode27-environment\.mjs/);
   assert.equal(buildInstallSource.includes('finally'), true, 'cleanup must run after failures too');
   assert.doesNotMatch(buildInstallSource, /cd\s+macos-app\/Loom|cd\s+\.\.\/\.\./);
 });
@@ -405,6 +405,7 @@ test('local macOS run entrypoint builds the current Xcode app and wires Codex Ru
   const verifier = fs.readFileSync(verifierPath, 'utf8');
 
   assert.match(runScript, /xcodebuild/);
+  assert.match(runScript, /ensure-xcode27-environment\.mjs/);
   assert.match(runScript, /-project "\$PROJECT_DIR\/Loom\.xcodeproj"/);
   assert.match(runScript, /-scheme "\$APP_NAME"/);
   assert.match(runScript, /-derivedDataPath "\$DERIVED_DATA"/);

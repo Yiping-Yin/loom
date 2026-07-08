@@ -1878,7 +1878,6 @@ struct LoomWebView: NSViewRepresentable {
             let cacheTypes: Set<String> = [
                 WKWebsiteDataTypeMemoryCache,
                 WKWebsiteDataTypeDiskCache,
-                WKWebsiteDataTypeOfflineWebApplicationCache,
                 WKWebsiteDataTypeSessionStorage,
                 WKWebsiteDataTypeLocalStorage,
             ]

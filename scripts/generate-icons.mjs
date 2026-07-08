@@ -32,7 +32,7 @@ async function renderPng(size, output) {
     .toFile(output);
 }
 
-// macOS 26+ masks app icons into its own squircle and mounts any artwork
+// Current macOS masks app icons into its own squircle and mounts any artwork
 // that doesn't fill the canvas on a gray legacy plate (the "ring"). The
 // interlaced-L source is a pre-rounded tile with margins, so for the
 // AppIcon set we trim the tile, scale it 18% past full bleed (the baked

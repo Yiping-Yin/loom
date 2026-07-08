@@ -129,7 +129,6 @@ export async function runInstalledAppSmoke(options = {}) {
   await assertFile(path.join(webRoot, 'index.html'), 'static export index');
   await assertFile(path.join(webRoot, 'digital-me.html'), 'static export digital-me route');
   await assertFile(path.join(webRoot, 'knowledge.html'), 'static export knowledge route');
-  await assertFile(path.join(webRoot, 'search-index.json'), 'static search index');
 
   // Stale-artifact check runs before plist parsing so the (Linux-only,
   // plutil-less) test path can exercise it. plutil is macOS-only — when

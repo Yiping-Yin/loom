@@ -692,7 +692,7 @@ Reverse-chronological. Date in YYYY-MM-DD.
 
 ### 2026-04-26 — Apple Foundation Models as default provider
 
-**Decision:** New `AIProviderKind.appleFoundation` case wired through `AppleFoundationClient` (wraps the macOS 26+ `FoundationModels` framework). Set as the default for new installs / first-run. Streams natively via snapshot diffing. Graceful `notAvailable` failure with actionable banner when on unsupported hardware/OS.
+**Decision:** New `AIProviderKind.appleFoundation` case wired through `AppleFoundationClient` (wraps the macOS 27+ `FoundationModels` framework). Set as the default for new installs / first-run. Streams natively via snapshot diffing. Graceful `notAvailable` failure with actionable banner when on unsupported hardware/OS.
 **Rationale:** Removes the configuration barrier that was blocking testing — the user couldn't try shipped AI features without configuring a CLI binary or paying for an API key. Apple Intelligence works out-of-the-box on supported hardware. Aligns with V11 (lean on macOS for things macOS provides) and V1-class privacy (on-device, never leaves the machine).
 **Coverage:** `LoomAI.send` and `LoomAI.sendStream` both route to `AppleFoundationClient`. `StructuredOutputClient` falls back to disabled for now (guided generation not yet wired). `FirstRunProviderSheet` treats it as credential-free.
 **File:** `Sources/AppleFoundationClient.swift`, registered in pbxproj.

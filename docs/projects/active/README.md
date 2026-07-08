@@ -2,7 +2,7 @@
 
 Use this folder for current work that is being implemented, reviewed, or validated.
 
-## Current Reading Order
+## Current Reading Order / Current new Loom continuation reading order
 
 Start current Loom continuation work from the sidecar/reflection standard. Use
 older acceptance and migration notes only as compatibility evidence:

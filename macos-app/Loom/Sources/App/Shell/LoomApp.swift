@@ -37,7 +37,7 @@ struct LoomApp: App {
             .frame(minWidth: loomWorkspaceMinimumSize.width, minHeight: loomWorkspaceMinimumSize.height)
         }
         .defaultSize(width: 1320, height: 860)
-        // macOS 15+ is the product floor. Do not let system state
+        // macOS 27 is the product floor. Do not let system state
         // restoration reopen Loom into the "all windows closed" state:
         // clicking the app icon should always present the room.
         .restorationBehavior(.disabled)
@@ -711,7 +711,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.unhide(nil)
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
-        NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+        NSRunningApplication.current.activate(options: [.activateAllWindows])
         NSApp.activate(ignoringOtherApps: true)
         // Installed builds can otherwise restore the main SwiftUI scene
         // onto a different Space where AX/Computer Use cannot see it.
@@ -1040,7 +1040,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let processIdentifier = externalCompanionSourceProcessIdentifier,
            let application = NSRunningApplication(processIdentifier: processIdentifier),
            !Self.isIgnoredSourceApplication(application) {
-            application.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+            application.activate(options: [.activateAllWindows])
             parkMainWindowForExternalCompanion()
             return true
         }
@@ -1049,7 +1049,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
            let application = NSWorkspace.shared.runningApplications.first(where: {
                 $0.bundleIdentifier == bundleIdentifier && !Self.isIgnoredSourceApplication($0)
            }) {
-            application.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+            application.activate(options: [.activateAllWindows])
             parkMainWindowForExternalCompanion()
             return true
         }
@@ -1974,11 +1974,7 @@ enum LoomExternalSelectionCaptureRelay {
 extension View {
     @ViewBuilder
     func loomWindowBackground(_ color: Color) -> some View {
-        if #available(macOS 15.0, *) {
-            self.containerBackground(color, for: .window)
-        } else {
-            self.background(color)
-        }
+        self.containerBackground(color, for: .window)
     }
 
     func paperChrome() -> some View {

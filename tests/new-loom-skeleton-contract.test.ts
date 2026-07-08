@@ -1639,10 +1639,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // logic — glass-native translucent objects via Color.primary washes.
   assert.doesNotMatch(nativeRoot, /usesLightChrome|usesCenterOverlay/);
   assert.match(nativeRoot, /ReflectionSidebarSearchField\(text: \$query, focus: \$searchFocused\)/);
-  // System semantics (owner 2026-07-03: 系统是什么就用什么): selection is
-  // the system's unemphasized sidebar-selection color; seams are the
+  // System semantics (owner 2026-07-03: 系统是什么就用什么): seams are the
   // system separator; fills are hierarchical styles.
-  assert.match(nativeRoot, /unemphasizedSelectedContentBackgroundColor/);
   assert.match(nativeRoot, /Color\(nsColor: \.separatorColor\)/);
   // Glass law 2026-07-03 (owner-approved): ONE glass pane per window — the
   // root matte is underWindowBackground+behindWindow with day/night tints;
@@ -1802,6 +1800,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /isInspectorPresented = false/);
   assert.match(nativeRoot, /openSourcesInNativeApps\(importedSources\)/);
   assert.match(nativeRoot, /nativeSource: nativeSource/);
+  assert.match(nativeRoot, /selectedSourceID: selectedSourceID/);
   assert.match(nativeRoot, /onOpenSourceInNativeApp: openSelectedSourceInNativeApp/);
   assert.match(nativeRoot, /private func openSourceInNativeApp\(_ source: ReflectionSource\)/);
   assert.match(nativeRoot, /private func openSelectedSourceInNativeApp\(\)/);
@@ -1818,6 +1817,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /case "doc", "docx", "rtf", "rtfd":[\s\S]{0,90}Microsoft Word\.app/);
   assert.match(nativeRoot, /case "xls", "xlsx", "csv", "tsv":[\s\S]{0,90}Microsoft Excel\.app/);
   assert.match(nativeRoot, /Image\(systemName: "arrow\.up\.forward\.app"\)/);
+  assert.match(nativeRoot, /private func openSourceInReader\(_ source: ReflectionSource\)/);
+  assert.match(nativeRoot, /onOpenSourceID: \{ sourceID in[\s\S]*?openSourceInReader\(source\)/);
+  assert.match(nativeRoot, /anchorPreview = AnchorPreviewTarget\(sourceID: source\.id, fileURL: resolved, page: 0, rect: \.zero\)/);
+  assert.doesNotMatch(nativeRoot, /onOpenSourceInReader/);
   assert.match(nativeRoot, /private static func learningCase\(from sources: \[ReflectionSource\]\) -> ReflectionCase/);
   assert.match(nativeRoot, /private static func nativeSessionSource\(from capture: LoomExternalSelectionCapture\) -> ReflectionSource\?/);
   assert.match(nativeRoot, /Native selection captured from/);
@@ -1863,12 +1866,19 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // — read the source, tag a line, keep writing.
   assert.match(sourceFileView, /var notePassageHandler: \(\(Int, CGRect, String, NSImage\?\) -> Void\)\? = nil/);
   assert.match(sourceFileView, /func onNotePassage\(_ handler: @escaping \(Int, CGRect, String, NSImage\?\) -> Void\) -> SourceFileView/);
-  assert.match(sourceFileView, /onNotePassage: notePassageHandler/);
+  assert.match(sourceFileView, /onNotePassage: handleReaderPassage/);
+  assert.match(sourceFileView, /private func handleReaderPassage\(page: Int, rect: CGRect, text: String, image: NSImage\?\)/);
+  assert.match(sourceFileView, /notePassageHandler\?\(page, rect, text, image\)/);
   assert.match(sourceFileView, /var onNotePassage: \(\(Int, CGRect, String, NSImage\?\) -> Void\)\?/);
-  // Margin-tick redesign (owner 2026-07-06): the off-brand system-blue "!" disc
-  // is gone — replaced by a single 青芒 hairline in the gutter (the quote's spine),
-  // non-interactive (the line owns the click). Cyan is signal, never a fill.
+  // Margin-tick redesign (owner 2026-07-06, refined 2026-07-07): the off-brand
+  // system-blue "!" disc is gone. Hovered lines get a single 青芒 hairline in
+  // the gutter; live selections draw no extra mark because the native blue
+  // selection is already the target.
   assert.match(sourceFileView, /final class NoteHoverTick: NSView/);
+  assert.doesNotMatch(sourceFileView, /case selectionTab/);
+  assert.doesNotMatch(sourceFileView, /noteTick\.style = \./);
+  assert.match(sourceFileView, /if liveSelectionTarget\(\) != nil \{[\s\S]{0,120}noteTick\.isHidden = true[\s\S]{0,80}return/);
+  assert.match(sourceFileView, /let tw: CGFloat = 12/);
   assert.doesNotMatch(sourceFileView, /NSColor\.controlAccentColor/);
   assert.match(sourceFileView, /page\.selectionForLine\(at: pagePoint\)/);
   // Linear text (line / drag-selection) lands as a clean TEXT QUOTE at evidence
@@ -1878,7 +1888,15 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /static let loomReflectionInsertPassage = Notification\.Name/);
   assert.match(nativeRoot, /\.onNotePassage \{ page, rect, text, image in/);
   assert.match(nativeRoot, /func insertPassageAnchor\(quote: String, anchorURL: String, precise: Bool = true\)/);
-  assert.match(nativeRoot, /quoteAttributes\[\.link\] = anchorURL/);
+  assert.match(nativeRoot, /let quoteText = ReflectionDocumentFormat\.collapsedQuote\(quote\)/);
+  assert.doesNotMatch(nativeRoot, /quoteAttributes\[\.link\] = anchorURL/);
+  assert.match(nativeRoot, /var locatorAttributes = quoteAttributes/);
+  assert.match(nativeRoot, /locatorAttributes\[\.link\] = anchorURL/);
+  assert.match(nativeRoot, /locatorAttributes\[\.baselineOffset\] = 4\.0/);
+  assert.match(nativeRoot, /let locatorGlyph = precise \? "\\u\{25C6\}" : "\\u\{25C7\}"/);
+  assert.match(nativeRoot, /NSAttributedString\(string: "\\u\{200A\}\\\(locatorGlyph\)", attributes: locatorAttributes\)/);
+  assert.match(nativeRoot, /view\.linkTextAttributes = \[/);
+  assert.match(nativeRoot, /\.underlineStyle: 0/);
   // Appshot (owner 2026-07-06): the hover ❕ / ⌥-drag renders the captured PDF
   // region to an image (no screen-capture permission) and lands ONE clean
   // CLICKABLE appshot card in the note — no scrambled auto-quote.
@@ -1900,19 +1918,65 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /final class SnipOverlayView: NSView/);
   assert.match(sourceFileView, /event\.modifierFlags\.contains\(\.option\)/);
   assert.match(sourceFileView, /private func captureRegion\(viewRect: CGRect\)/);
-  // Grab what's lit (owner 2026-07-06): a live text SELECTION wins the tick over
-  // the hovered line — you can grab part of a line, not just the whole row — and
-  // the full-line wash is gone; the flash confirms the exact captured rect.
+  // Grab what's lit (owner 2026-07-06, refined 2026-07-07): a live text
+  // SELECTION wins the capture target over the hovered line, but draws no extra
+  // cyan beside punctuation. You can grab part of a line by clicking inside the
+  // native blue selection; the full-line wash is gone; the flash confirms the
+  // exact captured rect.
   assert.match(sourceFileView, /final class LineHoverHighlight: NSView/);
   assert.match(sourceFileView, /lineHighlight\.flash\(\)/);
   assert.match(sourceFileView, /func liveSelectionTarget\(\) -> \(page: Int, rect: CGRect, text: String\)\?/);
-  assert.match(sourceFileView, /if let sel = currentSelection, liveSelectionTarget\(\) != nil/);
-  assert.match(sourceFileView, /func lastLineViewRect\(of sel: PDFSelection\) -> CGRect\?/);
+  assert.match(sourceFileView, /if let sel = liveSelectionTarget\(\) \{[\s\S]{0,260}selectionViewRect\(\)\?\.insetBy/);
+  assert.doesNotMatch(sourceFileView, /noteTick\.frame\.contains\(down\)/);
+  assert.doesNotMatch(sourceFileView, /func lastLineViewRect\(of sel: PDFSelection\) -> CGRect\?/);
   assert.match(sourceFileView, /\.PDFViewSelectionChanged, object: self/);
   // Drag-select must NOT auto-capture (owner 2026-07-06): detect the drag by
-  // distance, and if a selection now exists, light the tick instead of grabbing.
+  // distance, and if a selection now exists, keep it as the only marker instead
+  // of grabbing.
   assert.match(sourceFileView, /if let armed, !moved \{[\s\S]{0,120}commit\(page: armed\.page/);
   assert.match(sourceFileView, /if liveSelectionTarget\(\) != nil \{[\s\S]{0,60}relightMark\(\)/);
+  // Trace Rail MVP (owner 2026-07-07): source-reader marks leave the PDF text
+  // clean. The rail belongs to the right column, stays invisible until there is
+  // a real semantic trace, then draws only a quiet current-position needle plus
+  // colored ticks (capture/question/principle).
+  assert.match(sourceFileView, /struct SourceTraceRailItem: Identifiable, Equatable/);
+  assert.match(sourceFileView, /struct SourceTraceRail: View/);
+  assert.match(sourceFileView, /@State private var hoveredItemID: SourceTraceRailItem\.ID\?/);
+  assert.match(sourceFileView, /\.accessibilityLabel\("Evidence rail"\)/);
+  assert.match(sourceFileView, /var readerPageStateHandler: \(\(Int, Int\) -> Void\)\? = nil/);
+  assert.match(sourceFileView, /func onReaderPageStateChange\(_ handler: @escaping \(Int, Int\) -> Void\) -> SourceFileView/);
+  assert.match(sourceFileView, /@Published var currentPageIndex = 0/);
+  assert.match(sourceFileView, /@Published var pageCount = 0/);
+  assert.match(sourceFileView, /readerPageStateHandler\?\(pageIndex, pdfHolder\.pageCount\)/);
+  assert.doesNotMatch(sourceFileView, /visibleTraceRailItems/);
+  assert.doesNotMatch(sourceFileView, /sourceTraceRailItems/);
+  assert.doesNotMatch(sourceFileView, /if pdfHolder\.hasPDF, !visibleTraceRailItems\.isEmpty/);
+  assert.doesNotMatch(sourceFileView, /structureTickPages/);
+  assert.match(nativeRoot, /private let reflectionReadingNoteRailLeading: CGFloat = 20/);
+  assert.match(nativeRoot, /private let reflectionReadingNoteRailWidth: CGFloat = 18/);
+  assert.match(nativeRoot, /private let reflectionReadingNoteContentLeading: CGFloat = 60/);
+  assert.match(nativeRoot, /private let reflectionReadingNoteContentMaxWidth: CGFloat = 400/);
+  assert.match(nativeRoot, /ReflectionReadingNoteBackdrop\(\)/);
+  assert.match(nativeRoot, /isReadingSource: anchorPreview != nil/);
+  assert.match(nativeRoot, /let isReadingSource: Bool/);
+  assert.match(nativeRoot, /if !isReadingSource, documentHeadings\.count \+ contentSteps\.count > 1/);
+  assert.match(nativeRoot, /rightColumnTraceRail\(target\)/);
+  assert.match(nativeRoot, /private func rightColumnTraceRail\(_ target: AnchorPreviewTarget\) -> some View/);
+  assert.match(nativeRoot, /SourceTraceRail\(\s*items: items,\s*currentPageIndex: traceRailCurrentPage\(for: target\),\s*pageCount: traceRailPageCount\(for: items\)/);
+  assert.match(nativeRoot, /\.frame\(width: reflectionReadingNoteRailWidth\)/);
+  assert.match(nativeRoot, /ZStack\(alignment: \.leading\)/);
+  assert.match(nativeRoot, /\.padding\(\.leading, reflectionReadingNoteRailLeading\)/);
+  assert.match(nativeRoot, /name: \.loomApplyPDFAnchor/);
+  assert.match(nativeRoot, /rememberTraceRailCapture\(sourceID: target\.sourceID, page: page, rect: rect, text: text\)/);
+  assert.match(nativeRoot, /@State private var sessionTraceRailItemsBySourceID: \[ReflectionSource\.ID: \[SourceTraceRailItem\]\] = \[:\]/);
+  assert.match(nativeRoot, /private func traceRailItems\(for sourceID: String\) -> \[SourceTraceRailItem\]/);
+  assert.match(nativeRoot, /private func documentAnchorTraceRailItems\(for sourceID: String\) -> \[SourceTraceRailItem\]/);
+  assert.match(nativeRoot, /NSAttributedString\(\s*url: url,\s*options: \[\.documentType: NSAttributedString\.DocumentType\.rtfd\]/);
+  assert.match(nativeRoot, /raw\.hasPrefix\("loom:\/\/anchor"\)/);
+  assert.match(nativeRoot, /title: "Note anchor · Page \\\(pageIndex \+ 1\)"/);
+  assert.match(nativeRoot, /private func mergedTraceRailItems\(_ items: \[SourceTraceRailItem\]\) -> \[SourceTraceRailItem\]/);
+  assert.match(nativeRoot, /private func traceRailDedupeKey\(for item: SourceTraceRailItem\) -> String/);
+  assert.match(nativeRoot, /if trace\.focus == "question" \{ return \.question \}/);
   // Snip polish (owner 2026-07-06): dim OUTSIDE the box (screenshot-style
   // spotlight) + live dimensions + crosshair + a green flash on release.
   assert.match(sourceFileView, /mask\.windingRule = \.evenOdd/);
@@ -1922,6 +1986,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /func attach\(_ view: PDFView\)/);
   assert.match(sourceFileView, /func toggleFullScreen\(\)/);
   assert.match(sourceFileView, /private var pdfToolbar: some View/);
+  assert.match(sourceFileView, /Image\(systemName: "slider\.horizontal\.3"\)/);
+  assert.doesNotMatch(sourceFileView, /Text\(pdfHolder\.scaleLabel\.isEmpty \? "—" : pdfHolder\.scaleLabel\)/);
   assert.match(sourceFileView, /pdfHolder\.zoomIn\(\)/);
   assert.match(sourceFileView, /\.PDFViewPageChanged/);
   // In-document find (owner 2026-07-06): ⌘F search bar over PDFKit's own
@@ -1961,7 +2027,10 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /precomposedStringWithCompatibilityMapping/);
   assert.match(nativeRoot, /exact spot not found, will jump to the page/);
   assert.match(nativeRoot, /private func flashAnchor\(range: NSRange, precise: Bool\)/);
-  assert.match(nativeRoot, /addTemporaryAttributes\(\[\.backgroundColor: tint\], forCharacterRange: range\)/);
+  assert.match(nativeRoot, /let color = precise \? NSColor\.systemTeal : NSColor\.systemOrange/);
+  assert.match(nativeRoot, /let peak: CGFloat = 0\.28/);
+  assert.match(nativeRoot, /addTemporaryAttributes\(\[\.backgroundColor: color\.withAlphaComponent\(peak\)\],\s*forCharacterRange: range\)/);
+  assert.match(nativeRoot, /fadeOutAnchorTint\(range: range, color: color, from: peak,/);
   assert.match(nativeRoot, /can't be found — it may have moved or been deleted/);
   // Discoverable formatting: right-click Bold/Italic/Underline with ⌘ hints.
   assert.match(nativeRoot, /\("Bold", "b", #selector\(GrowingGlassTextView\.loomToggleBold\)\)/);
@@ -1989,7 +2058,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // Right-pane flexibility while reading (owner 2026-07-06: 右栏要能调整+收展). The
   // top-bar right toggle collapses/expands the NOTE while a source is open (the
   // note IS the right pane then); collapsed -> the reader fills the window and the
-  // resizer is dropped; the resizer seam brightens on hover so it's findable.
+  // resizer is dropped; the resizer seam remains tertiary on hover so it is
+  // findable without reading like a selected border.
   assert.match(nativeRoot, /if anchorPreview != nil \{\n\s*isReadingNoteCollapsed\.toggle\(\)/);
   // A freshly-opened source starts with the note visible (no stale collapse).
   assert.match(nativeRoot, /if anchorPreview == nil \{ isReadingNoteCollapsed = false \}/);
@@ -2001,7 +2071,8 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   // source name, and a blank case is just the cursor. The old `|| provenanceLabel
   // != nil` leak (which repeated the source name in the empty note) is gone.
   assert.match(nativeRoot, /if reflectionCase\.title != ReflectionCase\.untitledPlaceholder \{\n\s*VStack\(alignment: \.leading, spacing: 3\) \{\n\s*Text\(reflectionCase\.title\)/);
-  assert.match(nativeRoot, /isHovering \? AnyShapeStyle\(\.secondary\) : AnyShapeStyle\(Color\(nsColor: \.separatorColor\)\)/);
+  assert.match(nativeRoot, /Color\(nsColor: isHovering \? \.tertiaryLabelColor : \.separatorColor\)/);
+  assert.match(nativeRoot, /\.opacity\(isHovering \? 0\.72 : 0\.42\)/);
   assert.match(nativeRoot, /SourceFileView\(fileURL: target\.fileURL\) \{ anchorPreview = nil \}/);
   // Reader top redesign (owner 2026-07-06: "空的太多 · 去掉重复信息"). The reader's
   // own header row (filename + blue borderedProminent "Done") is DELETED: no
@@ -2022,9 +2093,9 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(sourceFileView, /if showsReaderClose \{[\s\S]{0,160}Image\(systemName: "xmark"\)/);
   assert.match(nativeRoot, /raw\.hasPrefix\("loom:\/\/anchor"\)/);
   assert.match(nativeRoot, /name: \.loomReflectionAnchorJump/);
-  // One click on a right-rail source reads it in-app (no hover-hunt for a
-  // hidden button); the old opt-in "Read in Loom" affordance is retired.
-  assert.match(nativeRoot, /jumpToAnchor\(sourceID: source\.id, page: 0, rect: \.zero\)/);
+  // The right rail no longer repeats the current filename as a source row; file
+  // identity and in-app reading live in the main source surface instead.
+  assert.doesNotMatch(nativeRoot, /jumpToAnchor\(sourceID: source\.id, page: 0, rect: \.zero\)/);
   assert.doesNotMatch(nativeRoot, /onReadInApp/);
   assert.match(sourceFileView, /import PDFKit/);
   assert.match(sourceFileView, /import QuickLookUI/);
@@ -2170,14 +2241,30 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /confirmationLabel\(for: trace\.focus\)/);
   assert.match(nativeRoot, /LoomReflectionRootView\.clippedSelectionText\(trimmedText, maxLength: 180\)/);
   assert.match(nativeRoot, /if reflectionCase\.project == "Learning pass"[\s\S]{0,360}ReflectionLearningLedgerView\([\s\S]{0,180}reflectionCase: reflectionCase/);
-  // Right pane = the launcher (owner-pointed design, 2026-07-03):
-  // Review / Terminal / Browser / Files; Files wires to the local-file
-  // importer. The old inspector face stays defined but unmounted.
-  assert.match(nativeRoot, /ReflectionBridgePanel\([\s\S]{0,120}sources: visibleBridgeSources[\s\S]{0,80}onFiles: importLocalSources/);
-  // Bridge v2: the lower half lists what has crossed — project-scoped
-  // resources with the way back out to the original.
-  assert.match(nativeRoot, /struct BridgeResourceRow: View/);
+  // Right pane = standard system actions plus a single quiet status line. The
+  // current filename belongs in the main bar and project list, not as a
+  // repeated resource row in the right pane.
+  assert.doesNotMatch(nativeRoot, /visibleBridgeSources/);
+  assert.doesNotMatch(nativeRoot, /visibleBridgeReviewCount/);
+  assert.match(nativeRoot, /ReflectionBridgePanel\([\s\S]{0,80}status: statusMessage[\s\S]{0,80}onFiles: importLocalSources[\s\S]{0,80}onReview: reviewSelectedCase/);
+  assert.match(nativeRoot, /private func reviewSelectedCase\(\)/);
+  assert.match(nativeRoot, /Review is available after a source has learning traces/);
+  assert.match(nativeRoot, /Add a question, correction, or principle to start review/);
+  assert.match(nativeRoot, /statusMessage = "Reviewing \\?\(reviewTrace\.version\\?\) \\?\(reviewTrace\.versionTitle\.lowercased\(\)\\?\)"/);
+  assert.doesNotMatch(nativeRoot, /Review arrives with the workbench bridge/);
+  assert.doesNotMatch(nativeRoot, /BridgeResourceRow/);
   assert.match(nativeRoot, /BridgeRow\([\s\S]{0,120}title: "Files"/);
+  assert.match(nativeRoot, /BridgeRow\([\s\S]{0,180}title: "Review"[\s\S]{0,120}help: "Review the current learning record"[\s\S]{0,80}action: onReview/);
+  assert.match(nativeRoot, /var help: String\? = nil/);
+  assert.match(nativeRoot, /\.help\(help \?\? title\)/);
+  assert.match(nativeRoot, /private let reflectionBridgePanelTopPadding: CGFloat = 116/);
+  assert.match(nativeRoot, /\.padding\(\.top,\s*reflectionBridgePanelTopPadding\)/);
+  assert.match(nativeRoot, /private struct BridgeStatusFooter: View/);
+  assert.match(nativeRoot, /trimmedStatus == "Local reflection workspace" \? "Ready" : trimmedStatus/);
+  assert.doesNotMatch(nativeRoot, /BridgeStatusPill/);
+  assert.match(nativeRoot, /\.frame\(height: 24\)/);
+  assert.match(nativeRoot, /\.padding\(\.bottom,\s*18\)/);
+  assert.match(nativeRoot, /It is not a source list; the[\s\S]{0,140}main bar and the project list/);
   assert.match(nativeRoot, /private struct ReflectionLearningLedgerView: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningTraceCard: View/);
   assert.match(nativeRoot, /private struct ReflectionLearningSignal: View/);
@@ -2834,7 +2921,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   );
   assert.match(
     nativeRoot,
-    /final class GrowingGlassTextView: NSTextView[\s\S]{0,600}intrinsicContentSize/,
+    /final class GrowingGlassTextView: NSTextView[\s\S]*override var intrinsicContentSize: NSSize/,
     'the editor grows with its content inside the outer reading scroll — no nested scroller',
   );
   assert.match(nativeModel, /var documentText: String\? = nil/);
@@ -2863,28 +2950,41 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeModel, /var projectID: String\? = nil/);
   assert.match(nativeModel, /var projects: \[ReflectionProject\]\? = nil/);
   assert.match(nativeModel, /struct ReflectionProject: Identifiable, Codable, Equatable/);
+  assert.match(nativeModel, /static let untitledName = "Untitled project"/);
+  assert.match(nativeModel, /static let legacyNewProjectName = "New project"/);
+  assert.match(nativeModel, /var displayName: String \{/);
   assert.match(nativeStore, /projects: \[ReflectionProject\] = \[\]/);
   assert.match(nativeStore, /snapshot\.projects = projects\.isEmpty \? nil : projects/);
   assert.match(nativeSession, /@Published var projects: \[ReflectionProject\] = \[\]/);
   assert.match(nativeSession, /projects: projects/);
-  // Left rail UI (2026-07-05): a prominent New Chat + a Projects grouping
-  // section above a flat Chats list, ChatGPT/Claude-familiar, on one glass pane.
+  // Left rail UI (2026-07-07): keep the existing project grouping, but present
+  // the visible work as LOOM drafts instead of chat furniture.
   assert.match(nativeRoot, /private var newChatRow: some View/);
+  assert.match(nativeRoot, /Text\("New Draft"\)/);
+  assert.match(nativeRoot, /title: "Drafts"/);
+  assert.doesNotMatch(nativeRoot, /Text\("New Chat"\)/);
+  assert.doesNotMatch(nativeRoot, /title: "Chats"/);
+  assert.match(nativeRoot, /private var displayTitle: String \{/);
+  assert.match(nativeRoot, /reflectionCase\.title == ReflectionCase\.untitledPlaceholder/);
+  assert.match(nativeRoot, /reflectionCase\.sources\.first\?\.label/);
+  assert.match(nativeRoot, /deletingPathExtension/);
+  assert.match(nativeRoot, /return "Untitled draft"/);
   assert.match(nativeRoot, /Image\(systemName: "folder\.badge\.plus"\)/);
   // Icon-first (owner 2026-07-05: 图标语言优先): a folder glyph on the project
   // row is the primary "this is a group" signal; the section labels demote to
   // quiet sentence case so a project instance no longer mimics a section header.
   assert.match(nativeRoot, /title: "Projects"/);
-  assert.match(nativeRoot, /title: "Chats"/);
   assert.match(nativeRoot, /Image\(systemName: showsExpanded \? "folder\.fill" : "folder"\)/);
-  assert.match(nativeRoot, /Text\(project\.name\)\n\s*\.font\(\.system\(size: 13, weight: \.medium\)\)/);
+  assert.match(nativeRoot, /ReflectionProject\(name: ReflectionProject\.untitledName/);
+  assert.match(nativeRoot, /Text\(project\.displayName\)\n\s*\.font\(\.system\(size: 13, weight: \.medium\)\)/);
+  assert.match(nativeRoot, /Button\(project\.displayName\) \{ onMoveToProject\(project\.id\) \}/);
   assert.doesNotMatch(nativeRoot, /Text\(project\.name\.uppercased\(\)\)/);
   // A row's Menu/contextMenu is cached by identity — fold the projects into the
   // row id so "Move to" refreshes when projects change in-session, not on relaunch.
   assert.match(nativeRoot, /private var projectMenuFingerprint: String/);
   // Sidebar craft polish (owner-audit 2026-07-05): drop the section-label
   // disclosure chevron (labels = non-collapsible furniture aligned to the name
-  // column), hover-only New Chat fill, unified icon size + row-height ladder.
+  // column), hover-only New Draft fill, unified icon size + row-height ladder.
   assert.match(nativeRoot, /Color\.clear\.frame\(width: 22, height: 1\)/);
   assert.match(nativeRoot, /if newChatHovering \{/);
   // Study index (2026-07-06): the week row collapses to ONE constant single
@@ -2941,7 +3041,7 @@ test('Reflection workspace is a separate product reflection workbench', () => {
   assert.match(nativeRoot, /private var sidebarCases: \[ReflectionCase\]/);
   assert.match(nativeRoot, /cases: sidebarCases/, 'the Explorer must hide fake blank rows in no-files state');
   assert.match(nativeRoot, /sourceCount: isWorkspaceEmpty \? 0 : selectedCase\.sources\.count/);
-  assert.match(nativeRoot, /sources: visibleBridgeSources/);
+  assert.doesNotMatch(nativeRoot, /sources: visibleBridgeSources/);
   assert.match(nativeRoot, /isWorkspaceEmpty: isWorkspaceEmpty/);
   assert.match(nativeRoot, /\.preferredColorScheme\(isWorkspaceEmpty \? \.dark : nil\)/, 'the no-files workbench stays in dark glass so the woven moon is not washed out by light mode');
   assert.match(nativeRoot, /if isWorkspaceEmpty \{[\s\S]{0,260}WorkbenchEmptyLauncher/);
@@ -3075,6 +3175,12 @@ test('Reflection workspace is a separate product reflection workbench', () => {
     /clickedOnLink[\s\S]{0,300}loom-source/,
     'chip clicks open the source through the workspace, not a raw file URL',
   );
+  assert.match(nativeRoot, /private struct ProjectSourcesList: View/);
+  assert.match(nativeRoot, /private struct ProjectSourceRow: View/);
+  assert.match(nativeRoot, /Text\(title\)[\s\S]{0,160}\.textCase\(\.uppercase\)/);
+  assert.match(nativeRoot, /ForEach\(sources\) \{ source in[\s\S]{0,260}ProjectSourceRow\(/);
+  assert.match(nativeRoot, /Label\("Open", systemImage: "book"\)/);
+  assert.match(nativeRoot, /help\(canOpen \? "Open source in Loom"/);
   assert.match(
     nativeRoot,
     /importSources\(from: urls, openAfterImport: false\)/,

@@ -86,6 +86,7 @@ function main() {
   fs.rmSync(archivePath, { recursive: true, force: true });
   fs.mkdirSync(path.dirname(archivePath), { recursive: true });
 
+  run(process.execPath, [path.join(repoRoot, 'scripts/ensure-xcode27-environment.mjs')]);
   run('xcodegen', ['generate'], { cwd: macosRoot });
   run('xcodebuild', archiveArgs(), { cwd: macosRoot });
   inspectArchive();

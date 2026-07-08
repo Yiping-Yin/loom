@@ -14,7 +14,7 @@
 
 - **Role**: Student / product owner of Loom (the application this document lives inside)
 - **Hardware**: MacBook Pro 16" (2024 model, M-series)
-- **Primary OS**: macOS 15+ (Sequoia/Tahoe era)
+- **Primary OS**: macOS 27+ (Xcode 27 local baseline)
 - **Languages**: Chinese (native) + English. Frequently mixes English technical terms into Chinese sentences. Comfortable reading either; prefers Chinese for nuanced design discussion, English for code/specs.
 - **Time zone**: Inferred from session timestamps; not yet explicitly recorded.
 - **Email**: yiping_yin0521@outlook.com
