@@ -14932,3 +14932,9 @@ body.loom-interlace-active .prose-notion > [data-loom-selected] {
   margin-top: 0.25rem;
   color: var(--vd-section-muted, var(--text-3));
 }
+
+/* Wiki pre-rendered diagrams (scripts/prerender-wiki-diagrams.mjs): light and
+   dark variants ship as static SVGs; the html.dark class flips visibility. */
+.wiki-diagram-dark { display: none; }
+html.dark .wiki-diagram-light { display: none; }
+html.dark .wiki-diagram-dark { display: block; }

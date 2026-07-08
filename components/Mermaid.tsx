@@ -1,11 +1,22 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import diagramMap from '../lib/wiki-diagram-map.json';
+import { diagramKey } from '../lib/wiki-diagram-key';
+
+/** Pre-rendered hash for this chart, when scripts/prerender-wiki-diagrams.mjs
+ * has seen it. Charts not yet in the map (a growing book) fall back to live
+ * mermaid rendering below. */
+function prerenderedHash(chart: string): string | undefined {
+  return (diagramMap as Record<string, string>)[diagramKey(chart)];
+}
 
 export function Mermaid({ chart }: { chart: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [showRaw, setShowRaw] = useState(false);
+  const pre = prerenderedHash(chart);
   useEffect(() => {
+    if (pre) return; // static SVGs ship with the page — no client mermaid
     let cancelled = false;
     (async () => {
       const mermaid = (await import('mermaid')).default;
@@ -27,7 +38,20 @@ export function Mermaid({ chart }: { chart: string }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [chart]);
+  }, [chart, pre]);
+
+  if (pre) {
+    // Build-time static render (light + dark), visibility flipped by the
+    // html.dark class — zero hydration dependency in the staged bundle.
+    return (
+      <div className="wiki-diagram" style={{ margin: '1.2rem 0' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/wiki-diagrams/${pre}.svg`} alt="diagram" className="wiki-diagram-light" style={{ maxWidth: '100%' }} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/wiki-diagrams/${pre}.dark.svg`} alt="diagram" className="wiki-diagram-dark" style={{ maxWidth: '100%' }} />
+      </div>
+    );
+  }
 
   if (error) {
     return (
