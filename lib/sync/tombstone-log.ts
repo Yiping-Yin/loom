@@ -3,7 +3,9 @@
  * A small localStorage list of `{ id, deletedAt }` per store, so a delete propagates
  * to other devices before being confirmed-pushed. SSR-safe, quota-safe.
  */
-import type { AsyncCollectionTombstone } from './async-collection-sync';
+// (Inlined when the cloud collection-sync layer was retired, 2026-07-08 —
+// tombstones remain a purely local deletion log.)
+export type AsyncCollectionTombstone = { id: string; deletedAt: number };
 
 export const TRACE_TOMBSTONES_KEY = 'loom.traces.tombstones.v1';
 export const PANEL_TOMBSTONES_KEY = 'loom.panels.tombstones.v1';

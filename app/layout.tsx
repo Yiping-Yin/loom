@@ -13,14 +13,10 @@ import { FreeInput } from '../components/FreeInput';
 import { IngestionOverlay } from '../components/IngestionOverlay';
 import { ExportAction } from '../components/ExportAction';
 import { CrystallizeListener } from '../components/CrystallizeListener';
-import { PanelSync } from '../components/PanelSync';
-import { WeaveSync } from '../components/WeaveSync';
 import { PageScopedChrome } from '../components/PageScopedChrome';
 import { AiKeyMissingBanner } from '../components/AiKeyMissingBanner';
 import { MigrationInstaller } from '../components/MigrationInstaller';
 import { InterlaceInstaller } from '../components/InterlaceInstaller';
-import { ArtifactSyncInstaller } from '../components/ArtifactSyncInstaller';
-import { LearningSyncInstaller } from '../components/LearningSyncInstaller';
 
 
 export const metadata = {
@@ -94,12 +90,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <IngestionOverlay />
         <ExportAction />
         <CrystallizeListener />
-        <PanelSync />
-        <WeaveSync />
         <MigrationInstaller />
         <InterlaceInstaller />
-        <ArtifactSyncInstaller />
-        <LearningSyncInstaller />
         </FocusLayerProvider>
       </body>
     </html>
