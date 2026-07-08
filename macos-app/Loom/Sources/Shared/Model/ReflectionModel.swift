@@ -59,6 +59,26 @@ struct ReflectionProject: Identifiable, Codable, Equatable {
     var order: Int
     var createdAt: Date = Date()
 
+    // Three-column division (ratified 2026-07-08, docs/canon/
+    // THREE_COLUMN_DIVISION.md): a project can be a COURSE containing one
+    // level of GROUPS. All four fields optional + declared LAST — legacy
+    // blobs decode as plain flat projects with zero migration.
+
+    /// One-level nesting: set = this project is a GROUP inside the course
+    /// with that id. Depth is capped by construction — resolution treats a
+    /// child-of-a-child (or a dangling parent) as top level, never deeper
+    /// (CourseOrganize.isTopLevel).
+    var parentID: String? = nil
+    /// Course-level spine: the ContentRoot (UUID string) of the bound real
+    /// course folder. LOOM reads that folder; it never writes it (ruling ③).
+    var contentRootID: String? = nil
+    /// Group-level spine: which subfolder of the course root this group is
+    /// bound to. Bookmark-first (survives Finder renames); subPath is
+    /// display/fallback.
+    var folderBinding: FolderBinding? = nil
+    /// The per-course Auto Organize template (courses only).
+    var organizeTemplate: OrganizeTemplate? = nil
+
     var displayName: String {
         name == Self.legacyNewProjectName ? Self.untitledName : name
     }
