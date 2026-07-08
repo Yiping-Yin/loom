@@ -240,7 +240,7 @@ struct SourceFileView: View {
             } label: {
                 Image(systemName: "slider.horizontal.3")
             }
-            .menuStyle(.borderlessButton)
+            .menuStyle(.button)
             .menuIndicator(.hidden)
             .fixedSize()
             .help("View options")
@@ -250,7 +250,7 @@ struct SourceFileView: View {
             Button { openFind() } label: { Image(systemName: "magnifyingglass") }
                 .help("Find in document (⌘F)").accessibilityLabel("Find in document").keyboardShortcut("f", modifiers: .command)
             Button { pdfHolder.toggleFullScreen() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
-                .help("Full screen (⌃⌘F)").accessibilityLabel("Full screen").keyboardShortcut("f", modifiers: [.control, .command])
+                .help("Full screen (⇧⌘F)").accessibilityLabel("Full screen").keyboardShortcut("f", modifiers: [.shift, .command])
 
             // The reader's close (owner 2026-07-06): a quiet ✕ that reuses the
             // find bar's own close glyph — NOT a filled accent block (青芒 =
@@ -293,8 +293,10 @@ struct SourceFileView: View {
             Spacer(minLength: 8)
 
             Button { pdfHolder.findPrevious() } label: { Image(systemName: "chevron.up") }
+                .keyboardShortcut("g", modifiers: [.command, .shift])
                 .help("Previous match (⇧⏎)").disabled(pdfHolder.findMatchLabel.isEmpty || pdfHolder.findMatchLabel == "No results")
             Button { pdfHolder.findNext() } label: { Image(systemName: "chevron.down") }
+                .keyboardShortcut("g", modifiers: .command)
                 .help("Next match (⏎)").disabled(pdfHolder.findMatchLabel.isEmpty || pdfHolder.findMatchLabel == "No results")
             Button { pdfHolder.closeFind() } label: { Image(systemName: "xmark") }
                 .help("Done (Esc)").keyboardShortcut(.cancelAction)
@@ -508,6 +510,7 @@ struct SourceFileView: View {
         .onChange(of: pdfHolder.currentPageIndex) { _, pageIndex in
             readerPageStateHandler?(pageIndex, pdfHolder.pageCount)
         }
+        .modifier(ReaderDocumentProxy(url: pdfHolder.documentURL))
         .onChange(of: pdfHolder.pageCount) { _, pageCount in
             readerPageStateHandler?(pdfHolder.currentPageIndex, pageCount)
         }
@@ -2896,10 +2899,16 @@ struct SourceTraceRailItem: Identifiable, Equatable {
     }
 }
 
-final class PDFViewHolder: ObservableObject {
+final class PDFViewHolder: NSObject, ObservableObject, PDFDocumentDelegate {
     weak var pdfView: PDFView?
     /// Set once the document is loaded — used to key per-file scroll memory.
     var documentURL: URL?
+    /// Anchor jump requested before the document finished loading — parked
+    /// here and applied on the next PDFKit readiness notification instead of
+    /// guessing with a timer (charter §15: handshake, not sleep). A repeat
+    /// jump to the same anchor re-parks and re-applies, so clicking the same
+    /// citation twice always re-scrolls.
+    private var pendingJump: (page: Int, rect: CGRect)?
 
     // Live reading state for the reader toolbar (owner 2026-07-06: wire the
     // native PDFView controls LOOM wasn't surfacing). Updated off PDFKit's own
@@ -2928,6 +2937,8 @@ final class PDFViewHolder: ObservableObject {
     private var findMatches: [PDFSelection] = []
     private var findIndex = 0
     private var findWorkItem: DispatchWorkItem?
+    /// Accumulator for the async beginFindString delegate stream.
+    private var liveFindHits: [PDFSelection] = []
 
     private var observers: [NSObjectProtocol] = []
 
@@ -2948,6 +2959,11 @@ final class PDFViewHolder: ObservableObject {
     }
 
     func refresh() {
+        if let pending = pendingJump, let view = pdfView, let doc = view.document,
+           pending.page >= 0, pending.page < doc.pageCount {
+            pendingJump = nil
+            applyJump(toPage: pending.page, rect: pending.rect, view: view, document: doc)
+        }
         guard let view = pdfView, let doc = view.document, doc.pageCount > 0 else {
             hasPDF = false; pageLabel = ""; scaleLabel = ""; canZoomIn = false; canZoomOut = false
             currentPageIndex = 0; pageCount = 0
@@ -2973,16 +2989,32 @@ final class PDFViewHolder: ObservableObject {
     private func persistPosition() {
         guard let url = documentURL, let view = pdfView, let doc = view.document,
               let page = view.currentPage else { return }
-        UserDefaults.standard.set(doc.index(for: page), forKey: positionKey(url))
+        // Charter §15: persist the full destination (page + point), not a bare
+        // page index, so reopening lands mid-page where the reader left off.
+        if let dest = view.currentDestination, let destPage = dest.page {
+            let point = dest.point
+            UserDefaults.standard.set("\(doc.index(for: destPage))|\(point.x)|\(point.y)",
+                                      forKey: positionKey(url))
+        } else {
+            UserDefaults.standard.set("\(doc.index(for: page))", forKey: positionKey(url))
+        }
     }
 
-    /// Jump to the last page this file was left on (no-op the first time).
+    /// Jump to the last destination this file was left at (no-op the first
+    /// time). Reads both the current "page|x|y" form and the legacy bare
+    /// page-index values.
     func restorePosition(for url: URL) {
         documentURL = url
-        guard let view = pdfView, let doc = view.document else { return }
-        let saved = UserDefaults.standard.object(forKey: positionKey(url)) as? Int
-        guard let idx = saved, idx > 0, idx < doc.pageCount, let page = doc.page(at: idx) else { return }
-        view.go(to: page)
+        guard let view = pdfView, let doc = view.document,
+              let saved = UserDefaults.standard.string(forKey: positionKey(url)) else { return }
+        let parts = saved.split(separator: "|")
+        guard let first = parts.first, let idx = Int(first),
+              idx > 0, idx < doc.pageCount, let page = doc.page(at: idx) else { return }
+        if parts.count == 3, let x = Double(parts[1]), let y = Double(parts[2]) {
+            view.go(to: PDFDestination(page: page, at: NSPoint(x: x, y: y)))
+        } else {
+            view.go(to: page)
+        }
         refresh()
     }
 
@@ -3070,6 +3102,7 @@ final class PDFViewHolder: ObservableObject {
 
     func closeFind() {
         findWorkItem?.cancel()
+        if pdfView?.document?.isFinding == true { pdfView?.document?.cancelFindString() }
         isFindOpen = false
         findText = ""
         findMatchLabel = ""
@@ -3098,15 +3131,35 @@ final class PDFViewHolder: ObservableObject {
     }
 
     private func performFind(_ text: String, in doc: PDFDocument) {
-        let hits = doc.findString(text, withOptions: [.caseInsensitive, .diacriticInsensitive])
-        findMatches = hits
-        findIndex = 0
-        for hit in hits { hit.color = NSColor.systemYellow.withAlphaComponent(0.42) }
-        pdfView?.highlightedSelections = hits
-        if hits.isEmpty {
-            findMatchLabel = "No results"
-        } else {
-            focusMatch(0)
+        // Charter §10: PDFKit's async find (beginFindString + delegate
+        // stream) instead of the synchronous whole-document findString,
+        // which hitched the main thread on reading-sized-but-heavy PDFs.
+        if doc.isFinding { doc.cancelFindString() }
+        doc.delegate = self
+        liveFindHits = []
+        findMatchLabel = "Searching…"
+        doc.beginFindString(text, withOptions: [.caseInsensitive, .diacriticInsensitive])
+    }
+
+    // MARK: PDFDocumentDelegate — async find stream
+
+    func didMatchString(_ instance: PDFSelection) {
+        liveFindHits.append(instance)
+    }
+
+    func documentDidEndDocumentFind(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let hits = self.liveFindHits
+            self.findMatches = hits
+            self.findIndex = 0
+            for hit in hits { hit.color = NSColor.systemYellow.withAlphaComponent(0.42) }
+            self.pdfView?.highlightedSelections = hits
+            if hits.isEmpty {
+                self.findMatchLabel = "No results"
+            } else {
+                self.focusMatch(0)
+            }
         }
     }
 
@@ -3158,8 +3211,18 @@ final class PDFViewHolder: ObservableObject {
     /// Jump to a specific page + rect in the open PDF, used by the
     /// anchor links inside Loom.md note rendering.
     func go(toPage pageIndex: Int, rect: CGRect) {
-        guard let view = pdfView, let document = view.document else { return }
-        guard pageIndex >= 0, pageIndex < document.pageCount else { return }
+        guard let view = pdfView, let document = view.document,
+              pageIndex >= 0, pageIndex < document.pageCount else {
+            // Reader still mounting / document still loading: park the jump.
+            // refresh() applies it when PDFKit posts document readiness —
+            // no fixed sleeps, no silently swallowed jumps (charter §15).
+            pendingJump = (pageIndex, rect)
+            return
+        }
+        applyJump(toPage: pageIndex, rect: rect, view: view, document: document)
+    }
+
+    private func applyJump(toPage pageIndex: Int, rect: CGRect, view: PDFView, document: PDFDocument) {
         guard let page = document.page(at: pageIndex) else { return }
         // Page-only anchor (a Preview capture where no rect was recovered):
         // land at the TOP of the page, no highlight — never the bottom-left.
@@ -3942,6 +4005,12 @@ private struct LoomQuickLookView: NSViewRepresentable {
     func updateNSView(_ nsView: QLPreviewView, context: Context) {
         nsView.previewItem = fileURL as QLPreviewItem
     }
+
+    // Charter §14: QLPreviewView must be close()'d on teardown or its XPC
+    // preview host leaks past the view's lifetime.
+    static func dismantleNSView(_ nsView: QLPreviewView, coordinator: ()) {
+        nsView.close()
+    }
 }
 
 extension Notification.Name {
@@ -4041,5 +4110,20 @@ final class SubmitOnReturnTextView: NSTextView {
             }
         }
         super.keyDown(with: event)
+    }
+}
+
+
+/// Charter §14: while a file is open in the reader, the window carries the
+/// standard document proxy icon (drag it, ⌘-click the title for the path) —
+/// the same affordance every native document window has.
+private struct ReaderDocumentProxy: ViewModifier {
+    let url: URL?
+    func body(content: Content) -> some View {
+        if let url {
+            content.navigationDocument(url)
+        } else {
+            content
+        }
     }
 }
