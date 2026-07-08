@@ -180,6 +180,7 @@
 		A4B5CEDEF7D344FCF557FCF9 /* DataSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1156569530AB7717DB156134 /* DataSettingsView.swift */; };
 		A4E5B5FECA3BB697EF82D35A /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCC4BC0CA44A965804B6379 /* OpenAIClient.swift */; };
 		A5382CF150DF464280FD5759 /* LoomLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAFA6A09B96B3B4B9DA4B97D /* LoomLibraryView.swift */; };
+		A8DD6328A970053AF4563376 /* AskSelectionCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F64CC6C05D87F44CB9FCA8 /* AskSelectionCaptureTests.swift */; };
 		A8FC963D7F94BDA1AD885AC1 /* KnowledgeSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F63E9380FCFE0EDDE2132F /* KnowledgeSidebarView.swift */; };
 		A9F1F83F562C3C570816EEDE /* infs-3822.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 185A77413B79C1A53A1C4E46 /* infs-3822.meta.json */; };
 		A9F2267D934896F2B63CEC1F /* LoomPursuitHideBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275615541351E46514458B90 /* LoomPursuitHideBridgeHandler.swift */; };
@@ -249,6 +250,7 @@
 		E7BF34FD0C07A860D7EDF7CA /* AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FB7FB27D296C4561FB05F6 /* AppearanceSettingsView.swift */; };
 		EA3527C93ECEB93574442C7E /* ReflectionTraceRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90FDFCB686D9AF8FAF403E6 /* ReflectionTraceRecord.swift */; };
 		EAB34604E8E1400EC66737CC /* LoomDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426B9DFFC4CCBC589C0628DC /* LoomDraftStore.swift */; };
+		ED8C2573CBC3C35A9290DE24 /* AskSelectionCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 600390BDA56BB5DB2E237835 /* AskSelectionCapture.swift */; };
 		EDD96E7B8123D80212C69028 /* SpreadsheetExtractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2AFF9C80CD8DAF7731D74A3 /* SpreadsheetExtractorTests.swift */; };
 		EE6405622EA7E4B131B913A1 /* CleanText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E454D515C7F6CE1C33909A /* CleanText.swift */; };
 		EF09133152D4824B71D484F0 /* ReflectionLearningRecordExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AA1215FEE5BD1DECF3002F /* ReflectionLearningRecordExporterTests.swift */; };
@@ -317,6 +319,7 @@
 		10D2D413F2722292ADA71EA5 /* comm-3030.meta.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "comm-3030.meta.json"; sourceTree = "<group>"; };
 		1156569530AB7717DB156134 /* DataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsView.swift; sourceTree = "<group>"; };
 		120EC93BD01487018FF4B961 /* filename-leak-course-name-term.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "filename-leak-course-name-term.schema.json"; sourceTree = "<group>"; };
+		12F64CC6C05D87F44CB9FCA8 /* AskSelectionCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskSelectionCaptureTests.swift; sourceTree = "<group>"; };
 		1300C0B402C8B9621FF9F7B0 /* comm-3030.input.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "comm-3030.input.txt"; sourceTree = "<group>"; };
 		1352B462522AFAA4443179B8 /* NavigationBridgeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationBridgeHandler.swift; sourceTree = "<group>"; };
 		138B87C1D42BF66CA68AB4DF /* FragmentSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentSchema.swift; sourceTree = "<group>"; };
@@ -398,6 +401,7 @@
 		5D7EE70B9F4AD1E582CBDAFF /* comm-3030.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "comm-3030.schema.json"; sourceTree = "<group>"; };
 		5F44B1105F482E8D7D93E42D /* EveningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EveningView.swift; sourceTree = "<group>"; };
 		5F8063D162F8C70BE55DD578 /* CaptureURLRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureURLRouter.swift; sourceTree = "<group>"; };
+		600390BDA56BB5DB2E237835 /* AskSelectionCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskSelectionCapture.swift; sourceTree = "<group>"; };
 		6197B174A46D3B3A28E53F41 /* filename-leak-course-name-term.filename.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "filename-leak-course-name-term.filename.txt"; sourceTree = "<group>"; };
 		61A02B85D9C6394D6362789A /* MotionTokensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionTokensTests.swift; sourceTree = "<group>"; };
 		61A5887D754D7E6CFE10302B /* ContentRootStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRootStore.swift; sourceTree = "<group>"; };
@@ -647,6 +651,7 @@
 			isa = PBXGroup;
 			children = (
 				07D68A3A3AF8272C96CB79CC /* AskAIWindow.swift */,
+				600390BDA56BB5DB2E237835 /* AskSelectionCapture.swift */,
 				EC67D6C99E2CA65A9C8282F3 /* LoomAIBar.swift */,
 			);
 			path = AI;
@@ -911,6 +916,7 @@
 			children = (
 				00599DFB275B7B8000591296 /* AnthropicClientTests.swift */,
 				940707A3D2714DC2DB60358D /* AskAIRunnerTests.swift */,
+				12F64CC6C05D87F44CB9FCA8 /* AskSelectionCaptureTests.swift */,
 				BD031FF67290A6EA1C70B6FE /* CapturePlacementTests.swift */,
 				9B88D06B0A8609F4723EA178 /* CapturesIndexDeleteTests.swift */,
 				CAC8911B39C40A490D19DE83 /* CaptureURLRouterTests.swift */,
@@ -1441,6 +1447,7 @@
 				E7BF34FD0C07A860D7EDF7CA /* AppearanceSettingsView.swift in Sources */,
 				C71D99B9B8B7D2D15A5776B1 /* AppleFoundationClient.swift in Sources */,
 				E4329A08DF5B594547771FC1 /* AskAIWindow.swift in Sources */,
+				ED8C2573CBC3C35A9290DE24 /* AskSelectionCapture.swift in Sources */,
 				69144E39C57FBB3EB54571BF /* CLIRuntimeClient.swift in Sources */,
 				FE2666851DA14E8AFCA1B639 /* CaptureHelpView.swift in Sources */,
 				CC95D9B696E8BD57B17BB187 /* CaptureSettingsView.swift in Sources */,
@@ -1568,6 +1575,7 @@
 			files = (
 				34EDC9CDD79A48A8FB22EDE7 /* AnthropicClientTests.swift in Sources */,
 				34ADAD0AE80A2254DBDDD625 /* AskAIRunnerTests.swift in Sources */,
+				A8DD6328A970053AF4563376 /* AskSelectionCaptureTests.swift in Sources */,
 				1A721B8D7F00C56477EFA186 /* CLIRuntimeClientTests.swift in Sources */,
 				825756E355334BF27477DDE9 /* CapturePlacementTests.swift in Sources */,
 				022649047CA2ABC4B458E7D8 /* CaptureURLRouterTests.swift in Sources */,

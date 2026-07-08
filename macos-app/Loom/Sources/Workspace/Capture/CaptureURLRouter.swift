@@ -67,9 +67,24 @@ enum CaptureURLRouter {
 /// transport the pasteboard would re-decode to whatever the user copied
 /// since. The AppleEvent handler expires the parked entry shortly after
 /// posting for the same reason.
+///
+/// The settle-dance semantics above only cover instances of the SAME
+/// shell. Two DIFFERENT live shells can also subscribe at once — the
+/// reflection workspace (primary; the main window and the AppKit
+/// fallback window both mount it) and the "You" dossier window
+/// (secondary) — and per-instance token gating alone let both present
+/// a CaptureSheet for one capture. The shell-arbitration members below
+/// make delivery single-consumer across shells: primaries register
+/// while mounted and keep presenting exactly as before; a secondary
+/// consumes a delivery only when NO primary is mounted, and its claim
+/// is recorded so a primary mounting moments later (the capture
+/// handler re-opens the main window) skips the already-presented
+/// delivery.
 @MainActor
 enum LoomCaptureURLRelay {
     private static var parked: (url: URL, token: UUID)?
+    private static var mountedPrimaryShells = 0
+    private static var secondaryClaimedTokens: Set<UUID> = []
 
     static func savePending(_ url: URL, token: UUID) {
         parked = (url, token)
@@ -90,5 +105,37 @@ enum LoomCaptureURLRelay {
     static func clear(ifToken token: UUID) {
         guard parked?.token == token else { return }
         parked = nil
+    }
+
+    // MARK: - Cross-shell arbitration
+
+    /// The reflection workspace calls these from onAppear/onDisappear.
+    /// A count, not a flag: the launch settle dance can mount several
+    /// primary instances at once.
+    static func registerPrimaryShell() {
+        mountedPrimaryShells += 1
+    }
+
+    static func unregisterPrimaryShell() {
+        mountedPrimaryShells = max(0, mountedPrimaryShells - 1)
+    }
+
+    /// A secondary shell (the dossier window) asks before presenting a
+    /// delivery — from either the notification or the parked-URL pickup
+    /// on appear. Grants only when no primary shell is mounted, at most
+    /// once per token; a tokenless delivery can't be deduped across
+    /// shells, so it is granted without being recorded.
+    static func claimForSecondaryShell(token: UUID?) -> Bool {
+        guard mountedPrimaryShells == 0 else { return false }
+        guard let token else { return true }
+        return secondaryClaimedTokens.insert(token).inserted
+    }
+
+    /// Primary shells skip deliveries a secondary already presented —
+    /// the dossier-only capture path re-opens the main window, and the
+    /// primary mounting into it must not show a second sheet.
+    static func claimedBySecondaryShell(token: UUID?) -> Bool {
+        guard let token else { return false }
+        return secondaryClaimedTokens.contains(token)
     }
 }

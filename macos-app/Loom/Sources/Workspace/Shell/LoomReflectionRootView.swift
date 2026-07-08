@@ -445,12 +445,19 @@ struct LoomReflectionRootView: View {
             jumpToAnchor(sourceID: sourceID, page: page, rect: rect)
         }
         .onAppear {
+            // Primary capture shell: while any instance is mounted, the
+            // dossier window defers capture presentation to us (see
+            // `LoomCaptureURLRelay` cross-shell arbitration).
+            LoomCaptureURLRelay.registerPrimaryShell()
             if normalizeUntouchedProductReflections() {
                 persistWorkspace()
             }
             consumePendingCapture()
             consumePendingExternalFiles()
             consumePendingExternalSelection()
+        }
+        .onDisappear {
+            LoomCaptureURLRelay.unregisterPrimaryShell()
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in createReflection() }
         .onReceive(NotificationCenter.default.publisher(for: .loomExportLearningRecord)) { _ in exportLearningRecord() }
@@ -492,6 +499,7 @@ struct LoomReflectionRootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .loomCaptureFromURL)) { note in
             let token = note.userInfo?["token"] as? UUID
             if let token, token == lastHandledCaptureToken { return }
+            if LoomCaptureURLRelay.claimedBySecondaryShell(token: token) { return }
             lastHandledCaptureToken = token
             handleCaptureRoute(CaptureURLRouter.route(userInfo: note.userInfo))
         }
@@ -958,7 +966,8 @@ struct LoomReflectionRootView: View {
 
     private func consumePendingCapture() {
         guard let pending = LoomCaptureURLRelay.pending(),
-              pending.token != lastHandledCaptureToken else { return }
+              pending.token != lastHandledCaptureToken,
+              !LoomCaptureURLRelay.claimedBySecondaryShell(token: pending.token) else { return }
         lastHandledCaptureToken = pending.token
         handleCaptureRoute(CaptureURLRouter.route(url: pending.url))
     }

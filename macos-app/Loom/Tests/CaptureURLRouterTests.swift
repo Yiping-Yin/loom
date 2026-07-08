@@ -153,3 +153,75 @@ final class LoomCaptureURLRelayTests: XCTestCase {
         XCTAssertNil(LoomCaptureURLRelay.pending())
     }
 }
+
+/// Cross-shell arbitration: two DIFFERENT live shells can subscribe to
+/// `.loomCaptureFromURL` at once — the reflection workspace (primary;
+/// main window and the AppKit fallback window both mount it) and the
+/// "You" dossier window (secondary). Per-instance token gating alone
+/// let BOTH present a CaptureSheet for the same capture. The relay
+/// arbitrates: primaries keep the settle-dance semantics (every
+/// mounting instance may present), while a secondary only consumes a
+/// delivery when no primary shell is mounted — and its claim is
+/// recorded so a primary that mounts moments later (the capture
+/// handler re-opens the main window) does not re-present.
+@MainActor
+final class LoomCaptureShellArbitrationTests: XCTestCase {
+
+    func testSecondaryClaimSucceedsWhenNoPrimaryShellMounted() {
+        let token = UUID()
+        XCTAssertTrue(LoomCaptureURLRelay.claimForSecondaryShell(token: token))
+        XCTAssertTrue(LoomCaptureURLRelay.claimedBySecondaryShell(token: token))
+    }
+
+    func testSecondaryDefersWhilePrimaryShellMountedThenClaimsAfterUnregister() {
+        let token = UUID()
+        LoomCaptureURLRelay.registerPrimaryShell()
+        XCTAssertFalse(LoomCaptureURLRelay.claimForSecondaryShell(token: token))
+        XCTAssertFalse(LoomCaptureURLRelay.claimedBySecondaryShell(token: token))
+        LoomCaptureURLRelay.unregisterPrimaryShell()
+        XCTAssertTrue(LoomCaptureURLRelay.claimForSecondaryShell(token: token))
+    }
+
+    func testSecondaryDefersUntilEveryLaunchDancePrimaryUnmounts() {
+        // The launch window-settling dance can mount SEVERAL primary
+        // instances (SwiftUI scene + AppKit fallback); the secondary
+        // must defer while ANY of them is still alive.
+        let token = UUID()
+        LoomCaptureURLRelay.registerPrimaryShell()
+        LoomCaptureURLRelay.registerPrimaryShell()
+        LoomCaptureURLRelay.unregisterPrimaryShell()
+        XCTAssertFalse(LoomCaptureURLRelay.claimForSecondaryShell(token: token))
+        LoomCaptureURLRelay.unregisterPrimaryShell()
+        XCTAssertTrue(LoomCaptureURLRelay.claimForSecondaryShell(token: token))
+    }
+
+    func testSecondaryClaimIsSingleUsePerToken() {
+        // The dossier sees the same delivery twice (relay pickup on
+        // appear + the notification); the second sighting must not
+        // re-present.
+        let token = UUID()
+        XCTAssertTrue(LoomCaptureURLRelay.claimForSecondaryShell(token: token))
+        XCTAssertFalse(LoomCaptureURLRelay.claimForSecondaryShell(token: token))
+        // A NEW capture (fresh token) is a separate delivery.
+        XCTAssertTrue(LoomCaptureURLRelay.claimForSecondaryShell(token: UUID()))
+    }
+
+    func testPrimarySkipsTokenAlreadyClaimedBySecondary() {
+        // Dossier-only capture re-opens the main window; the primary
+        // that mounts afterwards must not present the same delivery.
+        let token = UUID()
+        XCTAssertFalse(LoomCaptureURLRelay.claimedBySecondaryShell(token: token))
+        XCTAssertTrue(LoomCaptureURLRelay.claimForSecondaryShell(token: token))
+        XCTAssertTrue(LoomCaptureURLRelay.claimedBySecondaryShell(token: token))
+    }
+
+    func testTokenlessDeliveryClaimsWithoutRecording() {
+        // A delivery with no token can't be deduped across shells —
+        // allow it when no primary is mounted, but record nothing.
+        XCTAssertTrue(LoomCaptureURLRelay.claimForSecondaryShell(token: nil))
+        XCTAssertFalse(LoomCaptureURLRelay.claimedBySecondaryShell(token: nil))
+        LoomCaptureURLRelay.registerPrimaryShell()
+        XCTAssertFalse(LoomCaptureURLRelay.claimForSecondaryShell(token: nil))
+        LoomCaptureURLRelay.unregisterPrimaryShell()
+    }
+}

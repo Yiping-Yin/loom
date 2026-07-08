@@ -1773,16 +1773,20 @@ struct AboutMenuItem: View {
 /// ⌘⇧E opens the native Ask AI window — Phase 4 ChatFocus first slice.
 /// Streams from the user's configured provider, no webview hop.
 ///
-/// Posts `.loomOpenAskAI` instead of calling `openWindow` directly so
-/// ContentView's Coordinator can first capture any webview selection and
-/// stash it into `AskAIContext.shared.pendingPrompt` before the window
-/// opens. Coordinator forwards to `.loomOpenAskAIWindow`, which the
-/// `WindowOpener` helper inside the main scene turns into an actual
-/// `openWindow(id:)` call.
+/// Captures the key window's current text selection (reader PDFView or
+/// editor NSTextView, via `AskSelectionCapture`) into `AskAIContext`,
+/// then posts `.loomOpenAskAIWindow` for the main scene's `WindowOpener`
+/// to turn into an actual `openWindow(id:)` call — same route as
+/// "Ask About a File…". No selection just opens the window blank.
+///
+/// (Used to post `.loomOpenAskAI` for ContentView's Coordinator to do a
+/// webview-JS capture first, but ContentView never mounts since the
+/// Reflection pivot, so that made ⌘⇧E a silent no-op.)
 struct AskAIMenuItem: View {
     var body: some View {
         Button("Ask Selection") {
-            NotificationCenter.default.post(name: .loomOpenAskAI, object: nil)
+            AskSelectionCapture.seedFromKeyWindow()
+            NotificationCenter.default.post(name: .loomOpenAskAIWindow, object: nil)
         }
         .keyboardShortcut("e", modifiers: [.command, .shift])
     }
@@ -2278,13 +2282,15 @@ extension Notification.Name {
     /// ContentView maps the `"tab"` userInfo string to the matching
     /// `MainSurface` and swaps the detail column content in place.
     static let loomShowInspectorTab = Notification.Name("loomShowInspectorTab")
-    /// Posted by the Edit-menu "Ask AI" item / ⌘⇧E shortcut. Coordinator
-    /// intercepts, captures any webview selection into AskAIContext, then
-    /// reposts as `.loomOpenAskAIWindow` for the main window's WindowOpener.
+    /// Legacy: was posted by ⌘⇧E for ContentView's Coordinator to do a
+    /// webview selection capture. No live poster — ⌘⇧E now captures via
+    /// `AskSelectionCapture` and posts `.loomOpenAskAIWindow` directly.
+    /// Kept only because the unmounted ContentView still observes it;
+    /// removing ContentView is owner-gated.
     static let loomOpenAskAI = Notification.Name("loomOpenAskAI")
-    /// Posted by Coordinator once selection capture completes. The main
-    /// window's `WindowOpener` owns `@Environment(\.openWindow)` and
-    /// handles the actual scene open.
+    /// Posted by "Ask Selection" (⌘⇧E) and "Ask About a File…" after any
+    /// AskAIContext seeding. The main window's `WindowOpener` owns
+    /// `@Environment(\.openWindow)` and handles the actual scene open.
     static let loomOpenAskAIWindow = Notification.Name("loomOpenAskAIWindow")
     /// Posted by the Edit-menu "Rehearsal" item / ⌘⇧R shortcut so
     /// Coordinator can seed RehearsalContext with the webview's

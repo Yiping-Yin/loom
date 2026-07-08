@@ -24,11 +24,15 @@ struct LoomDossierRootView: View {
 
     /// Phase A3 web capture — the extension/bookmarklet fires
     /// `loom://capture?…`, the AppleEvent handler posts
-    /// `.loomCaptureFromURL`, and the MOUNTED root view must consume it.
-    /// This shell is mounted by both the SwiftUI scene window and
-    /// `AppDelegate.createFallbackMainWindow()`, so handling it here
-    /// covers both. (The previous consumer lived in the unmounted
-    /// `LoomMinimalRootView`, which silently dropped every capture.)
+    /// `.loomCaptureFromURL`, and a mounted root view must consume it.
+    /// This shell is the SECONDARY consumer: the primary root is
+    /// `LoomReflectionRootView` (mounted by the main scene window,
+    /// `LoomApp.body`, and by `AppDelegate.createFallbackMainWindow()`),
+    /// while this view is mounted only by the auxiliary "You" dossier
+    /// window. It presents a capture only when no primary shell is
+    /// alive — e.g. the main window was closed and the dossier is the
+    /// sole surface left — via `LoomCaptureURLRelay`'s cross-shell
+    /// arbitration; otherwise both windows would present one capture.
     @State private var capturePayload: CapturePayload?
     @State private var captureToast: String?
     @State private var lastCaptureURL: URL?
@@ -59,7 +63,8 @@ struct LoomDossierRootView: View {
                 // Cold launch: the AppleEvent handler ran before this view
                 // subscribed and parked the capture URL in the relay.
                 guard let pending = LoomCaptureURLRelay.pending(),
-                      pending.token != lastHandledCaptureToken else { return }
+                      pending.token != lastHandledCaptureToken,
+                      LoomCaptureURLRelay.claimForSecondaryShell(token: pending.token) else { return }
                 lastHandledCaptureToken = pending.token
                 loomCaptureLog("Dossier root: picked up pending capture URL on appear")
                 handleCaptureRoute(CaptureURLRouter.route(url: pending.url))
@@ -67,6 +72,7 @@ struct LoomDossierRootView: View {
             .onReceive(NotificationCenter.default.publisher(for: .loomCaptureFromURL)) { note in
                 let token = note.userInfo?["token"] as? UUID
                 if let token, token == lastHandledCaptureToken { return }
+                guard LoomCaptureURLRelay.claimForSecondaryShell(token: token) else { return }
                 lastHandledCaptureToken = token
                 loomCaptureLog("Dossier root: received capture notification")
                 handleCaptureRoute(CaptureURLRouter.route(userInfo: note.userInfo))
