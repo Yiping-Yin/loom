@@ -66,7 +66,7 @@ struct LoomHelpView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
                     helpRow("person.crop.circle", "You", "Your evidenced self — education, experience, and the knowledge you've built. Open it from the bottom-left of the sidebar.")
-                    helpRow("moon.stars", "About Loom", "What this app is, and its version.")
+                    helpRow("info.circle", "About Loom", "What this app is, and its version.")
                     helpRow("gearshape", "Settings", "Providers, data, and capture — ⌘,")
                     helpRow("keyboard", "Keyboard Shortcuts", "The full list — ⌘⇧?")
                 }
