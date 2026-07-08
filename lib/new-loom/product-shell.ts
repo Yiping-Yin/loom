@@ -77,6 +77,8 @@ export const NEW_LOOM_SUPPORT_ROUTES: readonly string[] = [
 ];
 
 export const NEW_LOOM_INTERNAL_ROUTES: readonly string[] = [
+  // The native You window's dossier route (B1 retarget, 2026-07-08).
+  '/you',
   '/doc',
 ];
 
