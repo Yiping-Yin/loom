@@ -17,7 +17,7 @@ test('native shell explicitly syncs the resolved theme into the webview', () => 
   const host = read('macos-app/Loom/Sources/DigitalMe/Dossier/LoomDossierRootView.swift');
 
   assert.match(host, /private var forcedTheme: String/);
-  assert.match(host, /LoomWebView\(url: server\.webviewURL, debugState: webState, forcedTheme: forcedTheme\)/);
+  assert.match(host, /LoomWebView\(url: dossierURL, debugState: webState, forcedTheme: forcedTheme\)/);
   assert.match(source, /let forcedTheme: String/);
   assert.match(source, /static func themeSyncScript\(mode: String\) -> String/);
   assert.match(source, /localStorage\.setItem\('wiki:theme', mode\)/);

@@ -48,8 +48,17 @@ struct LoomDossierRootView: View {
     /// "light" choice opts out.
     private var forcedTheme: String { theme == "light" ? "light" : "dark" }
 
+    /// Dossier retarget (ONE-digital-me, owner 2026-07-08): the You window
+    /// opens the owner's verified dossier (/you = HomeClient, no localStorage
+    /// gate, no Example ribbon) instead of the legacy stranger landing at
+    /// bundle root — the native webview's empty localStorage used to drop the
+    /// sole owner onto a GTM onboarding cover.
+    private var dossierURL: URL {
+        URL(string: "loom://bundle/you.html") ?? server.webviewURL
+    }
+
     var body: some View {
-        LoomWebView(url: server.webviewURL, debugState: webState, forcedTheme: forcedTheme)
+        LoomWebView(url: dossierURL, debugState: webState, forcedTheme: forcedTheme)
             .ignoresSafeArea()
             .background(LoomTokens.dsPaperDeep.ignoresSafeArea())
             .sheet(isPresented: Binding<Bool>(
