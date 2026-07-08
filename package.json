@@ -48,7 +48,8 @@
     "app:preflight": "node scripts/app-store-preflight.mjs",
     "app:where": "node scripts/where-loom-app.mjs",
     "app:open": "if [ -d \"$HOME/Applications/Loom.app\" ]; then open \"$HOME/Applications/Loom.app\"; else open /Applications/Loom.app; fi",
-    "typecheck:fast": "tsc --noEmit -p tsconfig.json"
+    "typecheck:fast": "tsc --noEmit -p tsconfig.json",
+    "test:app": "bash scripts/test-macos-app.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
