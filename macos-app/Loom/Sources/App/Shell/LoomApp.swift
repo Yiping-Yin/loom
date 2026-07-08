@@ -117,13 +117,6 @@ struct LoomApp: App {
         .defaultSize(width: 560, height: 520)
         .windowToolbarStyle(.unifiedCompact)
 
-        Window("Practice notes", id: ReconstructionsWindow.id) {
-            ReconstructionsView()
-                .paperChrome()
-        }
-        .defaultSize(width: 800, height: 520)
-        .windowToolbarStyle(.unified)
-
         Window("Add files", id: IngestionWindow.id) {
             IngestionView()
                 .paperChrome()
@@ -131,30 +124,11 @@ struct LoomApp: App {
         .defaultSize(width: 560, height: 540)
         .windowToolbarStyle(.unifiedCompact)
 
-        Window("Source practice", id: RehearsalWindow.id) {
-            RehearsalView()
-                .paperChrome()
-        }
-        .defaultSize(width: 620, height: 560)
-        .windowToolbarStyle(.unifiedCompact)
-
-        Window("Source check", id: ExaminerWindow.id) {
-            ExaminerView()
-                .paperChrome()
-        }
-        .defaultSize(width: 620, height: 540)
-        .windowToolbarStyle(.unifiedCompact)
-
-        // Evening ritual — literary session-close surface. Opens via
-        // App menu "Set Down the Shuttle…" (delegates through
-        // `EveningMenuItem`). Hidden title bar, content-sized, centered.
-        Window("Evening", id: EveningWindow.id) {
-            EveningView()
-        }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
-        .defaultPosition(.center)
-        .defaultSize(width: 640, height: 540)
+        // (The metaphor-family windows — Source practice, Source check,
+        // Practice notes, Evening — are culled per the owner's 2026-07-08
+        // partition decision: their jobs live in the workbench's learning
+        // traces now, and their look predated the system-unity law. The
+        // SwiftData plane they wrote to is kept and archived.)
 
         .commands {
             CommandGroup(after: .textEditing) {
@@ -166,7 +140,6 @@ struct LoomApp: App {
                 // in the right-pane Bridge; the launchers below open real windows.)
                 AskAIMenuItem()
                 AskAboutFileMenuItem()
-                RehearsalMenuItem()
                 ShuttleMenuItem()
                 // (Removed six more stone-dead launchers — Hold Question ⌘⇧P,
                 // Add/Connect Sōan Cards ⌘⇧D/⌘⇧L, Source check ⌘⇧X, Add files
@@ -190,8 +163,6 @@ struct LoomApp: App {
             // library-rescan mechanism to rewire it to.)
             CommandGroup(replacing: .appInfo) {
                 AboutMenuItem()
-                Divider()
-                EveningMenuItem()
             }
             CommandGroup(replacing: .help) {
                 LoomHelpMenuItem()
@@ -1820,40 +1791,10 @@ struct AskAboutFileMenuItem: View {
     }
 }
 
-/// App-menu "Set Down the Shuttle…" — opens the literary Evening ritual
-/// surface. Phrased like the surface's own CTA ("Set down the shuttle")
-/// so the menu item reads as what it is rather than an abstract noun.
-/// No keyboard shortcut (ritual surfaces shouldn't collide with ⌘-layer
-/// muscle memory); discoverable via menu only.
-struct EveningMenuItem: View {
-    @Environment(\.openWindow) private var openWindow
-    var body: some View {
-        Button("Set Down the Shuttle…") {
-            openWindow(id: EveningWindow.id)
-        }
-    }
-}
-
-enum EveningWindow {
-    static let id = "com.loom.window.evening"
-}
-
 // (Six dead menu-item shims removed — Hold Question, Add/Connect Sōan
 // Cards, Source check ⌘⇧X, Add files ⌘⇧I, Practice notes. Their
 // notifications' only observers lived in the never-instantiated
 // ContentView shell.)
-
-/// ⌘⇧R — Coordinator seeds `RehearsalContext.pendingTopic` from the
-/// webview title before surfacing the panel; conditionally live while
-/// the You window is open.
-struct RehearsalMenuItem: View {
-    var body: some View {
-        Button("Source practice") {
-            NotificationCenter.default.post(name: .loomOpenRehearsal, object: nil)
-        }
-        .keyboardShortcut("r", modifiers: [.command, .shift])
-    }
-}
 
 /// ⌘K opens the native Shuttle palette. Replaces the web-side Shuttle
 /// which used to be triggered via the `loomSearch` notification — the
@@ -2070,12 +2011,6 @@ struct WindowOpener: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .loomIngestFileDropped)) { _ in
                 openWindow(id: IngestionWindow.id)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .loomOpenRehearsalWindow)) { _ in
-                openWindow(id: RehearsalWindow.id)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .loomOpenEveningWindow)) { _ in
-                openWindow(id: EveningWindow.id)
             }
             // Shuttle action rows route Export / Import through the
             // notification bus so the palette dismisses cleanly before

@@ -33,8 +33,8 @@ final class NavigationBridgeHandler: NSObject, WKScriptMessageHandler {
             NotificationCenter.default.post(name: .loomOpenKeyboardHelp, object: nil)
         case "openShuttle":
             NotificationCenter.default.post(name: .loomOpenShuttle, object: nil)
-        case "openEvening":
-            NotificationCenter.default.post(name: .loomOpenEveningWindow, object: nil)
+        // ("openEvening" removed — the Evening ritual window was culled with
+        // the metaphor family, 2026-07-08 partition decision.)
         case "crystallize":
             handleCrystallize(body: payload)
         case "anchorFromInterlace":

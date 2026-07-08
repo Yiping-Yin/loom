@@ -380,15 +380,6 @@ struct AskAIView: View {
             .buttonStyle(.plain)
             .foregroundStyle(LoomTokens.muted)
             .help("Regenerate this answer")
-
-            Button {
-                citeIntoSourcePractice(msg)
-            } label: {
-                Image(systemName: "text.quote")
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(LoomTokens.muted)
-            .help("Send to Source practice as a passage")
         }
         .font(.system(size: 10))
     }
@@ -403,14 +394,6 @@ struct AskAIView: View {
         guard userMsg.role == .user else { return }
         runner.messages.removeSubrange((idx - 1)...idx)
         runner.stream(prompt: userMsg.content)
-    }
-
-    /// Push the assistant message as a passage into Source practice. Matches
-    /// the existing ⌘⇧E selection flow but comes from AI output — turns
-    /// a good answer into study material for the next round.
-    private func citeIntoSourcePractice(_ msg: AskAIMessage) {
-        RehearsalContext.seedTopic(msg.content)
-        NotificationCenter.default.post(name: .loomOpenRehearsalWindow, object: nil)
     }
 
     /// Foundation's `AttributedString(markdown:)` handles inline + block

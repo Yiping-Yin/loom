@@ -493,12 +493,6 @@ struct LoomWebView: NSViewRepresentable {
             name: .loomOpenAskAI,
             object: nil
         )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.handleOpenRehearsal),
-            name: .loomOpenRehearsal,
-            object: nil
-        )
         // Any native-side trace mutation wakes web panel surfaces so they
         // re-fetch the authoritative `loom://native/panels...` projection
         // without a page reload.
@@ -1789,21 +1783,6 @@ struct LoomWebView: NSViewRepresentable {
         /// so the swap is live (no reload). Native-visible ⇒ "hidden"
         /// on the web; native-hidden ⇒ whatever the user's pre-native
         /// web mode was (see ContentView.syncWebSidebar stash logic).
-        /// ⌘⇧R lands here before the Rehearsal window opens so we can
-        /// seed its topic field with whatever doc the learner is reading.
-        /// If the webview is on a content page, the doc title becomes the
-        /// pre-fill — mirrors the web `<RehearseThisButton>` convention.
-        @objc func handleOpenRehearsal() {
-            if let title = webView?.title, !title.isEmpty, title != "Loom" {
-                Task { @MainActor in
-                    RehearsalContext.shared.pendingTopic = title
-                    NotificationCenter.default.post(name: .loomOpenRehearsalWindow, object: nil)
-                }
-            } else {
-                NotificationCenter.default.post(name: .loomOpenRehearsalWindow, object: nil)
-            }
-        }
-
         /// Edit-menu "Ask AI" (⌘⇧E) lands here first so we can capture any
         /// webview text selection and seed the native AskAI window with it.
         /// Selection capture is async (JS round-trip); we open the window
