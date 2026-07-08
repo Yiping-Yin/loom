@@ -108,4 +108,55 @@ final class ReflectionDocumentFormatTests: XCTestCase {
         XCTAssertEqual(ReflectionDocumentFormat.headingLevel(of: "#NoSpace").level, 0)
         XCTAssertEqual(ReflectionDocumentFormat.headingLevel(of: "plain text").level, 0)
     }
+
+    // MARK: - W1-pre · editedRange-scoped normalization domain (charter §8)
+
+    func testNormalizationRangeExpandsEditToWholeParagraphs() {
+        let text = "First paragraph.\nSecond paragraph here.\nThird." as NSString
+        let edit = NSRange(location: 20, length: 2) // inside "Second…"
+        let range = ReflectionDocumentFormat.normalizationRange(in: text, editedRange: edit)
+        XCTAssertEqual(range, NSRange(location: 17, length: ("Second paragraph here.\n" as NSString).length))
+    }
+
+    func testNormalizationRangeSpanningTwoParagraphsCoversBoth() {
+        let text = "Alpha.\nBeta.\nGamma." as NSString
+        let edit = NSRange(location: 3, length: 6) // crosses Alpha → Beta
+        let range = ReflectionDocumentFormat.normalizationRange(in: text, editedRange: edit)
+        XCTAssertEqual(range, NSRange(location: 0, length: ("Alpha.\nBeta.\n" as NSString).length))
+    }
+
+    func testNormalizationRangeClampsAtDocumentTail() {
+        let text = "One.\nTwo." as NSString
+        let caretAtEnd = NSRange(location: text.length, length: 0)
+        let range = ReflectionDocumentFormat.normalizationRange(in: text, editedRange: caretAtEnd)
+        XCTAssertEqual(range, NSRange(location: 5, length: 4)) // "Two."
+    }
+
+    func testParagraphRoleClassification() {
+        XCTAssertEqual(ReflectionDocumentFormat.paragraphRole(of: "## Section"),
+                       .heading(level: 2, markerLength: 3))
+        XCTAssertEqual(ReflectionDocumentFormat.paragraphRole(of: "❓ Open — verify DPO"), .openQuestion)
+        XCTAssertEqual(ReflectionDocumentFormat.paragraphRole(of: "Plain claim."), .body)
+    }
+
+    // MARK: - W1-pre · open-condition slot (north-star block D)
+
+    func testOpenConditionParsesClosesWhenSlot() {
+        XCTAssertEqual(
+            ReflectionDocumentFormat.openCondition(ofLine: "❓ Does DPO beat PPO? · closes when: replicated on Tulu"),
+            "replicated on Tulu")
+        XCTAssertNil(ReflectionDocumentFormat.openCondition(ofLine: "❓ Just a question"))
+        XCTAssertNil(ReflectionDocumentFormat.openCondition(ofLine: "Body with closes when: red herring"))
+        XCTAssertNil(ReflectionDocumentFormat.openCondition(ofLine: "❓ q · closes when:   "))
+    }
+
+    func testOpenConditionMarkerIsCaseInsensitive() {
+        XCTAssertEqual(ReflectionDocumentFormat.openCondition(ofLine: "❓ q · Closes When: owner confirms"),
+                       "owner confirms")
+    }
+
+    func testOpenQuestionColorDerivesFromSystemPalette() {
+        let expected = NSColor.systemOrange.blended(withFraction: 0.34, of: .labelColor) ?? .systemOrange
+        XCTAssertEqual(ReflectionDocumentFormat.openQuestionColor, expected)
+    }
 }

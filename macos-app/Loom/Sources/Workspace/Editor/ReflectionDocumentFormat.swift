@@ -109,6 +109,63 @@ enum ReflectionDocumentFormat {
         line.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("\u{2753}")
     }
 
+    // MARK: - W1-pre · editedRange-scoped normalization domain (charter §8)
+    //
+    // The pure half of the normalize rewrite: styling cost must be
+    // proportional to the EDIT, not the document. The in-flight editor's
+    // whole-document normalizeDocument pass adopts these when the shell
+    // file lands (Wave 1) — per-keystroke work becomes "classify and
+    // re-assert the touched paragraphs only".
+
+    /// The paragraph role the editor re-asserts during normalization.
+    enum ParagraphRole: Equatable {
+        case heading(level: Int, markerLength: Int)
+        case openQuestion
+        case body
+    }
+
+    /// Expand one edit to the whole paragraph(s) it touched — the ONLY
+    /// region a per-keystroke normalize pass may restyle. Clamps a
+    /// past-the-end caret (typing at the document tail) to the last
+    /// paragraph.
+    static func normalizationRange(in text: NSString, editedRange: NSRange) -> NSRange {
+        guard text.length > 0 else { return NSRange(location: 0, length: 0) }
+        let location = min(editedRange.location, text.length)
+        let length = min(editedRange.length, text.length - location)
+        return text.paragraphRange(for: NSRange(location: location, length: length))
+    }
+
+    /// Classify one paragraph's text into the style bucket normalize
+    /// asserts. (Evidence altitude is attribute-based, not text-based —
+    /// use `isAnchorParagraph` for that check.)
+    static func paragraphRole(of line: String) -> ParagraphRole {
+        let (level, markerLength) = headingLevel(of: line)
+        if level > 0 { return .heading(level: level, markerLength: markerLength) }
+        if isOpenQuestionLine(line) { return .openQuestion }
+        return .body
+    }
+
+    // MARK: - W1-pre · open-condition slot (north-star block D)
+
+    /// Block D's open-condition slot: "❓ question · closes when: <condition>".
+    /// Editor-side twin of `ReflectionLearningTrace.openCondition` — same
+    /// text convention, pure function of the line, so the document path and
+    /// the trace path stay equivalent by construction.
+    static func openCondition(ofLine line: String) -> String? {
+        guard isOpenQuestionLine(line) else { return nil }
+        guard let range = line.range(of: "closes when:", options: .caseInsensitive) else { return nil }
+        let value = line[range.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
+    }
+
+    /// Block D open-question ink — the §6-sanctioned derivation (systemOrange
+    /// blended toward labelColor): "unresolved" reads muted, not shouting,
+    /// and adapts to appearance. Canonical home; the workspace shell's local
+    /// copy becomes a forwarder when it lands (Wave 1).
+    static var openQuestionColor: NSColor {
+        NSColor.systemOrange.blended(withFraction: 0.34, of: .labelColor) ?? .systemOrange
+    }
+
     /// The live outline is derived from the WRITTEN document — every heading
     /// line, with its character location for click-to-jump. Locations count
     /// UTF-16 units (+1 per newline) to match NSTextView's indexing.
