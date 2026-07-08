@@ -4,7 +4,6 @@ import ApplicationServices
 import CoreGraphics
 import UniformTypeIdentifiers
 
-private let showDebugHUDDefaultsKey = "loom.showDebugHUD.v2"
 private let loomWorkspaceMinimumSize = NSSize(width: 1184, height: 720)
 private let loomExternalCompanionSize = NSSize(width: 276, height: 64)
 
@@ -200,18 +199,8 @@ struct LoomApp: App {
                 KeyboardShortcutsMenuItem()
                 CaptureHelpMenuItem()
             }
-            #if DEBUG
-            CommandGroup(after: .help) {
-                Button("Toggle Debug HUD") {
-                    let next = !UserDefaults.standard.bool(forKey: showDebugHUDDefaultsKey)
-                    UserDefaults.standard.set(next, forKey: showDebugHUDDefaultsKey)
-                }
-                // ⌘⌥D — ⌘⇧D is reserved for "Add a Sōan Card…" in
-                // every build, including DEBUG, so the shortcut doesn't
-                // shift meaning between profiles.
-                .keyboardShortcut("d", modifiers: [.command, .option])
-            }
-            #endif
+            // (Debug HUD toggle removed — its only reader was the retired
+            // ContentView shell's DevHUD overlay.)
             CommandGroup(replacing: .newItem) {
                 NewTopicMenuItem()
                 ExportLearningRecordMenuItem()
@@ -588,7 +577,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         registerSourceApplicationObserver()
         registerCompanionMainWindowSuppressionObserver()
         registerServicesProvider()
-        UserDefaults.standard.set(false, forKey: showDebugHUDDefaultsKey)
         // URL handler registration normally already happened in
         // applicationWillFinishLaunching; this is a belt-and-braces
         // repeat for exotic activation paths (idempotent).

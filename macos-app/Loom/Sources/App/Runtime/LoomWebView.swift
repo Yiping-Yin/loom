@@ -261,12 +261,8 @@ struct LoomWebView: NSViewRepresentable {
         userContentController.add(aiStreamBridge, name: AIStreamBridgeHandler.name)
         context.coordinator.aiStreamBridge = aiStreamBridge
 
-        // Phase 2 of architecture inversion: IDB → SwiftData one-way
-        // migration. Web posts its IDB export here; Swift populates the
-        // SwiftData store. Runs once per install (status in UserDefaults).
-        let migrationBridge = MigrationBridgeHandler()
-        userContentController.add(migrationBridge, name: MigrationBridgeHandler.name)
-        context.coordinator.migrationBridge = migrationBridge
+        // (The IDB → SwiftData migration bridge is retired: the one-time
+        // web→native import completed; the machinery is deleted.)
 
         // Phase 4: small-action navigation bridge. Web components that used
         // to open the deleted in-webview SettingsPanel now post through
@@ -466,42 +462,6 @@ struct LoomWebView: NSViewRepresentable {
         context.coordinator.syncState(from: webView)
         context.coordinator.webView = webView
 
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.triggerLearn),
-            name: .loomLearn,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.triggerReview),
-            name: .loomReview,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.triggerReload),
-            name: .loomReload,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.openInBrowser),
-            name: .loomOpenInBrowser,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.goBack),
-            name: .loomGoBack,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.goForward),
-            name: .loomGoForward,
-            object: nil
-        )
 
         NotificationCenter.default.addObserver(
             context.coordinator,
@@ -537,24 +497,6 @@ struct LoomWebView: NSViewRepresentable {
             context.coordinator,
             selector: #selector(Coordinator.handleOpenRehearsal),
             name: .loomOpenRehearsal,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.zoomIn),
-            name: .loomZoomIn,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.zoomOut),
-            name: .loomZoomOut,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            context.coordinator,
-            selector: #selector(Coordinator.zoomReset),
-            name: .loomZoomReset,
             object: nil
         )
         // Any native-side trace mutation wakes web panel surfaces so they
@@ -650,7 +592,6 @@ struct LoomWebView: NSViewRepresentable {
         var loomSchemeHandler: LoomURLSchemeHandler?
         var aiBridge: AIBridgeHandler?
         var aiStreamBridge: AIStreamBridgeHandler?
-        var migrationBridge: MigrationBridgeHandler?
         var navBridge: NavigationBridgeHandler?
         var draftBridge: DraftBridgeHandler?
         var sourceLibraryBridge: SourceLibraryBridgeHandler?
@@ -1540,14 +1481,6 @@ struct LoomWebView: NSViewRepresentable {
                 // for a page reload.
                 mirrorRecentsToWebview()
             }
-            // Phase 2: trigger IDB → SwiftData migration on first webview
-            // load post-upgrade. Idempotent — the handler flips state to
-            // .done after a successful import and short-circuits on empty.
-            if let bridge = migrationBridge, bridge.currentStatus == .pending {
-                webView.evaluateJavaScript(
-                    "window.__loomMigration && window.__loomMigration.request()"
-                )
-            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 webView.evaluateJavaScript("""
                     (() => {
@@ -1747,62 +1680,6 @@ struct LoomWebView: NSViewRepresentable {
             }
         }
 
-        /// ⌘E · Engage. Selection → passage chat. No selection → rehearsal.
-        @objc func triggerLearn() {
-            webView?.evaluateJavaScript(LoomCommandScripts.learnSelectionScript())
-        }
-
-        @objc func triggerReview() {
-            guard let webView else { return }
-            isInReviewMode.toggle()
-            webView.evaluateJavaScript("""
-                window.dispatchEvent(new KeyboardEvent('keydown', {key: '/', metaKey: true}));
-            """)
-        }
-
-        @objc func triggerReload() {
-            guard let webView else { return }
-            if debugState.lastError != "" {
-                debugState.lastError = ""
-            }
-            if webView.url != nil {
-                webView.reloadFromOrigin()
-            } else if let fallbackURL {
-                lastRequestedURL = nil
-                let request = URLRequest(url: fallbackURL, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
-                webView.load(request)
-            } else {
-                webView.reloadFromOrigin()
-            }
-            syncState(from: webView)
-        }
-
-        @objc func openInBrowser() {
-            let current = webView?.url
-            let target: URL?
-            if let current, ["http", "https"].contains(current.scheme?.lowercased() ?? "") {
-                target = current
-            } else if let fallbackURL, ["http", "https"].contains(fallbackURL.scheme?.lowercased() ?? "") {
-                target = fallbackURL
-            } else {
-                target = nil
-            }
-            guard let target else { return }
-            NSWorkspace.shared.open(target)
-        }
-
-        @objc func goBack() {
-            guard let webView, webView.canGoBack else { return }
-            webView.goBack()
-            syncState(from: webView)
-        }
-
-        @objc func goForward() {
-            guard let webView, webView.canGoForward else { return }
-            webView.goForward()
-            syncState(from: webView)
-        }
-
         // The shell owns pinch for Review mode; WKWebView page zoom is disabled.
         func gestureRecognizer(_ gestureRecognizer: NSGestureRecognizer, shouldRecognizeSimultaneouslyWith other: NSGestureRecognizer) -> Bool {
             true
@@ -1834,21 +1711,6 @@ struct LoomWebView: NSViewRepresentable {
             webView?.evaluateJavaScript("""
                 window.dispatchEvent(new CustomEvent('loom:new-topic'));
             """)
-        }
-
-        /// View-menu zoom trio. `pageZoom` is the right knob — scales text
-        /// and layout together, saved per-webview for the session. We clamp
-        /// to [0.5, 2.5] so accidental zoom-out/in doesn't nuke the layout.
-        @objc func zoomIn() {
-            guard let webView else { return }
-            webView.pageZoom = min(webView.pageZoom + 0.1, 2.5)
-        }
-        @objc func zoomOut() {
-            guard let webView else { return }
-            webView.pageZoom = max(webView.pageZoom - 0.1, 0.5)
-        }
-        @objc func zoomReset() {
-            webView?.pageZoom = 1.0
         }
 
         /// Fires on `.loomTraceChanged` — LoomTraceWriter posts this after

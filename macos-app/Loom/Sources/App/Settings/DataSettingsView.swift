@@ -55,7 +55,6 @@ struct DataSettingsView: View {
     var body: some View {
         Form {
             contentRootSection
-            migrationSection
             localResetSection
             yourLoomSection
             statusSection
@@ -170,23 +169,10 @@ struct DataSettingsView: View {
         .padding(.vertical, 4)
     }
 
-    @ViewBuilder
-    private var migrationSection: some View {
-        Section("Migration") {
-            HStack {
-                Text("Status: \(migrationStatusLabel)")
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Button("Reset status") {
-                    UserDefaults.standard.removeObject(forKey: MigrationBridgeHandler.statusDefaultsKey)
-                    status = "Migration status cleared — runs again on next launch."
-                }
-            }
-            Text("The IDB → SwiftData migration runs once per install. Reset this if you rolled back to an older version and want to re-import.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
-    }
+    // (The Migration section is gone with the IDB→SwiftData migration
+    // machinery itself — the one-time web→native import completed long ago,
+    // and the section's "runs again on next launch" promise had been a lie
+    // since the runner's host shell was retired.)
 
     @ViewBuilder
     private var localResetSection: some View {
@@ -426,11 +412,6 @@ struct DataSettingsView: View {
             return url.path
         }
         return LoomRuntimePaths.resolveContentRoot()
-    }
-
-    private var migrationStatusLabel: String {
-        let raw = UserDefaults.standard.string(forKey: MigrationBridgeHandler.statusDefaultsKey) ?? "pending"
-        return raw
     }
 
     private func pickContentRoot() {
