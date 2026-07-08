@@ -54,12 +54,8 @@ enum LoomTokens {
     /// Same hue as `dsThread`, but a distinct name so chrome can't relapse into
     /// the anchor colour by grabbing `dsThread`.
     static let dsAnchor      = Color(hex: 0x4BC5DE)
-    /// Comet-ice accent · 55% alpha for de-emphasised states.
-    static let dsThreadMuted = Color(.sRGB,
-                                     red:    75/255,
-                                     green: 197/255,
-                                     blue:  222/255,
-                                     opacity: 0.55)
+    // (dsThreadMuted removed — zero callers; muted cyan invited chrome back
+    // into the anchor colour.)
 
     // MARK: - Design System v1.0 · semantic state colors
     //
@@ -86,14 +82,9 @@ enum LoomTokens {
                                       blue:  122/255,
                                       opacity: 0.55)
 
-    /// Neutral informational tints — comet-cyan (the data/signal accent).
-    static let dsInfo         = Color(hex: 0x4BC5DE)
-    /// Info · 55% alpha for de-emphasised state.
-    static let dsInfoMuted    = Color(.sRGB,
-                                      red:    75/255,
-                                      green: 197/255,
-                                      blue:  222/255,
-                                      opacity: 0.55)
+    // (dsInfo/dsInfoMuted removed — zero callers, and a cyan "info" tint
+    // conflated the semantic state colour with the reserved anchor cyan.
+    // New informational chrome should use Color.accentColor.)
 
     /// Caution — restrained amber, distinct from the comet accent.
     static let dsWarning      = Color(hex: 0xCB9A3F)
@@ -162,8 +153,6 @@ enum LoomTokens {
     static let paper      = Color.dynamic(light: 0xF6F8FA, dark: 0x10141A)
     /// @deprecated Use `dsPaperDeep`.
     static let paperDeep  = Color.dynamic(light: 0xEEF1F4, dark: 0x07090C)
-    /// @deprecated Use `dsPaperUp`.
-    static let paperShade = Color.dynamic(light: 0xE6EAEF, dark: 0x161B22)
     /// @deprecated Use `dsInk1`.
     static let ink        = Color.dynamic(light: 0x1A1F26, dark: 0xE6E9EE)
     /// @deprecated Use `dsInk2`.
@@ -179,15 +168,8 @@ enum LoomTokens {
     static let hairFaint  = Color.dynamicAlpha(light: 0x1A1F26, lightAlpha: 0.04,
                                                dark: 0xE6E9EE, darkAlpha: 0.05)
 
-    // MARK: - Night · ink-wash
-
-    static let night      = Color(hex: 0x07090C)
-    static let nightDeep  = Color(hex: 0x05060A)
-    static let nightWarm  = Color(hex: 0x0C0F13)
-    static let candle     = Color(hex: 0xE6E9EE)
-    static let candle2    = Color(hex: 0x9BA3AE)
-    static let mutedNight = Color(hex: 0x5E6671)
-    static let hairNight  = Color(hex: 0xE6E9EE, opacity: 0.08)
+    // (Night ink-wash family removed — zero callers since the web-era
+    // surfaces retired.)
 
     // MARK: - Inks — cool-black base; `thread` is AI/selection/focus.
     //
@@ -202,17 +184,15 @@ enum LoomTokens {
     // `dsThread` (#4BC5DE). The old gold value is gone; single source of
     // truth for comet accent going forward.
 
-    /// @deprecated Use `dsThread`.
+    /// @deprecated Use `dsAnchor` for the loom:// locator; `Color.accentColor`
+    /// for chrome. Still aliased because ~40 parked-surface call sites remain
+    /// (FirstRun wizard, rescued extractor UI, Ingest views) — migrate on touch.
     static let thread   = Color(hex: 0x4BC5DE)
-    /// @deprecated Use `dsThread`.
-    static let threadHi = Color(hex: 0x8AF7E6)
-    static let gold     = Color.dynamic(light: 0x2F7384, dark: 0x8AF7E6)
     static let ochre    = Color.dynamic(light: 0xB68A3C, dark: 0xDDBA6A)
     static let rose     = Color.dynamic(light: 0xC0504E, dark: 0xE06A6A)
     static let sage     = Color.dynamic(light: 0x3E9466, dark: 0x3FB37A)
-    static let indigo   = Color.dynamic(light: 0x2F8CA0, dark: 0x4BC5DE)
-    static let plum     = Color.dynamic(light: 0x55556E, dark: 0x9090B0)
-    static let umber    = Color(hex: 0x2A323D)
+    // (threadHi / gold / indigo / plum / umber removed — zero code callers;
+    // threadHi and indigo were cyan-family leak inviters.)
 
     // MARK: - Type stacks — same cascade as the web for cross-surface consistency.
 

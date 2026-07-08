@@ -22,13 +22,19 @@ struct AppearanceSettingsView: View {
 
     var body: some View {
         Form {
-            Section("Theme") {
+            // Honesty: the main workbench follows the SYSTEM appearance
+            // (glass law); this picker only themes the You window's web
+            // content. Say so, rather than implying it restyles the app.
+            Section("You window theme") {
                 Picker("Mode", selection: $theme) {
                     Text("Auto").tag("auto")
                     Text("Light").tag("light")
                     Text("Dark").tag("dark")
                 }
                 .pickerStyle(.segmented)
+                Text("The workbench itself follows the system appearance; this only affects the You window's pages.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
             }
 
             Section("Reading") {

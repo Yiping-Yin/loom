@@ -496,6 +496,13 @@ struct LoomReflectionRootView: View {
                 statusMessage = "Drafting is downstream of reflection"
             }
         }
+        // ⌘1 / ⌘3 — the real three columns (three-column charter).
+        .onReceive(NotificationCenter.default.publisher(for: .loomToggleSidebar)) { _ in
+            toggleSidebar()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .loomToggleInspector)) { _ in
+            toggleInspector()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .loomCaptureFromURL)) { note in
             let token = note.userInfo?["token"] as? UUID
             if let token, token == lastHandledCaptureToken { return }
@@ -4502,6 +4509,10 @@ private struct GlassReadingCenter: View {
         }
         .onChange(of: reflectionCase.id) {
             if isBlankCase && !isWorkspaceEmpty { editorFocusRequest += 1 }
+        }
+        // ⌘2 — focus the document column (three-column charter).
+        .onReceive(NotificationCenter.default.publisher(for: .loomFocusDocument)) { _ in
+            if !isWorkspaceEmpty { editorFocusRequest += 1 }
         }
     }
 

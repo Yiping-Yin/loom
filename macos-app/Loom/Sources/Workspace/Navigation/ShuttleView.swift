@@ -75,10 +75,10 @@ struct ShuttleView: View {
         .init(label: "Sources",         subtitle: "Your materials, grouped", path: "/sources",    keywords: ["sources", "source", "library", "materials", "bookshelf", "shelf", "browse", "knowledge"]),
         .init(label: "Example",         subtitle: "A finished LOOM",          path: "/example",     keywords: ["example", "showcase", "demo", "finished", "sample"]),
         // Inspector tabs — native source tools (not web routes).
-        .init(label: "Source practice", subtitle: "⌘⇧R",                      path: "",             keywords: ["rehearsal", "recall", "practice", "source"], inspectorTab: "rehearsal"),
-        .init(label: "Source check",    subtitle: "⌘⇧X",                      path: "",             keywords: ["examiner", "quiz", "check", "source"],        inspectorTab: "examiner"),
-        .init(label: "Add files",       subtitle: "⌘⇧I",                      path: "",             keywords: ["ingestion", "intake", "import", "add", "files"],    inspectorTab: "ingestion"),
-        .init(label: "Practice notes",  subtitle: nil,                        path: "",             keywords: ["reconstructions", "rebuild", "practice", "notes"],       inspectorTab: "reconstructions"),
+        // (The four inspector-tab rows — Source practice/check, Add files,
+        // Practice notes — are gone: their .loomShowInspectorTab post has had
+        // zero observers since the ContentView shell retired, and the metaphor
+        // family behind them was culled 2026-07-08.)
         // Data — flat-file JSON round-trip of the whole Loom store.
         .init(label: "Export Loom…",    subtitle: "Save your data to a file", path: "", keywords: ["export", "save", "backup", "dump", "json", "archive", "download"], notificationName: .loomExport),
         .init(label: "Import Loom…",    subtitle: "Restore data from a file", path: "", keywords: ["import", "restore", "load", "backup", "json", "archive", "upload"], notificationName: .loomImport),
@@ -197,7 +197,9 @@ struct ShuttleView: View {
                 .strokeBorder(
                     LinearGradient(
                         colors: [
-                            LoomTokens.threadHi.opacity(0.35),
+                            // Neutral glass rim-light — the old cyan-tinted
+                            // highlight was an ink-discipline leak.
+                            Color.white.opacity(0.35),
                             Color.clear
                         ],
                         startPoint: .top,
@@ -538,19 +540,13 @@ struct ShuttleView: View {
             NotificationCenter.default.post(name: name, object: nil)
             return
         }
-        if let tab = cmd.inspectorTab {
-            NotificationCenter.default.post(
-                name: .loomShowInspectorTab,
-                object: nil,
-                userInfo: ["tab": tab]
-            )
-        } else {
-            NotificationCenter.default.post(
-                name: .loomShuttleNavigate,
-                object: nil,
-                userInfo: ["path": cmd.path]
-            )
-        }
+        // (inspector-tab branch removed with its rows — the post had zero
+        // observers since the ContentView shell retired.)
+        NotificationCenter.default.post(
+            name: .loomShuttleNavigate,
+            object: nil,
+            userInfo: ["path": cmd.path]
+        )
         dismissWindow(id: ShuttleWindow.id)
     }
 

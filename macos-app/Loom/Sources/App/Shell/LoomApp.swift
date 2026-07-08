@@ -68,19 +68,14 @@ struct LoomApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: 460, height: 540)
 
-        Window("Set up captures", id: CaptureHelpWindow.id) {
-            CaptureHelpView()
-                .paperChrome()
-        }
-        .windowResizability(.contentSize)
-        .defaultSize(width: 560, height: 540)
-
+        // ("Set up captures" folded into Loom Help — one Help window,
+        // Apple convention; interactive setup stays in Settings → Capture.)
         Window("Loom Help", id: LoomHelpWindow.id) {
             LoomHelpView()
                 .paperChrome()
         }
         .windowResizability(.contentSize)
-        .defaultSize(width: 460, height: 560)
+        .defaultSize(width: 460, height: 700)
 
         Window("About Loom", id: AboutWindow.id) {
             AboutView()
@@ -117,12 +112,13 @@ struct LoomApp: App {
         .defaultSize(width: 560, height: 520)
         .windowToolbarStyle(.unifiedCompact)
 
-        Window("Add files", id: IngestionWindow.id) {
-            IngestionView()
-                .paperChrome()
-        }
-        .defaultSize(width: 560, height: 540)
-        .windowToolbarStyle(.unifiedCompact)
+        // (The old "Add files" IngestionWindow is unregistered — macOS gives
+        // every registered SwiftUI Window a system Window-menu command, and
+        // this one wrote typed-extractor output into a store the live
+        // workbench never reads: an honest-failure violation. The extractor
+        // pipeline itself (IngestionView + Shared/Ingest, ~10k lines, tested)
+        // is KEPT per the owner's rescue decision — it is the PDF→Word→Excel
+        // sidecar engine, to be rewired into the live import path.)
 
         // (The metaphor-family windows — Source practice, Source check,
         // Practice notes, Evening — are culled per the owner's 2026-07-08
@@ -168,7 +164,6 @@ struct LoomApp: App {
                 LoomHelpMenuItem()
                 Divider()
                 KeyboardShortcutsMenuItem()
-                CaptureHelpMenuItem()
             }
             // (Debug HUD toggle removed — its only reader was the retired
             // ContentView shell's DevHUD overlay.)
@@ -1688,7 +1683,9 @@ struct ExportLearningRecordMenuItem: View {
         Button("Export Learning Record…") {
             NotificationCenter.default.post(name: .loomExportLearningRecord, object: nil)
         }
-        .keyboardShortcut("e", modifiers: [.command, .shift])
+        // Menu-only: ⌘⇧E was double-booked with Ask Selection (the flagship
+        // selection shortcut) — macOS silently routed the key to only one of
+        // them. Export is an occasional action; the menu is enough.
     }
 }
 
@@ -1994,11 +1991,19 @@ extension View {
 
 struct WindowOpener: View {
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
     var body: some View {
         Color.clear
             .frame(width: 0, height: 0)
             .onReceive(NotificationCenter.default.publisher(for: .loomOpenShuttle)) { _ in
                 openWindow(id: ShuttleWindow.id)
+            }
+            // The dossier bridge's "openSettings" route lost its observer when
+            // the ContentView shell retired — rewired here so the You window's
+            // Settings link works again (openSettings is the only reliable
+            // route on macOS 14+).
+            .onReceive(NotificationCenter.default.publisher(for: .loomOpenSettings)) { _ in
+                openSettings()
             }
             .onReceive(NotificationCenter.default.publisher(for: .loomOpenAbout)) { _ in
                 openWindow(id: AboutWindow.id)
@@ -2009,9 +2014,8 @@ struct WindowOpener: View {
             .onReceive(NotificationCenter.default.publisher(for: .loomOpenAskAIWindow)) { _ in
                 openWindow(id: AskAIWindow.id)
             }
-            .onReceive(NotificationCenter.default.publisher(for: .loomIngestFileDropped)) { _ in
-                openWindow(id: IngestionWindow.id)
-            }
+            // (.loomIngestFileDropped opener removed with the unregistered
+            // IngestionWindow — its only posters died with the legacy shells.)
             // Shuttle action rows route Export / Import through the
             // notification bus so the palette dismisses cleanly before
             // the save/open panel shows.
@@ -2027,23 +2031,6 @@ struct WindowOpener: View {
 /// Help-menu item that opens the Capture setup window (CaptureHelpView).
 /// Per docs/loom.md §VII.bis the instructional content for setting up
 /// captures lives in this help window, not a sidebar surface.
-struct CaptureHelpMenuItem: View {
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.dismissWindow) private var dismissWindow
-    var body: some View {
-        Button("Set Up Captures…") {
-            let existing = NSApp.windows.first {
-                $0.identifier?.rawValue == CaptureHelpWindow.id && $0.isVisible
-            }
-            if existing != nil {
-                dismissWindow(id: CaptureHelpWindow.id)
-            } else {
-                openWindow(id: CaptureHelpWindow.id)
-            }
-        }
-    }
-}
-
 /// Help-menu item that opens the native Keyboard Shortcuts window. Wrapped
 /// in its own view so it can use `@Environment(\.openWindow)` — only
 /// available inside a `Scene.commands` body via a SwiftUI view.
@@ -2155,33 +2142,30 @@ extension Notification.Name {
     /// — no web surface to hop through.
     static let loomExport = Notification.Name("loomExport")
     static let loomImport = Notification.Name("loomImport")
+    /// ⌘1/⌘2/⌘3 — the three columns. Observed by the live workbench root
+    /// (sidebar / inspector) and the center document (focus).
+    static let loomToggleSidebar = Notification.Name("loomToggleSidebar")
+    static let loomFocusDocument = Notification.Name("loomFocusDocument")
+    static let loomToggleInspector = Notification.Name("loomToggleInspector")
 }
 
-/// Keyboard shortcuts for the native Reflection workspace and the remaining
-/// compatibility routes.
+/// ⌘1/⌘2/⌘3 — the real three columns (three-column charter), replacing the
+/// old web-route posts the live workbench answered with a status string only.
 struct WorkspaceShortcutsCommands: View {
     var body: some View {
         Group {
-            Button("Reflection") {
-                postNav("/reflection")
+            Button("Projects") {
+                NotificationCenter.default.post(name: .loomToggleSidebar, object: nil)
             }
             .keyboardShortcut("1", modifiers: .command)
-            Button("Sources") {
-                postNav("/sources")
+            Button("Document") {
+                NotificationCenter.default.post(name: .loomFocusDocument, object: nil)
             }
             .keyboardShortcut("2", modifiers: .command)
-            Button("Draft") {
-                postNav("/draft")
+            Button("Bridge") {
+                NotificationCenter.default.post(name: .loomToggleInspector, object: nil)
             }
             .keyboardShortcut("3", modifiers: .command)
         }
-    }
-
-    private func postNav(_ path: String) {
-        NotificationCenter.default.post(
-            name: .loomShuttleNavigate,
-            object: nil,
-            userInfo: ["path": path]
-        )
     }
 }

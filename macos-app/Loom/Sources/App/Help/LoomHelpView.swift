@@ -71,6 +71,19 @@ struct LoomHelpView: View {
                     helpRow("keyboard", "Keyboard Shortcuts", "The full list — ⌘⇧?")
                 }
 
+                Divider()
+
+                // Capturing — folded in from the retired "Set up captures"
+                // window (one Help window, Apple convention).
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Capturing from the web")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    helpRow("cursorarrow.click.2", "Capture a page", "On any web page, click the L button — Loom comes forward with the capture sheet pre-filled (title, URL, content). Shift-L captures reader-only; ⌘L keeps scripts.")
+                    helpRow("text.badge.checkmark", "Select first", "A selection always wins over auto-extraction when you only need a passage.")
+                    helpRow("puzzlepiece.extension", "If the L is missing", "The extension isn't running on that tab — reload the extension, then refresh the page. Interactive setup lives in Settings → Capture.")
+                }
+
                 Text("Everything is local, on your device. No account, no sign-in.")
                     .font(.system(size: 11.5))
                     .foregroundStyle(.tertiary)
@@ -79,7 +92,7 @@ struct LoomHelpView: View {
             .padding(28)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: 460, height: 560)
+        .frame(width: 460, height: 700)
         // Esc closes — registered as the window's cancel action (focus-independent,
         // unlike .onKeyPress which needs a focused responder this static guide lacks).
         .background {

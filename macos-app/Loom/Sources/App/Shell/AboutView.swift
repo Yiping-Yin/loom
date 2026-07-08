@@ -50,12 +50,11 @@ struct AboutView: View {
                 versionBadge
                     .padding(.top, 16)
 
+                // (Two dishonest buttons removed: "Privacy" opened a
+                // loom.app URL that doesn't exist — a local-first product
+                // has no privacy endpoint — and "Colophon" posted a web
+                // route the live workbench answers with a status string.)
                 HStack(spacing: 8) {
-                    linkButton("Privacy") {
-                        if let url = URL(string: "https://loom.app/privacy") {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }
                     linkButton("Help") {
                         openWindow(id: KeyboardHelpWindow.id)
                     }
@@ -64,13 +63,6 @@ struct AboutView: View {
                         // (owner 2026-07-04: one pane, not two pages).
                         NotificationCenter.default.post(name: .loomShowHistoryOnGlass, object: nil)
                         dismissWindow(id: AboutWindow.id)
-                    }
-                    linkButton("Colophon") {
-                        NotificationCenter.default.post(
-                            name: .loomShuttleNavigate,
-                            object: nil,
-                            userInfo: ["path": "/colophon"]
-                        )
                     }
                 }
                 .padding(.top, 26)

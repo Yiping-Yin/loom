@@ -249,7 +249,6 @@
 		F8A645F9D0B45B326AB2F59A /* MoonPhaseIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB83653308F1E2866F3A9740 /* MoonPhaseIndicator.swift */; };
 		FAC78B3207977E733B3CF14C /* MarkdownNotesSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29341FF987414D79B04F931 /* MarkdownNotesSchema.swift */; };
 		FBDF64EA2AEC8C505206F1E1 /* ReflectionSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4EF9B21E3A71AE8BDF39279 /* ReflectionSearchTests.swift */; };
-		FE2666851DA14E8AFCA1B639 /* CaptureHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2F0E68FEEE794345791A15 /* CaptureHelpView.swift */; };
 		FF22D10202DF4425ED3F335B /* fins-3666-assessment.input.txt in Resources */ = {isa = PBXBuildFile; fileRef = BFA113B1D695FD62468C5B5B /* fins-3666-assessment.input.txt */; };
 		FF417861B83D00B47B132E6D /* infs-3822-rubrics.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 463C6D1E20F4CA9B7BA43107 /* infs-3822-rubrics.meta.json */; };
 /* End PBXBuildFile section */
@@ -420,7 +419,6 @@
 		8C29E29AD32CD01469BDADE2 /* fins-3640.meta.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "fins-3640.meta.json"; sourceTree = "<group>"; };
 		8CB891C88545DCE0EE772B2D /* SidebarSharedTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSharedTypes.swift; sourceTree = "<group>"; };
 		8DC66B457BBA4EBA2BFC413B /* body.key */ = {isa = PBXFileReference; path = body.key; sourceTree = "<group>"; };
-		8F2F0E68FEEE794345791A15 /* CaptureHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureHelpView.swift; sourceTree = "<group>"; };
 		90920894513DAA8F66E9A987 /* TypedExtractorMatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedExtractorMatchTests.swift; sourceTree = "<group>"; };
 		92294067C1E61FCEA15D6948 /* PursuitSpawnMetaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PursuitSpawnMetaStore.swift; sourceTree = "<group>"; };
 		92586087AE7B79F054B84B84 /* BookmarkletDragPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkletDragPill.swift; sourceTree = "<group>"; };
@@ -915,7 +913,6 @@
 		C4F56B4DDC8096F270913CCB /* Help */ = {
 			isa = PBXGroup;
 			children = (
-				8F2F0E68FEEE794345791A15 /* CaptureHelpView.swift */,
 				1FA90B166BE7CE432CC76D25 /* KeyboardHelpView.swift */,
 				F8DE515C0AAB90065D3463F4 /* LoomHelpView.swift */,
 			);
@@ -1384,7 +1381,6 @@
 				ED8C2573CBC3C35A9290DE24 /* AskSelectionCapture.swift in Sources */,
 				AF2D34A1A5F3CE34FE13035C /* BookmarkletDragPill.swift in Sources */,
 				69144E39C57FBB3EB54571BF /* CLIRuntimeClient.swift in Sources */,
-				FE2666851DA14E8AFCA1B639 /* CaptureHelpView.swift in Sources */,
 				CC95D9B696E8BD57B17BB187 /* CaptureSettingsView.swift in Sources */,
 				911AE4EB868FA2AF44DC7D55 /* CaptureSheet.swift in Sources */,
 				DE9430E6CD27F39640372441 /* CaptureURLRouter.swift in Sources */,

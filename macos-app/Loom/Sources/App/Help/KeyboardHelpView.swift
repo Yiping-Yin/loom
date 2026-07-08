@@ -26,53 +26,39 @@ struct KeyboardHelpView: View {
         let items: [Shortcut]
     }
 
+    // Regenerated 2026-07-08 from the LIVE command set — the old list
+    // documented the retired web shell (~60% of its shortcuts were dead).
     let groups: [Group] = [
-        Group(title: "Reading", items: [
-            .init(keys: "✦ click", label: "Ask AI about the selection"),
-            .init(keys: "⌘⇧A", label: "Save the selection as a reader note"),
-            .init(keys: "⌘ click", label: "Save directly from the source line"),
-            .init(keys: "⌥ click", label: "Highlight the selection"),
-            .init(keys: "⌘/", label: "Open reader notes for the current source"),
-            .init(keys: "⌘⇧.", label: "Correct a typo / mis-extraction in the source"),
+        Group(title: "Workspace", items: [
+            .init(keys: "⌘1", label: "Projects — show or hide the left column"),
+            .init(keys: "⌘2", label: "Document — focus your note"),
+            .init(keys: "⌘3", label: "Bridge — show or hide the right column"),
+            .init(keys: "⌘N", label: "New draft"),
+            .init(keys: "⌘K", label: "Shuttle — search projects, notes, and traces"),
         ]),
-        Group(title: "AI", items: [
-            .init(keys: "Write", label: "Draft from your sources · ⌘K shape · ⌘S save"),
-            .init(keys: "Ask", label: "Check a reader note · ⌘↩ submit"),
-            .init(keys: "Add source", label: "Drop files into Sources"),
-            .init(keys: "Export", label: "Download notes as JSON or Markdown"),
+        Group(title: "Document", items: [
+            .init(keys: "⌘B", label: "Bold the selection"),
+            .init(keys: "⌘I", label: "Italicize the selection"),
+            .init(keys: "⌘U", label: "Underline the selection"),
+            .init(keys: "# ␣", label: "Heading (## and ### for deeper levels)"),
+            .init(keys: "❓", label: "Start a line with ❓ for an open question"),
         ]),
-        Group(title: "Navigation", items: [
-            .init(keys: "⌘K", label: "Open Shuttle — search everything"),
-            .init(keys: "⌘E", label: "Review — ask AI about the selection"),
+        Group(title: "Sources & reader", items: [
+            .init(keys: "⌘P", label: "Add files — import sources, read them in Loom"),
+            .init(keys: "⌘F", label: "Find in the open source"),
+            .init(keys: "⌘↑ / ⌘↓", label: "First / last page"),
+            .init(keys: "⌘9 / ⌘0", label: "Fit width / actual size"),
+            .init(keys: "⌃⌘F", label: "Reader full screen"),
+            .init(keys: "Esc", label: "Close the reader (or the find bar first)"),
+        ]),
+        Group(title: "AI & review", items: [
             .init(keys: "⌘⇧E", label: "Ask Selection — quick question in a native window"),
-            .init(keys: "⌘⇧R", label: "Source practice — write from memory"),
-            .init(keys: "⌘⇧X", label: "Source check — AI reviews your answer"),
-            .init(keys: "⌘⇧I", label: "Add files — drop or pick PDFs, DOCX, slides, Pages, Markdown, and images"),
-            .init(keys: "⌘N", label: "New topic"),
-            .init(keys: "⌘[", label: "Back"),
-            .init(keys: "⌘]", label: "Forward"),
-            .init(keys: "⌘R", label: "Reload"),
-            .init(keys: "⌘⇧O", label: "Open current page in default browser"),
+            .init(keys: "⌃⇧G", label: "Review — second pass over the open draft"),
+            .init(keys: "⌘T", label: "Browser — open the bridge browser"),
+        ]),
+        Group(title: "Help", items: [
+            .init(keys: "⌘⇧?", label: "Toggle this window"),
             .init(keys: "Esc", label: "Close any open panel"),
-            .init(keys: "⌘⇧?", label: "Toggle this help"),
-        ]),
-        Group(title: "View", items: [
-            .init(keys: "⌘+", label: "Zoom in"),
-            .init(keys: "⌘-", label: "Zoom out"),
-            .init(keys: "⌘0", label: "Actual size"),
-            .init(keys: "⌃⌘S", label: "Toggle Sidebar"),
-            .init(keys: "⌘⇧⌥R", label: "Reload sources"),
-        ]),
-        Group(title: "Workspaces", items: [
-            .init(keys: "⌘1", label: "Home"),
-            .init(keys: "⌘2", label: "Sources"),
-            .init(keys: "⌘3", label: "Draft"),
-        ]),
-        Group(title: "Draft and notes", items: [
-            .init(keys: "⌘⇧P", label: "Add question — add a question you're holding"),
-            .init(keys: "⌘⇧D", label: "Add draft card — place a thesis / counter / question"),
-            .init(keys: "⌘⇧L", label: "Connect draft cards — draw support or related edge"),
-            .init(keys: "⌘⇧W", label: "Connect reader notes — add explicit relation between notes"),
         ]),
     ]
 
@@ -107,7 +93,7 @@ struct KeyboardHelpView: View {
                             .font(.system(size: 11, design: .serif).smallCaps())
                             .fontWeight(.medium)
                             .tracking(0.5)
-                            .foregroundStyle(LoomTokens.thread)
+                            .foregroundStyle(.secondary)
                         ForEach(group.items) { item in
                             HStack(alignment: .firstTextBaseline, spacing: 16) {
                                 Text(item.keys)
