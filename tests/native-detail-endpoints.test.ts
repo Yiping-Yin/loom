@@ -41,12 +41,10 @@ test('native url scheme exposes direct panel and pursuit detail endpoints', () =
 });
 
 test('detail clients prefer direct native endpoints and keep mirror fallback', () => {
+  // (recents/pursuits/weaves/soan record clients retired in web-retirement
+  // 6/7 — only the panel detail path still ships on a live page.)
   const panelDetail = read('app/PanelDetailClient.tsx');
-  const recents = read('lib/loom-recent-records.ts');
   const panels = read('lib/loom-panel-records.ts');
-  const pursuitRecords = read('lib/loom-pursuit-records.ts');
-  const weaveRecords = read('lib/loom-weave-records.ts');
-  const soanRecords = read('lib/loom-soan-records.ts');
 
   assert.match(panelDetail, /loom:\/\/native\/panel\/\$\{encodeURIComponent\(id\)\}\.json/);
   assert.match(panelDetail, /async function loadPanelDetail\(id: string\): Promise<PanelDetail \| null>/);
@@ -54,23 +52,8 @@ test('detail clients prefer direct native endpoints and keep mirror fallback', (
   assert.match(panelDetail, /loadPanelRecords/);
   assert.doesNotMatch(panelDetail, /readLoomMirror/);
 
-  assert.match(recents, /loom:\/\/native\/recents\.json/);
-  assert.match(recents, /async function loadRecentRecords\(\): Promise<LoomRecentRecord\[]>/);
-  assert.match(recents, /return readStoredRecentRecords\(\);/);
-
   assert.match(panels, /loom:\/\/native\/panels\.json/);
   assert.match(panels, /async function loadPanelRecords\(\): Promise<LoomPanelRecord\[]>/);
   assert.match(panels, /return readStoredPanelRecords\(\);/);
 
-  assert.match(pursuitRecords, /loom:\/\/native\/pursuits\.json/);
-  assert.match(pursuitRecords, /async function loadPursuitRecords\(\): Promise<LoomPursuitRecord\[]>/);
-  assert.match(pursuitRecords, /return readStoredPursuitRecords\(\);/);
-
-  assert.match(weaveRecords, /loom:\/\/native\/weaves\.json/);
-  assert.match(weaveRecords, /async function loadWeaveRecords\(\): Promise<LoomWeaveRecord\[]>/);
-  assert.match(weaveRecords, /return readStoredWeaveRecords\(\);/);
-
-  assert.match(soanRecords, /loom:\/\/native\/soan\.json/);
-  assert.match(soanRecords, /async function loadSoanPayload\(\): Promise<LoomSoanPayload>/);
-  assert.match(soanRecords, /return readStoredSoanPayload\(\);/);
 });

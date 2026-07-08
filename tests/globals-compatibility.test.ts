@@ -18,7 +18,6 @@ const coldInterfacePaletteSource = [
   'lib/loom-design-system.ts',
   'app/PanelDetailClient.tsx',
   'components/BPETokenizer.tsx',
-  'components/LoomDiagram.tsx',
   'components/LoomCursor.tsx',
   'components/ActiveRetrieval.tsx',
   'app/knowledge/KnowledgeHomeStatic.module.css',

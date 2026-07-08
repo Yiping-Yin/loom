@@ -165,13 +165,7 @@ test('HomeClient first paint is a balanced evidence portal with source-backed de
   assert.match(aiKeyBannerSource, /className="loom-ai-key-banner"/);
   assert.match(aiKeyBannerSource, /data-ai-key-banner="true"/);
   assert.match(aiKeyBannerSource, /pathname === ['"]\/sources['"]/);
-  assert.match(aiKeyBannerSource, /pathname === ['"]\/draft['"]/);
-  assert.match(aiKeyBannerSource, /pathname === ['"]\/drafts['"]/);
-  assert.match(aiKeyBannerSource, /pathname === ['"]\/help['"]/);
-  assert.match(aiKeyBannerSource, /pathname === ['"]\/hour['"]/);
-  assert.match(aiKeyBannerSource, /pathname === ['"]\/connections['"]/);
   assert.match(aiKeyBannerSource, /pathname === ['"]\/offline['"]/);
-  assert.match(aiKeyBannerSource, /pathname === ['"]\/onboarding['"]/);
   assert.match(aiKeyBannerSource, /bottom: 'max\(0\.75rem, env\(safe-area-inset-bottom\)\)'/);
   assert.match(aiKeyBannerSource, /maxWidth: 'min\(25rem, calc\(100vw - 2rem\)\)'/);
   assert.match(aiKeyBannerSource, /boxSizing: 'border-box'/);
