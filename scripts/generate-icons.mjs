@@ -32,6 +32,38 @@ async function renderPng(size, output) {
     .toFile(output);
 }
 
+// macOS 26+ masks app icons into its own squircle and mounts any artwork
+// that doesn't fill the canvas on a gray legacy plate (the "ring"). The
+// interlaced-L source is a pre-rounded tile with margins, so for the
+// AppIcon set we trim the tile, scale it 18% past full bleed (the baked
+// corner rounding lands outside the system mask) and back the corners
+// with the artwork's own gradient so no transparency survives.
+async function renderMacIconPng(size, output) {
+  const rendered = await sharp(interlacedSourceSvg, { density: 384 })
+    .resize(1600, 1600, { fit: 'contain' })
+    .png()
+    .toBuffer();
+  const tile = await sharp(rendered).trim().png().toBuffer();
+  const oversize = Math.round(size * 1.18);
+  const offset = Math.floor((oversize - size) / 2);
+  const bleed = await sharp(tile)
+    .resize(oversize, oversize, { fit: 'fill' })
+    .extract({ left: offset, top: offset, width: size, height: size })
+    .png()
+    .toBuffer();
+  const backing = await sharp(bleed)
+    .resize(32, 32, { fit: 'fill' })
+    .resize(size, size, { fit: 'fill' })
+    .removeAlpha()
+    .png()
+    .toBuffer();
+  await sharp(backing)
+    .composite([{ input: bleed }])
+    .removeAlpha()
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toFile(output);
+}
+
 function requireSource(file) {
   if (!existsSync(file)) {
     throw new Error(`Missing icon source: ${path.relative(root, file)}`);
@@ -70,7 +102,7 @@ const faviconPng = readFileSync(path.join(publicDir, 'favicon-64.png'));
 writeFileSync(path.join(publicDir, 'favicon.ico'), makeIco(faviconPng, 64));
 
 for (const size of [16, 32, 64, 128, 256, 512, 1024]) {
-  await renderPng(size, path.join(appIconDir, `icon_${size}.png`));
+  await renderMacIconPng(size, path.join(appIconDir, `icon_${size}.png`));
 }
 
 console.log('Generated Loom interlaced L icons from design/icon-simplification/loom-clever-interlaced-l.svg.');

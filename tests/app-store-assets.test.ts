@@ -206,7 +206,8 @@ test('mac app registers the loom URL scheme used by browser capture', () => {
 
 test('mac app launch scene presents the main window by default', () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, 'macos-app', 'Loom', 'Sources', 'LoomApp.swift'),
+    // App/Shell/ since the 2026-07-07 feature reorg.
+    path.join(repoRoot, 'macos-app', 'Loom', 'Sources', 'App', 'Shell', 'LoomApp.swift'),
     'utf8',
   );
 
@@ -265,17 +266,8 @@ test('Loom interlaced L icon pipeline keeps web and macOS assets aligned', () =>
   }
 });
 
-test('first-run sheet is refreshed from current defaults instead of restored state', () => {
-  const source = fs.readFileSync(
-    path.join(repoRoot, 'macos-app', 'Loom', 'Sources', 'ContentView.swift'),
-    'utf8',
-  );
-
-  assert.match(source, /@State private var firstRunSheetVisible = false/);
-  assert.match(source, /private func refreshFirstRunSheetVisibility\(\)/);
-  assert.match(source, /private var firstRunSheetBinding: Binding<Bool>/);
-  assert.match(source, /get:\s*\{\s*firstRunSheetVisible && AIProviderKind\.firstRunShouldPrompt\s*\}/);
-  assert.match(source, /\.sheet\(isPresented:\s*firstRunSheetBinding\)/);
-  assert.match(source, /\.onAppear\s*\{[\s\S]*refreshFirstRunSheetVisibility\(\)/);
-  assert.doesNotMatch(source, /@State private var firstRunSheetVisible = AIProviderKind\.firstRunShouldPrompt/);
-});
+// (The first-run-sheet contract is retired with its host: the ContentView
+// web shell was deleted in the 2026-07-08 partition — its only mount died at
+// the Reflection pivot — and this block had in fact been reading a stale
+// pre-reorg path since 2026-07-07. FirstRunProviderSheet itself survives at
+// Sources/App/Settings/ awaiting its rewire into the live workbench.)
