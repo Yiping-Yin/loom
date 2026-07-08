@@ -95,8 +95,17 @@ enum LoomFileStore {
             options: [.withSecurityScope],
             relativeTo: nil,
             bookmarkDataIsStale: &isStale
-        ), !isStale else {
+        ) else {
             return nil
+        }
+        // Charter §16: re-mint stale bookmarks in place instead of silently
+        // falling back to the default location.
+        if isStale, let fresh = try? url.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        ) {
+            defaults.set(fresh, forKey: defaultsKey)
         }
         _ = url.startAccessingSecurityScopedResource()
         return url

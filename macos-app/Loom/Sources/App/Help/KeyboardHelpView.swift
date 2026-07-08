@@ -48,13 +48,12 @@ struct KeyboardHelpView: View {
             .init(keys: "⌘F", label: "Find in the open source"),
             .init(keys: "⌘↑ / ⌘↓", label: "First / last page"),
             .init(keys: "⌘9 / ⌘0", label: "Fit width / actual size"),
-            .init(keys: "⌃⌘F", label: "Reader full screen"),
+            .init(keys: "⇧⌘F", label: "Reader full screen"),
             .init(keys: "Esc", label: "Close the reader (or the find bar first)"),
         ]),
         Group(title: "AI & review", items: [
             .init(keys: "⌘⇧E", label: "Ask Selection — quick question in a native window"),
             .init(keys: "⌃⇧G", label: "Review — second pass over the open draft"),
-            .init(keys: "⌘T", label: "Browser — open the bridge browser"),
         ]),
         Group(title: "Help", items: [
             .init(keys: "⌘⇧?", label: "Toggle this window"),

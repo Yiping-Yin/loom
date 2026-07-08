@@ -458,6 +458,8 @@ struct AskAIView: View {
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(LoomTokens.muted)
+                        .accessibilityLabel("Remove reference")
+                        .help("Remove this referenced doc")
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)

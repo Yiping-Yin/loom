@@ -101,6 +101,15 @@ targets:
               - com.microsoft.excel.xls
               - org.openxmlformats.presentationml.presentation
               - com.microsoft.powerpoint.ppt
+              # Charter §22: keep this list in lockstep with
+              # nativeFileImporterContentTypes() (IngestionView.swift) —
+              # tests/loom-doc-types.test.ts trips on drift.
+              - net.daringfireball.markdown
+              - com.apple.rtfd
+              - public.comma-separated-values-text
+              - public.tab-separated-values-text
+              - com.apple.iwork.pages.pages
+              - com.apple.iwork.keynote.key
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleURLTypes:

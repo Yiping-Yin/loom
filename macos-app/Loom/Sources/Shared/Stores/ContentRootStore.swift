@@ -143,9 +143,10 @@ enum ContentRootStore {
     static func activateAtLaunch(defaults: UserDefaults = .standard) -> [ContentRoot] {
         migrateV1IfNeeded(defaults: defaults)
         flattenLegacySubpages(defaults: defaults)
-        let stored = loadAll(defaults: defaults)
+        var stored = loadAll(defaults: defaults)
         var newActive: [UUID: URL] = [:]
-        for root in stored {
+        var rewroteBookmarks = false
+        for (index, root) in stored.enumerated() {
             guard let bookmark = root.externalFolderBookmark else { continue }
             var isStale = false
             do {
@@ -155,13 +156,32 @@ enum ContentRootStore {
                     relativeTo: nil,
                     bookmarkDataIsStale: &isStale
                 )
-                if isStale { continue }
                 _ = url.startAccessingSecurityScopedResource()
+                // Charter §16: stale-but-resolved means "please re-mint", not
+                // "make the owner re-add the folder". Rewrite the bookmark from
+                // the resolved URL and keep going.
+                if isStale, let fresh = try? url.bookmarkData(
+                    options: .withSecurityScope,
+                    includingResourceValuesForKeys: nil,
+                    relativeTo: nil
+                ) {
+                    stored[index] = ContentRoot(
+                        id: root.id,
+                        displayName: root.displayName,
+                        description: root.description,
+                        externalFolderBookmark: fresh,
+                        parentID: root.parentID,
+                        addedAt: root.addedAt,
+                        updatedAt: Date()
+                    )
+                    rewroteBookmarks = true
+                }
                 newActive[root.id] = url
             } catch {
                 continue
             }
         }
+        if rewroteBookmarks { saveAll(stored, defaults: defaults) }
         let previous = withLock { _activeURLs }
         for (id, url) in previous where newActive[id] == nil {
             url.stopAccessingSecurityScopedResource()
@@ -243,7 +263,9 @@ enum ContentRootStore {
                     options: [.withSecurityScope],
                     relativeTo: nil,
                     bookmarkDataIsStale: &isStale
-                ), !isStale {
+                ) {
+                    // Stale is fine here too — access still works this launch;
+                    // activateAtLaunch re-mints on the next start (§16).
                     _ = resolved.startAccessingSecurityScopedResource()
                     withLock { _activeURLs[existing.id] = resolved }
                 }

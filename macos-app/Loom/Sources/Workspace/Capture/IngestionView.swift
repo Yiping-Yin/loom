@@ -350,7 +350,7 @@ struct IngestionView: View {
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = true
         panel.prompt = "Add files"
-        panel.title = "Add files to Sources"
+        panel.message = "Add files to Sources"
         panel.allowedContentTypes = nativeFileImporterContentTypes()
         guard panel.runModal() == .OK else { return }
         for url in panel.urls {
@@ -1722,7 +1722,7 @@ private struct ExtractingPane: View {
                 .frame(width: 6, height: 6)
                 .opacity(pulse ? 0.3 : 1.0)
                 .animation(
-                    .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+                    LoomMotion.gated(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)),
                     value: pulse
                 )
                 .onAppear { pulse = true }

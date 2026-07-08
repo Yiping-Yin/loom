@@ -2193,7 +2193,7 @@ struct SourceFileView: View {
             .frame(width: 6, height: 6)
             .opacity(compilePulseActive ? 0.35 : 1.0)
             .animation(
-                .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+                LoomMotion.gated(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)),
                 value: compilePulseActive
             )
     }
@@ -3367,7 +3367,7 @@ struct SourceTraceRail: View {
                 }
             }
             .frame(width: width, height: height)
-            .animation(.easeOut(duration: 0.12), value: hoveredItemID)
+            .animation(LoomMotion.gated(.easeOut(duration: 0.12)), value: hoveredItemID)
         }
         .frame(maxHeight: .infinity)
         .background(Color.clear)

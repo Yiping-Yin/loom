@@ -28,6 +28,12 @@
 				<string>com.microsoft.excel.xls</string>
 				<string>org.openxmlformats.presentationml.presentation</string>
 				<string>com.microsoft.powerpoint.ppt</string>
+				<string>net.daringfireball.markdown</string>
+				<string>com.apple.rtfd</string>
+				<string>public.comma-separated-values-text</string>
+				<string>public.tab-separated-values-text</string>
+				<string>com.apple.iwork.pages.pages</string>
+				<string>com.apple.iwork.keynote.key</string>
 			</array>
 		</dict>
 	</array>

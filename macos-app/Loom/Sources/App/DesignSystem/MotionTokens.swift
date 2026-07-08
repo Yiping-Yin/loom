@@ -1,5 +1,7 @@
 import Foundation
 import CoreGraphics
+import SwiftUI
+import AppKit
 
 /// The centre-document reading instrument's motion vocabulary (decision ③,
 /// owner 2026-07-06). Alive comes from PHYSICS (a spring), never from an OBJECT
@@ -63,5 +65,15 @@ enum MotionTokens {
         case .spatial: return MotionSpec(response: 0.5,  dampingFraction: 0.85, kind: .spring)
         case .hero:    return MotionSpec(response: 0.65, dampingFraction: 0.7,  kind: .spring)
         }
+    }
+}
+
+
+/// View-boundary helper for charter §18: every spatial/attention animation
+/// passes this gate. SwiftUI does NOT honor Reduce Motion for you — a nil
+/// animation collapses the change to instant, which is the system contract.
+enum LoomMotion {
+    static func gated(_ animation: Animation?) -> Animation? {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? nil : animation
     }
 }
