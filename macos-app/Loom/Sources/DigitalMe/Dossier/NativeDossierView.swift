@@ -15,6 +15,9 @@ struct NativeDossierView: View {
     @State private var isAddingProfile = false
     @State private var newProfileLabel = ""
     @State private var newProfileURL = ""
+    // The professional identity line ("Quant Trader / Researcher") — travels
+    // with the portable context so any AI knows WHO it's working with.
+    @AppStorage("loom.digitalme.profession") private var profession = ""
 
     var body: some View {
         ScrollView {
@@ -51,6 +54,13 @@ struct NativeDossierView: View {
                 .font(.system(size: 13, design: .serif))
                 .italic()
                 .foregroundStyle(.secondary)
+            // Who you are professionally — one quiet line, yours to state.
+            TextField("Your profession (e.g. Quant Trader / Researcher)", text: $profession)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13, design: .serif))
+                .foregroundStyle(.primary)
+                .padding(.top, 2)
+                .accessibilityLabel("Your profession")
             if !principles.isEmpty {
                 Text(traceSummary)
                     .font(.system(size: 11))
@@ -60,7 +70,10 @@ struct NativeDossierView: View {
                 // portable context to paste into ANY AI model — your judgment
                 // travels with you, commanding models outside LOOM too.
                 Button {
-                    if let context = DigitalMePrompt.portableContext(from: principles) {
+                    if let context = DigitalMePrompt.portableContext(
+                        from: principles,
+                        profession: profession,
+                        presenceLines: profiles.map { "\($0.label): \($0.url.absoluteString)" }) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(context, forType: .string)
                         copiedConfirmation = true

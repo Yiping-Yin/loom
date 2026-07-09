@@ -55,8 +55,20 @@ enum DigitalMePrompt {
     /// every principle travels (no budget cut — exporting is deliberate), each
     /// with its scope clause and provenance, wrapped in the same anti-oracle
     /// honesty framing the in-app companion gets. nil when nothing is recorded.
-    static func portableContext(from principles: [ReflectionPrincipleRecord]) -> String? {
+    static func portableContext(
+        from principles: [ReflectionPrincipleRecord],
+        profession: String = "",
+        presenceLines: [String] = []
+    ) -> String? {
         guard !principles.isEmpty else { return nil }
+        var identity: [String] = []
+        let trimmedProfession = profession.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedProfession.isEmpty {
+            identity.append("They work as: \(trimmedProfession).")
+        }
+        if !presenceLines.isEmpty {
+            identity.append("Their online presence: " + presenceLines.joined(separator: " · "))
+        }
         let header = """
         You are assisting a specific person. Below are principles they have \
         recorded from their own study — their own scoped judgments, not \
@@ -65,7 +77,7 @@ enum DigitalMePrompt {
         runs against one of their recorded principles, say so plainly instead \
         of silently overriding it; never cite these as outside authority. The \
         final judgment is always theirs.
-        """
+        """ + (identity.isEmpty ? "" : "\n\n" + identity.joined(separator: "\n"))
         let lines = principles
             .sorted { $0.promotedAt > $1.promotedAt }
             .map { p -> String in

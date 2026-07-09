@@ -79,6 +79,27 @@ final class DigitalMePromptTests: XCTestCase {
         XCTAssertNil(DigitalMePrompt.portableContext(from: []))
     }
 
+    func testPortableContextCarriesProfessionAndOnlinePresence() {
+        // The exported persona: WHO they are (profession), HOW they judge
+        // (principles), WHERE they are online — so any AI model works with the
+        // whole professional self, not a bare list of rules.
+        let p = principle("X.", holds: "Y", title: "T", at: 1)
+        let out = DigitalMePrompt.portableContext(
+            from: [p],
+            profession: "Quant Trader / Researcher",
+            presenceLines: ["GitHub: https://github.com/yiping"])!
+        XCTAssertTrue(out.contains("Quant Trader / Researcher"))
+        XCTAssertTrue(out.contains("github.com/yiping"))
+        XCTAssertTrue(out.contains("X."), "principles still travel")
+    }
+
+    func testPortableContextOmitsEmptyProfessionAndPresence() {
+        let p = principle("X.", holds: "Y", title: "T", at: 1)
+        let out = DigitalMePrompt.portableContext(from: [p], profession: "  ", presenceLines: [])!
+        XCTAssertFalse(out.lowercased().contains("profession"),
+                       "no empty-profession scaffolding in the export")
+    }
+
     func testRelevantPrincipleOutranksANewerIrrelevantOne() {
         // An OLD principle that shares terms with the question must rank above a
         // NEWER one that doesn't — relevance beats recency (v0.5 policy).
