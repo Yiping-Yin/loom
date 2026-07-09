@@ -687,6 +687,8 @@ struct LoomReflectionRootView: View {
         .modifier(WorkbenchMenuRelays(
             onNewTopic: createReflection,
             onNewLearningProject: createLearningProject,
+            onNewProject: createProject,
+            onNewCourseFromFolder: createCourseFromFolder,
             onImportLocalSources: importLocalSources,
             onExportLearningRecord: exportLearningRecord
         ))
@@ -4977,6 +4979,8 @@ private struct PaneLandmark: ViewModifier {
 private struct WorkbenchMenuRelays: ViewModifier {
     let onNewTopic: () -> Void
     let onNewLearningProject: () -> Void
+    var onNewProject: () -> Void = {}
+    var onNewCourseFromFolder: () -> Void = {}
     let onImportLocalSources: () -> Void
     let onExportLearningRecord: () -> Void
 
@@ -4987,6 +4991,12 @@ private struct WorkbenchMenuRelays: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .loomNewLearningProject)) { _ in
                 onNewLearningProject()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomNewProject)) { _ in
+                onNewProject()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomNewCourseFromFolder)) { _ in
+                onNewCourseFromFolder()
             }
             .onReceive(NotificationCenter.default.publisher(for: .loomImportLocalSources)) { _ in
                 onImportLocalSources()

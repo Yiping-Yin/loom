@@ -1747,7 +1747,9 @@ struct NewTopicMenuItem: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Button("New Topic") {
+        // "New Draft" — the sidebar's primary create action, same vocabulary
+        // (the old "New Topic" label was stale pre-trio wording).
+        Button("New Draft") {
             openMainWindow()
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .loomNewTopic, object: nil)
@@ -1756,6 +1758,21 @@ struct NewTopicMenuItem: View {
         .keyboardShortcut("n", modifiers: .command)
         .onReceive(NotificationCenter.default.publisher(for: .loomOpenMainWindow)) { _ in
             openMainWindow()
+        }
+        // File ▸ New Project / New Course from Folder… — the sidebar's folder
+        // menu, mirrored in the menu bar so every create verb has a menu home
+        // (charter §11: menus are the honest map of what the app can do).
+        Button("New Project") {
+            openMainWindow()
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .loomNewProject, object: nil)
+            }
+        }
+        Button("New Course from Folder…") {
+            openMainWindow()
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .loomNewCourseFromFolder, object: nil)
+            }
         }
     }
 
@@ -2256,6 +2273,10 @@ extension Notification.Name {
     /// File ▸ New Learning Project (⌘⇧N) → workbench root's
     /// `createLearningProject()` — same relay pattern as `.loomNewTopic`.
     static let loomNewLearningProject = Notification.Name("loomNewLearningProject")
+    /// File ▸ New Project / New Course from Folder… → the sidebar's create
+    /// actions, mirrored in the menu bar (same relay pattern).
+    static let loomNewProject = Notification.Name("loomNewProject")
+    static let loomNewCourseFromFolder = Notification.Name("loomNewCourseFromFolder")
     /// File ▸ Open… (⌘O) → workbench root's `importLocalSources()`
     /// (NSOpenPanel → case sources → reader).
     static let loomImportLocalSources = Notification.Name("loomImportLocalSources")
