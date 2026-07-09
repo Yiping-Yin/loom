@@ -463,6 +463,9 @@ struct LoomReflectionRootView: View {
         .onDisappear {
             LoomCaptureURLRelay.unregisterPrimaryShell()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .loomOpenCase)) { note in
+            if let id = note.userInfo?["caseID"] as? String { selectCaseTab(id) }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in createReflection() }
         .onReceive(NotificationCenter.default.publisher(for: .loomExportLearningRecord)) { _ in exportLearningRecord() }
         .onReceive(NotificationCenter.default.publisher(for: .loomOpenExternalFiles)) { note in
@@ -4771,6 +4774,9 @@ private struct AnchorPreviewTarget: Identifiable {
 }
 
 extension Notification.Name {
+    /// The Today window asks the workbench to open a case by id (a row tap in
+    /// the daily face routes back into the main workspace).
+    static let loomOpenCase = Notification.Name("loomOpenCase")
     /// A `loom://anchor` link clicked in the reflection note asks the workbench
     /// to pop the source in an in-app PDF view jumped to its page + rect.
     static let loomReflectionAnchorJump = Notification.Name("loomReflectionAnchorJump")

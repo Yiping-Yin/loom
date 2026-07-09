@@ -133,6 +133,16 @@ struct LoomApp: App {
         .defaultSize(width: 820, height: 760)
         .defaultPosition(.center)
 
+        // The Today daily face — its own window until the 3-way IA rebuild
+        // gives it a sidebar destination. A row tap routes back to the
+        // workbench via .loomOpenCase.
+        Window("Today", id: TodayWindow.id) {
+            TodayRootView()
+                .paperChrome()
+        }
+        .defaultSize(width: 520, height: 620)
+        .defaultPosition(.center)
+
         // (The old "Add files" IngestionWindow is unregistered — macOS gives
         // every registered SwiftUI Window a system Window-menu command, and
         // this one wrote typed-extractor output into a store the live
@@ -158,6 +168,7 @@ struct LoomApp: App {
                 AskAIMenuItem()
                 AskAboutFileMenuItem()
                 ShuttleMenuItem()
+                TodayMenuItem()
                 ReviewMenuItem()
                 LibraryMenuItem()
                 // (Removed six more stone-dead launchers — Hold Question ⌘⇧P,
@@ -1827,6 +1838,15 @@ struct ShuttleMenuItem: View {
             openWindow(id: ShuttleWindow.id)
         }
         .keyboardShortcut("k", modifiers: .command)
+    }
+}
+
+/// Opens the Today daily face (charter §20 · TodayDigest). ⌘⇧T.
+struct TodayMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+    var body: some View {
+        Button("Today") { openWindow(id: TodayWindow.id) }
+            .keyboardShortcut("t", modifiers: [.command, .shift])
     }
 }
 
