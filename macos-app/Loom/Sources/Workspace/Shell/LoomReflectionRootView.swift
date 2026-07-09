@@ -616,8 +616,17 @@ struct LoomReflectionRootView: View {
                 destination = .wiki
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in createReflection() }
-        .onReceive(NotificationCenter.default.publisher(for: .loomExportLearningRecord)) { _ in exportLearningRecord() }
+        // W1-2: the menu bar owns the shortcuts; the workbench root answers.
+        // File ▸ New Topic (⌘N) / New Learning Project (⌘⇧N) / Open… (⌘O) /
+        // Export Learning Record relay here — one modifier, not four chained
+        // onReceive calls, because this body chain sits at the compiler's
+        // type-check ceiling.
+        .modifier(WorkbenchMenuRelays(
+            onNewTopic: createReflection,
+            onNewLearningProject: createLearningProject,
+            onImportLocalSources: importLocalSources,
+            onExportLearningRecord: exportLearningRecord
+        ))
         .onReceive(NotificationCenter.default.publisher(for: .loomOpenExternalFiles)) { note in
             let token = note.userInfo?["token"] as? UUID
             if let token, token == lastHandledExternalFileToken {
@@ -3011,7 +3020,11 @@ private struct ReflectionSidebar: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
-        .background { hiddenShortcutButtons }
+        // Edit ▸ Search (⌘K) — the menu bar owns the shortcut (charter §11);
+        // the sidebar answers by focusing its search field.
+        .onReceive(NotificationCenter.default.publisher(for: .loomFocusSidebarSearch)) { _ in
+            searchFocused = true
+        }
     }
 
     // SwiftUI caches a row's Menu/contextMenu content by identity, so a reused
@@ -3112,22 +3125,12 @@ private struct ReflectionSidebar: View {
         }
     }
 
-    // View-local shortcuts — zero new data, zero new callbacks. Docked and
-    // peek sidebars are mutually exclusive, so these never double-register.
-    private var hiddenShortcutButtons: some View {
-        Group {
-            Button("") { searchFocused = true }
-                .keyboardShortcut("k", modifiers: .command)
-            Button("", action: onCreate)
-                .keyboardShortcut("n", modifiers: .command)
-            Button("", action: onCreateLearning)
-                .keyboardShortcut("n", modifiers: [.command, .shift])
-        }
-        .buttonStyle(.plain)
-        .opacity(0)
-        .frame(width: 0, height: 0)
-        .accessibilityHidden(true)
-    }
+    // (hiddenShortcutButtons is retired — charter §11/W1-2: no opacity-0
+    // buttons registering shortcuts. ⌘K/⌘N/⌘⇧N now live as REAL menu items
+    // in LoomApp (Edit ▸ Search, File ▸ New Topic, File ▸ New Learning
+    // Project), reaching this view through their notifications. That also
+    // ends the ⌘K double registration that shadowed the Shuttle menu item
+    // whenever the main window was key.)
 }
 
 /// One row of the 3-way destination picker (W2-2). Matches the sidebar row
@@ -4882,6 +4885,33 @@ private struct AnchorPreviewTarget: Identifiable {
     var id: String { "\(fileURL.path)#\(page)" }
 }
 
+/// W1-2 — the File-menu relays, folded into ONE modifier because the root
+/// view's body chain sits at the compiler's type-check ceiling (four chained
+/// onReceive calls tipped it over). The menu items in LoomApp post; the
+/// workbench root answers with the same actions its own buttons call.
+private struct WorkbenchMenuRelays: ViewModifier {
+    let onNewTopic: () -> Void
+    let onNewLearningProject: () -> Void
+    let onImportLocalSources: () -> Void
+    let onExportLearningRecord: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in
+                onNewTopic()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomNewLearningProject)) { _ in
+                onNewLearningProject()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomImportLocalSources)) { _ in
+                onImportLocalSources()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomExportLearningRecord)) { _ in
+                onExportLearningRecord()
+            }
+    }
+}
+
 extension Notification.Name {
     /// The Today window asks the workbench to open a case by id (a row tap in
     /// the daily face routes back into the main workspace).
@@ -5819,21 +5849,15 @@ struct GlassDocumentEditor: NSViewRepresentable {
             #endif
         }
 
-        // Word-class emphasis with no permanent chrome: the standard ⌘B/⌘I/⌘U
-        // toggle bold/italic/underline on the selection. normalizeDocument
-        // preserves them; the single-ink discipline still governs family/size.
-        override func performKeyEquivalent(with event: NSEvent) -> Bool {
-            if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
-               let key = event.charactersIgnoringModifiers?.lowercased() {
-                switch key {
-                case "b": toggleEmphasis(.boldFontMask); return true
-                case "i": toggleEmphasis(.italicFontMask); return true
-                case "u": toggleUnderline(); return true
-                default: break
-                }
-            }
-            return super.performKeyEquivalent(with: event)
-        }
+        // Word-class emphasis with no permanent chrome: ⌘B/⌘I/⌘U now arrive
+        // through the REAL Format ▸ Font menu (TextFormattingCommands in
+        // LoomApp, charter §11/W1-2) — Bold/Italic drive the font manager's
+        // addFontTrait: → changeFont:, Underline is the responder-chain
+        // underline(_:); NSTextView answers all three natively and undoably.
+        // The old performKeyEquivalent interception is gone: it beat the
+        // menu to the key, so the menu items could never own the shortcuts
+        // (and System Settings remapping saw items that never fired).
+        // toggleEmphasis/toggleUnderline stay for the right-click menu.
 
         private func toggleEmphasis(_ trait: NSFontTraitMask) {
             let range = selectedRange()
@@ -6759,14 +6783,17 @@ private struct ReflectionBridgePanel: View {
     var body: some View {
         VStack(spacing: 12) {
             VStack(spacing: 8) {
+                // ⌘O is owned by File ▸ Open… (charter §12 — ⌘P is released
+                // for its reserved meaning, Print). The row shows the menu's
+                // shortcut but registers no key of its own: one owner, and
+                // the combo no longer appears/disappears with this pane.
                 BridgeRow(
                     systemImage: "folder.badge.plus",
                     title: "Add files",
-                    shortcut: "⌘P",
+                    shortcut: "⌘O",
                     help: "Import local files as sources for this draft (or drag a file onto the document)",
                     action: onFiles
                 )
-                .keyboardShortcut("p", modifiers: .command)
                 BridgeRow(
                     systemImage: "checklist",
                     title: "Review",
