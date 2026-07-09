@@ -1,3 +1,5 @@
+> ⚠️ **已过时（2026-07-10）。** 本文件是 LOOM 早期框架，已被收敛后的定稿取代。当前定稿（冲突处以这三份为准，本文件仅作历史参考）：[`../NORTH_STAR.md`](../NORTH_STAR.md)（一页版）· [`../docs/LOOM_STATE.md`](../docs/LOOM_STATE.md)（总纲）· [`../docs/COMMERCIAL_VALIDATION.md`](../docs/COMMERCIAL_VALIDATION.md)（证据底稿）。
+
 # Loom — Plan Navigation Map (formerly Unified Product Vision)
 
 > **Status**: SUPERSEDED 2026-05-01 by `docs/canon/LOOM.md` at repo root.

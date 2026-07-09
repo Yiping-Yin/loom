@@ -1,3 +1,5 @@
+> ⚠️ **已过时（2026-07-10）。** 本文件（v1.2 产品规范）是 LOOM 早期框架，已被收敛后的定稿取代。当前定稿（冲突处以这三份为准，本文件仅作历史参考）：[`../NORTH_STAR.md`](../NORTH_STAR.md)（一页版）· [`LOOM_STATE.md`](LOOM_STATE.md)（总纲）· [`COMMERCIAL_VALIDATION.md`](COMMERCIAL_VALIDATION.md)（证据底稿）。
+
 # Loom — 完整讲述
 
 **版本** 1.2

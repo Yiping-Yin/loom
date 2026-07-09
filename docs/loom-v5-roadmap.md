@@ -1,3 +1,5 @@
+> ⚠️ **已过时（2026-07-10）。** 本路线图是 LOOM 早期框架，已被收敛后的定稿取代。当前定稿（冲突处以这三份为准，本文件仅作历史参考）：[`../NORTH_STAR.md`](../NORTH_STAR.md)（一页版）· [`LOOM_STATE.md`](LOOM_STATE.md)（总纲）· [`COMMERCIAL_VALIDATION.md`](COMMERCIAL_VALIDATION.md)（证据底稿）。
+
 # Loom v5 — 全面升级路线图
 
 **Date:** 2026-05-05

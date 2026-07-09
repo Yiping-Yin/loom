@@ -34,7 +34,22 @@
 
 ---
 
+> ## ⚠️ 2026-07-09 · THESIS UPDATE（收敛版）
+>
+> **下方为 v4.1（2026-05）框架。2026-07-09 与产品 owner + 导师 Benson 收敛出更锐的表述,已写入根目录 [`NORTH_STAR.md`](../../NORTH_STAR.md)（当前 canonical 短表述）。§1、§8 与其冲突处,以 NORTH_STAR 为准。** 导师原话:*some of this is just words, make it concrete* —— 具体化与未解的坑见 NORTH_STAR §2/§7 与 [`../COMMERCIAL_VALIDATION.md`](../COMMERCIAL_VALIDATION.md)。
+>
+> 收敛后的核心:
+> - **时代前提**:AI 把执行/生成打到近乎免费;稀缺、抄不走的那层退回到**人的判断力**。人成为"思考/品味/想象的决策架构师"。
+> - **唯一价值 = 判断力**——唯一别人抄不走的东西,是一个真正的**数据护城河**。
+> - **机制 = 高频、费力的回路**(留存结构参考 Duolingo,对象是"通过实时 AI 交互把硬东西搞懂"),回路把你的判断**费力逼出、结构化捕获**成专有数据(不是被动聊天记录)。
+> - **Power of Effort(双刃)**:费力才有理解(desirable difficulty,学习科学最稳的发现之一);费力才不廉价(高定逻辑)。**AI 是织机不是织工**——抹掉浪费的力(找/整理/排版),保留甚至强制有产出的力(提取/重构/下判断)。
+> - **产物 = 由判断数据生成的数字分身(Digital Me/agent)**,按你的判断行事,帮你和更强的模型交互。
+> - **架构升级**:工作台 → **The Loop(捕获判断)**;Wiki → **Judgment Data(判断数据护城河)**;Digital Me → **由判断生成的 Agent**。
+> - **未解的坑(诚实)**:① 一条"判断"作为数据长什么样 + 什么机制逼出判断而非又一堆聊天记录(否则打不过平台 memory);② agent 替谁、干什么、凭什么付钱;③ 冷启动。**商业现实**:留存是唯一的闸;自学者侧小而美、专业侧买"权威答案"非"学会"。
+
 ## 1. What Loom Is — In One Sentence
+
+> **更新 2026-07-09:** 下面这句 v4.1 一句话仍然成立(它是"知识系统"版),但**收敛后的一句话**是:*Loom 是把 AI 时代唯一还稀缺的东西——你的判断力——费力逼出、捕获成专有数据、并长成一个按你判断行事的分身的地方。* 见 [`NORTH_STAR.md`](../../NORTH_STAR.md)。
 
 **EN**: Loom is where you build your knowledge system over years, by closing the learning loop on every source you encounter.
 
@@ -763,6 +778,8 @@ The native side validates the prefix + path before any FS access. Cross-origin i
 ---
 
 ## 8. The Moat — Two Layers
+
+> **更新 2026-07-09:** 护城河的正式表述已升级为「**判断数据（Judgment Data）**」——见文件顶部 THESIS UPDATE 横幅与 [`NORTH_STAR.md`](../../NORTH_STAR.md) §1/§5。下面 v4.1 的"两层"仍成立,但现在被更精确地表述为:**session 层** = 费力回路的即时价值(把硬东西搞懂);**arc 层** = 积累的**专有判断数据**(不只是源锚定知识,而是被回路逼出、编码下来的**你的判断/品味**),这才是抄不走、且平台结构上不会为"单个人"去做的那层。诚实提醒:这条护城河的**生死坑**是——"判断"能否真被逼成比 ChatGPT memory 更值钱的数据(NORTH_STAR §7 坑 1),今天**未证**。
 
 ### Session moat (today)
 
