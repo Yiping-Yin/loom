@@ -16,15 +16,28 @@ enum ReviewStore {
     static let defaultDailyCap = 7
     static let candidateThreshold = 0.5
 
+    /// Where the wedge persists. Normally the standard store; when the
+    /// `LOOM_REVIEW_SCRATCH` env var is set, a throwaway suite instead — so the
+    /// owner (or a live-verify pass) can drive the whole read→write→review→rate
+    /// loop end to end WITHOUT touching real review items or the streak (the
+    /// never-churn iron rule). Note text still lives in the workspace; only the
+    /// review layer scratches.
+    static var activeDefaults: UserDefaults {
+        if ProcessInfo.processInfo.environment["LOOM_REVIEW_SCRATCH"] != nil {
+            return UserDefaults(suiteName: "loom.review.scratch") ?? .standard
+        }
+        return .standard
+    }
+
     // MARK: - Persistence
 
-    static func loadAll(defaults: UserDefaults = .standard) -> [ReviewItem] {
+    static func loadAll(defaults: UserDefaults = activeDefaults) -> [ReviewItem] {
         guard let data = defaults.data(forKey: defaultsKey) else { return [] }
         return (try? JSONDecoder().decode([ReviewItem].self, from: data)) ?? []
     }
 
     @discardableResult
-    static func saveAll(_ items: [ReviewItem], defaults: UserDefaults = .standard) -> Bool {
+    static func saveAll(_ items: [ReviewItem], defaults: UserDefaults = activeDefaults) -> Bool {
         guard let data = try? JSONEncoder().encode(items) else { return false }
         defaults.set(data, forKey: defaultsKey)
         return true
@@ -40,7 +53,7 @@ enum ReviewStore {
         document: NSAttributedString,
         sourceTitle: String,
         now: Date = Date(),
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = activeDefaults
     ) -> [ReviewItem] {
         let extracted = ReviewExtraction.extract(from: document)
         let merged = ReviewExtraction.upsert(
@@ -58,7 +71,7 @@ enum ReviewStore {
         itemID: String,
         rating: ReviewRating,
         at date: Date = Date(),
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = activeDefaults
     ) {
         var items = loadAll(defaults: defaults)
         guard let i = items.firstIndex(where: { $0.id == itemID }) else { return }
@@ -71,20 +84,20 @@ enum ReviewStore {
 
     // MARK: - Streak (forgiving, real-recall-only)
 
-    static func loadStreak(defaults: UserDefaults = .standard) -> ReviewStreak {
+    static func loadStreak(defaults: UserDefaults = activeDefaults) -> ReviewStreak {
         guard let data = defaults.data(forKey: streakKey),
               let s = try? JSONDecoder().decode(ReviewStreak.self, from: data) else { return .empty }
         return s
     }
 
-    static func currentStreak(defaults: UserDefaults = .standard) -> Int {
+    static func currentStreak(defaults: UserDefaults = activeDefaults) -> Int {
         loadStreak(defaults: defaults).current
     }
 
     private static func advanceStreak(
         on date: Date,
         calendar: Calendar = .current,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = activeDefaults
     ) {
         let day = calendar.startOfDay(for: date)
         let next = ReviewStreak.advance(loadStreak(defaults: defaults), day: day)
@@ -99,7 +112,7 @@ enum ReviewStore {
     static func dueToday(
         now: Date = Date(),
         dailyCap: Int = defaultDailyCap,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = activeDefaults
     ) -> [ReviewItem] {
         ReviewScheduler.todaysSession(
             items: loadAll(defaults: defaults),
