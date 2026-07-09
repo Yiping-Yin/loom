@@ -9,11 +9,18 @@ import SwiftUI
 struct NativeDossierView: View {
     @State private var principles: [ReflectionPrincipleRecord] = []
     @State private var copiedConfirmation = false
+    // Online presence (owner trio: LinkedIn/GitHub/Ins/Outlook supplement the
+    // wiki into the professional self). Owner-registered links, local.
+    @State private var profiles: [OnlineProfile] = []
+    @State private var isAddingProfile = false
+    @State private var newProfileLabel = ""
+    @State private var newProfileURL = ""
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 header
+                onlinePresenceSection
                 if principles.isEmpty {
                     emptyState
                 } else {
@@ -27,6 +34,7 @@ struct NativeDossierView: View {
         .onAppear {
             principles = ReflectionPrincipleStore.load()
                 .sorted { $0.promotedAt > $1.promotedAt }
+            profiles = OnlinePresenceStore.load()
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("You — your principles")
@@ -81,6 +89,90 @@ struct NativeDossierView: View {
         let reused = principles.filter { !$0.reuseEvents.isEmpty }.count
         let base = "\(principles.count) principle\(principles.count == 1 ? "" : "s")"
         return reused > 0 ? "\(base) · \(reused) reused" : base
+    }
+
+    /// Online presence — the places that supplement the wiki into the
+    /// professional self (LinkedIn / GitHub / Instagram / Outlook…). Owner-
+    /// registered links: local, honest, one click to open.
+    private var onlinePresenceSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text("Online presence")
+                    .font(.system(size: 11, weight: .medium))
+                    .tracking(1.2)
+                    .textCase(.uppercase)
+                    .foregroundStyle(.tertiary)
+                Button {
+                    isAddingProfile.toggle()
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("Add a profile link (LinkedIn, GitHub, …)")
+                .accessibilityLabel("Add online profile")
+            }
+
+            if profiles.isEmpty && !isAddingProfile {
+                Text("Add your LinkedIn, GitHub, or other profiles — the online places that round out who you are.")
+                    .font(.system(size: 12, design: .serif))
+                    .italic()
+                    .foregroundStyle(.tertiary)
+            }
+
+            ForEach(profiles) { profile in
+                Button {
+                    NSWorkspace.shared.open(profile.url)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "link")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 18)
+                        Text(profile.label)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.primary)
+                        Text(profile.url.host() ?? "")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.tertiary)
+                        Spacer(minLength: 0)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button("Remove", role: .destructive) {
+                        OnlinePresenceStore.remove(id: profile.id)
+                        profiles = OnlinePresenceStore.load()
+                    }
+                }
+                .accessibilityLabel("\(profile.label) profile")
+            }
+
+            if isAddingProfile {
+                HStack(spacing: 8) {
+                    TextField("Label (e.g. LinkedIn)", text: $newProfileLabel)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 150)
+                    TextField("URL", text: $newProfileURL)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit(commitNewProfile)
+                    Button("Add", action: commitNewProfile)
+                        .disabled(OnlinePresenceStore.normalizedWebURL(from: newProfileURL) == nil
+                                  || newProfileLabel.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                .font(.system(size: 12))
+            }
+        }
+    }
+
+    private func commitNewProfile() {
+        OnlinePresenceStore.add(label: newProfileLabel, urlString: newProfileURL)
+        profiles = OnlinePresenceStore.load()
+        newProfileLabel = ""
+        newProfileURL = ""
+        isAddingProfile = false
     }
 
     private var emptyState: some View {
