@@ -5355,19 +5355,30 @@ struct GlassDocumentEditor: NSViewRepresentable {
     /// scroll, so the jump animates that enclosing scroll view to the
     /// heading's line, leaving breathing room under the top chrome.
     static func scroll(_ view: NSTextView, toCharacter target: Int) {
-        guard let manager = view.layoutManager,
-              let container = view.textContainer,
+        // TextKit 2 (charter W2-3): resolve the character's line rect through
+        // textLayoutManager — .layoutManager would one-way-downgrade the view.
+        guard let textLayoutManager = view.textLayoutManager,
+              let contentManager = textLayoutManager.textContentManager,
               let scrollView = view.enclosingScrollView,
               let documentView = scrollView.documentView else { return }
         let length = (view.string as NSString).length
         guard length > 0 else { return }
         let safeTarget = min(max(0, target), length - 1)
-        let glyphRange = manager.glyphRange(
-            forCharacterRange: NSRange(location: safeTarget, length: 1),
-            actualCharacterRange: nil
-        )
-        let rect = manager.boundingRect(forGlyphRange: glyphRange, in: container)
-        let pointInDocument = view.convert(NSPoint(x: 0, y: rect.minY), to: documentView)
+        textLayoutManager.ensureLayout(for: textLayoutManager.documentRange)
+        guard let location = contentManager.location(
+                contentManager.documentRange.location, offsetBy: safeTarget),
+              let fragment = textLayoutManager.textLayoutFragment(for: location) else { return }
+        // The fragment covers the whole paragraph; refine to the LINE holding
+        // the target (matches the old one-glyph boundingRect for mid-paragraph
+        // jumps — headings are paragraph starts either way).
+        let fragmentFrame = fragment.layoutFragmentFrame
+        var lineY = fragmentFrame.minY
+        let offsetInFragment = contentManager.offset(from: fragment.rangeInElement.location, to: location)
+        for line in fragment.textLineFragments where NSLocationInRange(offsetInFragment, line.characterRange) {
+            lineY = fragmentFrame.minY + line.typographicBounds.minY
+            break
+        }
+        let pointInDocument = view.convert(NSPoint(x: 0, y: lineY), to: documentView)
         let maxY = max(0, documentView.frame.height - scrollView.contentView.bounds.height)
         let targetY = min(max(0, pointInDocument.y - 84), maxY)
         NSAnimationContext.runAnimationGroup { context in
@@ -5486,22 +5497,10 @@ struct GlassDocumentEditor: NSViewRepresentable {
             return true
         }
 
-        /// Attachment-cell clicks route here (not through clickedOnLink): a file
-        /// chip opens its source; an appshot card follows its loom://anchor link.
-        func textView(
-            _ textView: NSTextView,
-            clickedOn cell: NSTextAttachmentCellProtocol,
-            in cellFrame: NSRect,
-            at charIndex: Int
-        ) {
-            if let chip = cell as? PaperFileAttachmentCell {
-                onOpenSource(chip.sourceID)
-                return
-            }
-            if let link = textView.textStorage?.attribute(.link, at: charIndex, effectiveRange: nil) {
-                routeAnchorLink((link as? URL)?.absoluteString ?? (link as? String ?? ""))
-            }
-        }
+        // Attachment clicks no longer route through the clickedOn-cell
+        // delegate: TextKit 2 ignores cells, so the paper card / file chip
+        // views (PaperImageCardView / PaperFileChipView) own their own
+        // mouseDown and call back through this same Coordinator.
 
         func textDidEndEditing(_ notification: Notification) {
             guard let view = notification.object as? NSTextView else { return }
@@ -5584,18 +5583,19 @@ struct GlassDocumentEditor: NSViewRepresentable {
         /// onto the incoming document's text.
         func cancelInFlightAnchorFlashes() {
             flashGeneration += 1
-            if let lm = layoutManager, let storage = textStorage, storage.length > 0 {
-                lm.removeTemporaryAttribute(.backgroundColor,
-                                            forCharacterRange: NSRange(location: 0, length: storage.length))
-            }
+            guard let textLayoutManager else { return }
+            textLayoutManager.removeRenderingAttribute(
+                .backgroundColor, for: textLayoutManager.documentRange)
         }
 
         override var intrinsicContentSize: NSSize {
-            guard let container = textContainer, let manager = layoutManager else {
-                return super.intrinsicContentSize
-            }
-            manager.ensureLayout(for: container)
-            let used = manager.usedRect(for: container)
+            // TextKit 2 (charter W2-3): this runs on EVERY layout pass, so it
+            // must never touch .layoutManager — that was the downgrade that
+            // kept the editor on TextKit 1 its whole life.
+            // usageBoundsForTextContainer is .zero before layout: ensure first.
+            guard let textLayoutManager else { return super.intrinsicContentSize }
+            textLayoutManager.ensureLayout(for: textLayoutManager.documentRange)
+            let used = textLayoutManager.usageBoundsForTextContainer
             return NSSize(width: NSView.noIntrinsicMetric, height: max(used.height + 8, 72))
         }
 
@@ -5745,26 +5745,10 @@ struct GlassDocumentEditor: NSViewRepresentable {
         @objc func loomToggleItalic() { toggleEmphasis(.italicFontMask) }
         @objc func loomToggleUnderline() { toggleUnderline() }
 
-        // A click that lands on a file chip opens its source directly —
-        // deterministic hit-testing instead of AppKit's legacy attachment
-        // click plumbing.
-        override func mouseDown(with event: NSEvent) {
-            let point = convert(event.locationInWindow, from: nil)
-            if let manager = layoutManager, let container = textContainer, let storage = textStorage {
-                let glyphIndex = manager.glyphIndex(for: point, in: container)
-                let charIndex = manager.characterIndexForGlyph(at: glyphIndex)
-                if charIndex < storage.length,
-                   let attachment = storage.attribute(.attachment, at: charIndex, effectiveRange: nil) as? NSTextAttachment,
-                   let chip = attachment.attachmentCell as? PaperFileAttachmentCell {
-                    let rect = manager.boundingRect(forGlyphRange: NSRange(location: glyphIndex, length: 1), in: container)
-                    if rect.contains(point) {
-                        (delegate as? GlassDocumentEditor.Coordinator)?.onOpenSource(chip.sourceID)
-                        return
-                    }
-                }
-            }
-            super.mouseDown(with: event)
-        }
+        // Chip clicks: under TextKit 2 the file chip is a REAL view
+        // (PaperFileChipView) that owns its own mouseDown, so the old
+        // glyph-hit-test mouseDown override is gone — no .layoutManager,
+        // no downgrade.
 
         // Files route by kind (images → paper cards, documents → source
         // chips); everything textual pastes PLAIN so the document keeps
@@ -5997,7 +5981,7 @@ struct GlassDocumentEditor: NSViewRepresentable {
         /// saved to RTFD and normalizeDocument never sees it. Under Reduce Motion
         /// the fade collapses to today's instant removal.
         private func flashAnchor(range: NSRange, precise: Bool) {
-            guard let layoutManager, let storage = textStorage,
+            guard let storage = textStorage,
                   range.location >= 0, range.location + range.length <= storage.length else { return }
             // Supersede any prior flash: bump the generation (its queued frames
             // early-return) AND clear its tint so an overlapping capture never
@@ -6006,8 +5990,11 @@ struct GlassDocumentEditor: NSViewRepresentable {
             let generation = flashGeneration
             let color = precise ? NSColor.systemTeal : NSColor.systemOrange
             let peak: CGFloat = 0.28
-            layoutManager.addTemporaryAttributes([.backgroundColor: color.withAlphaComponent(peak)],
-                                                 forCharacterRange: range)
+            // TextKit 2 rendering attributes: display-only, never enter
+            // textStorage — the TK2 twin of the old temporary attributes.
+            guard let textLayoutManager, let flashRange = textKit2Range(from: range) else { return }
+            textLayoutManager.addRenderingAttribute(
+                .backgroundColor, value: color.withAlphaComponent(peak), for: flashRange)
             let spec = MotionTokens.spec(for: .effect, reduceMotion: Self.prefersReducedMotion)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
                 self?.fadeOutAnchorTint(range: range, color: color, from: peak,
@@ -6023,8 +6010,9 @@ struct GlassDocumentEditor: NSViewRepresentable {
                                        over duration: Double, generation: Int) {
             guard generation == flashGeneration else { return }  // superseded by a newer flash / doc swap
             guard duration > 0 else {
-                if let lm = layoutManager, let r = clampedTintRange(range) {
-                    lm.removeTemporaryAttribute(.backgroundColor, forCharacterRange: r)
+                if let tlm = textLayoutManager,
+                   let r = clampedTintRange(range).flatMap(textKit2Range(from:)) {
+                    tlm.removeRenderingAttribute(.backgroundColor, for: r)
                 }
                 return
             }
@@ -6033,15 +6021,27 @@ struct GlassDocumentEditor: NSViewRepresentable {
             for step in 1...steps {
                 DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(step)) { [weak self] in
                     guard let self, self.flashGeneration == generation,
-                          let lm = self.layoutManager, let r = self.clampedTintRange(range) else { return }
+                          let tlm = self.textLayoutManager,
+                          let r = self.clampedTintRange(range).flatMap(self.textKit2Range(from:)) else { return }
                     if let alpha = AnchorFlashFade.alpha(atStep: step, of: steps, peak: peak) {
-                        lm.addTemporaryAttributes([.backgroundColor: color.withAlphaComponent(alpha)],
-                                                  forCharacterRange: r)
+                        tlm.addRenderingAttribute(
+                            .backgroundColor, value: color.withAlphaComponent(alpha), for: r)
                     } else {
-                        lm.removeTemporaryAttribute(.backgroundColor, forCharacterRange: r)
+                        tlm.removeRenderingAttribute(.backgroundColor, for: r)
                     }
                 }
             }
+        }
+
+        /// NSRange → NSTextRange through the content manager's location
+        /// arithmetic — the bridge every rendering-attribute call needs.
+        private func textKit2Range(from range: NSRange) -> NSTextRange? {
+            guard let textLayoutManager,
+                  let contentManager = textLayoutManager.textContentManager else { return nil }
+            let document = contentManager.documentRange
+            guard let start = contentManager.location(document.location, offsetBy: range.location),
+                  let end = contentManager.location(start, offsetBy: range.length) else { return nil }
+            return NSTextRange(location: start, end: end)
         }
 
         /// The still-valid intersection of `range` with the current text, or nil
@@ -6060,156 +6060,6 @@ struct GlassDocumentEditor: NSViewRepresentable {
             UserDefaults.standard.string(forKey: "wiki:reduce-motion") == "1"
                 || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         }
-    }
-}
-
-// An image in the document flow is a piece of paper laid on the glass:
-// solid white card, rounded corners, a real shadow — the same material
-// honesty as EvidencePaperCard, drawn as a text attachment cell so it
-// lives inside the editor's own layout, selection, and undo.
-private final class PaperImageAttachmentCell: NSTextAttachmentCell {
-    static let padding: CGFloat = 10
-    static let cornerRadius: CGFloat = 10
-    static let maxCardWidth: CGFloat = 560
-
-    override func cellFrame(
-        for textContainer: NSTextContainer,
-        proposedLineFragment lineFrag: NSRect,
-        glyphPosition position: NSPoint,
-        characterIndex charIndex: Int
-    ) -> NSRect {
-        guard let image, image.size.width > 0 else {
-            return super.cellFrame(
-                for: textContainer,
-                proposedLineFragment: lineFrag,
-                glyphPosition: position,
-                characterIndex: charIndex
-            )
-        }
-        let available = min(lineFrag.width, Self.maxCardWidth) - Self.padding * 2
-        let scale = min(1, available / image.size.width)
-        let width = image.size.width * scale + Self.padding * 2
-        let height = image.size.height * scale + Self.padding * 2
-        return NSRect(x: 0, y: 0, width: width, height: height)
-    }
-
-    override func draw(withFrame cellFrame: NSRect, in controlView: NSView?) {
-        guard let context = NSGraphicsContext.current else { return }
-        context.saveGraphicsState()
-        let card = NSBezierPath(
-            roundedRect: cellFrame.insetBy(dx: 1, dy: 1),
-            xRadius: Self.cornerRadius,
-            yRadius: Self.cornerRadius
-        )
-        let shadow = NSShadow()
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.28)
-        shadow.shadowBlurRadius = 7
-        shadow.shadowOffset = NSSize(width: 0, height: -2)
-        shadow.set()
-        NSColor.white.setFill()
-        card.fill()
-        context.restoreGraphicsState()
-
-        if let image {
-            let inset = cellFrame.insetBy(dx: Self.padding, dy: Self.padding)
-            image.draw(
-                in: inset,
-                from: .zero,
-                operation: .sourceOver,
-                fraction: 1,
-                respectFlipped: true,
-                hints: [.interpolation: NSImageInterpolation.high]
-            )
-        }
-    }
-}
-
-// A non-image file in the document flow: the same paper material as the
-// image card, compressed to a chip — file icon and name on solid white
-// with a real shadow. Clicking follows its loom-source:// link.
-private final class PaperFileAttachmentCell: NSTextAttachmentCell {
-    static let chipHeight: CGFloat = 30
-    static let padding: CGFloat = 9
-    static let maxLabelWidth: CGFloat = 240
-
-    let label: String
-    let sourceID: String
-    let fileIcon: NSImage
-    private let labelFont = NSFont.systemFont(ofSize: 12, weight: .medium)
-
-    init(label: String, sourceID: String, fileURL: URL?) {
-        self.label = label
-        self.sourceID = sourceID
-        if let path = fileURL?.path, FileManager.default.fileExists(atPath: path) {
-            self.fileIcon = NSWorkspace.shared.icon(forFile: path)
-        } else if let ext = label.split(separator: ".").last.map(String.init),
-                  let type = UTType(filenameExtension: ext) {
-            self.fileIcon = NSWorkspace.shared.icon(for: type)
-        } else {
-            self.fileIcon = NSWorkspace.shared.icon(for: .data)
-        }
-        super.init(textCell: "")
-    }
-
-    required init(coder: NSCoder) {
-        fatalError("PaperFileAttachmentCell does not support NSCoding")
-    }
-
-    private var labelSize: NSSize {
-        (label as NSString).size(withAttributes: [.font: labelFont])
-    }
-
-    override func cellSize() -> NSSize {
-        let width = Self.padding + 16 + 6 + min(labelSize.width, Self.maxLabelWidth) + Self.padding
-        return NSSize(width: width, height: Self.chipHeight)
-    }
-
-    override func cellBaselineOffset() -> NSPoint {
-        NSPoint(x: 0, y: -8)
-    }
-
-    override func draw(withFrame cellFrame: NSRect, in controlView: NSView?) {
-        guard let context = NSGraphicsContext.current else { return }
-        context.saveGraphicsState()
-        let card = NSBezierPath(
-            roundedRect: cellFrame.insetBy(dx: 1, dy: 1),
-            xRadius: 8,
-            yRadius: 8
-        )
-        let shadow = NSShadow()
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.25)
-        shadow.shadowBlurRadius = 5
-        shadow.shadowOffset = NSSize(width: 0, height: -1.5)
-        shadow.set()
-        NSColor.white.setFill()
-        card.fill()
-        context.restoreGraphicsState()
-
-        let iconRect = NSRect(
-            x: cellFrame.minX + Self.padding,
-            y: cellFrame.midY - 8,
-            width: 16,
-            height: 16
-        )
-        fileIcon.draw(
-            in: iconRect,
-            from: .zero,
-            operation: .sourceOver,
-            fraction: 1,
-            respectFlipped: true,
-            hints: [.interpolation: NSImageInterpolation.high]
-        )
-        let size = labelSize
-        let textRect = NSRect(
-            x: iconRect.maxX + 6,
-            y: cellFrame.midY - size.height / 2,
-            width: min(size.width, Self.maxLabelWidth),
-            height: size.height
-        )
-        (label as NSString).draw(in: textRect, withAttributes: [
-            .font: labelFont,
-            .foregroundColor: NSColor.black.withAlphaComponent(0.8),
-        ])
     }
 }
 
