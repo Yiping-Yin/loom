@@ -2230,30 +2230,39 @@ extension Notification.Name {
     /// — no web surface to hop through.
     static let loomExport = Notification.Name("loomExport")
     static let loomImport = Notification.Name("loomImport")
-    /// ⌘1/⌘2/⌘3 — the three columns. Observed by the live workbench root
-    /// (sidebar / inspector) and the center document (focus).
+    /// Legacy ⌘1/⌘2/⌘3 posts (toggle sidebar / focus document / toggle
+    /// inspector). W2-2 retired their key bindings — ⌘1/⌘2/⌘3 now select the
+    /// three destinations (below). Sidebar open/close lives on ⌃⌘S
+    /// (SidebarCommands); the inspector toggle lives on the top-bar button.
+    /// The observers are harmless without posters; kept until a cleanup pass.
     static let loomToggleSidebar = Notification.Name("loomToggleSidebar")
     static let loomFocusDocument = Notification.Name("loomFocusDocument")
     static let loomToggleInspector = Notification.Name("loomToggleInspector")
+    /// ⌘1/⌘2/⌘3 select the three destinations (Today · Workspace · You) —
+    /// charter §12 / W2-2. `userInfo["number"]` is the 1-based shortcut number;
+    /// the workbench root maps it via `WorkspaceDestination.forShortcutNumber`.
+    static let loomSelectDestination = Notification.Name("loomSelectDestination")
 }
 
-/// ⌘1/⌘2/⌘3 — the real three columns (three-column charter), replacing the
-/// old web-route posts the live workbench answered with a status string only.
+/// ⌘1/⌘2/⌘3 select the three destinations (Today · Workspace · You) — charter
+/// §12 / W2-2, the Mail idiom. Retires the old ⌘1/⌘2/⌘3 (toggle sidebar / focus
+/// document / toggle inspector): sidebar open/close is ⌃⌘S (SidebarCommands),
+/// the inspector toggle is the top-bar button. Labels come from
+/// `WorkspaceDestination` so the menu stays in sync with the sidebar picker.
 struct WorkspaceShortcutsCommands: View {
     var body: some View {
         Group {
-            Button("Projects") {
-                NotificationCenter.default.post(name: .loomToggleSidebar, object: nil)
-            }
-            .keyboardShortcut("1", modifiers: .command)
-            Button("Document") {
-                NotificationCenter.default.post(name: .loomFocusDocument, object: nil)
-            }
-            .keyboardShortcut("2", modifiers: .command)
-            Button("Bridge") {
-                NotificationCenter.default.post(name: .loomToggleInspector, object: nil)
-            }
-            .keyboardShortcut("3", modifiers: .command)
+            Button(WorkspaceDestination.today.title) { select(1) }
+                .keyboardShortcut("1", modifiers: .command)
+            Button(WorkspaceDestination.workspace.title) { select(2) }
+                .keyboardShortcut("2", modifiers: .command)
+            Button(WorkspaceDestination.digitalMe.title) { select(3) }
+                .keyboardShortcut("3", modifiers: .command)
         }
+    }
+
+    private func select(_ number: Int) {
+        NotificationCenter.default.post(
+            name: .loomSelectDestination, object: nil, userInfo: ["number": number])
     }
 }

@@ -138,8 +138,13 @@ struct LoomReflectionRootView: View {
     @AppStorage("loom.workbench.chrome") private var workbenchChrome: Bool = true
     // Wave 2 Cut A: the outer sidebar/detail split is now a system
     // NavigationSplitView; this binding is its column-visibility source of
-    // truth (⌃⌘S via SidebarCommands, the top-bar toggle, and ⌘1 all drive it).
+    // truth (⌃⌘S via SidebarCommands and the top-bar toggle drive it; W2-2
+    // reassigned ⌘1 from the sidebar toggle to the Today destination).
     @State private var sidebarColumnVisibility: NavigationSplitViewVisibility = .all
+    // Wave 2 W2-2: the 3-way top IA (Today · Workspace · You). The sidebar
+    // picker + ⌘1/⌘2/⌘3 drive this; the detail switches on it. Defaults to
+    // Workspace so the workbench keeps owning cold start (charter answer ②).
+    @State private var destination: WorkspaceDestination = .workspace
     @State private var isInspectorPresented: Bool = true
     // While a source is open, the right pane IS the note. This collapses it so
     // the PDF reads full-width in-window (owner 2026-07-06: 右栏要能收展). Session
@@ -193,6 +198,8 @@ struct LoomReflectionRootView: View {
         ZStack(alignment: .topLeading) {
             NavigationSplitView(columnVisibility: $sidebarColumnVisibility) {
                 ReflectionSidebar(
+                        destination: destination,
+                        onSelectDestination: { destination = $0 },
                         cases: sidebarCases,
                         selectedCaseID: selectedCaseID,
                         panelsCase: nil,
@@ -224,6 +231,12 @@ struct LoomReflectionRootView: View {
                 // click-collapsible, autosaved, AX-adjustable — all for free.
                 .navigationSplitViewColumnWidth(min: 216, ideal: reflectionSidebarWidth, max: 360)
             } detail: {
+                // W2-2 (3-way IA): the detail switches on `destination`. The
+                // Workspace subtree below stays MOUNTED across switches (hidden
+                // via opacity, never rebuilt) so the center note editor keeps a
+                // stable SwiftUI identity and its capture observers survive a
+                // round-trip to Today / You.
+                ZStack {
                 GeometryReader { geo in
                 HStack(spacing: 0) {
                     // In-window reader (owner 2026-07-06): a COLUMN to the LEFT of
@@ -321,6 +334,28 @@ struct LoomReflectionRootView: View {
                 // material shows through; no column stacks its own behind-
                 // window material on top of it.
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .opacity(destination == .workspace ? 1 : 0)
+                .allowsHitTesting(destination == .workspace)
+                .accessibilityHidden(destination != .workspace)
+
+                // Today — pure aggregation over the live cases; a row tap opens
+                // the case AND returns to the Workspace destination.
+                if destination == .today {
+                    TodayView(
+                        digest: TodayDigest.derive(from: cases),
+                        onOpenCase: { id in
+                            selectCaseTab(id)
+                            destination = .workspace
+                        }
+                    )
+                    .padding(.top, reflectionTopBarHeight)
+                }
+                // You — the native dossier (judgment trace made visible).
+                if destination == .digitalMe {
+                    NativeDossierView()
+                        .padding(.top, reflectionTopBarHeight)
+                }
+                }
             }
             .navigationSplitViewStyle(.balanced)
             // The top bar owns the sidebar toggle (plus SidebarCommands ⌃⌘S);
@@ -328,6 +363,10 @@ struct LoomReflectionRootView: View {
             // fight the hidden-titlebar chrome.
             .toolbar(removing: .sidebarToggle)
 
+            // W2-2: the workbench top bar is Workspace chrome (source title,
+            // reader/inspector toggles) — it shows only on the Workspace
+            // destination, never floating over Today / You.
+            if destination == .workspace {
             ReflectionTopBar(
                 reflectionCase: selectedCase,
                 nativeSource: nativeSource,
@@ -347,11 +386,12 @@ struct LoomReflectionRootView: View {
                 }
             )
             .zIndex(1)
+            }
 
             // Wave 2 Cut A: the left-edge hover-peek sidebar + its second
             // (withinWindow) material are retired — the system NavigationSplitView
             // now owns show/hide/animation of the sidebar column (charter §2 +
-            // ratified answer ③a). ⌃⌘S, ⌘1, and the top-bar toggle drive it.
+            // ratified answer ③a). ⌃⌘S and the top-bar toggle drive it.
 
             // Bottom status bar removed 2026-07-03 (owner directive):
             // the workspace ends at the composer; no chrome strip below it.
@@ -463,6 +503,13 @@ struct LoomReflectionRootView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomToggleInspector)) { _ in
             toggleInspector()
+        }
+        // ⌘1 / ⌘2 / ⌘3 — select the three destinations (W2-2). The number maps
+        // through the tested `WorkspaceDestination.forShortcutNumber` contract.
+        .onReceive(NotificationCenter.default.publisher(for: .loomSelectDestination)) { note in
+            guard let number = note.userInfo?["number"] as? Int,
+                  let target = WorkspaceDestination.forShortcutNumber(number) else { return }
+            destination = target
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomCaptureFromURL)) { note in
             let token = note.userInfo?["token"] as? UUID
@@ -2632,6 +2679,11 @@ private struct ReflectionSidebar: View {
     private var wikiRail: [WikiRailSection]? {
         WikiCurriculum.loadBundled().map { WikiCurriculum.railSections(in: $0) }
     }
+    // W2-2 (3-way IA): the destination picker at the top of the sidebar. The
+    // current value drives the row highlight; selecting a row routes up so the
+    // main-window detail switches.
+    var destination: WorkspaceDestination = .workspace
+    var onSelectDestination: (WorkspaceDestination) -> Void = { _ in }
     let cases: [ReflectionCase]
     let selectedCaseID: ReflectionCase.ID
     var panelsCase: ReflectionCase? = nil
@@ -2756,8 +2808,17 @@ private struct ReflectionSidebar: View {
         // rows) lives in the bottom strip instead; the strip graduates to
         // a vertical rail only when workspace actions reach five.
         VStack(alignment: .leading, spacing: 0) {
-            ReflectionSidebarSearchField(text: $query, focus: $searchFocused)
+            // W2-2: the 3-way top IA sits above the workspace navigator; it owns
+            // the traffic-light top clearance now.
+            destinationPicker
                 .padding(.top, reflectionSidebarTopClearance)
+                .padding(.bottom, 6)
+
+            Divider()
+                .padding(.horizontal, 12)
+                .padding(.bottom, 6)
+
+            ReflectionSidebarSearchField(text: $query, focus: $searchFocused)
                 .padding(.horizontal, 10)
                 .padding(.bottom, 6)
 
@@ -2996,6 +3057,24 @@ private struct ReflectionSidebar: View {
         .padding(.bottom, 1)
     }
 
+    // W2-2 (charter §3/§20): the 3-way top IA — Today · Workspace · You —
+    // rendered as a small source-list group above the workspace navigator.
+    // Selecting a row switches the main-window detail; ⌘1/⌘2/⌘3 do the same.
+    private var destinationPicker: some View {
+        VStack(spacing: 1) {
+            ForEach(WorkspaceDestination.ordered) { dest in
+                DestinationRow(
+                    destination: dest,
+                    isSelected: dest == destination,
+                    onSelect: { onSelectDestination(dest) }
+                )
+            }
+        }
+        .padding(.horizontal, 8)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Destinations")
+    }
+
     /// The primary create action (owner 2026-07-05), moved out of the bottom
     /// strip so there is exactly one draft entry. A trailing folder+ makes the
     /// first project before the Projects section exists.
@@ -3062,6 +3141,54 @@ private struct ReflectionSidebar: View {
         .opacity(0)
         .frame(width: 0, height: 0)
         .accessibilityHidden(true)
+    }
+}
+
+/// One row of the 3-way destination picker (W2-2). Matches the sidebar row
+/// grammar — icon + title, plain button, the accent-wash selection pill, a
+/// quinary hover — so the picker reads as one furniture with the navigator.
+private struct DestinationRow: View {
+    let destination: WorkspaceDestination
+    let isSelected: Bool
+    let onSelect: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 10) {
+                Image(systemName: destination.systemImage)
+                    .font(.system(size: 13))
+                    .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                    .frame(width: 22)
+                Text(destination.title)
+                    .font(.system(size: 13, weight: isSelected ? .medium : .regular))
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 0)
+            }
+            .padding(.leading, 8)
+            .frame(height: 30)
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .background {
+            // Same selection grammar as ReflectionSidebarRow: the accent wash
+            // for selection, quinary for hover — Apple-tuned for every material.
+            if isSelected {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.accentColor.opacity(0.18))
+            } else if isHovering {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(.quinary)
+            }
+        }
+        .onHover { hovering in
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { isHovering = hovering }
+        }
+        .help(destination.title)
+        .accessibilityLabel(destination.title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
