@@ -56,6 +56,143 @@ enum CourseOrganize {
             .filter { !excluded.contains($0) }
             .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
+
+    // MARK: - Rail tree (what the left sidebar renders)
+
+    /// One group row: a GROUP project plus its chats (by projectID).
+    struct GroupNode: Equatable {
+        let group: ReflectionProject
+        let caseIDs: [String]
+    }
+
+    /// One top-level rail row: a project (a COURSE with groups, or a plain flat
+    /// project with none), its ordered groups, and the chats that sit DIRECTLY
+    /// under it (projectID == this project — a plain project's chats, or a chat
+    /// "returned to the course").
+    struct CourseNode: Equatable {
+        let project: ReflectionProject
+        let groups: [GroupNode]
+        let directCaseIDs: [String]
+    }
+
+    /// Build the rail tree: top-level projects in `order`, each with its ONE
+    /// level of groups (capped by `isTopLevel`, so a child-of-a-child surfaces
+    /// as its own top-level row — visible, never lost) and its direct chats.
+    /// A plain flat project renders exactly as today (no groups, its chats
+    /// directly under it). Ungrouped chats (projectID matching no project) are
+    /// the caller's concern, unchanged.
+    static func railTree(projects: [ReflectionProject], cases: [ReflectionCase]) -> [CourseNode] {
+        let topLevel = projects
+            .filter { isTopLevel($0, in: projects) }
+            .sorted { $0.order < $1.order }
+        return topLevel.map { top in
+            let groups = projects
+                .filter { $0.parentID == top.id && !isTopLevel($0, in: projects) }
+                .sorted { $0.order < $1.order }
+                .map { g in
+                    GroupNode(group: g, caseIDs: cases.filter { $0.projectID == g.id }.map(\.id))
+                }
+            let direct = cases.filter { $0.projectID == top.id }.map(\.id)
+            return CourseNode(project: top, groups: groups, directCaseIDs: direct)
+        }
+    }
+
+    // MARK: - Course creation from an import plan
+
+    /// Turn an accepted `CourseImportPlanner.Plan` into a course project plus
+    /// one group child-project per plan group (parentID set, folderBinding
+    /// bound to the subfolder, learning order preserved in `order`). The course
+    /// carries the ContentRoot + a default template.
+    static func makeCourse(
+        from plan: CourseImportPlanner.Plan,
+        contentRootID: String,
+        courseOrder: Int,
+        template: OrganizeTemplate = OrganizeTemplate()
+    ) -> [ReflectionProject] {
+        var courseProject = ReflectionProject(name: plan.courseName, order: courseOrder)
+        courseProject.contentRootID = contentRootID
+        courseProject.organizeTemplate = template
+        let groups = plan.groups.enumerated().map { index, groupPlan -> ReflectionProject in
+            var g = ReflectionProject(name: groupPlan.name, order: index)
+            g.parentID = courseProject.id
+            g.folderBinding = FolderBinding(subPath: groupPlan.subPath, bookmarkData: nil)
+            return g
+        }
+        return [courseProject] + groups
+    }
+
+    // MARK: - Auto Organize re-run (apply a diff)
+
+    struct ApplyDiffResult: Equatable {
+        /// The existing projects plus the newly appended group child-projects.
+        let projects: [ReflectionProject]
+        /// Groups whose bound folder vanished — badged in the rail, never removed.
+        let danglingGroupIDs: [String]
+    }
+
+    /// Apply an `OrganizeDiffPlanner.Diff`: append each proposed group as a new
+    /// child of the course, pass the dangling IDs through for badging. Deletes
+    /// nothing (deletion has no representation, by design).
+    static func applyDiff(
+        _ diff: OrganizeDiffPlanner.Diff,
+        into existing: [ReflectionProject],
+        courseID: String,
+        startOrder: Int
+    ) -> ApplyDiffResult {
+        let newGroups = diff.proposedNewGroups.enumerated().map { index, groupPlan -> ReflectionProject in
+            var g = ReflectionProject(name: groupPlan.name, order: startOrder + index)
+            g.parentID = courseID
+            g.folderBinding = FolderBinding(subPath: groupPlan.subPath, bookmarkData: nil)
+            return g
+        }
+        return ApplyDiffResult(projects: existing + newGroups, danglingGroupIDs: diff.danglingGroupIDs)
+    }
+
+    // MARK: - Deletion semantics (canon)
+
+    struct MutationResult: Equatable {
+        let projects: [ReflectionProject]
+        let cases: [ReflectionCase]
+    }
+
+    /// Delete a GROUP: remove the group project and return its chats to the
+    /// COURSE (its parent), not to unfiled. A group with no resolvable parent
+    /// falls back to plain ungrouping (to nil).
+    static func deleteGroup(
+        _ groupID: String,
+        from projects: [ReflectionProject],
+        cases: [ReflectionCase]
+    ) -> MutationResult {
+        let destination = projects.first(where: { $0.id == groupID })?.parentID
+        let remaining = projects.filter { $0.id != groupID }
+        let movedCases = cases.map { c -> ReflectionCase in
+            guard c.projectID == groupID else { return c }
+            var m = c
+            m.projectID = destination   // to the course, or nil if none
+            return m
+        }
+        return MutationResult(projects: remaining, cases: movedCases)
+    }
+
+    /// Delete a COURSE (or a plain project): cascade-remove its group entities
+    /// and return ALL its chats (direct + in any group) to unfiled (nil). For a
+    /// plain project with no groups this is exactly the existing ungroup-to-nil.
+    static func deleteCourse(
+        _ courseID: String,
+        from projects: [ReflectionProject],
+        cases: [ReflectionCase]
+    ) -> MutationResult {
+        let groupIDs = Set(projects.filter { $0.parentID == courseID }.map(\.id))
+        let removed = groupIDs.union([courseID])
+        let remaining = projects.filter { !removed.contains($0.id) }
+        let unfiledCases = cases.map { c -> ReflectionCase in
+            guard let pid = c.projectID, removed.contains(pid) else { return c }
+            var m = c
+            m.projectID = nil
+            return m
+        }
+        return MutationResult(projects: remaining, cases: unfiledCases)
+    }
 }
 
 /// "New course from folder…" — mirrors the folder's first-level subfolders
