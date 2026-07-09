@@ -419,6 +419,20 @@ struct LoomWebView: NSViewRepresentable {
                 forMainFrameOnly: true
             )
         )
+        // …and AGAIN at documentEnd: bundled pages carry an inline boot script
+        // that re-reads localStorage['wiki:theme'] and force-adds `dark` when
+        // it's missing — and on the loom:// custom scheme localStorage is not
+        // available, so the boot always lands on dark and OVERWRITES the
+        // documentStart sync (owner screenshot 2026-07-10: dark wiki page in a
+        // light app). Running the same sync after the page's own scripts makes
+        // the app's appearance win regardless of localStorage.
+        userContentController.addUserScript(
+            WKUserScript(
+                source: Self.themeSyncScript(mode: forcedTheme),
+                injectionTime: .atDocumentEnd,
+                forMainFrameOnly: true
+            )
+        )
 
         if let initialMirrorScript = LoomWebView.Coordinator.initialMirrorBootstrapScript() {
             userContentController.addUserScript(
