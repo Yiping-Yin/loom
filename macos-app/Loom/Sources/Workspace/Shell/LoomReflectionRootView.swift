@@ -741,14 +741,21 @@ struct LoomReflectionRootView: View {
     }
 
     private func deleteProject(_ id: String) {
-        // A project is a container, never an owner: deleting it only ungroups
-        // its drafts — it never deletes a draft.
-        for index in cases.indices where cases[index].projectID == id {
-            cases[index].projectID = nil
-        }
-        projects.removeAll { $0.id == id }
+        // A project is a container, never an owner: deleting it only re-homes
+        // its drafts — it never deletes a draft. Node-aware (three-column
+        // division): deleting a GROUP returns its chats to the course; deleting
+        // a COURSE cascades its group entities and returns ALL chats to
+        // unfiled. A plain project = a course with no groups → ungroup to nil.
+        let isGroup = projects.first(where: { $0.id == id })?.parentID != nil
+        let result = isGroup
+            ? CourseOrganize.deleteGroup(id, from: projects, cases: cases)
+            : CourseOrganize.deleteCourse(id, from: projects, cases: cases)
+        projects = result.projects
+        cases = result.cases
         persistWorkspace()
-        statusMessage = "Project removed — its drafts are now ungrouped"
+        statusMessage = isGroup
+            ? "Group removed — its drafts returned to the course"
+            : "Removed — its drafts are now ungrouped"
     }
 
     private func moveChat(_ reflectionCase: ReflectionCase, toProjectID projectID: String?) {
