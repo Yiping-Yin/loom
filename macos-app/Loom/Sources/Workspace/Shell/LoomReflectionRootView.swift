@@ -5397,18 +5397,11 @@ struct GlassDocumentEditor: NSViewRepresentable {
             .paragraphStyle: Self.documentParagraphStyle,
         ]
         // Anchor links must NOT read as web hyperlinks — no blue, no underline.
-        // Their only colour is the dynamic 青芒 cyan (dark #4BC5DE / light #2F8CA0,
-        // mirroring LoomTokens.indigo), and it lands only on the small locator glyph
-        // that now carries the link. Set once, globally, for every loom:// link.
+        // Their only colour is the anchor cyan from the ONE token source
+        // (charter W1-3: dsAnchorNSColor, dark #4BC5DE / light #2F8CA0), at the
+        // same 0.85 emphasis as before, landing only on the locator glyph.
         view.linkTextAttributes = [
-            .foregroundColor: NSColor(name: nil) { appearance in
-                let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-                // 青芒 #4BC5DE (dark) / #2F8CA0 (light), inlined as calibrated sRGB —
-                // matching the existing idiom (fromHex is fileprivate to the tokens).
-                return isDark
-                    ? NSColor(srgbRed: 75 / 255, green: 197 / 255, blue: 222 / 255, alpha: 0.85)
-                    : NSColor(srgbRed: 47 / 255, green: 140 / 255, blue: 160 / 255, alpha: 0.85)
-            },
+            .foregroundColor: LoomTokens.dsAnchorNSColor.withAlphaComponent(0.85),
             .underlineStyle: 0,
             .cursor: NSCursor.pointingHand,
         ]
