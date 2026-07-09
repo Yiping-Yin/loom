@@ -7,6 +7,7 @@ import AppKit
 /// testable without touching the owner's real store.
 enum ReviewStore {
     static let defaultsKey = "loom.review.items.v1"
+    static let streakKey = "loom.review.streak.v1"
 
     /// Canon §6: default daily portion is a small constant (5–7), the OUTPUT
     /// is hard-capped and decoupled from how many are "due". An item becomes a
@@ -63,6 +64,33 @@ enum ReviewStore {
         guard let i = items.firstIndex(where: { $0.id == itemID }) else { return }
         items[i].apply(rating: rating, at: date)
         saveAll(items, defaults: defaults)
+        // A rating is a real recall attempt (reveal was required) → the streak
+        // only ever advances on genuine review, never on a hollow action.
+        advanceStreak(on: date, defaults: defaults)
+    }
+
+    // MARK: - Streak (forgiving, real-recall-only)
+
+    static func loadStreak(defaults: UserDefaults = .standard) -> ReviewStreak {
+        guard let data = defaults.data(forKey: streakKey),
+              let s = try? JSONDecoder().decode(ReviewStreak.self, from: data) else { return .empty }
+        return s
+    }
+
+    static func currentStreak(defaults: UserDefaults = .standard) -> Int {
+        loadStreak(defaults: defaults).current
+    }
+
+    private static func advanceStreak(
+        on date: Date,
+        calendar: Calendar = .current,
+        defaults: UserDefaults = .standard
+    ) {
+        let day = calendar.startOfDay(for: date)
+        let next = ReviewStreak.advance(loadStreak(defaults: defaults), day: day)
+        if let data = try? JSONEncoder().encode(next) {
+            defaults.set(data, forKey: streakKey)
+        }
     }
 
     // MARK: - Today's session (served to TodayView)

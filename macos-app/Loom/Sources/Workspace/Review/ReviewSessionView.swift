@@ -7,6 +7,7 @@ import SwiftUI
 /// anchor URL for the shell's existing loom://anchor routing to consume.
 struct ReviewSessionView: View {
     @StateObject private var session: ReviewSession
+    @State private var streak: Int = 0
 
     /// Builds today's session from the store. `onRate` persists via
     /// ReviewStore; `openAnchor` hands the URL to the shell's anchor routing.
@@ -32,14 +33,22 @@ struct ReviewSessionView: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Review")
         // Reload today's live queue whenever the window appears, so reopening
-        // never shows a stale session.
-        .onAppear { session.reload(items: load()) }
+        // never shows a stale session; refresh the streak after each rating.
+        .onAppear { session.reload(items: load()); streak = ReviewStore.currentStreak() }
+        .onChange(of: session.completedCount) { _, _ in streak = ReviewStore.currentStreak() }
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 12) {
             Text("Review")
                 .font(.system(size: 13, weight: .medium, design: .serif))
+            // A quiet streak — an asset you protect, not a debt you flee. No
+            // guilt, no owl; shown only once you have one.
+            if streak > 0 {
+                Text("\(streak)-day streak")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+            }
             Spacer()
             if session.total > 0 {
                 Text("\(min(session.completedCount + (session.isComplete ? 0 : 1), session.total)) / \(session.total)")
