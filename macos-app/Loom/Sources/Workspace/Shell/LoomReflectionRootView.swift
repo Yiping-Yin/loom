@@ -273,8 +273,63 @@ struct LoomReflectionRootView: View {
         .accessibilityIdentifier("workspace.topBar")
     }
 
+    /// The current wiki chapter (Wiki destination with a slug open), or nil on
+    /// the encyclopedia's table of contents.
+    private var currentWikiChapter: WikiChapter? {
+        guard destination == .wiki, let slug = wikiSlug,
+              let manifest = WikiCurriculum.loadBundled() else { return nil }
+        return manifest.chapters.first { $0.slug == slug }
+    }
+
     @ToolbarContentBuilder
     private var workbenchToolbar: some ToolbarContent {
+        // ONE chrome for all three destinations (owner 2026-07-10: 统一): the
+        // same native toolbar carries each destination's title and controls —
+        // never an empty strip, never a per-surface hand-drawn bar.
+        if destination == .wiki {
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 1) {
+                    Text(currentWikiChapter?.title ?? "Wiki")
+                        .font(.system(size: 12.5, design: .serif))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    if let chapter = currentWikiChapter {
+                        Text(WikiCurriculum.folioLine(for: chapter))
+                            .font(.system(size: 10, design: .serif))
+                            .italic()
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+            if let chapter = currentWikiChapter, let manifest = WikiCurriculum.loadBundled() {
+                ToolbarItem(placement: .primaryAction) {
+                    let neighbors = WikiCurriculum.neighbors(of: chapter.slug, in: manifest)
+                    HStack(spacing: 2) {
+                        Button {
+                            if let p = neighbors.prev { wikiSlug = p.slug }
+                        } label: { Image(systemName: "chevron.left") }
+                        .disabled(neighbors.prev == nil)
+                        .help(neighbors.prev.map { "Previous: \($0.title)" } ?? "First chapter")
+                        Button {
+                            if let n = neighbors.next { wikiSlug = n.slug }
+                        } label: { Image(systemName: "chevron.right") }
+                        .disabled(neighbors.next == nil)
+                        .help(neighbors.next.map { "Next: \($0.title)" } ?? "Last chapter")
+                        Button {
+                            wikiSlug = nil
+                        } label: { Image(systemName: "xmark") }
+                        .help("Back to the table of contents")
+                    }
+                }
+            }
+        }
+        if destination == .digitalMe {
+            ToolbarItem(placement: .principal) {
+                Text("You")
+                    .font(.system(size: 12.5, design: .serif))
+                    .foregroundStyle(.primary)
+            }
+        }
         if destination == .workspace {
             ToolbarItem(placement: .principal) {
                 workbenchTitleLabel
@@ -512,10 +567,6 @@ struct LoomReflectionRootView: View {
             // the workbench items (only the shell's native sidebar toggle +
             // traffic lights remain there).
             .toolbar { workbenchToolbar }
-            // The toolbar carries only Workspace chrome — on Wiki/You hide the
-            // whole strip (owner screenshot 2026-07-10: in fullscreen the empty
-            // strip overlaid the sidebar's first destination row).
-            .toolbar(destination == .workspace ? .automatic : .hidden, for: .windowToolbar)
             // One-window-one-glass (charter §1): the single root matte
             // (ReflectionMatteWorkbenchBackground — one underWindowBackground /
             // behindWindow material) already extends under the titlebar strip via
