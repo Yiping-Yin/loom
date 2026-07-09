@@ -10,7 +10,7 @@ final class ReviewSession: ObservableObject {
     /// The user's own sentence is COVERED until they've tried to rebuild it.
     @Published private(set) var isRevealed: Bool = false
 
-    let items: [ReviewItem]
+    private(set) var items: [ReviewItem]
     private let now: () -> Date
     private let onRate: (String, ReviewRating, Date) -> Void
 
@@ -28,6 +28,14 @@ final class ReviewSession: ObservableObject {
     var isComplete: Bool { index >= items.count }
     var completedCount: Int { min(index, items.count) }
     var total: Int { items.count }
+
+    /// Load a fresh session — used when the review window reopens so it always
+    /// shows today's live queue, not a stale one.
+    func reload(items: [ReviewItem]) {
+        self.items = items
+        index = 0
+        isRevealed = false
+    }
 
     func reveal() {
         guard current != nil else { return }

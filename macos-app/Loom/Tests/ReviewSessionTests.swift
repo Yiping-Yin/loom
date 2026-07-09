@@ -60,6 +60,34 @@ final class ReviewSessionTests: XCTestCase {
         XCTAssertEqual(s.completedCount, 2)
     }
 
+    func testReloadReplacesQueueAndRecoversFromTheTop() {
+        let s = ReviewSession(items: items(2), onRate: { _, _, _ in })
+        s.reveal(); s.rate(.solid)     // advanced + revealed toggled
+        s.reload(items: items(3))
+        XCTAssertEqual(s.current?.id, "i0")
+        XCTAssertFalse(s.isRevealed)
+        XCTAssertEqual(s.total, 3)
+        XCTAssertEqual(s.completedCount, 0)
+        XCTAssertFalse(s.isComplete)
+    }
+
+    func testReturnToSourceParsesAnchorAndPostsJump() {
+        var received: [String: Any]?
+        let token = NotificationCenter.default.addObserver(
+            forName: .loomReflectionAnchorJump, object: nil, queue: nil) { note in
+            received = note.userInfo as? [String: Any]
+        }
+        defer { NotificationCenter.default.removeObserver(token) }
+
+        ReviewSessionView.returnToSource(anchorURL: "loom://anchor?src=doc42&page=3&rect=1,2,3,4")
+        XCTAssertEqual(received?["sourceID"] as? String, "doc42")
+        XCTAssertEqual(received?["page"] as? Int, 3)
+
+        received = nil
+        ReviewSessionView.returnToSource(anchorURL: "not-an-anchor")
+        XCTAssertNil(received, "non-anchor strings post nothing")
+    }
+
     func testEmptySessionIsImmediatelyComplete() {
         let s = ReviewSession(items: [], onRate: { _, _, _ in })
         XCTAssertTrue(s.isComplete)

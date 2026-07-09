@@ -11,13 +11,16 @@ struct ReviewSessionView: View {
     /// Builds today's session from the store. `onRate` persists via
     /// ReviewStore; `openAnchor` hands the URL to the shell's anchor routing.
     init(
-        items: [ReviewItem] = ReviewStore.dueToday(),
+        load: @escaping () -> [ReviewItem] = { ReviewStore.dueToday() },
         onRate: @escaping (String, ReviewRating, Date) -> Void = { id, rating, date in
             ReviewStore.recordReview(itemID: id, rating: rating, at: date)
         }
     ) {
-        _session = StateObject(wrappedValue: ReviewSession(items: items, onRate: onRate))
+        self.load = load
+        _session = StateObject(wrappedValue: ReviewSession(items: [], onRate: onRate))
     }
+
+    private let load: () -> [ReviewItem]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,6 +31,9 @@ struct ReviewSessionView: View {
         .frame(minWidth: 480, minHeight: 420)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Review")
+        // Reload today's live queue whenever the window appears, so reopening
+        // never shows a stale session.
+        .onAppear { session.reload(items: load()) }
     }
 
     private var header: some View {
@@ -55,11 +61,7 @@ struct ReviewSessionView: View {
                 isRevealed: session.isRevealed,
                 onReveal: { session.reveal() },
                 onRate: { session.rate($0) },
-                onOpenSource: {
-                    NotificationCenter.default.post(
-                        name: .loomReviewOpenAnchor, object: nil,
-                        userInfo: ["url": item.anchorURL])
-                }
+                onOpenSource: { Self.returnToSource(anchorURL: item.anchorURL) }
             )
             .id(item.id)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -88,8 +90,24 @@ struct ReviewSessionView: View {
     }
 }
 
-extension Notification.Name {
-    /// Posted by a review card's "Source" control; the shell observes it and
-    /// routes the loom://anchor back to the exact source passage.
-    static let loomReviewOpenAnchor = Notification.Name("loomReviewOpenAnchor")
+extension ReviewSessionView {
+    /// Parse a `loom://anchor?src=…&page=…&rect=…` URL and post the same
+    /// `.loomReflectionAnchorJump` the editor's own anchor clicks post, so the
+    /// main workbench reader jumps to the exact source passage — reusing the
+    /// already-shipped jump-back rather than a second routing path.
+    static func returnToSource(anchorURL: String) {
+        guard anchorURL.hasPrefix("loom://anchor"),
+              let comps = URLComponents(string: anchorURL) else { return }
+        let q = comps.queryItems ?? []
+        guard let sourceID = q.first(where: { $0.name == "src" })?.value, !sourceID.isEmpty else { return }
+        let page = Int(q.first(where: { $0.name == "page" })?.value ?? "") ?? 0
+        var rect = CGRect.zero
+        if let parts = q.first(where: { $0.name == "rect" })?.value?
+            .split(separator: ",").compactMap({ Double($0) }), parts.count == 4 {
+            rect = CGRect(x: parts[0], y: parts[1], width: parts[2], height: parts[3])
+        }
+        NotificationCenter.default.post(
+            name: .loomReflectionAnchorJump, object: nil,
+            userInfo: ["sourceID": sourceID, "page": page, "rect": NSValue(rect: rect)])
+    }
 }

@@ -112,6 +112,18 @@ struct LoomApp: App {
         .defaultSize(width: 560, height: 520)
         .windowToolbarStyle(.unifiedCompact)
 
+        // The Review wedge's daily surface (docs/canon/WHAT_IS_LOOM.md §6):
+        // today's capped, no-debt session of your own anchored quotes. Its own
+        // window for now — a v1 that doesn't wait on the 3-way IA rebuild; it
+        // folds into a Today destination when that lands.
+        Window("Review", id: ReviewWindow.id) {
+            ReviewSessionView()
+                .paperChrome()
+        }
+        .defaultSize(width: 560, height: 520)
+        .defaultPosition(.center)
+        .windowToolbarStyle(.unifiedCompact)
+
         // (The old "Add files" IngestionWindow is unregistered — macOS gives
         // every registered SwiftUI Window a system Window-menu command, and
         // this one wrote typed-extractor output into a store the live
@@ -137,6 +149,7 @@ struct LoomApp: App {
                 AskAIMenuItem()
                 AskAboutFileMenuItem()
                 ShuttleMenuItem()
+                ReviewMenuItem()
                 // (Removed six more stone-dead launchers — Hold Question ⌘⇧P,
                 // Add/Connect Sōan Cards ⌘⇧D/⌘⇧L, Source check ⌘⇧X, Add files
                 // ⌘⇧I, Practice notes — whose only observers lived in the
@@ -1805,6 +1818,22 @@ struct ShuttleMenuItem: View {
         }
         .keyboardShortcut("k", modifiers: .command)
     }
+}
+
+/// Opens today's review session (docs/canon/WHAT_IS_LOOM.md §6). ⌘⇧R —
+/// ⌘R was retired with the dead web reload command, so it's free.
+struct ReviewMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+    var body: some View {
+        Button("Review") {
+            openWindow(id: ReviewWindow.id)
+        }
+        .keyboardShortcut("r", modifiers: [.command, .shift])
+    }
+}
+
+enum ReviewWindow {
+    static let id = "com.loom.window.review"
 }
 
 enum MainWindow {
