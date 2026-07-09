@@ -187,7 +187,6 @@
 		9B58AF07AEF0712557CB0DAB /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF3C2FB4F926247D3B66D2E /* AnthropicClient.swift */; };
 		9B9112EA5C49E2EB2DBF1FE0 /* LoomRuntimePaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F16121B4C6D7ABDA517BBD8 /* LoomRuntimePaths.swift */; };
 		9C7CB6207E7BBC47F5D1F2EC /* fins-3666-group-project.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 809FC5C4D38AEE688A2FC8C5 /* fins-3666-group-project.meta.json */; };
-		9C82F7C4BE97FDCAF9F3BB87 /* DigitalMeDestinationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D27AC20C75DBFBF18CB1DFD /* DigitalMeDestinationView.swift */; };
 		9CFCB3C68879580822EBF4BE /* filename-leak-course-name-term.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = 120EC93BD01487018FF4B961 /* filename-leak-course-name-term.schema.json */; };
 		9E9E4EE809C943BAB36EBC36 /* LoomTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A42D0FCDADD28682D772ED /* LoomTokens.swift */; };
 		9FCB3B05B075E9EF6F2138D6 /* fins-3635.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 50E297155415B4F666F54E23 /* fins-3635.meta.json */; };
@@ -264,7 +263,6 @@
 		DEF8AE3073612EF2B44196D2 /* FirstRunProviderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CE8771B9AD7E5D9580EE84 /* FirstRunProviderSheet.swift */; };
 		DF7D7410A0DFA5C593CCBBE7 /* comm-3030.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 10D2D413F2722292ADA71EA5 /* comm-3030.meta.json */; };
 		DFE9984692367AB21D2B3231 /* GenericDocExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2A40B9ECE4DFDC83FBB7D8 /* GenericDocExtractor.swift */; };
-		E00545892C926513C612A463 /* LoomDossierRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5932AA7D79B4F97ED0145109 /* LoomDossierRootView.swift */; };
 		E0121325D03A3FA6E62BEC10 /* FragmentSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138B87C1D42BF66CA68AB4DF /* FragmentSchema.swift */; };
 		E08B8C70625845C29AE21017 /* fins-3640.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = DE6361E122DA7F8E6E66DF06 /* fins-3640.schema.json */; };
 		E0D95807215B3A53CBF5A4F2 /* fins-3635.schema-verified.json in Resources */ = {isa = PBXBuildFile; fileRef = DF4AC3D1A6E9CEFDC3C7C26F /* fins-3635.schema-verified.json */; };
@@ -373,7 +371,6 @@
 		1AEFE886AB0CA6EDD222A7F1 /* generate_slide_deck_fixtures.cpython-313.pyc */ = {isa = PBXFileReference; path = "generate_slide_deck_fixtures.cpython-313.pyc"; sourceTree = "<group>"; };
 		1C1CE77E5BA8B168C1306A29 /* alt-text.pptx */ = {isa = PBXFileReference; path = "alt-text.pptx"; sourceTree = "<group>"; };
 		1CB778254A0081F4E99DE637 /* TodayDigest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayDigest.swift; sourceTree = "<group>"; };
-		1D27AC20C75DBFBF18CB1DFD /* DigitalMeDestinationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalMeDestinationView.swift; sourceTree = "<group>"; };
 		1E61329899B59866C095E23F /* PDFExtraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFExtraction.swift; sourceTree = "<group>"; };
 		1F3CEBFC674A3F9012FFF516 /* infs-3822.schema-verified.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "infs-3822.schema-verified.json"; sourceTree = "<group>"; };
 		1F606694CE10EB327C327552 /* infs-3822-rubrics.input.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "infs-3822-rubrics.input.txt"; sourceTree = "<group>"; };
@@ -435,7 +432,6 @@
 		55F7F24B917E807B726C2B99 /* TextbookChapterExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextbookChapterExtractor.swift; sourceTree = "<group>"; };
 		56DBB53D0B4C211EBFBE980D /* semicolon-stitch-duedate.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "semicolon-stitch-duedate.schema.json"; sourceTree = "<group>"; };
 		5851243248D709E5B227E18B /* DataSettingsRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsRows.swift; sourceTree = "<group>"; };
-		5932AA7D79B4F97ED0145109 /* LoomDossierRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomDossierRootView.swift; sourceTree = "<group>"; };
 		5B34F36F6EAFC6BA0A1FF9CC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		5B91632129DF079E21EA3998 /* SyllabusSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyllabusSchema.swift; sourceTree = "<group>"; };
 		5D7EE70B9F4AD1E582CBDAFF /* comm-3030.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "comm-3030.schema.json"; sourceTree = "<group>"; };
@@ -1203,7 +1199,6 @@
 		E655F40CB6ABAAA7C3A65957 /* DigitalMe */ = {
 			isa = PBXGroup;
 			children = (
-				1D27AC20C75DBFBF18CB1DFD /* DigitalMeDestinationView.swift */,
 				C4164796A89FAA6689E207E8 /* DigitalMePrompt.swift */,
 				93CD9D89AADE0FE0A8889962 /* OnlinePresenceStore.swift */,
 				838CBED670154487968B493C /* ReflectionPrincipleStore.swift */,
@@ -1279,7 +1274,6 @@
 		F6EB67BEDEE06D9ADC61A072 /* Dossier */ = {
 			isa = PBXGroup;
 			children = (
-				5932AA7D79B4F97ED0145109 /* LoomDossierRootView.swift */,
 				FCDF97489B91229E831B44FC /* NativeDossierView.swift */,
 			);
 			path = Dossier;
@@ -1630,7 +1624,6 @@
 				3F0B9412BF0EB3AD754CD4E5 /* DataSettingsRows.swift in Sources */,
 				A4B5CEDEF7D344FCF557FCF9 /* DataSettingsView.swift in Sources */,
 				2EEED06E8467376350F0A25D /* DevServer.swift in Sources */,
-				9C82F7C4BE97FDCAF9F3BB87 /* DigitalMeDestinationView.swift in Sources */,
 				E249B45CE18085200E5B0808 /* DigitalMePrompt.swift in Sources */,
 				A47667572EB3A105D7480EFF /* DraftBridgeHandler.swift in Sources */,
 				6A553CA6C0B926947CF00B83 /* EmbeddingBridgeHandler.swift in Sources */,
@@ -1657,7 +1650,6 @@
 				2C2CDD5C6B1247A851C1973B /* LoomAppIntents.swift in Sources */,
 				2DAA38FFA473682D619B4FB5 /* LoomDataModel.swift in Sources */,
 				7E3164B451BF0B13EC046BB3 /* LoomDataStore.swift in Sources */,
-				E00545892C926513C612A463 /* LoomDossierRootView.swift in Sources */,
 				18BFDF19F65B27ABED3C1E0B /* LoomDraftLogic.swift in Sources */,
 				EAB34604E8E1400EC66737CC /* LoomDraftStore.swift in Sources */,
 				0494C37D2439D1ECBF61AF56 /* LoomEmbeddingStore.swift in Sources */,

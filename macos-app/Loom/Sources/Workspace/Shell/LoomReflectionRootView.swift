@@ -3684,7 +3684,12 @@ private struct SidebarUtilityStrip: View {
             // name; person.crop.circle, never a photo/initials/brand moon. The
             // form A colophon is promoted to the honest subtitle (sources + notes).
             Button {
-                openWindow(id: DossierWindow.id)
+                // ONE door to You (owner: 统一): the bottom-left identity row
+                // selects the You DESTINATION — same surface as ⌘3 — instead of
+                // opening the retired separate dossier window.
+                NotificationCenter.default.post(
+                    name: .loomSelectDestination, object: nil,
+                    userInfo: ["number": WorkspaceDestination.digitalMe.shortcutNumber])
             } label: {
                 HStack(spacing: 9) {
                     Image(systemName: "person.crop.circle")
