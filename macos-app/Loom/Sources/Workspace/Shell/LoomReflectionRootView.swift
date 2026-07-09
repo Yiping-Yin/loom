@@ -194,6 +194,127 @@ struct LoomReflectionRootView: View {
     private var sidebarCases: [ReflectionCase] {
         isWorkspaceEmpty ? [] : cases
     }
+
+    // MARK: - Wave 2 Cut B — native workbench toolbar
+    //
+    // These mirror the retired ReflectionTopBar exactly: same title logic, same
+    // reader/inspector-toggle label, same open affordances — moved into native
+    // `ToolbarItem`s. All items are gated to `destination == .workspace` inside
+    // `workbenchToolbar`, so Today / You never surface workbench chrome. The
+    // hand-drawn top bar's a11y identifiers ride along onto the native items:
+    // `workspace.topBar` on the principal group, `topbar.inspectorToggle` on the
+    // right-pane toggle. `topbar.sidebarToggle` is NOT re-created — the sidebar
+    // toggle is now NavigationSplitView's OWN native button (+ ⌃⌘S via
+    // SidebarCommands); we don't draw or duplicate one.
+
+    /// The toolbar title: the chat's real name once named; otherwise the SOURCE
+    /// it's about (Week 1 Notes); "LOOM" only for a truly empty app. (Same rule
+    /// as the old ReflectionTopBar.barTitle — owner 2026-07-06: 这里不应该是 LOOM.)
+    private var workbenchBarTitle: String {
+        if !isWorkspaceEmpty, selectedCase.title != ReflectionCase.untitledPlaceholder {
+            return selectedCase.title
+        }
+        if let label = nativeSource?.label ?? selectedCase.sources.first?.label, !label.isEmpty {
+            return (label as NSString).deletingPathExtension
+        }
+        return "LOOM"
+    }
+
+    /// The right-pane toggle's help/label. While a source is open the right pane
+    /// IS the note, so the button collapses/expands it; otherwise it toggles the
+    /// evidence pane (owner 2026-07-06). Identical text to the old inspectorButton.
+    private var inspectorToggleHelp: String {
+        anchorPreview != nil
+            ? (isReadingNoteCollapsed ? "Show notes" : "Hide notes")
+            : (isInspectorPresented ? "Hide evidence" : "Show evidence")
+    }
+
+    @ViewBuilder
+    private var workbenchTitleLabel: some View {
+        HStack(spacing: 8) {
+            if isWorkspaceEmpty {
+                MoonAvatar(size: 14)
+                    .frame(width: 16, height: 16)
+            } else {
+                ReflectionFileTypeBadge(
+                    kind: nativeSource?.kind ?? selectedCase.sources.first?.kind ?? "document",
+                    fallbackColor: LoomTokens.dsInk3
+                )
+                .scaleEffect(0.72)
+                .frame(width: 16, height: 16)
+            }
+
+            Text(workbenchBarTitle)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(LoomTokens.dsInk1)
+                .lineLimit(1)
+
+            if !isWorkspaceEmpty {
+                Circle()
+                    .fill(selectedCase.status == "Second pass ready" ? LoomTokens.dsSuccess : LoomTokens.dsInk3)
+                    .frame(width: 6, height: 6)
+                    .help(selectedCase.status)
+
+                if selectedCase.sources.count > 1 {
+                    Label("\(selectedCase.sources.count)", systemImage: "folder")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(LoomTokens.dsInk3)
+                }
+            }
+        }
+        // UI-verification handle carried over from the retired ReflectionTopBar:
+        // the Workspace-only top-bar group (the control that would catch a
+        // vanished toolbar). Non-behavioral.
+        .accessibilityIdentifier("workspace.topBar")
+    }
+
+    @ToolbarContentBuilder
+    private var workbenchToolbar: some ToolbarContent {
+        if destination == .workspace {
+            ToolbarItem(placement: .principal) {
+                workbenchTitleLabel
+            }
+
+            // Open affordances — only for a real, file-backed source (nativeSource
+            // already implies fileURL != nil). Preserves the old top bar's two
+            // buttons: reopen INSIDE Loom's reader (hidden while already reading),
+            // and open the original file in the default native app.
+            if !isWorkspaceEmpty, let native = nativeSource {
+                if anchorPreview == nil {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            openSourceInReader(native)
+                        } label: {
+                            Image(systemName: "book")
+                        }
+                        .help("Open this source in Loom's reader")
+                        .accessibilityLabel("Open in Loom")
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: openSelectedSourceInNativeApp) {
+                        Image(systemName: "arrow.up.forward.app")
+                    }
+                    .help("Open original file in the default native app")
+                    .accessibilityLabel("Open Source")
+                }
+            }
+
+            // The right-pane toggle: the SAME single action as the old bar —
+            // `toggleInspector` branches on whether a source is open, so this one
+            // button preserves BOTH the evidence-pane toggle and the reading-note
+            // collapse. The hand-drawn bar's `topbar.inspectorToggle` id rides on.
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: toggleInspector) {
+                    Image(systemName: "sidebar.right")
+                }
+                .help(inspectorToggleHelp)
+                .accessibilityLabel(inspectorToggleHelp)
+                .accessibilityIdentifier("topbar.inspectorToggle")
+            }
+        }
+    }
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             NavigationSplitView(columnVisibility: $sidebarColumnVisibility) {
@@ -358,35 +479,26 @@ struct LoomReflectionRootView: View {
                 }
             }
             .navigationSplitViewStyle(.balanced)
-            // The top bar owns the sidebar toggle (plus SidebarCommands ⌃⌘S);
-            // suppress the auto-inserted toolbar sidebar button so it doesn't
-            // fight the hidden-titlebar chrome.
-            .toolbar(removing: .sidebarToggle)
-
-            // W2-2: the workbench top bar is Workspace chrome (source title,
-            // reader/inspector toggles) — it shows only on the Workspace
-            // destination, never floating over Today / You.
-            if destination == .workspace {
-            ReflectionTopBar(
-                reflectionCase: selectedCase,
-                nativeSource: nativeSource,
-                isWorkspaceEmpty: isWorkspaceEmpty,
-                isSidebarPresented: isSidebarShown,
-                isInspectorPresented: isInspectorPresented,
-                isReadingSource: anchorPreview != nil,
-                isNoteCollapsed: isReadingNoteCollapsed,
-                sourceCount: isWorkspaceEmpty ? 0 : selectedCase.sources.count,
-                onToggleSidebar: toggleSidebar,
-                onToggleInspector: toggleInspector,
-                onOpenSourceInNativeApp: openSelectedSourceInNativeApp,
-                onReopenSourceInReader: {
-                    if let source = nativeSource ?? selectedCase.sources.first {
-                        openSourceInReader(source)
-                    }
-                }
-            )
-            .zIndex(1)
-            }
+            // Wave 2 Cut B (charter §4): the hand-drawn ReflectionTopBar overlay
+            // is retired for a native SwiftUI `.toolbar`. NavigationSplitView now
+            // owns the sidebar toggle (its native button + SidebarCommands ⌃⌘S),
+            // so we no longer strip it with `.toolbar(removing:)`. The workbench
+            // controls (source title, open-in-reader, open-in-native-app, and the
+            // reader/inspector toggle) are Workspace chrome — the toolbar content
+            // is gated to the Workspace destination so Today / You surface none of
+            // the workbench items (only the shell's native sidebar toggle +
+            // traffic lights remain there).
+            .toolbar { workbenchToolbar }
+            // One-window-one-glass (charter §1): the single root matte
+            // (ReflectionMatteWorkbenchBackground — one underWindowBackground /
+            // behindWindow material) already extends under the titlebar strip via
+            // `.ignoresSafeArea(.container, edges: .top)`. A VISIBLE toolbar
+            // background would stack a SECOND behind-window material in that strip
+            // (glass on glass). So the toolbar paints no material of its own; the
+            // one root matte shows through it as the chrome surface. (If the owner
+            // later wants a visible toolbar separator, the matte must first stop
+            // extending under the strip so it stays a single glass.)
+            .toolbarBackground(.hidden, for: .windowToolbar)
 
             // Wave 2 Cut A: the left-edge hover-peek sidebar + its second
             // (withinWindow) material are retired — the system NavigationSplitView
@@ -420,7 +532,17 @@ struct LoomReflectionRootView: View {
                 title: "Loom",
                 isNight: colorScheme == .dark,
                 contentExtendsUnderTitlebar: true,
-                removesSystemToolbar: true,
+                // Wave 2 Cut B: the shell now carries a native SwiftUI `.toolbar`
+                // (workbenchToolbar). WindowConfigurator must NOT strip it — with
+                // `removesSystemToolbar` true it set `window.toolbar = nil` on
+                // every mount AND on each fullscreen/resize/key notification,
+                // which would null out (and flicker) the SwiftUI toolbar so the
+                // Workspace controls vanish. Keeping the toolbar IS the charter §4
+                // move ("工具栏回归原生"); the empty-strip concern that motivated
+                // the nil is moot now that the toolbar is populated. The hidden-
+                // titlebar chrome (transparent titlebar, hidden title, full-size
+                // content view) is still driven by `contentExtendsUnderTitlebar`.
+                removesSystemToolbar: false,
                 contentCornerRadius: 0,
                 usesFrameAutosave: false
             )
@@ -2491,185 +2613,6 @@ private struct ReflectionLeftEdgePeekZone: View {
             .fill(Color.white.opacity(0.001))
             .contentShape(Rectangle())
             .help("Hover to peek sidebar")
-    }
-}
-
-private struct ReflectionTopBar: View {
-    let reflectionCase: ReflectionCase
-    let nativeSource: ReflectionSource?
-    let isWorkspaceEmpty: Bool
-    let isSidebarPresented: Bool
-    let isInspectorPresented: Bool
-    // While a source is open, the right-pane toggle drives the NOTE (which IS
-    // the right pane then), not the hidden evidence pane (owner 2026-07-06).
-    let isReadingSource: Bool
-    let isNoteCollapsed: Bool
-    let sourceCount: Int
-    let onToggleSidebar: () -> Void
-    let onToggleInspector: () -> Void
-    let onOpenSourceInNativeApp: () -> Void
-    // Reopen the source INSIDE Loom's reader (the anchor-capture surface). The
-    // center provenance Open only shows for a NAMED case (owner 2026-07-06:
-    // unnamed = invitation), so a freshly-imported unnamed draft had no in-app
-    // way back into the reader once closed — this always-present top-bar
-    // affordance is that way back, without staging the empty center.
-    let onReopenSourceInReader: () -> Void
-    // The Evidence strip tracks the resizable pane width live.
-    @AppStorage(reflectionInspectorWidthKey) private var inspectorWidth: Double = Double(reflectionInspectorDefaultWidth)
-
-    /// The top-bar title: the chat's real name once named; otherwise the SOURCE
-    /// it's about (Week 1 Notes) — not the app brand "LOOM" (owner 2026-07-06:
-    /// 这里不应该是 LOOM). The file-type badge already carries the kind, so the
-    /// filename shows without its extension. "LOOM" only for a truly empty app.
-    private var barTitle: String {
-        if !isWorkspaceEmpty, reflectionCase.title != ReflectionCase.untitledPlaceholder {
-            return reflectionCase.title
-        }
-        if let label = nativeSource?.label ?? reflectionCase.sources.first?.label, !label.isEmpty {
-            return (label as NSString).deletingPathExtension
-        }
-        return "LOOM"
-    }
-
-    var body: some View {
-        HStack(spacing: 0) {
-            HStack(spacing: 8) {
-                Spacer().frame(width: reflectionTrafficLightClearance)
-                sidebarButton
-                Spacer(minLength: 0)
-            }
-            .frame(width: isSidebarPresented ? reflectionSidebarWidth : reflectionTrafficLightClearance + 36)
-
-            HStack(spacing: 9) {
-                if isWorkspaceEmpty {
-                    MoonAvatar(size: 16)
-                        .frame(width: 18, height: 18)
-                } else {
-                    ReflectionFileTypeBadge(
-                        kind: nativeSource?.kind ?? reflectionCase.sources.first?.kind ?? "document",
-                        fallbackColor: LoomTokens.dsInk3
-                    )
-                    .scaleEffect(0.78)
-                    .frame(width: 18, height: 18)
-                }
-
-                // An unnamed chat shows the SOURCE it's about (Week 1 Notes), not
-                // the app brand "LOOM" and not the fake placeholder — the real
-                // title appears once the user names it (owner 2026-07-06).
-                Text(barTitle)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(LoomTokens.dsInk1)
-                    .lineLimit(1)
-
-                if !isWorkspaceEmpty {
-                    Circle()
-                        .fill(reflectionCase.status == "Second pass ready" ? LoomTokens.dsSuccess : LoomTokens.dsInk3)
-                        .frame(width: 6, height: 6)
-                        .help(reflectionCase.status)
-
-                    if sourceCount > 1 {
-                        Label("\(sourceCount)", systemImage: "folder")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(LoomTokens.dsInk3)
-                    }
-
-                    if nativeSource?.fileURL != nil {
-                        if !isReadingSource {
-                            Button(action: onReopenSourceInReader) {
-                                Image(systemName: "book")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
-                            }
-                            .buttonStyle(.plain)
-                            .foregroundStyle(LoomTokens.dsInk3)
-                            .contentShape(Rectangle())
-                            .accessibilityLabel("Open in Loom")
-                            .help("Open this source in Loom's reader")
-                        }
-                        Button(action: onOpenSourceInNativeApp) {
-                            Image(systemName: "arrow.up.forward.app")
-                                .font(.system(size: 12, weight: .medium))
-                                .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(LoomTokens.dsInk3)
-                        .contentShape(Rectangle())
-                        .accessibilityLabel("Open Source")
-                        .help("Open original file in the default native app")
-                    }
-                }
-
-                Spacer(minLength: 0)
-            }
-            .padding(.leading, isSidebarPresented ? 18 : 8)
-            .padding(.trailing, 14)
-            .frame(height: reflectionTitlebarControlSize)
-            .frame(maxWidth: .infinity)
-
-            // No pane title (owner 2026-07-03: 摘掉) — the launcher rows
-            // speak for themselves; only the pane toggle remains.
-            inspectorButton
-                .padding(.trailing, 16)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, reflectionTitlebarContentTop)
-        .frame(height: reflectionTopBarHeight, alignment: .topLeading)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .allowsHitTesting(true)
-        // UI-verification handle: the Workspace-only top bar (the control that
-        // would catch a vanished toolbar). Non-behavioral.
-        .accessibilityIdentifier("workspace.topBar")
-    }
-
-    private var sidebarButton: some View {
-        ReflectionTopBarButton(
-            systemName: "sidebar.left",
-            isActive: isSidebarPresented,
-            help: isSidebarPresented ? "Hide sidebar" : "Show sidebar",
-            action: onToggleSidebar
-        )
-        // These SF-symbol buttons carry only a `.help`; give them stable
-        // identifiers so UI verification can assert the toggles are present.
-        .accessibilityIdentifier("topbar.sidebarToggle")
-    }
-
-    private var inspectorButton: some View {
-        ReflectionTopBarButton(
-            systemName: "sidebar.right",
-            isActive: isReadingSource ? !isNoteCollapsed : isInspectorPresented,
-            help: isReadingSource
-                ? (isNoteCollapsed ? "Show notes" : "Hide notes")
-                : (isInspectorPresented ? "Hide evidence" : "Show evidence"),
-            action: onToggleInspector
-        )
-        .accessibilityIdentifier("topbar.inspectorToggle")
-    }
-}
-
-private struct ReflectionTopBarButton: View {
-    let systemName: String
-    let isActive: Bool
-    let help: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .font(.system(size: 12, weight: .medium))
-                .frame(width: reflectionTitlebarControlSize, height: reflectionTitlebarControlSize)
-                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(
-                            isActive ? Color.white.opacity(0.18) : Color.white.opacity(0.08),
-                            lineWidth: 0.5
-                        )
-                )
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(isActive ? LoomTokens.dsInk2 : LoomTokens.dsInk3)
-        .contentShape(Rectangle())
-        .help(help)
     }
 }
 
