@@ -57,6 +57,7 @@
 		2908B54B89AD2BF4C7E151F2 /* LoomWebViewInteractionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9913048130DF6BF2FB73A29E /* LoomWebViewInteractionPolicy.swift */; };
 		2ABC0F9C9ED8FC67B6B5EE79 /* LoomTraceWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6886C9A536109E2D4893543 /* LoomTraceWriter.swift */; };
 		2BFDB283DA3568B569B61F9E /* semicolon-stitch-duedate.filename.txt in Resources */ = {isa = PBXBuildFile; fileRef = 63185DEC5F9E03CA3708745E /* semicolon-stitch-duedate.filename.txt */; };
+		2C2CDD5C6B1247A851C1973B /* LoomAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D39BD2AE8726C2C77B6E51F /* LoomAppIntents.swift */; };
 		2C8C34C9C65A856400902E7E /* metadata.key in Resources */ = {isa = PBXBuildFile; fileRef = B0DE530467AF4AAA6E5BA7AC /* metadata.key */; };
 		2CDE46AFEC355A41DC946743 /* WikiHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A0FDC21C79D1C78A23AAE1 /* WikiHome.swift */; };
 		2DAA38FFA473682D619B4FB5 /* LoomDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92CFFCCFB767FEE0CAA1F7DD /* LoomDataModel.swift */; };
@@ -210,6 +211,7 @@
 		AEFB4BA1186923D05DAB812B /* fins-3666-group-project.expected.json in Resources */ = {isa = PBXBuildFile; fileRef = 6DEB4639A072780235090D3F /* fins-3666-group-project.expected.json */; };
 		AF2D34A1A5F3CE34FE13035C /* BookmarkletDragPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92586087AE7B79F054B84B84 /* BookmarkletDragPill.swift */; };
 		AF563728D800ABCD04B66208 /* LoomSchemaBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46D60E6FE4BDEF6A7245CAE /* LoomSchemaBridgeHandler.swift */; };
+		AF62BA49E662444FF9A77FE5 /* LoomAppIntentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376297A76C89C708E6253E74 /* LoomAppIntentsTests.swift */; };
 		B0FC4227A4354BF2A22A5C0E /* TranscriptSchemaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F8D50DEF79053A5B0264B8 /* TranscriptSchemaView.swift */; };
 		B11FED732191ABC3BA517F30 /* PursuitSpawnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66BFF8C822FD44301022C930 /* PursuitSpawnerTests.swift */; };
 		B13FC3B949B0AF09BE032800 /* MarkdownNotesExtractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A3E3199D28895D90997300 /* MarkdownNotesExtractorTests.swift */; };
@@ -397,6 +399,7 @@
 		329A7AC3FC4696AE00284416 /* LoomDraftStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomDraftStoreTests.swift; sourceTree = "<group>"; };
 		33DB96CA931210C770FEDFCB /* filename-leak-course-code.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "filename-leak-course-code.schema.json"; sourceTree = "<group>"; };
 		34135861066F96F4D9BEE04C /* ReviewStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewStore.swift; sourceTree = "<group>"; };
+		376297A76C89C708E6253E74 /* LoomAppIntentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomAppIntentsTests.swift; sourceTree = "<group>"; };
 		39CBF39CE864EAA9ED6CF581 /* AIProviderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviderSettingsView.swift; sourceTree = "<group>"; };
 		39CE02DF29E1E7FB32A25646 /* IngestExtractorResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngestExtractorResultView.swift; sourceTree = "<group>"; };
 		3A5C3A5F74996C173C6D5A37 /* ReviewExtractionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewExtractionTests.swift; sourceTree = "<group>"; };
@@ -422,6 +425,7 @@
 		4AC1AFF8DCC2B972F081DC1D /* LoomSoanWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomSoanWriter.swift; sourceTree = "<group>"; };
 		4C41EC505E61F2F96FD286D8 /* CaptureSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureSettingsView.swift; sourceTree = "<group>"; };
 		4C5FBDE5F2853C579D7FB37C /* LoomWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomWebView.swift; sourceTree = "<group>"; };
+		4D39BD2AE8726C2C77B6E51F /* LoomAppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomAppIntents.swift; sourceTree = "<group>"; };
 		4ED2AF1F26A1783183801D5B /* DraftBridgeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftBridgeHandler.swift; sourceTree = "<group>"; };
 		4F79A3AA4AE4BBFB8128B83E /* PursuitHideStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PursuitHideStore.swift; sourceTree = "<group>"; };
 		50E297155415B4F666F54E23 /* fins-3635.meta.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "fins-3635.meta.json"; sourceTree = "<group>"; };
@@ -669,11 +673,20 @@
 			path = Ingest;
 			sourceTree = "<group>";
 		};
+		0CF29E70759E279E4EA8B0E9 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				4D39BD2AE8726C2C77B6E51F /* LoomAppIntents.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		0F8D3C6986C7C89985A394D6 /* App */ = {
 			isa = PBXGroup;
 			children = (
 				3A2CBF70109BB872652CD41E /* DesignSystem */,
 				C4F56B4DDC8096F270913CCB /* Help */,
+				0CF29E70759E279E4EA8B0E9 /* Intents */,
 				FF3F321E266BD98AE455A30F /* Runtime */,
 				4C0552F55FD64B99D2D5A629 /* Settings */,
 				A57AF51BEC7D55B32206FB06 /* Shell */,
@@ -1033,6 +1046,7 @@
 				B696F0469EA6E0DA0F0D5669 /* GlassDocumentEditorWritingToolsTests.swift */,
 				9C465A55EF6D020019EF74BB /* IngestExtractorLocateTests.swift */,
 				7838A33BEFC23E835A507546 /* KeychainStoreTests.swift */,
+				376297A76C89C708E6253E74 /* LoomAppIntentsTests.swift */,
 				F15ABB1ACE29DE47CE756B2F /* LoomDataModelTests.swift */,
 				329A7AC3FC4696AE00284416 /* LoomDraftStoreTests.swift */,
 				AA46721A6010B3D16B37BE84 /* LoomExportWorkspaceSnapshotTests.swift */,
@@ -1640,6 +1654,7 @@
 				477C79CA536C9E302A3B6DCF /* LoomAnchorHelperClient.swift in Sources */,
 				0F4C5EAF882D4CB51B87363F /* LoomAnchorHelperProtocol.swift in Sources */,
 				837A6B1541CE815FB9C1C64A /* LoomApp.swift in Sources */,
+				2C2CDD5C6B1247A851C1973B /* LoomAppIntents.swift in Sources */,
 				2DAA38FFA473682D619B4FB5 /* LoomDataModel.swift in Sources */,
 				7E3164B451BF0B13EC046BB3 /* LoomDataStore.swift in Sources */,
 				E00545892C926513C612A463 /* LoomDossierRootView.swift in Sources */,
@@ -1758,6 +1773,7 @@
 				A62347FBC746DBCD93AD849C /* GlassDocumentEditorWritingToolsTests.swift in Sources */,
 				C697FC6F0D804AC59A2D874A /* IngestExtractorLocateTests.swift in Sources */,
 				0A33CF69C9CB7A623FC846CC /* KeychainStoreTests.swift in Sources */,
+				AF62BA49E662444FF9A77FE5 /* LoomAppIntentsTests.swift in Sources */,
 				57B5D9DC1353AFD625AAEF5D /* LoomDataModelTests.swift in Sources */,
 				5493357030DB1DA58E365583 /* LoomDraftStoreTests.swift in Sources */,
 				57F79C9D6A934E7FE0A34D65 /* LoomExportWorkspaceSnapshotTests.swift in Sources */,

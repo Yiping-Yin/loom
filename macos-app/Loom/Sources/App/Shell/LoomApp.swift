@@ -2167,6 +2167,14 @@ struct WindowOpener: View {
             .onReceive(NotificationCenter.default.publisher(for: .loomOpenAskAIWindow)) { _ in
                 openWindow(id: AskAIWindow.id)
             }
+            // App Intents (charter W2-4): Shortcuts/Spotlight verbs open the
+            // real windows through the same openWindow environment.
+            .onReceive(NotificationCenter.default.publisher(for: .loomOpenTodayWindow)) { _ in
+                openWindow(id: TodayWindow.id)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomOpenReviewWindow)) { _ in
+                openWindow(id: ReviewWindow.id)
+            }
             // (.loomIngestFileDropped opener removed with the unregistered
             // IngestionWindow — its only posters died with the legacy shells.)
             // Shuttle action rows route Export / Import through the
