@@ -11,8 +11,14 @@
 set -o pipefail
 cd "$(dirname "$0")/../macos-app/Loom" || exit 1
 
+# -skip-testing:LoomUITests — the XCUITest target needs an interactive TCC
+# automation grant (it times out with "control session with daemon" when run
+# from a non-authorized process tree), so the fast gate is unit-tests-only.
+# Run UI tests explicitly from an authorized Terminal:
+#   xcodebuild test -scheme LoomUITests -destination 'platform=macOS'
 LOOM_SKIP_WEB_STAGE=1 xcodebuild -project Loom.xcodeproj -scheme Loom \
-  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test "$@"
+  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO \
+  -skip-testing:LoomUITests test "$@"
 status=$?
 
 LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister
