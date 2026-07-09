@@ -4947,12 +4947,21 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             location = NSMaxRange(paragraphRange)
         }
         storage.endEditing()
-        // A fresh line after a heading starts as body ink, not a bigger pen.
-        view.typingAttributes = [
-            .font: documentFont,
-            .foregroundColor: NSColor.labelColor,
-            .paragraphStyle: documentParagraphStyle,
-        ]
+        // typingAttributes carry the caret's active style. Charter §8: override
+        // them ONLY at a structural boundary — a fresh (empty) line after a
+        // heading or open question types as body. Otherwise LEAVE them alone, so
+        // a live ⌘B / ⌘I keeps running as you type (the old unconditional reset
+        // reverted an empty-selection bold on the very next keystroke).
+        let caret = min(view.selectedRange().location, text.length)
+        let currentPara = text.paragraphRange(for: NSRange(location: caret, length: 0))
+        let currentLine = text.substring(with: currentPara).trimmingCharacters(in: .whitespacesAndNewlines)
+        if currentLine.isEmpty, currentPara.location > 0 {
+            let prevPara = text.paragraphRange(for: NSRange(location: currentPara.location - 1, length: 0))
+            let prevRole = ReflectionDocumentFormat.paragraphRole(of: text.substring(with: prevPara))
+            if let boundary = ReflectionDocumentFormat.typingAttributesAfterNewline(previousRole: prevRole) {
+                view.typingAttributes = boundary
+            }
+        }
     }
 
     /// Enforce the one serif family + body size on a paragraph while PRESERVING
@@ -5208,6 +5217,10 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             // The text view is reused across documents — cancel any in-flight
             // anchor-flash fade so its queued frames don't paint onto this one.
             (view as? GrowingGlassTextView)?.cancelInFlightAnchorFlashes()
+            // Clear the undo stack across the document swap (charter §9): the
+            // view is reused, so without this a ⌘Z after switching cases would
+            // replay the PREVIOUS document's edits onto this one.
+            view.undoManager?.removeAllActions()
             GlassDocumentEditor.normalizeDocument(view, sources: sources)
             view.invalidateIntrinsicContentSize()
         }
@@ -5363,6 +5376,11 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         private func toggleEmphasis(_ trait: NSFontTraitMask) {
             let range = selectedRange()
             guard range.length > 0, let storage = textStorage else { return }
+            // Register the attribute change with the undo manager (charter §9):
+            // shouldChangeText(in:replacementString:nil) is the documented way to
+            // make an attribute-only edit undoable — without it ⌘Z can't revert
+            // a ⌘B. Skips cleanly if the system vetoes the edit.
+            guard shouldChangeText(in: range, replacementString: nil) else { return }
             let manager = NSFontManager.shared
             let existing = storage.attribute(.font, at: range.location, effectiveRange: nil) as? NSFont
             let symbolic = existing?.fontDescriptor.symbolicTraits ?? []
@@ -5382,6 +5400,8 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         private func toggleUnderline() {
             let range = selectedRange()
             guard range.length > 0, let storage = textStorage else { return }
+            // Undoable attribute change (charter §9) — see toggleEmphasis.
+            guard shouldChangeText(in: range, replacementString: nil) else { return }
             let current = storage.attribute(.underlineStyle, at: range.location, effectiveRange: nil) as? Int ?? 0
             storage.beginEditing()
             if current == 0 {
