@@ -17,7 +17,11 @@ struct TodayRootView: View {
         })
         .frame(minWidth: 460, minHeight: 480)
         // Re-derive on every appearance so reopening never shows a stale day.
-        .onAppear { digest = TodayDigest.derive(from: ReflectionWorkspaceStore.load()?.cases ?? []) }
+        .onAppear {
+            let snapshot = ReflectionWorkspaceStore.load()
+            digest = TodayDigest.derive(from: snapshot?.cases ?? [],
+                                        projects: snapshot?.projects ?? [])
+        }
     }
 }
 

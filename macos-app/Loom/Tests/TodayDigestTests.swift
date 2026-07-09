@@ -60,6 +60,24 @@ final class TodayDigestTests: XCTestCase {
         XCTAssertTrue(digest.openQuestions.allSatisfy { $0.title == "Alignment" })
     }
 
+    func testSubtitleResolvesProjectNameAndNeverLeaksLegacyCategoryStrings() {
+        // The daily face's subtitle must be MEANINGFUL: the real project name
+        // when the note belongs to one, and NOTHING when the only label is a
+        // legacy category string ("New product practice" — blank()'s default)
+        // that carries zero information.
+        var inProject = makeCase(id: "a", title: "DPO note", touchedAt: Date(timeIntervalSince1970: 100))
+        inProject.projectID = "p1"
+        let loose = makeCase(id: "b", title: "Loose note", touchedAt: Date(timeIntervalSince1970: 90))
+        var project = ReflectionProject(name: "MATH 2991", order: 0)
+        project.id = "p1"
+
+        let digest = TodayDigest.derive(from: [inProject, loose], projects: [project])
+
+        XCTAssertEqual(digest.recent.first { $0.caseID == "a" }?.subtitle, "MATH 2991")
+        XCTAssertEqual(digest.recent.first { $0.caseID == "b" }?.subtitle, "",
+                       "the legacy 'New product practice' category must not leak into the daily face")
+    }
+
     func testOpenQuestionsAreCappedSoTheDayIsNeverAPile() {
         // Many open questions across cases → the daily face shows a calm top-N
         // (newest case first), never a growing pile (anti-debt).

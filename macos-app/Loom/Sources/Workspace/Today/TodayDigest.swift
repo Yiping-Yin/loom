@@ -33,7 +33,8 @@ struct TodayDigest: Equatable {
     /// - openQuestions: every `❓` line in every case document (the editor's
     ///   own open-question convention), newest case first.
     /// - recent: the most recently touched cases, full stop.
-    static func derive(from cases: [ReflectionCase], now: Date = Date()) -> TodayDigest {
+    static func derive(from cases: [ReflectionCase], projects: [ReflectionProject] = [], now: Date = Date()) -> TodayDigest {
+        let projectNames = Dictionary(uniqueKeysWithValues: projects.map { ($0.id, $0.displayName) })
         let byRecency = cases.sorted { lhs, rhs in
             (lhs.touchedAt ?? .distantPast) > (rhs.touchedAt ?? .distantPast)
         }
@@ -41,7 +42,7 @@ struct TodayDigest: Equatable {
         let readingNow = byRecency
             .filter { !$0.sources.isEmpty }
             .prefix(3)
-            .map { item(for: $0) }
+            .map { item(for: $0, projectNames: projectNames) }
 
         var openQuestions: [Item] = []
         outer: for reflectionCase in byRecency {
@@ -63,18 +64,23 @@ struct TodayDigest: Equatable {
             }
         }
 
-        let recent = byRecency.prefix(5).map { item(for: $0) }
+        let recent = byRecency.prefix(5).map { item(for: $0, projectNames: projectNames) }
 
         return TodayDigest(readingNow: Array(readingNow),
                            openQuestions: openQuestions,
                            recent: Array(recent))
     }
 
-    private static func item(for reflectionCase: ReflectionCase) -> Item {
-        Item(id: reflectionCase.id,
-             caseID: reflectionCase.id,
-             title: displayTitle(of: reflectionCase),
-             subtitle: reflectionCase.project)
+    private static func item(for reflectionCase: ReflectionCase, projectNames: [String: String]) -> Item {
+        // The subtitle must be MEANINGFUL: the real project name when the note
+        // belongs to one, nothing otherwise. The legacy `project` category
+        // string ("New product practice" — blank()'s default) carries zero
+        // information and never leaks into the daily face.
+        let subtitle = reflectionCase.projectID.flatMap { projectNames[$0] } ?? ""
+        return Item(id: reflectionCase.id,
+                    caseID: reflectionCase.id,
+                    title: displayTitle(of: reflectionCase),
+                    subtitle: subtitle)
     }
 
     private static func displayTitle(of reflectionCase: ReflectionCase) -> String {

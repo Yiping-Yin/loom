@@ -40,8 +40,8 @@ struct ReviewSessionView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Text("Review")
-                .font(.system(size: 13, weight: .medium, design: .serif))
+            // (No "Review" label here — the window's own titlebar already
+            // says it; a duplicate title was chrome noise.)
             // A quiet streak — an asset you protect, not a debt you flee. No
             // guilt, no owl; shown only once you have one.
             if streak > 0 {
