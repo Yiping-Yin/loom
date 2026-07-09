@@ -212,6 +212,7 @@ struct LoomReflectionRootView: View {
                         onRename: renameReflection,
                         projects: projects,
                         onCreateProject: createProject,
+                        onCreateCourse: createCourseFromFolder,
                         onRenameProject: renameProject,
                         onDeleteProject: deleteProject,
                         onNewChatInProject: createChat(inProject:),
@@ -365,6 +366,7 @@ struct LoomReflectionRootView: View {
                         onRename: renameReflection,
                         projects: projects,
                         onCreateProject: createProject,
+                        onCreateCourse: createCourseFromFolder,
                         onRenameProject: renameProject,
                         onDeleteProject: deleteProject,
                         onNewChatInProject: createChat(inProject:),
@@ -699,6 +701,36 @@ struct LoomReflectionRootView: View {
         projects.append(ReflectionProject(name: ReflectionProject.untitledName, order: order))
         persistWorkspace()
         statusMessage = "Project created"
+    }
+
+    /// "New course from folder…" (three-column division): pick a real folder,
+    /// mint its read-only ContentRoot, and mirror its first-level subfolders as
+    /// the course's groups — organization paid for once in Finder, never paid
+    /// twice. LOOM only READS the folder (ruling ③); nothing is written to disk.
+    private func createCourseFromFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Add course"
+        panel.message = "Choose a course folder — its subfolders become the course's groups."
+        guard panel.runModal() == .OK, let folderURL = panel.url else { return }
+        guard let root = ContentRootStore.addFolder(url: folderURL) else {
+            statusMessage = "Couldn't add that folder"
+            return
+        }
+        do {
+            let plan = try CourseImportPlanner.plan(courseFolder: folderURL, excluding: [])
+            let nextOrder = (projects.map(\.order).max() ?? -1) + 1
+            projects.append(contentsOf: CourseOrganize.makeCourse(
+                from: plan, contentRootID: root.id.uuidString, courseOrder: nextOrder))
+            persistWorkspace()
+            statusMessage = plan.groups.isEmpty
+                ? "Course “\(plan.courseName)” added"
+                : "Course “\(plan.courseName)” added — \(plan.groups.count) groups"
+        } catch {
+            statusMessage = "Couldn't read that folder's groups"
+        }
     }
 
     private func renameProject(_ id: String, to name: String) {
@@ -2622,6 +2654,7 @@ private struct ReflectionSidebar: View {
     // Chats-in-Projects (2026-07-05).
     var projects: [ReflectionProject] = []
     var onCreateProject: () -> Void = {}
+    var onCreateCourse: () -> Void = {}
     var onRenameProject: (String, String) -> Void = { _, _ in }
     var onDeleteProject: (String) -> Void = { _ in }
     var onNewChatInProject: (String) -> Void = { _ in }
@@ -2956,16 +2989,22 @@ private struct ReflectionSidebar: View {
             .onHover { newChatHovering = $0 }
             .accessibilityLabel("New Draft")
 
-            Button(action: onCreateProject) {
+            Menu {
+                Button("New project", action: onCreateProject)
+                Button("New course from folder…", action: onCreateCourse)
+            } label: {
                 Image(systemName: "folder.badge.plus")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .frame(width: 30, height: 34)
                     .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
+            .menuStyle(.button)
+            .menuIndicator(.hidden)
             .buttonStyle(.plain)
-            .help("New project")
-            .accessibilityLabel("New project")
+            .fixedSize()
+            .help("New project or course")
+            .accessibilityLabel("New project or course")
         }
     }
 
