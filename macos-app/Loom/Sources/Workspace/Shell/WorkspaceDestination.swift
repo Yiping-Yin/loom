@@ -1,32 +1,39 @@
 import Foundation
 
-/// The 3-way top IA (charter §3/§20, ratified 2026-07-08): Today · Workspace ·
-/// Digital Me. This is the PURE contract the Wave 2 sidebar destination list +
-/// the ⌘1/⌘2/⌘3 keymap render against — extracted first (Wave 2 STEP 0) so the
-/// shell rewrite adopts a tested type instead of inventing one mid-rewrite.
-/// No SwiftUI here; the view layer maps `systemImage`/`title` to rows.
+/// The 3-way top IA — owner-defined trio (2026-07-10): opening LOOM gives
+/// **Workspace · Wiki · You**.
+/// - Workspace: where your organized/uploaded knowledge and materials live
+///   (reading, notes, courses — the input plane).
+/// - Wiki: your personal knowledge encyclopedia (inputs + online content
+///   organized into a knowledge base).
+/// - You: the professional self — your judgment trace, supplemented by your
+///   online presence, growing toward the simulated professional companion.
+/// (Today is a daily FACE, not a product — it stays a window on ⌘⇧T.)
+/// This is the PURE contract the sidebar destination list + the ⌘1/⌘2/⌘3
+/// keymap render against. No SwiftUI here; the view layer maps
+/// `systemImage`/`title` to rows.
 enum WorkspaceDestination: String, CaseIterable, Identifiable, Codable {
-    case today
     case workspace
+    case wiki
     case digitalMe
 
     var id: String { rawValue }
 
-    /// Sidebar order + ⌘-number order (Today = ⌘1, Workspace = ⌘2, Digital Me = ⌘3).
-    static var ordered: [WorkspaceDestination] { [.today, .workspace, .digitalMe] }
+    /// Sidebar order + ⌘-number order (Workspace = ⌘1, Wiki = ⌘2, You = ⌘3).
+    static var ordered: [WorkspaceDestination] { [.workspace, .wiki, .digitalMe] }
 
     var title: String {
         switch self {
-        case .today: return "Today"
         case .workspace: return "Workspace"
+        case .wiki: return "Wiki"
         case .digitalMe: return "You"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .today: return "sun.max"
         case .workspace: return "square.grid.2x2"
+        case .wiki: return "books.vertical"
         case .digitalMe: return "person.crop.circle"
         }
     }

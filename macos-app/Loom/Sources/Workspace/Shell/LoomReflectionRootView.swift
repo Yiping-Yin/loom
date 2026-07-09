@@ -147,6 +147,9 @@ struct LoomReflectionRootView: View {
     // picker + ⌘1/⌘2/⌘3 drive this; the detail switches on it. Defaults to
     // Workspace so the workbench keeps owning cold start (charter answer ②).
     @State private var destination: WorkspaceDestination = .workspace
+    // Wiki destination: the chapter the reader shows (LIBRARY rail rows and
+    // .loomOpenWikiChapter deep-links set it); nil ⇒ the spine's first chapter.
+    @State private var wikiSlug: String?
     @State private var isInspectorPresented: Bool = true
     // While a source is open, the right pane IS the note. This collapses it so
     // the PDF reads full-width in-window (owner 2026-07-06: 右栏要能收展). Session
@@ -461,16 +464,31 @@ struct LoomReflectionRootView: View {
                 .allowsHitTesting(destination == .workspace)
                 .accessibilityHidden(destination != .workspace)
 
-                // Today — pure aggregation over the live cases; a row tap opens
-                // the case AND returns to the Workspace destination.
-                if destination == .today {
-                    TodayView(
-                        digest: TodayDigest.derive(from: cases),
-                        onOpenCase: { id in
-                            selectCaseTab(id)
-                            destination = .workspace
+                // Wiki — the personal knowledge encyclopedia, read IN the
+                // workbench (owner trio 2026-07-10). The LIBRARY rail rows
+                // set the chapter; spine prev/next walks from there.
+                if destination == .wiki {
+                    if let manifest = WikiCurriculum.loadBundled(),
+                       let first = manifest.chapters.first {
+                        WikiReaderColumn(
+                            manifest: manifest,
+                            currentSlug: wikiSlug ?? first.slug,
+                            onClose: { destination = .workspace }
+                        )
+                        // Remount when the rail deep-links a chapter so the
+                        // reader jumps there even while already open.
+                        .id(wikiSlug ?? first.slug)
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "books.vertical")
+                                .font(.system(size: 26))
+                                .foregroundStyle(.tertiary)
+                            Text("The wiki isn't staged in this build.")
+                                .font(.system(size: 14, design: .serif))
+                                .foregroundStyle(.secondary)
                         }
-                    )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                 }
                 // You — the native dossier (judgment trace made visible).
                 if destination == .digitalMe {
@@ -585,7 +603,17 @@ struct LoomReflectionRootView: View {
             LoomCaptureURLRelay.unregisterPrimaryShell()
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomOpenCase)) { note in
-            if let id = note.userInfo?["caseID"] as? String { selectCaseTab(id) }
+            if let id = note.userInfo?["caseID"] as? String {
+                selectCaseTab(id)
+                destination = .workspace
+            }
+        }
+        // LIBRARY rail rows + any wiki deep-link land in the Wiki destination.
+        .onReceive(NotificationCenter.default.publisher(for: .loomOpenWikiChapter)) { note in
+            if let slug = note.userInfo?["slug"] as? String {
+                wikiSlug = slug
+                destination = .wiki
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in createReflection() }
         .onReceive(NotificationCenter.default.publisher(for: .loomExportLearningRecord)) { _ in exportLearningRecord() }
@@ -2907,7 +2935,9 @@ private struct ReflectionSidebar: View {
                                 ForEach(wikiRail) { group in
                                     Button {
                                         guard let first = group.chapters.first else { return }
-                                        openWindow(id: LibraryWindow.id)
+                                        // Routes to the Wiki DESTINATION (owner trio
+                                        // 2026-07-10) — the root view observes and
+                                        // switches the detail; no separate window.
                                         NotificationCenter.default.post(
                                             name: .loomOpenWikiChapter, object: nil,
                                             userInfo: ["slug": first.slug])

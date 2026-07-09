@@ -124,18 +124,13 @@ struct LoomApp: App {
         .defaultPosition(.center)
         .windowToolbarStyle(.unifiedCompact)
 
-        // The Library — the owner's LLM wiki (THE BOOK) read inside LOOM
-        // (wiki-migration Phase 2 mount). Its own window until the 3-way IA
-        // rebuild gives it a left-rail LIBRARY group + reader slot.
-        Window("Library", id: LibraryWindow.id) {
-            LibraryRootView()
-        }
-        .defaultSize(width: 820, height: 760)
-        .defaultPosition(.center)
+        // (The standalone Library window is retired — the wiki is now the
+        // Wiki DESTINATION inside the main workbench (owner trio 2026-07-10:
+        // Workspace · Wiki · You, ⌘2). One door, no second window.)
 
-        // The Today daily face — its own window until the 3-way IA rebuild
-        // gives it a sidebar destination. A row tap routes back to the
-        // workbench via .loomOpenCase.
+        // The Today daily face — a daily FACE, not a product destination
+        // (owner trio 2026-07-10), so it stays its own window on ⌘⇧T. A row
+        // tap routes back to the workbench via .loomOpenCase.
         Window("Today", id: TodayWindow.id) {
             TodayRootView()
                 .paperChrome()
@@ -176,7 +171,8 @@ struct LoomApp: App {
                 ShapeIntoArticleMenuItem()
                 TodayMenuItem()
                 ReviewMenuItem()
-                LibraryMenuItem()
+                // (LibraryMenuItem retired with the standalone Library window —
+                // the wiki is the ⌘2 Wiki destination now.)
                 // (Removed six more stone-dead launchers — Hold Question ⌘⇧P,
                 // Add/Connect Sōan Cards ⌘⇧D/⌘⇧L, Source check ⌘⇧X, Add files
                 // ⌘⇧I, Practice notes — whose only observers lived in the
@@ -1888,17 +1884,6 @@ enum ReviewWindow {
     static let id = "com.loom.window.review"
 }
 
-/// Opens the Library (the owner's LLM wiki, read inside LOOM). ⌘⇧L.
-struct LibraryMenuItem: View {
-    @Environment(\.openWindow) private var openWindow
-    var body: some View {
-        Button("Library") {
-            openWindow(id: LibraryWindow.id)
-        }
-        .keyboardShortcut("l", modifiers: [.command, .shift])
-    }
-}
-
 enum MainWindow {
     static let id = "com.loom.window.main"
 }
@@ -2244,20 +2229,20 @@ extension Notification.Name {
     static let loomSelectDestination = Notification.Name("loomSelectDestination")
 }
 
-/// ⌘1/⌘2/⌘3 select the three destinations (Today · Workspace · You) — charter
-/// §12 / W2-2, the Mail idiom. Retires the old ⌘1/⌘2/⌘3 (toggle sidebar / focus
-/// document / toggle inspector): sidebar open/close is ⌃⌘S (SidebarCommands),
-/// the inspector toggle is the top-bar button. Labels come from
-/// `WorkspaceDestination` so the menu stays in sync with the sidebar picker.
+/// ⌘1/⌘2/⌘3 select the three destinations (Workspace · Wiki · You — the
+/// owner's trio, 2026-07-10), the Mail idiom. Sidebar open/close is ⌃⌘S
+/// (SidebarCommands); the inspector toggle is the top-bar button. Labels AND
+/// order come from `WorkspaceDestination.ordered` so the menu can never drift
+/// from the sidebar picker or the tested contract.
 struct WorkspaceShortcutsCommands: View {
     var body: some View {
         Group {
-            Button(WorkspaceDestination.today.title) { select(1) }
-                .keyboardShortcut("1", modifiers: .command)
-            Button(WorkspaceDestination.workspace.title) { select(2) }
-                .keyboardShortcut("2", modifiers: .command)
-            Button(WorkspaceDestination.digitalMe.title) { select(3) }
-                .keyboardShortcut("3", modifiers: .command)
+            ForEach(WorkspaceDestination.ordered) { dest in
+                Button(dest.title) { select(dest.shortcutNumber) }
+                    .keyboardShortcut(
+                        KeyEquivalent(Character("\(dest.shortcutNumber)")),
+                        modifiers: .command)
+            }
         }
     }
 
