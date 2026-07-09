@@ -2616,6 +2616,9 @@ private struct ReflectionTopBar: View {
         .frame(height: reflectionTopBarHeight, alignment: .topLeading)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .allowsHitTesting(true)
+        // UI-verification handle: the Workspace-only top bar (the control that
+        // would catch a vanished toolbar). Non-behavioral.
+        .accessibilityIdentifier("workspace.topBar")
     }
 
     private var sidebarButton: some View {
@@ -2625,6 +2628,9 @@ private struct ReflectionTopBar: View {
             help: isSidebarPresented ? "Hide sidebar" : "Show sidebar",
             action: onToggleSidebar
         )
+        // These SF-symbol buttons carry only a `.help`; give them stable
+        // identifiers so UI verification can assert the toggles are present.
+        .accessibilityIdentifier("topbar.sidebarToggle")
     }
 
     private var inspectorButton: some View {
@@ -2636,6 +2642,7 @@ private struct ReflectionTopBar: View {
                 : (isInspectorPresented ? "Hide evidence" : "Show evidence"),
             action: onToggleInspector
         )
+        .accessibilityIdentifier("topbar.inspectorToggle")
     }
 }
 
@@ -3188,6 +3195,9 @@ private struct DestinationRow: View {
         }
         .help(destination.title)
         .accessibilityLabel(destination.title)
+        // Stable, collision-free query handle for UI verification (the label
+        // "Today"/"You" also appears on the surfaces themselves). Non-behavioral.
+        .accessibilityIdentifier("destination.\(destination.rawValue)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
@@ -5340,6 +5350,8 @@ struct GlassDocumentEditor: NSViewRepresentable {
         view.delegate = context.coordinator
         context.coordinator.loadDocument(into: view, fallback: text)
         view.setAccessibilityLabel("Case document")
+        // Stable UI-verification handle for the Workspace note editor.
+        view.setAccessibilityIdentifier("surface.caseDocument")
         return view
     }
 

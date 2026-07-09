@@ -26,6 +26,9 @@ struct TodayView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Today")
+        // UI-verification handle: disambiguates the Today SURFACE from the
+        // sidebar "Today" destination row (which shares the label). Non-behavioral.
+        .accessibilityIdentifier("surface.today")
     }
 
     @ViewBuilder

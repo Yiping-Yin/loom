@@ -355,3 +355,57 @@ targets:
         DEVELOPMENT_TEAM: 8BW2794353
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "Apple Development"
+
+  # Wave 2 UI verification (W2-2 shell). SEPARATE from the fast LoomTests unit
+  # gate: XCUITests launch the whole app + drive it through Accessibility, so
+  # they are slow and belong to their own scheme (see `schemes:` below). They
+  # assert the migrated NavigationSplitView shell actually renders + switches
+  # destinations — the check that automation, not a human, can run this session.
+  LoomUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - UITests
+    dependencies:
+      - target: Loom
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yinyiping.loomUITests
+        GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_TEAM: 8BW2794353
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        # The app the runner launches + attaches to.
+        TEST_TARGET_NAME: Loom
+
+# Explicit schemes so the slow app-launching UI tests never join the fast unit
+# gate. `xcodebuild -scheme Loom build test` runs ONLY LoomTests (unchanged);
+# `xcodebuild test -scheme LoomUITests` runs the XCUITests on their own.
+schemes:
+  Loom:
+    build:
+      targets:
+        Loom: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - LoomTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+  LoomUITests:
+    build:
+      targets:
+        Loom: all
+        LoomUITests: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - LoomUITests

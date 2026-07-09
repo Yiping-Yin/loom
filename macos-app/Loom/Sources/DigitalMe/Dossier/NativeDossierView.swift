@@ -29,6 +29,8 @@ struct NativeDossierView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("You — your principles")
+        // UI-verification handle for the "You" dossier surface. Non-behavioral.
+        .accessibilityIdentifier("surface.dossier")
     }
 
     private var header: some View {
