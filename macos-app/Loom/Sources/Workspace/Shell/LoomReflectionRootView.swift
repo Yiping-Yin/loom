@@ -5066,29 +5066,49 @@ struct GlassDocumentEditor: NSViewRepresentable {
         guard let storage = view.textStorage, storage.length > 0 else { return }
         let full = NSRange(location: 0, length: storage.length)
         storage.beginEditing()
+        // TextKit 2 attachment rebuild: an RTFD reload hands back PLAIN
+        // NSTextAttachments (cells and typed subclasses don't survive the
+        // round trip — only the file wrapper does). Replace each with its
+        // typed paper attachment, which vends the card/chip view under
+        // TextKit 2 and doubles as the detection marker. Collected first,
+        // applied after — never mutate .attachment mid-enumerate.
+        var rebuilds: [(range: NSRange, attachment: NSTextAttachment, link: String?)] = []
         storage.enumerateAttribute(.attachment, in: full) { value, range, _ in
             guard let attachment = value as? NSTextAttachment else { return }
             let wrapperName = attachment.fileWrapper?.preferredFilename
                 ?? attachment.fileWrapper?.filename ?? ""
             if wrapperName.hasSuffix(".loomref") {
-                if !(attachment.attachmentCell is PaperFileAttachmentCell) {
-                    let payload = attachment.fileWrapper?.regularFileContents
-                        .flatMap { String(data: $0, encoding: .utf8) } ?? ""
-                    let parts = payload.split(separator: "\n", maxSplits: 1).map(String.init)
-                    let sourceID = parts.first ?? ""
-                    let source = sources.first { $0.id == sourceID }
-                    let label = source?.label ?? (parts.count > 1 ? parts[1] : "Attached file")
-                    attachment.attachmentCell = PaperFileAttachmentCell(label: label, sourceID: sourceID, fileURL: source?.fileURL)
-                    if !sourceID.isEmpty {
-                        storage.addAttribute(.link, value: "loom-source://\(sourceID)", range: range)
-                    }
-                }
-            } else if !(attachment.attachmentCell is PaperImageAttachmentCell) {
-                let image = attachment.image
-                    ?? attachment.fileWrapper?.regularFileContents.flatMap(NSImage.init(data:))
-                if let image {
-                    attachment.attachmentCell = PaperImageAttachmentCell(imageCell: image)
-                }
+                guard !(attachment is PaperFileAttachment),
+                      let wrapper = attachment.fileWrapper else { return }
+                let payload = wrapper.regularFileContents
+                    .flatMap { String(data: $0, encoding: .utf8) } ?? ""
+                let parts = payload.split(separator: "\n", maxSplits: 1).map(String.init)
+                let sourceID = parts.first ?? ""
+                let source = sources.first { $0.id == sourceID }
+                let label = source?.label ?? (parts.count > 1 ? parts[1] : "Attached file")
+                let chip = PaperFileAttachment(
+                    label: label, sourceID: sourceID,
+                    fileURL: source?.fileURL, fileWrapper: wrapper
+                )
+                rebuilds.append((range, chip, sourceID.isEmpty ? nil : "loom-source://\(sourceID)"))
+            } else if !(attachment is PaperImageAttachment) {
+                let card = PaperImageAttachment(data: nil, ofType: nil)
+                card.fileWrapper = attachment.fileWrapper
+                card.image = attachment.image
+                guard card.cardImage != nil else { return }
+                // An appshot card's return link rides the .link attribute
+                // through RTFD; restore the card's own copy so its view can
+                // route the click.
+                let existingLink = storage.attribute(.link, at: range.location, effectiveRange: nil)
+                let raw = (existingLink as? URL)?.absoluteString ?? (existingLink as? String ?? "")
+                if raw.hasPrefix("loom://anchor") { card.anchorURL = raw }
+                rebuilds.append((range, card, nil))
+            }
+        }
+        for rebuild in rebuilds {
+            storage.addAttribute(.attachment, value: rebuild.attachment, range: rebuild.range)
+            if let link = rebuild.link {
+                storage.addAttribute(.link, value: link, range: rebuild.range)
             }
         }
         let text = storage.string as NSString
@@ -5828,8 +5848,11 @@ struct GlassDocumentEditor: NSViewRepresentable {
                   let png = bitmap.representation(using: .png, properties: [:]) else { return }
             let wrapper = FileWrapper(regularFileWithContents: png)
             wrapper.preferredFilename = "image-\(UUID().uuidString.prefix(8)).png"
-            let attachment = NSTextAttachment(fileWrapper: wrapper)
-            attachment.attachmentCell = PaperImageAttachmentCell(imageCell: image)
+            // Typed paper attachment (TextKit 2): vends the white-card view
+            // itself; an appshot card keeps its return link for click routing.
+            let attachment = PaperImageAttachment(data: nil, ofType: nil)
+            attachment.fileWrapper = wrapper
+            attachment.anchorURL = anchorURL
 
             let insertion = NSMutableAttributedString()
             let bodyAttributes: [NSAttributedString.Key: Any] = [
@@ -5862,8 +5885,9 @@ struct GlassDocumentEditor: NSViewRepresentable {
             let payload = "\(sourceID)\n\(label)"
             let wrapper = FileWrapper(regularFileWithContents: Data(payload.utf8))
             wrapper.preferredFilename = "loomsource-\(sourceID.prefix(8)).loomref"
-            let attachment = NSTextAttachment(fileWrapper: wrapper)
-            attachment.attachmentCell = PaperFileAttachmentCell(label: label, sourceID: sourceID, fileURL: fileURL)
+            // Typed paper attachment (TextKit 2): the chip view it vends owns
+            // the click; the .loomref wrapper keeps it rebuildable on reload.
+            let attachment = PaperFileAttachment(label: label, sourceID: sourceID, fileURL: fileURL, fileWrapper: wrapper)
 
             let bodyAttributes: [NSAttributedString.Key: Any] = [
                 .font: GlassDocumentEditor.documentFont,
