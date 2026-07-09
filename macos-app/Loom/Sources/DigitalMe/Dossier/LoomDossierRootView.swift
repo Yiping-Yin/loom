@@ -58,8 +58,11 @@ struct LoomDossierRootView: View {
     }
 
     var body: some View {
-        LoomWebView(url: dossierURL, debugState: webState, forcedTheme: forcedTheme)
-            .ignoresSafeArea()
+        // Digital Me is now NATIVE: the "You" room shows your promoted
+        // principles (the judgment trace), not the old web bundle. Capture
+        // arbitration below is unchanged — the dossier stays the secondary
+        // web-capture consumer via LoomCaptureURLRelay.
+        NativeDossierView()
             .background(LoomTokens.dsPaperDeep.ignoresSafeArea())
             .sheet(isPresented: Binding<Bool>(
                 get: { capturePayload != nil },

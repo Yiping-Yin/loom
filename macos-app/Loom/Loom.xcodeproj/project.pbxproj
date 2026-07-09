@@ -50,6 +50,7 @@
 		20C7D372112D315ABE99575F /* minimal.pptx in Resources */ = {isa = PBXBuildFile; fileRef = F0636DAADCDD34A2B18DFFF5 /* minimal.pptx */; };
 		20FE72327535AA286E833295 /* LoomAnchorHelper.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 14AA21C3102011E5E9DD656F /* LoomAnchorHelper.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		21F96B2DE8EE9BF614AAB22D /* CourseRailTreeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2140BC06437DD412B4F5282 /* CourseRailTreeTests.swift */; };
+		223D9FD56839A60DE6A4290C /* NativeDossierView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCDF97489B91229E831B44FC /* NativeDossierView.swift */; };
 		234209E0BE4DBAED73F7E11E /* SchemaResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CF9C3C775507819114BD99 /* SchemaResolverTests.swift */; };
 		25A21210EB6DD7E34B3EAA41 /* IngestExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6468F0FCB91AC16AF43228DB /* IngestExtractor.swift */; };
 		274FC90F9C45C13A5DAE0582 /* CustomEndpointClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE18F301846375F2AA33FFC3 /* CustomEndpointClientTests.swift */; };
@@ -588,6 +589,7 @@
 		F3F01F74E7B1F90C312147ED /* fins-3666-assessment.expected.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "fins-3666-assessment.expected.json"; sourceTree = "<group>"; };
 		F8DE515C0AAB90065D3463F4 /* LoomHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomHelpView.swift; sourceTree = "<group>"; };
 		FB2A40B9ECE4DFDC83FBB7D8 /* GenericDocExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericDocExtractor.swift; sourceTree = "<group>"; };
+		FCDF97489B91229E831B44FC /* NativeDossierView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDossierView.swift; sourceTree = "<group>"; };
 		FD4149B12A1A06F4375CB341 /* filename-leak-course-code.filename.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "filename-leak-course-code.filename.txt"; sourceTree = "<group>"; };
 		FE532DE615AB0024E3486918 /* ellipsis-stitch-format.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "ellipsis-stitch-format.schema.json"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1211,6 +1213,7 @@
 			isa = PBXGroup;
 			children = (
 				5932AA7D79B4F97ED0145109 /* LoomDossierRootView.swift */,
+				FCDF97489B91229E831B44FC /* NativeDossierView.swift */,
 			);
 			path = Dossier;
 			sourceTree = "<group>";
@@ -1589,6 +1592,7 @@
 				FAC78B3207977E733B3CF14C /* MarkdownNotesSchema.swift in Sources */,
 				82AE14DDCFD066365ECA864E /* MarkdownNotesSchemaView.swift in Sources */,
 				1FAF9C532D22210F16C7F82D /* MotionTokens.swift in Sources */,
+				223D9FD56839A60DE6A4290C /* NativeDossierView.swift in Sources */,
 				710087B7B5C7E8B242F6A51D /* NavigationBridgeHandler.swift in Sources */,
 				43087E9F9CC38E0761914AE9 /* OllamaClient.swift in Sources */,
 				A4E5B5FECA3BB697EF82D35A /* OpenAIClient.swift in Sources */,
