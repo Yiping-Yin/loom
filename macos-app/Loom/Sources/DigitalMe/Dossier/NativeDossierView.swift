@@ -8,6 +8,7 @@ import SwiftUI
 /// the Ask companion (DigitalMePrompt), shown to you honestly.
 struct NativeDossierView: View {
     @State private var principles: [ReflectionPrincipleRecord] = []
+    @State private var copiedConfirmation = false
 
     var body: some View {
         ScrollView {
@@ -47,6 +48,28 @@ struct NativeDossierView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
                     .padding(.top, 2)
+                // Digital Me across desktops: copy the judgment trace as a
+                // portable context to paste into ANY AI model — your judgment
+                // travels with you, commanding models outside LOOM too.
+                Button {
+                    if let context = DigitalMePrompt.portableContext(from: principles) {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(context, forType: .string)
+                        copiedConfirmation = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            copiedConfirmation = false
+                        }
+                    }
+                } label: {
+                    Label(copiedConfirmation ? "Copied — paste into any AI" : "Copy for any AI",
+                          systemImage: copiedConfirmation ? "checkmark" : "doc.on.doc")
+                        .font(.system(size: 11))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.accentColor)
+                .padding(.top, 6)
+                .help("Copy your principles as a context you can paste into ChatGPT, Claude, or any AI — so it works with YOUR judgment.")
+                .accessibilityLabel("Copy your judgment context for any AI")
             }
         }
         .padding(.bottom, 4)

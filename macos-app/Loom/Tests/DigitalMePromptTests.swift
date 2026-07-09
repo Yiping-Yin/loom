@@ -54,6 +54,31 @@ final class DigitalMePromptTests: XCTestCase {
                           "the most-recently-promoted principle is listed first")
     }
 
+    // MARK: - Portable context (Digital Me across desktops — 指挥 AI 大模型)
+
+    func testPortableContextCarriesEveryPrincipleWithScopeAndHonestFraming() {
+        // The portable context is what the owner pastes into ANY AI model
+        // (ChatGPT / Claude / Gemini) so it acts with THEIR judgment. It must
+        // carry every principle (no budget cut — it's a deliberate export),
+        // each scope clause, and the same anti-oracle honesty framing.
+        let a = principle("Prefer supervised objectives when the reward model is noisy.",
+                          holds: "offline preference data", title: "DPO", at: 100)
+        let b = principle("Warm up the learning rate.", holds: "large-batch pretraining", title: "Optim", at: 200)
+        let out = DigitalMePrompt.portableContext(from: [a, b])
+        XCTAssertNotNil(out)
+        XCTAssertTrue(out!.contains("Prefer supervised objectives"))
+        XCTAssertTrue(out!.contains("Warm up the learning rate"))
+        XCTAssertTrue(out!.contains("offline preference data"), "scope clauses travel")
+        let lower = out!.lowercased()
+        XCTAssertTrue(lower.contains("scope") || lower.contains("holds"), "scope discipline travels")
+        XCTAssertTrue(lower.contains("not universal truth") || lower.contains("their own"),
+                      "anti-oracle framing travels with the export")
+    }
+
+    func testPortableContextIsNilWhenNothingRecorded() {
+        XCTAssertNil(DigitalMePrompt.portableContext(from: []))
+    }
+
     func testRelevantPrincipleOutranksANewerIrrelevantOne() {
         // An OLD principle that shares terms with the question must rank above a
         // NEWER one that doesn't — relevance beats recency (v0.5 policy).

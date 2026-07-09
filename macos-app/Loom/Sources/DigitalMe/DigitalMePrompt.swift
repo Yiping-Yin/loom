@@ -49,6 +49,33 @@ enum DigitalMePrompt {
         return header + "\n\n" + lines.joined(separator: "\n")
     }
 
+    /// The PORTABLE judgment context — Digital Me across desktops. The owner
+    /// copies this and pastes it into ANY AI model (ChatGPT / Claude / Gemini /
+    /// a system-prompt slot) so that model acts WITH the owner's judgment:
+    /// every principle travels (no budget cut — exporting is deliberate), each
+    /// with its scope clause and provenance, wrapped in the same anti-oracle
+    /// honesty framing the in-app companion gets. nil when nothing is recorded.
+    static func portableContext(from principles: [ReflectionPrincipleRecord]) -> String? {
+        guard !principles.isEmpty else { return nil }
+        let header = """
+        You are assisting a specific person. Below are principles they have \
+        recorded from their own study — their own scoped judgments, not \
+        universal truth. Work WITH this judgment: apply a principle only when \
+        the question falls within the scope it holds within; if their request \
+        runs against one of their recorded principles, say so plainly instead \
+        of silently overriding it; never cite these as outside authority. The \
+        final judgment is always theirs.
+        """
+        let lines = principles
+            .sorted { $0.promotedAt > $1.promotedAt }
+            .map { p -> String in
+                let scope = p.holdsWithin.isEmpty ? "" : " — holds within: \(p.holdsWithin)"
+                let from = p.sourceCaseTitle.isEmpty ? "" : " (from \(p.sourceCaseTitle))"
+                return "- \(p.statement)\(scope)\(from)"
+            }
+        return header + "\n\n" + lines.joined(separator: "\n")
+    }
+
     /// v0.5 selection policy (isolated + swappable — the owner reserved the full
     /// design): principles sharing meaningful terms with the current question
     /// rank first (relevance), ties and no-overlap fall back to newest. Reuses
