@@ -92,8 +92,9 @@ final class MenuCommandsTests: XCTestCase {
     // MARK: - The three ex-hidden shortcuts + ⌘O are real, single-owner items
 
     func testWorkspaceShortcutsAreSingleOwnerMenuItems() throws {
-        let newTopic = try soleOwner(of: "n", modifiers: .command)
-        XCTAssertEqual(newTopic.title, "New Topic")
+        let newDraft = try soleOwner(of: "n", modifiers: .command)
+        XCTAssertEqual(newDraft.title, "New Draft",
+                       "⌘N speaks the trio's vocabulary (the sidebar's create action), not the stale 'New Topic'")
 
         let newLearning = try soleOwner(of: "n", modifiers: [.command, .shift])
         XCTAssertEqual(newLearning.title, "New Learning Project",
