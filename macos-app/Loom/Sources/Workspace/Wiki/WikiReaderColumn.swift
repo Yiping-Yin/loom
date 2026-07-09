@@ -17,10 +17,6 @@ struct WikiReaderColumn: View {
     var onClose: () -> Void = {}
 
     @StateObject private var webState = WebDebugState()
-    // System unity (owner 2026-07-10: Wiki 与 Workspace 风格统一): the wiki
-    // page follows the APP's live appearance — light app, light page; dark
-    // app, dark page — never a forced dark island inside a light window.
-    @Environment(\.colorScheme) private var colorScheme
 
     private var chapter: WikiChapter? {
         manifest.chapters.first { $0.slug == currentSlug }
@@ -30,12 +26,20 @@ struct WikiReaderColumn: View {
         URL(string: "loom://bundle/wiki/\(currentSlug).html")
     }
 
+    /// THE BOOK's own binding colour (dsPaperDeep dark) — the corpus ships
+    /// dark-only CSS (zero `.light` rules; canon: cosmic pages stay dark), so
+    /// the reader column embraces it Books.app-style: the page keeps its
+    /// designed dark binding, the CHROME row + surround match it (no light
+    /// strip glaring over a dark page), and the light sidebar sits beside it
+    /// like a dark book open in a bright room.
+    private let bookBinding = Color(red: 7 / 255, green: 9 / 255, blue: 12 / 255)
+
     var body: some View {
         VStack(spacing: 0) {
             chromeRow
             Divider()
             if let pageURL {
-                LoomWebView(url: pageURL, debugState: webState, forcedTheme: colorScheme == .light ? "light" : "dark")
+                LoomWebView(url: pageURL, debugState: webState, forcedTheme: "dark")
                     .id(currentSlug) // remount per chapter — bundle pages are static documents
             } else {
                 Text("Chapter not staged in this build.")
@@ -45,6 +49,11 @@ struct WikiReaderColumn: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        // One surface: the whole reader column (chrome row included, up under
+        // the titlebar strip) wears the book's binding, and its controls render
+        // in dark appearance — no light-over-dark sandwich.
+        .background(bookBinding.ignoresSafeArea(edges: .top))
+        .environment(\.colorScheme, .dark)
         // The wedge loop, wiki edition (owner trio 2026-07-10): a selected
         // passage lands in the CURRENT NOTE as an anchored quote — exactly like
         // the PDF flow — carrying a loom://anchor?wiki= back-link to this
