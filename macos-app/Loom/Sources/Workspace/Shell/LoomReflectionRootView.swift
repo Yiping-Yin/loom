@@ -4797,7 +4797,9 @@ private struct WorkbenchEmptyActionRow: View {
 // dropped images ride the flow as solid white paper cards; the rich
 // document persists as an RTFD package per case while the workspace store
 // keeps only a plain-text mirror.
-private struct GlassDocumentEditor: NSViewRepresentable {
+// Internal (not private) so the S8 characterization test can prove the
+// range-scoped normalize produces byte-identical styling to the full pass.
+struct GlassDocumentEditor: NSViewRepresentable {
     let caseID: ReflectionCase.ID
     let text: String
     let focusRequest: Int
