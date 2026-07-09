@@ -463,6 +463,10 @@ struct LoomReflectionRootView: View {
                 .opacity(destination == .workspace ? 1 : 0)
                 .allowsHitTesting(destination == .workspace)
                 .accessibilityHidden(destination != .workspace)
+                // W1-5 (charter §19): the workspace detail is the "Document"
+                // VoiceOver landmark, the counterpart of the sidebar's
+                // "Navigator" — VO jumps between panes, not through them.
+                .modifier(PaneLandmark(label: "Document"))
 
                 // Wiki — the personal knowledge encyclopedia, read IN the
                 // workbench (owner trio 2026-07-10). No chapter selected ⇒ the
@@ -3025,6 +3029,9 @@ private struct ReflectionSidebar: View {
         .onReceive(NotificationCenter.default.publisher(for: .loomFocusSidebarSearch)) { _ in
             searchFocused = true
         }
+        // W1-5 (charter §19): the sidebar is ONE VoiceOver landmark so VO
+        // users can jump straight between the Navigator and the Document.
+        .modifier(PaneLandmark(label: "Navigator"))
     }
 
     // SwiftUI caches a row's Menu/contextMenu content by identity, so a reused
@@ -4883,6 +4890,21 @@ private struct AnchorPreviewTarget: Identifiable {
     let page: Int
     let rect: CGRect
     var id: String { "\(fileURL.path)#\(page)" }
+}
+
+/// W1-5 (charter §19) — a pane-level VoiceOver landmark: the pane becomes ONE
+/// named accessibility container so VO users can jump between the navigator
+/// and the document the way sighted users glance between columns. One
+/// modifier, two a11y calls — the root body chain sits at the compiler's
+/// type-check ceiling, so landmarks must not add two chained calls apiece.
+private struct PaneLandmark: ViewModifier {
+    let label: String
+
+    func body(content: Content) -> some View {
+        content
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(label)
+    }
 }
 
 /// W1-2 — the File-menu relays, folded into ONE modifier because the root
