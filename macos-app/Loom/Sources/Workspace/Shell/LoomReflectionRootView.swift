@@ -512,6 +512,10 @@ struct LoomReflectionRootView: View {
             // the workbench items (only the shell's native sidebar toggle +
             // traffic lights remain there).
             .toolbar { workbenchToolbar }
+            // The toolbar carries only Workspace chrome — on Wiki/You hide the
+            // whole strip (owner screenshot 2026-07-10: in fullscreen the empty
+            // strip overlaid the sidebar's first destination row).
+            .toolbar(destination == .workspace ? .automatic : .hidden, for: .windowToolbar)
             // One-window-one-glass (charter §1): the single root matte
             // (ReflectionMatteWorkbenchBackground — one underWindowBackground /
             // behindWindow material) already extends under the titlebar strip via
@@ -2936,50 +2940,49 @@ private struct ReflectionSidebar: View {
                                 }
                             }
                         }
-                        // LIBRARY — the owner's wiki (THE BOOK) brought into the
-                        // workbench itself. A row per chapter-group; tapping one
-                        // opens the reader at that group's first chapter (the
-                        // reader's spine prev/next walks from there).
-                        if let wikiRail, !wikiRail.isEmpty {
-                            Section(header: SidebarSectionHeader(
-                                title: "Library",
-                                count: wikiRail.reduce(0) { $0 + $1.chapters.count }
-                            )
-                            .padding(.top, 8)) {
-                                ForEach(wikiRail) { group in
-                                    Button {
-                                        guard let first = group.chapters.first else { return }
-                                        // Routes to the Wiki DESTINATION (owner trio
-                                        // 2026-07-10) — the root view observes and
-                                        // switches the detail; no separate window.
-                                        NotificationCenter.default.post(
-                                            name: .loomOpenWikiChapter, object: nil,
-                                            userInfo: ["slug": first.slug])
-                                    } label: {
-                                        HStack(spacing: 10) {
-                                            Image(systemName: "book")
-                                                .font(.system(size: 12))
-                                                .foregroundStyle(.secondary)
-                                                .frame(width: 22)
-                                            Text(group.section)
-                                                .font(.system(size: 13))
-                                                .foregroundStyle(.primary)
-                                                .lineLimit(1)
-                                            Spacer(minLength: 0)
-                                            Text("\(group.chapters.count)")
-                                                .font(.system(size: 11, design: .monospaced))
-                                                .foregroundStyle(.tertiary)
-                                        }
-                                        .padding(.leading, 8)
-                                        .frame(height: 30)
-                                        .contentShape(Rectangle())
+                    }
+                    // LIBRARY — the owner's wiki (THE BOOK) in the workbench.
+                    // OUTSIDE the sections branch so it shows even when the
+                    // owner has no projects/learning/principles yet (owner
+                    // screenshot 2026-07-10: sidebar had drafts only and the
+                    // Library vanished). A row per chapter-group; tapping one
+                    // opens the Wiki destination at that group's first chapter.
+                    if let wikiRail, !wikiRail.isEmpty {
+                        Section(header: SidebarSectionHeader(
+                            title: "Library",
+                            count: wikiRail.reduce(0) { $0 + $1.chapters.count }
+                        )
+                        .padding(.top, 8)) {
+                            ForEach(wikiRail) { group in
+                                Button {
+                                    guard let first = group.chapters.first else { return }
+                                    NotificationCenter.default.post(
+                                        name: .loomOpenWikiChapter, object: nil,
+                                        userInfo: ["slug": first.slug])
+                                } label: {
+                                    HStack(spacing: 10) {
+                                        Image(systemName: "book")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(.secondary)
+                                            .frame(width: 22)
+                                        Text(group.section)
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(.primary)
+                                            .lineLimit(1)
+                                        Spacer(minLength: 0)
+                                        Text("\(group.chapters.count)")
+                                            .font(.system(size: 11, design: .monospaced))
+                                            .foregroundStyle(.tertiary)
                                     }
-                                    .buttonStyle(.plain)
-                                    .padding(.horizontal, 8)
+                                    .padding(.leading, 8)
+                                    .frame(height: 30)
+                                    .contentShape(Rectangle())
                                 }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, 8)
                             }
-                            .padding(.bottom, 2)
                         }
+                        .padding(.bottom, 2)
                     }
                 }
                 .padding(.bottom, 8)

@@ -17,7 +17,10 @@ struct WikiReaderColumn: View {
     var onClose: () -> Void = {}
 
     @StateObject private var webState = WebDebugState()
-    @AppStorage("theme") private var theme: String = "dark"
+    // System unity (owner 2026-07-10: Wiki 与 Workspace 风格统一): the wiki
+    // page follows the APP's live appearance — light app, light page; dark
+    // app, dark page — never a forced dark island inside a light window.
+    @Environment(\.colorScheme) private var colorScheme
 
     private var chapter: WikiChapter? {
         manifest.chapters.first { $0.slug == currentSlug }
@@ -32,7 +35,7 @@ struct WikiReaderColumn: View {
             chromeRow
             Divider()
             if let pageURL {
-                LoomWebView(url: pageURL, debugState: webState, forcedTheme: theme == "light" ? "light" : "dark")
+                LoomWebView(url: pageURL, debugState: webState, forcedTheme: colorScheme == .light ? "light" : "dark")
                     .id(currentSlug) // remount per chapter — bundle pages are static documents
             } else {
                 Text("Chapter not staged in this build.")
