@@ -5444,9 +5444,11 @@ struct GlassDocumentEditor: NSViewRepresentable {
 
         /// Route a `loom://anchor?src=<sourceID>&page=N&rect=x,y,w,h` link — from
         /// a quote OR an appshot card — to pop the source in an in-app PDF jumped
-        /// to that passage. Returns true when it is an anchor link.
+        /// to that passage. Returns true when it is an anchor link. Internal so
+        /// the TextKit 2 attachment views (a card owns its own clicks now) can
+        /// route through the same door as clickedOnLink.
         @discardableResult
-        private func routeAnchorLink(_ raw: String) -> Bool {
+        func routeAnchorLink(_ raw: String) -> Bool {
             guard raw.hasPrefix("loom://anchor"), let comps = URLComponents(string: raw) else { return false }
             let q = comps.queryItems ?? []
             guard let sourceID = q.first(where: { $0.name == "src" })?.value, !sourceID.isEmpty else { return true }
@@ -6184,6 +6186,355 @@ private final class PaperFileAttachmentCell: NSTextAttachmentCell {
             .font: labelFont,
             .foregroundColor: NSColor.black.withAlphaComponent(0.8),
         ])
+    }
+}
+
+// MARK: - TextKit 2 paper attachments (charter W2-3)
+//
+// TextKit 2 ignores NSTextAttachmentCell entirely, so the paper cards are
+// typed NSTextAttachment subclasses vending REAL NSViews through
+// NSTextAttachmentViewProvider — the same paper drawing, now live views that
+// own their own clicks. The typed subclass doubles as normalizeDocument's
+// detection marker (type-based, replacing the old `is …Cell` checks).
+// Internal (not private) so the migration tests can assert the types.
+
+/// An image in the document flow is a piece of paper laid on the glass:
+/// solid white card, rounded corners, a real shadow — the same material
+/// honesty as EvidencePaperCard. An appshot card additionally carries its
+/// loom://anchor URL so clicking it jumps back to the source passage.
+final class PaperImageAttachment: NSTextAttachment {
+    /// The appshot return link. Persistence rides the `.link` attribute
+    /// (RTFD keeps it); normalizeDocument restores this copy on reload so
+    /// the card's view can route the click itself.
+    var anchorURL: String?
+
+    /// The paper card's picture: the live image if set, else decoded from
+    /// the RTFD file wrapper's bytes.
+    var cardImage: NSImage? {
+        image ?? fileWrapper?.regularFileContents.flatMap(NSImage.init(data:))
+    }
+
+    override func viewProvider(
+        for parentView: NSView?,
+        location: NSTextLocation,
+        textContainer: NSTextContainer?
+    ) -> NSTextAttachmentViewProvider? {
+        PaperImageAttachmentViewProvider(
+            textAttachment: self,
+            parentView: parentView,
+            textLayoutManager: textContainer?.textLayoutManager,
+            location: location
+        )
+    }
+}
+
+final class PaperImageAttachmentViewProvider: NSTextAttachmentViewProvider {
+    override init(
+        textAttachment: NSTextAttachment,
+        parentView: NSView?,
+        textLayoutManager: NSTextLayoutManager?,
+        location: NSTextLocation
+    ) {
+        super.init(textAttachment: textAttachment, parentView: parentView,
+                   textLayoutManager: textLayoutManager, location: location)
+        // The card is sized by attachmentBounds(for:…) below (width follows
+        // the line fragment), not by the vended view's own size.
+        tracksTextAttachmentViewBounds = true
+    }
+
+    override func loadView() {
+        let attachment = textAttachment as? PaperImageAttachment
+        view = PaperImageCardView(image: attachment?.cardImage, anchorURL: attachment?.anchorURL)
+    }
+
+    override func attachmentBounds(
+        for attributes: [NSAttributedString.Key: Any],
+        location: NSTextLocation,
+        textContainer: NSTextContainer?,
+        proposedLineFragment: CGRect,
+        position: CGPoint
+    ) -> CGRect {
+        guard let image = (textAttachment as? PaperImageAttachment)?.cardImage,
+              image.size.width > 0 else {
+            return CGRect(x: 0, y: 0, width: 24, height: 24)
+        }
+        let padding = PaperImageCardView.padding
+        let available = max(1, min(proposedLineFragment.width, PaperImageCardView.maxCardWidth) - padding * 2)
+        let scale = min(1, available / image.size.width)
+        return CGRect(
+            x: 0, y: 0,
+            width: image.size.width * scale + padding * 2,
+            height: image.size.height * scale + padding * 2
+        )
+    }
+}
+
+/// The image card's live view: white paper, rounded corners, a real layer
+/// shadow (a view's draw() is clipped to its backing store, so the old
+/// cell's NSShadow moves onto the layer, which may paint outside bounds).
+final class PaperImageCardView: NSView {
+    static let padding: CGFloat = 10
+    static let cornerRadius: CGFloat = 10
+    static let maxCardWidth: CGFloat = 560
+
+    private let image: NSImage?
+    private let anchorURL: String?
+
+    init(image: NSImage?, anchorURL: String?) {
+        self.image = image
+        self.anchorURL = anchorURL
+        super.init(frame: .zero)
+        wantsLayer = true
+        if anchorURL != nil {
+            toolTip = "Return to source — exact passage"
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("PaperImageCardView does not support NSCoding")
+    }
+
+    override var isFlipped: Bool { true }
+
+    override func layout() {
+        super.layout()
+        guard let layer else { return }
+        layer.masksToBounds = false
+        layer.shadowColor = NSColor.black.withAlphaComponent(0.28).cgColor
+        layer.shadowOpacity = 1
+        // NSShadow blur 7 ≈ layer radius 3.5; offset -2 keeps the old
+        // downward drop.
+        layer.shadowRadius = 3.5
+        layer.shadowOffset = CGSize(width: 0, height: -2)
+        layer.shadowPath = CGPath(
+            roundedRect: bounds.insetBy(dx: 1, dy: 1),
+            cornerWidth: Self.cornerRadius, cornerHeight: Self.cornerRadius,
+            transform: nil
+        )
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.white.setFill()
+        NSBezierPath(
+            roundedRect: bounds.insetBy(dx: 1, dy: 1),
+            xRadius: Self.cornerRadius, yRadius: Self.cornerRadius
+        ).fill()
+        if let image {
+            image.draw(
+                in: bounds.insetBy(dx: Self.padding, dy: Self.padding),
+                from: .zero, operation: .sourceOver, fraction: 1,
+                respectFlipped: true,
+                hints: [.interpolation: NSImageInterpolation.high]
+            )
+        }
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        // An appshot card follows its loom://anchor back to the passage —
+        // the routing that lived in textView(_:clickedOn:…) under TextKit 1.
+        if let anchorURL, let coordinator = loomEditorCoordinator {
+            coordinator.routeAnchorLink(anchorURL)
+            return
+        }
+        super.mouseDown(with: event)
+    }
+
+    override func resetCursorRects() {
+        if anchorURL != nil { addCursorRect(bounds, cursor: .pointingHand) }
+    }
+}
+
+/// A non-image file in the document flow: the same paper material as the
+/// image card, compressed to a chip — file icon and name on solid white.
+/// Carries its sourceID so the chip's own view opens the source on click,
+/// and keeps the .loomref wrapper so the chip survives RTFD round trips.
+final class PaperFileAttachment: NSTextAttachment {
+    let chipLabel: String
+    let sourceID: String
+    let chipFileURL: URL?
+
+    init(label: String, sourceID: String, fileURL: URL?, fileWrapper: FileWrapper) {
+        self.chipLabel = label
+        self.sourceID = sourceID
+        self.chipFileURL = fileURL
+        super.init(data: nil, ofType: nil)
+        self.fileWrapper = fileWrapper
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("PaperFileAttachment does not support NSCoding")
+    }
+
+    var fileIcon: NSImage {
+        if let path = chipFileURL?.path, FileManager.default.fileExists(atPath: path) {
+            return NSWorkspace.shared.icon(forFile: path)
+        }
+        if let ext = chipLabel.split(separator: ".").last.map(String.init),
+           let type = UTType(filenameExtension: ext) {
+            return NSWorkspace.shared.icon(for: type)
+        }
+        return NSWorkspace.shared.icon(for: .data)
+    }
+
+    override func viewProvider(
+        for parentView: NSView?,
+        location: NSTextLocation,
+        textContainer: NSTextContainer?
+    ) -> NSTextAttachmentViewProvider? {
+        PaperFileAttachmentViewProvider(
+            textAttachment: self,
+            parentView: parentView,
+            textLayoutManager: textContainer?.textLayoutManager,
+            location: location
+        )
+    }
+}
+
+final class PaperFileAttachmentViewProvider: NSTextAttachmentViewProvider {
+    override init(
+        textAttachment: NSTextAttachment,
+        parentView: NSView?,
+        textLayoutManager: NSTextLayoutManager?,
+        location: NSTextLocation
+    ) {
+        super.init(textAttachment: textAttachment, parentView: parentView,
+                   textLayoutManager: textLayoutManager, location: location)
+        tracksTextAttachmentViewBounds = true
+    }
+
+    override func loadView() {
+        guard let chip = textAttachment as? PaperFileAttachment else {
+            view = NSView()
+            return
+        }
+        view = PaperFileChipView(label: chip.chipLabel, sourceID: chip.sourceID, fileIcon: chip.fileIcon)
+    }
+
+    override func attachmentBounds(
+        for attributes: [NSAttributedString.Key: Any],
+        location: NSTextLocation,
+        textContainer: NSTextContainer?,
+        proposedLineFragment: CGRect,
+        position: CGPoint
+    ) -> CGRect {
+        guard let chip = textAttachment as? PaperFileAttachment else { return .zero }
+        let size = PaperFileChipView.chipSize(label: chip.chipLabel)
+        // Same geometry as the old cellBaselineOffset: the chip's bottom
+        // sits 8pt below the baseline.
+        return CGRect(x: 0, y: -8, width: size.width, height: size.height)
+    }
+}
+
+/// The file chip's live view — and the new home of the chip click: it opens
+/// its source directly, replacing the text view's TextKit 1 glyph hit-test.
+final class PaperFileChipView: NSView {
+    static let chipHeight: CGFloat = 30
+    static let padding: CGFloat = 9
+    static let maxLabelWidth: CGFloat = 240
+    private static let labelFont = NSFont.systemFont(ofSize: 12, weight: .medium)
+
+    let sourceID: String
+    private let label: String
+    private let fileIcon: NSImage
+
+    static func chipSize(label: String) -> NSSize {
+        let labelWidth = (label as NSString).size(withAttributes: [.font: labelFont]).width
+        return NSSize(
+            width: padding + 16 + 6 + min(labelWidth, maxLabelWidth) + padding,
+            height: chipHeight
+        )
+    }
+
+    init(label: String, sourceID: String, fileIcon: NSImage) {
+        self.label = label
+        self.sourceID = sourceID
+        self.fileIcon = fileIcon
+        super.init(frame: .zero)
+        wantsLayer = true
+        toolTip = label
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("PaperFileChipView does not support NSCoding")
+    }
+
+    override var isFlipped: Bool { true }
+
+    override func layout() {
+        super.layout()
+        guard let layer else { return }
+        layer.masksToBounds = false
+        layer.shadowColor = NSColor.black.withAlphaComponent(0.25).cgColor
+        layer.shadowOpacity = 1
+        layer.shadowRadius = 2.5
+        layer.shadowOffset = CGSize(width: 0, height: -1.5)
+        layer.shadowPath = CGPath(
+            roundedRect: bounds.insetBy(dx: 1, dy: 1),
+            cornerWidth: 8, cornerHeight: 8,
+            transform: nil
+        )
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.white.setFill()
+        NSBezierPath(
+            roundedRect: bounds.insetBy(dx: 1, dy: 1),
+            xRadius: 8, yRadius: 8
+        ).fill()
+
+        let iconRect = NSRect(
+            x: Self.padding,
+            y: bounds.midY - 8,
+            width: 16,
+            height: 16
+        )
+        fileIcon.draw(
+            in: iconRect,
+            from: .zero, operation: .sourceOver, fraction: 1,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
+        let size = (label as NSString).size(withAttributes: [.font: Self.labelFont])
+        let textRect = NSRect(
+            x: iconRect.maxX + 6,
+            y: bounds.midY - size.height / 2,
+            width: min(size.width, Self.maxLabelWidth),
+            height: size.height
+        )
+        (label as NSString).draw(in: textRect, withAttributes: [
+            .font: Self.labelFont,
+            .foregroundColor: NSColor.black.withAlphaComponent(0.8),
+        ])
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        // The chip opens its source — the routing that used to live in the
+        // text view's mouseDown glyph hit-test and clickedOn-cell delegate.
+        if !sourceID.isEmpty, let coordinator = loomEditorCoordinator {
+            coordinator.onOpenSource(sourceID)
+            return
+        }
+        super.mouseDown(with: event)
+    }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .pointingHand)
+    }
+}
+
+/// Walk up to the enclosing editor and hand back its Coordinator — the
+/// attachment views route clicks through the same delegate the link path
+/// uses, so a chip click and a loom-source:// link click stay one behaviour.
+private extension NSView {
+    var loomEditorCoordinator: GlassDocumentEditor.Coordinator? {
+        var ancestor = superview
+        while let view = ancestor {
+            if let textView = view as? NSTextView {
+                return textView.delegate as? GlassDocumentEditor.Coordinator
+            }
+            ancestor = view.superview
+        }
+        return nil
     }
 }
 
