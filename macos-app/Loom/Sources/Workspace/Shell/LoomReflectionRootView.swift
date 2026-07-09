@@ -1412,9 +1412,14 @@ struct LoomReflectionRootView: View {
                 )
             }
         }
-        statusMessage = precise
-            ? "Noted passage from page \(page + 1)"
-            : "Noted from page \(page + 1) — exact spot not found, will jump to the page"
+        // Invite the read-thin move (docs/canon/WHAT_IS_LOOM.md §6): the quote
+        // is just evidence; your OWN sentence under it is the distillation, and
+        // it's what comes back in Review. The nudge teaches the loop without a
+        // modal or a forced field — it reuses the existing status line.
+        let landed = precise
+            ? "Noted p.\(page + 1)"
+            : "Noted p.\(page + 1) — exact spot not found, will jump to the page"
+        statusMessage = "\(landed) — now say it in your own words; it comes back in Review."
     }
 
     /// External capture (⌘U from Preview): resolve the selection against the
