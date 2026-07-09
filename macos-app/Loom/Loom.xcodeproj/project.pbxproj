@@ -168,6 +168,7 @@
 		8D6FE68FEB1C7C30F90ABE95 /* ClipboardInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 402C456B36AC4BA76DBAD479 /* ClipboardInspector.swift */; };
 		911AE4EB868FA2AF44DC7D55 /* CaptureSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3EDF5BF32A0673979B61F5 /* CaptureSheet.swift */; };
 		9134BC8616E07D8521922E92 /* SecurityScopedFolderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C2C02DBD58D10293D82075 /* SecurityScopedFolderStore.swift */; };
+		9141674AC8563D3CB27E04BE /* WorkspaceDestinationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F318F98B17F50537081A7BF /* WorkspaceDestinationTests.swift */; };
 		919C8157157443FC5D6BE0F5 /* KeyboardHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA90B166BE7CE432CC76D25 /* KeyboardHelpView.swift */; };
 		92AC6632A54C5E8C6A8D5D7B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADAACE9D84B2BD1493396FAC /* KeychainStore.swift */; };
 		93ED4E676CA0CED2CB23969F /* TodayRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4B988FC2808C2F9F37D4FD1 /* TodayRootView.swift */; };
@@ -238,6 +239,7 @@
 		CF3CF544CB5BA0744BF3C100 /* SpreadsheetSchemaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8CC6E3E6017AB55F3850FB /* SpreadsheetSchemaView.swift */; };
 		D131467725A23B67A013F5F7 /* LoomWeaveWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8566863C50A5F0B39C16E6A /* LoomWeaveWriter.swift */; };
 		D1B47614EB50D6D2E6B26B0D /* LoomExtractorAnchorsBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47867B54346E4A879D376286 /* LoomExtractorAnchorsBridgeHandler.swift */; };
+		D1C814DC4CB904C26B3B85A2 /* WorkspaceDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77AD9CE6B1FA892AF03B282F /* WorkspaceDestination.swift */; };
 		D5AAF032B4FB267FAB5D0FEA /* AIBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A259D3AFDF3A8B5E06343F /* AIBridgeHandler.swift */; };
 		D664832649E5CD883E79A916 /* ReviewExtraction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC1C5D2AA918DA5FC36D84F /* ReviewExtraction.swift */; };
 		D6C670EC4AB12F9BD0E0DFDB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5B34F36F6EAFC6BA0A1FF9CC /* PrivacyInfo.xcprivacy */; };
@@ -419,6 +421,7 @@
 		5B34F36F6EAFC6BA0A1FF9CC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		5B91632129DF079E21EA3998 /* SyllabusSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyllabusSchema.swift; sourceTree = "<group>"; };
 		5D7EE70B9F4AD1E582CBDAFF /* comm-3030.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "comm-3030.schema.json"; sourceTree = "<group>"; };
+		5F318F98B17F50537081A7BF /* WorkspaceDestinationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDestinationTests.swift; sourceTree = "<group>"; };
 		5F8063D162F8C70BE55DD578 /* CaptureURLRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureURLRouter.swift; sourceTree = "<group>"; };
 		600390BDA56BB5DB2E237835 /* AskSelectionCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskSelectionCapture.swift; sourceTree = "<group>"; };
 		6197B174A46D3B3A28E53F41 /* filename-leak-course-name-term.filename.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "filename-leak-course-name-term.filename.txt"; sourceTree = "<group>"; };
@@ -446,6 +449,7 @@
 		7761CA846CF8E37783E12844 /* fins-3640.schema-verified.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "fins-3640.schema-verified.json"; sourceTree = "<group>"; };
 		778684CD29FD08EC0DFCE039 /* fins-3640.input.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "fins-3640.input.txt"; sourceTree = "<group>"; };
 		77A6B064D3A2812DC12C2B20 /* comm-3030.expected.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "comm-3030.expected.json"; sourceTree = "<group>"; };
+		77AD9CE6B1FA892AF03B282F /* WorkspaceDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDestination.swift; sourceTree = "<group>"; };
 		7838A33BEFC23E835A507546 /* KeychainStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStoreTests.swift; sourceTree = "<group>"; };
 		7A5EDCD4C68C98649C1426AF /* fins-3646.expected.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "fins-3646.expected.json"; sourceTree = "<group>"; };
 		7A8D4B88CA0C2077B42874B5 /* AppleFoundationClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleFoundationClient.swift; sourceTree = "<group>"; };
@@ -1031,6 +1035,7 @@
 				3F1008A20D6B8EEAEBF8D9E8 /* TranscriptExtractorTests.swift */,
 				90920894513DAA8F66E9A987 /* TypedExtractorMatchTests.swift */,
 				0FF399DF8C6EC99AB35DBF50 /* WikiCurriculumTests.swift */,
+				5F318F98B17F50537081A7BF /* WorkspaceDestinationTests.swift */,
 				46CF0562200DE1B9C768F570 /* fixtures */,
 			);
 			path = Tests;
@@ -1066,6 +1071,7 @@
 			children = (
 				CE4C4DAB6F7A9B7307B67AEF /* ColophonStatus.swift */,
 				06172BBC3FFAF68D03DD376B /* LoomReflectionRootView.swift */,
+				77AD9CE6B1FA892AF03B282F /* WorkspaceDestination.swift */,
 			);
 			path = Shell;
 			sourceTree = "<group>";
@@ -1656,6 +1662,7 @@
 				FAF7FA6880714B0AC7E10EE0 /* WikiCurriculum.swift in Sources */,
 				B6579540528E058EDC121949 /* WikiReaderColumn.swift in Sources */,
 				36EB61CA77CDC9435408F5E6 /* WindowConfigurator.swift in Sources */,
+				D1C814DC4CB904C26B3B85A2 /* WorkspaceDestination.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1721,6 +1728,7 @@
 				84DF520DC0478D1613F993DD /* TranscriptExtractorTests.swift in Sources */,
 				C91A01CF2B4FAF291818CA40 /* TypedExtractorMatchTests.swift in Sources */,
 				DC3FC8FBEBD2F1E2115FE62D /* WikiCurriculumTests.swift in Sources */,
+				9141674AC8563D3CB27E04BE /* WorkspaceDestinationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
