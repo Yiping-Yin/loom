@@ -34,20 +34,22 @@ private func clampedReaderWidth(_ value: Double) -> CGFloat {
 private let reflectionReaderFractionKey = "loom.reflection.readerFraction"
 private func clampedReaderFraction(_ f: Double) -> Double { min(max(f, 0.30), 0.68) }
 private let reflectionTopBarHeight: CGFloat = 52
-private let reflectionSidebarTopClearance: CGFloat = 60
-// The in-window reader sits FLUSH under the floating top bar (owner 2026-07-06:
-// "空的太多"). Its own header row is gone, so it only needs to clear the bar's
-// height — not the larger note-column clearance above. Kept separate so tuning
-// the reader never disturbs the four note/thread call sites of the 60 constant.
-private let reflectionReaderTopClearance: CGFloat = reflectionTopBarHeight
+// Windowed/fullscreen correctness (2026-07-10): content now RESPECTS the top
+// safe area — the system insets it under the titlebar/toolbar strip in
+// windowed mode and reclaims the space in fullscreen. These constants are
+// therefore pure BREATHING ROOM inside the content, no longer strip-dodging;
+// each old value carried ~52pt of manual strip clearance that the safe area
+// now provides (60→8, 52→0, 76→24, 116→64).
+private let reflectionSidebarTopClearance: CGFloat = 8
+private let reflectionReaderTopClearance: CGFloat = 0
 private let reflectionThreadMaxWidth: CGFloat = 720
 private let reflectionTrafficLightClearance: CGFloat = 88
 private let reflectionTitlebarControlSize: CGFloat = 16
 private let reflectionTitlebarControlCenterY: CGFloat = 16
 private let reflectionTitlebarContentTop: CGFloat = reflectionTitlebarControlCenterY - (reflectionTitlebarControlSize / 2)
-private let reflectionThreadTopPadding: CGFloat = 76
+private let reflectionThreadTopPadding: CGFloat = 24
 private let reflectionInspectorTopPadding: CGFloat = 74
-private let reflectionBridgePanelTopPadding: CGFloat = 116
+private let reflectionBridgePanelTopPadding: CGFloat = 64
 private let reflectionReadingNoteRailLeading: CGFloat = 20
 private let reflectionReadingNoteRailWidth: CGFloat = 18
 private let reflectionReadingNoteContentLeading: CGFloat = 60
@@ -469,12 +471,10 @@ struct LoomReflectionRootView: View {
                             destination = .workspace
                         }
                     )
-                    .padding(.top, reflectionTopBarHeight)
                 }
                 // You — the native dossier (judgment trace made visible).
                 if destination == .digitalMe {
                     NativeDossierView()
-                        .padding(.top, reflectionTopBarHeight)
                 }
                 }
             }
@@ -525,7 +525,12 @@ struct LoomReflectionRootView: View {
             isPresentingHistory = true
         }
         .preferredColorScheme(isWorkspaceEmpty ? .dark : nil)
-        .ignoresSafeArea(.container, edges: .top)
+        // Windowed vs fullscreen correctness (owner report 2026-07-10: "有些
+        // 情况只有在全屏能看到"): CONTENT respects the top safe area, so the
+        // system insets it under the titlebar/toolbar strip in windowed mode
+        // and reclaims the space when fullscreen hides that strip — the two
+        // modes can no longer diverge. Only the MATTE below ignores the safe
+        // area, so the single glass still extends under the strip.
         .background(ReflectionMatteWorkbenchBackground().ignoresSafeArea())
         .background(
             WindowConfigurator(
