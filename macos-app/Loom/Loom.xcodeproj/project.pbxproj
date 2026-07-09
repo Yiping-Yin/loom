@@ -58,6 +58,7 @@
 		2ABC0F9C9ED8FC67B6B5EE79 /* LoomTraceWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6886C9A536109E2D4893543 /* LoomTraceWriter.swift */; };
 		2BFDB283DA3568B569B61F9E /* semicolon-stitch-duedate.filename.txt in Resources */ = {isa = PBXBuildFile; fileRef = 63185DEC5F9E03CA3708745E /* semicolon-stitch-duedate.filename.txt */; };
 		2C8C34C9C65A856400902E7E /* metadata.key in Resources */ = {isa = PBXBuildFile; fileRef = B0DE530467AF4AAA6E5BA7AC /* metadata.key */; };
+		2CDE46AFEC355A41DC946743 /* WikiHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A0FDC21C79D1C78A23AAE1 /* WikiHome.swift */; };
 		2DAA38FFA473682D619B4FB5 /* LoomDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92CFFCCFB767FEE0CAA1F7DD /* LoomDataModel.swift */; };
 		2E292A46C9D0E60B938D67F0 /* MotionTokensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A02B85D9C6394D6362789A /* MotionTokensTests.swift */; };
 		2EEED06E8467376350F0A25D /* DevServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF41D93470838A29C2C31AC0 /* DevServer.swift */; };
@@ -136,6 +137,7 @@
 		7497B17809010F2569ED03A8 /* ReflectionLearningRecordExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21D9C05B536575D477A9F27E /* ReflectionLearningRecordExporter.swift */; };
 		75030B2B299E10261AD39CDE /* CustomEndpointClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66095B5A375EDFBFF4ABF616 /* CustomEndpointClient.swift */; };
 		754CC34803ED801438DAB57F /* SchemaResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF34AC00EC2317A3C5109325 /* SchemaResolver.swift */; };
+		758C261D345E4684A515E306 /* WikiHomeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90EC0099B0D5EBED40F02D8 /* WikiHomeTests.swift */; };
 		76B91217C2746C5B4E380024 /* infs-3822.input.txt in Resources */ = {isa = PBXBuildFile; fileRef = A0D047A8E1EF761508015C42 /* infs-3822.input.txt */; };
 		77CB7D65C23A09A3F969354E /* ReflectionArticleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037E787C018350B544217060 /* ReflectionArticleTests.swift */; };
 		790BBBEEE499ED7A91AF2398 /* ReviewPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BE6BC707FE20D2137E8BCD /* ReviewPrompt.swift */; };
@@ -468,6 +470,7 @@
 		81D5BFBE923A02380E14D8B3 /* body-duplicate-marker.pages */ = {isa = PBXFileReference; path = "body-duplicate-marker.pages"; sourceTree = "<group>"; };
 		830C53B1B9D2E50170D20F68 /* body-duplicate-marker.key */ = {isa = PBXFileReference; path = "body-duplicate-marker.key"; sourceTree = "<group>"; };
 		838CBED670154487968B493C /* ReflectionPrincipleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionPrincipleStore.swift; sourceTree = "<group>"; };
+		84A0FDC21C79D1C78A23AAE1 /* WikiHome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiHome.swift; sourceTree = "<group>"; };
 		858D5B116BB6043E31CDCABC /* LoomAnchorHelperClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomAnchorHelperClient.swift; sourceTree = "<group>"; };
 		85E454D515C7F6CE1C33909A /* CleanText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanText.swift; sourceTree = "<group>"; };
 		89379AADB02B6EAE35338621 /* PursuitSpawner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PursuitSpawner.swift; sourceTree = "<group>"; };
@@ -547,6 +550,7 @@
 		C4164796A89FAA6689E207E8 /* DigitalMePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalMePrompt.swift; sourceTree = "<group>"; };
 		C43C60987BB7033695705244 /* ReviewPromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptTests.swift; sourceTree = "<group>"; };
 		C8566863C50A5F0B39C16E6A /* LoomWeaveWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomWeaveWriter.swift; sourceTree = "<group>"; };
+		C90EC0099B0D5EBED40F02D8 /* WikiHomeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiHomeTests.swift; sourceTree = "<group>"; };
 		C9155AAEDCF35932560D896B /* LoomFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomFileStore.swift; sourceTree = "<group>"; };
 		CA42AA3A649050A335BAD0DE /* FragmentSchemaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentSchemaView.swift; sourceTree = "<group>"; };
 		CAC8911B39C40A490D19DE83 /* CaptureURLRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureURLRouterTests.swift; sourceTree = "<group>"; };
@@ -835,6 +839,7 @@
 			isa = PBXGroup;
 			children = (
 				D8FBD4F69267016E74918481 /* WikiCurriculum.swift */,
+				84A0FDC21C79D1C78A23AAE1 /* WikiHome.swift */,
 				65CFC24E8706DB3F1A7E604F /* WikiReaderColumn.swift */,
 			);
 			path = Wiki;
@@ -1055,6 +1060,7 @@
 				3F1008A20D6B8EEAEBF8D9E8 /* TranscriptExtractorTests.swift */,
 				90920894513DAA8F66E9A987 /* TypedExtractorMatchTests.swift */,
 				0FF399DF8C6EC99AB35DBF50 /* WikiCurriculumTests.swift */,
+				C90EC0099B0D5EBED40F02D8 /* WikiHomeTests.swift */,
 				5F318F98B17F50537081A7BF /* WorkspaceDestinationTests.swift */,
 				46CF0562200DE1B9C768F570 /* fixtures */,
 			);
@@ -1703,6 +1709,7 @@
 				DBE32BBD99881BD3998DEC4C /* TranscriptSchema.swift in Sources */,
 				B0FC4227A4354BF2A22A5C0E /* TranscriptSchemaView.swift in Sources */,
 				FAF7FA6880714B0AC7E10EE0 /* WikiCurriculum.swift in Sources */,
+				2CDE46AFEC355A41DC946743 /* WikiHome.swift in Sources */,
 				B6579540528E058EDC121949 /* WikiReaderColumn.swift in Sources */,
 				36EB61CA77CDC9435408F5E6 /* WindowConfigurator.swift in Sources */,
 				D1C814DC4CB904C26B3B85A2 /* WorkspaceDestination.swift in Sources */,
@@ -1772,6 +1779,7 @@
 				84DF520DC0478D1613F993DD /* TranscriptExtractorTests.swift in Sources */,
 				C91A01CF2B4FAF291818CA40 /* TypedExtractorMatchTests.swift in Sources */,
 				DC3FC8FBEBD2F1E2115FE62D /* WikiCurriculumTests.swift in Sources */,
+				758C261D345E4684A515E306 /* WikiHomeTests.swift in Sources */,
 				9141674AC8563D3CB27E04BE /* WorkspaceDestinationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

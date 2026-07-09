@@ -465,29 +465,30 @@ struct LoomReflectionRootView: View {
                 .accessibilityHidden(destination != .workspace)
 
                 // Wiki — the personal knowledge encyclopedia, read IN the
-                // workbench (owner trio 2026-07-10). The LIBRARY rail rows
-                // set the chapter; spine prev/next walks from there.
+                // workbench (owner trio 2026-07-10). No chapter selected ⇒ the
+                // encyclopedia's table of contents (staged book + YOUR pages —
+                // the workspace→wiki flow); a chapter ⇒ the reader; the
+                // reader's ✕ returns to the table of contents.
                 if destination == .wiki {
-                    if let manifest = WikiCurriculum.loadBundled(),
-                       let first = manifest.chapters.first {
+                    if let slug = wikiSlug, let manifest = WikiCurriculum.loadBundled() {
                         WikiReaderColumn(
                             manifest: manifest,
-                            currentSlug: wikiSlug ?? first.slug,
-                            onClose: { destination = .workspace }
+                            currentSlug: slug,
+                            onClose: { wikiSlug = nil }
                         )
                         // Remount when the rail deep-links a chapter so the
                         // reader jumps there even while already open.
-                        .id(wikiSlug ?? first.slug)
+                        .id(slug)
                     } else {
-                        VStack(spacing: 8) {
-                            Image(systemName: "books.vertical")
-                                .font(.system(size: 26))
-                                .foregroundStyle(.tertiary)
-                            Text("The wiki isn't staged in this build.")
-                                .font(.system(size: 14, design: .serif))
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        WikiHomeView(
+                            manifest: WikiCurriculum.loadBundled(),
+                            ownPages: WikiHome.ownPages(from: cases),
+                            onOpenChapter: { wikiSlug = $0 },
+                            onOpenOwnPage: { id in
+                                selectCaseTab(id)
+                                destination = .workspace
+                            }
+                        )
                     }
                 }
                 // You — the native dossier (judgment trace made visible).
