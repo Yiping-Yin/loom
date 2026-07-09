@@ -5614,9 +5614,33 @@ struct GlassDocumentEditor: NSViewRepresentable {
         private var passageObserver: NSObjectProtocol?
         private var passageImageObserver: NSObjectProtocol?
         private var shapeObserver: NSObjectProtocol?
+        #if DEBUG
+        /// Charter W2-3 tripwire: TextKit 2 is a one-way contract. AppKit
+        /// posts willSwitchToNSLayoutManagerNotification the instant ANY code
+        /// touches `.layoutManager` on this view — the silent permanent
+        /// downgrade this migration removed. Installed once; screams in DEBUG
+        /// so a regression can't hide behind a working-but-TextKit-1 editor.
+        private var tk1DowngradeTripwire: NSObjectProtocol?
+        #endif
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
+            #if DEBUG
+            if tk1DowngradeTripwire == nil {
+                tk1DowngradeTripwire = NotificationCenter.default.addObserver(
+                    forName: NSTextView.willSwitchToNSLayoutManagerNotification,
+                    object: self,
+                    queue: .main
+                ) { _ in
+                    assertionFailure("""
+                    GrowingGlassTextView is downgrading to TextKit 1 — some code \
+                    touched .layoutManager on the center editor. Find it and use \
+                    textLayoutManager instead (charter W2-3: the downgrade is \
+                    one-way and silent in Release).
+                    """)
+                }
+            }
+            #endif
             if window != nil, passageObserver == nil {
                 passageObserver = NotificationCenter.default.addObserver(
                     forName: .loomReflectionInsertPassage,
@@ -5679,6 +5703,11 @@ struct GlassDocumentEditor: NSViewRepresentable {
             if let observer = shapeObserver {
                 NotificationCenter.default.removeObserver(observer)
             }
+            #if DEBUG
+            if let observer = tk1DowngradeTripwire {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            #endif
         }
 
         // Word-class emphasis with no permanent chrome: the standard ⌘B/⌘I/⌘U
