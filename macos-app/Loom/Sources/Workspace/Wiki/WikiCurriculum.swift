@@ -25,6 +25,13 @@ struct WikiManifest: Codable, Equatable {
     let chapters: [WikiChapter]
 }
 
+/// One LIBRARY-rail group: a wiki section and its chapters in reading order.
+struct WikiRailSection: Identifiable, Equatable {
+    let section: String
+    let chapters: [WikiChapter]
+    var id: String { section }
+}
+
 enum WikiCurriculum {
     /// Decode a manifest blob. Refuses future major versions rather than
     /// misreading them.
@@ -73,6 +80,20 @@ enum WikiCurriculum {
     /// echo the book's own vocabulary without scraping HTML.
     static func folioLine(for chapter: WikiChapter) -> String {
         "\(chapter.section.lowercased()) · \(romanFolio(chapter.positionInSection)) of \(romanFolio(chapter.sectionSize))"
+    }
+
+    /// The LIBRARY rail's shape: the spine grouped into its sections (in
+    /// manifest order), each section's chapters in reading order. Zero
+    /// clustering — this is the book's own table of contents, not a re-sort.
+    /// The sidebar renders these as section headers + chapter rows; the reader
+    /// opens a row via its slug. Sections with no chapters are dropped.
+    static func railSections(in manifest: WikiManifest) -> [WikiRailSection] {
+        manifest.sections.compactMap { section in
+            let chapters = manifest.chapters
+                .filter { $0.section == section }
+                .sorted { $0.order < $1.order }
+            return chapters.isEmpty ? nil : WikiRailSection(section: section, chapters: chapters)
+        }
     }
 
     /// Prev/next along the whole spine (reading order), nil at the edges.

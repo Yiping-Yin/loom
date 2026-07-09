@@ -31,6 +31,14 @@ final class WikiCurriculumTests: XCTestCase {
         XCTAssertThrowsError(try WikiCurriculum.load(from: Data(future.utf8)))
     }
 
+    func testRailSectionsGroupBySectionInManifestOrderChaptersInReadingOrder() throws {
+        let manifest = try WikiCurriculum.load(from: Data(fixture.utf8))
+        let rail = WikiCurriculum.railSections(in: manifest)
+        XCTAssertEqual(rail.map(\.section), ["Start", "Finetuning"], "sections in manifest order")
+        XCTAssertEqual(rail[0].chapters.map(\.slug), ["llm101n"])
+        XCTAssertEqual(rail[1].chapters.map(\.slug), ["lora", "dpo"], "chapters in reading order")
+    }
+
     func testRomanFolioAndFolioLine() throws {
         XCTAssertEqual(WikiCurriculum.romanFolio(1), "i")
         XCTAssertEqual(WikiCurriculum.romanFolio(3), "iii")
