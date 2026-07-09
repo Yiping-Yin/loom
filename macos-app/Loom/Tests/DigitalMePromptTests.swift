@@ -54,6 +54,28 @@ final class DigitalMePromptTests: XCTestCase {
                           "the most-recently-promoted principle is listed first")
     }
 
+    func testRelevantPrincipleOutranksANewerIrrelevantOne() {
+        // An OLD principle that shares terms with the question must rank above a
+        // NEWER one that doesn't — relevance beats recency (v0.5 policy).
+        let relevant = principle("Prefer supervised objectives when the reward model is noisy.",
+                                 holds: "offline preference data", title: "DPO", at: 10)
+        let newerButOffTopic = principle("Warm up the learning rate for stability.",
+                                         holds: "large-batch pretraining", title: "Optim", at: 999)
+        let out = DigitalMePrompt.systemPrompt(
+            from: [relevant, newerButOffTopic],
+            relevantTo: "does the reward model matter for offline preference data?")!
+        XCTAssertLessThan(out.range(of: "supervised objectives")!.lowerBound,
+                          out.range(of: "learning rate")!.lowerBound,
+                          "the term-overlapping principle ranks first despite being older")
+    }
+
+    func testEmptyContextStillFallsBackToRecency() {
+        let older = principle("OLDER.", holds: "a", at: 10)
+        let newer = principle("NEWER.", holds: "b", at: 999)
+        let out = DigitalMePrompt.systemPrompt(from: [older, newer], relevantTo: "")!
+        XCTAssertLessThan(out.range(of: "NEWER")!.lowerBound, out.range(of: "OLDER")!.lowerBound)
+    }
+
     func testBudgetCapsSizeAndKeepsOnlyWholePrinciples() {
         // Many principles, tiny budget → the assembled text stays within budget
         // and keeps only the newest that fit WHOLE (never a half line).

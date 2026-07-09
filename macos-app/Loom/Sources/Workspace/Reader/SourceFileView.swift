@@ -1090,7 +1090,7 @@ struct SourceFileView: View {
                 )
                 let firstResponse = try await LoomAI.sendStream(
                     prompt: prompt,
-                    systemPrompt: Self.askSystemPromptWithJudgment()
+                    systemPrompt: Self.askSystemPromptWithJudgment(relevantTo: quote + " " + userText)
                 ) { chunk in
                     Task { @MainActor in
                         if let idx = askMessages.firstIndex(where: { $0.id == placeholderID }) {
@@ -1139,7 +1139,7 @@ struct SourceFileView: View {
                     }
                     _ = try await LoomAI.sendStream(
                         prompt: retryPrompt,
-                        systemPrompt: Self.askSystemPromptWithJudgment()
+                        systemPrompt: Self.askSystemPromptWithJudgment(relevantTo: quote + " " + userText)
                     ) { chunk in
                         Task { @MainActor in
                             if let idx = askMessages.firstIndex(where: { $0.id == placeholderID }) {
@@ -1377,8 +1377,9 @@ struct SourceFileView: View {
     /// signed principles so the companion reflects how THIS user thinks. Reads
     /// the principle store (read-only) at ask time; when the user has recorded
     /// none, this is exactly `askSystemPrompt`.
-    static func askSystemPromptWithJudgment() -> String {
-        guard let judgment = DigitalMePrompt.systemPrompt(from: ReflectionPrincipleStore.load()) else {
+    static func askSystemPromptWithJudgment(relevantTo context: String = "") -> String {
+        guard let judgment = DigitalMePrompt.systemPrompt(
+            from: ReflectionPrincipleStore.load(), relevantTo: context) else {
             return askSystemPrompt
         }
         return askSystemPrompt + "\n\n---\n\n" + judgment

@@ -20,7 +20,11 @@ enum DigitalMePrompt {
 
     /// The principle preamble to prepend to a companion's system prompt, or
     /// `nil` when the user has recorded nothing (then the assistant stays plain).
+    /// `relevantTo` (the current question + quote) ranks principles that share
+    /// its terms first, so a small budget spends on what's relevant now, not
+    /// merely what's newest. Empty context ⇒ pure recency (backward compatible).
     static func systemPrompt(from principles: [ReflectionPrincipleRecord],
+                             relevantTo context: String = "",
                              budgetChars: Int = 1800) -> String? {
         let header = """
         The user has recorded these principles from their own study — their own \
@@ -29,7 +33,7 @@ enum DigitalMePrompt {
         and if the user's question runs against a recorded principle, say so plainly \
         rather than overriding it silently. Never cite them as outside authority.
         """
-        let ordered = principles.sorted { $0.promotedAt > $1.promotedAt }
+        let ordered = ranked(principles, relevantTo: context)
         var lines: [String] = []
         var used = header.count + 2                 // header + the "\n\n" that follows it
         for p in ordered {
@@ -43,5 +47,29 @@ enum DigitalMePrompt {
         }
         guard !lines.isEmpty else { return nil }
         return header + "\n\n" + lines.joined(separator: "\n")
+    }
+
+    /// v0.5 selection policy (isolated + swappable — the owner reserved the full
+    /// design): principles sharing meaningful terms with the current question
+    /// rank first (relevance), ties and no-overlap fall back to newest. Reuses
+    /// the principle store's own term extractor so "relevance" means the same
+    /// thing here as in cross-case reuse.
+    static func ranked(_ principles: [ReflectionPrincipleRecord],
+                       relevantTo context: String) -> [ReflectionPrincipleRecord] {
+        let contextTerms = ReflectionPrincipleStore.meaningfulTerms(in: context)
+        guard !contextTerms.isEmpty else {
+            return principles.sorted { $0.promotedAt > $1.promotedAt }
+        }
+        return principles
+            .map { p -> (record: ReflectionPrincipleRecord, overlap: Int) in
+                let terms = ReflectionPrincipleStore.meaningfulTerms(in: p.statement + " " + p.holdsWithin)
+                return (p, contextTerms.intersection(terms).count)
+            }
+            .sorted { lhs, rhs in
+                lhs.overlap != rhs.overlap
+                    ? lhs.overlap > rhs.overlap
+                    : lhs.record.promotedAt > rhs.record.promotedAt
+            }
+            .map(\.record)
     }
 }
