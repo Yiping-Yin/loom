@@ -501,7 +501,11 @@ struct LoomReflectionRootView: View {
                         ReflectionBridgePanel(
                             status: statusMessage,
                             onFiles: importLocalSources,
-                            onReview: reviewSelectedCase,
+                            // The REAL review wedge (the ⌘⇧R session window),
+                            // not the old composer-focus stub.
+                            onReview: {
+                                NotificationCenter.default.post(name: .loomOpenReviewWindow, object: nil)
+                            },
                             onUnwired: { statusMessage = $0 }
                         )
                         .frame(width: clampedInspectorWidth(inspectorWidth))
@@ -6864,10 +6868,13 @@ private struct ReflectionBridgePanel: View {
     var body: some View {
         VStack(spacing: 12) {
             VStack(spacing: 8) {
-                // ⌘O is owned by File ▸ Open… (charter §12 — ⌘P is released
-                // for its reserved meaning, Print). The row shows the menu's
-                // shortcut but registers no key of its own: one owner, and
-                // the combo no longer appears/disappears with this pane.
+                // Workspace = the INPUT place (owner trio 2026-07-10): the pane
+                // carries the two REAL input/loop verbs. The old "Browser" /
+                // "Terminal" stub rows (toast-only) are retired — honest UI
+                // never advertises what isn't built.
+                //
+                // ⌘O is owned by File ▸ Open… (charter §12). The row shows the
+                // menu's shortcut but registers no key of its own: one owner.
                 BridgeRow(
                     systemImage: "folder.badge.plus",
                     title: "Add files",
@@ -6875,26 +6882,14 @@ private struct ReflectionBridgePanel: View {
                     help: "Import local files as sources for this draft (or drag a file onto the document)",
                     action: onFiles
                 )
+                // The REAL review wedge (⌘⇧R window) — not the old composer
+                // stub. Shows the menu's shortcut; the menu owns the key.
                 BridgeRow(
-                    systemImage: "checklist",
+                    systemImage: "rectangle.stack",
                     title: "Review",
-                    shortcut: "⌃⇧G",
-                    help: "Review the current learning record",
+                    shortcut: "⌘⇧R",
+                    help: "Today's review session — rebuild your own sentences",
                     action: onReview
-                )
-                .keyboardShortcut("g", modifiers: [.control, .shift])
-                BridgeRow(
-                    systemImage: "globe",
-                    title: "Browser",
-                    shortcut: "⌘T",
-                    action: { onUnwired("Browser bridge arrives next") }
-                )
-                .keyboardShortcut("t", modifiers: .command)
-                BridgeRow(
-                    systemImage: "apple.terminal",
-                    title: "Terminal",
-                    shortcut: nil,
-                    action: { onUnwired("Terminal arrives with the practice ground") }
                 )
             }
 
