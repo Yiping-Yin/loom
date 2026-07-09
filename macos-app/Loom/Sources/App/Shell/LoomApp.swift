@@ -168,6 +168,7 @@ struct LoomApp: App {
                 AskAIMenuItem()
                 AskAboutFileMenuItem()
                 ShuttleMenuItem()
+                ShapeIntoArticleMenuItem()
                 TodayMenuItem()
                 ReviewMenuItem()
                 LibraryMenuItem()
@@ -1838,6 +1839,18 @@ struct ShuttleMenuItem: View {
             openWindow(id: ShuttleWindow.id)
         }
         .keyboardShortcut("k", modifiers: .command)
+    }
+}
+
+/// Shape into article (G8): append the note's own anchored sources as a
+/// "## Reading" section. ⌘⇧A — the note gathers its provenance the way the
+/// wiki's articles carry theirs (no AI; your prose stays yours).
+struct ShapeIntoArticleMenuItem: View {
+    var body: some View {
+        Button("Shape into Article") {
+            NotificationCenter.default.post(name: .loomShapeIntoArticle, object: nil)
+        }
+        .keyboardShortcut("a", modifiers: [.command, .shift])
     }
 }
 

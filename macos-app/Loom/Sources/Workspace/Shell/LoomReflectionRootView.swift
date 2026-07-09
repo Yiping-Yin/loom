@@ -4834,6 +4834,8 @@ extension Notification.Name {
     /// Hover-to-note: the reader captured a passage; the center note editor
     /// listens and inserts it as a clickable `loom://anchor` quote.
     static let loomReflectionInsertPassage = Notification.Name("loomReflectionInsertPassage")
+    /// Shape into article (G8): append the note's gathered "## Reading" provenance.
+    static let loomShapeIntoArticle = Notification.Name("loomShapeIntoArticle")
 
     /// Appshot (owner 2026-07-06): the reader rendered the captured region to
     /// an image; the center note editor drops it in as a paper card next to the
@@ -5562,6 +5564,7 @@ struct GlassDocumentEditor: NSViewRepresentable {
         /// mounted center editor inserts it as a clickable anchored quote.
         private var passageObserver: NSObjectProtocol?
         private var passageImageObserver: NSObjectProtocol?
+        private var shapeObserver: NSObjectProtocol?
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
@@ -5600,6 +5603,21 @@ struct GlassDocumentEditor: NSViewRepresentable {
                 NotificationCenter.default.removeObserver(observer)
                 passageImageObserver = nil
             }
+            // Shape into article (G8): append the note's gathered provenance.
+            if window != nil, shapeObserver == nil {
+                shapeObserver = NotificationCenter.default.addObserver(
+                    forName: .loomShapeIntoArticle,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] _ in
+                    guard let self else { return }
+                    self.window?.makeFirstResponder(self)
+                    self.shapeIntoArticle()
+                }
+            } else if window == nil, let observer = shapeObserver {
+                NotificationCenter.default.removeObserver(observer)
+                shapeObserver = nil
+            }
         }
 
         deinit {
@@ -5607,6 +5625,9 @@ struct GlassDocumentEditor: NSViewRepresentable {
                 NotificationCenter.default.removeObserver(observer)
             }
             if let observer = passageImageObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            if let observer = shapeObserver {
                 NotificationCenter.default.removeObserver(observer)
             }
         }
@@ -5881,10 +5902,37 @@ struct GlassDocumentEditor: NSViewRepresentable {
             insertion.append(NSAttributedString(string: "\n", attributes: bodyAttributes))
             let quoteStart = location + (leadingNewline ? 1 : 0)
             insertText(insertion, replacementRange: selectedRange())
+            insertPassageAnchorFlash(quoteStart: quoteStart, quoteLength: quoteLine.length, precise: precise)
+        }
+
+        /// G8 "Shape into article": append the note's own gathered provenance as
+        /// a "## Reading" section (ReflectionArticle — no AI, the user's prose
+        /// stays theirs). Inserted as plain text so normalize styles the heading
+        /// + list; undoable via the standard insertText path. Beeps when the
+        /// note has no anchors yet (nothing to gather).
+        func shapeIntoArticle() {
+            guard let storage = textStorage,
+                  let section = ReflectionArticle.readingSection(from: storage) else {
+                NSSound.beep()
+                return
+            }
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: GlassDocumentEditor.documentFont,
+                .foregroundColor: NSColor.labelColor,
+                .paragraphStyle: GlassDocumentEditor.documentParagraphStyle,
+            ]
+            let end = (string as NSString).length
+            let prefix = end > 0 ? "\n\n" : ""
+            setSelectedRange(NSRange(location: end, length: 0))
+            insertText(NSAttributedString(string: prefix + section, attributes: bodyAttributes),
+                       replacementRange: NSRange(location: end, length: 0))
+        }
+
+        private func insertPassageAnchorFlash(quoteStart: Int, quoteLength: Int, precise: Bool) {
             // Confirm the landing (owner-audit 2026-07-05): flash the quote —
             // teal for an exact-rect anchor, amber for a page-only one — so the
             // owner sees WHERE it landed and how strong it is.
-            flashAnchor(range: NSRange(location: quoteStart, length: quoteLine.length), precise: precise)
+            flashAnchor(range: NSRange(location: quoteStart, length: quoteLength), precise: precise)
         }
 
         /// A highlight on the just-landed quote — teal for an exact-rect anchor,
