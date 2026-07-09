@@ -5044,6 +5044,16 @@ struct GlassDocumentEditor: NSViewRepresentable {
         view.isRichText = true
         view.importsGraphics = true
         view.allowsUndo = true
+        // System writing aids (Charter W1-1⑤): flag misspellings + grammar the
+        // way every macOS editor does — but NEVER silently rewrite the owner's
+        // text. Auto-correction and text replacement would corrupt technical
+        // terms (PPO, DPO, RLHF) mid-distillation, so they stay OFF while
+        // checking stays on. Spell underlines are temporary layout attributes,
+        // so they never touch the stored document or fight normalize.
+        view.isContinuousSpellCheckingEnabled = true
+        view.isGrammarCheckingEnabled = true
+        view.isAutomaticSpellingCorrectionEnabled = false
+        view.isAutomaticTextReplacementEnabled = false
         view.isVerticallyResizable = true
         view.isHorizontallyResizable = false
         view.textContainer?.widthTracksTextView = true
