@@ -40,8 +40,22 @@ struct NativeDossierView: View {
                 .font(.system(size: 13, design: .serif))
                 .italic()
                 .foregroundStyle(.secondary)
+            if !principles.isEmpty {
+                Text(traceSummary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .padding(.top, 2)
+            }
         }
         .padding(.bottom, 4)
+    }
+
+    /// A quiet one-line summary: how many principles you've recorded and how
+    /// many the workbench has seen you reuse — the moat, in two numbers.
+    private var traceSummary: String {
+        let reused = principles.filter { !$0.reuseEvents.isEmpty }.count
+        let base = "\(principles.count) principle\(principles.count == 1 ? "" : "s")"
+        return reused > 0 ? "\(base) · \(reused) reused" : base
     }
 
     private var emptyState: some View {
