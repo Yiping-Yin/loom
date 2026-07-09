@@ -5226,6 +5226,16 @@ private struct GlassDocumentEditor: NSViewRepresentable {
                 try? FileManager.default.removeItem(at: url)
                 return
             }
+            // Review wedge (docs/canon/WHAT_IS_LOOM.md §6): the persisted note
+            // is the wedge's INPUT. Each (anchored quote → your own claim
+            // beneath it) pairing becomes a ReviewItem, upserted while
+            // preserving its review schedule. Runs on the debounced save (not
+            // per keystroke), reads the .link anchors off the live storage.
+            // Provenance = the note's own first heading (fallback first line).
+            let reviewTitle = ReflectionDocumentFormat.documentHeadings(in: storage.string).first?.title
+                ?? storage.string.split(separator: "\n").first.map { $0.trimmingCharacters(in: .whitespaces) }
+                ?? ""
+            ReviewStore.syncNote(document: storage, sourceTitle: reviewTitle)
             let full = NSRange(location: 0, length: storage.length)
             guard let wrapper = storage.rtfdFileWrapper(
                 from: full,
