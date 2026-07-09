@@ -127,6 +127,7 @@
 		6CAE5141E456D4103307846A /* AIStreamBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96FE6DA452DB9D1A4D435FBA /* AIStreamBridgeHandler.swift */; };
 		6CF341B344940680027DFC19 /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7BDC2CF73EBD934FA6FF8B /* ReviewModel.swift */; };
 		6CFFACF0A5782C1627CB84EC /* ReflectionArticle.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF06DE32CC5C1BF44C86B85 /* ReflectionArticle.swift */; };
+		6DB04FE31996E8483056F75C /* GlassDocumentEditorFindBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC2F56BCFFB3AC4781ACA0F /* GlassDocumentEditorFindBarTests.swift */; };
 		6DD95256BFEBD011725C1AFA /* FragmentSchemaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA42AA3A649050A335BAD0DE /* FragmentSchemaView.swift */; };
 		7024D0D212EE76968DF1C255 /* CapturesIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100EA6E814A3795CA625635 /* CapturesIndex.swift */; };
 		710087B7B5C7E8B242F6A51D /* NavigationBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1352B462522AFAA4443179B8 /* NavigationBridgeHandler.swift */; };
@@ -614,6 +615,7 @@
 		FCDF97489B91229E831B44FC /* NativeDossierView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDossierView.swift; sourceTree = "<group>"; };
 		FD4149B12A1A06F4375CB341 /* filename-leak-course-code.filename.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "filename-leak-course-code.filename.txt"; sourceTree = "<group>"; };
 		FE532DE615AB0024E3486918 /* ellipsis-stitch-format.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "ellipsis-stitch-format.schema.json"; sourceTree = "<group>"; };
+		FEC2F56BCFFB3AC4781ACA0F /* GlassDocumentEditorFindBarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassDocumentEditorFindBarTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1017,6 +1019,7 @@
 				D98677EAB28D6F8769007F99 /* EmbeddingClientTests.swift */,
 				3FE60DA1FF551CB4D99F9183 /* FirstRunProviderSheetTests.swift */,
 				696423A83EE42B32A74FCD93 /* FragmentExtractorTests.swift */,
+				FEC2F56BCFFB3AC4781ACA0F /* GlassDocumentEditorFindBarTests.swift */,
 				CD44EA93B561EEBD847EF4DC /* GlassDocumentEditorNormalizeTests.swift */,
 				940345329DCBEF3CF9D38DAB /* GlassDocumentEditorTextKit2Tests.swift */,
 				9C465A55EF6D020019EF74BB /* IngestExtractorLocateTests.swift */,
@@ -1736,6 +1739,7 @@
 				B8B8C97E6FE0672756447FF8 /* EmbeddingClientTests.swift in Sources */,
 				48BAD02571CB0EE375243FBC /* FirstRunProviderSheetTests.swift in Sources */,
 				0899D6362535CA3A1543A7A5 /* FragmentExtractorTests.swift in Sources */,
+				6DB04FE31996E8483056F75C /* GlassDocumentEditorFindBarTests.swift in Sources */,
 				38337C29AD0B5B9BA98F536B /* GlassDocumentEditorNormalizeTests.swift in Sources */,
 				DC05B79F31D2BFA17CD14EC7 /* GlassDocumentEditorTextKit2Tests.swift in Sources */,
 				C697FC6F0D804AC59A2D874A /* IngestExtractorLocateTests.swift in Sources */,

@@ -5317,6 +5317,12 @@ struct GlassDocumentEditor: NSViewRepresentable {
         view.isGrammarCheckingEnabled = true
         view.isAutomaticSpellingCorrectionEnabled = false
         view.isAutomaticTextReplacementEnabled = false
+        // Find bar (charter W1-1⑤ / §10): ⌘F works IN the note, with
+        // incremental highlight-as-you-type. The editor scrolls inside the
+        // outer reading ScrollView — NSScrollView-backed under SwiftUI — and
+        // NSTextView hosts the bar there via NSTextFinderBarContainer.
+        view.usesFindBar = true
+        view.isIncrementalSearchingEnabled = true
         view.isVerticallyResizable = true
         view.isHorizontallyResizable = false
         view.textContainer?.widthTracksTextView = true
