@@ -2681,6 +2681,12 @@ private struct ReflectionTopBarButton: View {
 // "Learning pass" discriminator that already exists); store order is
 // preserved (updatedAt is a display string, not a Date — never sort on it).
 private struct ReflectionSidebar: View {
+    @Environment(\.openWindow) private var openWindow
+    /// The wiki (THE BOOK) grouped for the LIBRARY section, or nil when the
+    /// wiki isn't staged in this build (then the section doesn't appear).
+    private var wikiRail: [WikiRailSection]? {
+        WikiCurriculum.loadBundled().map { WikiCurriculum.railSections(in: $0) }
+    }
     let cases: [ReflectionCase]
     let selectedCaseID: ReflectionCase.ID
     var panelsCase: ReflectionCase? = nil
@@ -2926,6 +2932,48 @@ private struct ReflectionSidebar: View {
                                     .padding(.bottom, 1)
                                 }
                             }
+                        }
+                        // LIBRARY — the owner's wiki (THE BOOK) brought into the
+                        // workbench itself. A row per chapter-group; tapping one
+                        // opens the reader at that group's first chapter (the
+                        // reader's spine prev/next walks from there).
+                        if let wikiRail, !wikiRail.isEmpty {
+                            Section(header: SidebarSectionHeader(
+                                title: "Library",
+                                count: wikiRail.reduce(0) { $0 + $1.chapters.count }
+                            )
+                            .padding(.top, 8)) {
+                                ForEach(wikiRail) { group in
+                                    Button {
+                                        guard let first = group.chapters.first else { return }
+                                        openWindow(id: LibraryWindow.id)
+                                        NotificationCenter.default.post(
+                                            name: .loomOpenWikiChapter, object: nil,
+                                            userInfo: ["slug": first.slug])
+                                    } label: {
+                                        HStack(spacing: 10) {
+                                            Image(systemName: "book")
+                                                .font(.system(size: 12))
+                                                .foregroundStyle(.secondary)
+                                                .frame(width: 22)
+                                            Text(group.section)
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(.primary)
+                                                .lineLimit(1)
+                                            Spacer(minLength: 0)
+                                            Text("\(group.chapters.count)")
+                                                .font(.system(size: 11, design: .monospaced))
+                                                .foregroundStyle(.tertiary)
+                                        }
+                                        .padding(.leading, 8)
+                                        .frame(height: 30)
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 8)
+                                }
+                            }
+                            .padding(.bottom, 2)
                         }
                     }
                 }
@@ -4777,6 +4825,9 @@ extension Notification.Name {
     /// The Today window asks the workbench to open a case by id (a row tap in
     /// the daily face routes back into the main workspace).
     static let loomOpenCase = Notification.Name("loomOpenCase")
+    /// The sidebar LIBRARY section asks the Library reader to open a specific
+    /// wiki chapter by slug (userInfo["slug"]).
+    static let loomOpenWikiChapter = Notification.Name("loomOpenWikiChapter")
     /// A `loom://anchor` link clicked in the reflection note asks the workbench
     /// to pop the source in an in-app PDF view jumped to its page + rect.
     static let loomReflectionAnchorJump = Notification.Name("loomReflectionAnchorJump")

@@ -10,14 +10,27 @@ import SwiftUI
 struct LibraryRootView: View {
     @Environment(\.dismissWindow) private var dismissWindow
     private let manifest: WikiManifest? = WikiCurriculum.loadBundled()
+    /// The chapter to open — set when the sidebar LIBRARY section deep-links a
+    /// slug (.loomOpenWikiChapter); nil ⇒ start at the first chapter.
+    @State private var routedSlug: String?
 
     var body: some View {
         if let manifest, let first = manifest.chapters.first {
+            let slug = routedSlug ?? first.slug
             WikiReaderColumn(
                 manifest: manifest,
-                currentSlug: first.slug,
+                currentSlug: slug,
                 onClose: { dismissWindow(id: LibraryWindow.id) }
             )
+            // Remount at the routed chapter so a deep-link jumps there even
+            // while the window is already open.
+            .id(slug)
+            .onReceive(NotificationCenter.default.publisher(for: .loomOpenWikiChapter)) { note in
+                if let s = note.userInfo?["slug"] as? String,
+                   manifest.chapters.contains(where: { $0.slug == s }) {
+                    routedSlug = s
+                }
+            }
         } else {
             VStack(spacing: 8) {
                 Image(systemName: "books.vertical")
