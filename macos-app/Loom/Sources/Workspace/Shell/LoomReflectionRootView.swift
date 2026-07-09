@@ -213,6 +213,7 @@ struct LoomReflectionRootView: View {
                         projects: projects,
                         onCreateProject: createProject,
                         onCreateCourse: createCourseFromFolder,
+                        onAutoOrganizeCourse: autoOrganizeCourse,
                         onRenameProject: renameProject,
                         onDeleteProject: deleteProject,
                         onNewChatInProject: createChat(inProject:),
@@ -367,6 +368,7 @@ struct LoomReflectionRootView: View {
                         projects: projects,
                         onCreateProject: createProject,
                         onCreateCourse: createCourseFromFolder,
+                        onAutoOrganizeCourse: autoOrganizeCourse,
                         onRenameProject: renameProject,
                         onDeleteProject: deleteProject,
                         onNewChatInProject: createChat(inProject:),
@@ -701,6 +703,37 @@ struct LoomReflectionRootView: View {
         projects.append(ReflectionProject(name: ReflectionProject.untitledName, order: order))
         persistWorkspace()
         statusMessage = "Project created"
+    }
+
+    /// Auto Organize (three-column division): re-run the folder→groups diff for
+    /// a course and fold the result in — new subfolders become PROPOSED group
+    /// children, groups whose folder vanished are reported. Proposal-only: never
+    /// deletes, never writes the owner's disk (reading the bound folder only).
+    private func autoOrganizeCourse(_ courseID: String) {
+        guard let course = projects.first(where: { $0.id == courseID }),
+              let rootID = course.contentRootID, let uuid = UUID(uuidString: rootID),
+              let folderURL = ContentRootStore.activeURL(for: uuid) else {
+            statusMessage = "That course's folder isn't available — re-add it"
+            return
+        }
+        let excluded = course.organizeTemplate?.excludedSubfolders ?? []
+        let existingGroups = projects.filter { $0.parentID == courseID }
+        do {
+            let diff = try OrganizeDiffPlanner.diff(
+                courseFolder: folderURL, existingGroups: existingGroups, excluding: excluded)
+            let nextOrder = (existingGroups.map(\.order).max() ?? -1) + 1
+            let result = CourseOrganize.applyDiff(
+                diff, into: projects, courseID: courseID, startOrder: nextOrder)
+            projects = result.projects
+            persistWorkspace()
+            let added = diff.proposedNewGroups.count
+            let dangling = result.danglingGroupIDs.count
+            statusMessage = added == 0 && dangling == 0
+                ? "Auto Organize: already up to date"
+                : "Auto Organize: +\(added) group\(added == 1 ? "" : "s")\(dangling > 0 ? ", \(dangling) folder\(dangling == 1 ? "" : "s") missing" : "")"
+        } catch {
+            statusMessage = "Couldn't read that course's folder"
+        }
     }
 
     /// "New course from folder…" (three-column division): pick a real folder,
@@ -2662,6 +2695,7 @@ private struct ReflectionSidebar: View {
     var projects: [ReflectionProject] = []
     var onCreateProject: () -> Void = {}
     var onCreateCourse: () -> Void = {}
+    var onAutoOrganizeCourse: (String) -> Void = { _ in }
     var onRenameProject: (String, String) -> Void = { _, _ in }
     var onDeleteProject: (String) -> Void = { _ in }
     var onNewChatInProject: (String) -> Void = { _ in }
@@ -2806,7 +2840,9 @@ private struct ReflectionSidebar: View {
                                         forceExpanded: !queryIsEmpty,
                                         onNewChat: { onNewChatInProject(node.project.id) },
                                         onRename: { onRenameProject(node.project.id, $0) },
-                                        onDelete: { onDeleteProject(node.project.id) }
+                                        onDelete: { onDeleteProject(node.project.id) },
+                                        onAutoOrganize: node.project.contentRootID != nil
+                                            ? { onAutoOrganizeCourse(node.project.id) } : nil
                                     )
                                     if projectExpansion(node.project.id).wrappedValue || !queryIsEmpty {
                                         // A course's groups (e.g. weeks), each with
@@ -3104,6 +3140,9 @@ private struct SidebarProjectHeader: View {
     let onNewChat: () -> Void
     let onRename: (String) -> Void
     let onDelete: () -> Void
+    /// Course-only: re-run Auto Organize against the bound folder. nil for
+    /// groups and plain projects (the item then doesn't appear).
+    var onAutoOrganize: (() -> Void)? = nil
     @State private var isHovering = false
     @State private var isEditing = false
     @State private var draft = ""
@@ -3185,6 +3224,11 @@ private struct SidebarProjectHeader: View {
                 Menu {
                     Button("New draft here", action: onNewChat)
                     Button("Rename", action: beginRename)
+                    if let onAutoOrganize {
+                        Divider()
+                        Button("Auto Organize", action: onAutoOrganize)
+                    }
+                    Divider()
                     Button("Delete project", role: .destructive) { confirmingDelete = true }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -3220,6 +3264,11 @@ private struct SidebarProjectHeader: View {
         .contextMenu {
             Button("New draft here", action: onNewChat)
             Button("Rename", action: beginRename)
+            if let onAutoOrganize {
+                Divider()
+                Button("Auto Organize", action: onAutoOrganize)
+            }
+            Divider()
             Button("Delete project", role: .destructive) { confirmingDelete = true }
         }
         .confirmationDialog(
