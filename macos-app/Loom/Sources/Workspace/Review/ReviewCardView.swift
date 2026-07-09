@@ -52,7 +52,10 @@ struct ReviewCardView: View {
                 Button(action: onReveal) {
                     HStack(spacing: 8) {
                         Image(systemName: "eye")
-                        Text("What did you understand here? Rebuild it, then reveal.")
+                        // Prompt escalates with mastery: recall → why → apply
+                        // it somewhere new (transfer), fighting the illusion of
+                        // competence of merely re-reciting your own sentence.
+                        Text(ReviewPrompt.coverPrompt(stabilityDays: item.stabilityDays).text)
                             .font(.system(size: 14, design: .serif)).italic()
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
