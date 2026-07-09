@@ -2746,24 +2746,52 @@ private struct ReflectionSidebar: View {
                         }
                     } else {
                         if !projects.isEmpty {
+                            // Three-column division: the Projects section renders
+                            // the pure rail tree — top-level projects (plain, OR a
+                            // COURSE with one level of groups). A plain project has
+                            // no groups and renders exactly as before (parity).
+                            let tree = CourseOrganize.railTree(projects: projects, cases: cases)
                             Section(header: SidebarSectionHeader(
                                 title: "Projects",
-                                count: projects.count,
+                                count: tree.count,
                                 onAdd: onCreateProject
                             )) {
-                                ForEach(orderedProjects) { project in
+                                ForEach(tree, id: \.project.id) { node in
+                                    let courseChats = chats(inProject: node.project.id)
+                                    let groupChatTotal = node.groups.reduce(0) { $0 + chats(inProject: $1.group.id).count }
                                     SidebarProjectHeader(
-                                        project: project,
-                                        count: chats(inProject: project.id).count,
-                                        isExpanded: projectExpansion(project.id),
+                                        project: node.project,
+                                        count: courseChats.count + groupChatTotal,
+                                        isExpanded: projectExpansion(node.project.id),
                                         forceExpanded: !queryIsEmpty,
-                                        onNewChat: { onNewChatInProject(project.id) },
-                                        onRename: { onRenameProject(project.id, $0) },
-                                        onDelete: { onDeleteProject(project.id) }
+                                        onNewChat: { onNewChatInProject(node.project.id) },
+                                        onRename: { onRenameProject(node.project.id, $0) },
+                                        onDelete: { onDeleteProject(node.project.id) }
                                     )
-                                    if projectExpansion(project.id).wrappedValue || !queryIsEmpty {
-                                        let grouped = chats(inProject: project.id)
-                                        if grouped.isEmpty {
+                                    if projectExpansion(node.project.id).wrappedValue || !queryIsEmpty {
+                                        // A course's groups (e.g. weeks), each with
+                                        // its chats — indented one level under the course.
+                                        ForEach(node.groups, id: \.group.id) { groupNode in
+                                            SidebarProjectHeader(
+                                                project: groupNode.group,
+                                                count: chats(inProject: groupNode.group.id).count,
+                                                isExpanded: projectExpansion(groupNode.group.id),
+                                                forceExpanded: !queryIsEmpty,
+                                                onNewChat: { onNewChatInProject(groupNode.group.id) },
+                                                onRename: { onRenameProject(groupNode.group.id, $0) },
+                                                onDelete: { onDeleteProject(groupNode.group.id) }
+                                            )
+                                            .padding(.leading, 18)
+                                            if projectExpansion(groupNode.group.id).wrappedValue || !queryIsEmpty {
+                                                ForEach(chats(inProject: groupNode.group.id)) { reflectionCase in
+                                                    sidebarRow(reflectionCase, indented: true)
+                                                        .padding(.leading, 18)
+                                                }
+                                            }
+                                        }
+                                        // Chats directly under this project (a plain
+                                        // project's drafts, or a chat returned to the course).
+                                        if node.groups.isEmpty && courseChats.isEmpty {
                                             Text("No drafts yet")
                                                 .font(.system(size: 11))
                                                 .foregroundStyle(.tertiary)
@@ -2771,7 +2799,7 @@ private struct ReflectionSidebar: View {
                                                 .padding(.vertical, 4)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         } else {
-                                            ForEach(grouped) { reflectionCase in
+                                            ForEach(courseChats) { reflectionCase in
                                                 sidebarRow(reflectionCase, indented: true)
                                             }
                                         }
