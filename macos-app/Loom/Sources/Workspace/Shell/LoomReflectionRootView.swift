@@ -4891,11 +4891,42 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             location = NSMaxRange(paragraphRange)
         }
         storage.endEditing()
-        // typingAttributes carry the caret's active style. Charter §8: override
-        // them ONLY at a structural boundary — a fresh (empty) line after a
-        // heading or open question types as body. Otherwise LEAVE them alone, so
-        // a live ⌘B / ⌘I keeps running as you type (the old unconditional reset
-        // reverted an empty-selection bold on the very next keystroke).
+        applyBoundaryTypingAttributes(view)
+    }
+
+    /// Restyle ONLY the paragraphs an edit touched (S8: styling cost ∝ edit,
+    /// not document length). Expands the edited range to whole paragraphs via
+    /// the tested `normalizationRange` and normalizes each with the same
+    /// `normalizeParagraph` the full pass uses — so a keystroke in a long note
+    /// restyles one paragraph, not the whole book. (Attachment-cell rebuild is
+    /// skipped: freshly inserted cards arrive with their cell set; only
+    /// RTFD-loaded attachments need rebuilding, and those come in via the full
+    /// pass on load.)
+    static func normalizeEditedRange(_ view: NSTextView, editedRange: NSRange) {
+        guard let storage = view.textStorage, storage.length > 0 else { return }
+        let text = storage.string as NSString
+        let scope = ReflectionDocumentFormat.normalizationRange(in: text, editedRange: editedRange)
+        storage.beginEditing()
+        var location = scope.location
+        let end = min(NSMaxRange(scope), text.length)
+        while location < end {
+            let paragraphRange = text.paragraphRange(for: NSRange(location: location, length: 0))
+            if paragraphRange.length == 0 { break }
+            normalizeParagraph(storage, paragraphRange: paragraphRange)
+            location = NSMaxRange(paragraphRange)
+        }
+        storage.endEditing()
+        applyBoundaryTypingAttributes(view)
+    }
+
+    /// typingAttributes carry the caret's active style. Charter §8: override
+    /// them ONLY at a structural boundary — a fresh (empty) line after a
+    /// heading or open question types as body. Otherwise LEAVE them alone, so
+    /// a live ⌘B / ⌘I keeps running as you type (the old unconditional reset
+    /// reverted an empty-selection bold on the very next keystroke).
+    static func applyBoundaryTypingAttributes(_ view: NSTextView) {
+        guard let storage = view.textStorage else { return }
+        let text = storage.string as NSString
         let caret = min(view.selectedRange().location, text.length)
         let currentPara = text.paragraphRange(for: NSRange(location: caret, length: 0))
         let currentLine = text.substring(with: currentPara).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -5114,6 +5145,11 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         var onImportFiles: ([URL]) -> [ReflectionSource]
         var onOpenSource: (ReflectionSource.ID) -> Void
         private var saveWork: DispatchWorkItem?
+        /// The range an about-to-happen edit will occupy, captured in
+        /// `shouldChangeTextIn` (which fires BEFORE the mutation). textDidChange
+        /// uses it to restyle only the touched paragraphs (S8). nil ⇒ the edit
+        /// didn't come through the user-edit path (programmatic) ⇒ full pass.
+        private var pendingEditedRange: NSRange?
 
         init(
             caseID: ReflectionCase.ID,
@@ -5131,9 +5167,26 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             self.onOpenSource = onOpenSource
         }
 
+        /// Fires BEFORE each user edit with the range it will affect. Record the
+        /// post-edit range (same location, replacement length) so textDidChange
+        /// can scope styling to it. Always returns true — this only observes.
+        func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+            let insertedLength = (replacementString as NSString?)?.length ?? 0
+            pendingEditedRange = NSRange(location: affectedCharRange.location, length: insertedLength)
+            return true
+        }
+
         func textDidChange(_ notification: Notification) {
             guard let view = notification.object as? NSTextView else { return }
-            GlassDocumentEditor.normalizeDocument(view, sources: sources)
+            // S8: restyle only the paragraphs the edit touched. A keystroke in a
+            // long note now costs one paragraph, not the whole book. Programmatic
+            // edits (no shouldChangeTextIn) fall back to the full pass.
+            if let edited = pendingEditedRange {
+                pendingEditedRange = nil
+                GlassDocumentEditor.normalizeEditedRange(view, editedRange: edited)
+            } else {
+                GlassDocumentEditor.normalizeDocument(view, sources: sources)
+            }
             onTextChange(view.string)
             scheduleDocumentSave(view)
         }
