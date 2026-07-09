@@ -5323,6 +5323,14 @@ struct GlassDocumentEditor: NSViewRepresentable {
         // NSTextView hosts the bar there via NSTextFinderBarContainer.
         view.usesFindBar = true
         view.isIncrementalSearchingEnabled = true
+        // Writing Tools (charter W1-1⑥ / §10): opt into the FULL inline
+        // experience explicitly — TextKit 2 makes it real on macOS 27. The
+        // result declaration is honest: rich text + lists, but NOT .table
+        // (§7 bans NSTextTable in the storage; declaring it would invite
+        // structures the document model can't keep). The session guard +
+        // anchor protection live on the Coordinator (delegate) below.
+        view.writingToolsBehavior = .complete
+        view.allowedWritingToolsResultOptions = [.plainText, .richText, .list]
         view.isVerticallyResizable = true
         view.isHorizontallyResizable = false
         view.textContainer?.widthTracksTextView = true
@@ -5431,7 +5439,9 @@ struct GlassDocumentEditor: NSViewRepresentable {
         scrollView.reflectScrolledClipView(scrollView.contentView)
     }
 
-    final class Coordinator: NSObject, NSTextViewDelegate {
+    // Not `final`: tests subclass it to spy on the save paths (so no test
+    // ever writes into the real CaseDocuments / Review stores).
+    class Coordinator: NSObject, NSTextViewDelegate {
         var caseID: ReflectionCase.ID
         var focusRequest: Int
         var sources: [ReflectionSource]
@@ -5439,6 +5449,13 @@ struct GlassDocumentEditor: NSViewRepresentable {
         var onImportFiles: ([URL]) -> [ReflectionSource]
         var onOpenSource: (ReflectionSource.ID) -> Void
         private var saveWork: DispatchWorkItem?
+        /// Writing Tools session guard (charter W1-1⑥ / §10): true from
+        /// `textViewWritingToolsWillBegin` to `…DidEnd`. While Apple's
+        /// machinery animates a rewrite through the storage, LOOM's own
+        /// machinery stands down — normalize would fight the animation
+        /// attribute-by-attribute, and a debounced save could persist a
+        /// half-rewritten document. DidEnd lands ONE normalize + ONE save.
+        private(set) var isWritingToolsActive = false
         /// The range an about-to-happen edit will occupy, captured in
         /// `shouldChangeTextIn` (which fires BEFORE the mutation). textDidChange
         /// uses it to restyle only the touched paragraphs (S8). nil ⇒ the edit
@@ -5472,6 +5489,15 @@ struct GlassDocumentEditor: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let view = notification.object as? NSTextView else { return }
+            // W1-1⑥: while Writing Tools owns the storage, stand down — no
+            // normalize (scoped or full), no save. Only the SwiftUI mirror is
+            // kept in step, so an `updateNSView` mid-session can never stomp
+            // the rewrite with the stale document text.
+            if isWritingToolsActive {
+                pendingEditedRange = nil
+                onTextChange(view.string)
+                return
+            }
             // S8: restyle only the paragraphs the edit touched. A keystroke in a
             // long note now costs one paragraph, not the whole book. Programmatic
             // edits (no shouldChangeTextIn) fall back to the full pass.
@@ -5483,6 +5509,44 @@ struct GlassDocumentEditor: NSViewRepresentable {
             }
             onTextChange(view.string)
             scheduleDocumentSave(view)
+        }
+
+        // MARK: - Writing Tools session guard (charter W1-1⑥ / §10)
+
+        func textViewWritingToolsWillBegin(_ textView: NSTextView) {
+            isWritingToolsActive = true
+            // A save debounced from typing just before the session must not
+            // fire mid-rewrite and persist a half-transformed document.
+            saveWork?.cancel()
+            saveWork = nil
+        }
+
+        func textViewWritingToolsDidEnd(_ textView: NSTextView) {
+            isWritingToolsActive = false
+            // ONE full pass + ONE save: the rewritten text is styled and
+            // persisted atomically, exactly once.
+            GlassDocumentEditor.normalizeDocument(textView, sources: sources)
+            onTextChange(textView.string)
+            saveDocumentNow(textView)
+        }
+
+        /// Anchors are off-limits to the rewrite: a quote's `loom://anchor`
+        /// locator glyph and a file chip's `loom-source://` link are the
+        /// document's way back to its sources — structure, not prose.
+        /// Ordinary (e.g. https) links stay rewritable.
+        func textView(
+            _ textView: NSTextView,
+            writingToolsIgnoredRangesInEnclosingRange enclosingRange: NSRange
+        ) -> [NSValue] {
+            guard let storage = textView.textStorage else { return [] }
+            var protected: [NSValue] = []
+            storage.enumerateAttribute(.link, in: enclosingRange) { value, subRange, _ in
+                let raw = (value as? URL)?.absoluteString ?? (value as? String ?? "")
+                if raw.hasPrefix("loom://") || raw.hasPrefix("loom-source://") {
+                    protected.append(NSValue(range: subRange))
+                }
+            }
+            return protected
         }
 
         /// A file chip carries a loom-source:// link; clicking it opens
@@ -5546,6 +5610,9 @@ struct GlassDocumentEditor: NSViewRepresentable {
 
         func textDidEndEditing(_ notification: Notification) {
             guard let view = notification.object as? NSTextView else { return }
+            // Mid-Writing-Tools focus loss must not sneak a half-rewritten
+            // save in; DidEnd owns the one atomic save.
+            guard !isWritingToolsActive else { return }
             saveDocumentNow(view)
         }
 

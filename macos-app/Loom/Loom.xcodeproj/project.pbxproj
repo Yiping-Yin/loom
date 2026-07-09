@@ -196,6 +196,7 @@
 		A47667572EB3A105D7480EFF /* DraftBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED2AF1F26A1783183801D5B /* DraftBridgeHandler.swift */; };
 		A4B5CEDEF7D344FCF557FCF9 /* DataSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1156569530AB7717DB156134 /* DataSettingsView.swift */; };
 		A4E5B5FECA3BB697EF82D35A /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCC4BC0CA44A965804B6379 /* OpenAIClient.swift */; };
+		A62347FBC746DBCD93AD849C /* GlassDocumentEditorWritingToolsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B696F0469EA6E0DA0F0D5669 /* GlassDocumentEditorWritingToolsTests.swift */; };
 		A634CFEC77C05EB9F890BA2C /* ReviewSchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71D5A76231B67118B063C42 /* ReviewSchedulerTests.swift */; };
 		A79721680099845748AAF940 /* SourcePaneScrollCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19A9F1AD6C0E8A032EA4F877 /* SourcePaneScrollCoordinator.swift */; };
 		A8DD6328A970053AF4563376 /* AskSelectionCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F64CC6C05D87F44CB9FCA8 /* AskSelectionCaptureTests.swift */; };
@@ -531,6 +532,7 @@
 		B0DE530467AF4AAA6E5BA7AC /* metadata.key */ = {isa = PBXFileReference; path = metadata.key; sourceTree = "<group>"; };
 		B19335A7F16CAD7D4F2DB7F2 /* math-1241.input.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "math-1241.input.txt"; sourceTree = "<group>"; };
 		B4B5B92A67AAAC71EF109213 /* MarkdownNotesExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownNotesExtractor.swift; sourceTree = "<group>"; };
+		B696F0469EA6E0DA0F0D5669 /* GlassDocumentEditorWritingToolsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassDocumentEditorWritingToolsTests.swift; sourceTree = "<group>"; };
 		B71D5A76231B67118B063C42 /* ReviewSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSchedulerTests.swift; sourceTree = "<group>"; };
 		B7428AF4F2892A5268376E86 /* PageRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageRange.swift; sourceTree = "<group>"; };
 		B7F8CCD03C55D5771F90EF30 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1022,6 +1024,7 @@
 				FEC2F56BCFFB3AC4781ACA0F /* GlassDocumentEditorFindBarTests.swift */,
 				CD44EA93B561EEBD847EF4DC /* GlassDocumentEditorNormalizeTests.swift */,
 				940345329DCBEF3CF9D38DAB /* GlassDocumentEditorTextKit2Tests.swift */,
+				B696F0469EA6E0DA0F0D5669 /* GlassDocumentEditorWritingToolsTests.swift */,
 				9C465A55EF6D020019EF74BB /* IngestExtractorLocateTests.swift */,
 				7838A33BEFC23E835A507546 /* KeychainStoreTests.swift */,
 				F15ABB1ACE29DE47CE756B2F /* LoomDataModelTests.swift */,
@@ -1742,6 +1745,7 @@
 				6DB04FE31996E8483056F75C /* GlassDocumentEditorFindBarTests.swift in Sources */,
 				38337C29AD0B5B9BA98F536B /* GlassDocumentEditorNormalizeTests.swift in Sources */,
 				DC05B79F31D2BFA17CD14EC7 /* GlassDocumentEditorTextKit2Tests.swift in Sources */,
+				A62347FBC746DBCD93AD849C /* GlassDocumentEditorWritingToolsTests.swift in Sources */,
 				C697FC6F0D804AC59A2D874A /* IngestExtractorLocateTests.swift in Sources */,
 				0A33CF69C9CB7A623FC846CC /* KeychainStoreTests.swift in Sources */,
 				57B5D9DC1353AFD625AAEF5D /* LoomDataModelTests.swift in Sources */,
