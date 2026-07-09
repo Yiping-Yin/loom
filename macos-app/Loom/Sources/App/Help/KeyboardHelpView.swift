@@ -30,11 +30,15 @@ struct KeyboardHelpView: View {
     // documented the retired web shell (~60% of its shortcuts were dead).
     let groups: [Group] = [
         Group(title: "Workspace", items: [
-            .init(keys: "⌘1", label: "Projects — show or hide the left column"),
-            .init(keys: "⌘2", label: "Document — focus your note"),
-            .init(keys: "⌘3", label: "Bridge — show or hide the right column"),
+            // ⌘1/⌘2/⌘3 select the three destinations (W2-2, Mail idiom);
+            // the old column-toggle rows described the pre-split shell.
+            .init(keys: "⌘1", label: "Workspace"),
+            .init(keys: "⌘2", label: "Wiki"),
+            .init(keys: "⌘3", label: "You"),
+            .init(keys: "⌃⌘S", label: "Show or hide the sidebar"),
             .init(keys: "⌘N", label: "New draft"),
-            .init(keys: "⌘K", label: "Shuttle — search projects, notes, and traces"),
+            .init(keys: "⌘⇧N", label: "New learning project"),
+            .init(keys: "⌘K", label: "Search — projects, notes, and traces"),
         ]),
         Group(title: "Document", items: [
             .init(keys: "⌘B", label: "Bold the selection"),
@@ -44,7 +48,7 @@ struct KeyboardHelpView: View {
             .init(keys: "❓", label: "Start a line with ❓ for an open question"),
         ]),
         Group(title: "Sources & reader", items: [
-            .init(keys: "⌘P", label: "Add files — import sources, read them in Loom"),
+            .init(keys: "⌘O", label: "Open — import sources, read them in Loom"),
             .init(keys: "⌘F", label: "Find in the open source"),
             .init(keys: "⌘↑ / ⌘↓", label: "First / last page"),
             .init(keys: "⌘9 / ⌘0", label: "Fit width / actual size"),

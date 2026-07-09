@@ -463,6 +463,10 @@ struct LoomReflectionRootView: View {
                 .opacity(destination == .workspace ? 1 : 0)
                 .allowsHitTesting(destination == .workspace)
                 .accessibilityHidden(destination != .workspace)
+                // W1-5 (charter §19): the workspace detail is the "Document"
+                // VoiceOver landmark, the counterpart of the sidebar's
+                // "Navigator" — VO jumps between panes, not through them.
+                .modifier(PaneLandmark(label: "Document"))
 
                 // Wiki — the personal knowledge encyclopedia, read IN the
                 // workbench (owner trio 2026-07-10). No chapter selected ⇒ the
@@ -616,8 +620,17 @@ struct LoomReflectionRootView: View {
                 destination = .wiki
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in createReflection() }
-        .onReceive(NotificationCenter.default.publisher(for: .loomExportLearningRecord)) { _ in exportLearningRecord() }
+        // W1-2: the menu bar owns the shortcuts; the workbench root answers.
+        // File ▸ New Topic (⌘N) / New Learning Project (⌘⇧N) / Open… (⌘O) /
+        // Export Learning Record relay here — one modifier, not four chained
+        // onReceive calls, because this body chain sits at the compiler's
+        // type-check ceiling.
+        .modifier(WorkbenchMenuRelays(
+            onNewTopic: createReflection,
+            onNewLearningProject: createLearningProject,
+            onImportLocalSources: importLocalSources,
+            onExportLearningRecord: exportLearningRecord
+        ))
         .onReceive(NotificationCenter.default.publisher(for: .loomOpenExternalFiles)) { note in
             let token = note.userInfo?["token"] as? UUID
             if let token, token == lastHandledExternalFileToken {
@@ -3011,7 +3024,14 @@ private struct ReflectionSidebar: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
-        .background { hiddenShortcutButtons }
+        // Edit ▸ Search (⌘K) — the menu bar owns the shortcut (charter §11);
+        // the sidebar answers by focusing its search field.
+        .onReceive(NotificationCenter.default.publisher(for: .loomFocusSidebarSearch)) { _ in
+            searchFocused = true
+        }
+        // W1-5 (charter §19): the sidebar is ONE VoiceOver landmark so VO
+        // users can jump straight between the Navigator and the Document.
+        .modifier(PaneLandmark(label: "Navigator"))
     }
 
     // SwiftUI caches a row's Menu/contextMenu content by identity, so a reused
@@ -3112,22 +3132,12 @@ private struct ReflectionSidebar: View {
         }
     }
 
-    // View-local shortcuts — zero new data, zero new callbacks. Docked and
-    // peek sidebars are mutually exclusive, so these never double-register.
-    private var hiddenShortcutButtons: some View {
-        Group {
-            Button("") { searchFocused = true }
-                .keyboardShortcut("k", modifiers: .command)
-            Button("", action: onCreate)
-                .keyboardShortcut("n", modifiers: .command)
-            Button("", action: onCreateLearning)
-                .keyboardShortcut("n", modifiers: [.command, .shift])
-        }
-        .buttonStyle(.plain)
-        .opacity(0)
-        .frame(width: 0, height: 0)
-        .accessibilityHidden(true)
-    }
+    // (hiddenShortcutButtons is retired — charter §11/W1-2: no opacity-0
+    // buttons registering shortcuts. ⌘K/⌘N/⌘⇧N now live as REAL menu items
+    // in LoomApp (Edit ▸ Search, File ▸ New Topic, File ▸ New Learning
+    // Project), reaching this view through their notifications. That also
+    // ends the ⌘K double registration that shadowed the Shuttle menu item
+    // whenever the main window was key.)
 }
 
 /// One row of the 3-way destination picker (W2-2). Matches the sidebar row
@@ -4882,6 +4892,48 @@ private struct AnchorPreviewTarget: Identifiable {
     var id: String { "\(fileURL.path)#\(page)" }
 }
 
+/// W1-5 (charter §19) — a pane-level VoiceOver landmark: the pane becomes ONE
+/// named accessibility container so VO users can jump between the navigator
+/// and the document the way sighted users glance between columns. One
+/// modifier, two a11y calls — the root body chain sits at the compiler's
+/// type-check ceiling, so landmarks must not add two chained calls apiece.
+private struct PaneLandmark: ViewModifier {
+    let label: String
+
+    func body(content: Content) -> some View {
+        content
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(label)
+    }
+}
+
+/// W1-2 — the File-menu relays, folded into ONE modifier because the root
+/// view's body chain sits at the compiler's type-check ceiling (four chained
+/// onReceive calls tipped it over). The menu items in LoomApp post; the
+/// workbench root answers with the same actions its own buttons call.
+private struct WorkbenchMenuRelays: ViewModifier {
+    let onNewTopic: () -> Void
+    let onNewLearningProject: () -> Void
+    let onImportLocalSources: () -> Void
+    let onExportLearningRecord: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .loomNewTopic)) { _ in
+                onNewTopic()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomNewLearningProject)) { _ in
+                onNewLearningProject()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomImportLocalSources)) { _ in
+                onImportLocalSources()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .loomExportLearningRecord)) { _ in
+                onExportLearningRecord()
+            }
+    }
+}
+
 extension Notification.Name {
     /// The Today window asks the workbench to open a case by id (a row tap in
     /// the daily face routes back into the main workspace).
@@ -5317,6 +5369,20 @@ struct GlassDocumentEditor: NSViewRepresentable {
         view.isGrammarCheckingEnabled = true
         view.isAutomaticSpellingCorrectionEnabled = false
         view.isAutomaticTextReplacementEnabled = false
+        // Find bar (charter W1-1⑤ / §10): ⌘F works IN the note, with
+        // incremental highlight-as-you-type. The editor scrolls inside the
+        // outer reading ScrollView — NSScrollView-backed under SwiftUI — and
+        // NSTextView hosts the bar there via NSTextFinderBarContainer.
+        view.usesFindBar = true
+        view.isIncrementalSearchingEnabled = true
+        // Writing Tools (charter W1-1⑥ / §10): opt into the FULL inline
+        // experience explicitly — TextKit 2 makes it real on macOS 27. The
+        // result declaration is honest: rich text + lists, but NOT .table
+        // (§7 bans NSTextTable in the storage; declaring it would invite
+        // structures the document model can't keep). The session guard +
+        // anchor protection live on the Coordinator (delegate) below.
+        view.writingToolsBehavior = .complete
+        view.allowedWritingToolsResultOptions = [.plainText, .richText, .list]
         view.isVerticallyResizable = true
         view.isHorizontallyResizable = false
         view.textContainer?.widthTracksTextView = true
@@ -5425,7 +5491,9 @@ struct GlassDocumentEditor: NSViewRepresentable {
         scrollView.reflectScrolledClipView(scrollView.contentView)
     }
 
-    final class Coordinator: NSObject, NSTextViewDelegate {
+    // Not `final`: tests subclass it to spy on the save paths (so no test
+    // ever writes into the real CaseDocuments / Review stores).
+    class Coordinator: NSObject, NSTextViewDelegate {
         var caseID: ReflectionCase.ID
         var focusRequest: Int
         var sources: [ReflectionSource]
@@ -5433,6 +5501,13 @@ struct GlassDocumentEditor: NSViewRepresentable {
         var onImportFiles: ([URL]) -> [ReflectionSource]
         var onOpenSource: (ReflectionSource.ID) -> Void
         private var saveWork: DispatchWorkItem?
+        /// Writing Tools session guard (charter W1-1⑥ / §10): true from
+        /// `textViewWritingToolsWillBegin` to `…DidEnd`. While Apple's
+        /// machinery animates a rewrite through the storage, LOOM's own
+        /// machinery stands down — normalize would fight the animation
+        /// attribute-by-attribute, and a debounced save could persist a
+        /// half-rewritten document. DidEnd lands ONE normalize + ONE save.
+        private(set) var isWritingToolsActive = false
         /// The range an about-to-happen edit will occupy, captured in
         /// `shouldChangeTextIn` (which fires BEFORE the mutation). textDidChange
         /// uses it to restyle only the touched paragraphs (S8). nil ⇒ the edit
@@ -5466,6 +5541,15 @@ struct GlassDocumentEditor: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let view = notification.object as? NSTextView else { return }
+            // W1-1⑥: while Writing Tools owns the storage, stand down — no
+            // normalize (scoped or full), no save. Only the SwiftUI mirror is
+            // kept in step, so an `updateNSView` mid-session can never stomp
+            // the rewrite with the stale document text.
+            if isWritingToolsActive {
+                pendingEditedRange = nil
+                onTextChange(view.string)
+                return
+            }
             // S8: restyle only the paragraphs the edit touched. A keystroke in a
             // long note now costs one paragraph, not the whole book. Programmatic
             // edits (no shouldChangeTextIn) fall back to the full pass.
@@ -5477,6 +5561,44 @@ struct GlassDocumentEditor: NSViewRepresentable {
             }
             onTextChange(view.string)
             scheduleDocumentSave(view)
+        }
+
+        // MARK: - Writing Tools session guard (charter W1-1⑥ / §10)
+
+        func textViewWritingToolsWillBegin(_ textView: NSTextView) {
+            isWritingToolsActive = true
+            // A save debounced from typing just before the session must not
+            // fire mid-rewrite and persist a half-transformed document.
+            saveWork?.cancel()
+            saveWork = nil
+        }
+
+        func textViewWritingToolsDidEnd(_ textView: NSTextView) {
+            isWritingToolsActive = false
+            // ONE full pass + ONE save: the rewritten text is styled and
+            // persisted atomically, exactly once.
+            GlassDocumentEditor.normalizeDocument(textView, sources: sources)
+            onTextChange(textView.string)
+            saveDocumentNow(textView)
+        }
+
+        /// Anchors are off-limits to the rewrite: a quote's `loom://anchor`
+        /// locator glyph and a file chip's `loom-source://` link are the
+        /// document's way back to its sources — structure, not prose.
+        /// Ordinary (e.g. https) links stay rewritable.
+        func textView(
+            _ textView: NSTextView,
+            writingToolsIgnoredRangesInEnclosingRange enclosingRange: NSRange
+        ) -> [NSValue] {
+            guard let storage = textView.textStorage else { return [] }
+            var protected: [NSValue] = []
+            storage.enumerateAttribute(.link, in: enclosingRange) { value, subRange, _ in
+                let raw = (value as? URL)?.absoluteString ?? (value as? String ?? "")
+                if raw.hasPrefix("loom://") || raw.hasPrefix("loom-source://") {
+                    protected.append(NSValue(range: subRange))
+                }
+            }
+            return protected
         }
 
         /// A file chip carries a loom-source:// link; clicking it opens
@@ -5540,6 +5662,9 @@ struct GlassDocumentEditor: NSViewRepresentable {
 
         func textDidEndEditing(_ notification: Notification) {
             guard let view = notification.object as? NSTextView else { return }
+            // Mid-Writing-Tools focus loss must not sneak a half-rewritten
+            // save in; DidEnd owns the one atomic save.
+            guard !isWritingToolsActive else { return }
             saveDocumentNow(view)
         }
 
@@ -5746,21 +5871,15 @@ struct GlassDocumentEditor: NSViewRepresentable {
             #endif
         }
 
-        // Word-class emphasis with no permanent chrome: the standard ⌘B/⌘I/⌘U
-        // toggle bold/italic/underline on the selection. normalizeDocument
-        // preserves them; the single-ink discipline still governs family/size.
-        override func performKeyEquivalent(with event: NSEvent) -> Bool {
-            if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
-               let key = event.charactersIgnoringModifiers?.lowercased() {
-                switch key {
-                case "b": toggleEmphasis(.boldFontMask); return true
-                case "i": toggleEmphasis(.italicFontMask); return true
-                case "u": toggleUnderline(); return true
-                default: break
-                }
-            }
-            return super.performKeyEquivalent(with: event)
-        }
+        // Word-class emphasis with no permanent chrome: ⌘B/⌘I/⌘U now arrive
+        // through the REAL Format ▸ Font menu (TextFormattingCommands in
+        // LoomApp, charter §11/W1-2) — Bold/Italic drive the font manager's
+        // addFontTrait: → changeFont:, Underline is the responder-chain
+        // underline(_:); NSTextView answers all three natively and undoably.
+        // The old performKeyEquivalent interception is gone: it beat the
+        // menu to the key, so the menu items could never own the shortcuts
+        // (and System Settings remapping saw items that never fired).
+        // toggleEmphasis/toggleUnderline stay for the right-click menu.
 
         private func toggleEmphasis(_ trait: NSFontTraitMask) {
             let range = selectedRange()
@@ -6686,14 +6805,17 @@ private struct ReflectionBridgePanel: View {
     var body: some View {
         VStack(spacing: 12) {
             VStack(spacing: 8) {
+                // ⌘O is owned by File ▸ Open… (charter §12 — ⌘P is released
+                // for its reserved meaning, Print). The row shows the menu's
+                // shortcut but registers no key of its own: one owner, and
+                // the combo no longer appears/disappears with this pane.
                 BridgeRow(
                     systemImage: "folder.badge.plus",
                     title: "Add files",
-                    shortcut: "⌘P",
+                    shortcut: "⌘O",
                     help: "Import local files as sources for this draft (or drag a file onto the document)",
                     action: onFiles
                 )
-                .keyboardShortcut("p", modifiers: .command)
                 BridgeRow(
                     systemImage: "checklist",
                     title: "Review",

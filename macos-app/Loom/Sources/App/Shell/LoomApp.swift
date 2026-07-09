@@ -158,6 +158,15 @@ struct LoomApp: App {
             // sidebar through the responder chain and updates its
             // columnVisibility binding.
             SidebarCommands()
+            // W1-2 (charter §11): the menu bar is the ONLY shortcut registry.
+            // TextFormattingCommands = a real Format menu (Font ▸ Bold ⌘B /
+            // Italic ⌘I / Underline ⌘U …) driving the focused text view
+            // through the responder chain — the editor no longer intercepts
+            // those keys in performKeyEquivalent. TextEditingCommands = the
+            // Edit-menu text organs (Find ⌘F, Spelling and Grammar,
+            // Substitutions, Transformations, Speech) for the same editor.
+            TextFormattingCommands()
+            TextEditingCommands()
             CommandGroup(after: .textEditing) {
                 // (Removed dead web-nav menu items — Review ⌘E/⌘/, Reload ⌘R,
                 // Open in Browser, Back/Forward, and the ⌘+/-/0 zoom triplet —
@@ -167,6 +176,12 @@ struct LoomApp: App {
                 // in the right-pane Bridge; the launchers below open real windows.)
                 AskAIMenuItem()
                 AskAboutFileMenuItem()
+                // ⌘K = the navigator search (single owner, charter §11). It
+                // used to be double-registered: an opacity-0 button in the
+                // sidebar (search focus) shadowed the Shuttle menu item, so
+                // ⌘K meant different things depending on which window was
+                // key. The search field wins the key; Shuttle stays menu-only.
+                FocusSidebarSearchMenuItem()
                 ShuttleMenuItem()
                 ShapeIntoArticleMenuItem()
                 TodayMenuItem()
@@ -205,6 +220,16 @@ struct LoomApp: App {
             // ContentView shell's DevHUD overlay.)
             CommandGroup(replacing: .newItem) {
                 NewTopicMenuItem()
+                // ⌘⇧N graduates from the sidebar's opacity-0 button hack to a
+                // real, discoverable menu item (charter §11: every shortcut is
+                // visible in the menu bar and remappable in System Settings).
+                NewLearningProjectMenuItem()
+                Divider()
+                // File ▸ Open… ⌘O — the reserved combo (charter §12) drives
+                // the existing import flow: NSOpenPanel → sources → reader.
+                // (⌘P, which the Bridge row used to squat on, is released for
+                // its reserved meaning; Print itself is a W0-11/W2 item.)
+                OpenFilesMenuItem()
                 ExportLearningRecordMenuItem()
             }
             // File menu · Export / Import — flat-file JSON dump of the
@@ -1747,6 +1772,61 @@ struct NewTopicMenuItem: View {
     }
 }
 
+/// ⌘⇧N · File ▸ New Learning Project — the sidebar's second create action,
+/// promoted from an invisible opacity-0 shortcut button to a real menu item
+/// (charter §11/W1-2). Posts the notification the workbench root observes.
+struct NewLearningProjectMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("New Learning Project") {
+            openWindow(id: MainWindow.id)
+            NSApp.activate(ignoringOtherApps: true)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .loomNewLearningProject, object: nil)
+            }
+        }
+        .keyboardShortcut("n", modifiers: [.command, .shift])
+    }
+}
+
+/// ⌘O · File ▸ Open… — the reserved open combo (charter §12) drives the
+/// existing import flow (NSOpenPanel → case sources → opens in the reader),
+/// which used to squat on ⌘P behind the Bridge panel's visibility.
+struct OpenFilesMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("Open…") {
+            openWindow(id: MainWindow.id)
+            NSApp.activate(ignoringOtherApps: true)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .loomImportLocalSources, object: nil)
+            }
+        }
+        .keyboardShortcut("o", modifiers: .command)
+    }
+}
+
+/// ⌘K · Edit ▸ Search — focuses the navigator's search field. The single
+/// app-wide ⌘K owner (charter §11): it used to be split between an
+/// opacity-0 sidebar button (search focus, main window only) and the
+/// Shuttle menu item, flipping meaning with window focus.
+struct FocusSidebarSearchMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("Search") {
+            openWindow(id: MainWindow.id)
+            NSApp.activate(ignoringOtherApps: true)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .loomFocusSidebarSearch, object: nil)
+            }
+        }
+        .keyboardShortcut("k", modifiers: .command)
+    }
+}
+
 /// App-menu item that opens the native About window, replacing the
 /// default auto-generated panel.
 struct AboutMenuItem: View {
@@ -1829,17 +1909,17 @@ struct AskAboutFileMenuItem: View {
 // notifications' only observers lived in the never-instantiated
 // ContentView shell.)
 
-/// ⌘K opens the native Shuttle palette. Replaces the web-side Shuttle
-/// which used to be triggered via the `loomSearch` notification — the
-/// palette is the primary quick-navigation surface so going native here
-/// is a meaningful Phase 4 piece.
+/// Edit ▸ Shuttle opens the native Shuttle palette. Menu-only since W1-2:
+/// ⌘K's single owner is the navigator search (FocusSidebarSearchMenuItem) —
+/// before that, this item's ⌘K was shadowed by the sidebar's opacity-0
+/// search button whenever the main window was key, so the palette only
+/// actually got the key from secondary windows.
 struct ShuttleMenuItem: View {
     @Environment(\.openWindow) private var openWindow
     var body: some View {
         Button("Shuttle") {
             openWindow(id: ShuttleWindow.id)
         }
-        .keyboardShortcut("k", modifiers: .command)
     }
 }
 
@@ -2172,6 +2252,14 @@ extension Notification.Name {
     static let loomOpenExternalFiles = Notification.Name("loomOpenExternalFiles")
     static let loomCaptureExternalSelection = Notification.Name("loomCaptureExternalSelection")
     static let loomNewTopic = Notification.Name("loomNewTopic")
+    /// File ▸ New Learning Project (⌘⇧N) → workbench root's
+    /// `createLearningProject()` — same relay pattern as `.loomNewTopic`.
+    static let loomNewLearningProject = Notification.Name("loomNewLearningProject")
+    /// File ▸ Open… (⌘O) → workbench root's `importLocalSources()`
+    /// (NSOpenPanel → case sources → reader).
+    static let loomImportLocalSources = Notification.Name("loomImportLocalSources")
+    /// Edit ▸ Search (⌘K) → the navigator sidebar focuses its search field.
+    static let loomFocusSidebarSearch = Notification.Name("loomFocusSidebarSearch")
     static let loomExportLearningRecord = Notification.Name("loomExportLearningRecord")
     static let loomLearn = Notification.Name("loomLearn")
     static let loomZoomIn = Notification.Name("loomZoomIn")
