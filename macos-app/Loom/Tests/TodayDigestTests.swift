@@ -60,6 +60,19 @@ final class TodayDigestTests: XCTestCase {
         XCTAssertTrue(digest.openQuestions.allSatisfy { $0.title == "Alignment" })
     }
 
+    func testOpenQuestionsAreCappedSoTheDayIsNeverAPile() {
+        // Many open questions across cases → the daily face shows a calm top-N
+        // (newest case first), never a growing pile (anti-debt).
+        let cases = (0..<4).map { i in
+            makeCase(id: "c\(i)", title: "Case \(i)",
+                     documentText: "❓ q\(i)a\n❓ q\(i)b\n❓ q\(i)c",
+                     touchedAt: Date(timeIntervalSince1970: TimeInterval(1000 - i)))
+        }
+        let digest = TodayDigest.derive(from: cases)
+        XCTAssertEqual(digest.openQuestions.count, TodayDigest.openQuestionsCap)
+        XCTAssertEqual(digest.openQuestions.first?.caseID, "c0", "newest case's questions come first")
+    }
+
     func testRecentCapsAtFiveAndUntitledPlaceholderReadsUntitled() {
         let cases = (0..<7).map { i in
             makeCase(id: "c\(i)",

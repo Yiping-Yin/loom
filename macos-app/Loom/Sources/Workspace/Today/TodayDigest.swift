@@ -21,6 +21,10 @@ struct TodayDigest: Equatable {
     var openQuestions: [Item]
     var recent: [Item]
 
+    /// The day is a calm portion, never a pile (anti-debt, WHAT_IS_LOOM §6):
+    /// open questions surface a top-N to return to, not every ❓ you ever wrote.
+    static let openQuestionsCap = 5
+
     /// Derive the digest from the live case list. Pure — same inputs, same
     /// digest — so the section logic is unit-testable without a store.
     ///
@@ -40,7 +44,7 @@ struct TodayDigest: Equatable {
             .map { item(for: $0) }
 
         var openQuestions: [Item] = []
-        for reflectionCase in byRecency {
+        outer: for reflectionCase in byRecency {
             guard let document = reflectionCase.documentText, !document.isEmpty else { continue }
             for (index, line) in document.components(separatedBy: .newlines).enumerated() {
                 let trimmed = line.trimmingCharacters(in: .whitespaces)
@@ -53,6 +57,9 @@ struct TodayDigest: Equatable {
                     title: displayTitle(of: reflectionCase),
                     subtitle: question
                 ))
+                // Calm portion, newest case first — stop at the cap so the day
+                // is a top-N to return to, never a growing pile.
+                if openQuestions.count >= openQuestionsCap { break outer }
             }
         }
 
