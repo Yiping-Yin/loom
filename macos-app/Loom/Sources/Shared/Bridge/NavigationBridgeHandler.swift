@@ -374,7 +374,13 @@ final class NavigationBridgeHandler: NSObject, WKScriptMessageHandler {
         NotificationCenter.default.post(
             name: .loomCaptureWikiSelection,
             object: nil,
-            userInfo: ["webPayload": webPayload]
+            userInfo: [
+                "webPayload": webPayload,
+                // The wedge loop needs the chapter identity to build the
+                // quote's loom://anchor?wiki= back-link.
+                "slug": body["slug"] as? String ?? "",
+                "fragment": body["fragment"] as? String ?? "",
+            ]
         )
     }
 

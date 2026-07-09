@@ -39,6 +39,23 @@ final class WikiCurriculumTests: XCTestCase {
         XCTAssertEqual(rail[1].chapters.map(\.slug), ["lora", "dpo"], "chapters in reading order")
     }
 
+    func testWikiAnchorURLRoundTripsSlugAndFragment() {
+        // The wiki quote's back-link: read a chapter → quote into the note →
+        // the locator glyph carries loom://anchor?wiki=… → clicking it jumps
+        // back to the chapter (the wedge loop, wiki edition).
+        let url = WikiCurriculum.wikiAnchorURL(slug: "dpo", fragment: "key-idea")
+        XCTAssertEqual(WikiCurriculum.wikiSlugFromAnchor(url), "dpo")
+        let bare = WikiCurriculum.wikiAnchorURL(slug: "lora", fragment: nil)
+        XCTAssertEqual(WikiCurriculum.wikiSlugFromAnchor(bare), "lora")
+    }
+
+    func testWikiSlugFromAnchorRejectsPDFAnchorsAndGarbage() {
+        XCTAssertNil(WikiCurriculum.wikiSlugFromAnchor("loom://anchor?src=abc&page=3"),
+                     "src= anchors are the PDF route, not wiki")
+        XCTAssertNil(WikiCurriculum.wikiSlugFromAnchor("https://example.com"))
+        XCTAssertNil(WikiCurriculum.wikiSlugFromAnchor("loom://anchor?wiki="))
+    }
+
     func testRomanFolioAndFolioLine() throws {
         XCTAssertEqual(WikiCurriculum.romanFolio(1), "i")
         XCTAssertEqual(WikiCurriculum.romanFolio(3), "iii")

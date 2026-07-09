@@ -96,6 +96,32 @@ enum WikiCurriculum {
         }
     }
 
+    /// The wiki quote's back-link (the wedge loop, wiki edition): a
+    /// `loom://anchor?wiki=<slug>[&frag=…]` the note's locator glyph carries,
+    /// so clicking a wiki quote jumps back to its chapter the way a PDF quote
+    /// jumps to its page.
+    static func wikiAnchorURL(slug: String, fragment: String?) -> String {
+        var comps = URLComponents()
+        comps.scheme = "loom"
+        comps.host = "anchor"
+        var items = [URLQueryItem(name: "wiki", value: slug)]
+        if let fragment, !fragment.isEmpty {
+            items.append(URLQueryItem(name: "frag", value: fragment))
+        }
+        comps.queryItems = items
+        return comps.string ?? "loom://anchor?wiki=\(slug)"
+    }
+
+    /// Parse the chapter slug out of a wiki anchor, or nil when the link is a
+    /// PDF (`src=`) anchor or not a loom anchor at all — so the two routes
+    /// never shadow each other.
+    static func wikiSlugFromAnchor(_ raw: String) -> String? {
+        guard raw.hasPrefix("loom://anchor"), let comps = URLComponents(string: raw),
+              let slug = comps.queryItems?.first(where: { $0.name == "wiki" })?.value,
+              !slug.isEmpty else { return nil }
+        return slug
+    }
+
     /// Prev/next along the whole spine (reading order), nil at the edges.
     static func neighbors(of slug: String, in manifest: WikiManifest) -> (prev: WikiChapter?, next: WikiChapter?) {
         guard let index = manifest.chapters.firstIndex(where: { $0.slug == slug }) else {

@@ -18,7 +18,6 @@ struct WikiReaderColumn: View {
 
     @StateObject private var webState = WebDebugState()
     @AppStorage("theme") private var theme: String = "dark"
-    @State private var capturePayload: CapturePayload?
 
     private var chapter: WikiChapter? {
         manifest.chapters.first { $0.slug == currentSlug }
@@ -43,17 +42,28 @@ struct WikiReaderColumn: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .sheet(isPresented: Binding<Bool>(
-            get: { capturePayload != nil },
-            set: { if !$0 { capturePayload = nil } }
-        )) {
-            CaptureSheet(payload: $capturePayload, onSaved: { _ in })
-        }
+        // The wedge loop, wiki edition (owner trio 2026-07-10): a selected
+        // passage lands in the CURRENT NOTE as an anchored quote — exactly like
+        // the PDF flow — carrying a loom://anchor?wiki= back-link to this
+        // chapter. Write your own sentence under it and it comes back in
+        // Review; clicking the quote jumps back here. (The workspace subtree
+        // stays mounted behind the Wiki destination, so the editor's insert
+        // observer is alive to receive this.)
         .onReceive(NotificationCenter.default.publisher(for: .loomCaptureWikiSelection)) { note in
             guard let webPayload = note.userInfo?["webPayload"] as? CaptureWebPayload else { return }
-            let anchors = CaptureAnchorResolver.resolveForWebCapture(webPayload, preferredRootID: nil)
-            guard let primary = anchors.first else { return }
-            capturePayload = CapturePayload.makeFromWebPayload(webPayload, anchor: primary, available: anchors)
+            let quote = webPayload.selection.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !quote.isEmpty else { return }
+            let slug = (note.userInfo?["slug"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? currentSlug
+            let fragment = note.userInfo?["fragment"] as? String
+            NotificationCenter.default.post(
+                name: .loomReflectionInsertPassage,
+                object: nil,
+                userInfo: [
+                    "quote": quote,
+                    "url": WikiCurriculum.wikiAnchorURL(slug: slug, fragment: fragment),
+                    "precise": true,
+                ]
+            )
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Wiki reader")

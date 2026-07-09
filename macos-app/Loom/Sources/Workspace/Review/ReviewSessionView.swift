@@ -107,6 +107,13 @@ extension ReviewSessionView {
     static func returnToSource(anchorURL: String) {
         guard anchorURL.hasPrefix("loom://anchor"),
               let comps = URLComponents(string: anchorURL) else { return }
+        // Wiki quotes return to their CHAPTER (the main window's Wiki
+        // destination) — the wedge's jump-back, wiki edition.
+        if let slug = WikiCurriculum.wikiSlugFromAnchor(anchorURL) {
+            NotificationCenter.default.post(
+                name: .loomOpenWikiChapter, object: nil, userInfo: ["slug": slug])
+            return
+        }
         let q = comps.queryItems ?? []
         guard let sourceID = q.first(where: { $0.name == "src" })?.value, !sourceID.isEmpty else { return }
         let page = Int(q.first(where: { $0.name == "page" })?.value ?? "") ?? 0

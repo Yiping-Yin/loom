@@ -5639,6 +5639,13 @@ struct GlassDocumentEditor: NSViewRepresentable {
         @discardableResult
         func routeAnchorLink(_ raw: String) -> Bool {
             guard raw.hasPrefix("loom://anchor"), let comps = URLComponents(string: raw) else { return false }
+            // Wiki quotes jump back to their CHAPTER (the Wiki destination),
+            // the way PDF quotes jump to their page.
+            if let slug = WikiCurriculum.wikiSlugFromAnchor(raw) {
+                NotificationCenter.default.post(
+                    name: .loomOpenWikiChapter, object: nil, userInfo: ["slug": slug])
+                return true
+            }
             let q = comps.queryItems ?? []
             guard let sourceID = q.first(where: { $0.name == "src" })?.value, !sourceID.isEmpty else { return true }
             let page = Int(q.first(where: { $0.name == "page" })?.value ?? "") ?? 0
