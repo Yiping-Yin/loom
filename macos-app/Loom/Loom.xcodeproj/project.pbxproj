@@ -143,6 +143,7 @@
 		7BE50A2AC7CE54EEA2186921 /* ReviewStreak.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A4F97A99A6B4A7BA1D20525 /* ReviewStreak.swift */; };
 		7C4345A922588A3FBFB8FEF6 /* fins-3646.expected.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A5EDCD4C68C98649C1426AF /* fins-3646.expected.json */; };
 		7C9AD9390B711BA41FD9AD1C /* ellipsis-stitch-format.expected-verdict.json in Resources */ = {isa = PBXBuildFile; fileRef = D3C72F6CACA771C82CA2F7FE /* ellipsis-stitch-format.expected-verdict.json */; };
+		7D29653B9D27D984015EE233 /* DigitalMePromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B689D529D4EBFB1C46B870 /* DigitalMePromptTests.swift */; };
 		7D7FFA60CEFDAEFE03C2631F /* LoomAnchorHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25249A19FB6782E6C8A4D05A /* LoomAnchorHelperProtocol.swift */; };
 		7E3164B451BF0B13EC046BB3 /* LoomDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444E060DE57C5A1A3F1CFB0A /* LoomDataStore.swift */; };
 		8025F4E68891700CF30D6713 /* EmbeddingClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 673C5C09CB13F4C00F4B5AD1 /* EmbeddingClient.swift */; };
@@ -252,6 +253,7 @@
 		E08B8C70625845C29AE21017 /* fins-3640.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = DE6361E122DA7F8E6E66DF06 /* fins-3640.schema.json */; };
 		E0D95807215B3A53CBF5A4F2 /* fins-3635.schema-verified.json in Resources */ = {isa = PBXBuildFile; fileRef = DF4AC3D1A6E9CEFDC3C7C26F /* fins-3635.schema-verified.json */; };
 		E10652F27FC605BED57B2C49 /* comm-3030.schema-verified.json in Resources */ = {isa = PBXBuildFile; fileRef = 3CD731306217E6009EFFB6CE /* comm-3030.schema-verified.json */; };
+		E249B45CE18085200E5B0808 /* DigitalMePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4164796A89FAA6689E207E8 /* DigitalMePrompt.swift */; };
 		E24BC46F8E41434D457977B4 /* LoomPursuitWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7457DE5E9F4E63F7DDF7DBA2 /* LoomPursuitWriter.swift */; };
 		E4329A08DF5B594547771FC1 /* AskAIWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D68A3A3AF8272C96CB79CC /* AskAIWindow.swift */; };
 		E5D966841CC23E11EA1CFB94 /* SourceLibraryBridgeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF326274D773C5F109712C3B /* SourceLibraryBridgeHandler.swift */; };
@@ -521,6 +523,7 @@
 		C2928F31D36A233EA3BC450B /* textbook-filename-leak.expected-verdict.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "textbook-filename-leak.expected-verdict.json"; sourceTree = "<group>"; };
 		C29341FF987414D79B04F931 /* MarkdownNotesSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownNotesSchema.swift; sourceTree = "<group>"; };
 		C2AFC67118FBFAB8A6E054F3 /* ReflectionLearningTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionLearningTrace.swift; sourceTree = "<group>"; };
+		C4164796A89FAA6689E207E8 /* DigitalMePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalMePrompt.swift; sourceTree = "<group>"; };
 		C43C60987BB7033695705244 /* ReviewPromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptTests.swift; sourceTree = "<group>"; };
 		C8566863C50A5F0B39C16E6A /* LoomWeaveWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomWeaveWriter.swift; sourceTree = "<group>"; };
 		C9155AAEDCF35932560D896B /* LoomFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomFileStore.swift; sourceTree = "<group>"; };
@@ -538,6 +541,7 @@
 		D3A4538024656F16221D02A9 /* CleanTextParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanTextParityTests.swift; sourceTree = "<group>"; };
 		D3C72F6CACA771C82CA2F7FE /* ellipsis-stitch-format.expected-verdict.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "ellipsis-stitch-format.expected-verdict.json"; sourceTree = "<group>"; };
 		D4B123534AEB013AE1E773CF /* AnchorResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnchorResolver.swift; sourceTree = "<group>"; };
+		D5B689D529D4EBFB1C46B870 /* DigitalMePromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalMePromptTests.swift; sourceTree = "<group>"; };
 		D6886C9A536109E2D4893543 /* LoomTraceWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomTraceWriter.swift; sourceTree = "<group>"; };
 		D7E6A838CAA269D2A0AE45BB /* slide-deck-filename-leak.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "slide-deck-filename-leak.schema.json"; sourceTree = "<group>"; };
 		D897DA71A4178E322EEF1C20 /* slide-deck-filename-leak.expected-verdict.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "slide-deck-filename-leak.expected-verdict.json"; sourceTree = "<group>"; };
@@ -970,6 +974,7 @@
 				BEF2DD1C732251052F6A49FB /* ColophonStatusTests.swift */,
 				1A3BBA3092BEA8E5FB08CB9E /* CourseOrganizeTests.swift */,
 				DE18F301846375F2AA33FFC3 /* CustomEndpointClientTests.swift */,
+				D5B689D529D4EBFB1C46B870 /* DigitalMePromptTests.swift */,
 				D98677EAB28D6F8769007F99 /* EmbeddingClientTests.swift */,
 				3FE60DA1FF551CB4D99F9183 /* FirstRunProviderSheetTests.swift */,
 				696423A83EE42B32A74FCD93 /* FragmentExtractorTests.swift */,
@@ -1126,6 +1131,7 @@
 			isa = PBXGroup;
 			children = (
 				1D27AC20C75DBFBF18CB1DFD /* DigitalMeDestinationView.swift */,
+				C4164796A89FAA6689E207E8 /* DigitalMePrompt.swift */,
 				838CBED670154487968B493C /* ReflectionPrincipleStore.swift */,
 				F6EB67BEDEE06D9ADC61A072 /* Dossier */,
 			);
@@ -1525,6 +1531,7 @@
 				A4B5CEDEF7D344FCF557FCF9 /* DataSettingsView.swift in Sources */,
 				2EEED06E8467376350F0A25D /* DevServer.swift in Sources */,
 				9C82F7C4BE97FDCAF9F3BB87 /* DigitalMeDestinationView.swift in Sources */,
+				E249B45CE18085200E5B0808 /* DigitalMePrompt.swift in Sources */,
 				A47667572EB3A105D7480EFF /* DraftBridgeHandler.swift in Sources */,
 				6A553CA6C0B926947CF00B83 /* EmbeddingBridgeHandler.swift in Sources */,
 				8025F4E68891700CF30D6713 /* EmbeddingClient.swift in Sources */,
@@ -1649,6 +1656,7 @@
 				B7DA08668A1564CE06CA5F9E /* ColophonStatusTests.swift in Sources */,
 				979A9650E2E347A6DA033DA5 /* CourseOrganizeTests.swift in Sources */,
 				274FC90F9C45C13A5DAE0582 /* CustomEndpointClientTests.swift in Sources */,
+				7D29653B9D27D984015EE233 /* DigitalMePromptTests.swift in Sources */,
 				B8B8C97E6FE0672756447FF8 /* EmbeddingClientTests.swift in Sources */,
 				48BAD02571CB0EE375243FBC /* FirstRunProviderSheetTests.swift in Sources */,
 				0899D6362535CA3A1543A7A5 /* FragmentExtractorTests.swift in Sources */,
