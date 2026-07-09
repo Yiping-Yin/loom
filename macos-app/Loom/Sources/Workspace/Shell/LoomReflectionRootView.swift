@@ -4887,63 +4887,7 @@ private struct GlassDocumentEditor: NSViewRepresentable {
         while location < text.length {
             let paragraphRange = text.paragraphRange(for: NSRange(location: location, length: 0))
             if paragraphRange.length == 0 { break }
-            let line = text.substring(with: paragraphRange)
-            let (level, markerLength) = headingLevel(of: line)
-            if level > 0 {
-                storage.addAttributes([
-                    .font: headingFont(level: level),
-                    .foregroundColor: NSColor.labelColor,
-                    .paragraphStyle: headingParagraphStyle,
-                ], range: paragraphRange)
-                storage.addAttribute(
-                    .foregroundColor,
-                    value: NSColor.tertiaryLabelColor,
-                    range: NSRange(location: paragraphRange.location, length: markerLength)
-                )
-            } else if ReflectionDocumentFormat.isOpenQuestionLine(line) {
-                // Block D — an open question / to-confirm (line starts with ❓). A
-                // warm "unresolved" amber (LOOM's page-only/partial signal) so it
-                // reads as a thread to return to, not settled prose. Authored
-                // altitude (baseline), emphasis preserved.
-                storage.addAttributes([
-                    .foregroundColor: openQuestionColor,
-                    .paragraphStyle: documentParagraphStyle,
-                ], range: paragraphRange)
-                applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
-            } else if isAnchorParagraph(storage, at: paragraphRange.location) {
-                // Evidence altitude — a captured quote. Preserve its indent +
-                // quiet ink instead of flattening it to baseline authored text,
-                // so the source's words read as evidence below your own claim.
-                storage.addAttributes([
-                    .foregroundColor: NSColor.secondaryLabelColor,
-                    .paragraphStyle: quoteParagraphStyle,
-                ], range: paragraphRange)
-                applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
-                // Restore the trailing locator glyph's footnote size + raised
-                // baseline (the body-serif pass above reset it to 15pt baseline).
-                // Its cyan is painted by linkTextAttributes at display time.
-                storage.enumerateAttribute(.link, in: paragraphRange) { value, subRange, _ in
-                    let s = (value as? String) ?? (value as? URL)?.absoluteString
-                        ?? (value as? NSURL)?.absoluteString ?? ""
-                    guard s.hasPrefix("loom://anchor") else { return }
-                    // Only the locator run (hair-space + one diamond, ≤ 2 chars) —
-                    // never an OLD note whose whole quote text still carries the link,
-                    // even if that quote happens to contain a ◆ (that would shrink
-                    // the entire quote). Guard on BOTH length and the diamond.
-                    let sub = (storage.string as NSString).substring(with: subRange)
-                    guard subRange.length <= 2, sub.contains("\u{25C6}") || sub.contains("\u{25C7}") else { return }
-                    storage.addAttributes([
-                        .font: serifFont(size: 9.5, weight: .regular),
-                        .baselineOffset: 4.0,
-                    ], range: subRange)
-                }
-            } else {
-                storage.addAttributes([
-                    .foregroundColor: NSColor.labelColor,
-                    .paragraphStyle: documentParagraphStyle,
-                ], range: paragraphRange)
-                applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
-            }
+            normalizeParagraph(storage, paragraphRange: paragraphRange)
             location = NSMaxRange(paragraphRange)
         }
         storage.endEditing()
@@ -4961,6 +4905,71 @@ private struct GlassDocumentEditor: NSViewRepresentable {
             if let boundary = ReflectionDocumentFormat.typingAttributesAfterNewline(previousRole: prevRole) {
                 view.typingAttributes = boundary
             }
+        }
+    }
+
+    /// Restyle ONE paragraph to its altitude (heading / open question /
+    /// evidence quote / body). Extracted verbatim from normalizeDocument's loop
+    /// (behaviour-identical) so a per-keystroke path can restyle only the
+    /// edited paragraph(s) instead of the whole document (S8: cost ∝ edit).
+    /// Assumes the caller has begun/will end a storage editing transaction.
+    static func normalizeParagraph(_ storage: NSTextStorage, paragraphRange: NSRange) {
+        let line = (storage.string as NSString).substring(with: paragraphRange)
+        let (level, markerLength) = headingLevel(of: line)
+        if level > 0 {
+            storage.addAttributes([
+                .font: headingFont(level: level),
+                .foregroundColor: NSColor.labelColor,
+                .paragraphStyle: headingParagraphStyle,
+            ], range: paragraphRange)
+            storage.addAttribute(
+                .foregroundColor,
+                value: NSColor.tertiaryLabelColor,
+                range: NSRange(location: paragraphRange.location, length: markerLength)
+            )
+        } else if ReflectionDocumentFormat.isOpenQuestionLine(line) {
+            // Block D — an open question / to-confirm (line starts with ❓). A
+            // warm "unresolved" amber (LOOM's page-only/partial signal) so it
+            // reads as a thread to return to, not settled prose. Authored
+            // altitude (baseline), emphasis preserved.
+            storage.addAttributes([
+                .foregroundColor: openQuestionColor,
+                .paragraphStyle: documentParagraphStyle,
+            ], range: paragraphRange)
+            applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
+        } else if isAnchorParagraph(storage, at: paragraphRange.location) {
+            // Evidence altitude — a captured quote. Preserve its indent +
+            // quiet ink instead of flattening it to baseline authored text,
+            // so the source's words read as evidence below your own claim.
+            storage.addAttributes([
+                .foregroundColor: NSColor.secondaryLabelColor,
+                .paragraphStyle: quoteParagraphStyle,
+            ], range: paragraphRange)
+            applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
+            // Restore the trailing locator glyph's footnote size + raised
+            // baseline (the body-serif pass above reset it to 15pt baseline).
+            // Its cyan is painted by linkTextAttributes at display time.
+            storage.enumerateAttribute(.link, in: paragraphRange) { value, subRange, _ in
+                let s = (value as? String) ?? (value as? URL)?.absoluteString
+                    ?? (value as? NSURL)?.absoluteString ?? ""
+                guard s.hasPrefix("loom://anchor") else { return }
+                // Only the locator run (hair-space + one diamond, ≤ 2 chars) —
+                // never an OLD note whose whole quote text still carries the link,
+                // even if that quote happens to contain a ◆ (that would shrink
+                // the entire quote). Guard on BOTH length and the diamond.
+                let sub = (storage.string as NSString).substring(with: subRange)
+                guard subRange.length <= 2, sub.contains("\u{25C6}") || sub.contains("\u{25C7}") else { return }
+                storage.addAttributes([
+                    .font: serifFont(size: 9.5, weight: .regular),
+                    .baselineOffset: 4.0,
+                ], range: subRange)
+            }
+        } else {
+            storage.addAttributes([
+                .foregroundColor: NSColor.labelColor,
+                .paragraphStyle: documentParagraphStyle,
+            ], range: paragraphRange)
+            applyBodySerifPreservingEmphasis(storage, range: paragraphRange)
         }
     }
 
