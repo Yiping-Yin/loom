@@ -136,8 +136,10 @@ struct LoomReflectionRootView: View {
     // status bar) ships ON with a persisted rollback flag — flipping it off
     // restores the previous shell against identical data.
     @AppStorage("loom.workbench.chrome") private var workbenchChrome: Bool = true
-    @State private var isSidebarPresented: Bool = true
-    @State private var isSidebarPeeking: Bool = false
+    // Wave 2 Cut A: the outer sidebar/detail split is now a system
+    // NavigationSplitView; this binding is its column-visibility source of
+    // truth (⌃⌘S via SidebarCommands, the top-bar toggle, and ⌘1 all drive it).
+    @State private var sidebarColumnVisibility: NavigationSplitViewVisibility = .all
     @State private var isInspectorPresented: Bool = true
     // While a source is open, the right pane IS the note. This collapses it so
     // the PDF reads full-width in-window (owner 2026-07-06: 右栏要能收展). Session
@@ -161,8 +163,7 @@ struct LoomReflectionRootView: View {
     @State private var lastHandledExternalFileToken: UUID?
     @State private var lastHandledExternalSelectionToken: UUID?
 
-    private var shouldShowSidebar: Bool { isSidebarPresented || isSidebarPeeking }
-    private var shouldOverlaySidebar: Bool { !isSidebarPresented && isSidebarPeeking }
+    private var isSidebarShown: Bool { sidebarColumnVisibility != .detailOnly }
     private var selectedIndex: Int { cases.firstIndex { $0.id == selectedCaseID } ?? 0 }
     private var selectedCase: ReflectionCase { cases[selectedIndex] }
     private var selectedSource: ReflectionSource? {
@@ -190,9 +191,8 @@ struct LoomReflectionRootView: View {
     }
     var body: some View {
         ZStack(alignment: .topLeading) {
-            HStack(spacing: 0) {
-                if isSidebarPresented {
-                    ReflectionSidebar(
+            NavigationSplitView(columnVisibility: $sidebarColumnVisibility) {
+                ReflectionSidebar(
                         cases: sidebarCases,
                         selectedCaseID: selectedCaseID,
                         panelsCase: nil,
@@ -218,16 +218,12 @@ struct LoomReflectionRootView: View {
                         onDeleteProject: deleteProject,
                         onNewChatInProject: createChat(inProject:),
                         onMoveChat: moveChat
-                    )
-                    .frame(width: reflectionSidebarWidth)
-                    .transition(.move(edge: .leading).combined(with: .opacity))
-                    .onHover { hovering in
-                        updateSidebarPeek(hovering)
-                    }
-
-                    ReflectionDivider()
-                }
-
+                )
+                // System split divider replaces the old fixed 248pt column +
+                // hand-drawn ReflectionDivider (charter §2): draggable, double-
+                // click-collapsible, autosaved, AX-adjustable — all for free.
+                .navigationSplitViewColumnWidth(min: 216, ideal: reflectionSidebarWidth, max: 360)
+            } detail: {
                 GeometryReader { geo in
                 HStack(spacing: 0) {
                     // In-window reader (owner 2026-07-06): a COLUMN to the LEFT of
@@ -320,16 +316,23 @@ struct LoomReflectionRootView: View {
                 }
                 }
                 // Glass law (2026-07-03): exactly ONE glass pane per window —
-                // the root matte below. Columns never stack their own
-                // behind-window material on top of it.
+                // the root matte below (ReflectionMatteWorkbenchBackground).
+                // The system split columns stay transparent so that single
+                // material shows through; no column stacks its own behind-
+                // window material on top of it.
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .navigationSplitViewStyle(.balanced)
+            // The top bar owns the sidebar toggle (plus SidebarCommands ⌃⌘S);
+            // suppress the auto-inserted toolbar sidebar button so it doesn't
+            // fight the hidden-titlebar chrome.
+            .toolbar(removing: .sidebarToggle)
 
             ReflectionTopBar(
                 reflectionCase: selectedCase,
                 nativeSource: nativeSource,
                 isWorkspaceEmpty: isWorkspaceEmpty,
-                isSidebarPresented: isSidebarPresented,
+                isSidebarPresented: isSidebarShown,
                 isInspectorPresented: isInspectorPresented,
                 isReadingSource: anchorPreview != nil,
                 isNoteCollapsed: isReadingNoteCollapsed,
@@ -345,59 +348,10 @@ struct LoomReflectionRootView: View {
             )
             .zIndex(1)
 
-            if shouldOverlaySidebar {
-                HStack(spacing: 0) {
-                    ReflectionSidebar(
-                        cases: sidebarCases,
-                        selectedCaseID: selectedCaseID,
-                        panelsCase: nil,
-                        onSelectTrace: selectLearningTrace,
-                        panelPrinciples: workspace.principles,
-                        onCitePrinciple: citePrincipleIntoSelectedCase,
-                        onOpenPrinciple: { record in
-                            if let sourceCase = cases.first(where: { $0.id == record.sourceCaseID }) {
-                                selectCase(sourceCase)
-                            }
-                        },
-                        onSelect: selectCase,
-                        onCreate: createReflection,
-                        onCreateLearning: createLearningProject,
-                        onNewChat: createReflection,
-                        onDelete: deleteReflection,
-                        onRename: renameReflection,
-                        projects: projects,
-                        onCreateProject: createProject,
-                        onCreateCourse: createCourseFromFolder,
-                        onAutoOrganizeCourse: autoOrganizeCourse,
-                        onRenameProject: renameProject,
-                        onDeleteProject: deleteProject,
-                        onNewChatInProject: createChat(inProject:),
-                        onMoveChat: moveChat
-                    )
-                    .frame(width: reflectionSidebarWidth)
-                    .background(ReflectionSidebarPeekBackdrop())
-
-                    ReflectionDivider()
-                }
-                .frame(maxHeight: .infinity, alignment: .topLeading)
-                .transition(.move(edge: .leading).combined(with: .opacity))
-                .onHover { hovering in
-                    updateSidebarPeek(hovering)
-                }
-                .zIndex(0.75)
-            }
-
-            if !shouldShowSidebar {
-                ReflectionLeftEdgePeekZone()
-                    .frame(width: 18)
-                    .frame(maxHeight: .infinity)
-                    .onHover { hovering in
-                        if hovering {
-                            updateSidebarPeek(true)
-                        }
-                    }
-                    .zIndex(0.5)
-            }
+            // Wave 2 Cut A: the left-edge hover-peek sidebar + its second
+            // (withinWindow) material are retired — the system NavigationSplitView
+            // now owns show/hide/animation of the sidebar column (charter §2 +
+            // ratified answer ③a). ⌃⌘S, ⌘1, and the top-bar toggle drive it.
 
             // Bottom status bar removed 2026-07-03 (owner directive):
             // the workspace ends at the composer; no chrome strip below it.
@@ -601,16 +555,10 @@ struct LoomReflectionRootView: View {
     }
 
     private func toggleSidebar() {
+        // Drives the system NavigationSplitView column (⌘1 + top-bar button);
+        // ⌃⌘S goes through SidebarCommands, which updates the same binding.
         withAnimation(.easeInOut(duration: 0.18)) {
-            isSidebarPresented.toggle()
-            isSidebarPeeking = false
-        }
-    }
-
-    private func updateSidebarPeek(_ shouldPeek: Bool) {
-        guard !isSidebarPresented else { return }
-        withAnimation(.easeInOut(duration: 0.18)) {
-            isSidebarPeeking = shouldPeek
+            sidebarColumnVisibility = isSidebarShown ? .detailOnly : .all
         }
     }
 
@@ -1095,8 +1043,7 @@ struct LoomReflectionRootView: View {
         selectedLearningTraceID = nil
         draftText = ""
         emptyWorkbenchDismissed = true
-        isSidebarPresented = false
-        isSidebarPeeking = false
+        sidebarColumnVisibility = .detailOnly
         isInspectorPresented = false
         openSourcesInNativeApps(importedSources)
         statusMessage = importedSources.count == 1
@@ -1677,8 +1624,7 @@ struct LoomReflectionRootView: View {
             cases[index].touchedAt = Date()
             selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
             draftText = ""
-            isSidebarPresented = false
-            isSidebarPeeking = false
+            sidebarColumnVisibility = .detailOnly
             isInspectorPresented = false
             statusMessage = "Captured selected text from the native app"
             persistWorkspace()
@@ -1706,8 +1652,7 @@ struct LoomReflectionRootView: View {
         )
         selectedLearningTraceID = ReflectionLearningTrace.from(cases[index]).last?.id
         draftText = ""
-        isSidebarPresented = false
-        isSidebarPeeking = false
+        sidebarColumnVisibility = .detailOnly
         isInspectorPresented = false
         statusMessage = "Captured selected text from the native app"
         persistWorkspace()

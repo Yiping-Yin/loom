@@ -115,8 +115,7 @@ struct WindowConfigurator: NSViewRepresentable {
     /// mount. macOS can restore toolbar/titlebar chrome during
     /// fullscreen entry/exit, focus changes, Tahoe Fill resizes, and
     /// display/space moves — each notification reasserts the contract
-    /// immediately and again after the window-management animations
-    /// settle.
+    /// immediately (Wave 2 Cut A retired the delayed repair sweeps).
     final class Coordinator {
         private var observers: [NSObjectProtocol] = []
         private weak var observedWindow: NSWindow?
@@ -147,15 +146,10 @@ struct WindowConfigurator: NSViewRepresentable {
         }
 
         private func reapplyNowAndAfterAnimations() {
+            // Wave 2 Cut A (charter §4): the 0.75s / 2s delayed repair sweeps are
+            // retired. Chrome is reasserted immediately on each fullscreen/space/
+            // resize/key notification; no timer-based guessing.
             reapply?()
-            // Window-management animations can reinsert chrome after the
-            // current 0.75s repair window; sweep again at 2s.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) { [weak self] in
-                self?.reapply?()
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                self?.reapply?()
-            }
         }
 
         private func detach() {

@@ -158,6 +158,11 @@ struct LoomApp: App {
         // SwiftData plane they wrote to is kept and archived.)
 
         .commands {
+            // Wave 2 Cut A (charter §12): ⌃⌘S = the system sidebar toggle.
+            // SidebarCommands drives the main window's NavigationSplitView
+            // sidebar through the responder chain and updates its
+            // columnVisibility binding.
+            SidebarCommands()
             CommandGroup(after: .textEditing) {
                 // (Removed dead web-nav menu items — Review ⌘E/⌘/, Reload ⌘R,
                 // Open in Browser, Back/Forward, and the ⌘+/-/0 zoom triplet —
