@@ -6,9 +6,10 @@
 //  running app was impossible this session, so these XCUITests are the way to
 //  prove the migrated shell actually renders and works:
 //    • the app launches into a real window (the Reflection workbench),
-//    • the 3-way IA destination rows (Today / Workspace / You) are present,
+//    • the 3-way IA destination rows (Workspace / Wiki / You — the owner's
+//      trio, 2026-07-10) are present,
 //    • selecting each destination swaps the detail surface,
-//    • ⌘1 / ⌘2 / ⌘3 switch destinations (the W2-2 keymap),
+//    • ⌘1 / ⌘2 / ⌘3 switch destinations (Workspace / Wiki / You),
 //    • the Workspace top-bar controls are present (would catch a vanished
 //      toolbar),
 //    • the sidebar sections render (data-dependent — recorded honestly).
@@ -88,8 +89,8 @@ final class LoomWorkbenchUITests: XCTestCase {
 
     /// Reveal the sidebar if the destination rows aren't already queryable.
     private func ensureSidebarVisible() {
-        let today = destinationRow("today")
-        if today.waitForExistence(timeout: 8) { return }
+        let workspace = destinationRow("workspace")
+        if workspace.waitForExistence(timeout: 8) { return }
         // Prefer the Workspace top-bar sidebar button; fall back to ⌃⌘S.
         let toggle = app.buttons["topbar.sidebarToggle"]
         if toggle.waitForExistence(timeout: 3), toggle.isHittable {
@@ -97,7 +98,7 @@ final class LoomWorkbenchUITests: XCTestCase {
         } else {
             app.typeKey("s", modifierFlags: [.control, .command])
         }
-        _ = today.waitForExistence(timeout: 8)
+        _ = workspace.waitForExistence(timeout: 8)
     }
 
     private func selectDestinationByClick(_ dest: String) {
@@ -119,17 +120,17 @@ final class LoomWorkbenchUITests: XCTestCase {
 
         ensureSidebarVisible()
 
-        // 2) The three destination rows are present.
-        let todayRow = destinationRow("today")
+        // 2) The three destination rows are present (the owner's trio).
         let workspaceRow = destinationRow("workspace")
+        let wikiRow = destinationRow("wiki")
         let youRow = destinationRow("digitalMe")
-        let todayPresent = todayRow.waitForExistence(timeout: 8)
-        let workspacePresent = workspaceRow.waitForExistence(timeout: 3)
+        let workspacePresent = workspaceRow.waitForExistence(timeout: 8)
+        let wikiPresent = wikiRow.waitForExistence(timeout: 3)
         let youPresent = youRow.waitForExistence(timeout: 3)
-        record("destination row: Today present", todayPresent, "label=\(todayPresent ? todayRow.label : "-")")
         record("destination row: Workspace present", workspacePresent, "label=\(workspacePresent ? workspaceRow.label : "-")")
+        record("destination row: Wiki present", wikiPresent, "label=\(wikiPresent ? wikiRow.label : "-")")
         record("destination row: You present", youPresent, "label=\(youPresent ? youRow.label : "-")")
-        let allDestinations = todayPresent && workspacePresent && youPresent
+        let allDestinations = workspacePresent && wikiPresent && youPresent
         record("all 3 destinations present", allDestinations)
         XCTAssertTrue(allDestinations, "The 3-way IA destination rows were not all found in the sidebar.")
 
@@ -140,22 +141,22 @@ final class LoomWorkbenchUITests: XCTestCase {
         //    identifier would not always resolve to a queryable AX element, so we
         //    key off the button, not the container.
         let workspaceIndicator = app.buttons["topbar.inspectorToggle"]
-        let todaySurface = any("surface.today")
+        let wikiSurface = any("surface.wikiHome")
         let dossierSurface = any("surface.dossier")
 
-        // Today
-        selectDestinationByClick("today")
-        let todayShown = todaySurface.waitForExistence(timeout: 8)
-        let topBarGoneOnToday = waitForGone(workspaceIndicator, timeout: 4)
-        record("click Today → Today surface shown", todayShown)
-        record("click Today → Workspace top bar hidden (real swap)", topBarGoneOnToday)
+        // Wiki
+        selectDestinationByClick("wiki")
+        let wikiShown = wikiSurface.waitForExistence(timeout: 8)
+        let topBarGoneOnWiki = waitForGone(workspaceIndicator, timeout: 4)
+        record("click Wiki → encyclopedia front door shown", wikiShown)
+        record("click Wiki → Workspace top bar hidden (real swap)", topBarGoneOnWiki)
 
         // You
         selectDestinationByClick("digitalMe")
         let dossierShown = dossierSurface.waitForExistence(timeout: 8)
-        let todayGoneOnYou = waitForGone(todaySurface, timeout: 4)
+        let wikiGoneOnYou = waitForGone(wikiSurface, timeout: 4)
         record("click You → dossier surface shown", dossierShown)
-        record("click You → Today surface hidden (real swap)", todayGoneOnYou)
+        record("click You → Wiki surface hidden (real swap)", wikiGoneOnYou)
 
         // Workspace
         selectDestinationByClick("workspace")
@@ -164,23 +165,23 @@ final class LoomWorkbenchUITests: XCTestCase {
         record("click Workspace → top bar shown", topBarShown)
         record("click Workspace → dossier surface hidden (real swap)", dossierGoneOnWorkspace)
 
-        let clickSwitchingWorks = todayShown && dossierShown && topBarShown
+        let clickSwitchingWorks = wikiShown && dossierShown && topBarShown
         record("destination switching by click works", clickSwitchingWorks)
 
         // 4) ⌘1 / ⌘2 / ⌘3 switch destinations (the W2-2 keymap).
         app.activate()
 
-        app.typeKey("1", modifierFlags: .command)
-        let cmd1 = todaySurface.waitForExistence(timeout: 8)
-        record("⌘1 → Today surface", cmd1)
+        app.typeKey("2", modifierFlags: .command)
+        let cmd2 = wikiSurface.waitForExistence(timeout: 8)
+        record("⌘2 → Wiki front door", cmd2)
 
         app.typeKey("3", modifierFlags: .command)
         let cmd3 = dossierSurface.waitForExistence(timeout: 8)
         record("⌘3 → dossier surface", cmd3)
 
-        app.typeKey("2", modifierFlags: .command)
-        let cmd2 = workspaceIndicator.waitForExistence(timeout: 8)
-        record("⌘2 → Workspace top bar", cmd2)
+        app.typeKey("1", modifierFlags: .command)
+        let cmd1 = workspaceIndicator.waitForExistence(timeout: 8)
+        record("⌘1 → Workspace top bar", cmd1)
 
         let keymapWorks = cmd1 && cmd2 && cmd3
         record("⌘1/⌘2/⌘3 keymap works", keymapWorks)
