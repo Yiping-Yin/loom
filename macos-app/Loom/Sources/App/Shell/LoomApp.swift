@@ -124,6 +124,15 @@ struct LoomApp: App {
         .defaultPosition(.center)
         .windowToolbarStyle(.unifiedCompact)
 
+        // The Library — the owner's LLM wiki (THE BOOK) read inside LOOM
+        // (wiki-migration Phase 2 mount). Its own window until the 3-way IA
+        // rebuild gives it a left-rail LIBRARY group + reader slot.
+        Window("Library", id: LibraryWindow.id) {
+            LibraryRootView()
+        }
+        .defaultSize(width: 820, height: 760)
+        .defaultPosition(.center)
+
         // (The old "Add files" IngestionWindow is unregistered — macOS gives
         // every registered SwiftUI Window a system Window-menu command, and
         // this one wrote typed-extractor output into a store the live
@@ -150,6 +159,7 @@ struct LoomApp: App {
                 AskAboutFileMenuItem()
                 ShuttleMenuItem()
                 ReviewMenuItem()
+                LibraryMenuItem()
                 // (Removed six more stone-dead launchers — Hold Question ⌘⇧P,
                 // Add/Connect Sōan Cards ⌘⇧D/⌘⇧L, Source check ⌘⇧X, Add files
                 // ⌘⇧I, Practice notes — whose only observers lived in the
@@ -1834,6 +1844,17 @@ struct ReviewMenuItem: View {
 
 enum ReviewWindow {
     static let id = "com.loom.window.review"
+}
+
+/// Opens the Library (the owner's LLM wiki, read inside LOOM). ⌘⇧L.
+struct LibraryMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+    var body: some View {
+        Button("Library") {
+            openWindow(id: LibraryWindow.id)
+        }
+        .keyboardShortcut("l", modifiers: [.command, .shift])
+    }
 }
 
 enum MainWindow {
