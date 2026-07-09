@@ -1831,11 +1831,15 @@ struct ShuttleMenuItem: View {
 }
 
 /// Opens today's review session (docs/canon/WHAT_IS_LOOM.md §6). ⌘⇧R —
-/// ⌘R was retired with the dead web reload command, so it's free.
+/// ⌘R was retired with the dead web reload command, so it's free. The label
+/// carries the due count (a quiet "you have N to review" nudge — the daily
+/// return is the whole game) computed when the menu renders; no debt counter,
+/// just today's capped session size.
 struct ReviewMenuItem: View {
     @Environment(\.openWindow) private var openWindow
     var body: some View {
-        Button("Review") {
+        let due = ReviewStore.dueToday().count
+        Button(due > 0 ? "Review (\(due))" : "Review") {
             openWindow(id: ReviewWindow.id)
         }
         .keyboardShortcut("r", modifiers: [.command, .shift])
