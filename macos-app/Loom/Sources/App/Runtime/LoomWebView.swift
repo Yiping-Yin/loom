@@ -433,6 +433,33 @@ struct LoomWebView: NSViewRepresentable {
                 forMainFrameOnly: true
             )
         )
+        // Bundled pages can never play embedded video: the loom:// custom
+        // scheme is not an allowed embed origin, so every YouTube iframe
+        // renders a permanent "Error 153" block mid-page (live patrol,
+        // 2026-07-10). Replace them with an honest, quiet link card — the
+        // navigation delegate routes external links to the browser.
+        userContentController.addUserScript(
+            WKUserScript(
+                source: """
+                (() => {
+                  try {
+                    document.querySelectorAll('iframe[src*="youtube.com"], iframe[src*="youtube-nocookie.com"], iframe[src*="youtu.be"]').forEach((f) => {
+                      let href = f.src || '';
+                      const m = href.match(/embed\\/([A-Za-z0-9_-]{6,})/);
+                      if (m) { href = 'https://www.youtube.com/watch?v=' + m[1]; }
+                      const a = document.createElement('a');
+                      a.href = href;
+                      a.textContent = '▶\\u2002Watch on YouTube';
+                      a.setAttribute('style', 'display:flex;align-items:center;justify-content:center;gap:8px;padding:26px 22px;border:1px solid rgba(127,127,127,.35);border-radius:12px;text-decoration:none;font:500 14px/1 -apple-system,system-ui;color:inherit;opacity:.85;');
+                      (f.closest('figure') || f).replaceWith(a);
+                    });
+                  } catch (_) {}
+                })();
+                """,
+                injectionTime: .atDocumentEnd,
+                forMainFrameOnly: true
+            )
+        )
 
         if let initialMirrorScript = LoomWebView.Coordinator.initialMirrorBootstrapScript() {
             userContentController.addUserScript(
