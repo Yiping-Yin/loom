@@ -65,7 +65,8 @@ struct LoomHelpView: View {
                     Text("Around the workspace")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
-                    helpRow("person.crop.circle", "You", "Your evidenced self — education, experience, and the knowledge you've built. Open it from the bottom-left of the sidebar.")
+                    helpRow("square.grid.2x2", "Three places", "Workspace ⌘1 — where you read and write. Wiki ⌘2 — your knowledge, organized: the book and your own pages. You ⌘3 — your judgments, profession, and online presence.")
+                    helpRow("person.crop.circle", "You", "Your evidenced self. Also one click from the bottom-left of the sidebar.")
                     helpRow("info.circle", "About Loom", "What this app is, and its version.")
                     helpRow("gearshape", "Settings", "Providers, data, and capture — ⌘,")
                     helpRow("keyboard", "Keyboard Shortcuts", "The full list — ⌘⇧?")
@@ -73,15 +74,16 @@ struct LoomHelpView: View {
 
                 Divider()
 
-                // Capturing — folded in from the retired "Set up captures"
-                // window (one Help window, Apple convention).
+                // Capturing — the extension retired with the web product; the
+                // bookmarklet is the one honest web-capture path (live patrol
+                // 2026-07-10: this section still taught the deleted L button).
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Capturing from the web")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
-                    helpRow("cursorarrow.click.2", "Capture a page", "On any web page, click the L button — Loom comes forward with the capture sheet pre-filled (title, URL, content). Shift-L captures reader-only; ⌘L keeps scripts.")
+                    helpRow("link.badge.plus", "Capture a page", "Drag the pill from Settings → Capture into your browser's bookmarks bar once. On any page, click it — Loom comes forward with the capture sheet pre-filled (title, URL, content).")
                     helpRow("text.badge.checkmark", "Select first", "A selection always wins over auto-extraction when you only need a passage.")
-                    helpRow("puzzlepiece.extension", "If the L is missing", "The extension isn't running on that tab — reload the extension, then refresh the page. Interactive setup lives in Settings → Capture.")
+                    helpRow("book", "Quote the wiki", "Selecting a passage in a Wiki chapter drops it straight into your current note with a back-link — write your own sentence under it and it comes back in Review.")
                 }
 
                 Text("Everything is local, on your device. No account, no sign-in.")
