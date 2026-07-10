@@ -494,7 +494,7 @@ struct LoomWebView: NSViewRepresentable {
 
         config.userContentController = userContentController
 
-        let webView = WKWebView(frame: .zero, configuration: config)
+        let webView = LoomMenuFirstWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         context.coordinator.fallbackURL = url
@@ -2053,5 +2053,16 @@ struct LoomWebView: NSViewRepresentable {
             }
             decisionHandler(.allow)
         }
+    }
+}
+
+/// WKWebView consumes key equivalents before the main menu sees them, so
+/// app-level shortcuts (Settings ⌘, — live patrol 2026-07-10) died whenever
+/// the wiki reader had focus. Give the MENU first refusal; only combos no
+/// menu item owns fall through to the page.
+final class LoomMenuFirstWebView: WKWebView {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if NSApp.mainMenu?.performKeyEquivalent(with: event) == true { return true }
+        return super.performKeyEquivalent(with: event)
     }
 }
