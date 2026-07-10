@@ -443,7 +443,8 @@ struct LoomWebView: NSViewRepresentable {
                 source: """
                 (() => {
                   try {
-                    document.querySelectorAll('iframe[src*="youtube.com"], iframe[src*="youtube-nocookie.com"], iframe[src*="youtu.be"]').forEach((f) => {
+                    const SEL = 'iframe[src*="youtube.com"], iframe[src*="youtube-nocookie.com"], iframe[src*="youtu.be"]';
+                    const swap = (f) => {
                       let href = f.src || '';
                       const m = href.match(/embed\\/([A-Za-z0-9_-]{6,})/);
                       if (m) { href = 'https://www.youtube.com/watch?v=' + m[1]; }
@@ -452,7 +453,13 @@ struct LoomWebView: NSViewRepresentable {
                       a.textContent = '▶\\u2002Watch on YouTube';
                       a.setAttribute('style', 'display:flex;align-items:center;justify-content:center;gap:8px;padding:26px 22px;border:1px solid rgba(127,127,127,.35);border-radius:12px;text-decoration:none;font:500 14px/1 -apple-system,system-ui;color:inherit;opacity:.85;');
                       (f.closest('figure') || f).replaceWith(a);
-                    });
+                    };
+                    const sweep = () => { document.querySelectorAll(SEL).forEach(swap); };
+                    sweep();
+                    // Next.js hydrates AFTER documentEnd and may create the
+                    // iframes then — keep watching and swap whenever one lands.
+                    new MutationObserver(sweep)
+                      .observe(document.documentElement, { childList: true, subtree: true });
                   } catch (_) {}
                 })();
                 """,
