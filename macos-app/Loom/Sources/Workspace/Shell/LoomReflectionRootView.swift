@@ -512,6 +512,14 @@ struct LoomReflectionRootView: View {
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
                 }
+                // Fullscreen parity (owner screenshot 2026-07-10: content
+                // jammed against the top edge): windowed mode gets a ~52pt
+                // top safe-area inset from the titlebar strip; fullscreen's
+                // steady state collapses it to 0 (the toolbar auto-hides AND
+                // overlays on reveal). Compensate at the container so the
+                // workspace sits at the SAME visual height in both modes —
+                // and stays clear of the fullscreen toolbar-reveal overlay.
+                .padding(.top, max(reflectionTopBarHeight - geo.safeAreaInsets.top, 0))
                 }
                 // Glass law (2026-07-03): exactly ONE glass pane per window —
                 // the root matte below (ReflectionMatteWorkbenchBackground).
@@ -2865,11 +2873,17 @@ private struct ReflectionSidebar: View {
         // activity bar. The distilled lesson (icons + tooltips over text
         // rows) lives in the bottom strip instead; the strip graduates to
         // a vertical rail only when workspace actions reach five.
+        // GeometryReader: fullscreen parity (owner screenshot 2026-07-10 —
+        // the first destination row was clipped against the top edge). The
+        // windowed titlebar strip gives ~52pt of safe area; fullscreen's
+        // steady state gives 0, so compensate to the same visual height.
+        GeometryReader { sidebarGeo in
         VStack(alignment: .leading, spacing: 0) {
             // W2-2: the 3-way top IA sits above the workspace navigator; it owns
             // the traffic-light top clearance now.
             destinationPicker
-                .padding(.top, reflectionSidebarTopClearance)
+                .padding(.top, reflectionSidebarTopClearance
+                         + max(reflectionTopBarHeight - sidebarGeo.safeAreaInsets.top, 0))
                 .padding(.bottom, 6)
 
             Divider()
@@ -3081,6 +3095,7 @@ private struct ReflectionSidebar: View {
                 sourceCount: cases.reduce(0) { $0 + $1.sources.count },
                 noteCount: cases.reduce(0) { $0 + $1.messages.filter { $0.role == .human }.count }
             )
+        }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
